@@ -1,0 +1,45 @@
+header 
+    (기존 클라와 거의 똑같게)
+    [status] 출처 (아티스트) 곡명 난이도명
+    mapped by 매퍼
+    length:__ BPM:__ 총 노트 수:__ (LN:__) 
+    Keys:__ SR:__
+
+leaderboard
+    option: show scores of all mods on/off
+    - local
+    - global
+    - country
+    - friend
+
+    all mods on이면 pp순 정렬, 점수차 대신 pp차 보여주기
+
+a ranking panel
+    사진 랭크 닉네임
+    사진 랭크 점수 (콤보 수) pp 점수차/pp차
+    (확도 적혀있는 란에 pp 적기)
+    풀 콤보이면 콤보 수에 별도 색깔 입히기 
+
+
+mods
+    Time rate: << < [1.0] > >> (0.75 ~ 1.5, with 5 stages each) 
+        - Pitch (on/off)
+    SV 제거 (on/off)
+    Halt the play when fails (on/off) (그러니 기본적으로 노페일 with 1.0x) 
+    Target (on/off)
+
+    sr 및 pp, round 대신 floor
+    score는 ceil
+
+
+song option
+    1. Add to Favorite
+    2. Edit
+    3. Delete
+        3-1. Delete the map
+        3-2. Delete whole maps in the mapset
+        3-3. Delete all visible maps
+        3-4. Cancel
+    4. Cancel
+
+Sort / Group by는 드러나있는 모든 data 종류에 대해서 하자

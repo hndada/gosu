@@ -1,0 +1,2 @@
+서버 이름 Meong
+봇이름 MeongBot

@@ -1,0 +1,22 @@
+4+1 판정 체계 (beatmania, ez2dj)
+KOOL    16
+COOL    15
+GOOD    10
+BAD     4
+MISS    0
+
+SS All Cool & 997000~ (KC 비율 10:1 기준 997159)
+S 900k~
+A 800k~
+B 700k~
+C 600k~
+D ~600k
+
+확도 삭제 - 대신 득점률을 보여줌
+
+미스 내면 감점시키기 (넣을듯)
+
+일시정지걸면 스태미나 감소에 따른 sr 및 잠재적 점수 감소
+
+미스 났을 때 Bonus Score penalty를 
+-inf(-100) 로 하지말고 -50 정도로 

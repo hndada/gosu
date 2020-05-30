@@ -1,0 +1,23 @@
+DT (rankable)
+time rate 1.5x is considered as DT
+
+MR (rankable)
+N+1키는 핸들 잘해야 함
+
+RD (unrankable)
+seed 저장
+전용 sr계산
+
+-------- no use
+HR (rankable)
+1. 메트로놈 효과
+2. HP 빡세짐 (o2jam 기준 EZ->HD)
+3. 판정, OD 11
+4. SV 변화 1.5배
+5. 공푸어
+    - 공푸어 on 이면 모든 space가 cutter가 됨
+
+EZ? 
+1. 변속 제거
+2. 판정 OD -2 및 미스 range제거
+3. HP 완화? 

@@ -1,0 +1,12 @@
+new file format
+
+모드 별로 별도의 포맷 사용
+no convert
+
+HitObject
+
+mania
+type: note, ln start, ln end
+time: 으로 할지 1/n으로 할지.
+time,key,type,(sound)
+

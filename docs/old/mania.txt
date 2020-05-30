@@ -1,0 +1,12 @@
+pp
+점수 보더만 좀 튜닝하고 거의 그대로, 고렙에서 hp좀 반영
+기존 점수-새 난이도/pp 매핑함수
+
+mods
+func GetNote(line string, mods Mods) []Note
+	// overlap 등 신경써야 할 점이 있음
+	// if (beatmap.mods & ModsFlag["HR"]) && note.noteType==NOTE { note.noteType=["HoldNoteShort"] }
+
+score
+아니면, 수능처럼
+n단계로 차등화 시키고 그 안의 노트에선 모두 같은 배점 갖게.

@@ -1,0 +1,3 @@
+﻿pp
+object count abusing
+-> moving 총량 대비 moving 한 횟수 만큼으로 기존 pp 콤보 지분 주기

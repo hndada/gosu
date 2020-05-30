@@ -1,0 +1,11 @@
+html (s)css typescript
+
+랭킹 페이지
+키, 별개수만 두각
+
+sr penalty -0.13 (빨간색)
+
+# (overall rank) (4k: #XXX)
+멀티에서 4키 선곡시 4키 랭크 보여주기  
+
+beatmap git도입, 버전 시스템
