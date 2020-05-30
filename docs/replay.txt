@@ -1,0 +1,16 @@
+new file (json) for sustainable performance assessment: 
+collecting more info from submitted scores
+
+난이도 측정 방식이 바뀔 때마다 동일한 리플레이에 대해서 점수가 바뀜
+struct score에 난이도 측정 버전 기록
+점수 계산 알고리즘 업데이트되면 새로 점수 계산
+
+replay: full + compact
+    full: osu! 기존 replay + 멈춤 기록
+    compact: 각 노트의 hit 결과 기록 (예: 13번째 노트는 320 쳤습니다)
+    - 비트맵 md5같으면 노트 순서도 같으니까 n번째 노트 hit result를 기록하면 됨
+    - 롱노트 치고 있었는지도 기록해야함 - 노트 별 롱놋 ON/OFF (slice of bool)
+    - 어떤 시점에서 얼마나 일시정지 하고 있는지도 기록해야함
+
+score + compact replay는 모든 스코어에 대해서 저장
+full은 경우에 따라 일부 누락 가능

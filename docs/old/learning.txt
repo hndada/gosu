@@ -1,0 +1,20 @@
+Learning
+
+learning을 하기 위해서는 "정답" 이 필요함
+BMS를 이용하자
+마침 BMS는 실제 데이터 기반의 통계도 있다
+LN은 BMS 롱놋 패턴을 이용하자
+
+실제 rank 와 차이 많이 날수록 parameter score 하락
+(tolerance의 존재; 약 0.2%? 1천 개 중 5개)
+
+BMS (LR2)는 랜덤 걸려도 점수 submit 되는 구조인 걸 까먹고 있었다
+랜덤 돌려서 (한 10번?) 
+-해당 채보 전체에 해당값 부여?
+-채보 렙 평균으로?
+-채보 렙 최솟값으로?
+
+-> 정수만 따올까. sdvx 때 했던 것처럼.
+백분율 구하기
+tolerance 를 두어 어느 정도 벗어나도 OK인 걸로 판정 (sdvx 때 처럼) 
+(cf. existing algorithm)

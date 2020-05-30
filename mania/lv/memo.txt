@@ -1,0 +1,29 @@
+SR Rework는 1회 처리 후 별도 계산 값 저장 안해도 O
+그러나 추후 확장성을 생각하여, Note들의 attribute가 저장되었으면 좋겠음.
+
+나름 클리어 난이도니까, 
+HP 에 난이도 영향 받게. 근데 이건 결국 겉값.
+고득점의 경우 실제 pp 반영은 제대로 들어가게 
+
+o2jam은 매니아 특수 모드로 취급-
+이지 노말 하드의 체력 증가/감소량 고려하여 난이도 계산
+판정은 OD 0쯤으로 하고
+
+- 반대편 손, 아예 버려도 되는건가?
+
+beatmap.calculateStrain() 
+//롱놋 떼거나 안 치면 줄어듦
+
+beatmap.calculateLegibility()
+// 각 밀도에 적당한 빠르기가 있다고 상정 (겹쳐 보이는게 손해)
+
+beatmap.calculateStamina() 
+//일시정지하거나 안 치면 줄어듦
+// 순간 strain, 전반적인 strain 2개 부문으로 나누자
+// var stamina=[2]float64 // 손으로 결정.
+
+
+
+
+stamina는 보너스 점수로?
+일정 이상의 strain 이 쌓였다면 그때야 비로소
