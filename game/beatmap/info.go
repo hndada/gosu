@@ -8,6 +8,7 @@ import (
 type Info map[string]interface{}
 
 func (m Info) PutStr(kv []string) { m[kv[0]] = kv[1] }
+
 func (m Info) PutInt(kv []string) error {
 	d, err := strconv.Atoi(kv[1])
 	if err != nil {
@@ -54,4 +55,5 @@ func (m Info) PutIntSlice(kv []string) error {
 	m[kv[0]] = dSlice
 	return nil
 }
+
 func (m Info) PutStrSlice(kv []string) { m[kv[0]] = strings.Split(kv[1], ",") }

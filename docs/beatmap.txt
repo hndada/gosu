@@ -1,0 +1,5 @@
+space 는 못잡고 tab 은 잡음
+
+section을 유지해야 editor로 변경하기 쉬움
+
+func CountLN() {}
