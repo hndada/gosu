@@ -1,33 +1,82 @@
 package beatmap
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/hndada/gosu/game/tools"
 )
 
+// time,beatLength,meter,sampleSet,sampleIndex,volume,uninherited,effects
 type TimingPoint struct {
-	Time        int
-	Bpm         float64
-	SpeedScale  float64
-	Uninherited bool
-	Kiai        bool
+	Time            int
+	Bpm, SpeedScale float64
+	Meter           int
+	SampleSet       int
+	SampleIndex     int
+	Volume          int
+	Uninherited     bool
+	Effects         int
+	Kiai            bool
 }
 
-func parseTimingPoint(line string) TimingPoint {
-	splitValues := strings.Split(line, `,`)
-	timingPoint := TimingPoint{
-		Time:        tools.Atoi(splitValues[0]),
-		Uninherited: tools.Atoi(splitValues[6]) != 0,
-		Kiai:        tools.Atoi(splitValues[7])&1 != 0,
+func parseTimingPoint(line string) (TimingPoint, error) {
+	var tp TimingPoint
+	vs := strings.Split(line, `,`)
+
+	time, err := tools.Atoi(vs[0])
+	if err != nil {
+		return tp, err
 	}
-	beatLength := tools.Atof(splitValues[1])
-	v := timingPoint.Uninherited
-	switch v {
+	tp.Time = time
+
+	beatLength, err := strconv.ParseFloat(vs[1], 64)
+	if err != nil {
+		return tp, err
+	}
+
+	meter, err := tools.Atoi(vs[2])
+	if err != nil {
+		return tp, err
+	}
+	tp.Meter = meter
+
+	sampleSet, err := tools.Atoi(vs[3])
+	if err != nil {
+		return tp, err
+	}
+	tp.SampleSet = sampleSet
+
+	sampleIndex, err := tools.Atoi(vs[4])
+	if err != nil {
+		return tp, err
+	}
+	tp.SampleIndex = sampleIndex
+
+	volume, err := tools.Atoi(vs[5])
+	if err != nil {
+		return tp, err
+	}
+	tp.Volume = volume
+
+	uninherited, err := strconv.ParseBool(vs[6])
+	if err != nil {
+		return tp, err
+	}
+	tp.Uninherited = uninherited
+
+	effect, err := tools.Atoi(vs[7])
+	if err != nil {
+		return tp, err
+	}
+	tp.Effects = effect
+	tp.Kiai = effect&1 != 0
+
+	switch tp.Uninherited {
 	case true:
-		timingPoint.Bpm = 1000 * 60 / beatLength
+		tp.Bpm = 1000 * 60 / beatLength
 	case false:
-		timingPoint.SpeedScale = 100 / (-beatLength)
+		tp.SpeedScale = 100 / (-beatLength)
 	}
-	return timingPoint
+	return tp, nil
 }

@@ -3,6 +3,8 @@ New client of mania players, by a mania player, for mania players
 =================================================================
 1. Beatmap players
     - [ ] Beatmap parsing
+        - [ ] Event, Colors
+        - [ ] Parsing test
     - [ ] Show beatmap list and select one of them
     - [ ] Play beatmap along with audio
         * Audio package: beep

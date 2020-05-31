@@ -43,3 +43,5 @@ song option
     4. Cancel
 
 Sort / Group by는 드러나있는 모든 data 종류에 대해서 하자
+
+당시 제작자 이름(현 제작자 이름)

@@ -6,52 +6,51 @@ import (
 	"errors"
 	"io/ioutil"
 	"sort"
-	"strconv"
 	"strings"
-
-	"github.com/hndada/gosu/game/tools"
 )
 
-//const (
-//	ModeOsu = iota
-//	ModeTaiko
-//	ModeCatch
-//	ModeMania
-//)
-
-// space 는 못잡고 tab 은 잡음
-// todo: Events, Colours
+// todo: colours, event
 type Beatmap struct {
-	Md5                                   [md5.Size]byte
-	General, Editor, Metadata, Difficulty Info
-	TimingPoints                          []TimingPoint
-	HitObjects                            []HitObject
+	Md5          [md5.Size]byte
+	General      Info
+	Editor       Info
+	Metadata     Info
+	Difficulty   Info
+	TimingPoints []TimingPoint
+	HitObjects   []HitObject
 
-	//HitWindows    map[string]float64 // all maps will have same value
-	//Curves        map[string][]tools.Segment
-	StarRating    float64
+	// HitWindows    map[string]float64 // all maps will have same value
+	// Curves        map[string][]tools.Segment
+	Level         float64
 	OldStarRating float64
 }
 
-// section을 유지해야 editor로 변경하기 쉬움
-func (beatmap *Beatmap) Parse(path string) error {
+func ParseBeatmap(path string) (Beatmap, error) {
+	var beatmap Beatmap
 	dat, err := ioutil.ReadFile(path)
 	if err != nil {
-		return err
+		return beatmap, err
 	}
 	beatmap.Md5 = md5.Sum(dat)
-	lines, sectionInfo, err := trimLines(dat)
+
+	dat = bytes.ReplaceAll(dat, []byte("\r\n"), []byte("\n"))
+	lines := strings.Split(string(dat), "\n")
+	sectionLens, err := getSectionLength(lines)
 	if err != nil {
-		return err
+		return beatmap, err
 	}
 
 	general, editor, metadata, difficulty := make(Info), make(Info), make(Info), make(Info)
-	//colours
-	//event
+	timingPoints := make([]TimingPoint, sectionLens["TimingPoints"])
+	hitObjects := make([]HitObject, sectionLens["HitObjects"])
 
-	var section string
+	var l, section string
 	var kv []string
 	for _, line := range lines {
+		l = strings.TrimSpace(line)
+		if len(l) == 0 || len(l) >= 2 && l[:2] == "//" {
+			continue
+		}
 		switch {
 		case isSection(line):
 			section = strings.Trim(line, "[]")
@@ -66,7 +65,7 @@ func (beatmap *Beatmap) Parse(path string) error {
 					general.PutInt(kv)
 				case "Mode":
 					if err = general.PutInt(kv); err != nil {
-						return errors.New("invalid mode")
+						return beatmap, errors.New("invalid mode")
 					}
 				case "StackLeniency":
 					general.PutF64(kv)
@@ -97,72 +96,62 @@ func (beatmap *Beatmap) Parse(path string) error {
 				kv = strings.Split(line, `:`)
 				difficulty.PutF64(kv)
 			case "TimingPoints":
-				continue
-				//beatmap.TimingPoints = append(beatmap.TimingPoints, parseTimingPoint(line))
+				timingPoint, err := parseTimingPoint(line)
+				if err != nil {
+					return beatmap, err
+				}
+				timingPoints = append(timingPoints, timingPoint)
 			case "HitObjects":
-				continue
-				//beatmap.HitObjects = append(beatmap.HitObjects, parseNote(line))
+				hitObject, err := parseHitObject(line)
+				if err != nil {
+					return beatmap, err
+				}
+				hitObjects = append(hitObjects, hitObject)
 			}
 		}
 	}
-	lineIdx := sectionInfo["TimingPoints"][0]
-	timingPoints := make([]TimingPoint, sectionInfo["TimingPoints"][1])
-	for i := 0; i < sectionInfo["TimingPoints"][1]; i++ {
-		timingPoints[i].Parse(lines[lineIdx])
-		lineIdx++
-	}
-	sort.Slice(beatmap.TimingPoints, func(i, j int) bool {
-		return beatmap.TimingPoints[i].Time < beatmap.TimingPoints[j].Time
+	sort.Slice(timingPoints, func(i, j int) bool {
+		return timingPoints[i].Time < timingPoints[j].Time
 	})
+	beatmap.TimingPoints = timingPoints
 
-	lineIdx = sectionInfo["HitObjects"][0]
-	hitObjects := make([]HitObject, sectionInfo["HitObjects"][1])
-	for i := 0; i < sectionInfo["HitObjects"][1]; i++ {
-		hitObjects[i].Parse(lines[lineIdx])
-		lineIdx++
-	}
-	sort.Slice(beatmap.HitObjects, func(i, j int) bool {
-		return beatmap.HitObjects[i].StartTime < beatmap.HitObjects[j].StartTime
+	sort.Slice(hitObjects, func(i, j int) bool {
+		return hitObjects[i].StartTime < hitObjects[j].StartTime
 	})
+	beatmap.HitObjects = hitObjects
+
 	beatmap.calcSliderEndTime()
-	return nil
+	return beatmap, nil
 }
 
-func trimLines(dat []byte) ([]string, map[string][2]int, error) {
-	dat = bytes.ReplaceAll(dat, []byte("\r\n"), []byte("\n"))
-	dat = bytes.ReplaceAll(dat, []byte("\n\n"), []byte("\n"))
-	rawLines := bytes.Split(dat, []byte("\n"))
+func getSectionLength(lines []string) (map[string]int, error) {
+	// todo: yet too early to convert to []string? should i treat this with [][]byte?
+	// [][]byte로 하면 아예 수정되니까 이게 나은 거 같음
+	var l, section string
+	var c int
+	lens := make(map[string]int)
 
-	var line, section string
-	var i, c int
-	lines := make([]string, 0, len(rawLines))
-	sectionInfo := make(map[string][2]int)
-	for _, byteLine := range rawLines {
-		if string(byteLine[:2]) == "//" {
+	for _, line := range lines {
+		l = strings.TrimSpace(line)
+		if len(l) == 0 || len(l) >= 2 && l[:2] == "//" {
 			continue
 		}
-		byteLine = bytes.TrimSpace(byteLine)
-		if len(byteLine) == 0 {
-			continue
-		}
-		line = string(byteLine)
 		switch {
 		case isSection(line):
 			if section != "" {
-				if _, ok := sectionInfo[section]; ok {
-					return lines, sectionInfo, errors.New("duplicated sections")
+				if _, ok := lens[section]; ok {
+					return lens, errors.New("duplicated sections")
 				}
-				sectionInfo[section] = [2]int{i, c - i} // idx, len
+				lens[section] = c
 			}
-			i = c
+			c = 0
 			section = strings.Trim(line, "[]")
 		default:
 			c++
 		}
-		lines = append(lines, line)
 	}
-	sectionInfo[section] = [2]int{i, c - i}
-	return lines, sectionInfo, nil
+	lens[section] = c // for last section
+	return lens, nil
 }
 
 func isSection(line string) bool {
