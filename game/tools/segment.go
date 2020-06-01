@@ -27,7 +27,8 @@ func GetSegments(xPoints, yPoints []float64) []Segment {
 
 func SolveY(segments []Segment, x float64) float64 {
 	if x < 0 {
-		panic(&ValError{"Input X to segments", Ftoa(x), ErrSyntax})
+		panic("negative x")
+		// panic(&ValError{"Input X to segments", Ftoa(x), ErrSyntax})
 	}
 	for _, segment := range segments {
 		if x > segment.xMax || x < segment.xMin {
@@ -35,7 +36,8 @@ func SolveY(segments []Segment, x float64) float64 {
 		}
 		return segment.intercept + segment.slope*x
 	}
-	panic(&ValError{"Input X to segments", Ftoa(x), ErrSyntax})
+	panic("cannot reach with given x")
+	// panic(&ValError{"Input X to segments", Ftoa(x), ErrSyntax})
 }
 
 func SolveX(segments []Segment, y float64) []float64 {

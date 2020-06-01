@@ -4,25 +4,29 @@ import (
 	"bytes"
 	"crypto/md5"
 	"errors"
+	"github.com/hndada/gosu/game/tools"
 	"io/ioutil"
 	"sort"
 	"strings"
 )
 
-// todo: colours, event
 type Beatmap struct {
-	Md5          [md5.Size]byte
-	General      Info
-	Editor       Info
-	Metadata     Info
-	Difficulty   Info
+	Md5        [md5.Size]byte
+	General    Info
+	Editor     Info
+	Metadata   Info
+	Difficulty Info
+	Bg, Video  Event
+	Events     []string
+	Colours    Info
+
 	TimingPoints []TimingPoint
 	HitObjects   []HitObject
 
 	// HitWindows    map[string]float64 // all maps will have same value
 	// Curves        map[string][]tools.Segment
-	Level         float64
-	OldStarRating float64
+	Lv    float64
+	OldSR float64
 }
 
 func ParseBeatmap(path string) (Beatmap, error) {
@@ -41,11 +45,13 @@ func ParseBeatmap(path string) (Beatmap, error) {
 	}
 
 	general, editor, metadata, difficulty := make(Info), make(Info), make(Info), make(Info)
-	timingPoints := make([]TimingPoint, sectionLens["TimingPoints"])
-	hitObjects := make([]HitObject, sectionLens["HitObjects"])
+	events := make([]string, 0, sectionLens["Events"])
+	timingPoints := make([]TimingPoint, 0, sectionLens["TimingPoints"])
+	colours := make(Info)
+	hitObjects := make([]HitObject, 0, sectionLens["HitObjects"])
 
 	var l, section string
-	var kv []string
+	var kv, vs []string
 	for _, line := range lines {
 		l = strings.TrimSpace(line)
 		if len(l) == 0 || len(l) >= 2 && l[:2] == "//" {
@@ -95,12 +101,31 @@ func ParseBeatmap(path string) (Beatmap, error) {
 			case "Difficulty":
 				kv = strings.Split(line, `:`)
 				difficulty.PutF64(kv)
+			case "Events":
+				// 0,0,filename,xOffset,yOffset
+				vs = strings.Split(line, `,`)
+				startTime, _ := tools.Atoi(vs[1])
+				filename := vs[2]
+				xOffset, _ := tools.Atoi(vs[3])
+				yOffset, _ := tools.Atoi(vs[4])
+				event := Event{startTime, filename, xOffset, yOffset}
+				switch vs[0] {
+				case "0":
+					beatmap.Bg = event
+				case "1", "Video":
+					beatmap.Video = event
+				default:
+					events = append(events, line)
+				}
 			case "TimingPoints":
 				timingPoint, err := parseTimingPoint(line)
 				if err != nil {
 					return beatmap, err
 				}
 				timingPoints = append(timingPoints, timingPoint)
+			case "Colours":
+				kv = strings.Split(line, ` : `)
+				colours.PutIntSlice(kv)
 			case "HitObjects":
 				hitObject, err := parseHitObject(line)
 				if err != nil {
@@ -110,6 +135,13 @@ func ParseBeatmap(path string) (Beatmap, error) {
 			}
 		}
 	}
+	beatmap.General=general
+	beatmap.Editor=editor
+	beatmap.Metadata=metadata
+	beatmap.Difficulty=difficulty
+	beatmap.Events=events
+	beatmap.Colours=colours
+
 	sort.Slice(timingPoints, func(i, j int) bool {
 		return timingPoints[i].Time < timingPoints[j].Time
 	})
