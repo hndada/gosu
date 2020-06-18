@@ -1,6 +1,7 @@
 package mania
 
 import (
+	"github.com/hndada/gosu/mania"
 	"math"
 
 	"github.com/hndada/gosu/game/tools"
@@ -35,7 +36,7 @@ func (beatmap *ManiaBeatmap) markChordCut() {
 	// except to notes which are chordable with the hold note head
 	var holdStartTime, holdEndTime int
 	for _, holdNoteHead := range beatmap.Notes {
-		if holdNoteHead.NoteType != NtHoldHead {
+		if holdNoteHead.NoteType != mania.NtHoldHead {
 			continue
 		}
 		holdStartTime = holdNoteHead.Time
@@ -53,7 +54,7 @@ func (beatmap *ManiaBeatmap) markChordCut() {
 
 func (beatmap *ManiaBeatmap) markPrevAffect(i int, prevNotesIdxs []int) {
 	note := beatmap.Notes[i]
-	var prevNote ManiaNote
+	var prevNote mania.ManiaNote
 	var elapsedTime int
 	for prevNoteKey, prevNoteIdx := range prevNotesIdxs {
 		if prevNoteIdx == noFound {
@@ -81,7 +82,7 @@ func (beatmap *ManiaBeatmap) markPrevAffect(i int, prevNotesIdxs []int) {
 }
 func (beatmap *ManiaBeatmap) markNextAffect(i int, prevNotesIdxs []int) {
 	note := beatmap.Notes[i]
-	var nextNote ManiaNote
+	var nextNote mania.ManiaNote
 	nextNoteIdx := i + 1
 	var elapsedTime int
 	for nextNoteIdx < len(beatmap.Notes) {
@@ -91,7 +92,7 @@ func (beatmap *ManiaBeatmap) markNextAffect(i int, prevNotesIdxs []int) {
 			break
 		}
 
-		if nextNote.NoteType != NtHoldTail &&
+		if nextNote.NoteType != mania.NtHoldTail &&
 			nextNote.Key != note.Key && // jack is not relevant
 			beatmap.Notes[i].chord[nextNote.Key] == noFound { // prev notes is prior to next notes
 			switch {

@@ -1,6 +1,7 @@
 package mania
 
 import (
+	"github.com/hndada/gosu/mania"
 	"math"
 
 	"github.com/hndada/gosu/game/tools"
@@ -35,7 +36,7 @@ func (beatmap *ManiaBeatmap) setStrainBase() {
 	var base, holdNoteDuration float64
 	for i, note := range beatmap.Notes {
 		base = 1 + fingerBonus[finger(note.Key, beatmap.Keymode)]
-		if note.NoteType == NtHoldTail { // a tail of hold note will get partial strain
+		if note.NoteType == mania.NtHoldTail { // a tail of hold note will get partial strain
 			holdNoteDuration = float64(note.Time - note.OpponentTime)
 			base *= tools.SolveY(beatmap.Curves["HoldTail"], holdNoteDuration)
 		}
@@ -44,7 +45,7 @@ func (beatmap *ManiaBeatmap) setStrainBase() {
 }
 
 func (beatmap *ManiaBeatmap) calcChordPanelty() {
-	var chordNote ManiaNote
+	var chordNote mania.ManiaNote
 	var timeDelta, v, keyDistance float64
 	for i, note := range beatmap.Notes {
 		for _, idx := range tools.Neighbors(note.chord, note.Key) {
@@ -65,10 +66,10 @@ func (beatmap *ManiaBeatmap) calcChordPanelty() {
 }
 
 func (beatmap *ManiaBeatmap) calcJackBonus() {
-	var jackNote ManiaNote
+	var jackNote mania.ManiaNote
 	var timeDelta float64
 	for i, note := range beatmap.Notes {
-		if note.NoteType == NtHoldTail {
+		if note.NoteType == mania.NtHoldTail {
 			continue // no jack bonus to hold note tail
 		}
 		if note.trillJack[note.Key] != noFound {
@@ -82,10 +83,10 @@ func (beatmap *ManiaBeatmap) calcJackBonus() {
 func (beatmap *ManiaBeatmap) calcTrillBonus() {
 	// trill bonus is independent of other notes in same chord
 	// a note can get trill bonus at most once per each side
-	var trillNote ManiaNote
+	var trillNote mania.ManiaNote
 	var timeDelta, v, keyDistance float64
 	for i, note := range beatmap.Notes {
-		if note.NoteType == NtHoldTail {
+		if note.NoteType == mania.NtHoldTail {
 			continue // no trill bonus to hold note tail
 		}
 		if note.JackBonus <= 0 {
@@ -112,12 +113,12 @@ func (beatmap *ManiaBeatmap) setHoldImpacts() {
 	// holding starts: no impact
 	// at end of holding: partial impact
 	// other else: fully impact
-	var affected ManiaNote
+	var affected mania.ManiaNote
 	var affectedIdx int
 	var elapsedTime, remainedTime float64
 	var impact float64
 	for i, holdNote := range beatmap.Notes {
-		if holdNote.NoteType != NtHoldHead {
+		if holdNote.NoteType != mania.NtHoldHead {
 			continue
 		}
 		affectedIdx = i + 1

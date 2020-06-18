@@ -1,95 +1,112 @@
 package main
 
 import (
+	"github.com/golang/freetype/truetype"
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/audio"
-	"github.com/hajimehoshi/ebiten/inpututil"
+	"github.com/hajimehoshi/ebiten/ebitenutil"
+	"github.com/hajimehoshi/ebiten/examples/resources/fonts"
+	"github.com/hajimehoshi/ebiten/text"
+	"golang.org/x/image/font"
+	"image/color"
 	"log"
 )
 
-/*
-음악 재생
-vy = 일정
+var (
+	mFont font.Face
+)
 
- */
+func init() {
+	tt, err := truetype.Parse(fonts.MPlus1pRegular_ttf)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	const (
+		mFontSize = 12
+		dpi       = 300
+	)
+	mFont = truetype.NewFace(tt, &truetype.Options{
+		Size:    mFontSize,
+		DPI:     dpi,
+		Hinting: font.HintingFull,
+	})
+}
 
 const (
 	screenWidth  = 1600
-	screenHeight = 900
+	screenHeigth = 900
+	// sampleRate = 44100
 )
 
-type musicType int
-const (
-	typeOgg musicType = iota
-	typeMP3
+var (
+	introImage *ebiten.Image
 )
 
-
+func init() {
+	introImage, _ = ebiten.NewImage(screenWidth, screenHeigth, ebiten.FilterDefault)
+	const (
+		buttonWidth  = 250
+		buttonHeigth = 100
+	)
+	bigButtons := []string{"gosu!"}
+	for i, b := range bigButtons {
+		width := buttonWidth * 2
+		height := buttonHeigth * 3
+		x := i*width + 300
+		y := i*height + 300
+		ebitenutil.DrawRect(introImage, float64(x), float64(y), float64(width), float64(height), color.White)
+		text.Draw(introImage, b, mFont, x+width/4, y+height/2, color.Black)
+	}
+	smallButtons := []string{"(Multi)", "(Edit)", "Options"}
+	for i, b := range smallButtons {
+		width := buttonWidth
+		height := buttonHeigth
+		x := 300+buttonWidth*2
+		y := i*height + 300
+		ebitenutil.DrawRect(introImage, float64(x), float64(y), float64(width), float64(height), color.White)
+		text.Draw(introImage, b, mFont, x+width/4, y+height/2, color.Black)
+	}
+}
 
 type Game struct {
-	musicPlayer   *Player
-	musicPlayerCh chan *Player
-	errCh         chan error
 }
-
-func NewGame() (*Game, error) {
-	audioContext, err := audio.NewContext(sampleRate)
-	if err != nil {
-		return nil, err
-	}
-
-	m, err := NewPlayer(audioContext, typeOgg)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Game{
-		musicPlayer:   m,
-		musicPlayerCh: make(chan *Player),
-		errCh:         make(chan error),
-	}, nil
-}
-
 func (g *Game) Update(screen *ebiten.Image) error {
-	runnableOnUnfocused := ebiten.IsRunnableOnUnfocused()
-	if inpututil.IsKeyJustPressed(ebiten.KeyU) {
-		runnableOnUnfocused = !runnableOnUnfocused
-	}
-	ebiten.SetRunnableOnUnfocused(runnableOnUnfocused)
-	select {
-	case p := <-g.musicPlayerCh:
-		g.musicPlayer = p
-	case err := <-g.errCh:
-		return err
-	default:
-	}
-
-	if g.musicPlayer != nil {
-		if err := g.musicPlayer.update(); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if g.musicPlayer != nil {
-		g.musicPlayer.draw(screen)
-	}
+	screen.Fill(color.Black)
+	screen.DrawImage(introImage, nil)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return screenWidth, screenHeight
+	return screenWidth, screenHeigth
 }
+
+// var (
+// 	game = &game.Game{}
+// )
+//
+// func init() {
+// 	game.beatmaps = make([]beatmap.Beatmap, 0)
+// 	songs, err := tools.LoadSongList("test_beatmap", ".osu")
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	for _, song := range songs {
+// 		b, err := beatmap.ParseBeatmap(song)
+// 		if err != nil {
+// 			log.Fatal(err)
+// 		}
+// 		game.beatmaps = append(game.beatmaps, b)
+// 	}
+// }
 
 func main() {
 	ebiten.SetMaxTPS(240)
-	ebiten.SetWindowSize(screenWidth, screenHeight)
-	g, err := NewGame()
-	if err != nil {
-		log.Fatal(err)
-	}
-	if err := ebiten.RunGame(g); err != nil {
+	ebiten.SetWindowSize(screenWidth, screenHeigth)
+	ebiten.SetWindowTitle("gosu")
+	if err := ebiten.RunGame(&Game{}); err != nil {
 		log.Fatal(err)
 	}
 }

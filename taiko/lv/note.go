@@ -43,7 +43,7 @@ func (beatmap *TaikoBeatmap) AddNotes() {
 	beatmap.Notes = make([]TaikoNote, len(beatmap.RawNotes))
 	for i, raw := range beatmap.RawNotes {
 		note := TaikoNote{
-			NoteBase: diff.GetNoteBase(raw, beatmap.Mods),
+			NoteBase: diff.NewNoteBase(raw, beatmap.Mods),
 			TaikoNoteCommon: TaikoNoteCommon{
 				Color: color(raw.HitSound),
 			},
@@ -60,7 +60,7 @@ func (beatmap *TaikoBeatmap) AddOldNotes() {
 	beatmap.OldNotes = make([]TaikoOldNote, len(beatmap.RawNotes))
 	for i, raw := range beatmap.RawNotes {
 		note := TaikoOldNote{
-			OldNoteBase: diff.GetOldNoteBase(raw),
+			OldNoteBase: diff.NewOldNoteBase(raw),
 			TaikoNoteCommon: TaikoNoteCommon{
 				Color: color(raw.HitSound),
 			},

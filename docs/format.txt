@@ -10,3 +10,17 @@ HitObject
         time: 으로 할지 1/n으로 할지.
         time,key,type,(sound)
 
+
+
+[Header]
+general + metadata
+(editor 제거, 클라이언트에 local로 저장)
+(difficulty 제거, key는 모드로)
+(colours 제거, 매니아는 안씀. 나중에 필요하다면 헤더로.)
+
+[Events]
+
+[Timings]
+
+[Notes]
+

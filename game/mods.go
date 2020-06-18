@@ -1,4 +1,4 @@
-package mods
+package game
 
 type Mods struct {
 	TimeRate float64
