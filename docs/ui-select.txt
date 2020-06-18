@@ -45,3 +45,12 @@ song option
 Sort / Group by는 드러나있는 모든 data 종류에 대해서 하자
 
 당시 제작자 이름(현 제작자 이름)
+
+- show all speed rates
+- sort by scores(rank)
+- show ranked maps only
+
+곡 고를 때 아무리 멀리 점프에도 이동 시간 및 효과음은 마치 한칸 움직인 것처럼.
+
+롱놋곡 감지, sort에 추가
+감지 방법 (임시): 어려운 패턴 상위에 롱놋이 과반이면 롱놋곡
