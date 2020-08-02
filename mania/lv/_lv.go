@@ -1,4 +1,4 @@
-package game
+package lv
 
 import (
 	"github.com/hndada/gosu/game/beatmap"
@@ -11,23 +11,9 @@ const (
 	diffWeightDecay = 0.90
 	sectionLength   = 800
 )
-// const (
-// 	srScaleMania = 0.025
-// 	srScaleTaiko = 0.051
-// )
 
-type Beatmap interface {
-	SetBase(path string, modsBits int)
-	AddNotes()
-	SortNotes()
 
-	SetCurves()
-	CalcStrain()
-	CalcStamina()
-	// CalcLegibility()
-}
-
-func CalcSR(beatmap beatmap.Beatmap) float64 {
+func CalcLv(b Beatmap) float64 {
 	// mode := reflect.ValueOf(beatmap).Elem().FieldByName("Mode").Int()
 	notes := getNoteBaseSlice(beatmap)
 	if len(notes) == 0 {
@@ -47,14 +33,6 @@ func CalcSR(beatmap beatmap.Beatmap) float64 {
 		aggregate += note.Aggregate()
 	}
 	difficulty := tools.WeightedSum(aggregates, diffWeightDecay)
-	// var lv float64
-	// switch mode {
-	// case element.ModeMania:
-	// 	lv = difficulty * srScaleMania
-	// case element.ModeTaiko:
-	// 	lv = difficulty * srScaleTaiko
-	// }
-	// reflect.ValueOf(beatmap).Elem().FieldByName("Lv").SetFloat(sr)
 	return difficulty
 }
 

@@ -1,0 +1,3 @@
+기본 로직
+점수 방식 (lv, score, pp)
+사진 등 Asset

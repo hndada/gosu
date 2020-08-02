@@ -1,6 +1,8 @@
-package mania
+package lv
 
-import "github.com/hndada/gosu/game/tools"
+import (
+	"github.com/hndada/gosu/game/tools"
+)
 
 const thumb = 0
 const (
@@ -8,6 +10,8 @@ const (
 	alter = 0
 	right = 1
 )
+
+const defaultHand = right
 
 // currently no considering right-scratched 8K map
 func hand(key, keymode int) int {
@@ -34,7 +38,7 @@ func finger(key int, keymode int) int {
 			return 4
 		}
 		return finger(key-1, 7)
-	case 2, 4, 6: //no thumb
+	case 2, 4, 6: // no thumb
 		if key >= keymode/2 {
 			return key - keymode/2 + 1
 		}
@@ -87,4 +91,44 @@ func isHoldInnerAdj(holdKey, key, keymode int) bool {
 
 func isSameHand(h1, h2 int) bool {
 	return tools.IsIntSameSign(h1, h2)
+}
+
+func detAlter(ns []Note) {
+	for i, n := range ns {
+		// affect idx has already been calculated
+		if n.hand != alter {
+			continue
+		}
+
+		// rule 1: use default hand if there is a note very next to alterable note
+		if n.chord[n.Key+defaultHand] != noFound {
+			ns[i].hand = defaultHand
+			continue
+		}
+
+		// rule 2: the hand which has more notes in the chord
+		// rule 3: default hand if each hand has same number of notes
+		leftCount, rightCount := 0, 0
+		for key := n.Key - 1; key >= 0; key-- {
+			if n.chord[key] <= noFound {
+				break
+			}
+			leftCount++
+		}
+		for key := n.Key + 1; key < len(n.chord); key++ {
+			if n.chord[key] <= noFound {
+				break
+			}
+			rightCount++
+		}
+
+		switch {
+		case leftCount > rightCount:
+			ns[i].hand = left
+		case leftCount < rightCount:
+			ns[i].hand = right
+		default: // if two counts are same
+			ns[i].hand = defaultHand
+		}
+	}
 }

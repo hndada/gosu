@@ -37,8 +37,8 @@ func ParseBeatmap(path string) (Beatmap, error) {
 	}
 	beatmap.Md5 = md5.Sum(dat)
 
-	dat = bytes.ReplaceAll(dat, []byte("\r\n"), []byte("\n"))
-	lines := strings.Split(string(dat), "\n")
+	dat = bytes.ReplaceAll(dat, []byte("\\r\\n"), []byte("\\n"))
+	lines := strings.Split(string(dat), "\\n")
 	sectionLens, err := getSectionLength(lines)
 	if err != nil {
 		return beatmap, err
@@ -104,10 +104,13 @@ func ParseBeatmap(path string) (Beatmap, error) {
 			case "Events":
 				// 0,0,filename,xOffset,yOffset
 				vs = strings.Split(line, `,`)
+				var xOffset, yOffset int
 				startTime, _ := tools.Atoi(vs[1])
 				filename := vs[2]
-				xOffset, _ := tools.Atoi(vs[3])
-				yOffset, _ := tools.Atoi(vs[4])
+				if len(vs)>3{
+					xOffset, _ = tools.Atoi(vs[3])
+					yOffset, _ = tools.Atoi(vs[4])
+				}
 				event := Event{startTime, filename, xOffset, yOffset}
 				switch vs[0] {
 				case "0":

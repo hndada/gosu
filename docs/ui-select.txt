@@ -13,6 +13,7 @@ leaderboard
     - friend
 
     all mods on이면 pp순 정렬, 점수차 대신 pp차 보여주기
+    미러는 모드 구분 X
 
 a ranking panel
     사진 랭크 닉네임
@@ -54,3 +55,4 @@ Sort / Group by는 드러나있는 모든 data 종류에 대해서 하자
 
 롱놋곡 감지, sort에 추가
 감지 방법 (임시): 어려운 패턴 상위에 롱놋이 과반이면 롱놋곡
+-> 롱놋곡이면 롱놋곡 setting 자동 load (개인 별로 수정 가능)

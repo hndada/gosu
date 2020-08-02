@@ -61,7 +61,7 @@ func init() {
 	for i, b := range smallButtons {
 		width := buttonWidth
 		height := buttonHeigth
-		x := 300+buttonWidth*2
+		x := 300 + buttonWidth*2
 		y := i*height + 300
 		ebitenutil.DrawRect(introImage, float64(x), float64(y), float64(width), float64(height), color.White)
 		text.Draw(introImage, b, mFont, x+width/4, y+height/2, color.Black)
@@ -70,8 +70,19 @@ func init() {
 
 type Game struct {
 }
+
 func (g *Game) Update(screen *ebiten.Image) error {
 	return nil
+}
+
+type Button struct {
+	width int
+	height int
+}
+
+func (b *Button) Draw(screen *ebiten.Image) {
+	op:=&ebiten.DrawImageOptions{}
+
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
