@@ -1,12 +1,13 @@
 package lv
 
 import (
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/mania"
+	"github.com/hndada/gosu/tools"
 )
 
 const noFound = tools.NoFound
 
-func markAffect(ns []Note) {
+func markAffect(ns []mania.Note) {
 	// scan the notes whether its affectable, chordable or not
 	// further lanes which cause *miss* when be hit at the same time goes 'chuck cutter'
 	if len(ns)==0 {return}
@@ -18,9 +19,9 @@ func markAffect(ns []Note) {
 	}
 }
 
-func markPrevAffect(ns []Note, i int, pnIdxs []int) {
+func markPrevAffect(ns []mania.Note, i int, pnIdxs []int) {
 	n := ns[i]
-	var pn Note // previous note
+	var pn mania.Note // previous note
 	var elapsedTime int
 	for pnKey, pnIdx := range pnIdxs {
 		if pnIdx == noFound {
@@ -47,9 +48,9 @@ func markPrevAffect(ns []Note, i int, pnIdxs []int) {
 	ns[i].chord[n.Key] = i // putting note itself to chord
 }
 
-func markNextAffect(ns []Note, i int) {
+func markNextAffect(ns []mania.Note, i int) {
 	n := ns[i]
-	var nn Note
+	var nn mania.Note
 	nnIdx := i + 1
 	var elapsedTime int
 	for nnIdx < len(ns) {
@@ -59,7 +60,7 @@ func markNextAffect(ns []Note, i int) {
 			break
 		}
 
-		if nn.NoteType != NtHoldTail &&
+		if nn.NoteType != mania.NtHoldTail &&
 			nn.Key != n.Key && // jack is not relevant
 			ns[i].chord[nn.Key] == noFound { // prev notes is prior to next notes
 			switch {

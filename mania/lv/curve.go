@@ -1,7 +1,8 @@
 package lv
 
 import (
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/mania"
+	"github.com/hndada/gosu/tools"
 	"math"
 )
 
@@ -32,8 +33,8 @@ func init() {
 	curveTrillChord = tools.GetSegments(
 		[]float64{
 			0,
-			HitWindows["GOOD"]+30,
-			HitWindows["MISS"]+30},
+			float64(mania.Judgements[2].Window+30),
+			float64(mania.Judgements[4].Window+30)},
 		[]float64{
 			MaxChordPenalty,
 			MaxTrillBonus,
@@ -52,8 +53,8 @@ func init() {
 	curveTail = tools.GetSegments(
 		[]float64{
 			0,
-			HitWindows["KOOL"],
-			HitWindows["BAD"]},
+			float64(mania.Judgements[0].Window),
+			float64(mania.Judgements[3].Window)},
 		[]float64{
 			ZeroHoldTailStrain,
 			MinHoldTailStrain,

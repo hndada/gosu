@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/tools"
 )
 
 // time,beatLength,meter,sampleSet,sampleIndex,volume,uninherited,effects

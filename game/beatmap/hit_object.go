@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/tools"
 )
 
 type HitObject struct {

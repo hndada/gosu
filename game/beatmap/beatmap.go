@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"errors"
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/tools"
 	"io/ioutil"
 	"sort"
 	"strings"

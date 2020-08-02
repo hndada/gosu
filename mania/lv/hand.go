@@ -1,7 +1,8 @@
 package lv
 
 import (
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/mania"
+	"github.com/hndada/gosu/tools"
 )
 
 const thumb = 0
@@ -13,24 +14,6 @@ const (
 
 const defaultHand = right
 
-// currently no considering right-scratched 8K map
-func hand(key, keymode int) int {
-	switch {
-	case key < keymode/2:
-		return left
-	case key > keymode/2:
-		return right
-	default: // key==keymode/2
-		switch {
-		case keymode == 8:
-			return alter // 8K mode is actually 7+1 key mode
-		case keymode%2 == 0:
-			return right // even keymode use no alterable thumb
-		default:
-			return alter // odd keymode use thumb, which is alterable
-		}
-	}
-}
 func finger(key int, keymode int) int {
 	switch keymode {
 	case 8: // based on left-scratch
@@ -93,7 +76,28 @@ func isSameHand(h1, h2 int) bool {
 	return tools.IsIntSameSign(h1, h2)
 }
 
-func detAlter(ns []Note) {
+func hand(ns []mania.Note, keymode int) {
+	for i, n := range ns { // naive hand
+		ns[i].hand = func(key, keymode int) int {
+			// currently no considering right-scratched 8K map, but its fine since we can consider MR-ed one
+			switch {
+			case key < keymode/2:
+				return left
+			case key > keymode/2:
+				return right
+			default: // key==keymode/2
+				switch {
+				case keymode == 8:
+					return alter // 8K mode is actually 7+1 key mode
+				case keymode%2 == 0:
+					return right // even keymode use no alterable thumb
+				default:
+					return alter // odd keymode use thumb, which is alterable
+				}
+			}
+		}(n.Key, keymode)
+	}
+
 	for i, n := range ns {
 		// affect idx has already been calculated
 		if n.hand != alter {

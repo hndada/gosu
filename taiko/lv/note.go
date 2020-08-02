@@ -5,7 +5,7 @@ import (
 
 	"github.com/hndada/gosu/game/beatmap"
 	"github.com/hndada/gosu/game/lv"
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/tools"
 )
 
 const (

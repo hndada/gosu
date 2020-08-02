@@ -1,7 +1,8 @@
 package lv
 
 import (
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/mania"
+	"github.com/hndada/gosu/tools"
 	"math"
 )
 
@@ -22,9 +23,9 @@ var fingerBonus = [5]float64{
 	2 * outerBonus,
 	3 * outerBonus}
 
-func CalcStrain(ns []Note, keymode int) {
+func CalcStrain(ns []mania.Note, keymode int) {
 	markAffect(ns)
-	detAlter(ns)
+	hand(ns, keymode)
 
 	setStrainBase(ns, keymode)
 	calcChordPanelty(ns)
@@ -36,11 +37,11 @@ func CalcStrain(ns []Note, keymode int) {
 	setStrain(ns)
 }
 
-func setStrainBase(ns []Note, keymode int) {
+func setStrainBase(ns []mania.Note, keymode int) {
 	var base, lnDuration float64
 	for i, n := range ns {
 		base = 1 + fingerBonus[finger(n.Key, keymode)]
-		if n.NoteType == NtHoldTail { // a tail of hold note will get partial strain
+		if n.NoteType == mania.NtHoldTail { // a tail of hold note will get partial strain
 			lnDuration = float64(n.Time - n.OpponentTime)
 			base *= tools.SolveY(curveTail, lnDuration)
 		}
@@ -48,8 +49,8 @@ func setStrainBase(ns []Note, keymode int) {
 	}
 }
 
-func calcChordPanelty(ns []Note) {
-	var chordNote Note
+func calcChordPanelty(ns []mania.Note) {
+	var chordNote mania.Note
 	var timeDelta, v, div float64
 	for i, n := range ns {
 		// for _, idx := range tools.Neighbors(n.chord, n.Key) {
@@ -82,11 +83,11 @@ func calcChordPanelty(ns []Note) {
 	}
 }
 
-func calcJackBonus(ns []Note) {
-	var jackNote Note
+func calcJackBonus(ns []mania.Note) {
+	var jackNote mania.Note
 	var timeDelta float64
 	for i, n := range ns {
-		if n.NoteType == NtHoldTail {
+		if n.NoteType == mania.NtHoldTail {
 			continue // no jack bonus to hold note tail
 		}
 		if n.trillJack[n.Key] != noFound {
@@ -97,13 +98,13 @@ func calcJackBonus(ns []Note) {
 	}
 }
 
-func calcTrillBonus(ns []Note) {
+func calcTrillBonus(ns []mania.Note) {
 	// trill bonus is independent of other notes in same chord
 	// a note can get trill bonus at most once per each side
-	var trillNote Note
+	var trillNote mania.Note
 	var timeDelta, v, div float64
 	for i, n := range ns {
-		if n.NoteType == NtHoldTail {
+		if n.NoteType == mania.NtHoldTail {
 			continue // no trill bonus to hold n tail
 		}
 		if n.jackBonus <= 0 {
@@ -133,19 +134,19 @@ func calcTrillBonus(ns []Note) {
 	}
 }
 
-func setHoldImpacts(ns []Note) {
+func setHoldImpacts(ns []mania.Note) {
 	// sign in value stands for hit hand
 	// holding starts: no impact
 	// at end of holding: partial impact
 	// other else: fully impact
 
-	var affected Note
+	var affected mania.Note
 	var affectedIdx int
 	var elapsedTime, remainedTime float64
 	var impact float64
 
 	for i, ln := range ns {
-		if ln.NoteType != NtHoldHead {
+		if ln.NoteType != mania.NtHoldHead {
 			continue
 		}
 		affectedIdx = i + 1 // notes in same chord might have lower index but they arent affected anyway
@@ -169,7 +170,7 @@ func setHoldImpacts(ns []Note) {
 	}
 }
 
-func calcHoldBonus(ns []Note, keymode int) {
+func calcHoldBonus(ns []mania.Note, keymode int) {
 	// suppose hold notes on the other hand don't affect value
 	// and no altering hand during pressing hold note
 	// algorithm itself supposes playing with kb; outer fingers always have higher strain
@@ -204,7 +205,7 @@ func calcHoldBonus(ns []Note, keymode int) {
 }
 
 // changed from multiplying to adding
-func setStrain(ns []Note) {
+func setStrain(ns []mania.Note) {
 	var strain float64
 	for i, n := range ns {
 		strain = n.strainBase

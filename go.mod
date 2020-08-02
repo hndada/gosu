@@ -7,5 +7,5 @@ require (
 	github.com/faiface/beep v1.0.2
 	github.com/go-interpreter/wagon v0.6.0 // indirect
 	github.com/hajimehoshi/ebiten v1.11.1
-	github.com/ulikunitz/xz v0.5.7 // indirect
+	github.com/ulikunitz/xz v0.5.7
 )

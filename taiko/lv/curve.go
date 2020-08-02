@@ -1,7 +1,7 @@
 package taiko
 
 import (
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/tools"
 )
 
 // minimize parameters so that no need to do extra process: learning

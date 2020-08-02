@@ -9,15 +9,15 @@ var ErrDuration = errors.New("duration is not a positive value")
 
 type NoteBase struct {
 	NoteType                    int
-	Time, OpponentTime          int // mods' time rate has applied in advance
+	Time, OpponentTime          int64 // mods' time rate has applied in advance
 	Strain, Legibility, Stamina float64
 }
 
 func NewNoteBase(h HitObject, mods game.Mods) (NoteBase, error) {
 	base := NoteBase{
 		NoteType:     h.NoteType,
-		Time:         int(float64(h.StartTime) / mods.TimeRate),
-		OpponentTime: int(float64(h.EndTime) / mods.TimeRate),
+		Time:         int64(float64(h.StartTime) / mods.TimeRate),
+		OpponentTime: int64(float64(h.EndTime) / mods.TimeRate),
 	}
 	if base.NoteType != NtNote {
 		duration := base.OpponentTime - base.Time
