@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/beatmap"
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/mania"
+	"github.com/hndada/gosu/tools"
 	"log"
 )
 
@@ -20,15 +21,15 @@ func process(path string){
 	if err != nil {
 		log.Fatal(err)
 	}
-	b := &Beatmap{}
+	b := &mania.Beatmap{}
 	b.Beatmap = base
 
 	keymode := int(b.Difficulty["CircleSize"].(float64))
 	mods := game.Mods{1, false, false}
-	ns, err:= NewNotes(b.HitObjects, keymode, mods)
+	ns, err:= mania.NewNotes(b.HitObjects, keymode, mods)
 	if err!=nil {log.Fatal(err) }
 
-	SortNotes(ns)
+	mania.SortNotes(ns)
 	CalcStrain(ns, keymode)
 	CalcStamina(ns, keymode)
 
@@ -37,7 +38,7 @@ func process(path string){
 	CalcLV(ns)
 }
 
-func CalcLV(ns []Note) float64 {
+func CalcLV(ns []mania.Note) float64 {
 	if len(ns) == 0 {
 		return 0
 	}

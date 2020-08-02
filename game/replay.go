@@ -3,8 +3,6 @@ package game
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/json"
-	"fmt"
 	"github.com/ulikunitz/xz/lzma"
 	"io"
 	"io/ioutil"
@@ -12,13 +10,12 @@ import (
 	"strings"
 )
 
-// 다 처리하면 스코어, 체력 시뮬레이터 만들기
 // 키배치조합: x값, 1 2 4 8 16 32 64
-type ReplayAction struct {
-	w int64
-	x float64
-	y float64
-	z int64
+type LegacyReplayAction struct {
+	W int64
+	X float64
+	Y float64
+	Z int64
 }
 
 type LegacyReplay struct {
@@ -34,39 +31,9 @@ type LegacyReplay struct {
 	ModsBits    int32
 	LifeBar     string
 	TimeStamp   int64
-	ReplayData  []ReplayAction
+	ReplayData  []LegacyReplayAction
 	OnlineID    int64
 	// AddMods
-}
-
-func main2() {
-	const rDir = "../test/Replays/"
-	rs, err := ioutil.ReadDir(rDir)
-	if err != nil {
-		panic(err)
-	}
-	for _, rp := range rs {
-		func() {
-			path := rDir + rp.Name()
-			defer func() {
-				if r := recover(); r != nil {
-					fmt.Println(path)
-					fmt.Println(err)
-				}
-			}()
-			_ = ReadLegacyReplay(path)
-		}()
-	}
-}
-
-func main() {
-	r := ReadLegacyReplay("../test/od10 empty.osr")
-	var time int64
-	for _, rd := range r.ReplayData {
-		time+=rd.w
-		fmt.Printf("%d: %+v\n", time, rd)
-	}
-	// PrettyPrint(&r)
 }
 
 func ReadLegacyReplay(path string) *LegacyReplay {
@@ -118,7 +85,7 @@ func ReadString(r *bytes.Reader) string {
 	}
 }
 
-func ReadReplayData(r io.Reader) (replayData []ReplayAction) {
+func ReadReplayData(r io.Reader) (replayData []LegacyReplayAction) {
 	var replayDataLen int32
 	binary.Read(r, binary.LittleEndian, &replayDataLen)
 
@@ -142,44 +109,34 @@ func ReadReplayData(r io.Reader) (replayData []ReplayAction) {
 	}
 
 	actions := strings.Split(b.String(), ",")
-	replayData = make([]ReplayAction, 0, len(actions))
+	replayData = make([]LegacyReplayAction, 0, len(actions))
 	for _, f := range actions[:len(actions)-1] { // the stream ended with sep letter ","
-		var ra ReplayAction
+		var ra LegacyReplayAction
 		vs := strings.Split(f, "|")
 		if len(vs) != 4 {
 			panic(vs)
 		}
 
-		ra.w, err = strconv.ParseInt(vs[0], 10, 64)
+		ra.W, err = strconv.ParseInt(vs[0], 10, 64)
 		if err != nil {
 			panic(err)
 		}
-		ra.x, err = strconv.ParseFloat(vs[1], 64)
+		ra.X, err = strconv.ParseFloat(vs[1], 64)
 		if err != nil {
 			panic(err)
 		}
-		ra.y, err = strconv.ParseFloat(vs[2], 64)
+		ra.Y, err = strconv.ParseFloat(vs[2], 64)
 		if err != nil {
 			panic(err)
 		}
-		ra.z, err = strconv.ParseInt(vs[3], 10, 64)
+		ra.Z, err = strconv.ParseInt(vs[3], 10, 64)
 		if err != nil {
 			panic(err)
 		}
-		if ra.w == -12345 {
+		if ra.W == -12345 {
 			continue
 		}
 		replayData = append(replayData, ra)
 	}
 	return
-}
-
-// print the contents of the obj
-func PrettyPrint(data interface{}) {
-	p, err := json.MarshalIndent(data, "", "\t")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Printf("%s \n", p)
 }

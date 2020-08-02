@@ -4,7 +4,7 @@ import (
 	"math"
 
 	"github.com/hndada/gosu/game/lv"
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/tools"
 )
 
 const strainDecayBase = diff.OldStrainDecayBase

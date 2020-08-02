@@ -1,7 +1,8 @@
 package lv
 
 import (
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/mania"
+	"github.com/hndada/gosu/tools"
 )
 
 const (
@@ -11,7 +12,7 @@ const (
 	gradualDecay = 0.5
 )
 
-func CalcStamina(ns []Note, keymode int) {
+func CalcStamina(ns []mania.Note, keymode int) {
 	var instant, gradual float64
 	var elapsedTime float64
 	prevTimes := tools.GetIntSlice(keymode, 0)

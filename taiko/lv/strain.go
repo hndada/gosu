@@ -3,7 +3,7 @@ package taiko
 import (
 	"math"
 
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/tools"
 )
 
 const (

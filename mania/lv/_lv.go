@@ -2,9 +2,10 @@ package lv
 
 import (
 	"github.com/hndada/gosu/game/beatmap"
+	"github.com/hndada/gosu/mania"
 	"reflect"
 
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/tools"
 )
 
 const (
@@ -13,7 +14,7 @@ const (
 )
 
 
-func CalcLv(b Beatmap) float64 {
+func CalcLv(b mania.Beatmap) float64 {
 	// mode := reflect.ValueOf(beatmap).Elem().FieldByName("Mode").Int()
 	notes := getNoteBaseSlice(beatmap)
 	if len(notes) == 0 {

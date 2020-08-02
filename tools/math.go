@@ -9,9 +9,15 @@ const InfInt = int(^uint(0) >> 1)
 
 var InfFloat64 = math.Inf(1)
 
-func MaxInt(a, b int) int { return int(math.Max(float64(a), float64(b))) }
-func MinInt(a, b int) int { return int(math.Min(float64(a), float64(b))) }
-func AbsInt(a int) int    { return int(math.Abs(float64(a))) }
+// func MaxInt(a, b int) int64 { return int64(math.Max(float64(a), float64(b))) }
+// func MinInt(a, b int) int64 { return int64(math.Min(float64(a), float64(b))) }
+func AbsInt(a int64) int64 {
+	if a >= 0 {
+		return a
+	} else {
+		return -a
+	}
+}
 func AvgInt(a []int) float64 {
 	total := 0
 	for i := 0; i < len(a); i++ {

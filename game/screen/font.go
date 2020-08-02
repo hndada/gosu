@@ -1,4 +1,4 @@
-package resources
+package screen
 
 import (
 	"github.com/golang/freetype/truetype"

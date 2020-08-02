@@ -1,13 +1,13 @@
-package lv
+package mania
 
 import (
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/beatmap"
-	"github.com/hndada/gosu/game/tools"
+	"github.com/hndada/gosu/tools"
 	"sort"
 )
 
-// const noFound = tools.NoFound
+const noFound = tools.NoFound
 const (
 	NtHoldHead = beatmap.LastNoteType << iota
 	NtHoldTail
@@ -26,7 +26,7 @@ type Note struct {
 	chordPenalty float64
 	trillBonus   float64
 	jackBonus    float64
-	holdBonus    float64
+	HoldBonus    float64 // score 필요함
 }
 
 func NewNotes(hs []beatmap.HitObject, keymode int, mods game.Mods) ([]Note, error) {
@@ -41,7 +41,7 @@ func NewNotes(hs []beatmap.HitObject, keymode int, mods game.Mods) ([]Note, erro
 			NoteBase: base,
 			Key:      key(keymode, h.X),
 		}
-		n[0].hand = hand(n[0].Key, keymode)
+		// n[0].hand = lv.hand(n[0].Key, keymode)
 		n[0].initSlices(keymode)
 
 		if n[0].NoteType == beatmap.NtHoldNote {
