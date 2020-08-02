@@ -1,14 +1,13 @@
-package mania
+package lv
 
 import (
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/beatmap"
-	"sort"
-
 	"github.com/hndada/gosu/game/tools"
+	"sort"
 )
 
-const noFound = tools.NoFound
+// const noFound = tools.NoFound
 const (
 	NtHoldHead = beatmap.LastNoteType << iota
 	NtHoldTail
@@ -16,33 +15,35 @@ const (
 
 type Note struct {
 	beatmap.NoteBase
-	Key int // i-th column
-	// StrainBase   float64
-	// TrillBonus   float64
-	// JackBonus    float64
-	// HoldBonus    float64
-	// ChordPenalty float64
+	Key int
 
 	hand        int
 	chord       []int
 	trillJack   []int
 	holdImpacts []float64
+
+	strainBase   float64
+	chordPenalty float64
+	trillBonus   float64
+	jackBonus    float64
+	holdBonus    float64
 }
 
-// hand 나중에 입력
-// init slice 해줘야 하나?
 func NewNotes(hs []beatmap.HitObject, keymode int, mods game.Mods) ([]Note, error) {
-	notes := make([]Note, 0, 2*len(hs))
+	ns := make([]Note, 0, 2*len(hs))
 	for _, h := range hs {
 		n := make([]Note, 1, 2) // put one or two Note to []Note for every line
 		base, err := beatmap.NewNoteBase(h, mods)
 		if err != nil {
-			return notes, err
+			return ns, err
 		}
 		n[0] = Note{
 			NoteBase: base,
 			Key:      key(keymode, h.X),
 		}
+		n[0].hand = hand(n[0].Key, keymode)
+		n[0].initSlices(keymode)
+
 		if n[0].NoteType == beatmap.NtHoldNote {
 			n[0].NoteType = NtHoldHead
 			tail := Note{
@@ -51,29 +52,31 @@ func NewNotes(hs []beatmap.HitObject, keymode int, mods game.Mods) ([]Note, erro
 					Time:         n[0].OpponentTime,
 					OpponentTime: n[0].Time,
 				},
-				Key: n[0].Key,
+				Key:  n[0].Key,
+				hand: n[0].hand,
 			}
+			tail.initSlices(keymode)
 			n = append(n, tail)
 		}
-		notes = append(notes, n...)
+		ns = append(ns, n...)
 	}
-	return notes, nil
+	return ns, nil
 }
 func key(keymode int, x int) int {
 	return keymode * x / 512 // starts with 0
 }
 
-func SortNotes(notes []Note) {
-	sort.Slice(notes, func(i, j int) bool {
-		if notes[i].Time == notes[j].Time {
-			return notes[i].Key < notes[j].Key
-		}
-		return notes[i].Time < notes[j].Time
-	})
+func (n *Note) initSlices(keymode int) {
+	n.trillJack = tools.GetIntSlice(keymode, noFound)
+	n.chord = tools.GetIntSlice(keymode, noFound)
+	n.holdImpacts = make([]float64, keymode)
 }
 
-// func (note *ManiaNote) initSlices(keymode int) {
-// 	note.trillJack = tools.GetIntSlice(keymode, noFound)
-// 	note.chord = tools.GetIntSlice(keymode, noFound)
-// 	note.holdImpacts = make([]float64, keymode)
-// }
+func SortNotes(ns []Note) {
+	sort.Slice(ns, func(i, j int) bool {
+		if ns[i].Time == ns[j].Time {
+			return ns[i].Key < ns[j].Key
+		}
+		return ns[i].Time < ns[j].Time
+	})
+}

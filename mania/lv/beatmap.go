@@ -1,4 +1,4 @@
-package mania
+package lv
 
 import (
 	"github.com/hndada/gosu/game"
