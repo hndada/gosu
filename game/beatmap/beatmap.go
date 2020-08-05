@@ -26,7 +26,7 @@ type Beatmap struct {
 	// HitWindows    map[string]float64 // all maps will have same value
 	// Curves        map[string][]tools.Segment
 	Lv    float64
-	OldSR float64
+	// OldSR float64
 }
 
 func ParseBeatmap(path string) (Beatmap, error) {

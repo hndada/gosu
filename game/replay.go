@@ -11,14 +11,14 @@ import (
 )
 
 // 키배치조합: x값, 1 2 4 8 16 32 64
-type LegacyReplayAction struct {
+type OsuReplayAction struct {
 	W int64
 	X float64
 	Y float64
 	Z int64
 }
 
-type LegacyReplay struct {
+type OsuReplay struct {
 	GameMode    int8
 	GameVersion int32
 	BeatmapMD5  string // [16]byte
@@ -31,17 +31,17 @@ type LegacyReplay struct {
 	ModsBits    int32
 	LifeBar     string
 	TimeStamp   int64
-	ReplayData  []LegacyReplayAction
+	ReplayData  []OsuReplayAction
 	OnlineID    int64
 	// AddMods
 }
 
-func ReadLegacyReplay(path string) *LegacyReplay {
+func ParseOsuReplay(path string) *OsuReplay {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
-	var rp LegacyReplay
+	var rp OsuReplay
 	r := bytes.NewReader(b)
 	binary.Read(r, binary.LittleEndian, &rp.GameMode)
 	binary.Read(r, binary.LittleEndian, &rp.GameVersion)
@@ -55,7 +55,7 @@ func ReadLegacyReplay(path string) *LegacyReplay {
 	binary.Read(r, binary.LittleEndian, &rp.ModsBits)
 	rp.LifeBar = ReadString(r)
 	binary.Read(r, binary.LittleEndian, &rp.TimeStamp)
-	rp.ReplayData = ReadReplayData(r)
+	rp.ReplayData = parseOsuReplayData(r)
 	binary.Read(r, binary.LittleEndian, &rp.OnlineID)
 	return &rp
 }
@@ -85,7 +85,7 @@ func ReadString(r *bytes.Reader) string {
 	}
 }
 
-func ReadReplayData(r io.Reader) (replayData []LegacyReplayAction) {
+func parseOsuReplayData(r io.Reader) (replayData []OsuReplayAction) {
 	var replayDataLen int32
 	binary.Read(r, binary.LittleEndian, &replayDataLen)
 
@@ -109,9 +109,9 @@ func ReadReplayData(r io.Reader) (replayData []LegacyReplayAction) {
 	}
 
 	actions := strings.Split(b.String(), ",")
-	replayData = make([]LegacyReplayAction, 0, len(actions))
+	replayData = make([]OsuReplayAction, 0, len(actions))
 	for _, f := range actions[:len(actions)-1] { // the stream ended with sep letter ","
-		var ra LegacyReplayAction
+		var ra OsuReplayAction
 		vs := strings.Split(f, "|")
 		if len(vs) != 4 {
 			panic(vs)
