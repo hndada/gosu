@@ -110,7 +110,7 @@ func NewOSU(path string) (OSU, error) { // todo: return pointer
 				vs = strings.Split(line, `,`)
 				var xOffset, yOffset int
 				startTime, _ := tools.Atoi(vs[1])
-				filename := vs[2]
+				filename := strings.Trim(vs[2], `"`)
 				if len(vs) > 3 {
 					xOffset, _ = tools.Atoi(vs[3])
 					yOffset, _ = tools.Atoi(vs[4])
