@@ -2,81 +2,70 @@ package mania
 
 import (
 	"github.com/hndada/gosu/game"
-	"github.com/hndada/gosu/game/beatmap"
-	"github.com/hndada/gosu/tools"
-	"sort"
+	"github.com/hndada/gosu/game/parser/osu"
 )
 
-const noFound = tools.NoFound
 const (
-	NtHoldHead = beatmap.LastNoteType << iota
-	NtHoldTail
+	TypeNote = 1 << (iota + 1)
+	TypeReleaseNote
+	TypeLongNote
+)
+const (
+	LNHead = TypeLongNote | TypeNote
+	LNTail = TypeLongNote | TypeReleaseNote
 )
 
 type Note struct {
-	beatmap.NoteBase
+	game.BaseNote
 	Key int
 
-	hand        int
-	chord       []int
-	trillJack   []int
-	holdImpacts []float64
-
-	strainBase   float64
-	chordPenalty float64
-	trillBonus   float64
-	jackBonus    float64
-	HoldBonus    float64 // score 필요함
+	// 난이도 및 점수 관련은 나중에
 }
 
-func NewNotes(hs []beatmap.HitObject, keymode int, mods game.Mods) ([]Note, error) {
+func NewNotes(hs []osu.HitObject, keys int) ([]Note, error) {
 	ns := make([]Note, 0, 2*len(hs))
 	for _, h := range hs {
-		n := make([]Note, 1, 2) // put one or two Note to []Note for every line
-		base, err := beatmap.NewNoteBase(h, mods)
-		if err != nil {
-			return ns, err
-		}
-		n[0] = Note{
-			NoteBase: base,
-			Key:      key(keymode, h.X),
-		}
-		// n[0].hand = lv.hand(n[0].Key, keymode)
-		n[0].initSlices(keymode)
+		// n := Note{
+		// 	BaseNote: game.BaseNote{
+		// 		Type: noteType(h.NoteType),
+		// 		Time: int64(h.StartTime),
+		// 	},
+		// 	Key: key(keys, h.X),
+		// }
+		var n Note
+		n.Type = noteType(h.NoteType)
+		n.Key = key(keys, h.X)
+		n.Time = int64(h.StartTime)
+		ns = append(ns, n)
 
-		if n[0].NoteType == beatmap.NtHoldNote {
-			n[0].NoteType = NtHoldHead
-			tail := Note{
-				NoteBase: beatmap.NoteBase{
-					NoteType:     NtHoldTail,
-					Time:         n[0].OpponentTime,
-					OpponentTime: n[0].Time,
-				},
-				Key:  n[0].Key,
-				hand: n[0].hand,
-			}
-			tail.initSlices(keymode)
-			n = append(n, tail)
+		if n.Type == TypeLongNote {
+			n.Type = LNHead
+			n.Time2 = int64(h.EndTime)
+
+			var n2 Note
+			n2.Type = LNTail
+			n2.Key = n.Key
+			n2.Time = n.Time2
+			n2.Time2 = n.Time
+			ns = append(ns, n2)
 		}
-		ns = append(ns, n...)
 	}
 	return ns, nil
 }
-func key(keymode int, x int) int {
-	return keymode * x / 512 // starts with 0
+
+// func NewNotesFromOSU
+// func NewNotesFromBMS
+
+func noteType(t int) int16 {
+	switch {
+	case t&osu.NtNote != 0:
+		return TypeNote
+	case t&osu.NtHoldNote != 0:
+		return TypeLongNote
+	}
+	panic("not reach")
 }
 
-func (n *Note) initSlices(keymode int) {
-	n.trillJack = tools.GetIntSlice(keymode, noFound)
-	n.chord = tools.GetIntSlice(keymode, noFound)
-	n.holdImpacts = make([]float64, keymode)
-}
-
-func SortNotes(ns []Note) {
-	sort.Slice(ns, func(i, j int) bool {
-		if ns[i].Time == ns[j].Time {
-			return ns[i].Key < ns[j].Key
-		}
-		return ns[i].Time < ns[j].Time
-	})
+func key(keys int, x int) int {
+	return keys * x / 512 // starts with 0
 }

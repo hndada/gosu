@@ -1,8 +1,7 @@
-package beatmap
+package osu
 
 import (
 	"bytes"
-	"crypto/md5"
 	"errors"
 	"github.com/hndada/gosu/tools"
 	"io/ioutil"
@@ -10,44 +9,48 @@ import (
 	"strings"
 )
 
-type Beatmap struct {
-	Md5        [md5.Size]byte
-	General    Info
-	Editor     Info
-	Metadata   Info
-	Difficulty Info
-	Bg, Video  Event
+type OSU struct {
+	General    tools.Info
+	Editor     tools.Info
+	Metadata   tools.Info
+	Difficulty tools.Info
+	Image      Event
+	Video      Event
 	Events     []string
-	Colours    Info
+	Colours    tools.Info
 
 	TimingPoints []TimingPoint
 	HitObjects   []HitObject
-
-	// HitWindows    map[string]float64 // all maps will have same value
-	// Curves        map[string][]tools.Segment
-	Lv    float64
-	// OldSR float64
 }
 
-func ParseBeatmap(path string) (Beatmap, error) {
-	var beatmap Beatmap
+type Event struct {
+	StartTime int64
+	Filename  string
+	XOffset   int
+	YOffset   int
+}
+
+func NewOSU(path string) (OSU, error) { // todo: return pointer
+	var o OSU
 	dat, err := ioutil.ReadFile(path)
 	if err != nil {
-		return beatmap, err
+		return o, err
 	}
-	beatmap.Md5 = md5.Sum(dat)
+	dat = bytes.ReplaceAll(dat, []byte("\r\n"), []byte("\n"))
+	lines := make([]string, 0)
+	for _, l := range bytes.Split(dat, []byte("\n")) {
+		lines = append(lines, string(l))
+	}
 
-	dat = bytes.ReplaceAll(dat, []byte("\\r\\n"), []byte("\\n"))
-	lines := strings.Split(string(dat), "\\n")
 	sectionLens, err := getSectionLength(lines)
 	if err != nil {
-		return beatmap, err
+		return o, err
 	}
 
-	general, editor, metadata, difficulty := make(Info), make(Info), make(Info), make(Info)
+	general, editor, metadata, difficulty := make(tools.Info), make(tools.Info), make(tools.Info), make(tools.Info)
 	events := make([]string, 0, sectionLens["Events"])
 	timingPoints := make([]TimingPoint, 0, sectionLens["TimingPoints"])
-	colours := make(Info)
+	colours := make(tools.Info)
 	hitObjects := make([]HitObject, 0, sectionLens["HitObjects"])
 
 	var l, section string
@@ -70,9 +73,10 @@ func ParseBeatmap(path string) (Beatmap, error) {
 				case "AudioLeadIn", "PreviewTime", "Countdown", "CountdownOffset":
 					general.PutInt(kv)
 				case "Mode":
-					if err = general.PutInt(kv); err != nil {
-						return beatmap, errors.New("invalid mode")
-					}
+					general.PutInt(kv)
+					// if err = general.PutInt(kv); err != nil {
+					// 	return o, errors.New("invalid mode")
+					// }
 				case "StackLeniency":
 					general.PutF64(kv)
 				default:
@@ -107,23 +111,23 @@ func ParseBeatmap(path string) (Beatmap, error) {
 				var xOffset, yOffset int
 				startTime, _ := tools.Atoi(vs[1])
 				filename := vs[2]
-				if len(vs)>3{
+				if len(vs) > 3 {
 					xOffset, _ = tools.Atoi(vs[3])
 					yOffset, _ = tools.Atoi(vs[4])
 				}
-				event := Event{startTime, filename, xOffset, yOffset}
+				event := Event{int64(startTime), filename, xOffset, yOffset}
 				switch vs[0] {
 				case "0":
-					beatmap.Bg = event
+					o.Image = event
 				case "1", "Video":
-					beatmap.Video = event
+					o.Video = event
 				default:
 					events = append(events, line)
 				}
 			case "TimingPoints":
 				timingPoint, err := parseTimingPoint(line)
 				if err != nil {
-					return beatmap, err
+					return o, err
 				}
 				timingPoints = append(timingPoints, timingPoint)
 			case "Colours":
@@ -132,31 +136,38 @@ func ParseBeatmap(path string) (Beatmap, error) {
 			case "HitObjects":
 				hitObject, err := parseHitObject(line)
 				if err != nil {
-					return beatmap, err
+					return o, err
 				}
 				hitObjects = append(hitObjects, hitObject)
 			}
 		}
 	}
-	beatmap.General=general
-	beatmap.Editor=editor
-	beatmap.Metadata=metadata
-	beatmap.Difficulty=difficulty
-	beatmap.Events=events
-	beatmap.Colours=colours
+	o.General = general
+	o.Editor = editor
+	o.Metadata = metadata
+	o.Difficulty = difficulty
+	o.Events = events
+	o.Colours = colours
 
 	sort.Slice(timingPoints, func(i, j int) bool {
 		return timingPoints[i].Time < timingPoints[j].Time
 	})
-	beatmap.TimingPoints = timingPoints
+	o.TimingPoints = timingPoints
 
 	sort.Slice(hitObjects, func(i, j int) bool {
 		return hitObjects[i].StartTime < hitObjects[j].StartTime
 	})
-	beatmap.HitObjects = hitObjects
+	o.HitObjects = hitObjects
 
-	beatmap.calcSliderEndTime()
-	return beatmap, nil
+	o.calcSliderEndTime()
+	return o, nil
+}
+
+func isSection(line string) bool {
+	if len(line) == 0 {
+		return false
+	}
+	return string(line[0]) == "[" && string(line[len(line)-1]) == "]"
 }
 
 func getSectionLength(lines []string) (map[string]int, error) {
@@ -189,29 +200,22 @@ func getSectionLength(lines []string) (map[string]int, error) {
 	return lens, nil
 }
 
-func isSection(line string) bool {
-	if len(line) == 0 {
-		return false
-	}
-	return string(line[0]) == "[" && string(line[len(line)-1]) == "]"
-}
-
 // todo: correctness check yet
-func (beatmap *Beatmap) calcSliderEndTime() {
+func (o *OSU) calcSliderEndTime() {
 	var duration float64
 	var tPoint TimingPoint
-	for i, note := range beatmap.HitObjects {
+	for i, note := range o.HitObjects {
 		if note.NoteType != NtSlider {
 			continue
 		}
-		for j := len(beatmap.TimingPoints) - 1; j >= 0; j-- {
-			tPoint = beatmap.TimingPoints[j]
+		for j := len(o.TimingPoints) - 1; j >= 0; j-- {
+			tPoint = o.TimingPoints[j]
 			if tPoint.Time > note.StartTime || tPoint.Uninherited {
 				continue
 			}
 			duration = note.SliderParams.Length / tPoint.SpeedScale
-			duration /= beatmap.Difficulty["SliderMultiplier"].(float64) * 100
-			beatmap.HitObjects[i].EndTime = note.StartTime + int(duration)
+			duration /= o.Difficulty["SliderMultiplier"].(float64) * 100
+			o.HitObjects[i].EndTime = note.StartTime + int(duration)
 		}
 	}
 }

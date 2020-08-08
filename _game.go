@@ -4,7 +4,7 @@ import (
 	"errors"
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/inpututil"
-	"github.com/hndada/gosu/game/beatmap"
+	"github.com/hndada/gosu/game/parser"
 	"path/filepath"
 )
 
@@ -26,7 +26,7 @@ var (
 
 type Game struct {
 	audioPlayer
-	beatmaps []beatmap.Beatmap
+	beatmaps []parser.Beatmap
 	config
 	stage        int
 	selectCursor int // (window 포함)

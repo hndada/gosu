@@ -3,7 +3,7 @@ package lv
 import (
 	"fmt"
 	"github.com/hndada/gosu/game"
-	"github.com/hndada/gosu/game/beatmap"
+	"github.com/hndada/gosu/game/parser"
 	"github.com/hndada/gosu/mania"
 	"github.com/hndada/gosu/tools"
 	"log"
@@ -17,7 +17,7 @@ const (
 )
 
 func process(path string){
-	base, err := beatmap.ParseBeatmap(path)
+	base, err := parser.ParseBeatmap(path)
 	if err != nil {
 		log.Fatal(err)
 	}
