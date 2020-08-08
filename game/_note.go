@@ -1,8 +1,8 @@
-package beatmap
+package game
 
 import (
 	"errors"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/parser/osu"
 )
 
 var ErrDuration = errors.New("duration is not a positive value")
@@ -13,13 +13,13 @@ type NoteBase struct {
 	Strain, Legibility, Stamina float64
 }
 
-func NewNoteBase(h HitObject, mods game.Mods) (NoteBase, error) {
+func NewNoteBase(h osu.HitObject, mods Mods) (NoteBase, error) {
 	base := NoteBase{
 		NoteType:     h.NoteType,
 		Time:         int64(float64(h.StartTime) / mods.TimeRate),
 		OpponentTime: int64(float64(h.EndTime) / mods.TimeRate),
 	}
-	if base.NoteType != NtNote {
+	if base.NoteType != osu.NtNote {
 		duration := base.OpponentTime - base.Time
 		if duration < 0 {
 			return base, ErrDuration

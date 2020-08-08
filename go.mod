@@ -8,5 +8,7 @@ require (
 	github.com/go-interpreter/wagon v0.6.0 // indirect
 	github.com/hajimehoshi/ebiten v1.11.1
 	github.com/ulikunitz/xz v0.5.7
-	golang.org/x/text v0.3.3 // indirect
+	golang.org/x/exp v0.0.0-20190731235908-ec7cb31e5a56
+	golang.org/x/image v0.0.0-20200801110659-972c09e46d76
+	golang.org/x/text v0.3.3
 )

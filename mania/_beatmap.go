@@ -2,20 +2,18 @@ package mania
 
 import (
 	"github.com/hndada/gosu/game"
-	"github.com/hndada/gosu/game/beatmap"
+	"github.com/hndada/gosu/game/parser"
 )
 
-const Mode = 3
-
 type Beatmap struct {
-	beatmap.Beatmap
+	parser.Beatmap
 	Mods    game.Mods
 	Keymode int
 	Notes   []Note
 }
 
 func ManiaBeatmap(path string) *Beatmap {
-	b, err := beatmap.ParseBeatmap(path)
+	b, err := parser.ParseBeatmap(path)
 	if err != nil {
 		panic(err)
 	}

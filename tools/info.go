@@ -1,4 +1,4 @@
-package beatmap
+package tools
 
 import (
 	"strconv"

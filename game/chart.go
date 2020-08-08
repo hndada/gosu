@@ -1,6 +1,9 @@
 package game
 
-import "crypto/md5"
+import (
+	"crypto/md5"
+	"github.com/hndada/gosu/game/parser/osu"
+)
 
 // interface 로 할까?
 
@@ -29,6 +32,8 @@ type BaseChart struct {
 	ImageFilename string
 	VideoFilename string
 	VideoOffset   int64
+
+	Parameter map[string]float64
 }
 
 // editor 관련 데이터는 전용 포맷으로. 
@@ -37,3 +42,27 @@ type BaseChart struct {
 
 // hash, 최소한의 변화에만 반응하게 하고 싶다
 // A라는 쉬운 곡이 B라는 어려운 곡을 사칭하는 것을 가정하고 hash target정하기
+
+func NewBaseChart(o *osu.OSU) BaseChart {
+	c := BaseChart{
+		Title:         o.Metadata["Title"].(string),
+		TitleUnicode:  o.Metadata["TitleUnicode"].(string),
+		Artist:        o.Metadata["Artist"].(string),
+		ArtistUnicode: o.Metadata["ArtistUnicode"].(string),
+		Source:        o.Metadata["Source"].(string),
+		ChartName:     o.Metadata["Version"].(string),
+		Producer:      o.Metadata["Creator"].(string), // 변경될 수 있음
+
+		AudioFilename: o.General["AudioFilename"].(string),
+		AudioLeadIn:   int64(o.General["AudioLeadIn"].(int)),
+		PreviewTime:   int64(o.General["PreviewTime"].(int)),
+		ImageFilename: o.Image.Filename,
+		VideoFilename: o.Video.Filename,
+		VideoOffset:   o.Video.StartTime,
+	}
+	// AudioHash
+	// TimingPoint
+	c.Parameter = make(map[string]float64)
+	c.Parameter["Scale"] = o.Difficulty["CircleSize"].(float64)
+	return c
+}

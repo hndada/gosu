@@ -1,4 +1,4 @@
-package beatmap
+package osu
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-func TestParseBeatmap(t *testing.T) {
-	b, err := ParseBeatmap("../test_beatmap/test.osu")
+func TestNewOSU(t *testing.T) {
+	b, err := NewOSU("../test_beatmap/test.osu")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -16,19 +16,19 @@ func TestParseBeatmap(t *testing.T) {
 	// fmt.Printf("%+v, %+v\n", b.General, b.Metadata)
 }
 
-func BenchmarkParseBeatmap(b *testing.B) {
-	for i:=0; i< b.N; i++ {
-		_, err := ParseBeatmap("../test_beatmap/test.osu")
+func BenchmarkNewOSU(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, err := NewOSU("../test_beatmap/test.osu")
 		if err != nil {
 			log.Fatal(err)
 		}
 	}
 }
 
-func BenchmarkParseBeatmapParellel(b *testing.B) {
+func BenchmarkNewOSUParellel(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
-			_, err := ParseBeatmap("../test_beatmap/test.osu")
+			_, err := NewOSU("../test_beatmap/test.osu")
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -41,16 +41,16 @@ func TestLoadSongList(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	var beatmaps []Beatmap
+	var beatmaps []OSU
 	fmt.Println(songs)
 	for _, song := range songs {
-		b, err:= ParseBeatmap(song)
-		if err!=nil { log.Fatal(err) }
-		beatmaps=append(beatmaps, b)
+		b, err := NewOSU(song)
+		if err != nil {
+			log.Fatal(err)
+		}
+		beatmaps = append(beatmaps, b)
 	}
 	for _, b := range beatmaps {
 		fmt.Println(b.Metadata)
 	}
 }
-
-

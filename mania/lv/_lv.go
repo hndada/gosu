@@ -1,7 +1,8 @@
 package lv
 
 import (
-	"github.com/hndada/gosu/game/beatmap"
+	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/parser"
 	"github.com/hndada/gosu/mania"
 	"reflect"
 
@@ -37,11 +38,11 @@ func CalcLv(b mania.Beatmap) float64 {
 	return difficulty
 }
 
-func getNoteBaseSlice(b beatmap.Beatmap) []beatmap.NoteBase {
+func getNoteBaseSlice(b parser.Beatmap) []game.NoteBase {
 	notesValue := reflect.ValueOf(b).Elem().FieldByName("Notes")
-	notes := make([]beatmap.NoteBase, notesValue.Len())
+	notes := make([]game.NoteBase, notesValue.Len())
 	for i := range notes {
-		notes[i] = notesValue.Index(i).FieldByName("NoteBase").Interface().(beatmap.NoteBase)
+		notes[i] = notesValue.Index(i).FieldByName("NoteBase").Interface().(game.NoteBase)
 	}
 	return notes
 }
