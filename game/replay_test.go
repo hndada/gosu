@@ -7,7 +7,7 @@ import (
 )
 
 func TestOneReplay(t *testing.T) {
-	r := ParseOsuReplay("MuangMuangE - Aoi Eir - Cynthia No Hikari 1.1x [Revelation 7K [feat. qodtjr]] (2020-05-14) OsuMania.osr")
+	r := ParseOsuReplay("test.osr")
 	var time int64
 	for _, rd := range r.ReplayData {
 		time += rd.W
