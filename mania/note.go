@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	TypeNote = 1 << (iota + 1)
+	TypeNote = 1 << iota
 	TypeReleaseNote
 	TypeLongNote
 )
@@ -36,11 +36,11 @@ func NewNotes(hs []osu.HitObject, keys int) ([]Note, error) {
 		n.Type = noteType(h.NoteType)
 		n.Key = key(keys, h.X)
 		n.Time = int64(h.StartTime)
-		ns = append(ns, n)
 
 		if n.Type == TypeLongNote {
 			n.Type = LNHead
 			n.Time2 = int64(h.EndTime)
+			ns = append(ns, n)
 
 			var n2 Note
 			n2.Type = LNTail
@@ -48,6 +48,8 @@ func NewNotes(hs []osu.HitObject, keys int) ([]Note, error) {
 			n2.Time = n.Time2
 			n2.Time2 = n.Time
 			ns = append(ns, n2)
+		} else {
+			ns = append(ns, n)
 		}
 	}
 	return ns, nil
