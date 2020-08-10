@@ -1,0 +1,9 @@
+scene: abstract; contents in the screen
+screen: mere image data after all; screen is the result
+
+모든 scene에 sceneManager가 하는 일을 embed하면 없어도 되지 않을까?
+->성공적인 듯
+
+Chart struct는 계산한 값 살리기 등을 위해서도 gob로 저장
+
+업데이트 이후 Draw라고는 말 못함. 둘은 그냥 1/60마다 한번씩 실행됨

@@ -1,0 +1,25 @@
+base->game
+game_test.go 에서 cmd/main.go 따라하기
+
+/asset
+/cmd
+    /gosu
+    /parser
+/docs
+/graphics
+/internal
+    /game
+        scenes.go (game과 scene은 하나)
+        input.go (keyboard.go)
+        game.go
+    /tools
+/mode
+    /mania (lv)
+    /taiko (lv)
+    chart.go
+    mods.go
+    note.go
+    replay.go
+/parser
+    /o2jam
+    /osu
