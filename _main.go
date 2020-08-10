@@ -32,12 +32,6 @@ func init() {
 	})
 }
 
-const (
-	screenWidth  = 1600
-	screenHeigth = 900
-	// sampleRate = 44100
-)
-
 var (
 	introImage *ebiten.Image
 )
@@ -94,12 +88,9 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 	return screenWidth, screenHeigth
 }
 
-// var (
-// 	game = &game.Game{}
-// )
 //
 // func init() {
-// 	game.beatmaps = make([]beatmap.Beatmap, 0)
+// 	mode.beatmaps = make([]beatmap.Beatmap, 0)
 // 	songs, err := tools.LoadSongList("test_beatmap", ".osu")
 // 	if err != nil {
 // 		log.Fatal(err)
@@ -109,7 +100,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 // 		if err != nil {
 // 			log.Fatal(err)
 // 		}
-// 		game.beatmaps = append(game.beatmaps, b)
+// 		mode.beatmaps = append(mode.beatmaps, b)
 // 	}
 // }
 
