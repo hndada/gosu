@@ -34,17 +34,18 @@ type Options struct {
 	MaxTPS       int
 	ScreenWidth  int
 	ScreenHeight int
-	HitPosition  float64 // skin -> option
+	HitPosition  float64 // object which is now set at 'options'
+
+	DimValue  int
+	VolumeSFX int
+	VolumeBGM int
+	Skin      *Skin
 }
 
+// scene이 game을 control하는 주체
 type Scene interface {
 	Update(g *Game) error
 	Draw(screen *ebiten.Image)
-}
-type Input interface{}
-
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return g.ScreenWidth, g.ScreenHeight
 }
 
 func (g *Game) Update(screen *ebiten.Image) error {
@@ -89,15 +90,18 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(g.TransSceneTo, &op)
 }
 
+func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	return g.ScreenWidth, g.ScreenHeight
+}
+
 func NewGame() (g *Game) {
 	g = &Game{}
-	// g.State = State{
-	// 	Scene:,
-	// }
-	g.Options = Options{
+	g.State = State{
+		Scene:&Title{},
+	}
+	g.Options = Options{ // todo: load settings
 		MaxTPS:      240,
 		ScrollSpeed: 1.33,
-		// KeysLayout
 		HitPosition: 730,
 	}
 	g.ScreenWidth = 1600
