@@ -2,7 +2,6 @@ package game
 
 import (
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hndada/gosu/mode/mania"
 	"log"
 	"testing"
 )
@@ -10,8 +9,8 @@ import (
 func TestMain(m *testing.M) {
 	g := NewGame()
 	g.Scene = &Title{}
-	c := mania.NewChart(`./test/test_ln.osu`)
-	g.NextScene = mania.NewSceneMania(g.Options, c)
+	// c := mania.NewChart(`./test/test_ln.osu`)
+	// g.NextScene = mania.NewSceneMania(g.Options, c)
 
 	// f, err := os.Open("./test/" + c.AudioFilename)
 	// if err != nil {
