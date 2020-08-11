@@ -4,12 +4,10 @@ import (
 	"github.com/hajimehoshi/ebiten"
 )
 
-// title -> 간이 song select -> play -> result -> title
-//
 // mp3 플레이어, Scene에 저장; 연동
 // sync with mp3, position
 // 곡선택: 맵정보패널
-//
+
 // 플레이: input (ebiten으로 간단히, 나중에 별도 라이브러리.)
 // 점수계산: 1/n -> my score system
 // 리플레이 실행 - 스코어/hp 시뮬레이터
@@ -24,6 +22,7 @@ type State struct {
 	TransSceneFrom *ebiten.Image
 	TransSceneTo   *ebiten.Image
 	TransCountdown int
+	// TransLifetime  float64
 
 	input Input
 }
@@ -97,7 +96,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 func NewGame() (g *Game) {
 	g = &Game{}
 	g.State = State{
-		Scene:&Title{},
+		Scene: &SceneTitle{},
 	}
 	g.Options = Options{ // todo: load settings
 		MaxTPS:      240,
@@ -110,8 +109,3 @@ func NewGame() (g *Game) {
 	g.TransSceneTo, _ = ebiten.NewImage(g.ScreenWidth, g.ScreenHeight, ebiten.FilterDefault)
 	return
 }
-
-// type ImageInfo struct {
-// 	x, y, w, h float64
-// 	clr        color.RGBA
-// }

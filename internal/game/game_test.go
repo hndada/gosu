@@ -8,7 +8,7 @@ import (
 
 func TestMain(m *testing.M) {
 	g := NewGame()
-	g.Scene = &Title{}
+	g.Scene = &SceneTitle{}
 	// c := mania.NewChart(`./test/test_ln.osu`)
 	// g.NextScene = mania.NewSceneMania(g.Options, c)
 
