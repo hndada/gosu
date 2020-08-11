@@ -20,11 +20,15 @@ type SceneSelect struct {
 // 위쪽/왼쪽: 커서 -1
 // 아래쪽/오른쪽: 커서 +1
 // +시프트: 그룹 이동
+
+// mania.NewChart, NewSceneMania 둘 다 오래 걸릴듯
+// loading하는 동안 SceneMania 말고 game 쪽에서 block
 func (s *SceneSelect) Update(g *Game) error {
 	if ebiten.IsKeyPressed(ebiten.Key1) {
-		c := mania.NewChart(`C:\Users\hndada\Documents\GitHub\hndada\gosu\mode\mania\test\test_ln.osu`)
-		g.NextScene = NewSceneMania(g.Options, c)
-		g.TransCountdown = 99
+		// c := mania.NewChart(`C:\Users\hndada\Documents\GitHub\hndada\gosu\mode\mania\test\test_ln.osu`)
+		c:=&mania.Chart{}
+		g.NextScene = NewSceneMania(g, c) // todo: go func()?
+		g.TransLifetime = g.MaxTransLifetime()
 	}
 	// 키 입력 받으면 play scene으로 이동
 	return nil
