@@ -11,11 +11,10 @@ type SceneResult struct {
 	// hit error deviation
 }
 
-// scene을 나누면 안될것 같다
 func (s *SceneResult) Update(g *Game) error {
 	if ebiten.IsKeyPressed(ebiten.Key3) {
-		g.NextScene=&SceneSelect{}
-		g.TransCountdown = 99
+		g.NextScene = &SceneSelect{}
+		g.TransLifetime = g.MaxTransLifetime()
 	}
 	// 키 입력 받으면 곡선택 scene으로 이동
 	return nil

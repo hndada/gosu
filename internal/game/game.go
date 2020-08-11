@@ -21,8 +21,9 @@ type State struct {
 	NextScene      Scene
 	TransSceneFrom *ebiten.Image
 	TransSceneTo   *ebiten.Image
-	TransCountdown int
-	// TransLifetime  float64
+	// TransCountdown int
+	TransLifetime float64
+	Loading       bool
 
 	input Input
 }
@@ -47,12 +48,16 @@ type Scene interface {
 	Draw(screen *ebiten.Image)
 }
 
+func (g *Game) Tick() float64             { return 1000 / float64(g.MaxTPS) }
+func (g *Game) MaxTransLifetime() float64 { return 600 } // 모든 time 관련 단위는 ms
 func (g *Game) Update(screen *ebiten.Image) error {
-	if g.TransCountdown == 0 {
+	if g.Loading { return nil }
+	if int(g.TransLifetime) == 0 {
 		return g.Scene.Update(g)
 	}
-	g.TransCountdown--
-	if g.TransCountdown > 0 {
+	g.TransLifetime -= 4.2 // g.Tick()
+	// g.TransLifetime--
+	if g.TransLifetime > 0 {
 		return nil
 	}
 	// count down has just been from non-zero to zero
@@ -64,7 +69,10 @@ func (g *Game) Update(screen *ebiten.Image) error {
 // scene의 Draw는 input으로 들어온 screen을 그리는 함수
 func (g *Game) Draw(screen *ebiten.Image) {
 	//  ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %.2f", ebiten.CurrentFPS())) // 겹쳐버리는듯
-	if g.TransCountdown == 0 {
+	if g.Loading {
+		return
+	}
+	if int(g.TransLifetime) == 0 {
 		g.Scene.Draw(screen)
 		return
 	}
@@ -73,16 +81,15 @@ func (g *Game) Draw(screen *ebiten.Image) {
 
 	g.TransSceneFrom.Clear()
 	g.Scene.Draw(g.TransSceneFrom)
-	value = float64(g.TransCountdown) / 99 // todo: 변경 가능하게
+	value = g.TransLifetime / g.MaxTransLifetime()
 	op = ebiten.DrawImageOptions{}
 	// op.ColorM.Scale(1, 1, 1, alpha)
 	op.ColorM.ChangeHSV(0, 1, value)
 	screen.DrawImage(g.TransSceneFrom, &op)
 
 	g.TransSceneTo.Clear()
-	// g.TransSceneTo.Fill(color.RGBA{128, 128, 0, 255}) // temp
 	g.NextScene.Draw(g.TransSceneTo)
-	value = 1 - float64(g.TransCountdown)/99 // todo: 변경 가능하게
+	value = 1 - value
 	op = ebiten.DrawImageOptions{}
 	// op.ColorM.Scale(1, 1, 1, alpha)
 	op.ColorM.ChangeHSV(0, 1, value)
