@@ -6,17 +6,17 @@ import (
 )
 
 // intro 도 1회용으로 넣기
-type Title struct {
+type SceneTitle struct {
 }
 
-func (s *Title) Update(g *Game) error {
+func (s *SceneTitle) Update(g *Game) error {
 	if ebiten.IsKeyPressed(ebiten.Key0) {
-		g.NextScene = &Select{}
+		g.NextScene = &SceneSelect{}
 		g.TransCountdown = 99
 	}
 	return nil
 }
 
-func (s *Title) Draw(screen *ebiten.Image) {
-	ebitenutil.DebugPrint(screen, "Title: Press Key 0")
+func (s *SceneTitle) Draw(screen *ebiten.Image) {
+	ebitenutil.DebugPrint(screen, "SceneTitle: Press Key 0")
 }

@@ -1,28 +1,28 @@
-package mania
+package game
 
 import (
 	"bytes"
 	"fmt"
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
-	"github.com/hndada/gosu/internal/game"
+	"github.com/hndada/gosu/mode/mania"
 	"image"
 	"image/color"
+	_ "image/jpeg"
 	"io/ioutil"
 )
 
 type SceneMania struct { // aka Clavier
 	Notes        []NoteImageInfo
-	C            Chart
+	C            mania.Chart
 	TickDuration float64
 	scrollSpeed  float64
 	Time         float64
-	// Score float64
-	// HP float64
+	Score        float64
+	HP           float64
 
 	Cover *ebiten.Image
 	// Audio
-	Done bool
 }
 
 type NoteImageInfo struct {
@@ -31,15 +31,15 @@ type NoteImageInfo struct {
 }
 
 // todo: 맵 로딩하는동안 업데이트 말고 로딩에만 집중하게
-func (s *SceneMania) Update(g *game.Game) error {
-	var endTime = 5.0 * 1000 // float64(s.C.Notes[len(s.C.Notes)-1].Time)
+func (s *SceneMania) Update(g *Game) error {
+	const endTime = 5.0 * 1000 // float64(s.C.Notes[len(s.C.Notes)-1].Time)
 	s.Time += s.TickDuration
 	for i := range s.Notes {
 		// if s.Notes[i].y > 900 { continue }
 		s.Notes[i].y += s.TickDuration * s.scrollSpeed
 	}
 	if s.Time > endTime {
-		g.NextScene = &game.Result{}
+		g.NextScene = &SceneResult{}
 		g.TransCountdown = 99 // todo: set maxCount
 	}
 	return nil
@@ -65,7 +65,7 @@ func (s *SceneMania) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("\nTime: %.1fs", s.Time/1000))
 }
 
-func noteColor(n Note, keys int) color.RGBA {
+func noteColor(n mania.Note, keys int) color.RGBA {
 	switch n.Key {
 	case 0, 2, 4, 6:
 		return color.RGBA{239, 243, 247, 0xff} // white
@@ -78,7 +78,8 @@ func noteColor(n Note, keys int) color.RGBA {
 }
 
 // 노트, 그냥 네모 그리고 색깔 채워넣기
-func NewSceneMania(op game.Options, c *Chart) (s *SceneMania) {
+// &SceneMania{}로 하고 chart 로딩을 할까
+func NewSceneMania(op Options, c *mania.Chart) (s *SceneMania) {
 	ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", c.Title, c.ChartName)) // todo: can I change window title ?
 	s = &SceneMania{}
 	const w = 70
@@ -91,16 +92,16 @@ func NewSceneMania(op game.Options, c *Chart) (s *SceneMania) {
 		var y, h float64
 		x := float64(n.Key*w + 565)
 		switch n.Type {
-		case TypeNote:
+		case mania.TypeNote:
 			y = -float64(n.Time)*op.ScrollSpeed + 1000
 			h = noteHeight * op.ScrollSpeed
-		case LNHead:
+		case mania.LNHead:
 			y = -float64(n.Time2)*op.ScrollSpeed + 1000
 			h = float64(n.Time2-n.Time+noteHeight) * op.ScrollSpeed
 		}
 		s.Notes[i] = NoteImageInfo{x, y, w, h, noteColor(n, c.Keys)}
 	}
-	b, err := ioutil.ReadFile("./test/" + c.ImageFilename)
+	b, err := ioutil.ReadFile("C:\\Users\\hndada\\Documents\\GitHub\\hndada\\gosu\\mode\\mania\\test\\" + c.ImageFilename)
 	if err != nil {
 		panic(err)
 	}
