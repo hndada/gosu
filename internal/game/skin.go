@@ -5,6 +5,8 @@ import (
 	"image/color"
 )
 
+// todo: 집에 가서 할 것
+// todo: BMS parsing
 type Skin struct {
 }
 

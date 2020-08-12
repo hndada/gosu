@@ -1,4 +1,4 @@
-package graphic
+package game
 
 
 type Button struct {

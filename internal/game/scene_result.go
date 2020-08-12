@@ -14,12 +14,12 @@ type SceneResult struct {
 func (s *SceneResult) Update(g *Game) error {
 	if ebiten.IsKeyPressed(ebiten.Key3) {
 		g.NextScene = &SceneSelect{}
-		g.TransLifetime = g.MaxTransLifetime()
+		g.TransCountdown = g.MaxTransCountDown() // todo: 함수 하나로 묶기
 	}
-	// 키 입력 받으면 곡선택 scene으로 이동
 	return nil
 }
 
+// input, score, hp 다 구현되고 나서 ui 등 고민
 func (s *SceneResult) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(screen, "SceneResult: Press Key 3")
 }
