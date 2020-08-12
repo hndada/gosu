@@ -21,9 +21,8 @@ type State struct {
 	NextScene      Scene
 	TransSceneFrom *ebiten.Image
 	TransSceneTo   *ebiten.Image
-	// TransCountdown int
-	TransLifetime float64
-	Loading       bool
+	TransCountdown int
+	Loading bool
 
 	input Input
 }
@@ -48,16 +47,16 @@ type Scene interface {
 	Draw(screen *ebiten.Image)
 }
 
-func (g *Game) Tick() float64             { return 1000 / float64(g.MaxTPS) }
-func (g *Game) MaxTransLifetime() float64 { return 600 } // 모든 time 관련 단위는 ms
+func (g *Game) MaxTransCountDown() int { return int(0.8 * float64(g.MaxTPS)) } // 모든 time 관련 단위는 ms
 func (g *Game) Update(screen *ebiten.Image) error {
-	if g.Loading { return nil }
-	if int(g.TransLifetime) == 0 {
+	if g.Loading {
+		return nil
+	}
+	if g.TransCountdown == 0 {
 		return g.Scene.Update(g)
 	}
-	g.TransLifetime -= 4.2 // g.Tick()
-	// g.TransLifetime--
-	if g.TransLifetime > 0 {
+	g.TransCountdown--
+	if g.TransCountdown > 0 {
 		return nil
 	}
 	// count down has just been from non-zero to zero
@@ -67,33 +66,32 @@ func (g *Game) Update(screen *ebiten.Image) error {
 }
 
 // scene의 Draw는 input으로 들어온 screen을 그리는 함수
+// Game.Draw() 자체에서는 screen에 직접 그려봤자 반영 안됨
 func (g *Game) Draw(screen *ebiten.Image) {
-	//  ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %.2f", ebiten.CurrentFPS())) // 겹쳐버리는듯
 	if g.Loading {
 		return
 	}
-	if int(g.TransLifetime) == 0 {
+	if g.TransCountdown == 0 {
 		g.Scene.Draw(screen)
 		return
 	}
 	var value float64
-	var op ebiten.DrawImageOptions
-
-	g.TransSceneFrom.Clear()
-	g.Scene.Draw(g.TransSceneFrom)
-	value = g.TransLifetime / g.MaxTransLifetime()
-	op = ebiten.DrawImageOptions{}
-	// op.ColorM.Scale(1, 1, 1, alpha)
-	op.ColorM.ChangeHSV(0, 1, value)
-	screen.DrawImage(g.TransSceneFrom, &op)
-
-	g.TransSceneTo.Clear()
-	g.NextScene.Draw(g.TransSceneTo)
-	value = 1 - value
-	op = ebiten.DrawImageOptions{}
-	// op.ColorM.Scale(1, 1, 1, alpha)
-	op.ColorM.ChangeHSV(0, 1, value)
-	screen.DrawImage(g.TransSceneTo, &op)
+	{
+		value = float64(g.TransCountdown) / float64(g.MaxTransCountDown())
+		g.TransSceneFrom.Clear()
+		g.Scene.Draw(g.TransSceneFrom)
+		op := ebiten.DrawImageOptions{}
+		op.ColorM.ChangeHSV(0, 1, value)
+		screen.DrawImage(g.TransSceneFrom, &op)
+	}
+	{
+		value = 1 - value
+		g.TransSceneTo.Clear()
+		g.NextScene.Draw(g.TransSceneTo)
+		op := ebiten.DrawImageOptions{}
+		op.ColorM.ChangeHSV(0, 1, value)
+		screen.DrawImage(g.TransSceneTo, &op)
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

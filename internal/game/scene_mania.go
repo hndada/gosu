@@ -36,7 +36,8 @@ type NoteImageInfo struct {
 	x, y, w, h float64
 	clr        color.RGBA
 }
-
+// mania.NewChart, NewSceneMania 둘 다 오래 걸릴듯
+// loading하는 동안 SceneMania 말고 game 쪽에서 block
 // todo: 음악 켜지는 순간에 렉걸림 -> 스트리머에 1500ms 공백 파일을 그냥 넣자
 func (s *SceneMania) Update(g *Game) error {
 	// if s.Time > 0 && s.Streamer.Position() == 0 {
@@ -62,7 +63,7 @@ func (s *SceneMania) Update(g *Game) error {
 		if err != nil {
 			log.Fatal(err)
 		}
-		go func(){
+		go func() {
 			n := s.StreamFormat.SampleRate.N(time.Millisecond * time.Duration(s.BufferTime()))
 			speaker.Play(beep.Seq(beep.Silence(n), s.Streamer))
 		}()
@@ -77,7 +78,7 @@ func (s *SceneMania) Update(g *Game) error {
 		s.Streamer.Close()
 		ebiten.SetWindowTitle("gosu")
 		g.NextScene = &SceneResult{}
-		g.TransLifetime = g.MaxTransLifetime()
+		g.TransCountdown = g.MaxTransCountDown()
 	}
 	return nil
 }
@@ -108,6 +109,9 @@ func (s *SceneMania) Draw(screen *ebiten.Image) {
 // 노트, 그냥 네모 그리고 색깔 채워넣기
 // &SceneMania{}로 하고 chart 로딩을 할까
 // todo: bufferTime 1500ms 정도로 설정하면 fps 5나옴
+// todo: mp3, 버퍼에 올리자. 오래 걸려도 되니까
+// todo: examples/camera 참고하여 플레이 프레임 안정화
+// todo: 곡목록 select 본격화
 func (s *SceneMania) BufferTime() int64 { return 0 }
 func NewSceneMania(g *Game, c *mania.Chart) (s *SceneMania) {
 	g.Loading = true
@@ -120,7 +124,7 @@ func NewSceneMania(g *Game, c *mania.Chart) (s *SceneMania) {
 	s.C = *c
 	s.Notes = make([]NoteImageInfo, len(c.Notes))
 	s.ScrollSpeed = g.ScrollSpeed
-	s.Tick = func() float64 { return g.Tick() } // 스피드값 1 기준 초당 1000픽셀 내려오게 해야함
+	s.Tick = func() float64 { return 1000 / float64(g.MaxTPS) } // 스피드값 1 기준 초당 1000픽셀 내려오게 해야함
 	s.Time = -float64(s.BufferTime())
 	for i, n := range c.Notes {
 		var y, h float64
@@ -154,6 +158,7 @@ func NewSceneMania(g *Game, c *mania.Chart) (s *SceneMania) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	// defer streamer.Close()
 	// done := make(chan bool)
 	// speaker.Play(beep.Seq(streamer, beep.Callback(func() {

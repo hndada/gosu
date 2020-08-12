@@ -2,8 +2,9 @@
 New client of mania players, by a mania player, for mania players
 =================================================================
 1. Beatmap players
-    - [x] Parse beatmap
-        - [x] Parsing test
+    - [ ] Parse beatmap
+        - [x] Parsing Hit Objects
+        - [ ] Parsing samples 
     - [ ] Show beatmap list and select one of them
         - [ ] Draw a box with beatmap info
         - [ ] List them

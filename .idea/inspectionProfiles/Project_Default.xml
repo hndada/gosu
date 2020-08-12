@@ -10,6 +10,7 @@
         <function importPath="fmt" name="Println" />
         <function importPath="fmt" name="Print" />
         <function importPath="github.com/hajimehoshi/ebiten/ebitenutil" name="DebugPrint" />
+        <function importPath="github.com/hajimehoshi/ebiten" name="NewImage" />
       </functions>
       <methods>
         <method importPath="hash" receiver="Hash" name="Write" />
@@ -24,6 +25,7 @@
         <method importPath="math/rand" receiver="*Rand" name="Read" />
         <method importPath="github.com/hajimehoshi/ebiten" receiver="*Image" name="Clear" />
         <method importPath="github.com/hajimehoshi/ebiten" receiver="*Image" name="DrawImage" />
+        <method importPath="github.com/hajimehoshi/ebiten" receiver="*Image" name="Fill" />
       </methods>
     </inspection_tool>
     <inspection_tool class="SpellCheckingInspection" enabled="false" level="TYPO" enabled_by_default="false">
