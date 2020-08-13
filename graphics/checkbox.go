@@ -7,37 +7,75 @@ import (
 )
 
 const (
+	checkboxBorder  = 2
 	checkboxRadius  = 8
 	checkboxPadding = 8
 )
 
+var (
+	imgUncheckedBox *ebiten.Image
+	imgCheckedBox   *ebiten.Image
+)
+
+func init() {
+	bw := 2 * checkboxRadius
+	bh := bw
+	fw := bw - 2*checkboxBorder
+	fh := fw
+	w := bw + 2*checkboxPadding
+	h := bh + checkboxPadding
+
+	fop := &ebiten.DrawImageOptions{}
+	fop.GeoM.Translate(checkboxBorder, checkboxBorder)
+	bop := &ebiten.DrawImageOptions{}
+	bop.GeoM.Translate(checkboxPadding, checkboxPadding/2)
+
+	clrBorder := color.RGBA{102, 0, 95, 255}
+	clrUncheck := color.Transparent
+	clrCheck := color.RGBA{95, 240, 252, 255}
+	{
+		fill, _ := ebiten.NewImage(fw, fh, ebiten.FilterDefault)
+		fill.Fill(clrUncheck)
+		box, _ := ebiten.NewImage(bw, bh, ebiten.FilterDefault)
+		box.Fill(clrBorder)
+		box.DrawImage(fill, fop)
+		imgUncheckedBox, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
+		imgUncheckedBox.DrawImage(box, bop)
+	}
+	{
+		fill, _ := ebiten.NewImage(fw, fh, ebiten.FilterDefault)
+		fill.Fill(clrCheck)
+		box, _ := ebiten.NewImage(bw, bh, ebiten.FilterDefault)
+		box.Fill(clrBorder)
+		box.DrawImage(fill, fop)
+		imgCheckedBox, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
+		imgCheckedBox.DrawImage(box, bop)
+	}
+}
+
 // todo: 글자 크기가 안 맞는 체크박스가 나올 수 있음, 현재 수동으로 해야함
+// -> 폰트 및 글자 크기. dpi고정. text받고 렌더하고 체크박스까지 그리자
 type Checkbox struct {
+	MinPt     image.Point
 	Text      *ebiten.Image
-	Rect      image.Rectangle
 	checked   bool
 	mouseDown bool
 	onChanged func(c *Checkbox)
 }
 
-func NewCheckbox(text *ebiten.Image, x, y int) *Checkbox {
+// 화면 등이 움직이면 point값 바꿔주면 됨
+func NewCheckbox(s string, p image.Point) *Checkbox {
 	c := &Checkbox{}
-	tw, th := text.Size()
-	w := 2*checkboxRadius + checkboxPadding + tw
-	h := th
-	if h < 2*checkboxRadius {
-		h = 2 * checkboxRadius
-	}
-	c.Rect = image.Rect(x, y, x+w, y+h)
-	c.Text = text
+	c.MinPt = p
+	c.Text = DrawText(s, mplusNormalFont, color.Black)
 	return c
 }
 
 // todo: button과 한번에 합칠 수 있을까?
 func (c *Checkbox) Update() {
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
-		x, y := ebiten.CursorPosition()
-		if InRect(c.Rect, x, y) {
+		p := image.Pt(ebiten.CursorPosition())
+		if p.In(c.Rect()) {
 			c.mouseDown = true
 		} else {
 			c.mouseDown = false
@@ -53,60 +91,20 @@ func (c *Checkbox) Update() {
 	}
 }
 
-var (
-	imgUncheckedBox *ebiten.Image
-	imgCheckedBox   *ebiten.Image
-)
-
-func init() {
-	w := 2*checkboxPadding + 2*checkboxRadius
-	h := 2*checkboxRadius + checkboxPadding
-	{
-		fill, _ := ebiten.NewImage(2*checkboxRadius-2, 2*checkboxRadius-2, ebiten.FilterDefault)
-		fill.Fill(color.Transparent)
-
-		box, _ := ebiten.NewImage(2*checkboxRadius, 2*checkboxRadius, ebiten.FilterDefault)
-		box.Fill(color.Black)
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(1, 1)
-		box.DrawImage(fill, op)
-
-		imgUncheckedBox, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
-		op = &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(checkboxPadding, checkboxPadding/2)
-		imgUncheckedBox.DrawImage(box, op)
-	}
-	{
-		fill, _ := ebiten.NewImage(2*checkboxRadius-2, 2*checkboxRadius-2, ebiten.FilterDefault)
-		fill.Fill(color.RGBA{95, 240, 252, 255})
-
-		box, _ := ebiten.NewImage(2*checkboxRadius, 2*checkboxRadius, ebiten.FilterDefault)
-		box.Fill(color.Black)
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(1, 1)
-		box.DrawImage(fill, op)
-
-		imgCheckedBox, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
-		op = &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(checkboxPadding, checkboxPadding/2)
-		imgCheckedBox.DrawImage(box, op)
-	}
-}
-
 // 패딩 넣어 그려진 체크박스 그리고 텍스트 이미지 그리기
 func (c *Checkbox) Draw(screen *ebiten.Image) {
-	p := c.Rect.Size()
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(float64(p.X), float64(p.Y))
 	var box *ebiten.Image
 	if c.checked {
 		box = imgCheckedBox
 	} else {
 		box = imgUncheckedBox
 	}
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(float64(c.MinPt.X), float64(c.MinPt.Y))
 	screen.DrawImage(box, op)
-	bx, by := imgUncheckedBox.Size()
-	op.GeoM.Translate(float64(bx), float64(by))
+
+	bx, _ := imgUncheckedBox.Size()
+	op.GeoM.Translate(float64(bx), 0)
 	screen.DrawImage(c.Text, op)
 }
 
@@ -116,6 +114,18 @@ func (c *Checkbox) Checked() bool {
 
 func (c *Checkbox) SetOnChanged(f func(c *Checkbox)) {
 	c.onChanged = f
+}
+
+func (c *Checkbox) Rect() image.Rectangle {
+	bw, bh := imgUncheckedBox.Size()
+	tw, th := c.Text.Size()
+	w := bw + tw
+	h := th
+	if h < bh {
+		h = bh
+	}
+	maxPt := c.MinPt.Add(image.Pt(w, h))
+	return image.Rectangle{c.MinPt, maxPt}
 }
 
 // func Rect(p image.Point, w, h int) image.Rectangle {
