@@ -11,7 +11,6 @@ require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/hajimehoshi/ebiten v1.12.0-alpha.8.0.20200812044722-50cd33ed9bb6
 	github.com/ulikunitz/xz v0.5.7
-	golang.org/x/exp v0.0.0-20200513190911-00229845015e
 	golang.org/x/image v0.0.0-20200801110659-972c09e46d76
 	golang.org/x/mobile v0.0.0-20200801112145-973feb4309de // indirect
 	golang.org/x/sys v0.0.0-20200810151505-1b9f1253b3ed // indirect
