@@ -1,19 +1,20 @@
-package graphics
+package ebitenui
 
 import "github.com/hajimehoshi/ebiten"
 
-// Suppose all images have proper height e.g., same
-func AttachH(imgs ...*ebiten.Image) *ebiten.Image { // horizontal
+// AttachH attaches input images horizontally.
+// AttachH supposes all input images have proper height.
+func AttachH(imgs ...*ebiten.Image) *ebiten.Image {
 	var w, h int
 	for _, i := range imgs {
 		x, y := i.Size()
-		if y > h {
-			y = h
+		if h < y {
+			h = y
 		}
 		w += x
 	}
 	img, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
-	op:= &ebiten.DrawImageOptions{}
+	op := &ebiten.DrawImageOptions{}
 	for _, i := range imgs {
 		img.DrawImage(i, op)
 		x, _ := i.Size()
@@ -22,7 +23,9 @@ func AttachH(imgs ...*ebiten.Image) *ebiten.Image { // horizontal
 	return img
 }
 
-func AttachV(imgs ...*ebiten.Image) *ebiten.Image { // vertical
+// AttachV attaches input images vertically.
+// AttachV supposes all input images have proper width.
+func AttachV(imgs ...*ebiten.Image) *ebiten.Image {
 	var w, h int
 	for _, i := range imgs {
 		x, y := i.Size()
@@ -32,7 +35,7 @@ func AttachV(imgs ...*ebiten.Image) *ebiten.Image { // vertical
 		h += y
 	}
 	img, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
-	op:= &ebiten.DrawImageOptions{}
+	op := &ebiten.DrawImageOptions{}
 	for _, i := range imgs {
 		img.DrawImage(i, op)
 		_, y := i.Size()

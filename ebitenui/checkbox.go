@@ -1,4 +1,4 @@
-package graphics
+package ebitenui
 
 import (
 	"github.com/hajimehoshi/ebiten"
@@ -53,8 +53,9 @@ func init() {
 	}
 }
 
-// todo: 글자 크기가 안 맞는 체크박스가 나올 수 있음, 현재 수동으로 해야함
-// -> 폰트 및 글자 크기. dpi고정. text받고 렌더하고 체크박스까지 그리자
+// Checkbox is a struct for implementing a checkbox.
+// Checkbox consists of padded checkbox image and text image.
+// The font of Text is fixed, including text size.
 type Checkbox struct {
 	MinPt     image.Point
 	Text      *ebiten.Image
@@ -63,19 +64,18 @@ type Checkbox struct {
 	onChanged func(c *Checkbox)
 }
 
-// 화면 등이 움직이면 point값 바꿔주면 됨
 func NewCheckbox(s string, p image.Point) *Checkbox {
 	c := &Checkbox{}
 	c.MinPt = p
-	c.Text = DrawText(s, mplusNormalFont, color.Black)
+	c.Text = RenderText(s, MplusNormalFont, color.Black)
 	return c
 }
 
-// todo: button과 한번에 합칠 수 있을까?
+// todo: could it be abstracted as button?
 func (c *Checkbox) Update() {
 	if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
 		p := image.Pt(ebiten.CursorPosition())
-		if p.In(c.Rect()) {
+		if p.In(c.rect()) {
 			c.mouseDown = true
 		} else {
 			c.mouseDown = false
@@ -91,7 +91,6 @@ func (c *Checkbox) Update() {
 	}
 }
 
-// 패딩 넣어 그려진 체크박스 그리고 텍스트 이미지 그리기
 func (c *Checkbox) Draw(screen *ebiten.Image) {
 	var box *ebiten.Image
 	if c.checked {
@@ -116,7 +115,7 @@ func (c *Checkbox) SetOnChanged(f func(c *Checkbox)) {
 	c.onChanged = f
 }
 
-func (c *Checkbox) Rect() image.Rectangle {
+func (c *Checkbox) rect() image.Rectangle {
 	bw, bh := imgUncheckedBox.Size()
 	tw, th := c.Text.Size()
 	w := bw + tw
@@ -128,6 +127,7 @@ func (c *Checkbox) Rect() image.Rectangle {
 	return image.Rectangle{c.MinPt, maxPt}
 }
 
-// func Rect(p image.Point, w, h int) image.Rectangle {
-// 	return image.Rect(p.X, p.Y, p.X+w, p.Y+h)
-// }
+// it will not use widely
+func f64Pt(p image.Point) (float64, float64) {
+	return float64(p.X), float64(p.Y)
+}
