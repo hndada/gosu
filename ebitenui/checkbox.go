@@ -13,8 +13,8 @@ const (
 )
 
 var (
-	imgUncheckedBox *ebiten.Image
-	imgCheckedBox   *ebiten.Image
+	ImgUncheckedBox *ebiten.Image
+	ImgCheckedBox   *ebiten.Image
 )
 
 func init() {
@@ -39,8 +39,8 @@ func init() {
 		box, _ := ebiten.NewImage(bw, bh, ebiten.FilterDefault)
 		box.Fill(clrBorder)
 		box.DrawImage(fill, fop)
-		imgUncheckedBox, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
-		imgUncheckedBox.DrawImage(box, bop)
+		ImgUncheckedBox, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
+		ImgUncheckedBox.DrawImage(box, bop)
 	}
 	{
 		fill, _ := ebiten.NewImage(fw, fh, ebiten.FilterDefault)
@@ -48,8 +48,8 @@ func init() {
 		box, _ := ebiten.NewImage(bw, bh, ebiten.FilterDefault)
 		box.Fill(clrBorder)
 		box.DrawImage(fill, fop)
-		imgCheckedBox, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
-		imgCheckedBox.DrawImage(box, bop)
+		ImgCheckedBox, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
+		ImgCheckedBox.DrawImage(box, bop)
 	}
 }
 
@@ -94,15 +94,15 @@ func (c *Checkbox) Update() {
 func (c *Checkbox) Draw(screen *ebiten.Image) {
 	var box *ebiten.Image
 	if c.checked {
-		box = imgCheckedBox
+		box = ImgCheckedBox
 	} else {
-		box = imgUncheckedBox
+		box = ImgUncheckedBox
 	}
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Translate(float64(c.MinPt.X), float64(c.MinPt.Y))
 	screen.DrawImage(box, op)
 
-	bx, _ := imgUncheckedBox.Size()
+	bx, _ := ImgUncheckedBox.Size()
 	op.GeoM.Translate(float64(bx), 0)
 	screen.DrawImage(c.Text, op)
 }
@@ -116,7 +116,7 @@ func (c *Checkbox) SetOnChanged(f func(c *Checkbox)) {
 }
 
 func (c *Checkbox) rect() image.Rectangle {
-	bw, bh := imgUncheckedBox.Size()
+	bw, bh := ImgUncheckedBox.Size()
 	tw, th := c.Text.Size()
 	w := bw + tw
 	h := th
