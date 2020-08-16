@@ -1,4 +1,4 @@
-package o2jam
+package o2
 
 // wrong format, don't use this.
 type ojn2 struct { // another header specification

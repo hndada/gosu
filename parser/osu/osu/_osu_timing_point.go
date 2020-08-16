@@ -17,10 +17,9 @@ type TimingPoint struct {
 	Volume          int
 	Uninherited     bool
 	Effects         int
-	Kiai            bool
+	// Kiai            bool
 }
-
-func parseTimingPoint(line string) (TimingPoint, error) {
+func newTimingPoint(line string) (TimingPoint, error) {
 	var tp TimingPoint
 	vs := strings.Split(line, `,`)
 
@@ -70,7 +69,7 @@ func parseTimingPoint(line string) (TimingPoint, error) {
 		return tp, err
 	}
 	tp.Effects = effect
-	tp.Kiai = effect&1 != 0
+	// tp.Kiai = effect&1 != 0
 
 	switch tp.Uninherited {
 	case true:

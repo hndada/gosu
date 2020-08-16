@@ -3,7 +3,7 @@ package game
 import (
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
-	"github.com/hndada/gosu/ebitenui"
+	"github.com/hndada/ebitenui"
 	"github.com/hndada/gosu/mode/mania"
 	"image"
 	"image/color"

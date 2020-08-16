@@ -3,13 +3,13 @@ package mania
 import (
 	"github.com/hndada/gosu/internal/tools"
 	"github.com/hndada/gosu/mode"
-	"github.com/hndada/gosu/parser/osu"
+	osu2 "github.com/hndada/gosu/parser/osu/osu"
 	"sort"
 )
 
 const noFound = tools.NoFound
 const (
-	NtHoldHead = osu.LastNoteType << iota
+	NtHoldHead = osu2.LastNoteType << iota
 	NtHoldTail
 )
 
@@ -29,7 +29,7 @@ type Note struct {
 	HoldBonus    float64 // score 필요함
 }
 
-func NewNotes(hs []osu.HitObject, keymode int, mods mode.Mods) ([]Note, error) {
+func NewNotes(hs []osu2.HitObject, keymode int, mods mode.Mods) ([]Note, error) {
 	ns := make([]Note, 0, 2*len(hs))
 	for _, h := range hs {
 		n := make([]Note, 1, 2) // put one or two Note to []Note for every line
@@ -44,7 +44,7 @@ func NewNotes(hs []osu.HitObject, keymode int, mods mode.Mods) ([]Note, error) {
 		// n[0].hand = lv.hand(n[0].Key, keymode)
 		n[0].initSlices(keymode)
 
-		if n[0].NoteType == osu.NtHoldNote {
+		if n[0].NoteType == osu2.NtHoldNote {
 			n[0].NoteType = NtHoldHead
 			tail := Note{
 				NoteBase: base.NoteBase{

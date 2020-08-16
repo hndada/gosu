@@ -43,6 +43,8 @@ github.com/hajimehoshi/oto v0.5.4/go.mod h1:0QXGEkbuJRohbJaxr7ZQSxnju7hEhseiPx2h
 github.com/hajimehoshi/oto v0.6.1/go.mod h1:0QXGEkbuJRohbJaxr7ZQSxnju7hEhseiPx2hrh6raOI=
 github.com/hajimehoshi/oto v0.6.3 h1:NfrHdINv+7J8JhfkbHBROlWCzFSWc9PaHm2lS90KNzY=
 github.com/hajimehoshi/oto v0.6.3/go.mod h1:0QXGEkbuJRohbJaxr7ZQSxnju7hEhseiPx2hrh6raOI=
+github.com/hndada/ebitenui v0.0.0-20200814200704-4426e49b2da9 h1:BPtjB5C1L4TDCLHk0/DxTDw1gkZQoNBtUachG332BJ4=
+github.com/hndada/ebitenui v0.0.0-20200814200704-4426e49b2da9/go.mod h1:xDGbiWGW42bd6ZnDM5V38s9XUtPYhXnC6CndxJ+6RL8=
 github.com/jakecoffman/cp v0.1.0 h1:sgSYEGUgfwiT447fRjloa2c5b6UyYP+7muR3gQK+Ep0=
 github.com/jakecoffman/cp v0.1.0/go.mod h1:a3xPx9N8RyFAACD644t2dj/nK4SuLg1v+jL61m2yVo4=
 github.com/jakecoffman/cp v1.0.0/go.mod h1:JjY/Fp6d8E1CHnu74gWNnU0+b9VzEdUVPoJxg2PsTQg=
