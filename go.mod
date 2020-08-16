@@ -10,6 +10,7 @@ require (
 	github.com/go-interpreter/wagon v0.6.0 // indirect
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/hajimehoshi/ebiten v1.12.0-alpha.8.0.20200812044722-50cd33ed9bb6
+	github.com/hndada/ebitenui v0.0.0-20200814200704-4426e49b2da9 // indirect
 	github.com/ulikunitz/xz v0.5.7
 	golang.org/x/image v0.0.0-20200801110659-972c09e46d76
 	golang.org/x/mobile v0.0.0-20200801112145-973feb4309de // indirect

@@ -2,7 +2,7 @@ package mania
 
 import (
 	"github.com/hndada/gosu/internal/tools"
-	"github.com/hndada/gosu/parser/osu"
+	"github.com/hndada/gosu/parser/osu/osr"
 	"math"
 )
 
@@ -93,7 +93,7 @@ func ProcessScore(bpath, rpath string) {
 	// if err != nil {
 	// 	panic(err)
 	// }
-	r := osu.ParseOsuReplay(rpath)
+	r := osr.ParseOsuReplay(rpath)
 	pns := loadPlayNotes(b.Notes, b.Keymode)
 
 	var keymode int // keymode := int(b.Difficulty["CircleSize"])

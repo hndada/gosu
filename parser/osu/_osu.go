@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"github.com/hndada/gosu/internal/tools"
+	"github.com/hndada/gosu/parser/osu/osu"
 	"io/ioutil"
 	"sort"
 	"strings"
@@ -19,8 +20,8 @@ type OSU struct {
 	Events     []string
 	Colours    tools.Info
 
-	TimingPoints []TimingPoint
-	HitObjects   []HitObject
+	TimingPoints []osu.TimingPoint
+	HitObjects   []osu.HitObject
 }
 
 type Event struct {
@@ -49,9 +50,9 @@ func NewOSU(path string) (OSU, error) { // todo: return pointer
 
 	general, editor, metadata, difficulty := make(tools.Info), make(tools.Info), make(tools.Info), make(tools.Info)
 	events := make([]string, 0, sectionLens["Events"])
-	timingPoints := make([]TimingPoint, 0, sectionLens["TimingPoints"])
+	timingPoints := make([]osu.TimingPoint, 0, sectionLens["TimingPoints"])
 	colours := make(tools.Info)
-	hitObjects := make([]HitObject, 0, sectionLens["HitObjects"])
+	hitObjects := make([]osu.HitObject, 0, sectionLens["HitObjects"])
 
 	var l, section string
 	var kv, vs []string
@@ -125,7 +126,7 @@ func NewOSU(path string) (OSU, error) { // todo: return pointer
 					events = append(events, line)
 				}
 			case "TimingPoints":
-				timingPoint, err := parseTimingPoint(line)
+				timingPoint, err := osu.newTimingPoint(line)
 				if err != nil {
 					return o, err
 				}
@@ -134,7 +135,7 @@ func NewOSU(path string) (OSU, error) { // todo: return pointer
 				kv = strings.Split(line, ` : `)
 				colours.PutIntSlice(kv)
 			case "HitObjects":
-				hitObject, err := parseHitObject(line)
+				hitObject, err := osu.parseHitObject(line)
 				if err != nil {
 					return o, err
 				}
@@ -203,9 +204,9 @@ func getSectionLength(lines []string) (map[string]int, error) {
 // todo: correctness check yet
 func (o *OSU) calcSliderEndTime() {
 	var duration float64
-	var tPoint TimingPoint
+	var tPoint osu.TimingPoint
 	for i, note := range o.HitObjects {
-		if note.NoteType != NtSlider {
+		if note.NoteType != osu.NtSlider {
 			continue
 		}
 		for j := len(o.TimingPoints) - 1; j >= 0; j-- {

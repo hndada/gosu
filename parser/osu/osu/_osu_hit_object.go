@@ -16,7 +16,7 @@ type HitObject struct {
 	HitSound  int
 	EndTime   int
 	*SliderParams
-	*HitSamples
+	HitSamples
 }
 
 const (
@@ -204,7 +204,7 @@ func parseHitObject(line string) (HitObject, error) {
 		return hitObject, errors.New("cannot reach")
 	}
 
-	hitObject.HitSamples = &hitSamples
+	hitObject.HitSamples = hitSamples
 	return hitObject, nil
 }
 

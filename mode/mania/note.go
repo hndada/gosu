@@ -2,7 +2,7 @@ package mania
 
 import (
 	"github.com/hndada/gosu/mode"
-	"github.com/hndada/gosu/parser/osu"
+	osu2 "github.com/hndada/gosu/parser/osu/osu"
 )
 
 const (
@@ -22,7 +22,7 @@ type Note struct {
 	// 난이도 및 점수 관련은 나중에
 }
 
-func NewNotes(hs []osu.HitObject, keys int) ([]Note, error) {
+func NewNotes(hs []osu2.HitObject, keys int) ([]Note, error) {
 	ns := make([]Note, 0, 2*len(hs))
 	for _, h := range hs {
 		// n := Note{
@@ -60,9 +60,9 @@ func NewNotes(hs []osu.HitObject, keys int) ([]Note, error) {
 
 func noteType(t int) int16 {
 	switch {
-	case t&osu.NtNote != 0:
+	case t&osu2.NtNote != 0:
 		return TypeNote
-	case t&osu.NtHoldNote != 0:
+	case t&osu2.NtHoldNote != 0:
 		return TypeLongNote
 	}
 	panic("not reach")

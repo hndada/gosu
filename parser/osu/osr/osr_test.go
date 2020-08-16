@@ -1,4 +1,4 @@
-package osu
+package osr
 
 import (
 	"fmt"

@@ -1,4 +1,4 @@
-package o2jam
+package o2
 
 import (
 	"fmt"
