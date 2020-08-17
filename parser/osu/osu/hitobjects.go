@@ -2,11 +2,10 @@ package osu
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 )
-
-// var errInvalid = errors.New("invalid hit object data")
 
 func newHitObject(line string) (HitObject, error) {
 	var ho HitObject
@@ -30,7 +29,7 @@ func newHitObject(line string) (HitObject, error) {
 		if err != nil {
 			return ho, err
 		}
-		ho.StartTime = int(f)
+		ho.Time = int(f)
 	}
 	{
 		i, err := strconv.Atoi(vs[3])
@@ -48,7 +47,7 @@ func newHitObject(line string) (HitObject, error) {
 	}
 
 	var vs2 []string
-	switch HitType(ho.NoteType) & ComboMask {
+	switch ho.NoteType & ComboMask {
 	case HitTypeNote, HitTypeSlider, HitTypeSpinner:
 		vs2 = strings.Split(vs[5], `,`)
 	case HitTypeHoldNote:
@@ -58,7 +57,7 @@ func newHitObject(line string) (HitObject, error) {
 	}
 
 	var hsSkip bool
-	switch HitType(ho.NoteType) & ComboMask {
+	switch ho.NoteType & ComboMask {
 	case HitTypeNote:
 		// hitSample
 
@@ -69,7 +68,7 @@ func newHitObject(line string) (HitObject, error) {
 			vs3 = strings.Join(vs2[:len(vs2)-1], `,`)
 		} else { // no hit sample
 			vs3 = strings.Join(vs2, `,`)
-			hsSkip=true
+			hsSkip = true
 		}
 		sp, err := newSliderParams(vs3)
 		if err != nil {
@@ -206,10 +205,10 @@ func newHitSample(s string) (HitSample, error) {
 	return hs, nil
 }
 
-type HitType int
+// type HitType int
 
 const (
-	HitTypeNote HitType = 1 << iota
+	HitTypeNote = 1 << iota
 	HitTypeSlider
 	NewCombo
 	HitTypeSpinner
@@ -221,3 +220,76 @@ const (
 const ComboMask = ^(NewCombo + ComboColourSkip1 + ComboColourSkip2 + ComboColourSkip3)
 
 // var ActualHitType = [...]HitType{HitTypeNote, HitTypeSlider, HitTypeSpinner, HitTypeHoldNote}
+
+const (
+	HitSoundNormal = iota
+	HitSoundWhistle
+	HitSoundFinish
+	HitSoundClap
+)
+
+// todo: test yet
+// supposed whether normal or additional sample set is input in every call
+func (hs HitSample) SampleFilename(sampleSet, hitSound int) string {
+	if hs.Filename != "" {
+		return hs.Filename
+	}
+	var sampleSetName, hitSoundName, index string
+	switch sampleSet {
+	case 1:
+		sampleSetName = "normal"
+	case 2:
+		sampleSetName = "soft"
+	case 3:
+		sampleSetName = "drum"
+	}
+	switch hitSound {
+	case HitSoundNormal:
+		hitSoundName = "normal"
+	case HitSoundWhistle:
+		hitSoundName = "whistle"
+	case HitSoundFinish:
+		hitSoundName = "finish"
+	case HitSoundClap:
+		hitSoundName = "clap"
+	}
+	index = strconv.Itoa(hs.Index)
+	return fmt.Sprintf("%s-hit%s%s.wav", sampleSetName, hitSoundName, index)
+}
+
+// todo: need a test
+func (ho HitObject) SliderDuration(tps []TimingPoint, multiplier float64) int {
+	if ho.NoteType != HitTypeSlider {
+		return 0
+	}
+	for j := len(tps) - 1; j >= 0; j-- {
+		tp := tps[j]
+		if tp.Time > ho.Time || tp.Uninherited {
+			continue
+		}
+		duration := ho.SliderParams.Length / (multiplier * 100) * (-tp.BeatLength)
+		return int(duration)
+	}
+	return 0
+}
+
+func (ho HitObject) IsTaikoDon() bool {
+	if ho.NoteType&ComboMask != 1 {
+		return false
+	}
+	return ho.HitSound != HitSoundWhistle && ho.HitSound != HitSoundClap
+}
+func (ho HitObject) IsTaikoKat() bool {
+	if ho.NoteType&ComboMask != 1 {
+		return false
+	}
+	return ho.HitSound == HitSoundWhistle || ho.HitSound == HitSoundClap
+}
+func (ho HitObject) IsTaikoBig() bool {
+	return ho.HitSound&HitSoundFinish != 0
+}
+
+// Column returns index of column at mania playfield
+func (ho HitObject) Column(columnCount int) int {
+	return columnCount * ho.X / 512
+}

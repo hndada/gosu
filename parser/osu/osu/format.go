@@ -96,7 +96,7 @@ type HitObjects []HitObject
 type HitObject struct { // delimiter,
 	X            int
 	Y            int
-	StartTime    int
+	Time    int
 	NoteType     int          // nofloat
 	HitSound     int          // nofloat
 	EndTime      int          // optional

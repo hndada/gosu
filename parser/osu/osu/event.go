@@ -18,7 +18,7 @@ func newEvent(line string) (Event, error) {
 			e.StartTime = int(f)
 		}
 		{
-			e.Filename = vs[2]
+			e.Filename = strings.Trim(vs[2], `"`)
 		}
 		{
 			f, err := strconv.ParseFloat(vs[3], 64)
