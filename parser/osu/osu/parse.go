@@ -2,16 +2,23 @@ package osu
 
 import (
 	"bytes"
+	"image/color"
 	"io/ioutil"
 	"strconv"
 	"strings"
 )
 
-// todo: 자동 생성 코드 검사, 수동 코드 추가
-// todo: 미구현 파싱 추가
-// todo: put flag: force parse (ignore error)
 func Parse(path string) (*FormatOsu, error) {
-	var o FormatOsu
+	var o = FormatOsu{
+		General: General{
+			PreviewTime:      -1,
+			Countdown:        1,
+			SampleSet:        "Normal",
+			StackLeniency:    0.7,
+			StoryFireInFront: true,
+			OverlayPosition:  "NoChange",
+		},
+	}
 	dat, err := ioutil.ReadFile(path)
 	if err != nil {
 		return &o, err
@@ -34,24 +41,24 @@ func Parse(path string) (*FormatOsu, error) {
 		}
 		switch section {
 		case "General":
-			kv := strings.Split(line, `:(space)`)
+			kv := strings.Split(line, `: `)
 			switch kv[0] {
 			case "AudioFilename":
 				o.General.AudioFilename = kv[1]
 			case "AudioLeadIn":
-				i, err := strconv.Atoi(kv[1])
+				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
 					return &o, err
 				}
-				o.General.AudioLeadIn = i
+				o.General.AudioLeadIn = int(f)
 			case "AudioHash":
 				o.General.AudioHash = kv[1]
 			case "PreviewTime":
-				i, err := strconv.Atoi(kv[1])
+				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
 					return &o, err
 				}
-				o.General.PreviewTime = i
+				o.General.PreviewTime = int(f)
 			case "Countdown":
 				i, err := strconv.Atoi(kv[1])
 				if err != nil {
@@ -107,11 +114,11 @@ func Parse(path string) (*FormatOsu, error) {
 				}
 				o.General.EpilepsyWarning = b
 			case "CountdownOffset":
-				i, err := strconv.Atoi(kv[1])
+				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
 					return &o, err
 				}
-				o.General.CountdownOffset = i
+				o.General.CountdownOffset = int(f)
 			case "SpecialStyle":
 				b, err := strconv.ParseBool(kv[1])
 				if err != nil {
@@ -132,7 +139,7 @@ func Parse(path string) (*FormatOsu, error) {
 				o.General.SamplesMatchPlaybackRate = b
 			}
 		case "Editor":
-			kv := strings.Split(line, `:(space)`)
+			kv := strings.Split(line, `: `)
 			switch kv[0] {
 			case "Bookmarks":
 				slice := make([]int, 0)
@@ -157,11 +164,11 @@ func Parse(path string) (*FormatOsu, error) {
 				}
 				o.Editor.BeatDivisor = f
 			case "GridSize":
-				i, err := strconv.Atoi(kv[1])
+				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
 					return &o, err
 				}
-				o.Editor.GridSize = i
+				o.Editor.GridSize = int(f)
 			case "TimelineZoom":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
@@ -193,17 +200,19 @@ func Parse(path string) (*FormatOsu, error) {
 				}
 				o.Metadata.Tags = slice
 			case "BeatmapID":
-				i, err := strconv.Atoi(kv[1])
+				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return &o, err
+					// return &o, err
+					f = -1
 				}
-				o.Metadata.BeatmapID = i
+				o.Metadata.BeatmapID = int(f)
 			case "BeatmapSetID":
-				i, err := strconv.Atoi(kv[1])
+				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return &o, err
+					// return &o, err
+					f = -1
 				}
-				o.Metadata.BeatmapSetID = i
+				o.Metadata.BeatmapSetID = int(f)
 			}
 		case "Difficulty":
 			kv := strings.Split(line, `:`)
@@ -245,18 +254,42 @@ func Parse(path string) (*FormatOsu, error) {
 				}
 				o.Difficulty.SliderTickRate = f
 			}
-		
-		
-		
-		
 		case "Events":
-			continue
+			e, err := newEvent(line)
+			if err != nil {
+				// return &o, err
+				continue
+			}
+			o.Events = append(o.Events, e)
 		case "TimingPoints":
-			// tp, err := newTimingPoint(line)
-			// if err != nil {
-			// 	return &o, err
-			// }
-			// o.TimingPoints = append(o.TimingPoints, tp)
+			tp, err := newTimingPoint(line)
+			if err != nil {
+				return &o, err
+			}
+			o.TimingPoints = append(o.TimingPoints, tp)
+		case "Colours":
+			kv := strings.Split(line, ` : `)
+			rgb := convRGB(kv[1])
+			switch kv[0] {
+			case "Combo1":
+				o.Colours.Combos[0] = rgb
+			case "Combo2":
+				o.Colours.Combos[1] = rgb
+			case "Combo3":
+				o.Colours.Combos[2] = rgb
+			case "Combo4":
+				o.Colours.Combos[3] = rgb
+			case "SliderTrackOverride":
+				o.Colours.SliderTrackOverride = rgb
+			case "SliderBorder":
+				o.Colours.SliderBorder = rgb
+			}
+		case "HitObjects":
+			ho, err := newHitObject(line)
+			if err != nil {
+				return &o, err
+			}
+			o.HitObjects = append(o.HitObjects, ho)
 		}
 	}
 	return &o, nil
@@ -269,4 +302,23 @@ func isSection(line string) bool {
 		return false
 	}
 	return string(line[0]) == "[" && string(line[len(line)-1]) == "]"
+}
+func convRGB(s string) color.RGBA {
+	var rgb color.RGBA
+	for i, c := range strings.Split(s, `,`) {
+		f, err := strconv.ParseFloat(c, 64)
+		if err != nil {
+			f = 0
+		}
+		switch i {
+		case 0:
+			rgb.R = uint8(f)
+		case 1:
+			rgb.G = uint8(f)
+		case 2:
+			rgb.B = uint8(f)
+		}
+	}
+	rgb.A = 255
+	return rgb
 }

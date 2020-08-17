@@ -19,10 +19,10 @@ type General struct { // delimiter:(space)
 	AudioLeadIn              int
 	AudioHash                string // deprecated
 	PreviewTime              int
-	Countdown                int
+	Countdown                int // nofloat
 	SampleSet                string
 	StackLeniency            float64
-	Mode                     int
+	Mode                     int // nofloat
 	LetterboxInBreaks        bool
 	StoryFireInFront         bool // deprecated
 	UseSkinSprites           bool
@@ -67,7 +67,8 @@ type Events []Event
 // storyboard not implemented yet
 type Event struct { // delimiter,
 	Type      string
-	StartTime int64
+	StartTime int
+	EndTime   int // optional
 	Filename  string
 	XOffset   int
 	YOffset   int
@@ -79,15 +80,15 @@ type TimingPoint struct { // delimiter,
 	// Bpm, SpeedScale float64 // todo: method
 	BeatLength  float64
 	Meter       int
-	SampleSet   int
-	SampleIndex int
+	SampleSet   int // nofloat
+	SampleIndex int // nofloat
 	Volume      int
 	Uninherited bool
-	Effects     int
+	Effects     int // nofloat
 	// Kiai        bool // todo: method
 }
 type Colours struct { // manual
-	Combos              []color.RGBA
+	Combos              [4]color.RGBA
 	SliderTrackOverride color.RGBA
 	SliderBorder        color.RGBA
 }
@@ -96,8 +97,8 @@ type HitObject struct { // delimiter,
 	X            int
 	Y            int
 	StartTime    int
-	NoteType     int
-	HitSound     int
+	NoteType     int          // nofloat
+	HitSound     int          // nofloat
 	EndTime      int          // optional
 	SliderParams SliderParams // optional
 	HitSample    HitSample    // optional
@@ -107,13 +108,13 @@ type SliderParams struct { // delimiter,
 	CurvePoints [][2]int // delimiter| // delimiter: // slice of paired integers
 	Slides      int
 	Length      float64
-	EdgeSounds  [2]int    // delimiter|
-	EdgeSets    [2][2]int // delimiter| // delimiter:
+	EdgeSounds  []int    // delimiter|
+	EdgeSets    [][2]int // delimiter| // delimiter:
 }
 type HitSample struct { // delimiter:
-	NormalSet   int
-	AdditionSet int
-	Index       int
+	NormalSet   int // nofloat
+	AdditionSet int // nofloat
+	Index       int // nofloat
 	Volume      int
 	Filename    string
 }
