@@ -11,8 +11,8 @@ const (
 	kat
 )
 const donKat = element.NtNote
-const katBitMask = element.Whistle + element.Clap
-const allowedNTMask = element.NtNote + element.NtSlider + element.NtSpinner
+// const katBitMask = element.Whistle + element.Clap
+// const allowedNTMask = element.NtNote + element.NtSlider + element.NtSpinner
 
 type TaikoNoteCommon struct {
 	Color int

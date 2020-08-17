@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-// time,beatLength,meter,sampleSet,sampleIndex,volume,uninherited,effects
 func newTimingPoint(line string) (TimingPoint, error) {
+	// time,beatLength,meter,sampleSet,sampleIndex,volume,uninherited,effects
 	var tp TimingPoint
 	vs := strings.Split(line, `,`)
 	{
@@ -66,4 +66,25 @@ func newTimingPoint(line string) (TimingPoint, error) {
 		tp.Effects = i
 	}
 	return tp, nil
+}
+
+func (tp TimingPoint) IsInherited() bool { return !tp.Uninherited }
+
+func (tp TimingPoint) BPM() (bpm float64, ok bool) {
+	if !tp.Uninherited {
+		return 0, false
+	}
+	return 1000 * 60 / tp.BeatLength, true
+}
+// Speed returns speed scale. The standard speed value is 1.
+func (tp TimingPoint) Speed() (speed float64, ok bool) {
+	if tp.Uninherited {
+		return 0, false
+	}
+	return 100 / (-tp.BeatLength), true
+}
+
+func (tp TimingPoint) isKiai() bool { return tp.Effects&1 != 0 }
+func (tp TimingPoint) isFirstBarOmitted() bool {
+	return tp.Effects&(1<<3) != 0
 }
