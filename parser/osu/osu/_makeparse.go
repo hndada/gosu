@@ -9,9 +9,6 @@ import (
 	"go/token"
 )
 
-// 필요할 때만 ``풀기
-// src1, 삽입, src2
-
 func main() {
 	// Events, TimingPoints, HitObjects는 어떤 시점에서 자동 스킵됨
 	sections := []string{"General", "Editor", "Metadata", "Difficulty"} // [4]string

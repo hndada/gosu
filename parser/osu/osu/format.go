@@ -65,7 +65,7 @@ type Difficulty struct { // delimiter:
 type Events []Event
 
 // storyboard not implemented yet
-type Event struct {
+type Event struct { // delimiter,
 	Type      string
 	StartTime int64
 	Filename  string
