@@ -2,11 +2,9 @@ package mania
 
 import (
 	"github.com/hndada/gosu/internal/tools"
-	"github.com/hndada/gosu/parser/osu/osr"
 	"math"
 )
 
-// mania beatmap loader
 // legacy replay 분석 좀 더, 이후 test 여부 결정
 // (키보드 input: eiannone/keyboard module)
 

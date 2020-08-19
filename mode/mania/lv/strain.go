@@ -25,7 +25,7 @@ var fingerBonus = [5]float64{
 
 func CalcStrain(ns []mania.Note, keymode int) {
 	markAffect(ns)
-	hand(ns, keymode)
+	mania.hand(ns, keymode)
 
 	setStrainBase(ns, keymode)
 	calcChordPanelty(ns)
@@ -40,7 +40,7 @@ func CalcStrain(ns []mania.Note, keymode int) {
 func setStrainBase(ns []mania.Note, keymode int) {
 	var base, lnDuration float64
 	for i, n := range ns {
-		base = 1 + fingerBonus[finger(n.Key, keymode)]
+		base = 1 + fingerBonus[mania.finger(n.Key, keymode)]
 		if n.NoteType == mania.NtHoldTail { // a tail of hold note will get partial strain
 			lnDuration = float64(n.Time - n.OpponentTime)
 			base *= tools.SolveY(curveTail, lnDuration)
@@ -158,7 +158,7 @@ func setHoldImpacts(ns []mania.Note) {
 			if elapsedTime >= holdAffectDelta {
 				impact = math.Max(0, 0.5+math.Min(remainedTime, holdAffectDelta)/(2*holdAffectDelta))
 				ns[affectedIdx].holdImpacts[ln.Key] = impact * float64(ln.hand)
-				if ln.hand == alter {
+				if ln.hand == mania.alter {
 					panic("still alter")
 				}
 				if impact == 0 { // hold note will not affect further notes
@@ -180,17 +180,17 @@ func calcHoldBonus(ns []mania.Note, keymode int) {
 		bonus = 0
 		existOuter, existInner = false, false // for adding main bonus only once
 		for holdKey, impact := range n.holdImpacts {
-			if impact == 0 || !isSameHand(n.hand, int(impact)) {
+			if impact == 0 || !mania.isSameHand(n.hand, int(impact)) {
 				continue
 			}
 			switch {
-			case isHoldOuter(holdKey, n.Key, keymode):
+			case mania.isHoldOuter(holdKey, n.Key, keymode):
 				if !existOuter {
 					bonus += holdOuterOnceBonus
 				}
 				existOuter = true
-			case isHoldInner(holdKey, n.Key, keymode):
-				if isHoldInnerAdj(holdKey, n.Key, keymode) {
+			case mania.isHoldInner(holdKey, n.Key, keymode):
+				if mania.isHoldInnerAdj(holdKey, n.Key, keymode) {
 					bonus += holdInnerAdjOnceBonus
 				}
 				if !existInner {
@@ -198,7 +198,7 @@ func calcHoldBonus(ns []mania.Note, keymode int) {
 				}
 				existInner = true
 			}
-			bonus += holdRemainBonus * fingerBonus[finger(holdKey, keymode)] * math.Abs(impact)
+			bonus += holdRemainBonus * fingerBonus[mania.finger(holdKey, keymode)] * math.Abs(impact)
 		}
 		ns[i].holdBonus = bonus
 	}
