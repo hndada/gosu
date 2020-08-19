@@ -1,8 +1,9 @@
 package mania
 
 import (
+	"errors"
 	"github.com/hndada/gosu/mode"
-	osu2 "github.com/hndada/gosu/parser/osu/osu"
+	"github.com/hndada/rg-parser/osugame/osu"
 )
 
 const (
@@ -15,59 +16,77 @@ const (
 	LNTail = TypeLongNote | TypeReleaseNote
 )
 
+// 난이도 및 점수 관련은 나중에
 type Note struct {
 	mode.BaseNote
 	Key int
 
-	// 난이도 및 점수 관련은 나중에
+	// hand        int
+	// chord       []int
+	// trillJack   []int
+	// holdImpacts []float64
+	//
+	// strainBase   float64
+	// chordPenalty float64
+	// trillBonus   float64
+	// jackBonus    float64
+	// HoldBonus    float64 // score 필요함
+
+	// Strain
+	// Read
+	// Stamina
 }
 
-func NewNotes(hs []osu2.HitObject, keys int) ([]Note, error) {
-	ns := make([]Note, 0, 2*len(hs))
-	for _, h := range hs {
-		// n := Note{
-		// 	BaseNote: mode.BaseNote{
-		// 		Type: noteType(h.NoteType),
-		// 		Time: int64(h.StartTime),
-		// 	},
-		// 	Key: key(keys, h.X),
-		// }
-		var n Note
-		n.Type = noteType(h.NoteType)
-		n.Key = key(keys, h.X)
-		n.Time = int64(h.StartTime)
+var ErrDuration = errors.New("invalid duration: not a positive value")
 
-		if n.Type == TypeLongNote {
-			n.Type = LNHead
-			n.Time2 = int64(h.EndTime)
-			ns = append(ns, n)
+func newNote(ho osu.HitObject, keys int, mods Mods) ([]Note, error) {
+	ns := make([]Note, 0, 2)
+	var n Note
+	switch ho.NoteType & osu.ComboMask {
+	case osu.HitTypeHoldNote:
+		n.Type = TypeLongNote
+	case osu.HitTypeNote:
+		n.Type = TypeNote
+	default:
+		return ns, errors.New("invalid hit object")
+	}
+	n.Key = ho.Column(keys)
+	n.Time = int64(float64(ho.Time) / mods.TimeRate)
+	n.SampleFilename = ho.HitSample.Filename
+	n.SampleVolume = uint8(ho.HitSample.Volume)
 
-			var n2 Note
-			n2.Type = LNTail
-			n2.Key = n.Key
-			n2.Time = n.Time2
-			n2.Time2 = n.Time
-			ns = append(ns, n2)
-		} else {
-			ns = append(ns, n)
+	if n.Type == TypeLongNote {
+		n.Type = LNHead
+		n.Time2 = int64(float64(ho.EndTime) / mods.TimeRate)
+		ns = append(ns, n)
+		if n.Time2-n.Time <= 0 {
+			return ns, ErrDuration
 		}
+
+		var n2 Note
+		n2.Type = LNTail
+		n2.Key = n.Key
+		n2.Time = n.Time2
+		n2.Time2 = n.Time
+		ns = append(ns, n2)
+	} else {
+		ns = append(ns, n)
 	}
 	return ns, nil
 }
 
-// func NewNotesFromOSU
-// func NewNotesFromBMS
+// func SortNotes(ns []Note) {
+// 	sort.Slice(ns, func(i, j int) bool {
+// 		if ns[i].Time == ns[j].Time {
+// 			return ns[i].Key < ns[j].Key
+// 		}
+// 		return ns[i].Time < ns[j].Time
+// 	})
+// }
 
-func noteType(t int) int16 {
-	switch {
-	case t&osu2.NtNote != 0:
-		return TypeNote
-	case t&osu2.NtHoldNote != 0:
-		return TypeLongNote
-	}
-	panic("not reach")
-}
 
-func key(keys int, x int) int {
-	return keys * x / 512 // starts with 0
-}
+// func (n *Note) initSlices(keymode int) {
+//	n.trillJack = tools.GetIntSlice(keymode, noFound)
+//	n.chord = tools.GetIntSlice(keymode, noFound)
+//	n.holdImpacts = make([]float64, keymode)
+// }
