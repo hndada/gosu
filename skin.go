@@ -1,53 +1,28 @@
 package gosu
 
-import (
-	"github.com/hndada/gosu/mode/mania"
-	"image/color"
-)
+// todo: backward-compatibility하면 게임 스킨 파싱 버전 안 적어도 되나?
+// case1: 클라가 최신, 스킨이 구식 버전 (보통)
+// case2: 스킨은 최신, 클라가 구식
 
+// skin은 only for asset/resources; 설정은 전적으로 user에게 맡긴다
+// author나 license는 skin 폴더에 별도 텍스트 파일로 저장
 type Skin struct {
-}
+	Name string
+	// NoteImage#: // LNHead와 동일
+	// NoteImage#L:
+	// (NoteImage#H)
+	// (NoteImage#T)
+	// LightingN, L
 
-const (
-	even int = iota
-	odd
-	middle
-	pinky
-)
-const (
-	scratchLeft  = 1 << 5 // 32
-	scratchRight = 1 << 6 // 64
-)
+	// HitResults
+	// ScorePrefix (스코어 이미지 접두어)
+	// ComboPrefix
 
-func NewNoteImageInfo2() map[int][]int {
-	info := make(map[int][]int)
-	info[0] = []int{}
-	info[1] = []int{middle}
-	info[2] = []int{even, even}
-	info[3] = []int{even, middle, even}
-	info[4] = []int{even, odd, odd, even}
-	info[5] = []int{even, odd, middle, odd, even}
-	info[6] = []int{even, odd, even, even, odd, even}
-	info[7] = []int{even, odd, even, middle, even, odd, even}
-	info[8] = []int{pinky, even, odd, even, even, odd, even, pinky}
-	info[9] = []int{pinky, even, odd, even, middle, even, odd, even, pinky}
-	info[10] = []int{pinky, even, odd, even, middle, middle, even, odd, even, pinky}
-
-	for i := 1; i <= 8; i++ { // 정말 잘 짠듯
-		info[i|scratchLeft] = append([]int{pinky}, info[i-1]...)
-		info[i|scratchRight] = append(info[i-1], pinky)
-	}
-	return info
-}
-
-func noteColor(n mania.Note, keys int) color.RGBA {
-	switch n.Key {
-	case 0, 2, 4, 6:
-		return color.RGBA{239, 243, 247, 0xff} // white
-	case 1, 5:
-		return color.RGBA{66, 211, 247, 0xff} // blue
-	case 3:
-		return color.RGBA{255, 203, 82, 0xff} // yellow
-	}
-	panic("not reach")
+	// KeyImage (버튼)
+	// KeyImage#D (눌린 버튼)
+	// StageLeft
+	// StageRight
+	// StageBottom
+	// StageJudgeLine (Hint)
+	// HPBar
 }

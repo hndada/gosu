@@ -1,0 +1,7 @@
+필요 없어 보이는 것:
+BarlineHeight
+NoteBodyStyle (애매함)
+AnimationFramerate
+SongSelectActiveText // 패널 색
+SongSelectInactiveText
+StageLight

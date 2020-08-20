@@ -31,6 +31,7 @@ func (s *SceneResult) Update(g *Game) error {
 }
 
 func (s *SceneResult) Draw(screen *ebiten.Image) {
+	screen.DrawImage(s.ScreenResult, &ebiten.DrawImageOptions{})
 	for _, b := range s.Buttons {
 		b.Draw(screen)
 	}
