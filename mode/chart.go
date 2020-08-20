@@ -1,12 +1,17 @@
 package mode
 
 import (
+	"bytes"
 	"crypto/md5"
 	"github.com/hndada/rg-parser/osugame/osu"
+	"image"
+	"io/ioutil"
+	"path/filepath"
 )
 
 type BaseChart struct {
-	ChartID       int64 // 6byte: setID, 2byte: subID
+	Path          string // path of chart source file. It won't be exported to file content.
+	ChartID       int64  // 6byte: setID, 2byte: subID
 	SongName      string
 	SongUnicode   string
 	Artist        string
@@ -26,8 +31,23 @@ type BaseChart struct {
 	Parameter map[string]float64
 }
 
-func NewBaseChartFromOsu(o *osu.Format) BaseChart {
+// todo: tidy pointer up
+func NewBaseChart(path string) (*BaseChart, error) {
+	var b = &BaseChart{}
+	switch filepath.Ext(path) {
+	case ".osu":
+		o, err := osu.Parse(path)
+		if err != nil {
+			return b, err
+		}
+		*b = *NewBaseChartFromOsu(o, path)
+	}
+	return b, nil
+}
+
+func NewBaseChartFromOsu(o *osu.Format, path string) *BaseChart {
 	b := BaseChart{
+		Path:          path,
 		SongName:      o.Title,
 		SongUnicode:   o.TitleUnicode,
 		Artist:        o.Artist,
@@ -41,10 +61,29 @@ func NewBaseChartFromOsu(o *osu.Format) BaseChart {
 		// ImageFilename: o.Background().Filename,
 		Parameter: make(map[string]float64),
 	}
-	// AudioHash
 	// TimingPoint
+	if dat, err := ioutil.ReadFile(b.AbsPath(b.AudioFilename)); err == nil {
+		b.AudioHash = md5.Sum(dat)
+	}
 	b.Parameter["Scale"] = o.CircleSize
-	return b
+	return &b
 }
 
 // interface로 만들만한 게 없음
+// TransPoint를 Base에 두지 않는다면, ChartHeader로 바꾸어도 된다고 생각
+
+func (b *BaseChart) AbsPath(filename string) string {
+	return filepath.Join(filepath.Dir(b.Path), filename)
+}
+
+func (b *BaseChart) Background() (image.Image, error) {
+	dat, err := ioutil.ReadFile(b.AbsPath(b.ImageFilename))
+	if err != nil {
+		return nil, err
+	}
+	bg, _, err := image.Decode(bytes.NewReader(dat))
+	if err != nil {
+		return nil, err
+	}
+	return bg, nil
+}

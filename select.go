@@ -6,11 +6,9 @@ import (
 	"github.com/hndada/gosu/mode/mania"
 )
 
-// todo: 곡패널 만들기
+// todo: 차트 패널
 // todo: Songs 폴더 읽는 로직 만들기 - rule 포함
 // 모든 box 생성?
-// 오디오 플레이어? // 필수는 아님
-// race (competition)
 type SceneSelect struct {
 	Buttons     []ebitenui.Button
 	ChartPanels []ChartPanel

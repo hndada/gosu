@@ -1,4 +1,4 @@
-package game_test
+package game_test_test
 
 import (
 	"github.com/hajimehoshi/ebiten"

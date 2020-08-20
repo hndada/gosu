@@ -39,7 +39,7 @@ type Note struct {
 
 var ErrDuration = errors.New("invalid duration: not a positive value")
 
-func newNote(ho osu.HitObject, keys int, mods Mods) ([]Note, error) {
+func newNote(ho osu.HitObject, keys int) ([]Note, error) {
 	ns := make([]Note, 0, 2)
 	var n Note
 	switch ho.NoteType & osu.ComboMask {
@@ -51,13 +51,15 @@ func newNote(ho osu.HitObject, keys int, mods Mods) ([]Note, error) {
 		return ns, errors.New("invalid hit object")
 	}
 	n.Key = ho.Column(keys)
-	n.Time = int64(float64(ho.Time) / mods.TimeRate)
+	// n.Time = int64(float64(ho.Time) / mods.TimeRate)
+	n.Time = int64(ho.Time)
 	n.SampleFilename = ho.HitSample.Filename
 	n.SampleVolume = uint8(ho.HitSample.Volume)
 
 	if n.Type == TypeLongNote {
 		n.Type = LNHead
-		n.Time2 = int64(float64(ho.EndTime) / mods.TimeRate)
+		// n.Time2 = int64(float64(ho.EndTime) / mods.TimeRate)
+		n.Time2 = int64(ho.EndTime)
 		ns = append(ns, n)
 		if n.Time2-n.Time <= 0 {
 			return ns, ErrDuration
@@ -83,7 +85,6 @@ func newNote(ho osu.HitObject, keys int, mods Mods) ([]Note, error) {
 // 		return ns[i].Time < ns[j].Time
 // 	})
 // }
-
 
 // func (n *Note) initSlices(keymode int) {
 //	n.trillJack = tools.GetIntSlice(keymode, noFound)
