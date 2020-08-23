@@ -1,6 +1,8 @@
 package gosu
 
 import (
+	"fmt"
+	"github.com/hndada/gosu/config"
 	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten"
@@ -9,14 +11,20 @@ import (
 	"github.com/hndada/rg-parser/osugame/osu"
 )
 
-// todo: 체크박스 같은거 다시 그리기
-// todo: input; ebiten으로 간단히, 나중에 별도 라이브러리.
-// todo: PlayIntro, PlayExit
+// gob, toml - 설정 저장
+// beep (sound) - 음원 및 효과음 재생
+// font - 패널 그리기
+// input - 게임
+
+// 체크박스 같은거 다시 그리기 -> 우선 메모장으로 직접 설정하게
+// PlayIntro, PlayExit
+const Millisecond = 1000
+
 type Game struct {
-	Settings
+	settings.Settings
 	Scene        Scene
 	SceneChanger *SceneChanger
-	Skin         Skin
+	Skin         settings.Skin
 	Input        input.Input
 }
 
@@ -29,7 +37,7 @@ type Scene interface {
 
 func NewGame() (g *Game) {
 	g = &Game{}
-	g.Settings = LoadSettings()
+	g.Settings = settings.LoadSettings()
 	g.Scene = g.NewSceneTitle()
 	g.SceneChanger = NewSceneChanger()
 	return
@@ -55,7 +63,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 
 // 수정 날짜는 정직하다고 가정
 // 플레이 이외의 scene에서, 폴더 변화 감지하면 차트 리로드
-// 로드된 차트 데이터는 로컬 db에 별도 저장
+// 로드된 차트 데이터는 gob에 별도 저장
 func (g *Game) LoadCharts() error {
 	for _, d := range dirs {
 		for _, f := range files {

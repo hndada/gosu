@@ -7,7 +7,8 @@ import (
 	"github.com/hndada/ebitenui"
 )
 
-// todo: 화면 비율 조정
+// 바로 select로 넘어가게 하자
+// 800x600 기준으로 버튼 크기 고정, 여거보다 크면 가장자리가 비는 느낌으로
 type SceneTitle struct {
 	Buttons []ebitenui.Button
 	// background

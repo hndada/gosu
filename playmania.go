@@ -2,7 +2,8 @@ package gosu
 
 import (
 	"fmt"
-	"image/color"
+	"github.com/hndada/gosu/config"
+	"image"
 	_ "image/jpeg"
 	"log"
 	"os"
@@ -21,9 +22,9 @@ import (
 // todo: 플레이 하면서 리플레이 데이터 저장
 type SceneMania struct { // aka Clavier
 	BasePlayScene
-	Chart       *mania.Chart
-	Cover       *ebiten.Image
-	ScrollSpeed float64
+	Chart    *mania.Chart
+	Cover    *ebiten.Image
+	Velocity float64
 }
 
 // todo: 로딩일 때 기다리는 로직
@@ -60,31 +61,84 @@ func (s *SceneMania) Update(g *Game) error {
 	}
 
 	const endTime = 5.0 * 1000 // float64(s.C.Notes[len(s.C.Notes)-1].Time)
-	s.Time += s.Tick()
+	// 노트 이미지가 전부 불러와졌다고 가정
+	s.Tick++
+
 	for i := range s.Notes {
-		s.Notes[i].y += s.Tick() * s.ScrollSpeed
+		s.Notes[i].y += s.Tick() * scrollSpeed
 	}
-	if s.Time > endTime {
+	if s.Time() > endTime {
 		s.Streamer.Close()
-		ebiten.SetWindowTitle("gosu")
-		g.NextScene = &SceneResult{}
-		g.TransCountdown = g.MaxTransCountDown()
+		g.ChangeScene(NewSceneSelect())
 	}
+
+	// next note들이 slice에 fetch되어 있는 상태. hit 판정이 나왔을 경우.
+	if done {
+		ops[i].ColorM.ChangeHSV(0, 0, 0.5) // gray
+	}
+
 	return nil
 }
 
+// op은 노트와 일대일 대응되므로 별도의 타입이나 idx 필요 없음
+// 롱노트 body는 어떻게 해야할지 걱정
+func loadNotes() {
+	// TransPoint 좌르륵 읽기
+	// 다음 TransPoint-현 TransPoint
+	ops := make([]ebiten.DrawImageOptions, len(notes))
+	var notes []mania.Note
+
+	// 필드의 중앙이 스크린의 중앙에 오게
+	// noteimgs := config.NoteImages(7)
+
+	var ps []image.Point
+	var fieldWidth float64
+	for _, p := range ps {
+		fieldWidth += p.X
+	}
+	// 아래 목록은 screen에 처음부터 fixed 된 상태로 그려질 애들
+	// hint size: fieldWidth, ps[0].Y (indexing했으니 앞에서 0키면 에러 리턴) (근데 Y 그대로 쓰면 두꺼운 노트 스킨인 경우 어색할 수도 있음)
+	// main size: fieldWidth, screenHeight
+	// bottom size: fieldWidth, scaled src height
+	// left, right, HPBarBG size: scaled src width, screenHeight
+
+	X(fieldWidth)
+
+	for i, n := range notes {
+		n.Key
+	}
+}
+
+func X(w, center float64) float64 {
+	var halfWidth = float64(screenWidth / 2)
+	offset := halfWidth * (center / 100)
+	return halfWidth + offset - w/2
+}
+
+// 맨날 Update()에 game을 넘겨주지 말고 scene struct의 필드 값으로 박자
+// 이미지를 관리할게 아니라 op을 관리해야하네
 func (s *SceneMania) Draw(screen *ebiten.Image) {
+	// BasePlayScene 그리기
 	op := &ebiten.DrawImageOptions{}
 	const ratio = float64(1600) / 1920
 	op.GeoM.Scale(ratio, ratio)
 	op.ColorM.ChangeHSV(0, 1, 0.30)
 	screen.DrawImage(s.Cover, op)
 
-	ebitenutil.DrawRect(screen, 565, 0, 70*7, 900, color.RGBA{0, 0, 0, 180})
-	ebitenutil.DrawRect(screen, 565, 730, 70*7, 10, color.RGBA{252, 106, 111, 255})
-	for i := range s.Notes {
-		ebitenutil.DrawRect(screen, s.Notes[i].x, s.Notes[i].y, s.Notes[i].w, s.Notes[i].h, s.Notes[i].clr)
+	// edit를 위해서도, 단순하게 짜기: 전체 그리기
+	for i := range ops {
+		ops[i].GeoM.Translate(0, tickTime*speed*speedFactor)
+		screen.DrawImage(noteimgs[keys], &ops[i])
 	}
+
+	// 키 버튼 그리기
+
+	// ebitenutil.DrawRect(screen, 565, 0, 70*7, 900, color.RGBA{0, 0, 0, 180})
+	// ebitenutil.DrawRect(screen, 565, 730, 70*7, 10, color.RGBA{252, 106, 111, 255})
+	// for i := range s.Notes {
+	// 	ebitenutil.DrawRect(screen, s.Notes[i].x, s.Notes[i].y, s.Notes[i].w, s.Notes[i].h, s.Notes[i].clr)
+	// }
+
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %.2f\nTime: %.1fs", ebiten.CurrentFPS(), s.Time/1000))
 }
 
@@ -118,7 +172,7 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 			y = (-float64(n.Time2)+PlaySceneBufferTime)*s.ScrollSpeed + 730
 			h = float64(n.Time2-n.Time+noteHeight) * s.ScrollSpeed
 		}
-		s.Notes[i] = NoteImageInfo{x, y, w, h, noteColor(n, c.Keys)}
+		s.Notes[i] = NoteImageInfo{x, y, w, h, settings.noteColor(n, c.Keys)}
 	}
 
 	bg, err := s.Chart.Background()

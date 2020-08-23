@@ -5,7 +5,8 @@ import (
 	"github.com/hndada/ebitenui"
 )
 
-// todo: ui
+// 리절트창 따로 만들지 말고 mania에서 해결보기
+// 버튼 만드는거 최소화
 type SceneResult struct {
 	ScreenResult *ebiten.Image
 	Buttons      []ebitenui.Button
