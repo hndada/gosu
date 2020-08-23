@@ -8,7 +8,7 @@ import (
 type TransPoint struct {
 	Time      int64
 	BPM       float64
-	Speed     float64
+	SpeedFactor  float64
 	Meter     uint8
 	Volume    uint8
 	Highlight bool
@@ -17,7 +17,7 @@ type TransPoint struct {
 // should be run at whole slice at once
 func newTransPointsFromOsu(o osu.Format) []TransPoint {
 	var lastBPM float64
-	var lastSpeed float64 = 1
+	var lastSpeedFactor float64 = 1
 	ts := make([]TransPoint, len(o.TimingPoints))
 	for i, tp := range o.TimingPoints {
 		var t TransPoint
@@ -25,12 +25,12 @@ func newTransPointsFromOsu(o osu.Format) []TransPoint {
 		if tp.Uninherited {
 			lastBPM = t.BPM
 			t.BPM, _ = tp.BPM()
-			t.Speed = lastSpeed
+			t.SpeedFactor = lastSpeedFactor
 
 		} else {
-			lastSpeed = t.Speed
+			lastSpeedFactor = t.SpeedFactor
 			t.BPM = lastBPM
-			t.Speed, _ = tp.Speed()
+			t.SpeedFactor, _ = tp.SpeedFactor()
 		}
 		t.Meter = uint8(tp.Meter)
 		t.Volume = uint8(tp.Volume)

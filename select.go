@@ -18,6 +18,7 @@ type SceneSelect struct {
 }
 
 func NewSceneSelect() *SceneSelect {
+	ebiten.SetWindowTitle("gosu")
 	return nil
 }
 
