@@ -20,102 +20,74 @@ import (
 
 // todo: NewBasePlayScene()
 // todo: examples/camera 참고하여 플레이 프레임 안정화
+// todo: image.Point가 int,int만 받는걸 이제 봤네
 type SceneMania struct { // aka Clavier
-	// BasePlayScene
-	buffer *beep.Buffer
 	g      *Game
+	buffer *beep.Buffer
+	bg     *ebiten.Image
+	bgop   *ebiten.DrawImageOptions
+	tick   int64
+	step   func() float64
 
-	tick int64
-	// score float64
-	// HP    float64
-	// Combo int32
+	score float64
+	hp    float64
+	combo int32
 
-	chart *mania.Chart
-	// Cover  *ebiten.Image
-	backStage   *ebiten.Image
+	chart  *mania.Chart
+	notes  []NoteSprite
+	lnotes []LNSprite // 롱노트 특성상, 2개로 나누는 게 불가피해보임
+
 	speed       float64
-	speedFactor float64
-	notes       []NoteSprite
-	lnotes      []LNSprite // 롱노트 특성상, 2개로 나누는 게 불가피해보임
 	viewport    float64
-	step        func() float64
+	speedFactor float64
 }
 
 // lnhead와 lntail 분리 유지
 func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	s := &SceneMania{}
 	ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", c.SongName, c.ChartName))
-	s.tick = -int64(2 * s.g.MaxTPS())
-
-	f, err := os.Open(s.chart.AbsPath(s.chart.AudioFilename))
-	if err != nil {
-		log.Fatal(err)
-	}
-	var streamer beep.StreamSeekCloser
-	var streamFormat beep.Format
-	switch strings.ToLower(filepath.Ext(s.chart.AudioFilename)) {
-	case ".mp3":
-		streamer, streamFormat, err = mp3.Decode(f)
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
-	s.buffer = beep.NewBuffer(streamFormat)
-	s.buffer.Append(beep.Silence(streamFormat.SampleRate.N(2 * time.Second)))
-	s.buffer.Append(streamer)
-	_ = streamer.Close()
-
-	if err = speaker.Init(s.buffer.Format().SampleRate,
-		s.buffer.Format().SampleRate.N(time.Second/100)); err != nil {
-		log.Fatal(err)
-	}
-
-	s.chart = c.ApplyMods(mods)
-
-	// 스테이지 + StartAt Offset op걸고
-	// ebitenutil.DrawRect(screen, 565, 0, 70*7, 900, color.RGBA{0, 0, 0, 180})
-	// ebitenutil.DrawRect(screen, 565, 730, 70*7, 10, color.RGBA{252, 106, 111, 255})
-
-	// var ps []image.Point
-	// var fieldWidth float64
-	// for _, p := range ps {
-	// 	fieldWidth += p.X
-	// }
-	// 아래 목록은 screen에 처음부터 fixed 된 상태로 그려질 애들
-	// hint size: fieldWidth, ps[0].Y (indexing했으니 앞에서 0키면 에러 리턴)
-	// (근데 Y 그대로 쓰면 두꺼운 노트 스킨인 경우 어색할 수도 있음)
-	// todo: 판정선 가운데에 노트 가운데가 맞을 때 Max가 뜨게
-	// main size: fieldWidth, screenHeight
-	// bottom size: fieldWidth, scaled src height
-	// left, right, HPBarBG size: scaled src width, screenHeight
-
-	// 필드의 중앙이 스크린의 중앙에 오게
-	// ColumnStart를 리턴하는 함수로 만드는 게 좋을 듯
-	// func X(w, center float64) float64 {
-	// 	var halfWidth = float64(screenWidth / 2)
-	// 	offset := halfWidth * (center / 100)
-	// 	return halfWidth + offset - w/2
-	// }
-
-	s.setNoteSprites()
-	s.applySpeed(s.g.ScrollSpeed)
-	// todo: 값 변경 안생기게 함수로 감쌌는데, performance 확인
-	const approachDuration = 1000
-	s.step = func() float64 { return float64(s.g.ScreenSize().Y) / float64(s.g.MaxTPS()) / (approachDuration / Millisecond) }
 	{
 		_bg, err := s.chart.Background()
 		if err != nil {
 			log.Fatal(err)
 		}
-		bg, _ := ebiten.NewImageFromImage(_bg, ebiten.FilterDefault)
-
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(ratio(s.g.ScreenSize(), image.Pt(bg.Size()))) // todo: 폭맞춤
-		op.ColorM.ChangeHSV(0, 1, 0.30)
-		s.backStage.DrawImage(bg, op)
+		s.bg, _ = ebiten.NewImageFromImage(_bg, ebiten.FilterDefault)
+		s.bgop = &ebiten.DrawImageOptions{}
+		s.bgop.GeoM.Scale(ratio(s.g.ScreenSize(), image.Pt(s.bg.Size()))) // todo: 폭맞춤
+		s.bgop.ColorM.ChangeHSV(0, 1, 0.30)
 	}
+	{
+		f, err := os.Open(s.chart.AbsPath(s.chart.AudioFilename))
+		if err != nil {
+			log.Fatal(err)
+		}
+		var streamer beep.StreamSeekCloser
+		var streamFormat beep.Format
+		switch strings.ToLower(filepath.Ext(s.chart.AudioFilename)) {
+		case ".mp3":
+			streamer, streamFormat, err = mp3.Decode(f)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+		s.buffer = beep.NewBuffer(streamFormat)
+		s.buffer.Append(beep.Silence(streamFormat.SampleRate.N(2 * time.Second)))
+		s.buffer.Append(streamer)
+		_ = streamer.Close()
 
+		if err = speaker.Init(s.buffer.Format().SampleRate,
+			s.buffer.Format().SampleRate.N(time.Second/100)); err != nil {
+			log.Fatal(err)
+		}
+	}
+	s.tick = -int64(2 * s.g.MaxTPS())
+	// todo: 값 변경 안생기게 함수로 감쌌는데, performance 확인
+	const approachDuration = 1000
+	s.step = func() float64 { return float64(s.g.ScreenSize().Y) / float64(s.g.MaxTPS()) / (approachDuration / Millisecond) }
+
+	s.chart = c.ApplyMods(mods)
+	s.setNoteSprites()
+	s.applySpeed(s.g.ScrollSpeed)
 	return s
 }
 
@@ -134,7 +106,7 @@ func (s *SceneMania) Update() error {
 	}
 
 	dy := s.step() * s.speed * s.speedFactor
-	// todo: op을 Update()에서 바꾸는 게 나는 바람직해 보이는데, 표준은?
+	// op을 Update()에서 바꾸는 게 나는 바람직해 보이는데, 표준인진 모르겠음
 	for i := range s.notes {
 		s.notes[i].op.GeoM.Translate(0, dy)
 	}
@@ -147,7 +119,8 @@ func (s *SceneMania) Update() error {
 
 // 단순명료하게 전체 노트 그리기; edit 위해서도 좋음
 func (s *SceneMania) Draw(screen *ebiten.Image) {
-	// BackStage 그리기
+	screen.DrawImage(s.bg, s.bgop)
+	screen.DrawImage(s.g.Skin.Mania.Stage.Image, s.g.Skin.Mania.Stage.Op)
 	for _, n := range s.notes {
 		screen.DrawImage(noteimgs[keys], &n.op)
 	}
