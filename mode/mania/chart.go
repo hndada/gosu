@@ -7,7 +7,7 @@ import (
 )
 
 type Chart struct {
-	mode.BaseChart
+	*mode.BaseChart
 	Keys  int
 	Notes []Note
 }
@@ -43,4 +43,17 @@ func (c *Chart) ApplyMods(mods Mods) *Chart {
 		c2.Notes[i] = n
 	}
 	return &c2
+}
+
+func (c Chart) EndTime() int64 {
+	return c.Notes[len(c.Notes)-1].Time
+}
+func (c Chart) NumLN() int {
+	var num int
+	for _, n := range c.Notes {
+		if n.Type == LNHead {
+			num++
+		}
+	}
+	return num
 }

@@ -7,13 +7,6 @@ import (
 
 const PlaySceneBufferTime float64 = 1500
 
-// todo: bufferTime 1500ms 정도로 넣기, 그런데 현재 fps 5 나옴
-// todo: mp3, 버퍼에 올리자. 오래 걸려도 되니까
-// todo: examples/camera 참고하여 플레이 프레임 안정화
-// todo: float64, fixed로 고치기 생각
-// sync with mp3, position
-
-
 type BasePlayScene struct {
 	Streamer     beep.StreamSeekCloser
 	StreamFormat beep.Format

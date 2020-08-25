@@ -1,7 +1,6 @@
 package gosu
 
 import (
-	"fmt"
 	"github.com/hndada/gosu/config"
 	"path/filepath"
 
@@ -11,36 +10,41 @@ import (
 	"github.com/hndada/rg-parser/osugame/osu"
 )
 
+// todo: 훈련소 및 군대 가서 할 것들 정리 필요
+// todo: reference book: 참고용 ui; 곡선택창 같은거
+// 다른 곳으로 날아가도, 외출 때 코딩을 하겠음
+
 // gob, toml - 설정 저장
 // beep (sound) - 음원 및 효과음 재생
 // font - 패널 그리기
 // input - 게임
+// todo: float64, fixed로 고치기 생각
 
 // 체크박스 같은거 다시 그리기 -> 우선 메모장으로 직접 설정하게
 // PlayIntro, PlayExit
 const Millisecond = 1000
 
 type Game struct {
-	settings.Settings
+	config.Settings
 	Scene        Scene
 	SceneChanger *SceneChanger
-	Skin         settings.Skin
+	Skin         config.Skin
 	Input        input.Input
 }
 
 // todo: 소리 재생
 // Scene이 Game을 control하는 주체
 type Scene interface {
-	Update(g *Game) error
+	Update() error
 	Draw(screen *ebiten.Image) // Draws scene to screen
 }
 
-func NewGame() (g *Game) {
-	g = &Game{}
-	g.Settings = settings.LoadSettings()
+func NewGame() *Game {
+	g := &Game{}
+	g.Settings = config.LoadSettings()
 	g.Scene = g.NewSceneTitle()
 	g.SceneChanger = NewSceneChanger()
-	return
+	return g
 }
 func (g *Game) Update(screen *ebiten.Image) error {
 	if !g.SceneChanger.done() {
