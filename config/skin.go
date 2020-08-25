@@ -23,15 +23,15 @@ const (
 )
 
 type Skin struct {
-	Name         string
-	Score        [13]image.Image
-	Combo        [10]image.Image
-	HPBarBG      image.Image
-	HPBarColor   image.Image
-	ButtonLeft   image.Image
-	ButtonMiddle image.Image
-	ButtonRight  image.Image
-	ChartPanelBG image.Image
+	Name            string
+	Score           [13]image.Image
+	Combo           [10]image.Image
+	HPBarFrame      image.Image
+	HPBarColor      image.Image
+	BoxLeft         image.Image
+	BoxMiddle       image.Image
+	BoxRight        image.Image
+	ChartPanelFrame image.Image
 
 	Mania ManiaSkin
 }
@@ -48,10 +48,10 @@ type ManiaSkin struct {
 	HitResults [5]image.Image
 	// NoteLighting
 	// LNLighting
-	// StageLeft   image.Image
 	StageRight  image.Image
 	StageBottom image.Image
 	StageHint   image.Image
+	Stage       StageMania
 }
 
 // todo: ScaledManiaSkin
@@ -100,12 +100,12 @@ func LoadSkin() Skin {
 			continue
 		}
 	}
-	s.HPBarBG, _ = loadSkinImage("scorebar-bg.png")
+	s.HPBarFrame, _ = loadSkinImage("scorebar-bg.png")
 	s.HPBarColor, _ = loadSkinImage("scorebar-colour.png")
-	s.ButtonLeft, _ = loadSkinImage("button-left.png")
-	s.ButtonMiddle, _ = loadSkinImage("button-middle.png")
-	s.ButtonRight, _ = loadSkinImage("button-right.png")
-	s.ChartPanelBG, _ = loadSkinImage("menu-button-background.png")
+	s.BoxLeft, _ = loadSkinImage("button-left.png")
+	s.BoxMiddle, _ = loadSkinImage("button-middle.png")
+	s.BoxRight, _ = loadSkinImage("button-right.png")
+	s.ChartPanelFrame, _ = loadSkinImage("menu-button-background.png")
 
 	s.Mania = loadManiaSkin()
 	return s
@@ -172,8 +172,32 @@ func loadManiaSkin() ManiaSkin {
 	return s
 }
 
-func resizeImage() {
-	NoteSizes
-	ebiten.NewImage()
-	s.Note[0]
+// screen에 처음부터 fixed 된 상태로 그려질 애들
+// option 건들 때마다 갱신
+type StageMania struct {
+	Image *ebiten.Image
+	Op    *ebiten.DrawImageOptions
+}
+
+// 먼저 100 스케일로 그리고 확대하면 깨지니까
+// todo: 판정선 가운데에 노트 가운데가 맞을 때 Max가 뜨게
+func NewStageMania() StageMania {
+	var sm StageMania
+	sm.Op = &ebiten.DrawImageOptions{}
+	// skin에서 불러오기
+	var (
+		main        *ebiten.Image // fieldWidth, screenHeight (generated)
+		stageBottom *ebiten.Image // fieldWidth, 폭맞춤 y
+		stageHint   *ebiten.Image // fieldWidth, 설정값 ('노트와 동일한 높이로' 옵션 추가)
+		stageRight  *ebiten.Image // 폭맞춤x, screenHeigth
+		hpBarFrame  *ebiten.Image // 폭맞춤x, screenHeigth
+	)
+	stageCenter := float64(s.g.ScreenSize().X) * s.g.StagePosition / 100
+	var fieldWidth float64
+	sm.Op.GeoM.Translate(stageCenter, 0)
+	sm.Op.GeoM.Translate(-fieldWidth/2, 0)
+}
+
+func (s *StageMania) render() {
+	// 필드의 중앙이 스크린의 중앙에 오게 op.GeoM.Translate(dx, 0)
 }

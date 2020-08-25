@@ -14,6 +14,7 @@ type NoteSprite struct {
 	y        float64
 	op       ebiten.DrawImageOptions
 }
+
 type LNSprite struct {
 	head   *NoteSprite
 	tail   *NoteSprite
@@ -75,7 +76,7 @@ func (s *SceneMania) applySpeed(speed float64) {
 	}
 	for i, n := range s.lnotes {
 		// 이미지 불러오기
-		// n.height() 활용해서 스케일 구하기
+		// todo: n.height() 활용해서 스케일 구하기
 		s.lnotes[i].bodyop.GeoM.Reset()
 		s.lnotes[i].bodyop.GeoM.Translate(n.tail.x, n.tail.y)
 		s.lnotes[i].bodyop.GeoM.Scale() // body 생성

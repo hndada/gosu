@@ -39,7 +39,7 @@ type Settings struct {
 
 	SplitGap            float64
 	UpsideDown          bool
-	FieldCenterPosition float64 // -100 ~ 100; 0 is a center
+	StagePosition       float64 // -100 ~ 100; 0 is a center
 	ColumnDivisionWidth float64 // default is 0.
 }
 
@@ -145,7 +145,7 @@ func newSettings() Settings {
 		lineInJudgeLine:     true,
 		SplitGap:            0,
 		UpsideDown:          false,
-		FieldCenterPosition: 0,
+		StagePosition:       0,
 		ColumnDivisionWidth: 0,
 	}
 	s.ManiaKeyLayout[4] = []ebiten.Key{
@@ -212,7 +212,7 @@ func (s *Settings) SetScreenSize(p image.Point) {
 	s.setNoteSizes()
 	ebiten.SetWindowSize(p.X, p.Y)
 }
-func (s *Settings) ScreenSize() image.Point { return s.screenSize}
+func (s *Settings) ScreenSize() image.Point { return s.screenSize }
 
 func (s *Settings) SetNoteWidths(keys int, vs [4]float64) {
 	s.noteWidths[keys] = vs
@@ -268,15 +268,3 @@ func ratio(dst, src image.Point) (float64, float64) {
 	return float64(dst.X) / float64(src.X),
 		float64(dst.Y) / float64(src.Y)
 }
-
-// func noteColor(n mania.Note, keys int) color.RGBA {
-// 	switch n.Key {
-// 	case 0, 2, 4, 6:
-// 		return color.RGBA{239, 243, 247, 0xff} // white
-// 	case 1, 5:
-// 		return color.RGBA{66, 211, 247, 0xff} // blue
-// 	case 3:
-// 		return color.RGBA{255, 203, 82, 0xff} // yellow
-// 	}
-// 	panic("not reach")
-// }
