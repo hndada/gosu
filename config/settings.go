@@ -1,4 +1,4 @@
-package settings
+package config
 
 import (
 	"github.com/hajimehoshi/ebiten"
@@ -10,9 +10,10 @@ import (
 // 값 변경과 동시에 실행되어야 하는 함수가 있는 경우 private/method로 set하는 방법으로 변경
 type Settings struct {
 	// General - screen
-	maxTPS       int
-	screenWidth  int
-	screenHeight int
+	maxTPS int
+	// screenWidth  int
+	// screenHeight int
+	screenSize image.Point
 
 	// General - sound
 	volumeMaster uint8
@@ -118,9 +119,10 @@ func LoadSettings() Settings {
 
 func newSettings() Settings {
 	s := Settings{
-		maxTPS:            240,
-		screenWidth:       1600,
-		screenHeight:      900,
+		maxTPS:     240,
+		screenSize: image.Pt(1600, 900),
+		// screenWidth:       1600,
+		// screenHeight:      900,
 		DimValue:          25,
 		volumeMaster:      100,
 		volumeBGM:         50,
@@ -203,12 +205,14 @@ func (s *Settings) SetMaxTPS(tps int) {
 
 func (s *Settings) MaxTPS() int   { return s.maxTPS }
 func (s *Settings) Tick() float64 { return 1000 / float64(s.maxTPS) } // 1000ms
-func (s *Settings) SetScreenSize(w, h int) {
-	s.screenWidth = w
-	s.screenHeight = h
+func (s *Settings) SetScreenSize(p image.Point) {
+	// s.screenWidth = w
+	// s.screenHeight = h
+	s.screenSize = p
 	s.setNoteSizes()
-	ebiten.SetWindowSize(w, h)
+	ebiten.SetWindowSize(p.X, p.Y)
 }
+func (s *Settings) ScreenSize() image.Point { return s.screenSize}
 
 func (s *Settings) SetNoteWidths(keys int, vs [4]float64) {
 	s.noteWidths[keys] = vs

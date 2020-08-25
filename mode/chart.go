@@ -29,6 +29,7 @@ type BaseChart struct {
 	// VideoOffset   int64
 
 	Parameter map[string]float64
+	TimingPoints
 }
 
 // todo: tidy pointer up
