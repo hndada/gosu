@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"github.com/hajimehoshi/ebiten"
 	"image"
 	_ "image/png"
 	"os"
@@ -22,22 +21,23 @@ const (
 	ScorePercent
 )
 
+// todo: score, combo: 0~9을 하나의 이미지로
+// todo: image.Image는 결국 필요 없는거 아닌가? - 중간에 render 필요한 애들만 image로 불러오자
 type Skin struct {
 	Name            string
-	Score           [13]image.Image
-	Combo           [10]image.Image
+	Score           [13]image.Image // unscaled
+	Combo           [10]image.Image // unscaled
 	HPBarFrame      image.Image
 	HPBarColor      image.Image
-	BoxLeft         image.Image
-	BoxMiddle       image.Image
-	BoxRight        image.Image
-	ChartPanelFrame image.Image
+	BoxLeft         image.Image // unscaled
+	BoxMiddle       image.Image // unscaled
+	BoxRight        image.Image // unscaled
+	ChartPanelFrame image.Image // unscaled
 
 	Mania ManiaSkin
 }
 
 type ManiaSkin struct {
-	// all scalable
 	Note             [4]image.Image
 	LNHead           [4]image.Image
 	LNBody           [4][]image.Image
@@ -45,31 +45,14 @@ type ManiaSkin struct {
 	KeyButton        [4]image.Image
 	KeyButtonPressed [4]image.Image
 
-	HitResults [5]image.Image
-	// NoteLighting
-	// LNLighting
-	StageRight  image.Image
-	StageBottom image.Image
-	StageHint   image.Image
-	Stage       StageMania
-}
+	HitResults   [5]image.Image
+	NoteLighting []image.Image
+	LNLighting   []image.Image
+	StageRight   image.Image
+	StageBottom  image.Image
+	StageHint    image.Image
 
-// todo: ScaledManiaSkin
-type ScaledManiaSkin struct {
-	Note             [4]ebiten.Image
-	LNHead           [4]ebiten.Image
-	LNBody           [4][]ebiten.Image
-	LNTail           [4]ebiten.Image
-	KeyButton        [4]ebiten.Image
-	KeyButtonPressed [4]ebiten.Image
-
-	HitResults [5]ebiten.Image
-	// NoteLighting
-	// LNLighting
-	// StageLeft   ebiten.Image
-	StageRight  ebiten.Image
-	StageBottom ebiten.Image
-	StageHint   ebiten.Image
+	Stage ManiaStage
 }
 
 // todo: TOML-ize
@@ -111,24 +94,6 @@ func LoadSkin() Skin {
 	return s
 }
 
-var skinPath = "C:\\Users\\hndada\\Documents\\GitHub\\hndada\\gosu\\asset\\Skin\\"
-
-func loadSkinImage(filename string) (image.Image, error) {
-	path := filepath.Join(skinPath, filename)
-	return loadImage(path)
-}
-func loadImage(path string) (image.Image, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	img, _, err := image.Decode(f)
-	if err != nil {
-		return nil, err
-	}
-	return img, nil
-}
 func loadManiaSkin() ManiaSkin {
 	var s ManiaSkin
 	s.Note[0], _ = loadSkinImage("mania-note1.png")
@@ -172,32 +137,17 @@ func loadManiaSkin() ManiaSkin {
 	return s
 }
 
-// screen에 처음부터 fixed 된 상태로 그려질 애들
-// option 건들 때마다 갱신
-type StageMania struct {
-	Image *ebiten.Image
-	Op    *ebiten.DrawImageOptions
-}
-
-// 먼저 100 스케일로 그리고 확대하면 깨지니까
-// todo: 판정선 가운데에 노트 가운데가 맞을 때 Max가 뜨게
-func NewStageMania() StageMania {
-	var sm StageMania
-	sm.Op = &ebiten.DrawImageOptions{}
-	// skin에서 불러오기
-	var (
-		main        *ebiten.Image // fieldWidth, screenHeight (generated)
-		stageBottom *ebiten.Image // fieldWidth, 폭맞춤 y
-		stageHint   *ebiten.Image // fieldWidth, 설정값 ('노트와 동일한 높이로' 옵션 추가)
-		stageRight  *ebiten.Image // 폭맞춤x, screenHeigth
-		hpBarFrame  *ebiten.Image // 폭맞춤x, screenHeigth
-	)
-	stageCenter := float64(s.g.ScreenSize().X) * s.g.StagePosition / 100
-	var fieldWidth float64
-	sm.Op.GeoM.Translate(stageCenter, 0)
-	sm.Op.GeoM.Translate(-fieldWidth/2, 0)
-}
-
-func (s *StageMania) render() {
-	// 필드의 중앙이 스크린의 중앙에 오게 op.GeoM.Translate(dx, 0)
+func loadSkinImage(filename string) (image.Image, error) {
+	var skinPath = "C:\\Users\\hndada\\Documents\\GitHub\\hndada\\gosu\\asset\\Skin\\"
+	path := filepath.Join(skinPath, filename)
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	img, _, err := image.Decode(f)
+	if err != nil {
+		return nil, err
+	}
+	return img, nil
 }

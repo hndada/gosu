@@ -161,9 +161,10 @@ func newSettings() Settings {
 	return s
 }
 
+type Kind int8
 const (
-	even int = iota
-	odd
+	one Kind = iota
+	two
 	middle
 	pinky
 )
@@ -177,23 +178,23 @@ const (
 )
 
 // 다른 패키지에서 수정하면 안됨
-var NoteKinds = make(map[int][]int)
+var NoteKinds = make(map[int][]Kind)
 
 func init() {
-	NoteKinds[0] = []int{}
-	NoteKinds[1] = []int{middle}
-	NoteKinds[2] = []int{even, even}
-	NoteKinds[3] = []int{even, middle, even}
-	NoteKinds[4] = []int{even, odd, odd, even}
-	NoteKinds[5] = []int{even, odd, middle, odd, even}
-	NoteKinds[6] = []int{even, odd, even, even, odd, even}
-	NoteKinds[7] = []int{even, odd, even, middle, even, odd, even}
-	NoteKinds[8] = []int{pinky, even, odd, even, even, odd, even, pinky}
-	NoteKinds[9] = []int{pinky, even, odd, even, middle, even, odd, even, pinky}
-	NoteKinds[10] = []int{pinky, even, odd, even, middle, middle, even, odd, even, pinky}
+	NoteKinds[0] = []Kind{}
+	NoteKinds[1] = []Kind{middle}
+	NoteKinds[2] = []Kind{one, one}
+	NoteKinds[3] = []Kind{one, middle, one}
+	NoteKinds[4] = []Kind{one, two, two, one}
+	NoteKinds[5] = []Kind{one, two, middle, two, one}
+	NoteKinds[6] = []Kind{one, two, one, one, two, one}
+	NoteKinds[7] = []Kind{one, two, one, middle, one, two, one}
+	NoteKinds[8] = []Kind{pinky, one, two, one, one, two, one, pinky}
+	NoteKinds[9] = []Kind{pinky, one, two, one, middle, one, two, one, pinky}
+	NoteKinds[10] = []Kind{pinky, one, two, one, middle, middle, one, two, one, pinky}
 
 	for i := 1; i <= 8; i++ { // 정말 잘 짠듯
-		NoteKinds[i|scratchLeft] = append([]int{pinky}, NoteKinds[i-1]...)
+		NoteKinds[i|scratchLeft] = append([]Kind{pinky}, NoteKinds[i-1]...)
 		NoteKinds[i|scratchRight] = append(NoteKinds[i-1], pinky)
 	}
 }

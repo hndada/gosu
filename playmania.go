@@ -2,6 +2,7 @@ package gosu
 
 import (
 	"fmt"
+	"github.com/hndada/gosu/config"
 	"image"
 	_ "image/jpeg"
 	"log"
@@ -27,19 +28,20 @@ type SceneMania struct { // aka Clavier
 	bg     *ebiten.Image
 	bgop   *ebiten.DrawImageOptions
 	tick   int64
-	step   func() float64
+	step   func(ms int64) float64
 
 	score float64
 	hp    float64
 	combo int32
 
-	chart  *mania.Chart
-	notes  []NoteSprite
-	lnotes []LNSprite // 롱노트 특성상, 2개로 나누는 게 불가피해보임
+	chart   *mania.Chart
+	notes   []NoteSprite
+	lnotes  []LNSprite // 롱노트 특성상, 2개로 나누는 게 불가피해보임
+	endTime int64
 
-	speed       float64
-	viewport    float64
-	speedFactor float64
+	speed      float64
+	progress   float64
+	sfactorIdx int
 }
 
 // lnhead와 lntail 분리 유지
@@ -47,11 +49,11 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	s := &SceneMania{}
 	ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", c.SongName, c.ChartName))
 	{
-		_bg, err := s.chart.Background()
+		bg, err := s.chart.Background()
 		if err != nil {
 			log.Fatal(err)
 		}
-		s.bg, _ = ebiten.NewImageFromImage(_bg, ebiten.FilterDefault)
+		s.bg, _ = ebiten.NewImageFromImage(bg, ebiten.FilterDefault)
 		s.bgop = &ebiten.DrawImageOptions{}
 		s.bgop.GeoM.Scale(ratio(s.g.ScreenSize(), image.Pt(s.bg.Size()))) // todo: 폭맞춤
 		s.bgop.ColorM.ChangeHSV(0, 1, 0.30)
@@ -80,22 +82,22 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 			log.Fatal(err)
 		}
 	}
-	s.tick = -int64(2 * s.g.MaxTPS())
-	// todo: 값 변경 안생기게 함수로 감쌌는데, performance 확인
-	const approachDuration = 1000
-	s.step = func() float64 { return float64(s.g.ScreenSize().Y) / float64(s.g.MaxTPS()) / (approachDuration / Millisecond) }
+	const BufferTime = 2
+	s.tick = -int64(BufferTime * s.g.MaxTPS())
+
+	const ApproachDuration = 1500
+	step1ms := float64(s.g.ScreenSize().Y) / ApproachDuration
+	s.step = func(ms int64) float64 { return float64(ms) * step1ms }
 
 	s.chart = c.ApplyMods(mods)
 	s.setNoteSprites()
 	s.applySpeed(s.g.ScrollSpeed)
+	s.endTime = s.chart.EndTime()
 	return s
 }
 
 func (s *SceneMania) Update() error {
-	// speedFactor 적용
-	// todo: 1프레임 사이에 speedFactor가 바뀔 경우, 그 잠깐의 간격에서 발생하는 오차
-	s.tick++
-	if s.Time() > s.chart.EndTime() {
+	if s.Time(s.tick) > s.endTime {
 		s.g.ChangeScene(NewSceneSelect())
 	}
 	// todo: 플레이 하면서 리플레이 데이터 저장
@@ -105,35 +107,57 @@ func (s *SceneMania) Update() error {
 		s.notes[i].op.ColorM.ChangeHSV(0, 0, 0.5) // gray
 	}
 
-	dy := s.step() * s.speed * s.speedFactor
-	// op을 Update()에서 바꾸는 게 나는 바람직해 보이는데, 표준인진 모르겠음
+	var dy float64
+	lastTime := s.Time(s.tick - 1)
+	sfactors := s.chart.TimingPoints.SpeedFactors
+	for si, sp := range sfactors[s.sfactorIdx+1:] {
+		if sp.Time > s.Time(s.tick) { // equality condition should be excluded
+			break
+		}
+		dy += s.step(sp.Time-lastTime) * s.speed * sp.Factor
+		lastTime = sp.Time
+		s.sfactorIdx = si
+	}
 	for i := range s.notes {
 		s.notes[i].op.GeoM.Translate(0, dy)
 	}
 	for i := range s.lnotes {
 		s.lnotes[i].bodyop.GeoM.Translate(0, dy)
 	}
-	s.viewport += dy
+	s.progress += dy
+	s.tick++
 	return nil
 }
 
 // 단순명료하게 전체 노트 그리기; edit 위해서도 좋음
+// (op을 Update()에서 바꾸는 게 나는 바람직해 보이는데, 표준인진 모르겠음)
 func (s *SceneMania) Draw(screen *ebiten.Image) {
 	screen.DrawImage(s.bg, s.bgop)
 	screen.DrawImage(s.g.Skin.Mania.Stage.Image, s.g.Skin.Mania.Stage.Op)
 	for _, n := range s.notes {
-		screen.DrawImage(noteimgs[keys], &n.op)
+		var img *ebiten.Image
+		switch n.noteType {
+		case mania.TypeNote:
+			img = config.NoteImgs[n.kind]
+		case mania.TypeLNHead:
+			img = config.LNHeadImgs[n.kind]
+		case mania.TypeLNTail:
+			img = config.LNTailImgs[n.kind]
+		}
+		screen.DrawImage(img, &n.op)
 	}
 	for _, n := range s.lnotes {
-		screen.DrawImage(noteimgs[keys], &n.bodyop)
+		screen.DrawImage(config.LNBodyImgs[n.kind], &n.bodyop)
 	}
 	// 키 버튼 그리기
 	// 스코어, hp, 콤보, 시간 그리기
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %.2f\nTime: %.1fs", ebiten.CurrentFPS(), float64(s.Time())/1000))
+	// hp는 마스크 이미지를 씌우면 되지 않을까
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %.2f\nTime: %.1fs", ebiten.CurrentFPS(), float64(s.Time(s.tick))/1000))
 }
 
-func (s *SceneMania) Time() int64 {
-	return s.tick * Millisecond / int64(ebiten.MaxTPS())
+// downcast happens
+func (s *SceneMania) Time(tick int64) int64 {
+	return Millisecond * tick / int64(s.g.MaxTPS())
 }
 
 func (s *SceneMania) Init() {

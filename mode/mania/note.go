@@ -7,13 +7,14 @@ import (
 )
 
 const (
-	TypeNote = 1 << iota
-	TypeReleaseNote
-	TypeLongNote
+	typeNote mode.NoteType = 1 << iota
+	typeReleaseNote
+	typeLongNote
 )
 const (
-	LNHead = TypeLongNote | TypeNote
-	LNTail = TypeLongNote | TypeReleaseNote
+	TypeNote   = typeNote
+	TypeLNHead = typeLongNote | typeNote
+	TypeLNTail = typeLongNote | typeReleaseNote
 )
 
 // 난이도 및 점수 관련은 나중에
@@ -44,7 +45,7 @@ func newNote(ho osu.HitObject, keys int) ([]Note, error) {
 	var n Note
 	switch ho.NoteType & osu.ComboMask {
 	case osu.HitTypeHoldNote:
-		n.Type = TypeLongNote
+		n.Type = typeLongNote
 	case osu.HitTypeNote:
 		n.Type = TypeNote
 	default:
@@ -56,8 +57,8 @@ func newNote(ho osu.HitObject, keys int) ([]Note, error) {
 	n.SampleFilename = ho.HitSample.Filename
 	n.SampleVolume = uint8(ho.HitSample.Volume)
 
-	if n.Type == TypeLongNote {
-		n.Type = LNHead
+	if n.Type == typeLongNote {
+		n.Type = TypeLNHead
 		// n.Time2 = int64(float64(ho.EndTime) / mods.TimeRate)
 		n.Time2 = int64(ho.EndTime)
 		ns = append(ns, n)
@@ -66,7 +67,7 @@ func newNote(ho osu.HitObject, keys int) ([]Note, error) {
 		}
 
 		var n2 Note
-		n2.Type = LNTail
+		n2.Type = TypeLNTail
 		n2.Key = n.Key
 		n2.Time = n.Time2
 		n2.Time2 = n.Time

@@ -14,10 +14,10 @@ import (
 // todo: reference book: 참고용 ui; 곡선택창 같은거
 // 다른 곳으로 날아가도, 외출 때 코딩을 하겠음
 
+// keyboard - 게임
 // gob, toml - 설정 저장
 // beep (sound) - 음원 및 효과음 재생
 // font - 패널 그리기
-// input - 게임
 // todo: float64, fixed로 고치기 생각
 
 // 체크박스 같은거 다시 그리기 -> 우선 메모장으로 직접 설정하게
@@ -29,7 +29,7 @@ type Game struct {
 	Scene        Scene
 	SceneChanger *SceneChanger
 	Skin         config.Skin
-	Input        input.Input
+	// Input        input.Input
 }
 
 // todo: 소리 재생
