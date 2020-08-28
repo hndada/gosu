@@ -51,7 +51,7 @@ func (c Chart) EndTime() int64 {
 func (c Chart) NumLN() int {
 	var num int
 	for _, n := range c.Notes {
-		if n.Type == LNHead {
+		if n.Type == TypeLNHead {
 			num++
 		}
 	}
