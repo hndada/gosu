@@ -18,9 +18,13 @@ const (
 )
 
 // 난이도 및 점수 관련은 나중에
+// 아래와 같이 난이도 계산에만 쓰이는 값들은 unexported로 할듯
 type Note struct {
 	mode.BaseNote
 	Key int
+	// Strain
+	// Read
+	// Stamina
 
 	// hand        int
 	// chord       []int
@@ -32,10 +36,6 @@ type Note struct {
 	// trillBonus   float64
 	// jackBonus    float64
 	// HoldBonus    float64 // score 필요함
-
-	// Strain
-	// Read
-	// Stamina
 }
 
 var ErrDuration = errors.New("invalid duration: not a positive value")
