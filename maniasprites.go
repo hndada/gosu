@@ -2,7 +2,7 @@ package gosu
 
 import (
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hndada/gosu/config"
+	"github.com/hndada/gosu/graphics"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/mania"
 )
@@ -36,11 +36,11 @@ func (s *SceneMania) setNoteSprites() {
 		ns.key = n.Key
 		switch n.Type {
 		case mania.TypeNote:
-			ns.i = s.stage.Note[n.Key].Image()
+			ns.i = s.stage.Notes[n.Key].Image()
 		case mania.TypeLNHead:
-			ns.i = s.stage.LNHead[n.Key].Image()
+			ns.i = s.stage.LNHeads[n.Key].Image()
 		case mania.TypeLNTail:
-			ns.i = s.stage.LNTail[n.Key].Image()
+			ns.i = s.stage.LNTails[n.Key].Image()
 		}
 		ns.op = &ebiten.DrawImageOptions{}
 		s.notes[i] = ns
@@ -76,7 +76,6 @@ func (s *SceneMania) setNoteSprites() {
 			ls.key = n.Key
 			ls.head = &s.notes[lastLNHeads[n.Key]]
 			ls.tail = &s.notes[i]
-			ls.i = s.stage.LNBody[n.Key][0].Image() // todo: animation
 			ls.bodyop = &ebiten.DrawImageOptions{}
 			s.lnotes = append(s.lnotes, ls)
 		}
@@ -85,27 +84,30 @@ func (s *SceneMania) setNoteSprites() {
 
 // op에 값 적용하는 함수
 // hitPosition은 settings 단계에서 미리 적용하고 옴
+// todo: 판정선 가운데에 노트 가운데가 맞을 때 Max가 뜨게
 func (s *SceneMania) applySpeed(speed float64) {
 	s.speed = speed
 	for i, n := range s.notes {
 		y := -(n.y - s.progress) * speed
 		s.notes[i].y = y
-		var sprite config.Sprite
+		var sprite graphics.Sprite
 		switch n.type_ {
 		case mania.TypeNote:
-			sprite = s.stage.Note[n.key]
+			sprite = s.stage.Notes[n.key]
 		case mania.TypeLNHead:
-			sprite = s.stage.LNHead[n.key]
+			sprite = s.stage.LNHeads[n.key]
 		case mania.TypeLNTail:
-			sprite = s.stage.LNTail[n.key]
+			sprite = s.stage.LNTails[n.key]
 		}
 		sprite.ResetPosition(n.op)
 		s.notes[i].op.GeoM.Translate(0, y)
 	}
 	// todo: animation
-	// todo: lnBody: 가변 이미지 generate
-	// todo: 판정선 가운데에 노트 가운데가 맞을 때 Max가 뜨게
-	// for i, n := range s.lnotes {
-	// 	s.stage.LNBody[n.key][0].ResetPosition(n.bodyop)
-	// }
+	for i, n := range s.lnotes {
+		y := n.tail.y
+		h := n.height() * speed
+		s.lnotes[i].i = s.stage.LNBodys[n.key][0].Image(h)
+		s.stage.LNBodys[n.key][0].ResetPosition(n.bodyop)
+		s.lnotes[i].bodyop.GeoM.Translate(0, y)
+	}
 }

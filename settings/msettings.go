@@ -1,4 +1,4 @@
-package config
+package settings
 
 import (
 	"github.com/hajimehoshi/ebiten"
@@ -66,6 +66,6 @@ func (s *ManiaSettings) reset() {
 	s.ColumnDivisionWidth = 0
 }
 
-func (s ManiaSettings) stageCenter(screenSize image.Point) int {
+func (s ManiaSettings) StageCenter(screenSize image.Point) int {
 	return int(float64(screenSize.X) * s.StagePosition / 100)
 }
