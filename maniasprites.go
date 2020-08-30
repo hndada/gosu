@@ -7,19 +7,21 @@ import (
 	"github.com/hndada/gosu/mode/mania"
 )
 
+// type, key, x and y are for "backup" to re-fetch options or redraw
 type NoteSprite struct {
-	noteType mode.NoteType
-	kind     config.Kind
-	x        float64
-	y        float64
-	op       ebiten.DrawImageOptions
+	type_ mode.NoteType
+	key   int
+	x, y  float64 // mania doesnt use x
+	i     *ebiten.Image
+	op    *ebiten.DrawImageOptions
 }
 
 type LNSprite struct {
-	kind   config.Kind
+	key    int
 	head   *NoteSprite
 	tail   *NoteSprite
-	bodyop ebiten.DrawImageOptions
+	i      *ebiten.Image
+	bodyop *ebiten.DrawImageOptions
 }
 
 func (s LNSprite) height() float64 {
@@ -27,17 +29,35 @@ func (s LNSprite) height() float64 {
 }
 
 func (s *SceneMania) setNoteSprites() {
+	s.notes = make([]NoteSprite, len(s.chart.Notes))
+	for i, n := range s.chart.Notes {
+		var ns NoteSprite
+		ns.type_ = n.Type
+		ns.key = n.Key
+		switch n.Type {
+		case mania.TypeNote:
+			ns.i = s.stage.Note[n.Key].Image()
+		case mania.TypeLNHead:
+			ns.i = s.stage.LNHead[n.Key].Image()
+		case mania.TypeLNTail:
+			ns.i = s.stage.LNTail[n.Key].Image()
+		}
+		ns.op = &ebiten.DrawImageOptions{}
+		s.notes[i] = ns
+	}
 	{
-		s.notes = make([]NoteSprite, len(s.chart.Notes))
 		var i int
 		var n mania.Note
 		var offset float64
 		sfactors := s.chart.TimingPoints.SpeedFactors
+	outer:
 		for si, sp := range sfactors {
 			for n.Time < sp.Time {
-				// kind, noteType, x 설정
 				s.notes[i].y = float64(n.Time-sp.Time)*sp.Factor + offset
 				i++
+				if i >= len(s.chart.Notes) {
+					break outer
+				}
 				n = s.chart.Notes[i]
 			}
 			if si < len(sfactors) {
@@ -45,40 +65,47 @@ func (s *SceneMania) setNoteSprites() {
 			}
 		}
 	}
-	{
-		s.lnotes = make([]LNSprite, s.chart.NumLN())
-		lastLNHeads := make([]int, s.chart.Keys)
-		for i, n := range s.chart.Notes {
-			switch n.Type {
-			case mania.TypeLNHead:
-				lastLNHeads[n.Key] = i
-			case mania.TypeLNTail:
-				var ls LNSprite
-				ls.head = &s.notes[lastLNHeads[n.Key]]
-				ls.tail = &s.notes[i]
-				ls.kind = ls.head.kind
-			}
+	s.lnotes = make([]LNSprite, 0, s.chart.NumLN())
+	lastLNHeads := make([]int, s.chart.Keys)
+	for i, n := range s.chart.Notes {
+		switch n.Type {
+		case mania.TypeLNHead:
+			lastLNHeads[n.Key] = i
+		case mania.TypeLNTail:
+			var ls LNSprite
+			ls.key = n.Key
+			ls.head = &s.notes[lastLNHeads[n.Key]]
+			ls.tail = &s.notes[i]
+			ls.i = s.stage.LNBody[n.Key][0].Image() // todo: animation
+			ls.bodyop = &ebiten.DrawImageOptions{}
+			s.lnotes = append(s.lnotes, ls)
 		}
 	}
 }
 
 // op에 값 적용하는 함수
-// speed와 hitPosition을 적용
+// hitPosition은 settings 단계에서 미리 적용하고 옴
 func (s *SceneMania) applySpeed(speed float64) {
 	s.speed = speed
-	var hitPosition float64
 	for i, n := range s.notes {
-		// todo: scaled x 구하기
-		var x float64
-		y := (-(n.y - s.progress) + hitPosition) * speed
-		s.notes[i].op.GeoM.Reset()
-		s.notes[i].op.GeoM.Translate(x, y)
+		y := -(n.y - s.progress) * speed
+		s.notes[i].y = y
+		var sprite config.Sprite
+		switch n.type_ {
+		case mania.TypeNote:
+			sprite = s.stage.Note[n.key]
+		case mania.TypeLNHead:
+			sprite = s.stage.LNHead[n.key]
+		case mania.TypeLNTail:
+			sprite = s.stage.LNTail[n.key]
+		}
+		sprite.ResetPosition(n.op)
+		s.notes[i].op.GeoM.Translate(0, y)
 	}
-	for i, n := range s.lnotes {
-		// 이미지 불러오기
-		// todo: n.height() 활용해서 스케일 구하기
-		s.lnotes[i].bodyop.GeoM.Reset()
-		s.lnotes[i].bodyop.GeoM.Translate(n.tail.x, n.tail.y)
-		s.lnotes[i].bodyop.GeoM.Scale() // body 생성
-	}
+	// todo: animation
+	// todo: lnBody: 가변 이미지 generate
+	// todo: 판정선 가운데에 노트 가운데가 맞을 때 Max가 뜨게
+	// for i, n := range s.lnotes {
+	// 	s.stage.LNBody[n.key][0].ResetPosition(n.bodyop)
+	// }
 }

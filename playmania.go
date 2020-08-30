@@ -44,6 +44,8 @@ type SceneMania struct { // aka Clavier
 	speed      float64
 	progress   float64
 	sfactorIdx int
+
+	stage config.ManiaStage
 }
 
 // lnhead와 lntail 분리 유지
@@ -108,10 +110,12 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	var speed float64
 	switch {
 	default:
-		speed = s.g.Settings.Mania.GeneralSpeed
+		speed = s.g.Settings.GeneralSpeed
 	}
 	s.applySpeed(speed)
 	s.endTime = s.chart.EndTime()
+
+	s.stage = s.g.Sprites.ManiaStages[s.chart.Keys] // for quick access
 	return s
 }
 
@@ -122,9 +126,9 @@ func (s *SceneMania) Update() error {
 	// todo: 플레이 하면서 리플레이 데이터 저장
 	// 키보드 입력 채널에서 키 입력 불러오기
 	// next note들이 slice에 fetch되어 있는 상태. hit 판정이 나왔을 경우.
-	if done {
-		s.notes[i].op.ColorM.ChangeHSV(0, 0, 0.5) // gray
-	}
+	// if done {
+	// 	s.notes[i].op.ColorM.ChangeHSV(0, 0, 0.5) // gray
+	// }
 
 	var dy float64
 	lastTime := s.Time(s.tick - 1)
@@ -152,28 +156,18 @@ func (s *SceneMania) Update() error {
 // (op을 Update()에서 바꾸는 게 나는 바람직해 보이는데, 표준인진 모르겠음)
 func (s *SceneMania) Draw(screen *ebiten.Image) {
 	screen.DrawImage(s.bg, s.bgop)
-	screen.DrawImage(s.g.Skin.Mania.Stage.Image, s.g.Skin.Mania.Stage.Op)
-	for _, n := range s.notes {
-		// var img *ebiten.Image
-		switch n.noteType {
-		case mania.TypeNote:
-			nimgs[n.Key].DrawTo(screen)
-			// img = config.NoteImgs[n.kind]
-		case mania.TypeLNHead:
-			lhimgs[n.Key].DrawTo(screen)
-			// img = config.LNHeadImgs[n.kind]
-		case mania.TypeLNTail:
-			ltimgs[n.Key].DrawTo(screen)
-			// img = config.LNTailImgs[n.kind]
-		}
-		// screen.DrawImage(img, &n.op)
-	}
-	for _, n := range s.lnotes {
-		screen.DrawImage(config.LNBodyImgs[n.kind], &n.bodyop)
-	}
+	// 스테이지 그리기
 	// 키 버튼 그리기
 	// 스코어, hp, 콤보, 시간 그리기
+	// s.g.Sprites.Score
+	// s.g.Sprites.ManiaCombo
 	// hp는 마스크 이미지를 씌우면 되지 않을까
+	for _, n := range s.notes {
+		screen.DrawImage(n.i, n.op)
+	}
+	for _, n := range s.lnotes {
+		screen.DrawImage(n.i, n.bodyop)
+	}
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %.2f\nTime: %.1fs", ebiten.CurrentFPS(), float64(s.Time(s.tick))/1000))
 }
 
