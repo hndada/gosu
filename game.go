@@ -1,7 +1,8 @@
 package gosu
 
 import (
-	"github.com/hndada/gosu/config"
+	"github.com/hndada/gosu/graphics"
+	"github.com/hndada/gosu/settings"
 	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten"
@@ -28,8 +29,8 @@ const Millisecond = 1000
 // save 누르면 실제 세팅으로 값복사
 // game에서 세팅 바꾸면 Sprite 자동 갱신
 type Game struct {
-	config.Settings
-	config.Sprites
+	settings.Settings
+	graphics.GameSprites
 	Scene        Scene
 	SceneChanger *SceneChanger
 	// Input        input.Input

@@ -2,7 +2,7 @@ package gosu
 
 import (
 	"fmt"
-	"github.com/hndada/gosu/config"
+	"github.com/hndada/gosu/graphics"
 	"image"
 	_ "image/jpeg"
 	"log"
@@ -45,7 +45,7 @@ type SceneMania struct { // aka Clavier
 	progress   float64
 	sfactorIdx int
 
-	stage config.ManiaStage
+	stage graphics.ManiaStage
 }
 
 // lnhead와 lntail 분리 유지
@@ -68,7 +68,7 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	var dimness uint8
 	switch {
 	default:
-		dimness = s.g.Settings.GeneralDimness
+		dimness = s.g.Settings.GeneralDimness()
 	}
 	// 별도 함수 없이 여기서 처리하는게 맞을듯
 	// 만약 dim 을 바꾸는 입력이 들어왔다면 즉석에서 s.bgop.ColorM.Reset() 날리고 다시 설정.
@@ -115,7 +115,7 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	s.applySpeed(speed)
 	s.endTime = s.chart.EndTime()
 
-	s.stage = s.g.Sprites.ManiaStages[s.chart.Keys] // for quick access
+	s.stage = s.g.GameSprites.ManiaStages[s.chart.Keys] // for quick access
 	return s
 }
 

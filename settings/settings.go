@@ -1,4 +1,4 @@
-package config
+package settings
 
 import (
 	"bytes"
@@ -31,11 +31,14 @@ func (s *Settings) SetScreenSize(p image.Point) {
 	ebiten.SetWindowSize(p.X, p.Y)
 }
 func (s *Settings) ScreenSize() image.Point { return s.screenSize }
+func (s *Settings) ScaleY() float64         { return float64(s.screenSize.Y) / 100 }
 func (s *Settings) SetMaxTPS(tps int) {
 	s.maxTPS = tps
 	ebiten.SetMaxTPS(tps)
 }
 func (s *Settings) MaxTPS() int { return s.maxTPS }
+
+func (s *Settings) GeneralDimness() uint8 { return s.generalDimness }
 
 // todo: Streamer 2개 만들기: BGM, SFX
 func (s *Settings) SetDownVolumeMaster() {
@@ -53,8 +56,8 @@ func (s *Settings) SetDownVolumeMaster() {
 
 // func percent(v uint8) float64 { return float64(v) / 100 }
 
-func (s Settings) maniaStageCenter() int {
-	return s.ManiaSettings.stageCenter(s.screenSize)
+func (s Settings) ManiaStageCenter() int {
+	return s.ManiaSettings.StageCenter(s.screenSize)
 }
 
 func (s *Settings) Load() {
