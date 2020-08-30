@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode/mania"
 	"github.com/hndada/rg-parser/osugame/osu"
 )
@@ -24,11 +23,15 @@ import (
 // PlayIntro, PlayExit
 const Millisecond = 1000
 
+// reset    save cancel
+// 설정 켜면 임시 세팅이 생성, 임시 세팅으로 실시간 보여주기
+// save 누르면 실제 세팅으로 값복사
+// game에서 세팅 바꾸면 Sprite 자동 갱신
 type Game struct {
 	config.Settings
+	config.Sprites
 	Scene        Scene
 	SceneChanger *SceneChanger
-	Skin         config.Skin
 	// Input        input.Input
 }
 
@@ -41,7 +44,7 @@ type Scene interface {
 
 func NewGame() *Game {
 	g := &Game{}
-	g.Settings = config.LoadSettings()
+	g.Settings.Load()
 	g.Scene = g.NewSceneTitle()
 	g.SceneChanger = NewSceneChanger()
 	return g
@@ -50,7 +53,7 @@ func (g *Game) Update(screen *ebiten.Image) error {
 	if !g.SceneChanger.done() {
 		return g.SceneChanger.Update(g)
 	}
-	return g.Scene.Update(g)
+	return g.Scene.Update()
 }
 
 // 이미지의 method Draw는 input으로 들어온 screen을 그리는 함수
@@ -62,7 +65,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return g.ScreenWidth, g.ScreenHeight
+	return g.ScreenSize().X, g.ScreenSize().Y
 }
 
 // 수정 날짜는 정직하다고 가정
