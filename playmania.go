@@ -3,6 +3,8 @@ package gosu
 import (
 	"fmt"
 	"github.com/hndada/gosu/graphics"
+	"github.com/hndada/gosu/input"
+	"github.com/moutend/go-hook/pkg/types"
 	"image"
 	_ "image/jpeg"
 	"log"
@@ -45,13 +47,29 @@ type SceneMania struct { // aka Clavier
 	progress   float64
 	sfactorIdx int
 
-	stage graphics.ManiaStage
+	stage       graphics.ManiaStage
+	layout      []types.VKCode
+	kbEventChan input.KeyboardEventChannel
+
+	log map[int64][]bool
+	logTime
+}
+
+type logTime []int64
+
+func (l logTime) isLogged(t int64) bool {
+	for i := len(l) - 1; i >= 0; i-- {
+		if l[i] == t {
+			return true
+		}
+	}
+	return false
 }
 
 // lnhead와 lntail 분리 유지
 func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	s := &SceneMania{}
-	ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", c.SongName, c.ChartName))
+	ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", c.MusicName, c.ChartName))
 	// 얘도 별도 함수 없이 여기서 처리하는게 맞을듯
 	// BaseChart는 ScreenSize에 대해서 알지 못함
 	// mode 쪽은 ebiten으로부터 독립적이었으면 좋겠음
@@ -116,19 +134,46 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	s.endTime = s.chart.EndTime()
 
 	s.stage = s.g.GameSprites.ManiaStages[s.chart.Keys] // for quick access
+	s.layout = s.g.Settings.KeyLayout[s.chart.Keys]
+
+	s.kbEventChan, err = input.NewKeyboardEventChannel()
+	if err != nil {
+		log.Fatal(err)
+	}
 	return s
 }
 
+// 리플레이 구조: 마지막 status 시간, 레이아웃 키state
 func (s *SceneMania) Update() error {
 	if s.Time(s.tick) > s.endTime {
-		s.g.ChangeScene(NewSceneSelect())
+		if err := s.kbEventChan.Close(); err != nil {
+			return err
+		}
+		s.g.changeScene(s.g.NewSceneSelect())
+		return nil
 	}
-	// todo: 플레이 하면서 리플레이 데이터 저장
-	// 키보드 입력 채널에서 키 입력 불러오기
-	// next note들이 slice에 fetch되어 있는 상태. hit 판정이 나왔을 경우.
-	// if done {
-	// 	s.notes[i].op.ColorM.ChangeHSV(0, 0, 0.5) // gray
-	// }
+
+	for _, e := range s.kbEventChan.Dequeue() {
+		for key, keycode := range s.layout {
+			if keycode == e.KeyCode {
+				if !s.logTime.isLogged(e.Time) {
+					s.log[e.Time] = make([]bool, s.chart.Keys)
+				}
+
+				if e.State == input.KeyStateDown {
+					s.log[e.Time][key] = true
+				} else {
+					s.log[e.Time][key] = false
+				}
+				break
+			}
+		}
+		// todo: 스코어 처리 함수에 s.log와 s.logTime 보내기
+		// next note들이 slice에 fetch되어 있는 상태.
+		// if done {
+		// 	s.notes[i].op.ColorM.ChangeHSV(0, 0, 0.5) // gray
+		// }
+	}
 
 	var dy float64
 	lastTime := s.Time(s.tick - 1)
@@ -156,7 +201,7 @@ func (s *SceneMania) Update() error {
 // (op을 Update()에서 바꾸는 게 나는 바람직해 보이는데, 표준인진 모르겠음)
 func (s *SceneMania) Draw(screen *ebiten.Image) {
 	screen.DrawImage(s.bg, s.bgop)
-	// 스테이지 그리기
+	screen.DrawImage(s.stage.Fixed.Image(), &ebiten.DrawImageOptions{})
 	// 키 버튼 그리기
 	// 스코어, hp, 콤보, 시간 그리기
 	// s.g.Sprites.Score

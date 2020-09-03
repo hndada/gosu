@@ -1,34 +1,30 @@
 package gosu
 
 import (
+	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/graphics"
 	"github.com/hndada/gosu/settings"
-	"path/filepath"
-
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hndada/gosu/mode/mania"
-	"github.com/hndada/rg-parser/osugame/osu"
+	"os"
 )
 
-// todo: 훈련소 및 군대 가서 할 것들 정리 필요
-// todo: reference book: 참고용 ui; 곡선택창 같은거
-// 다른 곳으로 날아가도, 외출 때 코딩을 하겠음
+// 곡 선택 (터미널처럼 초간단하게 만들수도 있음)
+// 스코어, hp 계산, 리플레이 저장
+// 기타 Sprite 그리기
+// 레벨 계산 대충 마무리
 
-// keyboard - 게임
-// gob, toml - 설정 저장
-// beep (sound) - 음원 및 효과음 재생
-// font - 패널 그리기
-// todo: float64, fixed로 고치기 생각
+// 운동, 코딩, 잡일, 독서, 글씨 연습
+// 다른 곳으로 날아가도, 외출 때 코딩을 하겠음, 아니면 과외나 학원 알바를 하든가
 
-// 체크박스 같은거 다시 그리기 -> 우선 메모장으로 직접 설정하게
-// PlayIntro, PlayExit
+// 레벨 튜닝
+// 시스템 디자인: pp(그대로 갈듯), 심플 웹, 랭크 시스템, 채보 discussion and contribution
+// ui
+// gosu만의 특별한 기능
+// (다른 파일 포맷 파싱)
+
 const Millisecond = 1000
 
-// reset    save cancel
-// 설정 켜면 임시 세팅이 생성, 임시 세팅으로 실시간 보여주기
-// save 누르면 실제 세팅으로 값복사
-// game에서 세팅 바꾸면 Sprite 자동 갱신
 type Game struct {
+	path string
 	settings.Settings
 	graphics.GameSprites
 	Scene        Scene
@@ -45,14 +41,18 @@ type Scene interface {
 
 func NewGame() *Game {
 	g := &Game{}
+	var err error
+	if g.path, err = os.Executable(); err != nil {
+		panic(err)
+	}
 	g.Settings.Load()
-	g.Scene = g.NewSceneTitle()
-	g.SceneChanger = NewSceneChanger()
+	g.Scene = g.NewSceneSelect()
+	g.SceneChanger = g.NewSceneChanger()
 	return g
 }
 func (g *Game) Update(screen *ebiten.Image) error {
 	if !g.SceneChanger.done() {
-		return g.SceneChanger.Update(g)
+		return g.SceneChanger.Update()
 	}
 	return g.Scene.Update()
 }
@@ -69,28 +69,15 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 	return g.ScreenSize().X, g.ScreenSize().Y
 }
 
-// 수정 날짜는 정직하다고 가정
-// 플레이 이외의 scene에서, 폴더 변화 감지하면 차트 리로드
-// 로드된 차트 데이터는 gob에 별도 저장
-func (g *Game) LoadCharts() error {
-	for _, d := range dirs {
-		for _, f := range files {
-			switch filepath.Ext(f.Name()) {
-			case ".osu":
-				o, err := osu.Parse(path)
-				if err != nil {
-					panic(err) // todo: log and continue
-				}
-				switch o.Mode {
-				case 3: // todo: osu.ModeMania
-					c, err := mania.NewChartFromOsu()
-					if err != nil {
-						panic(err) // todo: log and continue
-					}
-					s.Charts = append(s.Charts, c)
-				}
-			}
-		}
-	}
-	return nil
+func (g *Game) changeScene(s Scene) {
+	g.SceneChanger.changeScene(s)
 }
+
+// todo: float64, fixed로 고치기 생각
+
+// reset    save cancel
+// 설정 켜면 임시 세팅이 생성, 임시 세팅으로 실시간 보여주기
+// save 누르면 실제 세팅으로 값복사
+// game에서 세팅 바꾸면 Sprite 자동 갱신
+
+// PlayIntro, PlayExit

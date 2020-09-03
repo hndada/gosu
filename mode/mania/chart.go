@@ -14,9 +14,9 @@ type Chart struct {
 
 // raw 차트에는 모드가 들어가면 안됨
 // 모드마다 TransPoint(TimingPoint), Note건듦
-func NewChartFromOsu(o *osu.Format) (*Chart, error) {
+func NewChartFromOsu(o *osu.Format, path string) (*Chart, error) {
 	var c Chart
-	c.BaseChart = mode.NewBaseChartFromOsu(o)
+	c.BaseChart = mode.NewBaseChartFromOsu(o, path)
 	c.Keys = int(c.Parameter["Scale"])
 	c.Notes = make([]Note, 0, len(o.HitObjects)*2)
 	for _, ho := range o.HitObjects {
