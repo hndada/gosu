@@ -1,7 +1,7 @@
 package settings
 
 import (
-	"github.com/hajimehoshi/ebiten"
+	"github.com/moutend/go-hook/pkg/types"
 	"image"
 	"image/color"
 )
@@ -10,8 +10,8 @@ import (
 // EachDimness map[[16]byte]uint8 -> 얘는 toml 등으로 저장
 // EachSpeed map[[16]byte]float64 -> 얘는 toml 등으로 저장
 type ManiaSettings struct {
-	KeyLayout    map[int][]ebiten.Key // todo: 무결성 검사, 겹치는거 있는지 매번 확인
-	GeneralSpeed float64              // todo: fixed decimal?
+	KeyLayout    map[int][]types.VKCode // todo: 무결성 검사, 겹치는거 있는지 매번 확인
+	GeneralSpeed float64                // todo: fixed decimal?
 	GroupSpeeds  []float64
 
 	NoteWidths          map[int][4]float64 // 키마다 width 설정
@@ -36,10 +36,10 @@ const (
 )
 
 func (s *ManiaSettings) reset() {
-	s.KeyLayout = map[int][]ebiten.Key{
-		4: {ebiten.KeyD, ebiten.KeyF, ebiten.KeyJ, ebiten.KeyK},
-		7: {ebiten.KeyS, ebiten.KeyD, ebiten.KeyF,
-			ebiten.KeySpace, ebiten.KeyJ, ebiten.KeyK, ebiten.KeyL},
+	s.KeyLayout = map[int][]types.VKCode{
+		4: {types.VK_D, types.VK_F, types.VK_J, types.VK_K},
+		7: {types.VK_S, types.VK_D, types.VK_F,
+			types.VK_SPACE, types.VK_J, types.VK_K, types.VK_L},
 	}
 	s.GeneralSpeed = 1.33
 

@@ -4,6 +4,8 @@ import (
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/settings"
 	"image"
+	"image/color"
+	"image/draw"
 )
 
 // These values are applied at keys
@@ -109,13 +111,24 @@ func (s *ManiaStage) Render(set *settings.Settings, skin skin) {
 			s.LNTails[key] = ltsp
 		}
 	}
-	// todo: fixed stage
-	// 대충 그리고 test 해보기
-	// main *ebiten.image // fieldWidth, screenHeight (generated)
-	// HPBarFrame      Sprite     // 폭맞춤x, screenHeigth
+	// HPBarFrame: (폭맞춤, screenHeigth)
 	var fieldWidth int
 	for _, ns := range noteSizes {
 		fieldWidth += ns.X
 	}
 	stageOffset := set.ManiaStageCenter() - (fieldWidth)/2 // int - int. 전자는 Position일 뿐.
+
+	fixed := image.NewRGBA(image.Rect(0, 0, set.ScreenSize().X, set.ScreenSize().Y))
+	black := image.NewUniform(color.RGBA{0, 0, 0, 255})
+	mainRect := image.Rect(stageOffset, 0, stageOffset+fieldWidth, set.ScreenSize().Y)
+	draw.Draw(fixed, mainRect, black, mainRect.Min, draw.Over)
+
+	red := image.NewUniform(color.RGBA{254, 106, 109, 128})
+	hintRect := image.Rect(stageOffset, int(set.HitPosition*scale),
+		stageOffset+fieldWidth, int(set.HitPosition*scale+set.NoteHeigth*scale))
+	draw.Draw(fixed, hintRect, red, hintRect.Min, draw.Over)
+
+	s.Fixed.i, _ = ebiten.NewImageFromImage(fixed, ebiten.FilterDefault)
+	s.Fixed.x, s.Fixed.y = 0, 0
+	s.Fixed.w, s.Fixed.h = set.ScreenSize().X, set.ScreenSize().Y
 }

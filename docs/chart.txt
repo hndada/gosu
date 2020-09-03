@@ -14,3 +14,11 @@ tags는 text file 로 관리 (이대로 할진 아직 고민 중)
 
 hash, 최소한의 변화에만 반응하게 하고 싶다
 A라는 쉬운 곡이 B라는 어려운 곡을 사칭하는 것을 가정하고 hash target 정하기
+
+Chart Version Control
+a.b.c
+c: 음량, 메타데이터 등 스코어 기록 유지되는 업데이트
+b: 채보, timingpoints 등 스코어 기록 유지 안되는 업데이트
+a: 리맵 수준으로 크게 변화한 경우
+
+0.0.0: WIP인 경우

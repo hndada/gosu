@@ -3,16 +3,19 @@ module github.com/hndada/gosu
 go 1.14
 
 require (
-	github.com/eiannone/keyboard v0.0.0-20200508000154-caf4b762e807
 	github.com/faiface/beep v1.0.2
-	github.com/gofrs/flock v0.7.3 // indirect
+	github.com/gofrs/flock v0.8.0 // indirect
 	github.com/hajimehoshi/ebiten v1.12.0-alpha.8.0.20200812044722-50cd33ed9bb6
+	github.com/hajimehoshi/go-mp3 v0.3.1 // indirect
+	github.com/hajimehoshi/oto v0.6.4 // indirect
 	github.com/hndada/ebitenui v0.0.0-20200814200704-4426e49b2da9
-	github.com/hndada/rg-parser v0.0.0-20200821111356-284206feb3bc
+	github.com/hndada/rg-parser v0.0.0-20200823155014-7036f7a3512a
 	github.com/kr/text v0.2.0 // indirect
+	github.com/moutend/go-hook v0.1.0
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/exp v0.0.0-20200821190819-94841d0725da // indirect
+	golang.org/x/exp v0.0.0-20200901203048-c4f52b2c50aa // indirect
 	golang.org/x/image v0.0.0-20200801110659-972c09e46d76 // indirect
 	golang.org/x/mobile v0.0.0-20200801112145-973feb4309de // indirect
-	golang.org/x/sys v0.0.0-20200821140526-fda516888d29 // indirect
+	golang.org/x/sys v0.0.0-20200831180312-196b9ba8737a // indirect
+	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b // indirect
 )

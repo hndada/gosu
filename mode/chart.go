@@ -12,11 +12,11 @@ import (
 type BaseChart struct {
 	Path          string // path of chart source file. It won't be exported to file content.
 	ChartID       int64  // 6byte: setID, 2byte: subID
-	SongName      string
-	SongUnicode   string
+	MusicName     string
+	MusicUnicode  string
 	Artist        string
 	ArtistUnicode string
-	SongSource    string
+	MusicSource   string
 	ChartName     string // diff name
 	Producer      string
 	HolderID      int64 // 0: gosu Chart Management
@@ -49,11 +49,11 @@ func NewBaseChart(path string) (*BaseChart, error) {
 func NewBaseChartFromOsu(o *osu.Format, path string) *BaseChart {
 	b := BaseChart{
 		Path:          path,
-		SongName:      o.Title,
-		SongUnicode:   o.TitleUnicode,
+		MusicName:     o.Title,
+		MusicUnicode:  o.TitleUnicode,
 		Artist:        o.Artist,
 		ArtistUnicode: o.ArtistUnicode,
-		SongSource:    o.Source,
+		MusicSource:   o.Source,
 		ChartName:     o.Version,
 		Producer:      o.Creator, // 변경될 수 있음
 
@@ -62,7 +62,7 @@ func NewBaseChartFromOsu(o *osu.Format, path string) *BaseChart {
 		// ImageFilename: o.Background().Filename,
 		Parameter: make(map[string]float64),
 	}
-	// TimingPoint
+	b.TimingPoints = newTimingPointsFromOsu(o)
 	if dat, err := ioutil.ReadFile(b.AbsPath(b.AudioFilename)); err == nil {
 		b.AudioHash = md5.Sum(dat)
 	}
