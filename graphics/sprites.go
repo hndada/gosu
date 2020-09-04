@@ -11,10 +11,10 @@ type GameSprites struct {
 	BoxRight        Sprite    // unscaled
 	ChartPanelFrame Sprite    // unscaled
 
-	Score           [10]Sprite   // unscaled
-	ManiaCombo      [10]Sprite   // unscaled
-	ManiaHitResults [5]Sprite    // unscaled
-	ManiaStages     []ManiaStage // 키별로 option 다름
+	Score           [10]Sprite         // unscaled
+	ManiaCombo      [10]Sprite         // unscaled
+	ManiaHitResults [5]Sprite          // unscaled
+	ManiaStages     map[int]ManiaStage // 키별로 option 다름
 
 	skin skin
 }
@@ -26,7 +26,14 @@ func (s *GameSprites) Render(settings *settings.Settings) {
 	// screenSize := settings.screenSize
 	// settings.ComboPosition
 	// settings.HitResultPosition
-	for key := range maniaNoteKinds {
-		s.ManiaStages[key].Render(settings, s.skin)
+	s.skin.LoadSkin(`C:\Users\hndada\Documents\GitHub\hndada\gosu\test\Skin`)
+	if s.ManiaStages == nil {
+		s.ManiaStages = make(map[int]ManiaStage)
+	}
+	// for key := range maniaNoteKinds {
+	for _, key := range []int{4, 7} {
+		stage := ManiaStage{Keys: key}
+		stage.Render(settings, s.skin)
+		s.ManiaStages[key] = stage
 	}
 }

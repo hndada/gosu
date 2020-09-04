@@ -72,16 +72,39 @@ func (s *ManiaStage) Render(set *settings.Settings, skin skin) {
 			noteSizes[key] = image.Pt(w, h)
 		}
 	}
+
+	// HPBarFrame: (폭맞춤, screenHeigth)
+	var fieldWidth int
+	for _, ns := range noteSizes {
+		fieldWidth += ns.X
+	}
+	stageOffset := set.ManiaStageCenter() - (fieldWidth)/2 // int - int. 전자는 Position일 뿐.
+
+	fixed := image.NewRGBA(image.Rect(0, 0, set.ScreenSize().X, set.ScreenSize().Y))
+	black := image.NewUniform(color.RGBA{0, 0, 0, 128})
+	mainRect := image.Rect(stageOffset, 0, stageOffset+fieldWidth, set.ScreenSize().Y)
+	draw.Draw(fixed, mainRect, black, mainRect.Min, draw.Over)
+
+	red := image.NewUniform(color.RGBA{254, 106, 109, 128})
+	hintRect := image.Rect(stageOffset, int(set.HitPosition*scale),
+		stageOffset+fieldWidth, int(set.HitPosition*scale+set.NoteHeigth*scale))
+	draw.Draw(fixed, hintRect, red, hintRect.Min, draw.Over)
+
+	s.Fixed.i, _ = ebiten.NewImageFromImage(fixed, ebiten.FilterDefault)
+	s.Fixed.x, s.Fixed.y = 0, 0
+	s.Fixed.w, s.Fixed.h = set.ScreenSize().X, set.ScreenSize().Y
+
 	s.Notes = make([]Sprite, len(noteSizes))
 	s.LNHeads = make([]Sprite, len(noteSizes))
 	s.LNTails = make([]Sprite, len(noteSizes))
+	s.LNBodys = make([][]ExpSprite, len(noteSizes))
 	{
 		hitPosition := int(set.HitPosition * set.ScaleY())
 		var x int
 		for key, ns := range noteSizes {
 			var sp Sprite
 			sp.w, sp.h = ns.X, ns.Y
-			sp.x = x
+			sp.x = x + stageOffset
 			sp.y = hitPosition
 			x += sp.w
 
@@ -109,26 +132,14 @@ func (s *ManiaStage) Render(set *settings.Settings, skin skin) {
 				ltsp.i = skin.mania.lnHead[noteKinds[key]]
 			}
 			s.LNTails[key] = ltsp
+
+			var lbsp ExpSprite
+			lbsp.vertical = true
+			lbsp.wh = sp.w
+			lbsp.x, lbsp.y = sp.x, sp.y
+			lbsp.i = skin.mania.lnBody[noteKinds[key]][0]
+			s.LNBodys[key] = make([]ExpSprite, 1)
+			s.LNBodys[key][0] = lbsp
 		}
 	}
-	// HPBarFrame: (폭맞춤, screenHeigth)
-	var fieldWidth int
-	for _, ns := range noteSizes {
-		fieldWidth += ns.X
-	}
-	stageOffset := set.ManiaStageCenter() - (fieldWidth)/2 // int - int. 전자는 Position일 뿐.
-
-	fixed := image.NewRGBA(image.Rect(0, 0, set.ScreenSize().X, set.ScreenSize().Y))
-	black := image.NewUniform(color.RGBA{0, 0, 0, 255})
-	mainRect := image.Rect(stageOffset, 0, stageOffset+fieldWidth, set.ScreenSize().Y)
-	draw.Draw(fixed, mainRect, black, mainRect.Min, draw.Over)
-
-	red := image.NewUniform(color.RGBA{254, 106, 109, 128})
-	hintRect := image.Rect(stageOffset, int(set.HitPosition*scale),
-		stageOffset+fieldWidth, int(set.HitPosition*scale+set.NoteHeigth*scale))
-	draw.Draw(fixed, hintRect, red, hintRect.Min, draw.Over)
-
-	s.Fixed.i, _ = ebiten.NewImageFromImage(fixed, ebiten.FilterDefault)
-	s.Fixed.x, s.Fixed.y = 0, 0
-	s.Fixed.w, s.Fixed.h = set.ScreenSize().X, set.ScreenSize().Y
 }

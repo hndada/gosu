@@ -25,7 +25,7 @@ type LNSprite struct {
 }
 
 func (s LNSprite) height() float64 {
-	return s.tail.y - s.head.y
+	return s.head.y - s.tail.y // y는 음수
 }
 
 func (s *SceneMania) setNoteSprites() {
@@ -46,22 +46,26 @@ func (s *SceneMania) setNoteSprites() {
 		s.notes[i] = ns
 	}
 	{
-		var i int
-		var n mania.Note
+		var ni int
 		var offset float64
-		sfactors := s.chart.TimingPoints.SpeedFactors
 	outer:
-		for si, sp := range sfactors {
-			for n.Time < sp.Time {
-				s.notes[i].y = float64(n.Time-sp.Time)*sp.Factor + offset
-				i++
-				if i >= len(s.chart.Notes) {
-					break outer
+		for si, sp := range s.sfactors {
+			if si == len(s.sfactors)-1 {
+				for i, n := range s.chart.Notes[ni:] {
+					s.notes[i].y = -float64(n.Time-sp.Time)*sp.Factor + offset
 				}
-				n = s.chart.Notes[i]
-			}
-			if si < len(sfactors) {
-				offset += float64(sfactors[si+1].Time-sp.Time) * sp.Factor
+			} else {
+				nextsp := s.sfactors[si+1]
+				var n mania.Note
+				for n.Time < nextsp.Time {
+					s.notes[ni].y = -float64(n.Time-sp.Time)*sp.Factor + offset
+					ni++
+					if ni >= len(s.chart.Notes) { // 어느 speed factor point가 마지막 노트보다 뒤에 있을 때
+						break outer
+					}
+					n = s.chart.Notes[ni]
+				}
+				offset += -float64(nextsp.Time-sp.Time) * sp.Factor
 			}
 		}
 	}
@@ -88,8 +92,8 @@ func (s *SceneMania) setNoteSprites() {
 func (s *SceneMania) applySpeed(speed float64) {
 	s.speed = speed
 	for i, n := range s.notes {
-		y := -(n.y - s.progress) * speed
-		s.notes[i].y = y
+		y := (n.y - s.progress) * speed
+		// s.notes[i].y = y
 		var sprite graphics.Sprite
 		switch n.type_ {
 		case mania.TypeNote:

@@ -3,7 +3,6 @@
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$/../ebiten" />
     <content url="file://$MODULE_DIR$/../ebitenui" />
-    <content url="file://$MODULE_DIR$/../go-hook" />
     <content url="file://$MODULE_DIR$" />
     <content url="file://$MODULE_DIR$/../rg-parser" />
     <content url="file://$USER_HOME$/go/src/github.com/hndada/gosu-framework" />

@@ -157,22 +157,22 @@ func (s *maniaSkin) load(skinPath string) {
 	for i := range s.lnBody {
 		s.lnBody[i] = make([]*ebiten.Image, 1)
 	}
-	filename = "mania-note1L-0"
+	filename = "mania-note1L-0.png"
 	path = filepath.Join(skinPath, filename)
 	if s.lnBody[0][0], ok = LoadImage(path); !ok {
 		s.lnBody[0][0] = defaultSkin.mania.lnBody[0][0]
 	}
-	filename = "mania-note2L-0"
+	filename = "mania-note2L-0.png"
 	path = filepath.Join(skinPath, filename)
 	if s.lnBody[1][0], ok = LoadImage(path); !ok {
 		s.lnBody[1][0] = defaultSkin.mania.lnBody[1][0]
 	}
-	filename = "mania-noteSL-0"
+	filename = "mania-noteSL-0.png"
 	path = filepath.Join(skinPath, filename)
 	if s.lnBody[2][0], ok = LoadImage(path); !ok {
 		s.lnBody[2][0] = defaultSkin.mania.lnBody[2][0]
 	}
-	filename = "mania-noteSCL-0"
+	filename = "mania-noteSCL-0.png"
 	path = filepath.Join(skinPath, filename)
 	if s.lnBody[3][0], ok = LoadImage(path); !ok {
 		s.lnBody[3][0] = defaultSkin.mania.lnBody[3][0]
