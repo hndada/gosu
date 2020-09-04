@@ -8,7 +8,8 @@
 # Test binary, built with `go test -c`
 *.test
 /mode/mania/lv_test
-/test/music
+/test/Music
+/test/Skin
 /asset
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
