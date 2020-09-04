@@ -59,9 +59,13 @@ func NewBaseChartFromOsu(o *osu.Format, path string) *BaseChart {
 
 		AudioFilename: o.AudioFilename,
 		PreviewTime:   int64(o.PreviewTime),
-		// ImageFilename: o.Background().Filename,
-		Parameter: make(map[string]float64),
+		Parameter:     make(map[string]float64),
 	}
+	bg, ok := o.Background()
+	if !ok {
+		panic("failed to load bg")
+	}
+	b.ImageFilename = bg.Filename
 	b.TimingPoints = newTimingPointsFromOsu(o)
 	if dat, err := ioutil.ReadFile(b.AbsPath(b.AudioFilename)); err == nil {
 		b.AudioHash = md5.Sum(dat)

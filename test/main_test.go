@@ -1,4 +1,4 @@
-package game_test_test
+package main
 
 import (
 	"github.com/hajimehoshi/ebiten"
@@ -9,10 +9,6 @@ import (
 
 func TestMain(m *testing.M) {
 	g := gosu.NewGame()
-	ebiten.SetWindowTitle("gosu")
-	ebiten.SetWindowSize(g.ScreenWidth, g.ScreenHeight) // fixed in prototype
-	ebiten.SetRunnableOnUnfocused(true)
-	ebiten.SetMaxTPS(g.MaxTPS)
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}

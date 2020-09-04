@@ -4,10 +4,9 @@ import (
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/graphics"
 	"github.com/hndada/gosu/settings"
-	"os"
 )
 
-// 곡 선택 (터미널처럼 초간단하게 만들수도 있음)
+// 채보 재생: 속도, 로딩 및 싱크
 // 스코어, hp 계산, 리플레이 저장
 // 기타 Sprite 그리기
 // 레벨 계산 대충 마무리
@@ -35,19 +34,26 @@ type Game struct {
 // todo: 소리 재생
 // Scene이 Game을 control하는 주체
 type Scene interface {
+	Init()
 	Update() error
 	Draw(screen *ebiten.Image) // Draws scene to screen
 }
 
 func NewGame() *Game {
 	g := &Game{}
-	var err error
-	if g.path, err = os.Executable(); err != nil {
-		panic(err)
-	}
+	// var err error
+	// if g.path, err = os.Executable(); err != nil {
+	// 	panic(err)
+	// }
+	g.path = `C:\Users\hndada\Documents\GitHub\hndada\gosu\test\`
 	g.Settings.Load()
+	g.GameSprites.Render(&g.Settings)
 	g.Scene = g.NewSceneSelect()
 	g.SceneChanger = g.NewSceneChanger()
+	ebiten.SetMaxTPS(g.Settings.MaxTPS())
+	ebiten.SetWindowTitle("gosu")
+	ebiten.SetWindowSize(g.Settings.ScreenSize().X, g.Settings.ScreenSize().Y) // fixed in prototype
+	ebiten.SetRunnableOnUnfocused(true)
 	return g
 }
 func (g *Game) Update(screen *ebiten.Image) error {

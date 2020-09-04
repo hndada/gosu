@@ -23,10 +23,10 @@ func (s *Sprite) ResetPosition(op *ebiten.DrawImageOptions) {
 
 // Stands for Expandible sprite
 type ExpSprite struct {
-	i        *ebiten.Image
-	wh       float64
-	x, y     float64
 	vertical bool
+	i        *ebiten.Image
+	wh       int
+	x, y     int
 }
 
 func (s *ExpSprite) Image(length float64) *ebiten.Image {
@@ -37,7 +37,7 @@ func (s *ExpSprite) Image(length float64) *ebiten.Image {
 	op := &ebiten.DrawImageOptions{}
 	if s.vertical {
 		i, _ = ebiten.NewImage(int(s.wh), int(length), ebiten.FilterDefault)
-		ratio = s.wh / float64(rw)
+		ratio = float64(s.wh) / float64(rw)
 		op.GeoM.Scale(ratio, ratio)
 		count = int(length / (float64(rh) * ratio))
 		for c := 0; c <= count; c++ {
@@ -46,7 +46,7 @@ func (s *ExpSprite) Image(length float64) *ebiten.Image {
 		}
 	} else {
 		i, _ = ebiten.NewImage(int(length), int(s.wh), ebiten.FilterDefault)
-		ratio = s.wh / float64(rh)
+		ratio = float64(s.wh) / float64(rh)
 		op.GeoM.Scale(ratio, ratio)
 		count = int(length / (float64(rw) * ratio))
 		for c := 0; c <= count; c++ {
@@ -59,5 +59,5 @@ func (s *ExpSprite) Image(length float64) *ebiten.Image {
 
 func (s *ExpSprite) ResetPosition(op *ebiten.DrawImageOptions) {
 	op.GeoM.Reset()
-	op.GeoM.Translate(s.x, s.y)
+	op.GeoM.Translate(float64(s.x), float64(s.y))
 }

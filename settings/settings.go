@@ -93,7 +93,7 @@ func (s *Settings) Save() {
 }
 
 func (s *Settings) Reset() {
-	s.maxTPS = 240
+	s.maxTPS = 60
 	s.screenSize = image.Pt(1600, 900)
 	s.generalDimness = 30
 	s.volumeMaster = 100

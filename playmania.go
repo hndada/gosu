@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"github.com/hndada/gosu/graphics"
 	"github.com/hndada/gosu/input"
+	"github.com/hndada/gosu/mode"
 	"github.com/moutend/go-hook/pkg/types"
 	"image"
 	_ "image/jpeg"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -45,6 +45,7 @@ type SceneMania struct { // aka Clavier
 
 	speed      float64
 	progress   float64
+	sfactors   []mode.SpeedFactorPoint
 	sfactorIdx int
 
 	stage       graphics.ManiaStage
@@ -69,13 +70,14 @@ func (l logTime) isLogged(t int64) bool {
 // lnhead와 lntail 분리 유지
 func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	s := &SceneMania{}
-	ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", c.MusicName, c.ChartName))
+	s.g = g
 	// 얘도 별도 함수 없이 여기서 처리하는게 맞을듯
 	// BaseChart는 ScreenSize에 대해서 알지 못함
 	// mode 쪽은 ebiten으로부터 독립적이었으면 좋겠음
+	s.chart = c.ApplyMods(mods)
 	bg, err := s.chart.Background()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	s.bg, _ = ebiten.NewImageFromImage(bg, ebiten.FilterDefault)
 
@@ -95,7 +97,7 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	{
 		f, err := os.Open(s.chart.AbsPath(s.chart.AudioFilename))
 		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
 		var streamer beep.StreamSeekCloser
 		var streamFormat beep.Format
@@ -103,18 +105,13 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 		case ".mp3":
 			streamer, streamFormat, err = mp3.Decode(f)
 			if err != nil {
-				log.Fatal(err)
+				panic(err)
 			}
 		}
 		s.buffer = beep.NewBuffer(streamFormat)
 		s.buffer.Append(beep.Silence(streamFormat.SampleRate.N(2 * time.Second)))
 		s.buffer.Append(streamer)
 		_ = streamer.Close()
-
-		if err = speaker.Init(s.buffer.Format().SampleRate,
-			s.buffer.Format().SampleRate.N(time.Second/100)); err != nil {
-			log.Fatal(err)
-		}
 	}
 	const BufferTime = 2
 	s.tick = -int64(BufferTime * s.g.MaxTPS())
@@ -123,7 +120,12 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	step1ms := float64(s.g.ScreenSize().Y) / ApproachDuration
 	s.step = func(ms int64) float64 { return float64(ms) * step1ms }
 
-	s.chart = c.ApplyMods(mods)
+	// todo: 노트가 언제나 양수 시간에 있다고 상정; 실제로는 노트가 BufferTime보다 뒤에 있을 수 있음
+	initSpeedFactor := mode.SpeedFactorPoint{-BufferTime * Millisecond, 1}
+	// s.progress = float64(-BufferTime*Millisecond-initSpeedFactor.Time) * initSpeedFactor.Factor
+	s.sfactors = append([]mode.SpeedFactorPoint{initSpeedFactor}, s.chart.TimingPoints.SpeedFactors...)
+
+	s.stage = s.g.GameSprites.ManiaStages[s.chart.Keys] // for quick access
 	s.setNoteSprites()
 	var speed float64
 	switch {
@@ -133,22 +135,21 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	s.applySpeed(speed)
 	s.endTime = s.chart.EndTime()
 
-	s.stage = s.g.GameSprites.ManiaStages[s.chart.Keys] // for quick access
 	s.layout = s.g.Settings.KeyLayout[s.chart.Keys]
-
 	s.kbEventChan, err = input.NewKeyboardEventChannel()
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	return s
 }
 
 // 리플레이 구조: 마지막 status 시간, 레이아웃 키state
 func (s *SceneMania) Update() error {
-	if s.Time(s.tick) > s.endTime {
+	if s.Time(s.tick) > s.endTime || ebiten.IsKeyPressed(ebiten.KeyEscape) {
 		if err := s.kbEventChan.Close(); err != nil {
 			return err
 		}
+		speaker.Close()
 		s.g.changeScene(s.g.NewSceneSelect())
 		return nil
 	}
@@ -159,7 +160,6 @@ func (s *SceneMania) Update() error {
 				if !s.logTime.isLogged(e.Time) {
 					s.log[e.Time] = make([]bool, s.chart.Keys)
 				}
-
 				if e.State == input.KeyStateDown {
 					s.log[e.Time][key] = true
 				} else {
@@ -176,16 +176,31 @@ func (s *SceneMania) Update() error {
 	}
 
 	var dy float64
+	now := s.Time(s.tick)
 	lastTime := s.Time(s.tick - 1)
-	sfactors := s.chart.TimingPoints.SpeedFactors
-	for si, sp := range sfactors[s.sfactorIdx+1:] {
-		if sp.Time > s.Time(s.tick) { // equality condition should be excluded
-			break
+	for si, sp := range s.sfactors[s.sfactorIdx:] { // todo: timing points sorting -> rg-parser에서
+		if si == len(s.sfactors)-1 {
+			dy += s.step(now-lastTime) * s.speed * sp.Factor
+			s.sfactorIdx = si
+		} else {
+			nextsp := s.sfactors[si+1]
+			if nextsp.Time > now { // equality condition should be excluded
+				s.sfactorIdx = si
+				break
+			}
+			dy += s.step(nextsp.Time-lastTime) * s.speed * sp.Factor
+			lastTime = nextsp.Time
 		}
-		dy += s.step(sp.Time-lastTime) * s.speed * sp.Factor
-		lastTime = sp.Time
-		s.sfactorIdx = si
 	}
+	// for si, sp := range sfactors[s.sfactorIdx+1:] {
+	// 	if sp.Time > s.Time(s.tick) { // equality condition should be excluded
+	// 		break
+	// 	}
+	// 	dy += s.step(sp.Time-lastTime) * s.speed * sp.Factor
+	// 	lastTime = sp.Time
+	// 	s.sfactorIdx = si
+	// }
+	dy *= 1.7 // todo: why?
 	for i := range s.notes {
 		s.notes[i].op.GeoM.Translate(0, dy)
 	}
@@ -194,6 +209,7 @@ func (s *SceneMania) Update() error {
 	}
 	s.progress += dy
 	s.tick++
+	// fmt.Printf("%d: %f\n", lastTime, dy)
 	return nil
 }
 
@@ -207,11 +223,11 @@ func (s *SceneMania) Draw(screen *ebiten.Image) {
 	// s.g.Sprites.Score
 	// s.g.Sprites.ManiaCombo
 	// hp는 마스크 이미지를 씌우면 되지 않을까
-	for _, n := range s.notes {
-		screen.DrawImage(n.i, n.op)
-	}
 	for _, n := range s.lnotes {
 		screen.DrawImage(n.i, n.bodyop)
+	}
+	for _, n := range s.notes {
+		screen.DrawImage(n.i, n.op)
 	}
 	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %.2f\nTime: %.1fs", ebiten.CurrentFPS(), float64(s.Time(s.tick))/1000))
 }
@@ -222,6 +238,11 @@ func (s *SceneMania) Time(tick int64) int64 {
 }
 
 func (s *SceneMania) Init() {
+	if err := speaker.Init(s.buffer.Format().SampleRate,
+		s.buffer.Format().SampleRate.N(time.Second/10)); err != nil {
+		panic(err)
+	}
+	ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", s.chart.MusicName, s.chart.ChartName))
 	speaker.Play(s.buffer.Streamer(0, s.buffer.Len()))
 }
 
@@ -250,7 +271,7 @@ func (s *SceneMania) Init() {
 // 	}
 // }
 
-func BackgroundOp(bg, screen image.Point) *ebiten.DrawImageOptions {
+func BackgroundOp(screen, bg image.Point) *ebiten.DrawImageOptions {
 	// 그림의 크기가 스크린보다 클 경우 줄이기
 	// rx := float64(bg.X) / float64(screen.X)
 	// ry := float64(bg.Y) / float64(screen.Y)

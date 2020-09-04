@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type KeyState uint8
+type KeyState int8
 
 const (
 	KeyStateUnknown KeyState = iota - 1

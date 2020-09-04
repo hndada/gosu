@@ -15,6 +15,8 @@ type SceneChanger struct {
 // The function is called every time when settings has been updated
 func (g *Game) NewSceneChanger() *SceneChanger {
 	sc := &SceneChanger{}
+	sc.g = g
+	sc.Scene = g.Scene
 	p := g.ScreenSize()
 	sc.TransSceneFrom, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
 	sc.TransSceneTo, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
@@ -23,7 +25,8 @@ func (g *Game) NewSceneChanger() *SceneChanger {
 
 func (sc *SceneChanger) Update() error {
 	if sc.done() {
-		return sc.g.Scene.Update()
+		return nil
+		// return sc.g.Scene.Update()
 	}
 	sc.TransCountdown--
 	if sc.TransCountdown > 0 {
@@ -31,6 +34,7 @@ func (sc *SceneChanger) Update() error {
 	}
 	// count down has just been from non-zero to zero
 	sc.g.Scene = sc.NextScene
+	sc.g.Scene.Init()
 	sc.NextScene = nil
 	return nil
 }

@@ -41,15 +41,15 @@ func (s *ManiaSettings) reset() {
 		7: {types.VK_S, types.VK_D, types.VK_F,
 			types.VK_SPACE, types.VK_J, types.VK_K, types.VK_L},
 	}
-	s.GeneralSpeed = 1.33
+	s.GeneralSpeed = 1
 
 	s.NoteWidths = map[int][4]float64{
 		4: {10, 9, 11, 12},
-		7: {4.5, 4, 5, 5.5}, // {4.67, 3.83, 5.5, 5.5}
+		7: {4.5 * 1.8, 4 * 1.8, 5 * 1.8, 5.5 * 1.8}, // {4.67, 3.83, 5.5, 5.5}
 	}
 	s.NoteHeigth = 3
 	s.StagePosition = 50
-	s.HitPosition = 70
+	s.HitPosition = 77
 	s.ComboPosition = 50
 	s.HitResultPosition = 60
 	s.SpotlightColor = [4]color.RGBA{
