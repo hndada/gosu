@@ -13,6 +13,7 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/moutend/go-hook v0.1.0
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/silbinarywolf/preferdiscretegpu v1.0.0
 	golang.org/x/exp v0.0.0-20200901203048-c4f52b2c50aa // indirect
 	golang.org/x/image v0.0.0-20200801110659-972c09e46d76
 	golang.org/x/mobile v0.0.0-20200801112145-973feb4309de // indirect

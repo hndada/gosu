@@ -5,11 +5,11 @@ import (
 )
 
 type GameSprites struct {
-	Name            string
-	BoxLeft         Sprite    // unscaled
-	BoxMiddle       ExpSprite // unscaled
-	BoxRight        Sprite    // unscaled
-	ChartPanelFrame Sprite    // unscaled
+	Name string
+	// BoxLeft         Sprite // unscaled
+	// BoxMiddle       Sprite // unscaled
+	// BoxRight        Sprite // unscaled
+	// ChartPanelFrame Sprite // unscaled
 
 	Score           [10]Sprite         // unscaled
 	ManiaCombo      [10]Sprite         // unscaled

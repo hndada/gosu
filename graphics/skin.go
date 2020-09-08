@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"github.com/hajimehoshi/ebiten"
 	"image"
+	_ "image/jpeg"
+	_ "image/png"
 	"os"
 	"path/filepath"
 )
@@ -18,20 +20,20 @@ import (
 // skin은 only for asset/resources; 설정은 전적으로 user에게 맡긴다
 // author나 license는 skin 폴더에 별도 텍스트 파일로 저장
 
-// todo: 스킨 표준
+// todo: 스킨 표준 세우기:
 // score, combo: 0~9을 하나의 이미지로
 // 4개짜리 이미지, 하나로 뭉치기
 // 길이/4, 높이에 해당하는 거 만큼 롱노트 SubImage
 type skin struct {
-	name            string
-	score           [10]*ebiten.Image
-	combo           [10]*ebiten.Image
-	hpBarFrame      *ebiten.Image
-	hpBarColor      *ebiten.Image
-	boxLeft         *ebiten.Image
-	boxMiddle       *ebiten.Image
-	boxRight        *ebiten.Image
-	chartPanelFrame *ebiten.Image
+	name       string
+	score      [10]*ebiten.Image
+	combo      [10]*ebiten.Image
+	hpBarFrame *ebiten.Image
+	hpBarColor *ebiten.Image
+	// boxLeft         *ebiten.Image
+	// boxMiddle       *ebiten.Image
+	// boxRight        *ebiten.Image
+	// chartPanelFrame *ebiten.Image
 
 	mania maniaSkin
 }
@@ -52,12 +54,13 @@ type maniaSkin struct {
 	stageHint    *ebiten.Image // fieldWidth, 설정값 ('노트와 동일한 높이로' 옵션 추가)
 }
 
-var defaultSkin skin
+var defaultSkin skin // option 적용 안 돼있는 이미지 set
 
 // 게임 켜질 때
-// 세팅의 skin id 에 맞추어서 메모리에 올리기 아니면 gob로 저장
+// 세팅의 skin id 에 맞추어서 메모리에 올리기 (먼 훗날 gob로 저장)
 // skinPathList = map[int]string
 // todo: filename list, .toml로 저장
+
 func (s *skin) LoadSkin(skinPath string) {
 	var filename, path string
 	var ok bool
@@ -85,53 +88,39 @@ func (s *skin) LoadSkin(skinPath string) {
 	if s.hpBarColor, ok = LoadImage(path); !ok {
 		s.hpBarColor = defaultSkin.hpBarColor
 	}
-	filename = "button-left.png"
-	path = filepath.Join(skinPath, filename)
-	if s.boxLeft, ok = LoadImage(path); !ok {
-		s.boxLeft = defaultSkin.boxLeft
-	}
-	filename = "button-middle.png"
-	path = filepath.Join(skinPath, filename)
-	if s.boxMiddle, ok = LoadImage(path); !ok {
-		s.boxMiddle = defaultSkin.boxMiddle
-	}
-	filename = "button-right.png"
-	path = filepath.Join(skinPath, filename)
-	if s.boxRight, ok = LoadImage(path); !ok {
-		s.boxRight = defaultSkin.boxRight
-	}
-	filename = "menu-button-background.png"
-	path = filepath.Join(skinPath, filename)
-	if s.chartPanelFrame, ok = LoadImage(path); !ok {
-		s.chartPanelFrame = defaultSkin.chartPanelFrame
-	}
+	// filename = "button-left.png"
+	// path = filepath.Join(skinPath, filename)
+	// if s.boxLeft, ok = LoadImage(path); !ok {
+	// 	s.boxLeft = defaultSkin.boxLeft
+	// }
+	// filename = "button-middle.png"
+	// path = filepath.Join(skinPath, filename)
+	// if s.boxMiddle, ok = LoadImage(path); !ok {
+	// 	s.boxMiddle = defaultSkin.boxMiddle
+	// }
+	// filename = "button-right.png"
+	// path = filepath.Join(skinPath, filename)
+	// if s.boxRight, ok = LoadImage(path); !ok {
+	// 	s.boxRight = defaultSkin.boxRight
+	// }
+	// filename = "menu-button-background.png"
+	// path = filepath.Join(skinPath, filename)
+	// if s.chartPanelFrame, ok = LoadImage(path); !ok {
+	// 	s.chartPanelFrame = defaultSkin.chartPanelFrame
+	// }
 	s.mania.load(skinPath)
 }
 
+// todo: for loop으로 1/4로 줄일 수 있음
 func (s *maniaSkin) load(skinPath string) {
 	var filename, path string
 	var ok bool
-	filename = "mania-note1.png"
-	path = filepath.Join(skinPath, filename)
-	if s.note[0], ok = LoadImage(path); !ok {
-		s.note[0] = defaultSkin.mania.note[0]
+	for i, fname := range []string{"mania-note1.png", "mania-note2.png", "mania-noteS.png", "mania-noteSC.png"} {
+		path = filepath.Join(skinPath, fname)
+		if s.note[i], ok = LoadImage(path); !ok {
+			s.note[i] = defaultSkin.mania.note[i]
+		}
 	}
-	filename = "mania-note2.png"
-	path = filepath.Join(skinPath, filename)
-	if s.note[1], ok = LoadImage(path); !ok {
-		s.note[1] = defaultSkin.mania.note[1]
-	}
-	filename = "mania-noteS.png"
-	path = filepath.Join(skinPath, filename)
-	if s.note[2], ok = LoadImage(path); !ok {
-		s.note[2] = defaultSkin.mania.note[2]
-	}
-	filename = "mania-noteSC.png"
-	path = filepath.Join(skinPath, filename)
-	if s.note[3], ok = LoadImage(path); !ok {
-		s.note[3] = defaultSkin.mania.note[3]
-	}
-
 	s.lnHead = s.note
 	// filename =
 	// 	path = filepath.Join(skinPath, filename)

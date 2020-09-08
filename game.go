@@ -2,13 +2,21 @@ package gosu
 
 import (
 	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/audio"
 	"github.com/hndada/gosu/graphics"
 	"github.com/hndada/gosu/settings"
+	_ "github.com/silbinarywolf/preferdiscretegpu"
 )
 
-// 채보 재생: 속도, 로딩 및 싱크
+// 실제 파일을 자주 불러오는듯
+// skin: *ebiten.Image, raw 이미지들
+// sprites: *ebiten.Image, 크기랑 position 맞춰진 이미지들
+
+// 채보 재생: 속도, 로딩 및 싱크, 긴 롱노트 그리기
+// todo: 개느림
 // 스코어, hp 계산, 리플레이 저장
 // 기타 Sprite 그리기
+// refactoring (graphics, settings을 각 mode폴더에)
 // 레벨 계산 대충 마무리
 
 // 운동, 코딩, 잡일, 독서, 글씨 연습
@@ -29,6 +37,7 @@ type Game struct {
 	Scene        Scene
 	SceneChanger *SceneChanger
 	// Input        input.Input
+	audioContext *audio.Context
 }
 
 // todo: 소리 재생
@@ -40,11 +49,18 @@ type Scene interface {
 }
 
 func NewGame() *Game {
+	const sampleRate = 44100
 	g := &Game{}
 	// var err error
 	// if g.path, err = os.Executable(); err != nil {
 	// 	panic(err)
 	// }
+	var err error
+	c, err := audio.NewContext(sampleRate)
+	if err != nil {
+		panic(err)
+	}
+	g.audioContext = c
 	g.path = `C:\Users\hndada\Documents\GitHub\hndada\gosu\test\`
 	g.Settings.Load()
 	g.GameSprites.Render(&g.Settings)
