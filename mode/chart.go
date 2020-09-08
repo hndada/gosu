@@ -81,6 +81,7 @@ func (b *BaseChart) AbsPath(filename string) string {
 	return filepath.Join(filepath.Dir(b.Path), filename)
 }
 
+// no ebiten.Image; mode 쪽은 ebiten으로부터 독립적이었으면 좋겠음
 func (b *BaseChart) Background() (image.Image, error) {
 	dat, err := ioutil.ReadFile(b.AbsPath(b.ImageFilename))
 	if err != nil {

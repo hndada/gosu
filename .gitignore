@@ -9,6 +9,7 @@
 *.test
 /mode/mania/lv_test
 /test/Music
+/test/Music2
 /test/Skin
 /asset
 # Output of the go coverage tool, specifically when used with LiteIDE
