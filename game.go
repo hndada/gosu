@@ -3,8 +3,8 @@ package gosu
 import (
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/audio"
-	"github.com/hndada/gosu/graphics"
-	"github.com/hndada/gosu/settings"
+	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/mode/mania"
 	_ "github.com/silbinarywolf/preferdiscretegpu"
 )
 
@@ -13,7 +13,6 @@ import (
 // sprites: *ebiten.Image, 크기랑 position 맞춰진 이미지들
 
 // 채보 재생: 속도, 로딩 및 싱크, 긴 롱노트 그리기
-// todo: 개느림
 // 스코어, hp 계산, 리플레이 저장
 // 기타 Sprite 그리기
 // refactoring (graphics, settings을 각 mode폴더에)
@@ -31,13 +30,44 @@ import (
 const Millisecond = 1000
 
 type Game struct {
-	path string
-	settings.Settings
-	graphics.GameSprites
+	path         string
+	audioContext *audio.Context
+	*settings
+	*sprites
 	Scene        Scene
 	SceneChanger *SceneChanger
 	// Input        input.Input
-	audioContext *audio.Context
+
+}
+
+type settings struct {
+	common *mode.CommonSettings
+	mania  *mania.Settings
+}
+
+func (g *Game) newSettings() {
+	s := &settings{
+		common: &mode.CommonSettings{},
+		mania:  &mania.Settings{},
+	}
+	s.common.Reset()
+	s.mania.Reset(s.common)
+	g.settings = s
+}
+
+type sprites struct {
+	common *mode.CommonSprites
+	mania  *mania.Sprites
+}
+
+func (g *Game) newSprites() {
+	s := &sprites{
+		common: &mode.CommonSprites{},
+		mania:  &mania.Sprites{},
+	}
+	s.common.Render(g.settings.common)
+	s.mania.Render(g.settings.mania)
+	g.sprites = s
 }
 
 // todo: 소리 재생
@@ -55,20 +85,22 @@ func NewGame() *Game {
 	// if g.path, err = os.Executable(); err != nil {
 	// 	panic(err)
 	// }
+	g.path = `C:\Users\hndada\Documents\GitHub\hndada\gosu\test\`
 	var err error
 	c, err := audio.NewContext(sampleRate)
 	if err != nil {
 		panic(err)
 	}
 	g.audioContext = c
-	g.path = `C:\Users\hndada\Documents\GitHub\hndada\gosu\test\`
-	g.Settings.Load()
-	g.GameSprites.Render(&g.Settings)
+	g.newSettings()
+	g.newSprites()
+
 	g.Scene = g.NewSceneSelect()
 	g.SceneChanger = g.NewSceneChanger()
-	ebiten.SetMaxTPS(g.Settings.MaxTPS())
+
+	ebiten.SetMaxTPS(g.settings.common.MaxTPS())
 	ebiten.SetWindowTitle("gosu")
-	ebiten.SetWindowSize(g.Settings.ScreenSize().X, g.Settings.ScreenSize().Y) // fixed in prototype
+	ebiten.SetWindowSize(g.settings.common.ScreenSize().X, g.settings.common.ScreenSize().Y) // fixed in prototype
 	ebiten.SetRunnableOnUnfocused(true)
 	return g
 }
@@ -88,7 +120,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return g.ScreenSize().X, g.ScreenSize().Y
+	return g.settings.common.ScreenSize().X, g.settings.common.ScreenSize().Y
 }
 
 func (g *Game) changeScene(s Scene) {

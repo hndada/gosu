@@ -1,4 +1,4 @@
-package graphics
+package mode
 
 import (
 	"github.com/hajimehoshi/ebiten"
@@ -15,9 +15,11 @@ type Sprite struct {
 	p image.Point
 }
 
-func (s Sprite) Image() *ebiten.Image  { return s.i }
-func (s Sprite) Size() image.Point     { return image.Pt(s.i.Size()) }
-func (s Sprite) Position() image.Point { return s.p }
+func (s *Sprite) SetImage(i *ebiten.Image)  { s.i = i }
+func (s Sprite) Image() *ebiten.Image       { return s.i }
+func (s Sprite) Size() image.Point          { return image.Pt(s.i.Size()) }
+func (s *Sprite) SetPosition(p image.Point) { s.p = p }
+func (s Sprite) Position() image.Point      { return s.p }
 
 // // field값들은 이미 값이 맞춰져있다고 가정
 // func (s *Sprite) ResetPosition(op *ebiten.DrawImageOptions) {

@@ -1,4 +1,4 @@
-package settings
+package mode
 
 import (
 	"bytes"
@@ -14,34 +14,34 @@ import (
 
 // Dimness 및 Speed, 어찌됐든 플레이 중에 바뀔 수 있음
 // 그러나, Settings 쪽에선 Scene을 모르므로 Scene쪽에서 값 바꾸고 함수 호출하는 식으로.
-type Settings struct {
+type CommonSettings struct {
 	screenSize     image.Point
 	maxTPS         int
 	generalDimness uint8 // todo: 0 ~ 100으로만 되게.
 	volumeMaster   uint8
 	volumeBGM      uint8
 	volumeSFX      uint8
-	ManiaSettings
 }
 
 // 우선 image.Point로 다뤄보고 번거로운 부분이 발견되면 대체
 // 아래 애들은 별도로 설정
-func (s *Settings) SetScreenSize(p image.Point) {
+func (s *CommonSettings) SetScreenSize(p image.Point) {
 	s.screenSize = p
 	ebiten.SetWindowSize(p.X, p.Y)
 }
-func (s *Settings) ScreenSize() image.Point { return s.screenSize }
-func (s *Settings) ScaleY() float64         { return float64(s.screenSize.Y) / 100 }
-func (s *Settings) SetMaxTPS(tps int) {
+func (s *CommonSettings) ScreenSize() image.Point { return s.screenSize }
+func (s *CommonSettings) ScaleY() float64         { return float64(s.screenSize.Y) / 100 }
+func (s *CommonSettings) SetMaxTPS(tps int) {
 	s.maxTPS = tps
 	ebiten.SetMaxTPS(tps)
 }
-func (s *Settings) MaxTPS() int { return s.maxTPS }
+func (s *CommonSettings) MaxTPS() int { return s.maxTPS }
 
-func (s *Settings) GeneralDimness() uint8 { return s.generalDimness }
+func (s *CommonSettings) GeneralDimness() uint8 { return s.generalDimness }
 
 // todo: Streamer 2개 만들기: BGM, SFX
-func (s *Settings) SetDownVolumeMaster() {
+// todo: Streamer에 vol 꽂기
+func (s *CommonSettings) SetDownVolumeMaster() {
 	switch {
 	case s.volumeMaster <= 0:
 		return
@@ -50,17 +50,16 @@ func (s *Settings) SetDownVolumeMaster() {
 	case s.volumeMaster <= 100:
 		s.volumeMaster -= 5
 	}
-	// todo: Streamer에 vol 꽂기
 	// percent(s.volumeBGM) * percent(s.volumeMaster)
 }
 
 // func percent(v uint8) float64 { return float64(v) / 100 }
 
-func (s Settings) ManiaStageCenter() int {
-	return s.ManiaSettings.StageCenter(s.screenSize)
-}
+// func (s CommonSettings) ManiaStageCenter() int {
+// 	return s.mania.StageCenter(s.screenSize)
+// }
 
-func (s *Settings) Load() {
+func (s *CommonSettings) Load() {
 	f, err := ioutil.ReadFile("settings")
 	if err != nil {
 		s.Reset()
@@ -74,7 +73,7 @@ func (s *Settings) Load() {
 	}
 }
 
-func (s *Settings) Save() {
+func (s *CommonSettings) Save() {
 	var b bytes.Buffer
 	enc := gob.NewEncoder(&b)
 	err := enc.Encode(s)
@@ -92,12 +91,11 @@ func (s *Settings) Save() {
 	}
 }
 
-func (s *Settings) Reset() {
+func (s *CommonSettings) Reset() {
 	s.maxTPS = 240
 	s.screenSize = image.Pt(1600, 900)
 	s.generalDimness = 30
 	s.volumeMaster = 100
 	s.volumeBGM = 50
 	s.volumeSFX = 50
-	s.ManiaSettings.reset()
 }

@@ -1,7 +1,5 @@
 package gosu
 
-// 이전 값에 상관없이 언제나 다시 그리므로 applySpeed()가 따로 필요 없음
-
 // op에 값 적용하는 함수
 // hitPosition은 settings 단계에서 미리 적용하고 옴
 // func (s *SceneMania) applySpeed(speed float64) {
