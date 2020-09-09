@@ -1,7 +1,6 @@
 package gosu
 
 import (
-	"fmt"
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/speaker"
@@ -27,7 +26,24 @@ func (ap *audioPlayer) play() {
 	speaker.Play(ap.volume)
 }
 func (ap *audioPlayer) time() time.Duration {
-	fmt.Println(ap.streamer.Position())
 	return ap.sampleRate.D(ap.streamer.Position())
 }
 
+// NewSceneMania에서 쓰던거
+// {
+// f, err := os.Open(s.chart.AbsPath(s.chart.AudioFilename))
+// if err != nil {
+// panic(err)
+// }
+// var streamer beep.StreamSeekCloser
+// var format beep.Format
+// switch strings.ToLower(filepath.Ext(s.chart.AudioFilename)) {
+// case ".mp3":
+// streamer, format, err = mp3.Decode(f)
+// if err != nil {
+// panic(err)
+// }
+// }
+// _ = speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+// s.audioPlayer = NewAudioPlayer(streamer, format.SampleRate, s.mods.TimeRate)
+// }

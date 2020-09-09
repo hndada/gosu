@@ -60,7 +60,7 @@ func (s *SceneSelect) Update() error {
 			s.cursor = len(s.charts) - 1
 		}
 	}
-	screenSize := s.g.settings.common.ScreenSize()
+	screenSize := s.g.settings.ScreenSize()
 	for i := range s.charts {
 		mid := (screenSize.Y - 40) / 2 // 현재 선택된 차트 focus 틀 위치 고정
 		s.charts[i].x = screenSize.X - 400

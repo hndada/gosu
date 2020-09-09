@@ -5,6 +5,7 @@ import (
 	"github.com/hndada/gosu/internal/tools"
 )
 
+// todo: score, level 다 정리되고 나서 internal/tools 정리하겠음
 // ppy 방식처럼, 구간 내 최고 strain을 잡아야 할까?
 // 우선 chord 알고리즘 먼저 고쳐보자
 const (

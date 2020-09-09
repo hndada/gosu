@@ -44,7 +44,7 @@ func (s *Settings) Reset(common *mode.CommonSettings) {
 		7: {types.VK_S, types.VK_D, types.VK_F,
 			types.VK_SPACE, types.VK_J, types.VK_K, types.VK_L},
 	}
-	s.GeneralSpeed = 0.1
+	s.GeneralSpeed = 0.115
 
 	s.NoteWidths = map[int][4]float64{
 		4: {10, 9, 11, 12},
