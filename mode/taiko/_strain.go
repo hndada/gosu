@@ -6,10 +6,7 @@ import (
 	"github.com/hndada/gosu/internal/tools"
 )
 
-const (
-	left  = -1
-	right = 1
-)
+
 const defaultHand = right
 
 // const deltaLimitFactor = 1.1 // int(float64(lastTimeDelta)*deltaLimitFactor)

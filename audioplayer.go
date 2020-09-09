@@ -12,25 +12,11 @@ import (
 type AudioPlayer struct {
 	context *audio.Context
 	player  *audio.Player
-	// current   time.Duration
 	total     time.Duration
 	seBytes   []byte
 	seCh      chan []byte
 	volume128 int
-	//
-	// sampleRate beep.SampleRate
-	// streamer   beep.StreamSeeker
-	// ctrl       *beep.Ctrl
-	// resampler  *beep.Resampler
-	// volume     *effects.Volume
 }
-
-// type MusicType int
-//
-// const (
-// 	MusicTypeMP3 = iota
-// 	MusicTypeOGG
-// )
 
 // todo: timeRate
 func NewAudioPlayer(context *audio.Context, audioPath string) *AudioPlayer {

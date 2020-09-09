@@ -80,7 +80,7 @@ func (s *Stage) Render(set *Settings, skin *skin) {
 
 		i, _ := ebiten.NewImageFromImage(fixed, ebiten.FilterDefault)
 		s.Fixed.SetImage(i)
-		s.Fixed.SetPosition(image.Pt(0, 0))
+		s.Fixed.SetPosition(image.Point{}) // image.Pt(0, 0)
 		// s.Fixed.x, s.Fixed.y = 0, 0
 		// s.Fixed.w, s.Fixed.h = set.ScreenSize().X, set.ScreenSize().Y
 	}

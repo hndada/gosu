@@ -57,7 +57,7 @@ func (cp *ChartPanelInfo) Render() *ebiten.Image {
 	return img
 }
 
-func NewChartPanel(c *mania.Chart, minPt image.Point) *ChartPanel {
+func NewChartPanel(c *mania.Chart, position image.Point) *ChartPanel {
 	cp := &ChartPanel{}
 	cp.ChartPanelInfo = ChartPanelInfo{ // todo: mode-inspecific
 		Keys:        c.Keys,
@@ -66,7 +66,7 @@ func NewChartPanel(c *mania.Chart, minPt image.Point) *ChartPanel {
 		SongUnicode: c.SongUnicode,
 		ChartName:   c.ChartName,
 	}
-	cp.MinPt = minPt
+	cp.Position = position
 	cp.Image = cp.Render()
 	cp.SetOnPressed(func(b *ebitenui.Button) {
 		// SceneMania로 넘어가기

@@ -1,5 +1,10 @@
 package taiko
 
+const (
+	left  = -1
+	right = 1
+)
+
 // kddk
 func finger(hand, color int) int {
 	switch hand {

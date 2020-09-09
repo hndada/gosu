@@ -55,10 +55,6 @@ func (s *CommonSettings) SetDownVolumeMaster() {
 
 // func percent(v uint8) float64 { return float64(v) / 100 }
 
-// func (s CommonSettings) ManiaStageCenter() int {
-// 	return s.mania.StageCenter(s.screenSize)
-// }
-
 func (s *CommonSettings) Load() {
 	f, err := ioutil.ReadFile("settings")
 	if err != nil {
