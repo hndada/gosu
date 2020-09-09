@@ -6,7 +6,6 @@ import (
 )
 
 // legacy replay 분석 좀 더, 이후 test 여부 결정
-// (키보드 input: eiannone/keyboard module)
 
 // 놓친 롱노트 끝날 때 리플레이가 어떻게 박히는지는 아직 확인 안함
 // 시간 내에 correct한 action이 없을 경우 마지막에 miss 판정 내고 끝나는 걸로 상정 -> 여러 케이스 확인해봐야함 (sv2)

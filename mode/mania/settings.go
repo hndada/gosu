@@ -1,6 +1,7 @@
-package settings
+package mania
 
 import (
+	"github.com/hndada/gosu/mode"
 	"github.com/moutend/go-hook/pkg/types"
 	"image"
 	"image/color"
@@ -9,7 +10,8 @@ import (
 // 매냐: 세로 100 기준으로 가로 얼마 만큼 쓸래
 // EachDimness map[[16]byte]uint8 -> 얘는 toml 등으로 저장
 // EachSpeed map[[16]byte]float64 -> 얘는 toml 등으로 저장
-type ManiaSettings struct {
+type Settings struct {
+	*mode.CommonSettings
 	KeyLayout    map[int][]types.VKCode // todo: 무결성 검사, 겹치는거 있는지 매번 확인
 	GeneralSpeed float64                // todo: fixed decimal?
 	GroupSpeeds  []float64
@@ -35,7 +37,8 @@ const (
 	LNTailModeCustom
 )
 
-func (s *ManiaSettings) reset() {
+func (s *Settings) Reset(common *mode.CommonSettings) {
+	s.CommonSettings = common
 	s.KeyLayout = map[int][]types.VKCode{
 		4: {types.VK_D, types.VK_F, types.VK_J, types.VK_K},
 		7: {types.VK_S, types.VK_D, types.VK_F,
@@ -66,6 +69,6 @@ func (s *ManiaSettings) reset() {
 	s.ColumnDivisionWidth = 0
 }
 
-func (s ManiaSettings) StageCenter(screenSize image.Point) int {
+func (s Settings) StageCenter(screenSize image.Point) int {
 	return int(float64(screenSize.X) * s.StagePosition / 100)
 }

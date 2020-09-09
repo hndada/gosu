@@ -92,3 +92,41 @@ func newNote(ho osu.HitObject, keys int) ([]Note, error) {
 //	n.chord = tools.GetIntSlice(keymode, noFound)
 //	n.holdImpacts = make([]float64, keymode)
 // }
+
+// These values are applied at keys
+// Example: 40 = 32 + 8 = Left-scratching 8 Key
+const (
+	ScratchLeft  = 1 << 5 // 32
+	ScratchRight = 1 << 6 // 64
+)
+const ScratchMask = ^(ScratchLeft | ScratchRight)
+
+type keyKind uint8
+
+const (
+	one keyKind = iota
+	two
+	middle
+	pinky
+)
+
+var keyKinds = make(map[int][]keyKind)
+
+func init() {
+	keyKinds[0] = []keyKind{}
+	keyKinds[1] = []keyKind{middle}
+	keyKinds[2] = []keyKind{one, one}
+	keyKinds[3] = []keyKind{one, middle, one}
+	keyKinds[4] = []keyKind{one, two, two, one}
+	keyKinds[5] = []keyKind{one, two, middle, two, one}
+	keyKinds[6] = []keyKind{one, two, one, one, two, one}
+	keyKinds[7] = []keyKind{one, two, one, middle, one, two, one}
+	keyKinds[8] = []keyKind{pinky, one, two, one, one, two, one, pinky}
+	keyKinds[9] = []keyKind{pinky, one, two, one, middle, one, two, one, pinky}
+	keyKinds[10] = []keyKind{pinky, one, two, one, middle, middle, one, two, one, pinky}
+
+	for i := 1; i <= 8; i++ { // 정말 잘 짠듯
+		keyKinds[i|ScratchLeft] = append([]keyKind{pinky}, keyKinds[i-1]...)
+		keyKinds[i|ScratchRight] = append(keyKinds[i-1], pinky)
+	}
+}

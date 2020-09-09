@@ -59,7 +59,7 @@ func NewAudioPlayer(context *audio.Context, audioPath string) *AudioPlayer {
 		player:    p,
 		total:     time.Millisecond * time.Duration(s.Length()) / bytesPerSample / sampleRate,
 		seCh:      make(chan []byte),
-		volume128: 128,
+		volume128: 128/2,
 	}
 	if player.total == 0 {
 		player.total = 1
