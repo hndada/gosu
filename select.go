@@ -12,6 +12,7 @@ import (
 	"image/color"
 	"io/ioutil"
 	"path/filepath"
+	"strings"
 )
 
 // todo: 로딩일 때 기다리는 로직
@@ -110,9 +111,11 @@ func (s *SceneSelect) LoadCharts() error {
 			return err
 		}
 		for _, f := range files {
-			switch filepath.Ext(f.Name()) {
+			switch strings.ToLower(filepath.Ext(f.Name())) {
 			case ".osu":
 				fpath :=filepath.Join(dpath, f.Name())
+				// todo: osu.Parse를 여기서 호출할지 아니면 mania 패키지에서 호출할지
+				// 그런데 미리 parse를 해야 Mode 값을 알 수 있음
 				o, err := osu.Parse(fpath)
 				if err != nil {
 					panic(err) // todo: log and continue

@@ -20,6 +20,7 @@ import (
 // 최종 이미지는 언제나 사이즈가 int, int이므로 image.Point로 다뤄도 됨
 
 // todo: timing points, (decending/ascending) order로 sort -> rg-parser에서
+// todo: SceneMania -> mania 패키지로
 type NoteSprite struct {
 	h        int     // same with second value of NoteSprite.i.Size()
 	x        float64 // x is fixed among mania notes
@@ -56,7 +57,7 @@ type SceneMania struct { // aka Clavier
 	hitPosition  float64
 	displayScale float64
 
-	audioPlayer *AudioPlayer
+	audioPlayer *mode.AudioPlayer
 	// sfxBuffer map[string]*beep.Buffer
 	kbEventChan input.KeyboardEventChannel
 	layout      []types.VKCode
@@ -123,7 +124,7 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 		}
 		s.stamps[i] = stamp
 	}
-	s.stage = s.g.sprites.mania.Stages[s.chart.Keys]
+	s.stage = s.g.sprites.mania.Stages[s.chart.Keys] // init으로 대체 가능
 	s.notes = make([]NoteSprite, len(s.chart.Notes))
 	for i, n := range s.chart.Notes {
 		var ns NoteSprite
@@ -157,7 +158,7 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 		}
 		s.notes[i].position = float64(n.Time-stamp.time)*stamp.factor + stamp.position
 	}
-	s.lnotes = make([]LNSprite, 0, s.chart.NumLN())
+	s.lnotes = make([]LNSprite, 0, s.chart.LNCount())
 	lastLNHeads := make([]int, s.chart.Keys)
 	for i, n := range s.chart.Notes {
 		switch n.Type {
@@ -195,7 +196,7 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	s.hitPosition = s.g.settings.mania.HitPosition
 	s.displayScale = s.g.settings.ScaleY()
 
-	s.audioPlayer = NewAudioPlayer(s.g.audioContext, s.chart.AbsPath(s.chart.AudioFilename))
+	s.audioPlayer = mode.NewAudioPlayer(s.g.audioContext, s.chart.AbsPath(s.chart.AudioFilename))
 	s.kbEventChan, err = input.NewKeyboardEventChannel()
 	if err != nil {
 		panic(err)

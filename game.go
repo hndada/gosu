@@ -8,7 +8,6 @@ import (
 	_ "github.com/silbinarywolf/preferdiscretegpu"
 )
 
-// refactoring
 // 스코어, hp 계산, 리플레이 저장
 // 기타 Sprite 그리기
 // 레벨 계산 대충 마무리
@@ -33,7 +32,6 @@ type Game struct {
 }
 
 type settings struct {
-	// common *mode.CommonSettings
 	*mode.CommonSettings
 	mania *mania.Settings
 }

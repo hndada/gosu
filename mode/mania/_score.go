@@ -37,16 +37,7 @@ func KeyAction(last, now bool) int { // action are realized with 2 snapshots
 	}
 }
 
-func readPressed(x, keymode int) []bool {
-	mask := 1
-	pressed := make([]bool, keymode)
-	for i := 0; i < keymode; i++ {
-		pressed[i] = x&mask != 0
-		mask = mask << 1
-	}
-	return pressed
-}
-
+// todo: 이거 다 note로
 type PlayNote struct {
 	Note
 	Score       float64
@@ -58,7 +49,7 @@ type PlayNote struct {
 }
 
 func loadPlayNotes(ns []Note, keymode int) []PlayNote {
-	// 사실 strain 아니고 aggregate인데 일단 이대로
+	// todo: strain에서 확장
 	pns := make([]PlayNote, len(ns))
 	var totalStrain float64
 	var idxQueues = make([][]int, keymode)
@@ -116,7 +107,7 @@ func ProcessScore(bpath, rpath string) {
 
 	for _, ra := range r.ReplayData {
 		time += ra.W
-		pressed = readPressed(int(ra.X), keymode)
+		pressed = KeysPressed(int(ra.X), keymode)
 
 		for k, i := range staged {
 			n := pns[i]
