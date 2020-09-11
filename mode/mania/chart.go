@@ -48,7 +48,7 @@ func (c *Chart) ApplyMods(mods Mods) *Chart {
 func (c Chart) EndTime() int64 {
 	return c.Notes[len(c.Notes)-1].Time
 }
-func (c Chart) NumLN() int {
+func (c Chart) LNCount() int {
 	var num int
 	for _, n := range c.Notes {
 		if n.Type == TypeLNHead {

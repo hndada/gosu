@@ -30,19 +30,18 @@ type BaseChart struct {
 	TimingPoints
 }
 
-// todo: tidy pointer up
-func NewBaseChart(path string) (*BaseChart, error) {
-	var b = &BaseChart{}
-	switch filepath.Ext(path) {
-	case ".osu":
-		o, err := osu.Parse(path)
-		if err != nil {
-			return b, err
-		}
-		*b = *NewBaseChartFromOsu(o, path)
-	}
-	return b, nil
-}
+// func NewBaseChart(path string) (*BaseChart, error) {
+// 	b := &BaseChart{}
+// 	switch filepath.Ext(path) {
+// 	case ".osu":
+// 		o, err := osu.Parse(path)
+// 		if err != nil {
+// 			return b, err
+// 		}
+// 		*b = *NewBaseChartFromOsu(o, path)
+// 	}
+// 	return b, nil
+// }
 
 func NewBaseChartFromOsu(o *osu.Format, path string) *BaseChart {
 	b := BaseChart{
