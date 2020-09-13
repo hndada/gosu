@@ -60,7 +60,7 @@ func markNextAffect(ns []mania.Note, i int) {
 			break
 		}
 
-		if nn.NoteType != mania.NtHoldTail &&
+		if nn.NoteType != NtHoldTail &&
 			nn.Key != n.Key && // jack is not relevant
 			ns[i].chord[nn.Key] == noFound { // prev notes is prior to next notes
 			switch {
