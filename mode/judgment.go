@@ -1,7 +1,6 @@
 package mode
 
-type Judgement struct {
-	Name    string
+type Judgment struct {
 	Value   float64
 	Penalty float64
 	HP      float64
