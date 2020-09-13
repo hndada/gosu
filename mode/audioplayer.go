@@ -9,9 +9,21 @@ import (
 	"time"
 )
 
+const sampleRate = 44100
+
+var AudioContext *audio.Context
+
+func init() {
+	var err error
+	AudioContext, err = audio.NewContext(sampleRate)
+	if err != nil {
+		panic(err)
+	}
+}
+
 type AudioPlayer struct {
-	context *audio.Context
-	player  *audio.Player
+	context   *audio.Context
+	player    *audio.Player
 	total     time.Duration
 	seBytes   []byte
 	seCh      chan []byte
@@ -19,7 +31,7 @@ type AudioPlayer struct {
 }
 
 // todo: timeRate
-func NewAudioPlayer(context *audio.Context, audioPath string) *AudioPlayer {
+func NewAudioPlayer(audioPath string) *AudioPlayer {
 	b, err := ioutil.ReadFile(audioPath)
 	if err != nil {
 		panic(err)
@@ -31,9 +43,9 @@ func NewAudioPlayer(context *audio.Context, audioPath string) *AudioPlayer {
 	var s audioStream
 	switch strings.ToLower(filepath.Ext(audioPath)) {
 	case ".mp3":
-		s, err = mp3.Decode(context, audio.BytesReadSeekCloser(b))
+		s, err = mp3.Decode(AudioContext, audio.BytesReadSeekCloser(b))
 	}
-	p, err := audio.NewPlayer(context, s)
+	p, err := audio.NewPlayer(AudioContext, s)
 	if err != nil {
 		panic(err)
 	}
@@ -41,11 +53,11 @@ func NewAudioPlayer(context *audio.Context, audioPath string) *AudioPlayer {
 	const bytesPerSample = 4
 	const sampleRate = 44100
 	player := &AudioPlayer{
-		context:   context,
+		context:   AudioContext,
 		player:    p,
 		total:     time.Millisecond * time.Duration(s.Length()) / bytesPerSample / sampleRate,
 		seCh:      make(chan []byte),
-		volume128: 128/2,
+		volume128: 128 / 2,
 	}
 	if player.total == 0 {
 		player.total = 1
@@ -54,7 +66,7 @@ func NewAudioPlayer(context *audio.Context, audioPath string) *AudioPlayer {
 }
 
 func (ap *AudioPlayer) Play() {
-	ap.player.Play()
+	_ = ap.player.Play()
 }
 func (ap *AudioPlayer) Close() error {
 	return ap.player.Close()
