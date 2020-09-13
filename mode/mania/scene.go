@@ -1,12 +1,10 @@
-package gosu
+package mania
 
 import (
 	"fmt"
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
-	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
-	"github.com/hndada/gosu/mode/mania"
 	"github.com/moutend/go-hook/pkg/types"
 	_ "github.com/silbinarywolf/preferdiscretegpu"
 	"image"
@@ -20,33 +18,13 @@ import (
 // 최종 이미지는 언제나 사이즈가 int, int이므로 image.Point로 다뤄도 됨
 
 // todo: timing points, (decending/ascending) order로 sort -> rg-parser에서
-// todo: SceneMania -> mania 패키지로
-type NoteSprite struct {
-	h        int     // same with second value of NoteSprite.i.Size()
-	x        float64 // x is fixed among mania notes
-	position float64 // positive value
-	y        float64
-	i        *ebiten.Image
-	op       *ebiten.DrawImageOptions
-}
-
-type LNSprite struct {
-	head   *NoteSprite
-	tail   *NoteSprite
-	length float64
-
-	height float64
-	i      *ebiten.Image
-	bodyop *ebiten.DrawImageOptions
-}
-
-type SceneMania struct { // aka Clavier
-	g            *Game
-	mods         mania.Mods
-	chart        *mania.Chart
+type Scene struct { // aka Clavier
+	mode.PlayScene
+	mods         Mods
+	chart        *Chart
 	speedFactors []mode.SpeedFactorPoint
 	stamps       []timeStamp
-	stage        mania.Stage // for quick access
+	stage        Stage // for quick access
 	notes        []NoteSprite
 	lnotes       []LNSprite // 롱노트 특성상, 2개로 나누는 게 불가피해보임
 
@@ -59,16 +37,19 @@ type SceneMania struct { // aka Clavier
 
 	audioPlayer *mode.AudioPlayer
 	// sfxBuffer map[string]*beep.Buffer
-	kbEventChan input.KeyboardEventChannel
+	kbEventChan mode.KeyboardEventChannel // todo: rename
 	layout      []types.VKCode
 	endTime     int64
 
-	tick     int64
 	score    float64
+	karma    float64
 	hp       float64
 	combo    int32
 	stampIdx int
 	logs     []keyLog
+
+	lastPressed []bool
+	staged      []int
 }
 
 // tools.Stamp를 통해서 구현하려 했다가 element 설정에서 fail
@@ -100,9 +81,8 @@ func SortKeyLogs(logs []keyLog) {
 }
 
 // lnhead와 lntail 분리 유지
-func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
-	s := &SceneMania{}
-	s.g = g
+func NewScene(c *Chart, mods Mods) *Scene {
+	s := &Scene{}
 	s.mods = mods
 	s.chart = c.ApplyMods(s.mods)
 	// todo: 노트가 언제나 양수 시간에 있다고 상정; 실제로는 노트가 BufferTime보다 뒤에 있을 수 있음
@@ -124,17 +104,17 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 		}
 		s.stamps[i] = stamp
 	}
-	s.stage = s.g.sprites.mania.Stages[s.chart.Keys] // init으로 대체 가능
+	s.stage = SpriteMap.Stages[s.chart.Keys]
 	s.notes = make([]NoteSprite, len(s.chart.Notes))
 	for i, n := range s.chart.Notes {
 		var ns NoteSprite
 		var sprite mode.Sprite
 		switch n.Type {
-		case mania.TypeNote:
+		case TypeNote:
 			sprite = s.stage.Notes[n.Key]
-		case mania.TypeLNHead:
+		case TypeLNHead:
 			sprite = s.stage.LNHeads[n.Key]
-		case mania.TypeLNTail:
+		case TypeLNTail:
 			sprite = s.stage.LNTails[n.Key]
 		}
 		ns.x = float64(sprite.Position().X)
@@ -162,9 +142,9 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	lastLNHeads := make([]int, s.chart.Keys)
 	for i, n := range s.chart.Notes {
 		switch n.Type {
-		case mania.TypeLNHead:
+		case TypeLNHead:
 			lastLNHeads[n.Key] = i
-		case mania.TypeLNTail:
+		case TypeLNTail:
 			var ls LNSprite
 			ls.head = &s.notes[lastLNHeads[n.Key]]
 			ls.tail = &s.notes[i]
@@ -180,52 +160,56 @@ func (g *Game) NewSceneMania(c *mania.Chart, mods mania.Mods) *SceneMania {
 	if err != nil {
 		panic(err)
 	}
-	s.bgop = mode.BackgroundOp(s.g.settings.ScreenSize(), image.Pt(s.bg.Size()))
+	s.bgop = mode.BackgroundOp(mode.ScreenSize(), image.Pt(s.bg.Size()))
 	var dimness uint8
 	switch {
 	default:
-		dimness = s.g.settings.GeneralDimness()
+		dimness = mode.GeneralDimness()
 	}
 	// dim 을 바꾸는 입력이 들어왔다면 별도 함수 없이 즉석에서 s.bgop.ColorM.Reset() 날리고 다시 설정.
 	s.bgop.ColorM.ChangeHSV(0, 1, float64(dimness)/100)
 
 	switch {
 	default:
-		s.speed = s.g.settings.mania.GeneralSpeed
+		s.speed = Settings.GeneralSpeed
 	}
-	s.hitPosition = s.g.settings.mania.HitPosition
-	s.displayScale = s.g.settings.ScaleY()
+	s.hitPosition = Settings.HitPosition
+	s.displayScale = mode.ScaleY()
 
-	s.audioPlayer = mode.NewAudioPlayer(s.g.audioContext, s.chart.AbsPath(s.chart.AudioFilename))
-	s.kbEventChan, err = input.NewKeyboardEventChannel()
+	s.audioPlayer = mode.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename))
+	s.kbEventChan, err = mode.NewKeyboardEventChannel()
 	if err != nil {
 		panic(err)
 	}
-	s.layout = s.g.settings.mania.KeyLayout[s.chart.Keys]
+	s.layout = Settings.KeyLayout[s.chart.Keys]
 	s.endTime = s.chart.EndTime()
 
 	// const BufferTime = 2
 	// s.tick = -int64(BufferTime * s.g.MaxTPS())
 	s.logs = make([]keyLog, 0)
+	s.karma = 100
+	s.hp = 100
+	s.lastPressed = make([]bool, s.chart.Keys)
 	return s
 }
 
-func (s *SceneMania) Update() error {
-	if s.Time() > s.endTime || ebiten.IsKeyPressed(ebiten.KeyEscape) {
-		if err := s.kbEventChan.Close(); err != nil {
-			return err
-		}
-		_ = s.audioPlayer.Close()
-		s.g.changeScene(s.g.NewSceneSelect())
-		return nil
-	}
+func (s *Scene) Update() error {
+	// if s.Time() > s.endTime+2*Millisecond || ebiten.IsKeyPressed(ebiten.KeyEscape) {
+	// 	if err := s.kbEventChan.Close(); err != nil {
+	// 		return err
+	// 	}
+	// 	_ = s.audioPlayer.Close()
+	// 	s.g.changeScene(s.g.NewSceneSelect())
+	// 	return nil
+	// }
+	// 처음 스코어 처리할 때는 event 단위로.
 	for _, e := range s.kbEventChan.Dequeue() {
 		for key, keycode := range s.layout {
 			if keycode == e.KeyCode {
 				if SearchKeyLog(s.logs, e.Time) == -1 {
 					s.logs[e.Time].state = make([]bool, s.chart.Keys)
 				}
-				if e.State == input.KeyStateDown {
+				if e.State == mode.KeyStateDown {
 					s.logs[e.Time].state[key] = true
 				} else {
 					s.logs[e.Time].state[key] = false
@@ -233,16 +217,12 @@ func (s *SceneMania) Update() error {
 				break
 			}
 		}
-		// todo: 스코어 처리 함수에 s.log와 s.logTime 보내기
-		// 리플레이 구조: 마지막 status 시간, 레이아웃 키state
-		// next note들이 slice에 fetch되어 있는 상태.
 		// if done {
 		// 	s.notes[i].op.ColorM.ChangeHSV(0, 0, 0.5) // gray
 		// }
 	}
 
 	now := s.Time()
-	// fmt.Printf("tick:%d, time: %dms\n", s.tick, now)
 	var stamp timeStamp
 	for si := range s.stamps[s.stampIdx:] {
 		if now < s.stamps[s.stampIdx+si].nextTime {
@@ -260,11 +240,11 @@ func (s *SceneMania) Update() error {
 	for i, n := range s.lnotes {
 		s.lnotes[i].height = n.length * s.speed * s.displayScale
 	}
-	s.tick++
+	s.Tick++
 	return nil
 }
 
-func (s *SceneMania) Draw(screen *ebiten.Image) {
+func (s *Scene) Draw(screen *ebiten.Image) {
 	// 키 버튼 그리기
 	// 스코어, hp, 콤보, 시간 그리기; hp는 마스크 이미지를 씌우면 되지 않을까
 	screen.DrawImage(s.bg, s.bgop)
@@ -285,37 +265,9 @@ CurrentTPS: %.2f
 Time: %.3fs`, ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000))
 }
 
-func (s LNSprite) DrawLN(screen *ebiten.Image) {
-	_, h := s.i.Size()
-	count, remainder := int(s.height)/h, int(s.height)%h+1
-	s.bodyop.GeoM.Reset()
-	s.bodyop.GeoM.Translate(s.tail.x, s.tail.y)
-
-	firstRect := s.i.Bounds()
-	firstRect.Min = image.Pt(0, h-remainder)
-	screen.DrawImage(s.i.SubImage(firstRect).(*ebiten.Image), s.bodyop)
-	s.bodyop.GeoM.Translate(0, float64(remainder))
-
-	for c := 0; c < count; c++ {
-		screen.DrawImage(s.i, s.bodyop)
-		s.bodyop.GeoM.Translate(0, float64(h))
-	}
-}
-func (s *SceneMania) Init() {
+func (s *Scene) Init() {
 	ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", s.chart.MusicName, s.chart.ChartName))
 	s.audioPlayer.Play()
-}
-
-// always follows audio's time
-// func (s *SceneMania) Time() int64 {
-// 	return s.audioPlayer.Time().Milliseconds()
-// }
-
-// 이 방법을 하려면 tps가 게임 중에 변하지 않아야 함
-// CurrentTPS가 약간 딱 떨어지지 않는 게 마음에 걸리지만, 곧 보충되어 결과적으로 일정히 유지 된다고 상정하겠음
-// -> Audio에서 Time 따오는 게 제일 정확. 그런데 지금 오디오가 내주는 시간이 버퍼에 의해 정확하지 않음
-func (s *SceneMania) Time() int64 {
-	return Millisecond * s.tick / int64(s.g.settings.MaxTPS())
 }
 
 // 노트 효율적으로 하강시키기 위해 시도했던 방법 중 하나

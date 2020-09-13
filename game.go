@@ -2,10 +2,10 @@ package gosu
 
 import (
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/audio"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/mania"
 	_ "github.com/silbinarywolf/preferdiscretegpu"
+	"path/filepath"
 )
 
 // 스코어, hp 계산, 리플레이 저장
@@ -20,30 +20,26 @@ import (
 // ui
 // gosu만의 특별한 기능: 다른 파일 포맷 파싱 등
 
-const Millisecond = 1000
+var MaxTransCountDown int
 
 type Game struct {
-	path         string
-	audioContext *audio.Context
-	*settings
-	*sprites
-	Scene        Scene
-	SceneChanger *SceneChanger
-}
-
-type settings struct {
-	*mode.CommonSettings
-	mania *mania.Settings
+	path           string
+	Scene          Scene
+	NextScene      Scene
+	TransSceneFrom *ebiten.Image
+	TransSceneTo   *ebiten.Image
+	TransCountdown int
 }
 
 // 실제 파일을 자주 불러오는듯
 // skin: *ebiten.Image, raw 이미지들
 // sprites: *ebiten.Image, 크기랑 position 맞춰진 이미지들
-type sprites struct {
-	common *mode.CommonSprites
-	mania  *mania.Sprites
-}
 
+// todo: Load, Save settings
+// type settings struct {
+// 	common mode.SettingsTemplate
+// 	mania  mania.SettingsTemplate
+// }
 type Scene interface { // Scene이 Game을 control하는 주체
 	Init()
 	Update() error
@@ -51,69 +47,78 @@ type Scene interface { // Scene이 Game을 control하는 주체
 }
 
 func NewGame() *Game {
-	const sampleRate = 44100
 	g := &Game{}
 	// var err error
 	// if g.path, err = os.Executable(); err != nil {
 	// 	panic(err)
 	// }
 	g.path = `C:\Users\hndada\Documents\GitHub\hndada\gosu\test\`
-	var err error
-	g.audioContext, err = audio.NewContext(sampleRate)
-	if err != nil {
-		panic(err)
-	}
-	g.newSettings()
-	g.newSprites()
 
+	mode.LoadSettings()
+	mania.ResetSettings()
+	mania.LoadSpriteMap(filepath.Join(g.path, "Skin"))
 	g.Scene = g.NewSceneSelect()
-	g.SceneChanger = g.NewSceneChanger()
 
-	ebiten.SetMaxTPS(g.settings.MaxTPS())
+	// g.SceneChanger = g.NewSceneChanger()
+	p := mode.ScreenSize()
+	g.TransSceneFrom, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
+	g.TransSceneTo, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
+	MaxTransCountDown = mode.MaxTPS() * 4 / 5
+
 	ebiten.SetWindowTitle("gosu")
-	ebiten.SetWindowSize(g.settings.ScreenSize().X, g.settings.ScreenSize().Y)
 	ebiten.SetRunnableOnUnfocused(true)
 	return g
 }
-func (g *Game) newSettings() {
-	s := &settings{
-		CommonSettings: &mode.CommonSettings{},
-		mania:          &mania.Settings{},
-	}
-	s.CommonSettings.Reset()
-	s.mania.Reset(s.CommonSettings)
-	g.settings = s
-}
-func (g *Game) newSprites() {
-	s := &sprites{
-		common: &mode.CommonSprites{},
-		mania:  &mania.Sprites{},
-	}
-	s.common.Render(g.settings.CommonSettings)
-	s.mania.Render(g.settings.mania)
-	g.sprites = s
-}
 
 func (g *Game) Update(screen *ebiten.Image) error {
-	if !g.SceneChanger.done() {
-		return g.SceneChanger.Update()
+	if g.TransCountdown <= 0 { // == 0
+		return g.Scene.Update()
 	}
-	return g.Scene.Update()
+	g.TransCountdown--
+	if g.TransCountdown > 0 {
+		return nil
+	}
+	// count down has just been from non-zero to zero
+	g.Scene = g.NextScene
+	g.NextScene = nil
+	g.Scene.Init()
+	return nil
+	// if !g.SceneChanger.done() {
+	// 	return g.SceneChanger.Update()
+	// }
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if !g.SceneChanger.done() {
-		g.SceneChanger.Draw(screen) // todo: DrawTo?
+	if g.TransCountdown == 0 {
+		g.Scene.Draw(screen)
+		return
 	}
-	g.Scene.Draw(screen)
+	var value float64
+	{
+		value = float64(g.TransCountdown) / float64(MaxTransCountDown)
+		g.TransSceneFrom.Clear()
+		g.Scene.Draw(g.TransSceneFrom)
+		op := ebiten.DrawImageOptions{}
+		op.ColorM.ChangeHSV(0, 1, value)
+		screen.DrawImage(g.TransSceneFrom, &op)
+	}
+	{
+		value = 1 - value
+		g.TransSceneTo.Clear()
+		g.NextScene.Draw(g.TransSceneTo)
+		op := ebiten.DrawImageOptions{}
+		op.ColorM.ChangeHSV(0, 1, value)
+		screen.DrawImage(g.TransSceneTo, &op)
+	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return g.settings.ScreenSize().X, g.settings.ScreenSize().Y
+	return mode.ScreenSize().X, mode.ScreenSize().Y
 }
 
 func (g *Game) changeScene(s Scene) {
-	g.SceneChanger.changeScene(s)
+	g.NextScene = s
+	g.TransCountdown = MaxTransCountDown
 }
 
 // reset    save cancel

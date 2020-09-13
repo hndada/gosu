@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 )
 
+const Millisecond = 1000
+
 type BaseChart struct {
 	Path          string // path of chart source file. It won't be exported to file content.
 	ChartID       int64  // 6byte: setID, 2byte: subID
