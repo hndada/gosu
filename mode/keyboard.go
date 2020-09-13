@@ -1,10 +1,12 @@
-package input
+package mode
 
 import (
 	"github.com/moutend/go-hook/pkg/keyboard"
 	"github.com/moutend/go-hook/pkg/types"
 	"time"
 )
+
+// GetAsyncKeyState: most significant bit 가 set이면 해당 키 눌린 거
 
 type KeyState int8
 

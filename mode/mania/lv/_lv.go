@@ -1,8 +1,9 @@
-package mania
+package lv
 
 import (
 	"fmt"
 	"github.com/hndada/gosu/internal/tools"
+	"github.com/hndada/gosu/mode/mania"
 )
 
 // todo: score, level 다 정리되고 나서 internal/tools 정리하겠음
@@ -13,7 +14,7 @@ const (
 	sectionLength   = 800
 )
 
-func CalcLV(ns []Note) float64 {
+func CalcLV(ns []mania.Note) float64 {
 	if len(ns) == 0 {
 		return 0
 	}
