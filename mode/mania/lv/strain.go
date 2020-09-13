@@ -40,8 +40,8 @@ func CalcStrain(ns []mania.Note, keymode int) {
 func setStrainBase(ns []mania.Note, keymode int) {
 	var base, lnDuration float64
 	for i, n := range ns {
-		base = 1 + fingerBonus[mania.finger(n.Key, keymode)]
-		if n.NoteType == mania.NtHoldTail { // a tail of hold note will get partial strain
+		base = 1 + fingerBonus[mania.finger(keymode, n.Key)]
+		if n.NoteType == NtHoldTail { // a tail of hold note will get partial strain
 			lnDuration = float64(n.Time - n.OpponentTime)
 			base *= tools.SolveY(curveTail, lnDuration)
 		}
@@ -87,7 +87,7 @@ func calcJackBonus(ns []mania.Note) {
 	var jackNote mania.Note
 	var timeDelta float64
 	for i, n := range ns {
-		if n.NoteType == mania.NtHoldTail {
+		if n.NoteType == NtHoldTail {
 			continue // no jack bonus to hold note tail
 		}
 		if n.trillJack[n.Key] != noFound {
@@ -104,7 +104,7 @@ func calcTrillBonus(ns []mania.Note) {
 	var trillNote mania.Note
 	var timeDelta, v, div float64
 	for i, n := range ns {
-		if n.NoteType == mania.NtHoldTail {
+		if n.NoteType == NtHoldTail {
 			continue // no trill bonus to hold n tail
 		}
 		if n.jackBonus <= 0 {
@@ -146,7 +146,7 @@ func setHoldImpacts(ns []mania.Note) {
 	var impact float64
 
 	for i, ln := range ns {
-		if ln.NoteType != mania.NtHoldHead {
+		if ln.NoteType != NtHoldHead {
 			continue
 		}
 		affectedIdx = i + 1 // notes in same chord might have lower index but they arent affected anyway
@@ -180,7 +180,7 @@ func calcHoldBonus(ns []mania.Note, keymode int) {
 		bonus = 0
 		existOuter, existInner = false, false // for adding main bonus only once
 		for holdKey, impact := range n.holdImpacts {
-			if impact == 0 || !mania.isSameHand(n.hand, int(impact)) {
+			if impact == 0 || !mania.sameHand(float64(n.hand), impact) {
 				continue
 			}
 			switch {
@@ -198,7 +198,7 @@ func calcHoldBonus(ns []mania.Note, keymode int) {
 				}
 				existInner = true
 			}
-			bonus += holdRemainBonus * fingerBonus[mania.finger(holdKey, keymode)] * math.Abs(impact)
+			bonus += holdRemainBonus * fingerBonus[mania.finger(keymode, holdKey)] * math.Abs(impact)
 		}
 		ns[i].holdBonus = bonus
 	}

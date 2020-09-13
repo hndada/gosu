@@ -3,7 +3,6 @@ package mania
 import (
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/rg-parser/osugame/osu"
-	"log"
 )
 
 type Chart struct {
@@ -18,14 +17,12 @@ func NewChartFromOsu(o *osu.Format, path string) (*Chart, error) {
 	var c Chart
 	c.BaseChart = mode.NewBaseChartFromOsu(o, path)
 	c.Keys = int(c.Parameter["Scale"])
-	c.Notes = make([]Note, 0, len(o.HitObjects)*2)
-	for _, ho := range o.HitObjects {
-		ns, err := newNote(ho, c.Keys)
-		if err != nil {
-			log.Fatal("invalid hit object") // todo: normal log
-		}
-		c.Notes = append(c.Notes, ns...)
+	err := c.loadNotes(o)
+	if err != nil {
+		panic(err)
 	}
+	// c.CalcLevel() // 노트별 strain 계산 후 차트에 level 입력
+	// c.CalcScore()
 	return &c, nil
 }
 
