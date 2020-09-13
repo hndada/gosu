@@ -16,7 +16,7 @@ import (
 // 버전 업데이트되는 경우는 기능의 추가 혹은 악용의 가능성으로 인한 삭제
 // 추가야 backward 지원되고 삭제는 반영되어야 하는 부분이므로 업데이트가 강제되므로 스킨 버전은 따로 필요 없을 듯
 
-// 스킨은 말그대로 이미지 struct
+// 스킨은 말그대로 이미지 struct; option 적용 안 돼있음
 // Skin은 only for asset/resources; 설정은 전적으로 user에게 맡긴다
 // author나 license는 Skin 폴더에 별도 텍스트 파일로 저장
 
@@ -24,7 +24,7 @@ import (
 // score, combo: 0~9을 하나의 이미지로
 // 4개짜리 이미지, 하나로 뭉치기
 // 길이/4, 높이에 해당하는 거 만큼 롱노트 SubImage
-type CommonSkin struct {
+type SkinTemplate struct {
 	name       string
 	score      [10]*ebiten.Image
 	combo      [10]*ebiten.Image
@@ -36,65 +36,63 @@ type CommonSkin struct {
 	// chartPanelFrame *ebiten.Image
 }
 
+var Skin SkinTemplate
 
-var defaultSkin CommonSkin // option 적용 안 돼있는 이미지 set
+var defaultSkin SkinTemplate
 
 // 게임 켜질 때
 // 세팅의 Skin id 에 맞추어서 메모리에 올리기 (먼 훗날 gob로 저장)
 // SkinPathList = map[int]string
 // todo: filename list, .toml로 저장
 
-func LoadSkin(skinPath string) *CommonSkin {
-	s:=&CommonSkin{}
+func LoadSkin(skinPath string) {
 	var filename, path string
 	var ok bool
 	for i := 0; i < 10; i++ {
 		filename = fmt.Sprintf("score-%d.png", i)
 		path = filepath.Join(skinPath, filename)
-		if s.score[i], ok = LoadImage(path); !ok {
-			s.score[i] = defaultSkin.score[i]
+		if Skin.score[i], ok = LoadImage(path); !ok {
+			Skin.score[i] = defaultSkin.score[i]
 		}
 	}
 	for i := 0; i < 10; i++ {
 		filename = fmt.Sprintf("combo-%d.png", i)
 		path = filepath.Join(skinPath, filename)
-		if s.combo[i], ok = LoadImage(path); !ok {
-			s.combo[i] = defaultSkin.combo[i]
+		if Skin.combo[i], ok = LoadImage(path); !ok {
+			Skin.combo[i] = defaultSkin.combo[i]
 		}
 	}
 	filename = "scorebar-bg.png"
 	path = filepath.Join(skinPath, filename)
-	if s.hpBarFrame, ok = LoadImage(path); !ok {
-		s.hpBarFrame = defaultSkin.hpBarFrame
+	if Skin.hpBarFrame, ok = LoadImage(path); !ok {
+		Skin.hpBarFrame = defaultSkin.hpBarFrame
 	}
 	filename = "scorebar-colour.png"
 	path = filepath.Join(skinPath, filename)
-	if s.hpBarColor, ok = LoadImage(path); !ok {
-		s.hpBarColor = defaultSkin.hpBarColor
+	if Skin.hpBarColor, ok = LoadImage(path); !ok {
+		Skin.hpBarColor = defaultSkin.hpBarColor
 	}
 	// filename = "button-left.png"
 	// path = filepath.Join(skinPath, filename)
-	// if s.boxLeft, ok = LoadImage(path); !ok {
-	// 	s.boxLeft = defaultSkin.boxLeft
+	// if Skin.boxLeft, ok = LoadImage(path); !ok {
+	// 	Skin.boxLeft = defaultSkin.boxLeft
 	// }
 	// filename = "button-middle.png"
 	// path = filepath.Join(skinPath, filename)
-	// if s.boxMiddle, ok = LoadImage(path); !ok {
-	// 	s.boxMiddle = defaultSkin.boxMiddle
+	// if Skin.boxMiddle, ok = LoadImage(path); !ok {
+	// 	Skin.boxMiddle = defaultSkin.boxMiddle
 	// }
 	// filename = "button-right.png"
 	// path = filepath.Join(skinPath, filename)
-	// if s.boxRight, ok = LoadImage(path); !ok {
-	// 	s.boxRight = defaultSkin.boxRight
+	// if Skin.boxRight, ok = LoadImage(path); !ok {
+	// 	Skin.boxRight = defaultSkin.boxRight
 	// }
 	// filename = "menu-button-background.png"
 	// path = filepath.Join(skinPath, filename)
-	// if s.chartPanelFrame, ok = LoadImage(path); !ok {
-	// 	s.chartPanelFrame = defaultSkin.chartPanelFrame
+	// if Skin.chartPanelFrame, ok = LoadImage(path); !ok {
+	// 	Skin.chartPanelFrame = defaultSkin.chartPanelFrame
 	// }
-	return s
 }
-
 
 // todo: graphic로 이동
 // loadSkinImage로 한번에 표시하려면 reflect 써야함
