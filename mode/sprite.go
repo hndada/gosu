@@ -21,6 +21,24 @@ func (s Sprite) Size() image.Point          { return image.Pt(s.i.Size()) }
 func (s *Sprite) SetPosition(p image.Point) { s.p = p }
 func (s Sprite) Position() image.Point      { return s.p }
 
+type Sprite2 struct {
+	Size     image.Point
+	Position image.Point
+	i        *ebiten.Image
+	Op       *ebiten.DrawImageOptions
+}
+
+func (s *Sprite2) SetImage(i *ebiten.Image) { s.i = i }
+func (s *Sprite2) Image() *ebiten.Image     { return s.i }
+
+type LongSprite struct {
+	Size  image.Point // 여기에 가변 길이 값 들어감
+	Start Sprite2
+	End   Sprite2 // Position
+	i     *ebiten.Image
+	Op    *ebiten.DrawImageOptions
+}
+
 // // field값들은 이미 값이 맞춰져있다고 가정
 // func (s *Sprite) ResetPosition(op *ebiten.DrawImageOptions) {
 // 	op.GeoM.Reset()

@@ -1,12 +1,8 @@
 package mode
 
 import (
-	"bytes"
-	"encoding/gob"
 	"github.com/hajimehoshi/ebiten"
 	"image"
-	"io/ioutil"
-	"os"
 )
 
 // 값 변경과 동시에 실행되어야 하는 함수가 있는 경우 private/method로 set하는 방법으로 변경
@@ -14,84 +10,89 @@ import (
 
 // Dimness 및 Speed, 어찌됐든 플레이 중에 바뀔 수 있음
 // 그러나, Settings 쪽에선 Scene을 모르므로 Scene쪽에서 값 바꾸고 함수 호출하는 식으로.
-type CommonSettings struct {
+type SettingsTemplate struct { // temporary struct for load/save settings
 	screenSize     image.Point
 	maxTPS         int
 	generalDimness uint8 // todo: 0 ~ 100으로만 되게.
 	volumeMaster   uint8
-	volumeBGM      uint8
-	volumeSFX      uint8
+	// volumeBGM      uint8
+	// volumeSFX      uint8
 }
+
+var Settings SettingsTemplate
 
 // 우선 image.Point로 다뤄보고 번거로운 부분이 발견되면 대체
 // 아래 애들은 별도로 설정
-func (s *CommonSettings) SetScreenSize(p image.Point) {
-	s.screenSize = p
+func SetScreenSize(p image.Point) {
+	Settings.screenSize = p
 	ebiten.SetWindowSize(p.X, p.Y)
 }
-func (s *CommonSettings) ScreenSize() image.Point { return s.screenSize }
-func (s *CommonSettings) ScaleY() float64         { return float64(s.screenSize.Y) / 100 }
-func (s *CommonSettings) SetMaxTPS(tps int) {
-	s.maxTPS = tps
+func ScreenSize() image.Point { return Settings.screenSize }
+func ScaleY() float64         { return float64(Settings.screenSize.Y) / 100 }
+func SetMaxTPS(tps int) {
+	Settings.maxTPS = tps
 	ebiten.SetMaxTPS(tps)
 }
-func (s *CommonSettings) MaxTPS() int { return s.maxTPS }
+func MaxTPS() int { return Settings.maxTPS }
 
-func (s *CommonSettings) GeneralDimness() uint8 { return s.generalDimness }
+func GeneralDimness() uint8 { return Settings.generalDimness }
 
 // todo: Streamer 2개 만들기: BGM, SFX
 // todo: Streamer에 vol 꽂기
-func (s *CommonSettings) SetDownVolumeMaster() {
+func SetVolumeMasterDown() {
 	switch {
-	case s.volumeMaster <= 0:
+	case Settings.volumeMaster <= 0:
 		return
-	case s.volumeMaster <= 5:
-		s.volumeMaster -= 1
-	case s.volumeMaster <= 100:
-		s.volumeMaster -= 5
+	case Settings.volumeMaster <= 5:
+		Settings.volumeMaster -= 1
+	case Settings.volumeMaster <= 100:
+		Settings.volumeMaster -= 5
 	}
-	// percent(s.volumeBGM) * percent(s.volumeMaster)
+	// percent(Settings.volumeBGM) * percent(Settings.volumeMaster)
 }
 
 // func percent(v uint8) float64 { return float64(v) / 100 }
 
-func (s *CommonSettings) Load() {
-	f, err := ioutil.ReadFile("settings")
-	if err != nil {
-		s.Reset()
-		return
-	}
-	r := bytes.NewReader(f)
-	dec := gob.NewDecoder(r)
-	err = dec.Decode(s)
-	if err != nil {
-		panic(err)
-	}
+// const settingsFilename = "common.settings"
+
+func LoadSettings() {
+	// if f, err := ioutil.ReadFile(settingsFilename); err != nil {
+	// 	ResetSettings()
+	// } else {
+	// 	r := bytes.NewReader(f)
+	// 	dec := gob.NewDecoder(r)
+	// 	if err := dec.Decode(&Settings); err != nil {
+	// 		panic(err)
+	// 	}
+	// }
+	ResetSettings()
+	ebiten.SetMaxTPS(MaxTPS())
+	ebiten.SetWindowSize(ScreenSize().X, ScreenSize().Y)
 }
 
-func (s *CommonSettings) Save() {
-	var b bytes.Buffer
-	enc := gob.NewEncoder(&b)
-	err := enc.Encode(s)
-	if err != nil {
-		panic(err)
-	}
+// func SaveSettings() {
+// 	var b bytes.Buffer
+// 	enc := gob.NewEncoder(&b)
+// 	err := enc.Encode(&Settings)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+//
+// 	f, err := os.Create(settingsFilename)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	_, err = f.Write(b.Bytes())
+// 	if err != nil {
+// 		panic(err) // todo: 파일 날아가는거 대비?
+// 	}
+// }
 
-	f, err := os.Create("settings")
-	if err != nil {
-		panic(err)
-	}
-	_, err = f.Write(b.Bytes())
-	if err != nil {
-		panic(err) // todo: 파일 날아가는거 대비?
-	}
-}
-
-func (s *CommonSettings) Reset() {
-	s.maxTPS = 240
-	s.screenSize = image.Pt(1600, 900)
-	s.generalDimness = 30
-	s.volumeMaster = 100
-	s.volumeBGM = 50
-	s.volumeSFX = 50
+func ResetSettings() {
+	Settings.maxTPS = 240
+	Settings.screenSize = image.Pt(1600, 900)
+	Settings.generalDimness = 30
+	Settings.volumeMaster = 100
+	// Settings.volumeBGM = 50
+	// Settings.volumeSFX = 50
 }
