@@ -1,7 +1,10 @@
 package gosu
 
-import "github.com/hajimehoshi/ebiten"
-
+import (
+	"github.com/hajimehoshi/ebiten"
+	"github.com/hndada/gosu/mode"
+)
+// todo: game에 그대로 구현
 // the word changer is more descriptive than manager
 type SceneChanger struct {
 	g              *Game
@@ -17,7 +20,7 @@ func (g *Game) NewSceneChanger() *SceneChanger {
 	sc := &SceneChanger{}
 	sc.g = g
 	sc.Scene = g.Scene
-	p := g.settings.ScreenSize()
+	p := mode.ScreenSize()
 	sc.TransSceneFrom, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
 	sc.TransSceneTo, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
 	return sc
@@ -68,6 +71,6 @@ func (sc *SceneChanger) changeScene(s Scene) {
 }
 
 // 모든 time 관련 단위는 ms
-func (sc *SceneChanger) MaxTransCountDown() int { return sc.g.settings.MaxTPS() * 4 / 5 }
+func (sc *SceneChanger) MaxTransCountDown() int { return mode.MaxTPS() * 4 / 5 }
 
 func (sc *SceneChanger) done() bool { return sc.TransCountdown == 0 }
