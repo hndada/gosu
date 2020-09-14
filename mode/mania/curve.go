@@ -1,7 +1,7 @@
 package mania
 
 import (
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/mode"
 	"math"
 )
 
@@ -22,13 +22,13 @@ const (
 var (
 	maxDeltaChord   int64
 	maxDeltaTrill   int64
-	curveTrillChord []game.Segment
-	curveJack       []game.Segment
-	curveTail       []game.Segment
+	curveTrillChord []mode.Segment
+	curveJack       []mode.Segment
+	curveTail       []mode.Segment
 )
 
 func init() {
-	curveTrillChord = game.GetSegments(
+	curveTrillChord = mode.GetSegments(
 		[]float64{
 			0,
 			float64(good.Window + 30),
@@ -38,7 +38,7 @@ func init() {
 			MaxTrillBonus,
 			0})
 
-	curveJack = game.GetSegments(
+	curveJack = mode.GetSegments(
 		[]float64{
 			0,
 			Max2DeltaJack,
@@ -48,7 +48,7 @@ func init() {
 			Max2JackBonus,
 			0})
 
-	curveTail = game.GetSegments(
+	curveTail = mode.GetSegments(
 		[]float64{
 			0,
 			float64(kool.Window),
@@ -58,7 +58,7 @@ func init() {
 			MinHoldTailStrain,
 			MaxHoldTailStrain})
 
-	xValues := game.SolveX(curveTrillChord, 0)
+	xValues := mode.SolveX(curveTrillChord, 0)
 	if len(xValues) != 2 {
 		panic("incorrect numbers of xValues")
 	}

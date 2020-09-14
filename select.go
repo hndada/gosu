@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hndada/gosu/game"
-	"github.com/hndada/gosu/game/mania"
+	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/mode/mania"
 	"github.com/hndada/rg-parser/osugame/osu"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
@@ -64,7 +64,7 @@ func (s *SceneSelect) Update() error {
 			s.cursor = len(s.charts) - 1
 		}
 	}
-	screenSize := game.ScreenSize()
+	screenSize := mode.ScreenSize()
 	for i := range s.charts {
 		mid := (screenSize.Y - 40) / 2 // 현재 선택된 차트 focus 틀 위치 고정
 		s.charts[i].x = screenSize.X - 400
