@@ -1,4 +1,4 @@
-package game
+package mode
 
 type Judgment struct {
 	Value   float64

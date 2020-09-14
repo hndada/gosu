@@ -1,17 +1,17 @@
 package mania
 
 import (
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/mode"
 )
 
 var (
-	kool = game.Judgment{16 / 16, 0, 0.75, 16}
-	cool = game.Judgment{15 / 16, 0, 0.5, 40}
-	good = game.Judgment{10 / 16, 4, 0.25, 70}
-	bad  = game.Judgment{4 / 16, 10, 0, 100}
-	miss = game.Judgment{0, 25, -3, 150}
+	kool = mode.Judgment{16 / 16, 0, 0.75, 16}
+	cool = mode.Judgment{15 / 16, 0, 0.5, 40}
+	good = mode.Judgment{10 / 16, 4, 0.25, 70}
+	bad  = mode.Judgment{4 / 16, 10, 0, 100}
+	miss = mode.Judgment{0, 25, -3, 150}
 )
-var judgments = [5]game.Judgment{kool, cool, good, bad, miss}
+var judgments = [5]mode.Judgment{kool, cool, good, bad, miss}
 
 // func judge(time int64) mode.Judgment {
 // 	if time < 0 {

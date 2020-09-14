@@ -2,7 +2,7 @@ package mania
 
 import (
 	"fmt"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/mode"
 )
 
 // todo: score, level 다 정리되고 나서 internal/tools 정리하겠음
@@ -38,7 +38,7 @@ func (c *Chart) CalcDifficulty() {
 		panic("section count mismatch")
 	}
 
-	c.Level = game.WeightedSum(ds, diffWeightDecay)
+	c.Level = mode.WeightedSum(ds, diffWeightDecay)
 	// newSectionCounts:=sectionCounts
 	// for ds[newSectionCounts-1]<3 {newSectionCounts--}
 

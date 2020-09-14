@@ -2,7 +2,7 @@ package mania
 
 import (
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/mode"
 	"path/filepath"
 )
 
@@ -31,7 +31,7 @@ func loadSkin(skinPath string) {
 	var ok bool
 	for i, fname := range []string{"mania-note1.png", "mania-note2.png", "mania-noteS.png", "mania-noteSC.png"} {
 		path = filepath.Join(skinPath, fname)
-		if skin.note[i], ok = game.LoadImage(path); !ok {
+		if skin.note[i], ok = mode.LoadImage(path); !ok {
 			skin.note[i] = defaultSkin.note[i]
 		}
 	}
@@ -62,22 +62,22 @@ func loadSkin(skinPath string) {
 	}
 	filename = "mania-note1L-0.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.lnBody[0][0], ok = game.LoadImage(path); !ok {
+	if skin.lnBody[0][0], ok = mode.LoadImage(path); !ok {
 		skin.lnBody[0][0] = defaultSkin.lnBody[0][0]
 	}
 	filename = "mania-note2L-0.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.lnBody[1][0], ok = game.LoadImage(path); !ok {
+	if skin.lnBody[1][0], ok = mode.LoadImage(path); !ok {
 		skin.lnBody[1][0] = defaultSkin.lnBody[1][0]
 	}
 	filename = "mania-noteSL-0.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.lnBody[2][0], ok = game.LoadImage(path); !ok {
+	if skin.lnBody[2][0], ok = mode.LoadImage(path); !ok {
 		skin.lnBody[2][0] = defaultSkin.lnBody[2][0]
 	}
 	filename = "mania-noteSCL-0.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.lnBody[3][0], ok = game.LoadImage(path); !ok {
+	if skin.lnBody[3][0], ok = mode.LoadImage(path); !ok {
 		skin.lnBody[3][0] = defaultSkin.lnBody[3][0]
 
 	}
@@ -106,94 +106,94 @@ func loadSkin(skinPath string) {
 
 	filename = "mania-key1.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.keyButton[0], ok = game.LoadImage(path); !ok {
+	if skin.keyButton[0], ok = mode.LoadImage(path); !ok {
 		skin.keyButton[0] = defaultSkin.keyButton[0]
 	}
 	filename = "mania-key2.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.keyButton[1], ok = game.LoadImage(path); !ok {
+	if skin.keyButton[1], ok = mode.LoadImage(path); !ok {
 		skin.keyButton[1] = defaultSkin.keyButton[1]
 	}
 	filename = "mania-keyS.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.keyButton[2], ok = game.LoadImage(path); !ok {
+	if skin.keyButton[2], ok = mode.LoadImage(path); !ok {
 		skin.keyButton[2] = defaultSkin.keyButton[2]
 	}
 	filename = "mania-keyS.png" // todo: 4th image
 	path = filepath.Join(skinPath, filename)
-	if skin.keyButton[3], ok = game.LoadImage(path); !ok {
+	if skin.keyButton[3], ok = mode.LoadImage(path); !ok {
 		skin.keyButton[3] = defaultSkin.keyButton[3]
 	}
 	filename = "mania-key1D.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.keyButtonPressed[0], ok = game.LoadImage(path); !ok {
+	if skin.keyButtonPressed[0], ok = mode.LoadImage(path); !ok {
 		skin.keyButtonPressed[0] = defaultSkin.keyButtonPressed[0]
 	}
 	filename = "mania-key2D.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.keyButtonPressed[1], ok = game.LoadImage(path); !ok {
+	if skin.keyButtonPressed[1], ok = mode.LoadImage(path); !ok {
 		skin.keyButtonPressed[1] = defaultSkin.keyButtonPressed[1]
 	}
 	filename = "mania-keySD.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.keyButtonPressed[2], ok = game.LoadImage(path); !ok {
+	if skin.keyButtonPressed[2], ok = mode.LoadImage(path); !ok {
 		skin.keyButtonPressed[2] = defaultSkin.keyButtonPressed[2]
 	}
 	filename = "mania-keySD.png" // todo: 4th image
 	path = filepath.Join(skinPath, filename)
-	if skin.keyButtonPressed[3], ok = game.LoadImage(path); !ok {
+	if skin.keyButtonPressed[3], ok = mode.LoadImage(path); !ok {
 		skin.keyButtonPressed[3] = defaultSkin.keyButtonPressed[3]
 	}
 	filename = "mania-hit300g.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.hitResults[0], ok = game.LoadImage(path); !ok {
+	if skin.hitResults[0], ok = mode.LoadImage(path); !ok {
 		skin.hitResults[0] = defaultSkin.hitResults[0]
 	}
 	filename = "mania-hit300.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.hitResults[1], ok = game.LoadImage(path); !ok {
+	if skin.hitResults[1], ok = mode.LoadImage(path); !ok {
 		skin.hitResults[1] = defaultSkin.hitResults[1]
 	}
 	filename = "mania-hit200.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.hitResults[2], ok = game.LoadImage(path); !ok {
+	if skin.hitResults[2], ok = mode.LoadImage(path); !ok {
 		skin.hitResults[2] = defaultSkin.hitResults[2]
 	}
 	filename = "mania-hit50.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.hitResults[3], ok = game.LoadImage(path); !ok {
+	if skin.hitResults[3], ok = mode.LoadImage(path); !ok {
 		skin.hitResults[3] = defaultSkin.hitResults[3]
 	}
 	filename = "mania-hit0.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.hitResults[4], ok = game.LoadImage(path); !ok {
+	if skin.hitResults[4], ok = mode.LoadImage(path); !ok {
 		skin.hitResults[4] = defaultSkin.hitResults[4]
 	}
 	skin.noteLighting = make([]*ebiten.Image, 1)
 	filename = "lightingN-3.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.noteLighting[0], ok = game.LoadImage(path); !ok {
+	if skin.noteLighting[0], ok = mode.LoadImage(path); !ok {
 		skin.noteLighting[0] = defaultSkin.noteLighting[0]
 	}
 	skin.lnLighting = make([]*ebiten.Image, 1)
 	filename = "lightingL-0.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.lnLighting[0], ok = game.LoadImage(path); !ok {
+	if skin.lnLighting[0], ok = mode.LoadImage(path); !ok {
 		skin.lnLighting[0] = defaultSkin.lnLighting[0]
 	}
 	filename = "mania-stage-right.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.stageRight, ok = game.LoadImage(path); !ok {
+	if skin.stageRight, ok = mode.LoadImage(path); !ok {
 		skin.stageRight = defaultSkin.stageRight
 	}
 	filename = "mania-stage-bottom.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.stageBottom, ok = game.LoadImage(path); !ok {
+	if skin.stageBottom, ok = mode.LoadImage(path); !ok {
 		skin.stageBottom = defaultSkin.stageBottom
 	}
 	filename = "mania-stage-hint.png"
 	path = filepath.Join(skinPath, filename)
-	if skin.stageHint, ok = game.LoadImage(path); !ok {
+	if skin.stageHint, ok = mode.LoadImage(path); !ok {
 		skin.stageHint = defaultSkin.stageHint
 	}
 }

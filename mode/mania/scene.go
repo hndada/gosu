@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/mode"
 	"github.com/moutend/go-hook/pkg/types"
 	_ "github.com/silbinarywolf/preferdiscretegpu"
 	"image"
@@ -19,10 +19,10 @@ import (
 // 최종 이미지는 언제나 사이즈가 int, int이므로 image.Point로 다뤄도 됨
 // todo: timing points, (decending/ascending) order로 sort -> rg-parser에서
 type Scene struct { // aka Clavier
-	game.PlayScene
+	mode.PlayScene
 	mods         Mods
 	chart        *Chart
-	speedFactors []game.SpeedFactorPoint
+	speedFactors []mode.SpeedFactorPoint
 	stamps       []timeStamp
 	stage        Stage // for quick access
 	notes        []NoteSprite
@@ -35,9 +35,9 @@ type Scene struct { // aka Clavier
 	hitPosition  float64
 	displayScale float64
 
-	audioPlayer *game.AudioPlayer
+	audioPlayer *mode.AudioPlayer
 	// sfxBuffer map[string]*beep.Buffer
-	kbChan  *game.KeyboardEventChannel
+	kbChan  *mode.KeyboardEventChannel
 	layout  []types.VKCode
 	endTime int64
 
@@ -86,8 +86,8 @@ func NewScene(c *Chart, mods Mods) *Scene {
 	s.mods = mods
 	s.chart = c.ApplyMods(s.mods)
 	// todo: 노트가 언제나 양수 시간에 있다고 상정; 실제로는 노트가 BufferTime보다 뒤에 있을 수 있음
-	initSpeedFactor := game.SpeedFactorPoint{0, 1}
-	s.speedFactors = append([]game.SpeedFactorPoint{initSpeedFactor}, s.chart.TimingPoints.SpeedFactors...)
+	initSpeedFactor := mode.SpeedFactorPoint{0, 1}
+	s.speedFactors = append([]mode.SpeedFactorPoint{initSpeedFactor}, s.chart.TimingPoints.SpeedFactors...)
 	s.stamps = make([]timeStamp, len(s.speedFactors))
 	var position float64
 	for i, sf := range s.speedFactors {
@@ -108,7 +108,7 @@ func NewScene(c *Chart, mods Mods) *Scene {
 	s.notes = make([]NoteSprite, len(s.chart.Notes))
 	for i, n := range s.chart.Notes {
 		var ns NoteSprite
-		var sprite game.Sprite
+		var sprite mode.Sprite
 		switch n.Type {
 		case TypeNote:
 			sprite = s.stage.Notes[n.Key]
@@ -160,11 +160,11 @@ func NewScene(c *Chart, mods Mods) *Scene {
 	if err != nil {
 		panic(err)
 	}
-	s.bgop = game.BackgroundOp(game.ScreenSize(), image.Pt(s.bg.Size()))
+	s.bgop = mode.BackgroundOp(mode.ScreenSize(), image.Pt(s.bg.Size()))
 	var dimness uint8
 	switch {
 	default:
-		dimness = game.GeneralDimness()
+		dimness = mode.GeneralDimness()
 	}
 	// dim 을 바꾸는 입력이 들어왔다면 별도 함수 없이 즉석에서 s.bgop.ColorM.Reset() 날리고 다시 설정.
 	s.bgop.ColorM.ChangeHSV(0, 1, float64(dimness)/100)
@@ -174,10 +174,10 @@ func NewScene(c *Chart, mods Mods) *Scene {
 		s.speed = Settings.GeneralSpeed
 	}
 	s.hitPosition = Settings.HitPosition
-	s.displayScale = game.ScaleY()
+	s.displayScale = mode.ScaleY()
 
-	s.audioPlayer = game.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename))
-	s.kbChan, err = game.NewKeyboardEventChannel()
+	s.audioPlayer = mode.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename))
+	s.kbChan, err = mode.NewKeyboardEventChannel()
 	if err != nil {
 		panic(err)
 	}
@@ -188,7 +188,7 @@ func NewScene(c *Chart, mods Mods) *Scene {
 	// s.tick = -int64(BufferTime * s.g.MaxTPS())
 	s.logs = make([]keyLog, 0, 1e4)
 	s.logs = append(s.logs, keyLog{
-		time:  -2 * game.Millisecond,
+		time:  -2 * mode.Millisecond,
 		state: make([]bool, s.chart.Keys),
 	})
 	s.karma = 100

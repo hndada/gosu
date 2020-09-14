@@ -1,7 +1,7 @@
 package taiko
 
 import (
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/mode"
 )
 
 // minimize parameters so that no need to do extra process: learning
@@ -16,11 +16,11 @@ const (
 )
 
 func (beatmap *TaikoBeatmap) SetCurves() {
-	beatmap.Curves = make(map[string][]game.Segment)
-	beatmap.Curves["Trill"] = game.GetSegments(
+	beatmap.Curves = make(map[string][]mode.Segment)
+	beatmap.Curves["Trill"] = mode.GetSegments(
 		[]float64{0, beatmap.HitWindows["100"] + TrillBonusXOffset1, beatmap.HitWindows["0"]},
 		[]float64{MaxChordPenalty, MaxTrillBonus, 0})
-	beatmap.Curves["Jack"] = game.GetSegments(
+	beatmap.Curves["Jack"] = mode.GetSegments(
 		[]float64{0, beatmap.HitWindows["100"], beatmap.HitWindows["0"] + JackBonusXOffset2},
 		[]float64{MaxJackBonus, Max2JackBonus, 0})
 }

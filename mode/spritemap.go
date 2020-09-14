@@ -1,4 +1,4 @@
-package game
+package mode
 
 // TilesTemplate
 type SpriteMapTemplate struct {

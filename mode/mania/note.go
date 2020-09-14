@@ -2,13 +2,13 @@ package mania
 
 import (
 	"errors"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/mode"
 	"github.com/hndada/rg-parser/osugame/osu"
 	"sort"
 )
 
 const (
-	typeNote game.NoteType = 1 << iota
+	typeNote mode.NoteType = 1 << iota
 	typeReleaseNote
 	typeLongNote
 )
@@ -21,7 +21,7 @@ const (
 // 난이도 및 점수 관련은 나중에
 // 아래와 같이 난이도 계산에만 쓰이는 값들은 unexported로 할듯
 type Note struct {
-	game.BaseNote
+	mode.BaseNote
 	Key int
 
 	position float64

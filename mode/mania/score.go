@@ -1,12 +1,12 @@
 package mania
 
 import (
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/mode"
 	"math"
 )
 
 type Score struct {
-	game.BaseScore
+	mode.BaseScore
 	Counts [len(judgments)]int
 }
 
@@ -34,7 +34,7 @@ func (c *Chart) CalcScore2() {
 		avgStrain = sumStrain / float64(len(c.Notes))
 	}
 	for i, n := range c.Notes {
-		c.Notes[i].score = game.MaxScore * (n.strain / sumStrain)
+		c.Notes[i].score = mode.MaxScore * (n.strain / sumStrain)
 		c.Notes[i].karma = math.Min(n.strain/avgStrain, 2.5)      // 0 ~ 2.5
 		c.Notes[i].hp = math.Min(n.strain/(3*avgStrain)+2/3, 1.5) // 0 ~ 1.5
 	}
@@ -111,9 +111,9 @@ func (s *Scene) processScore(e keyEvent) {
 		}
 	}
 }
-func judge(n Note, action int, time int64) (game.Judgment, bool) { // bool: judged
+func judge(n Note, action int, time int64) (mode.Judgment, bool) { // bool: judged
 	if !scoreable(n, action, time) {
-		return game.Judgment{}, false
+		return mode.Judgment{}, false
 	}
 	if time < 0 {
 		time *= -1
@@ -126,7 +126,7 @@ func judge(n Note, action int, time int64) (game.Judgment, bool) { // bool: judg
 	return miss, true // reaches only when release ln too early
 }
 
-func (s *Scene) updateScore(i int, j game.Judgment) {
+func (s *Scene) updateScore(i int, j mode.Judgment) {
 	n := s.chart.Notes[i]
 	if j.Value == 0 {
 		s.score += math.Min(-1e4, -4*n.score) // not lower than -10,000
