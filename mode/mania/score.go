@@ -5,12 +5,6 @@ import (
 	"math"
 )
 
-// 핵심은, 롱노트를 놔서 최종 미스 판정을 받았더라도 staged에 ln tail 이 있어야 한다는 것
-// Tail 이면서 unscored이고 press나 idle일순 없음
-// 안쳐서 미스난 건 event가 없을 수 있음, 바깥에서 진행되어야 함
-// todo: 리플레이 -> 키보드 인풋처럼
-// 리플레이 구조: 마지막 status 시간, 레이아웃 키state
-
 type Score struct {
 	mode.BaseScore
 	Counts [len(judgments)]int
@@ -63,15 +57,60 @@ func scoreable(n Note, action int, time int64) bool {
 	}
 	return inRange(time) && action == press
 }
-// func outer() { // 이미 n.scored == false, 검사할 필요 없음
-// 	if lost(t) {
-// 		s.updateScore(i, miss)
-// 		if n.Type == TypeLNHead {
-// 			s.updateScore(n.next, miss) // todo: scored 에 true대입하는걸 updateScore에서 하기
-// 		}
-// 	}
-// }
 
+// 핵심은, 롱노트를 놔서 최종 미스 판정을 받았더라도 staged에 ln tail 이 있어야 한다는 것
+// Tail 이면서 unscored이고 press나 idle일순 없음
+func (s *Scene) processScore(e keyEvent) {
+	i := s.staged[e.key]
+	n := s.chart.Notes[i]
+	logIdx := SearchKeyLog(s.logs, e.time)
+	if logIdx == -1 { // 아직 없다
+		log := keyLog{
+			time:  e.time,
+			state: make([]bool, s.chart.Keys),
+		}
+		s.logs = append(s.logs, log)
+		// SortKeyLogs(s.logs) // suppose key input inputs nicely
+		logIdx = len(s.logs) - 1
+	}
+
+	lastLog := s.logs[logIdx-1] // todo: time 엇박자 난거면, 같은 time에서 찾아올수도 있음
+	action := KeyAction(lastLog.state[e.key], e.pressed)
+	time := n.Time - e.time
+
+	if j, judged := judge(n, action, time); judged && !n.scored {
+		s.updateScore(i, j)
+	}
+	if drainable(s.chart.Notes[i], time) { // scored가 이미 돼있을 수도 있어서 분리
+		s.staged[e.key] = n.next
+	}
+
+	if n.Type == TypeLNTail {
+		var holdTime float64
+		if e.time > n.Time {
+			holdTime = float64(n.Time - lastLog.time)
+		} else {
+			holdTime = float64(e.time - lastLog.time)
+		}
+		if holdTime < 0 {
+			holdTime = 0
+		}
+		switch action {
+		case hold, release: // release: 1, 0
+			s.hp += holdUnitHP * holdTime
+		case idle, press: // press: 0, 1
+			s.hp -= 4 * holdUnitHP * holdTime
+		}
+	}
+	s.logs[logIdx].state[e.key] = e.pressed
+
+	// 안쳐서 미스난 건 event 없을 수 있음, staged 중 lost된 것들 따로 빼주기
+	for k := range s.staged { // 이미 n.scored == false, 검사할 필요 없음
+		for lost(s.chart.Notes[s.staged[k]].Time) {
+			s.updateScore(s.staged[k], miss)
+		}
+	}
+}
 func judge(n Note, action int, time int64) (mode.Judgment, bool) { // bool: judged
 	if !scoreable(n, action, time) {
 		return mode.Judgment{}, false
@@ -86,42 +125,8 @@ func judge(n Note, action int, time int64) (mode.Judgment, bool) { // bool: judg
 	}
 	return miss, true // reaches only when release ln too early
 }
-func (s *Scene) processScore(e mode.KeyEvent) {
-	i := s.staged[e.KeyCode]
-	n := s.chart.Notes[i]
-	lastPressed := lastLog[e.Key]
-	action := KeyAction(lastPressed, e.State)
-	time := n.Time - e.Time
-
-	if j, judged := judge(n, action, time); judged && !n.scored {
-		s.updateScore(i, j)
-	}
-	if drainable(s.chart.Notes[i], time) { // scored가 이미 돼있을 수도 있어서 분리
-		s.staged[e.Key] = n.next
-	}
-
-	if n.Type == TypeLNTail {
-		var holdTime float64
-		if e.Time > n.Time {
-			holdTime = float64(n.Time - lastLog.Time)
-		} else {
-			holdTime = float64(e.Time - lastLog.Time)
-		}
-		if holdTime < 0 {
-			holdTime = 0
-		}
-		switch action {
-		case hold, release: // release: 1, 0
-			s.hp += holdUnitHP * holdTime
-		case idle, press: // press: 0, 1
-			s.hp -= 4 * holdUnitHP * holdTime
-		}
-	}
-}
 
 func (s *Scene) updateScore(i int, j mode.Judgment) {
-	// last pressed: s.logs[len(logTime)-1]
-	// if time is same (누락된 것)-> 그 이전걸로.
 	n := s.chart.Notes[i]
 	if j.Value == 0 {
 		s.score += math.Min(-1e4, -4*n.score) // not lower than -10,000
@@ -141,4 +146,12 @@ func (s *Scene) updateScore(i int, j mode.Judgment) {
 	}
 	s.hp += n.hp * j.HP
 	s.chart.Notes[i].scored = true
+	if j != miss {
+		s.combo++
+	} else {
+		s.combo = 0
+	}
+	if j == miss && n.Type == TypeLNHead {
+		s.updateScore(n.next, miss)
+	}
 }
