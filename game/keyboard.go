@@ -1,4 +1,4 @@
-package mode
+package game
 
 import (
 	"github.com/moutend/go-hook/pkg/keyboard"

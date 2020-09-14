@@ -1,4 +1,4 @@
-package mode
+package game
 
 import (
 	"github.com/hajimehoshi/ebiten"

@@ -2,7 +2,7 @@ package mania
 
 import (
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/game"
 	"image"
 	"image/color"
 	"image/draw"
@@ -13,30 +13,30 @@ import (
 // -> 둘다 각 settings, skin에 포함
 
 type SpriteMapTemplate struct {
-	Combo      [10]mode.Sprite // unscaled
-	HitResults [5]mode.Sprite  // unscaled
+	Combo      [10]game.Sprite // unscaled
+	HitResults [5]game.Sprite  // unscaled
 	Stages     map[int]Stage   // 키별로 option 다름
 }
 type Stage struct {
 	Keys    int           // todo: int8
-	Notes   []mode.Sprite // key
-	LNHeads []mode.Sprite
-	LNTails []mode.Sprite
-	LNBodys [][]mode.Sprite // key // animation
+	Notes   []game.Sprite // key
+	LNHeads []game.Sprite
+	LNTails []game.Sprite
+	LNBodys [][]game.Sprite // key // animation
 	// KeyButtons        []Sprite
 	// KeyPressedButtons []Sprite
 	// NoteLightings     []Sprite // unscaled
 	// LNLightings       []Sprite // unscaled
 
 	// HPBarColor Sprite // 폭맞춤x, screenHeigth
-	Fixed mode.Sprite
+	Fixed game.Sprite
 }
 
 var SpriteMap SpriteMapTemplate
 
 func LoadSpriteMap(skinPath string) {
-	if !mode.SpriteMap.Loaded() {
-		mode.LoadSpriteMap(skinPath)
+	if !game.SpriteMap.Loaded() {
+		game.LoadSpriteMap(skinPath)
 	}
 	loadSkin(skinPath)
 	if SpriteMap.Stages == nil {
@@ -52,7 +52,7 @@ func LoadSpriteMap(skinPath string) {
 
 func (s *Stage) Draw() {
 	// HPBarFrame: (폭맞춤, screenHeigth)
-	scale := mode.ScaleY()
+	scale := game.ScaleY()
 	noteKinds := keyKinds[s.Keys]
 	noteWidths := make([]int, s.Keys&ScratchMask)
 	h := int(Settings.NoteHeigth * scale)
@@ -62,11 +62,11 @@ func (s *Stage) Draw() {
 		noteWidths[key] = w
 		fieldWidth += w
 	}
-	stageOffset := StageCenter(mode.ScreenSize()) - (fieldWidth)/2 // int - int. 전자는 Position일 뿐.
+	stageOffset := StageCenter(game.ScreenSize()) - (fieldWidth)/2 // int - int. 전자는 Position일 뿐.
 	{
-		fixed := image.NewRGBA(image.Rectangle{image.Pt(0, 0), mode.ScreenSize()})
+		fixed := image.NewRGBA(image.Rectangle{image.Pt(0, 0), game.ScreenSize()})
 		black := image.NewUniform(color.RGBA{0, 0, 0, 128})
-		mainRect := image.Rect(stageOffset, 0, stageOffset+fieldWidth, mode.ScreenSize().Y)
+		mainRect := image.Rect(stageOffset, 0, stageOffset+fieldWidth, game.ScreenSize().Y)
 		draw.Draw(fixed, mainRect, black, mainRect.Min, draw.Over)
 
 		const hintHeight float64 = 2
@@ -80,10 +80,10 @@ func (s *Stage) Draw() {
 		s.Fixed.SetPosition(image.Point{}) // image.Pt(0, 0)
 	}
 	{
-		s.Notes = make([]mode.Sprite, len(noteWidths))
-		s.LNHeads = make([]mode.Sprite, len(noteWidths))
-		s.LNTails = make([]mode.Sprite, len(noteWidths))
-		s.LNBodys = make([][]mode.Sprite, len(noteWidths))
+		s.Notes = make([]game.Sprite, len(noteWidths))
+		s.LNHeads = make([]game.Sprite, len(noteWidths))
+		s.LNTails = make([]game.Sprite, len(noteWidths))
+		s.LNBodys = make([][]game.Sprite, len(noteWidths))
 		x := stageOffset
 		y := int(Settings.HitPosition*scale - float64(h)/2) // default
 		for key, w := range noteWidths {
@@ -136,7 +136,7 @@ func (s *Stage) Draw() {
 			}
 			{
 				srcs := skin.lnBody[noteKinds[key]]
-				s.LNBodys[key] = make([]mode.Sprite, len(srcs))
+				s.LNBodys[key] = make([]game.Sprite, len(srcs))
 				for idx, src := range srcs {
 					op := &ebiten.DrawImageOptions{}
 					rw, rh := src.Size()

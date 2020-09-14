@@ -1,4 +1,4 @@
-package mode
+package game
 
 import (
 	"crypto/md5"
