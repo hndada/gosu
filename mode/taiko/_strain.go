@@ -1,9 +1,8 @@
 package taiko
 
 import (
+	"github.com/hndada/gosu/mode"
 	"math"
-
-	"github.com/hndada/gosu/internal/tools"
 )
 
 
@@ -53,8 +52,8 @@ func (beatmap TaikoBeatmap) baseStrain(i, hand int, lastHitTime [4]int) (int, fl
 		return f, 1
 	}
 	prevNote := beatmap.Notes[i-1]
-	v := tools.SolveY(beatmap.Curves["Jack"], float64(note.Time-lastHitTime[f]))
-	v += tools.SolveY(beatmap.Curves["Trill"], float64(note.Time-prevNote.Time))
+	v := mode.SolveY(beatmap.Curves["Jack"], float64(note.Time-lastHitTime[f]))
+	v += mode.SolveY(beatmap.Curves["Trill"], float64(note.Time-prevNote.Time))
 	v *= fingerBonus[f]
 	return f, v
 }
