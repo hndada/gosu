@@ -1,7 +1,7 @@
 package mania
 
 import (
-	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/game"
 )
 
 const (
@@ -16,9 +16,9 @@ func (c *Chart) calcStamina() {
 	prevTimes := make([]int64, c.Keys)
 	for i, n := range c.Notes {
 		time := n.Time - prevTimes[n.Key]
-		instant *= mode.DecayFactor(instantDecay, time)
+		instant *= game.DecayFactor(instantDecay, time)
 		instant += instantScale * n.strain
-		gradual *= mode.DecayFactor(gradualDecay, time)
+		gradual *= game.DecayFactor(gradualDecay, time)
 		gradual += gradualScale * n.strain
 		if instant < 0 || gradual < 0 {
 			panic("negative stamina")

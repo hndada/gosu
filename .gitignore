@@ -7,7 +7,7 @@
 
 # Test binary, built with `go test -c`
 *.test
-/mode/mania/lv_test
+/game/mania/lv_test
 /test/Music
 /test/Music2
 /test/Skin

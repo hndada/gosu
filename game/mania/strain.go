@@ -1,7 +1,7 @@
 package mania
 
 import (
-	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/game"
 	"math"
 )
 
@@ -45,7 +45,7 @@ func baseStrain(keys int, n Note) float64 {
 	base := 1 + fingerBonus[finger(keys, n.Key)]
 	if n.Type == TypeLNTail { // a tail of hold note will get partial strain
 		lnDuration := float64(n.Time - n.Time2)
-		base *= mode.SolveY(curveTail, lnDuration)
+		base *= game.SolveY(curveTail, lnDuration)
 	}
 	return base
 }
@@ -73,7 +73,7 @@ func (c *Chart) chordPenalty(n Note) float64 {
 		// 	continue
 		// }
 		time := math.Abs(float64(n.Time - chordNote.Time))
-		v := mode.SolveY(curveTrillChord, time)
+		v := game.SolveY(curveTrillChord, time)
 		// keyDistance = math.Max(1, float64(tools.AbsInt(n.Key-chordNote.Key)))
 		penalty += v / div
 	}
@@ -90,7 +90,7 @@ func (c *Chart) jackBonus(n Note) float64 {
 	if n.trillJack[n.Key] != noFound {
 		jackNote := c.Notes[n.trillJack[n.Key]]
 		time := float64(n.Time - jackNote.Time)
-		return mode.SolveY(curveJack, time)
+		return game.SolveY(curveJack, time)
 	}
 	return 0
 }
@@ -123,7 +123,7 @@ func (c *Chart) trillBonus(n Note) float64 {
 			div = 1.5
 		}
 		time := float64(n.Time - trillNote.Time)
-		v := mode.SolveY(curveTrillChord, time)
+		v := game.SolveY(curveTrillChord, time)
 		// keyDistance = math.Max(1, float64(tools.AbsInt(n.Key-trillNote.Key)))
 		bonus += v / div
 	}

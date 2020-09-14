@@ -1,4 +1,4 @@
-package mode
+package game
 
 type PlayScene struct {
 	Tick int64
