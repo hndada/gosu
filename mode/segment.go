@@ -1,4 +1,6 @@
-package tools
+package mode
+
+import "math"
 
 type Segment struct {
 	xMin      float64
@@ -13,7 +15,7 @@ func GetSegments(xPoints, yPoints []float64) []Segment {
 		segments[i].xMin = xPoints[i]
 		switch i {
 		case len(xPoints) - 1:
-			segments[i].xMax = InfFloat64
+			segments[i].xMax = math.Inf(1)
 			segments[i].slope = 0
 			segments[i].intercept = yPoints[i]
 		default:
@@ -65,4 +67,9 @@ scan:
 		}
 	}
 	return xValues
+}
+
+func Round(v float64, decimal int) float64 {
+	scale := math.Pow(10, float64(decimal))
+	return math.Round(v*scale) / scale
 }
