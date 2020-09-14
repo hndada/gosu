@@ -2,8 +2,8 @@ package gosu
 
 import (
 	"github.com/hajimehoshi/ebiten"
-	"github.com/hndada/gosu/mode"
-	"github.com/hndada/gosu/mode/mania"
+	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/mania"
 	_ "github.com/silbinarywolf/preferdiscretegpu"
 	"path/filepath"
 )
@@ -38,7 +38,7 @@ type Game struct {
 
 // todo: Load, Save settings
 // type settings struct {
-// 	common mode.SettingsTemplate
+// 	common game.SettingsTemplate
 // 	mania  mania.SettingsTemplate
 // }
 type Scene interface { // Scene이 Game을 control하는 주체
@@ -55,16 +55,16 @@ func NewGame() *Game {
 	// }
 	g.path = `C:\Users\hndada\Documents\GitHub\hndada\gosu\test\`
 
-	mode.LoadSettings()
+	game.LoadSettings()
 	mania.ResetSettings()
 	mania.LoadSpriteMap(filepath.Join(g.path, "Skin"))
 	g.Scene = g.NewSceneSelect()
 
 	// g.SceneChanger = g.NewSceneChanger()
-	p := mode.ScreenSize()
+	p := game.ScreenSize()
 	g.TransSceneFrom, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
 	g.TransSceneTo, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
-	MaxTransCountDown = mode.MaxTPS() * 4 / 5
+	MaxTransCountDown = game.MaxTPS() * 4 / 5
 
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetRunnableOnUnfocused(true)
@@ -114,7 +114,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return mode.ScreenSize().X, mode.ScreenSize().Y
+	return game.ScreenSize().X, game.ScreenSize().Y
 }
 
 func (g *Game) changeScene(s Scene) {

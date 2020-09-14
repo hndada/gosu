@@ -1,12 +1,12 @@
 package mania
 
 import (
-	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/game"
 	"github.com/hndada/rg-parser/osugame/osu"
 )
 
 type Chart struct {
-	*mode.BaseChart
+	*game.BaseChart
 	Keys  int
 	Notes []Note
 }
@@ -15,7 +15,7 @@ type Chart struct {
 // 모드마다 TransPoint(TimingPoint), Note건듦
 func NewChartFromOsu(o *osu.Format, path string) (*Chart, error) {
 	var c Chart
-	c.BaseChart = mode.NewBaseChartFromOsu(o, path)
+	c.BaseChart = game.NewBaseChartFromOsu(o, path)
 	c.Keys = int(c.Parameter["Scale"])
 	err := c.loadNotes(o)
 	if err != nil {
