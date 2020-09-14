@@ -76,7 +76,9 @@ func (c *Chart) loadNotes(o *osu.Format) error {
 	for next, n := range c.Notes {
 		prev := prevs[n.Key]
 		c.Notes[next].prev = prev
-		c.Notes[prev].next = next
+		if prev != -1 {
+			c.Notes[prev].next = next
+		}
 		prevs[n.Key] = next
 	}
 	for _, lastIdx := range prevs {
