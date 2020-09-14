@@ -32,21 +32,20 @@ type Note struct {
 	next     int // next note index
 	scored   bool
 
-	strain float64
-	// Strain
+	hand    int
+	strain  float64
+	stamina float64
 	// Read
-	// Stamina
 
-	hand  int
-	chord []int
-	// trillJack   []int
-	// holdImpacts []float64
-	//
-	// strainBase   float64
-	// chordPenalty float64
-	// trillBonus   float64
-	// jackBonus    float64
-	// HoldBonus    float64 // score 필요함
+	chord       []int
+	trillJack   []int
+	holdImpacts []float64
+
+	baseStrain   float64
+	chordPenalty float64
+	trillBonus   float64
+	jackBonus    float64
+	holdBonus    float64 // score 필요함
 }
 
 var ErrDuration = errors.New("invalid duration: not a positive value")
