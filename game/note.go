@@ -1,4 +1,4 @@
-package mode
+package game
 
 // time rate has been applied in advance
 type BaseNote struct {

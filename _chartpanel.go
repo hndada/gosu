@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/ebitenui"
-	"github.com/hndada/gosu/mode/mania"
+	"github.com/hndada/gosu/game/mania"
 	"image"
 	"image/color"
 )

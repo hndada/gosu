@@ -1,4 +1,4 @@
-package mode
+package game
 
 // Game version:
 // [Major build number].[Minor build number].[Revision].[Package]
