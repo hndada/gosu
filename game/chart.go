@@ -81,3 +81,7 @@ func NewBaseChartFromOsu(o *osu.Format, path string) *BaseChart {
 func (b *BaseChart) AbsPath(filename string) string {
 	return filepath.Join(filepath.Dir(b.Path), filename)
 }
+
+type Chart interface {
+	CalcDifficulty()
+}

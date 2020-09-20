@@ -21,8 +21,7 @@ func NewChartFromOsu(o *osu.Format, path string) (*Chart, error) {
 	if err != nil {
 		panic(err)
 	}
-	// c.CalcLevel() // 노트별 strain 계산 후 차트에 level 입력
-	// c.CalcScore()
+	c.CalcDifficulty()
 	return &c, nil
 }
 
@@ -39,6 +38,7 @@ func (c *Chart) ApplyMods(mods Mods) *Chart {
 		}
 		c2.Notes[i] = n
 	}
+	c2.CalcDifficulty()
 	return &c2
 }
 

@@ -23,14 +23,16 @@ func init() {
 	}
 }
 
-// todo: finger, note 불러올 때 미리 계산
+// todo: hand와 finger는 note 불러올 때 미리 계산
 // todo: memory-less 인 애들은 루프 분리
 func (c *Chart) CalcStrain() {
 	c.markAffect()
-	c.setHoldImpacts()
 	for i, n := range c.Notes {
 		c.Notes[i].hand = hand(c.Keys, n.Key)
 		c.Notes[i].settleAlterHand()
+	}
+	c.setHoldImpacts()
+	for i, n := range c.Notes {
 		c.Notes[i].baseStrain = baseStrain(c.Keys, n)
 		c.Notes[i].chordPenalty = c.chordPenalty(n)
 		c.Notes[i].jackBonus = c.jackBonus(n)
@@ -199,8 +201,9 @@ func (n *Note) calcStrain() {
 	v += n.jackBonus
 	v += n.holdBonus
 	v += n.chordPenalty
-	if v < 0 {
-		panic("negative strain")
+	if v < 0 { // todo: why happens
+		v = 0
+		// panic("negative strain")
 	}
 	n.strain = v
 }
