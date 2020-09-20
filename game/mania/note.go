@@ -101,6 +101,7 @@ func newNote(ho osu.HitObject, keys int) ([]Note, error) {
 	n.Time = int64(ho.Time)
 	n.SampleFilename = ho.HitSample.Filename
 	n.SampleVolume = uint8(ho.HitSample.Volume)
+	n.initSliceFields(keys)
 
 	if n.Type == typeLongNote {
 		n.Type = TypeLNHead
@@ -115,9 +116,20 @@ func newNote(ho osu.HitObject, keys int) ([]Note, error) {
 		n2.Key = n.Key
 		n2.Time = n.Time2
 		n2.Time2 = n.Time
+		n2.initSliceFields(keys)
 		ns = append(ns, n2)
 	} else {
 		ns = append(ns, n)
 	}
 	return ns, nil
+}
+
+func (n *Note) initSliceFields(keys int) {
+	n.chord = make([]int, keys)
+	n.trillJack = make([]int, keys)
+	n.holdImpacts = make([]float64, keys)
+	for k := 0; k < keys; k++ {
+		n.chord[k] = -1
+		n.trillJack[k] = -1
+	}
 }

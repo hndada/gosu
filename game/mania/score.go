@@ -23,8 +23,7 @@ func (s Score) IsPerfect() bool {
 
 const holdUnitHP = 0.002 // 롱노트를 눌렀을 때 1ms 당 차오르는 체력
 
-// todo: CalcLV 에 추가
-func (c *Chart) CalcScore2() {
+func (c *Chart) calcScore() {
 	var sumStrain float64
 	for _, n := range c.Notes {
 		sumStrain += n.strain
@@ -74,7 +73,7 @@ func (s *Scene) processScore(e keyEvent) {
 		logIdx = len(s.logs) - 1
 	}
 
-	lastLog := s.logs[logIdx-1] // todo: time 엇박자 난거면, 같은 time에서 찾아올수도 있음
+	lastLog := s.logs[logIdx-1]
 	action := KeyAction(lastLog.state[e.key], e.pressed)
 	time := n.Time - e.time
 
