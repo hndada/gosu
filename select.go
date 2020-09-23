@@ -54,6 +54,8 @@ func (g *Game) NewSceneSelect() *SceneSelect {
 // 위쪽/왼쪽: 커서 -1
 // 아래쪽/오른쪽: 커서 +1
 // +시프트: 그룹 이동
+
+// 각 IsKeyPressed()마다 hold를 체크할 수 밖에 없음
 func (s *SceneSelect) Init() {}
 func (s *SceneSelect) Update() error {
 	// if !s.hold{
