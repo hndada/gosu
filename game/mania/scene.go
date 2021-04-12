@@ -2,11 +2,13 @@ package mania
 
 import (
 	"fmt"
+
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
 	"github.com/hndada/gosu/game"
 	"github.com/moutend/go-hook/pkg/types"
-	_ "github.com/silbinarywolf/preferdiscretegpu"
+
+	// _ "github.com/silbinarywolf/preferdiscretegpu"
 	"image"
 	_ "image/jpeg"
 	"sort"
