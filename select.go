@@ -18,25 +18,11 @@ import (
 	"strings"
 )
 
-// todo: 로딩일 때 기다리는 로직
-// Loading 이라는 별도의 Lock을 둔 이상, 특별히 채널은 필요없는거 아닌가?
-// 비트맵 로딩 15초 후 timeout
-
-// chart panel에 저장할 것:
-// timing point 제외 basechart 전부 (차트 기본 정보)
-// 난이도 계산된 값 (겉값)
-// 채보 속성
-// 채보 파일 경로
 type SceneSelect struct {
 	g      *Game
 	charts []chartPanel
 	cursor int
 	mods   mania.Mods
-	hold   bool
-	// 그룹 (디렉토리 트리)
-	// 현재 정렬 기준
-	// Buttons     []ebitenui.Button
-	// ChartPanels []ChartPanel
 }
 
 func (g *Game) NewSceneSelect() *SceneSelect {
@@ -51,34 +37,8 @@ func (g *Game) NewSceneSelect() *SceneSelect {
 	return s
 }
 
-// 위쪽/왼쪽: 커서 -1
-// 아래쪽/오른쪽: 커서 +1
-// +시프트: 그룹 이동
-
-// 각 IsKeyPressed()마다 hold를 체크할 수 밖에 없음
 func (s *SceneSelect) Init() {}
 func (s *SceneSelect) Update() error {
-	// if !s.hold{
-	// 	switch {
-	// 	case ebiten.IsKeyPressed(ebiten.KeyEnter):
-	// 		s.g.changeScene(mania.NewScene(s.charts[s.cursor].chart, s.mods))
-	// 		s.hold = true
-	// 	case ebiten.IsKeyPressed(ebiten.KeyDown):
-	// 		s.cursor++
-	// 		if s.cursor >= len(s.charts) {
-	// 			s.cursor = 0
-	// 		}
-	// 		s.hold = true
-	// 	case ebiten.IsKeyPressed(ebiten.KeyUp):
-	// 		s.cursor--
-	// 		if s.cursor < 0 {
-	// 			s.cursor = len(s.charts) - 1
-	// 		}
-	// 		s.hold = true
-	// 	default:
-	// 		s.hold = false
-	// 	}
-	// }
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		s.g.changeScene(mania.NewScene(s.charts[s.cursor].chart, s.mods))
 	}
@@ -102,9 +62,6 @@ func (s *SceneSelect) Update() error {
 		s.charts[i].y = mid + 40*(i-s.cursor)
 	}
 	s.charts[s.cursor].x -= 30
-	// for _, p := range s.ChartPanels {
-	// 	p.Update()
-	// }
 	return nil
 }
 
@@ -114,17 +71,9 @@ func (s *SceneSelect) Draw(screen *ebiten.Image) {
 		s.charts[i].op.GeoM.Translate(float64(c.x), float64(c.y))
 		screen.DrawImage(c.box, s.charts[i].op)
 	}
-	// for _, p := range s.ChartPanels {
-	// 	p.Draw(screen)
-	// }
-	// for _, b := range s.Buttons {
-	// 	b.Draw(screen)
-	// }
 }
 
 func (s *SceneSelect) checkCharts() error {
-	// 폴더 변화 감지하면 LoadCharts()
-	// 수정 날짜는 정직하다고 가정?
 	return s.LoadCharts()
 }
 
@@ -148,8 +97,6 @@ func (s *SceneSelect) LoadCharts() error {
 			switch strings.ToLower(filepath.Ext(f.Name())) {
 			case ".osu":
 				fpath := filepath.Join(dpath, f.Name())
-				// todo: osu.Parse를 여기서 호출할지 아니면 mania 패키지에서 호출할지
-				// 그런데 미리 parse를 해야 Mode 값을 알 수 있음
 				o, err := osu.Parse(fpath)
 				if err != nil {
 					panic(err) // todo: log and continue
@@ -195,7 +142,7 @@ func newChartPanel(c *mania.Chart) chartPanel {
 }
 
 // var ModePrefix = map[int]string{0: "o", 1: "t", 2: "c", 3: "m"}
-// 폴더 두번 스캔
+// 폴더 두번 스캔: mapsets, maps
 func LoadSongList(root, ext string) ([]string, error) {
 	var songs []string
 	if info, err := os.Stat(root); err != nil || !info.IsDir() {
