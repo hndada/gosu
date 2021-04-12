@@ -12,6 +12,7 @@
 /test/Music2
 /test/Skin
 /asset
+/cmd/calc/charts
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
