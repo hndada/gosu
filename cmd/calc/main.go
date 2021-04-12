@@ -24,6 +24,6 @@ func main() {
 		}
 		c, _ := mania.NewChartFromOsu(o, s)
 		c.CalcDifficulty()
-		fmt.Printf("%3.3f: %s\n", c.Level/25, f.Name())
+		fmt.Printf("%1.2f: %s\n", c.Level/25, f.Name())
 	}
 }
