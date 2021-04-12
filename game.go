@@ -4,11 +4,12 @@ import (
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/mania"
-	_ "github.com/silbinarywolf/preferdiscretegpu"
+
+	// _ "github.com/silbinarywolf/preferdiscretegpu"
 	"path/filepath"
 )
 
-// select에서 곡 로드 방식 바꾸기, 그 외 간단히 고칠 것들 todo 나 메모에서  
+// select에서 곡 로드 방식 바꾸기, 그 외 간단히 고칠 것들 todo 나 메모에서
 // 리플레이 저장, 이후 스코어/hp 고치기
 // 기타 Sprite 그리기
 // docs, markdown 정리 및 internal 삭제
