@@ -1,9 +1,0 @@
-﻿I expect more beatmaps will get chance to be selected by players as getting pp than before with new difficulty calculation algorithm and score system.
-
-Even though tuning of parameter goes not well, there is few problems on fairness of estimating one's skill
-since its criteria is equal to all players; this is also applied to existing algorithm.
-
-이 코드가 리듬게임 일체 난이도 계산의 일종의 표준이 될 것이라고 기대함
-리듬게임 별 약간의 변형을 가하여 난이도 계산
-현재 계산 알고리즘 관심 있는 게임 모드는 osu!mania (o2jam), osu!taiko, sdvx, piu
-더 나아가서, 비(非)리듬게임에도 확장: 악보, 플랫폼 게임(슈퍼마리오 등) 난이도 계산

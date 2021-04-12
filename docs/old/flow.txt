@@ -1,7 +1,0 @@
-Process .osu files
-
-.osu -> parse -> gob 
-Converting osu to other modes change 
-Converting requires original raw notes sooo the raw notes itself is required anyway
-Mods could change the notes (hr in std flip the notes)
-Putting mods should be separated from the raw process

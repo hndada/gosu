@@ -1,5 +1,0 @@
-플레이 직전에
-runtime.GC()로 GC 한번 하고
-debug.SetGCPercent(-1)로 GC 끄기
-플레이 끝난 뒤
-debug.SetGCPercent(100)으로 원상복귀
