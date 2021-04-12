@@ -1,66 +1,40 @@
 # gosu
 New client of mania players, by a mania player, for mania players
 =================================================================
-1. Beatmap players
-    - [ ] Parse beatmap
-        - [x] Parsing Hit Objects
-        - [ ] Parsing samples 
-    - [ ] Show beatmap list and select one of them
-        - [ ] Draw a box with beatmap info
-        - [ ] List them
-    - [ ] Play beatmap along with audio
-        * Audio package: beep
+0. rg-parser
+    - [x] .osu
+        - [ ] Parse sound samples 
+    - [ ] .ojn
+1. gosu-calc
+    - [ ] Mania difficulty calculation
+2. gosu-nity
+    - [ ] Essential features
+        - [ ] chart synced with music
+        - [ ] Quick input system
+        - [ ] Level, score, hp, pp system
+    - [ ] Replay
+    - [ ] Local/online Leaderboard
+        * [ ] Real-time local/online score competition
+    * UI
+        - [ ] beatmap list
+        - [ ] Skinning
 
-2. Primitive game play
-    - [ ] Keyboard input, judgement
-
-3. Improving game play
-    - [ ] Add lv(sr), score, hp, pp system
-        - [ ] Decrease lv/score when pause happened 
-    - [ ] Save scores and replays, shows on leaderboard
+        
+        - [ ] Keyboard input
+        - [ ] judgement
     - [ ] Mods
-        - [ ] Time rate
-        - [ ] Random 
-        - [ ] Mirror and other simple options 
-    - [ ] Search functions
-        - [ ] Keyword matching
-        - [ ] Query 
-        - [ ] Quick move with mouse right button 
-    - [ ] Options
-        - [ ] Screen size, TPS(FPS is auto in ebiten)
-        - [ ] Volume
-        - [ ] Background dim, score meter size
-        - [ ] Universal/specific offset
-        - [ ] Keyboard layout
-    - [ ] Simple skinning
-        - [ ] Most of them but except very minor and non-mania
-    - [ ] Awesome leaderboard
-        - [ ] Real-time local score leaderboard
-        - [ ]
+    - [ ] Song search
+    - [ ] Various extension parsing
 
-4. Simple server
+3. Mwang (gosu server)
     - [ ] User struct
-        - [ ] 
     - [ ] Collect user info, scores and replay
         - [ ] Collceting user info: Key stroke, play time count
     - [ ] Chatting and multiplaying
 
-
-## Following bullets are optional
-
-5. Simple web
+4. Website
     - [ ] Ranking page
     - [ ] Beatmap download pages (for collecting all separated files)
     - [ ] Beatmap discussion
     - [ ] Beatmap git system
     - [ ] Userpage
-
-6. Beyond osu!
-    - [ ] .ojn
-    - [ ] .bms 
-    - [ ] .sim
-    - [ ] .gos (new format)
-    - [ ] Edit
-
-### Awesome UI
-- [ ] Smooth movement 
