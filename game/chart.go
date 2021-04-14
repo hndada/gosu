@@ -2,13 +2,15 @@ package game
 
 import (
 	"crypto/md5"
-	"github.com/hndada/rg-parser/osugame/osu"
 	"io/ioutil"
 	"path/filepath"
+
+	"github.com/hndada/rg-parser/osugame/osu"
 )
 
 const Millisecond = 1000
 
+// TransPoint를 Base에 두지 않는다면, ChartHeader로 바꾸어도 된다고 생각
 type BaseChart struct {
 	Path          string // path of chart source file. It won't be exported to file content.
 	ChartID       int64  // 6byte: setID, 2byte: subID
@@ -75,13 +77,11 @@ func NewBaseChartFromOsu(o *osu.Format, path string) *BaseChart {
 	return &b
 }
 
-// interface로 만들만한 게 없음
-// TransPoint를 Base에 두지 않는다면, ChartHeader로 바꾸어도 된다고 생각
-
 func (b *BaseChart) AbsPath(filename string) string {
 	return filepath.Join(filepath.Dir(b.Path), filename)
 }
 
+// interface로 만들만한 게 없음
 type Chart interface {
 	CalcDifficulty()
 }

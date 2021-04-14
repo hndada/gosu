@@ -116,10 +116,6 @@ const (
 	innerAdj
 )
 
-// todo: strain 고치면서 여기 한번에 쓰기
-// func lnLocation() int {
-//
-// }
 // supposed comparing keys are in same hand
 func isHoldOuter(holdKey, key, keymode int) bool {
 	h := finger(holdKey, keymode)
