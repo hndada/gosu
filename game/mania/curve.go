@@ -1,22 +1,23 @@
 package mania
 
 import (
-	"github.com/hndada/gosu/game"
 	"math"
+
+	"github.com/hndada/gosu/game"
 )
 
 const (
 	MaxChordPenalty = -0.3 // must be same or greater than -0.5
 	MaxTrillBonus   = 0.08
 
-	MaxJackBonus  = 0.25
-	Max2JackBonus = 0.1
+	MaxJackBonus  = 0.2
+	Max2JackBonus = 0.05
 	Max2DeltaJack = 120
 	maxDeltaJack  = 180
 
-	MinHoldTailStrain  = 0.05
-	MaxHoldTailStrain  = 0.2
-	ZeroHoldTailStrain = 0.1
+	MinHoldTailStrain  = 0   // 0.05
+	MaxHoldTailStrain  = 0.3 // 0.2
+	ZeroHoldTailStrain = 0   // 0.1
 )
 
 var (
@@ -52,7 +53,7 @@ func init() {
 		[]float64{
 			0,
 			float64(kool.Window),
-			float64(bad.Window)},
+			float64(bad.Window) + 50},
 		[]float64{
 			ZeroHoldTailStrain,
 			MinHoldTailStrain,
