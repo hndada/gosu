@@ -1,8 +1,9 @@
 package mania
 
 import (
-	"github.com/hndada/gosu/game"
 	"math"
+
+	"github.com/hndada/gosu/game"
 )
 
 const holdAffectDelta = 16
@@ -13,13 +14,14 @@ const (
 	holdRemainBonus       = 0.03 * 3
 )
 
-const outerBonus = 0.025 * 3.5
+const outerBonus = 1 // 0.025 * 3.5
 
-var fingerBonus = [5]float64{1.5, 0, 1, 2, 3} // from thumb to little finger
+var fingerBonus = [5]float64{1.15, 0, 1, 1.2, 1.3} // from thumb to little finger
 
 func init() {
 	for i := range fingerBonus {
-		fingerBonus[i] *= outerBonus
+		// fingerBonus[i] *= outerBonus
+		fingerBonus[i] = math.Pow(fingerBonus[i], outerBonus)
 	}
 }
 
