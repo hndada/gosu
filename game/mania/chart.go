@@ -11,8 +11,8 @@ type Chart struct {
 	Notes []Note
 }
 
-// raw 차트에는 모드가 들어가면 안됨
-// 모드마다 TransPoint(TimingPoint), Note건듦
+// raw 차트에는 Mods가 들어가면 안됨
+// Mods마다 TransPoint(TimingPoint), Note건듦
 func NewChartFromOsu(o *osu.Format, path string) (*Chart, error) {
 	var c Chart
 	c.BaseChart = game.NewBaseChartFromOsu(o, path)
