@@ -2,6 +2,7 @@ package mania
 
 import (
 	"fmt"
+
 	"github.com/hndada/gosu/game"
 )
 
@@ -15,7 +16,7 @@ func (c *Chart) CalcDifficulty() {
 	if len(c.Notes) == 0 {
 		return
 	}
-	// c.CalcStrain()
+	c.CalcStrain()
 	sectionCounts := int(c.EndTime()-c.Notes[0].Time) / sectionLength // independent of note offset
 	sectionEndTime := sectionLength + c.Notes[0].Time
 
@@ -27,7 +28,7 @@ func (c *Chart) CalcDifficulty() {
 			d = 0.0
 			sectionEndTime += sectionLength
 		}
-		d += n.strain + n.stamina // n.read (->SV) someday
+		d += n.strain // + n.stamina // n.read (->SV) someday
 	}
 
 	if len(ds) != sectionCounts {
