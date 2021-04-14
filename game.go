@@ -44,7 +44,8 @@ func NewGame() *Game {
 	// if g.path, err = os.Executable(); err != nil {
 	// 	panic(err)
 	// }
-	g.path = `C:\Users\hndada\Documents\GitHub\hndada\gosu\test\`
+	// g.path = `C:\Users\hndada\Documents\GitHub\hndada\gosu\test\`
+	g.path = `E:\projects\gosu\cmd\gosu`
 
 	game.LoadSettings()
 	mania.ResetSettings()
