@@ -33,7 +33,7 @@ type BaseChart struct {
 	Parameter map[string]float64
 	TimingPoints
 
-	Level float64
+	Level float64 // 모드 별 레벨의 필요성 
 }
 
 // func NewBaseChart(path string) (*BaseChart, error) {
