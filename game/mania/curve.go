@@ -10,8 +10,8 @@ const (
 	MaxChordPenalty = -0.3 // must be same or greater than -0.5
 	MaxTrillBonus   = 0.08
 
-	MaxJackBonus  = 0.2
-	Max2JackBonus = 0.05
+	MaxJackBonus  = 0 // 0.2
+	Max2JackBonus = 0 //0.05
 	Max2DeltaJack = 120
 	maxDeltaJack  = 180
 
