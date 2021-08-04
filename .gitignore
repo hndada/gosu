@@ -14,6 +14,9 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# Personal settings
+/.idea
+
 # Test Data
 /game/mania/lv_test
 
