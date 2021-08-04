@@ -7,16 +7,21 @@
 
 # Test binary, built with `go test -c`
 *.test
-/game/mania/lv_test
-/test/Music
-/test/Music2
-/test/Skin
-/cmd/gosu/Music
-/cmd/gosu/Skin
-/asset
-/cmd/calc/charts
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# Test Data
+/game/mania/lv_test
+
+/cmd/gosu/Music
+/cmd/gosu/Skin
+/cmd/gosu/Skin-reunited
+
+/cmd/calc/charts
+/cmd/calc/bms
+
+/asset.zip
