@@ -1,8 +1,9 @@
 package game
 
 import (
-	"github.com/hajimehoshi/ebiten"
 	"image"
+
+	"github.com/hajimehoshi/ebiten"
 )
 
 // 값 변경과 동시에 실행되어야 하는 함수가 있는 경우 private/method로 set하는 방법으로 변경
@@ -90,7 +91,7 @@ func LoadSettings() {
 
 func ResetSettings() {
 	Settings.maxTPS = 240
-	Settings.screenSize = image.Pt(1600, 900)
+	Settings.screenSize = image.Pt(800, 600)
 	Settings.generalDimness = 30
 	Settings.volumeMaster = 100
 	// Settings.volumeBGM = 50
