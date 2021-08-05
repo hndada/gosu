@@ -3,6 +3,13 @@ package gosu
 import (
 	"errors"
 	"fmt"
+	"image"
+	"image/color"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/mania"
@@ -10,19 +17,14 @@ import (
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
-	"image"
-	"image/color"
-	"io/ioutil"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 type SceneSelect struct {
-	g      *Game
-	charts []chartPanel
-	cursor int
-	mods   mania.Mods
+	g         *Game
+	charts    []chartPanel
+	cursor    int
+	mods      mania.Mods
+	holdCount int
 }
 
 func (g *Game) NewSceneSelect() *SceneSelect {
@@ -41,18 +43,29 @@ func (s *SceneSelect) Init() {}
 func (s *SceneSelect) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		s.g.changeScene(mania.NewScene(s.charts[s.cursor].chart, s.mods))
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyDown) {
-		s.cursor++
-		if s.cursor >= len(s.charts) {
-			s.cursor = 0
+		s.holdCount = 0
+	} else if ebiten.IsKeyPressed(ebiten.KeyDown) {
+		if s.holdCount >= 10 {
+			s.cursor++
+			if s.cursor >= len(s.charts) {
+				s.cursor = 0
+			}
+			s.holdCount = 0
+		} else {
+			s.holdCount++
 		}
-	}
-	if ebiten.IsKeyPressed(ebiten.KeyUp) {
-		s.cursor--
-		if s.cursor < 0 {
-			s.cursor = len(s.charts) - 1
+	} else if ebiten.IsKeyPressed(ebiten.KeyUp) {
+		if s.holdCount >= 10 {
+			s.cursor--
+			if s.cursor < 0 {
+				s.cursor = len(s.charts) - 1
+			}
+			s.holdCount = 0
+		} else {
+			s.holdCount++
 		}
+	} else {
+		s.holdCount = 0
 	}
 
 	screenSize := game.ScreenSize()
