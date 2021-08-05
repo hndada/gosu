@@ -1,8 +1,9 @@
 package mania
 
 import (
-	"github.com/hndada/gosu/game"
 	"math"
+
+	"github.com/hndada/gosu/game"
 )
 
 type Score struct {
@@ -23,19 +24,27 @@ func (s Score) IsPerfect() bool {
 
 const holdUnitHP = 0.002 // 롱노트를 눌렀을 때 1ms 당 차오르는 체력
 
+// func (c *Chart) calcScore() {
+// 	var sumStrain float64
+// 	for _, n := range c.Notes {
+// 		sumStrain += n.strain
+// 	}
+// 	var avgStrain float64
+// 	if len(c.Notes) != 0 {
+// 		avgStrain = sumStrain / float64(len(c.Notes))
+// 	}
+// 	for i, n := range c.Notes {
+// 		c.Notes[i].score = game.MaxScore * (n.strain / sumStrain)
+// 		c.Notes[i].karma = math.Min(n.strain/avgStrain, 2.5)      // 0 ~ 2.5
+// 		c.Notes[i].hp = math.Min(n.strain/(3*avgStrain)+2.0/3.0, 1.5) // 0 ~ 1.5
+// 	}
+// }
+
 func (c *Chart) calcScore() {
-	var sumStrain float64
-	for _, n := range c.Notes {
-		sumStrain += n.strain
-	}
-	var avgStrain float64
-	if len(c.Notes) != 0 {
-		avgStrain = sumStrain / float64(len(c.Notes))
-	}
-	for i, n := range c.Notes {
-		c.Notes[i].score = game.MaxScore * (n.strain / sumStrain)
-		c.Notes[i].karma = math.Min(n.strain/avgStrain, 2.5)      // 0 ~ 2.5
-		c.Notes[i].hp = math.Min(n.strain/(3*avgStrain)+2/3, 1.5) // 0 ~ 1.5
+	for i := range c.Notes {
+		c.Notes[i].score = 1
+		c.Notes[i].karma = 1
+		c.Notes[i].hp = 1
 	}
 }
 

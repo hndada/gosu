@@ -1,3 +1,7 @@
+스코어 고치기
+
+
+
 // strain.go
     변인을 통제해야함: stamina, Hold
     우선 chord 알고리즘 먼저 고쳐보자
