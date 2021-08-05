@@ -10,7 +10,6 @@ import (
 )
 
 // 스코어, hp 고치기
-// internal 삭제
 // pp
 var MaxTransCountDown int
 
@@ -40,12 +39,7 @@ type Scene interface { // Scene이 Game을 control하는 주체
 
 func NewGame() *Game {
 	g := &Game{}
-	// var err error
-	// if g.path, err = os.Executable(); err != nil {
-	// 	panic(err)
-	// }
-	// g.path = `C:\Users\hndada\Documents\GitHub\hndada\gosu\test\`
-	g.path = `F:\projects\gosu\cmd\gosu`
+	g.path = `D:\gosu\`
 
 	game.LoadSettings()
 	mania.ResetSettings()
