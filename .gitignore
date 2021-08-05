@@ -15,13 +15,7 @@
 # vendor/
 
 # Test Data
-/game/mania/lv_test
-
 /cmd/gosu/Music
 /cmd/gosu/Skin
-/cmd/gosu/Skin-reunited
 
 /cmd/calc/charts
-/cmd/calc/bms
-
-/asset.zip
