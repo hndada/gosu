@@ -36,5 +36,5 @@ func (c *Chart) CalcDifficulty() {
 		panic("section count mismatch")
 	}
 	c.Level = game.WeightedSum(ds, diffWeightDecay)
-	c.calcScore()
+	c.allotScore()
 }
