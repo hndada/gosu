@@ -1,8 +1,10 @@
 package game
 
 type PlayScene struct {
-	Tick int64
+	Tick        int64
+	AudioPlayer *AudioPlayer
 }
+
 // always follows audio's time
 // func (s *Scene) Time() int64 {
 // 	return s.audioPlayer.Time().Milliseconds()
