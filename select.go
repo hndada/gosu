@@ -42,7 +42,7 @@ func (g *Game) NewSceneSelect() *SceneSelect {
 func (s *SceneSelect) Init() {}
 func (s *SceneSelect) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
-		s.g.changeScene(mania.NewScene(s.charts[s.cursor].chart, s.mods))
+		s.g.ChangeScene(mania.NewScene(s.charts[s.cursor].chart, s.mods))
 		s.holdCount = 0
 	} else if ebiten.IsKeyPressed(ebiten.KeyDown) {
 		if s.holdCount >= 10 {
@@ -86,6 +86,7 @@ func (s *SceneSelect) Draw(screen *ebiten.Image) {
 	}
 }
 
+func (s *SceneSelect) Done() bool { return false }
 func (s *SceneSelect) checkCharts() error {
 	return s.LoadCharts()
 }
@@ -140,7 +141,7 @@ func newChartPanel(c *mania.Chart) chartPanel {
 	img := image.NewRGBA(image.Rect(0, 0, 450, 40))
 	col := color.RGBA{200, 100, 0, 255}
 	x, y := 20, 30
-	point := fixed.Point26_6{fixed.Int26_6(x * 64), fixed.Int26_6(y * 64)}
+	point := fixed.Point26_6{X: fixed.Int26_6(x * 64), Y: fixed.Int26_6(y * 64)}
 	d := &font.Drawer{
 		Dst:  img,
 		Src:  image.NewUniform(col),
