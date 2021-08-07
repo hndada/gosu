@@ -4,26 +4,22 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
+type Judgment struct {
+	Value   float64
+	Penalty float64
+	HP      float64
+	Window  int64
+}
+
 var (
-	kool = game.Judgment{16 / 16, 0, 0.75, 16}
-	cool = game.Judgment{15 / 16, 0, 0.5, 40}
-	good = game.Judgment{10 / 16, 4, 0.25, 70}
-	bad  = game.Judgment{4 / 16, 10, 0, 100}
-	miss = game.Judgment{0, 25, -3, 150}
+	kool  = game.Judgment{Value: 1.0000, Penalty: 0, HP: 0.75, Window: 16}
+	cool  = game.Judgment{Value: 0.9375, Penalty: 0, HP: 0.5, Window: 40} // 15/16
+	good  = game.Judgment{Value: 0.625, Penalty: 4, HP: 0.25, Window: 70} // 10/16
+	bad   = game.Judgment{Value: 0.25, Penalty: 10, HP: 0, Window: 100}
+	miss  = game.Judgment{Value: 0, Penalty: 25, HP: -3, Window: 150}
+	empty = game.Judgment{}
 )
 var judgments = [5]game.Judgment{kool, cool, good, bad, miss}
-
-// func judge(time int64) mode.Judgment {
-// 	if time < 0 {
-// 		time *= -1
-// 	}
-// 	for _, judge := range judgments {
-// 		if time <= judge.Window {
-// 			return judge
-// 		}
-// 	}
-// 	return miss // todo: 미스 범위보다 멀면 그냥 무시
-// }
 
 const (
 	idle = iota
