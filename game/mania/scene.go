@@ -6,16 +6,14 @@ import (
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
 	"github.com/hndada/gosu/game"
-	"github.com/moutend/go-hook/pkg/types"
 
-	// _ "github.com/silbinarywolf/preferdiscretegpu"
 	"image"
 	_ "image/jpeg"
-	"sort"
-	"time"
 )
 
-// 판정선 가운데에 노트 가운데가 맞을 때 Max가 뜨게 (거의 다 구현한듯)
+// lnhead와 lntail 분리 유지
+// keyboardChannel (kbChan) 삭제
+// scene이 최종 패키지에 전부 import 됨 (no cycle dependency)
 // 내 생각에 지금 느린건 (혹은 느리다고 보이는건) audio가 Time을 제대로 안내주기 때문인거 같음 -> 맞음
 // 이전 값에 상관없이 언제나 다시 그리므로 applySpeed()가 따로 필요 없음
 // 최종 이미지는 언제나 사이즈가 int, int이므로 image.Point로 다뤄도 됨
@@ -38,9 +36,7 @@ type Scene struct { // aka Clavier
 	displayScale float64
 
 	audioPlayer *game.AudioPlayer
-	// sfxBuffer map[string]*beep.Buffer
-	kbChan  *game.KeyboardEventChannel
-	layout  []types.VKCode
+	// layout      []types.VKCode
 	endTime int64
 
 	score    float64
@@ -48,14 +44,12 @@ type Scene struct { // aka Clavier
 	hp       float64
 	combo    int32
 	stampIdx int
-	logs     []keyLog
 
 	lastPressed []bool
 	staged      []int
+	done        bool
 }
 
-// tools.Stamp를 통해서 구현하려 했다가 element 설정에서 fail
-// 각 타입 별로 (float64 등) 만들면 그때 비로소 쓸 수 있을 듯
 type timeStamp struct {
 	time     int64
 	nextTime int64
@@ -63,32 +57,12 @@ type timeStamp struct {
 	factor   float64
 }
 
-type keyLog struct {
-	time  int64
-	state []bool
-}
-
-// time series; acending order
-func SearchKeyLog(logs []keyLog, time int64) int {
-	idx := sort.Search(len(logs), func(i int) bool { return logs[i].time >= time })
-	if idx < len(logs) && logs[idx].time == time {
-		return idx
-	}
-	return -1
-}
-
-// 없다면, 추가하고 Sort해야함
-func SortKeyLogs(logs []keyLog) {
-	sort.Slice(logs, func(i, j int) bool { return logs[i].time < logs[j].time })
-}
-
-// lnhead와 lntail 분리 유지
 func NewScene(c *Chart, mods Mods) *Scene {
 	s := &Scene{}
 	s.mods = mods
 	s.chart = c.ApplyMods(s.mods)
 	// todo: 노트가 언제나 양수 시간에 있다고 상정; 실제로는 노트가 BufferTime보다 뒤에 있을 수 있음
-	initSpeedFactor := game.SpeedFactorPoint{0, 1}
+	initSpeedFactor := game.SpeedFactorPoint{Time: 0, Factor: 1}
 	s.speedFactors = append([]game.SpeedFactorPoint{initSpeedFactor}, s.chart.TimingPoints.SpeedFactors...)
 	s.stamps = make([]timeStamp, len(s.speedFactors))
 	var position float64
@@ -168,7 +142,6 @@ func NewScene(c *Chart, mods Mods) *Scene {
 	default:
 		dimness = game.GeneralDimness()
 	}
-	// dim 을 바꾸는 입력이 들어왔다면 별도 함수 없이 즉석에서 s.bgop.ColorM.Reset() 날리고 다시 설정.
 	s.bgop.ColorM.ChangeHSV(0, 1, float64(dimness)/100)
 
 	switch {
@@ -179,20 +152,9 @@ func NewScene(c *Chart, mods Mods) *Scene {
 	s.displayScale = game.ScaleY()
 
 	s.audioPlayer = game.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename))
-	s.kbChan, err = game.NewKeyboardEventChannel()
-	if err != nil {
-		panic(err)
-	}
-	s.layout = Settings.KeyLayout[s.chart.Keys]
+	// s.layout = Settings.KeyLayout[s.chart.Keys]
 	s.endTime = s.chart.EndTime()
 
-	// const BufferTime = 2
-	// s.tick = -int64(BufferTime * s.g.MaxTPS())
-	s.logs = make([]keyLog, 0, 1e4)
-	s.logs = append(s.logs, keyLog{
-		time:  -2 * game.Millisecond,
-		state: make([]bool, s.chart.Keys),
-	})
 	s.karma = 100
 	s.hp = 100
 	s.lastPressed = make([]bool, s.chart.Keys)
@@ -209,11 +171,16 @@ func NewScene(c *Chart, mods Mods) *Scene {
 			}
 		}
 	}
+	s.done = false
 	return s
 }
 
-// todo: scored 된 롱노트들 (일반 노트까지?) 회색 처리
 func (s *Scene) Update() error {
+	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
+		_ = s.audioPlayer.Close()
+		s.done = true
+	}
+
 	now := s.Time()
 	var stamp timeStamp
 	for si := range s.stamps[s.stampIdx:] {
@@ -233,12 +200,33 @@ func (s *Scene) Update() error {
 		s.lnotes[i].height = n.length * s.speed * s.displayScale
 	}
 	s.Tick++
+
+	// 매 업데이트마다 score 업데이트; staged도 따라서 업데이트
+	var keyEvents []keyEvent
+	for _, e := range keyEvents {
+		s.judge(e)
+	}
+
+	// 따로 처리: lost, scored되고 시간 다 된 LNTail
+	lost := func(timeDiff int64) bool { return timeDiff < -bad.Window } // never hit
+	flushable := func(n Note, timeDiff int64) bool { return n.scored && timeDiff < miss.Window }
+	for k, i := range s.staged {
+		n := s.chart.Notes[i]
+		timeDiff := n.Time - s.Time()
+
+		if lost(timeDiff) {
+			s.applyScore(i, miss)
+		}
+
+		if n.Type == TypeLNTail && flushable(n, timeDiff) {
+			s.staged[k] = n.next
+		}
+	}
 	return nil
 }
 
 func (s *Scene) Draw(screen *ebiten.Image) {
-	// 키 버튼 그리기
-	// 스코어, hp, 콤보, 시간 그리기; hp는 마스크 이미지를 씌우면 되지 않을까
+	// hp는 마스크 이미지를 씌우면 되지 않을까
 	screen.DrawImage(s.bg, s.bgop)
 	screen.DrawImage(s.stage.Fixed.Image(), &ebiten.DrawImageOptions{})
 	for _, n := range s.lnotes {
@@ -267,22 +255,8 @@ combo: %d
 func (s *Scene) Init() {
 	ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", s.chart.MusicName, s.chart.ChartName))
 	s.audioPlayer.Play()
-	s.kbChan.SetStartTime(time.Now())
-	go s.processInput()
 }
 
-// 노트 효율적으로 하강시키기 위해 시도했던 방법 중 하나
-// 모종의 이유로 update가 누락되어도 오디오가 재생되는 거에 맞춰서 스크린 그려지게 하려면 이 방법은 쓰면 안됨
-// const ApproachDuration = 1500
-// step1ms := float64(s.g.ScreenSize().Y) / ApproachDuration
-// s.step = func(ms int64) float64 { return float64(ms) * step1ms }
-
-func (s *Scene) Close() error {
-	if err := s.kbChan.Close(); err != nil {
-		return err
-	}
-	_ = s.audioPlayer.Close()
-	// todo: done 채널에 신호 보내기
-	// s.g.changeScene(s.g.NewSceneSelect())
-	return nil
+func (s *Scene) Done() bool {
+	return s.done
 }
