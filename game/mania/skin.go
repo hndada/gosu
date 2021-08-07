@@ -1,9 +1,10 @@
 package mania
 
 import (
+	"path/filepath"
+
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/game"
-	"path/filepath"
 )
 
 type skinTemplate struct {
