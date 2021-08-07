@@ -9,10 +9,11 @@ import (
 	"path/filepath"
 )
 
-// 스코어, hp 고치기
-// pp
 var MaxTransCountDown int
 
+const gosuPath = `E:\gosu\`
+
+// Game: path + Renderer
 type Game struct {
 	path           string
 	Scene          Scene
@@ -22,31 +23,23 @@ type Game struct {
 	TransCountdown int
 }
 
-// 실제 파일을 자주 불러오는듯
-// skin: *ebiten.Image, raw 이미지들
-// sprites: *ebiten.Image, 크기랑 position 맞춰진 이미지들
-
-// todo: Load, Save settings
-// type settings struct {
-// 	common game.SettingsTemplate
-// 	mania  mania.SettingsTemplate
-// }
-type Scene interface { // Scene이 Game을 control하는 주체
+// Scene: an actual thing that control the game
+type Scene interface {
 	Init()
 	Update() error
 	Draw(screen *ebiten.Image) // Draws scene to screen
+	Done() bool
 }
 
 func NewGame() *Game {
 	g := &Game{}
-	g.path = `D:\gosu\`
+	g.path = gosuPath
 
 	game.LoadSettings()
 	mania.ResetSettings()
 	mania.LoadSpriteMap(filepath.Join(g.path, "Skin"))
 	g.Scene = g.NewSceneSelect()
 
-	// g.SceneChanger = g.NewSceneChanger()
 	p := game.ScreenSize()
 	g.TransSceneFrom, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
 	g.TransSceneTo, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
@@ -59,6 +52,9 @@ func NewGame() *Game {
 
 func (g *Game) Update(screen *ebiten.Image) error {
 	if g.TransCountdown <= 0 { // == 0
+		if g.Scene.Done() {
+			g.ChangeScene(g.NewSceneSelect()) // temp
+		}
 		return g.Scene.Update()
 	}
 	g.TransCountdown--
@@ -70,9 +66,6 @@ func (g *Game) Update(screen *ebiten.Image) error {
 	g.NextScene = nil
 	g.Scene.Init()
 	return nil
-	// if !g.SceneChanger.done() {
-	// 	return g.SceneChanger.Update()
-	// }
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -103,18 +96,10 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 	return game.ScreenSize().X, game.ScreenSize().Y
 }
 
-func (g *Game) changeScene(s Scene) {
+func (g *Game) ChangeScene(s Scene) {
 	g.NextScene = s
 	g.TransCountdown = MaxTransCountDown
 }
 
-// reset    save cancel
-// 설정 켜면 임시 세팅이 생성, 임시 세팅으로 실시간 보여주기
-// save 누르면 실제 세팅으로 값복사
-// game에서 세팅 바꾸면 Sprite 자동 갱신
-
-// PlayIntro, PlayExit
 // BasePlayScene (base struct), PlayScene (interface)
 // PlayScene, 각 mode 패키지에다가 구현해야 할까?
-
-// float64, fixed로 고칠건 따로 안 보임
