@@ -9,12 +9,26 @@ import (
 	"path/filepath"
 )
 
+// singleton style
+// var (
+//     g Game
+//     sSelect SceneSelect
+// )
+
+// init() {
+//     g = NewGame()
+//     sSelect = NewSceneSelect()
+// }
+
 var MaxTransCountDown int
 
 const gosuPath = `E:\gosu\`
 
+// BasePlayScene (base struct), PlayScene (interface)
+// PlayScene, 각 mode 패키지에다가 구현해야 할까?
 // Game: path + Renderer
 type Game struct {
+	cwd            string // current working dir
 	path           string
 	Scene          Scene
 	NextScene      Scene
@@ -101,5 +115,6 @@ func (g *Game) ChangeScene(s Scene) {
 	g.TransCountdown = MaxTransCountDown
 }
 
-// BasePlayScene (base struct), PlayScene (interface)
-// PlayScene, 각 mode 패키지에다가 구현해야 할까?
+func (g Game) GetCWD() string {
+	return g.cwd
+}
