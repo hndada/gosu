@@ -149,12 +149,14 @@ func newSceneNotes(c *Chart, timeStamps []timeStamp) sceneNotes {
 		case TypeLNHead:
 			lastLNHeads[n.Key] = i
 		case TypeLNTail:
-			var ls LNSprite
-			ls.head = &s.notes[lastLNHeads[n.Key]]
-			ls.tail = &s.notes[i]
-			ls.i = stageSprite.LNBodys[n.Key][0].Image()
+			ls := LNSprite{
+				head: &s.notes[lastLNHeads[n.Key]],
+				tail: &s.notes[i],
+
+				i:      stageSprite.LNBodys[n.Key][0].Image(),
+				bodyop: &ebiten.DrawImageOptions{},
+			}
 			ls.length = ls.tail.position - ls.head.position
-			ls.bodyop = &ebiten.DrawImageOptions{}
 			s.lnotes = append(s.lnotes, ls)
 		}
 	}
@@ -207,7 +209,7 @@ func newSceneTally() sceneTally {
 }
 
 func NewScene(c *Chart, mods Mods) *Scene {
-	s := &Scene{}
+	s := new(Scene)
 	s.sceneSettings = newSceneSettings()
 	s.sceneChart = newSceneChart(c, mods)
 	s.sceneImage = newSceneImage(c)
@@ -297,6 +299,10 @@ func (s *Scene) Init() {
 	s.AudioPlayer.Play()
 }
 
-func (s *Scene) Done() bool {
+func (s *Scene) Done(args *game.TransSceneArgs) bool {
+	if s.done && args.Next == "" {
+		args.Next = "sceneSelect"
+		args.Args = nil
+	}
 	return s.done
 }

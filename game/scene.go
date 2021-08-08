@@ -5,6 +5,12 @@ type PlayScene struct {
 	AudioPlayer *AudioPlayer
 }
 
+type TransSceneArgs struct {
+	// 자기 자신은 .(type)으로 알 수 있음
+	Next string // next scene name
+	Args interface{}
+}
+
 // always follows audio's time
 // func (s *Scene) Time() int64 {
 // 	return s.audioPlayer.Time().Milliseconds()
