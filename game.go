@@ -1,6 +1,8 @@
 package gosu
 
 import (
+	"reflect"
+
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/mania"
@@ -8,17 +10,6 @@ import (
 	// _ "github.com/silbinarywolf/preferdiscretegpu"
 	"path/filepath"
 )
-
-// singleton style
-// var (
-//     g Game
-//     sSelect SceneSelect
-// )
-
-// init() {
-//     g = NewGame()
-//     sSelect = NewSceneSelect()
-// }
 
 var MaxTransCountDown int
 
@@ -35,14 +26,17 @@ type Game struct {
 	TransSceneFrom *ebiten.Image
 	TransSceneTo   *ebiten.Image
 	TransCountdown int
+
+	args game.TransSceneArgs
 }
 
 // Scene: an actual thing that control the game
+// 다음 scene에게 필요한 정보를 넘겨줘야 함
 type Scene interface {
 	Init()
 	Update() error
-	Draw(screen *ebiten.Image) // Draws scene to screen
-	Done() bool
+	Draw(screen *ebiten.Image)           // Draws scene to screen
+	Done(args *game.TransSceneArgs) bool // 모든 passed parameter는 Passed by Value.
 }
 
 func NewGame() *Game {
@@ -52,13 +46,14 @@ func NewGame() *Game {
 	game.LoadSettings()
 	mania.ResetSettings()
 	mania.LoadSpriteMap(filepath.Join(g.path, "Skin"))
-	g.Scene = g.NewSceneSelect()
+	g.Scene = newSceneSelect(g.path)
 
 	p := game.ScreenSize()
 	g.TransSceneFrom, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
 	g.TransSceneTo, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
 	MaxTransCountDown = game.MaxTPS() * 4 / 5
 
+	g.args = game.TransSceneArgs{}
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetRunnableOnUnfocused(true)
 	return g
@@ -66,8 +61,24 @@ func NewGame() *Game {
 
 func (g *Game) Update(screen *ebiten.Image) error {
 	if g.TransCountdown <= 0 { // == 0
-		if g.Scene.Done() {
-			g.ChangeScene(g.NewSceneSelect()) // temp
+		if g.Scene.Done(&g.args) {
+			switch g.Scene.(type) {
+			case *sceneSelect:
+				switch g.args.Next {
+				case "mania.Scene":
+					v := reflect.ValueOf(g.args.Args)
+					chart := v.FieldByName("Chart").Interface().(*mania.Chart)
+					mods := v.FieldByName("Mods").Interface().(mania.Mods)
+					s2 := mania.NewScene(chart, mods)
+					g.ChangeScene(s2)
+				}
+			case *mania.Scene:
+				s2 := newSceneSelect(g.path) // temp: 매번 새로 만들 필요는 없음
+				g.ChangeScene(s2)
+			default:
+				panic("not reach")
+			}
+			g.args = game.TransSceneArgs{}
 		}
 		return g.Scene.Update()
 	}
@@ -115,6 +126,6 @@ func (g *Game) ChangeScene(s Scene) {
 	g.TransCountdown = MaxTransCountDown
 }
 
-func (g Game) GetCWD() string {
+func (g Game) CWD() string {
 	return g.cwd
 }

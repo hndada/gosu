@@ -19,30 +19,51 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
-type SceneSelect struct {
-	g         *Game
+type sceneSelect struct {
+	path      string
+	mods      mania.Mods
 	charts    []chartPanel
 	cursor    int
-	mods      mania.Mods
 	holdCount int
+
+	args argsSelect2Mania
+	done bool
 }
 
-func (g *Game) NewSceneSelect() *SceneSelect {
-	s := &SceneSelect{}
-	s.g = g
+func newSceneSelect(path string) *sceneSelect {
+	s := new(sceneSelect)
+	ebiten.SetWindowTitle("gosu")
+	s.path = path
 	s.mods = mania.Mods{
 		TimeRate: 1,
 		Mirror:   false,
 	}
-	ebiten.SetWindowTitle("gosu")
 	_ = s.checkCharts()
+	s.done = false
 	return s
 }
 
-func (s *SceneSelect) Init() {}
-func (s *SceneSelect) Update() error {
+// reflect: fields should be exported
+type argsSelect2Mania struct {
+	Chart *mania.Chart
+	Mods  mania.Mods
+}
+
+func (s *sceneSelect) Done(args *game.TransSceneArgs) bool {
+	if s.done && args.Next == "" {
+		args.Next = "mania.Scene"
+		args.Args = s.args
+	}
+	return s.done
+}
+func (s *sceneSelect) Init() {}
+func (s *sceneSelect) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
-		s.g.ChangeScene(mania.NewScene(s.charts[s.cursor].chart, s.mods))
+		s.args = argsSelect2Mania{
+			Chart: s.charts[s.cursor].chart,
+			Mods:  s.mods,
+		}
+		s.done = true
 		s.holdCount = 0
 	} else if ebiten.IsKeyPressed(ebiten.KeyDown) {
 		if s.holdCount >= 10 {
@@ -78,7 +99,7 @@ func (s *SceneSelect) Update() error {
 	return nil
 }
 
-func (s *SceneSelect) Draw(screen *ebiten.Image) {
+func (s *sceneSelect) Draw(screen *ebiten.Image) {
 	for i, c := range s.charts {
 		s.charts[i].op.GeoM.Reset()
 		s.charts[i].op.GeoM.Translate(float64(c.x), float64(c.y))
@@ -86,15 +107,14 @@ func (s *SceneSelect) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (s *SceneSelect) Done() bool { return false }
-func (s *SceneSelect) checkCharts() error {
+func (s *sceneSelect) checkCharts() error {
 	return s.LoadCharts()
 }
 
 // 로드된 차트 데이터는 gob로 저장
-func (s *SceneSelect) LoadCharts() error {
+func (s *sceneSelect) LoadCharts() error {
 	s.charts = make([]chartPanel, 0, 100)
-	dirs, err := ioutil.ReadDir(filepath.Join(s.g.path, "Music"))
+	dirs, err := ioutil.ReadDir(filepath.Join(s.path, "Music"))
 	if err != nil {
 		return err
 	}
@@ -102,7 +122,7 @@ func (s *SceneSelect) LoadCharts() error {
 		if !d.IsDir() {
 			continue
 		}
-		dpath := filepath.Join(s.g.path, "Music", d.Name())
+		dpath := filepath.Join(s.path, "Music", d.Name())
 		files, err := ioutil.ReadDir(dpath)
 		if err != nil {
 			return err
