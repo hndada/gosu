@@ -24,6 +24,7 @@ type Scene struct {
 	ready      bool      // whether scene has been loaded
 	startTime  time.Time // int64
 	initUpdate bool
+	auto       func(int64) []keyEvent
 }
 type sceneSettings struct {
 	speed        float64
@@ -147,6 +148,23 @@ func newSceneNotes(c *Chart, timeStamps []timeStamp) sceneNotes {
 		s.notes[i] = ns
 	}
 
+	// set position of notes
+	// should be precede lnotes loading
+	// performance: range timeStamps를 outer loop로 두고 짜도 큰 차이 없을 듯
+	var timeStampIdx int
+	ts := timeStamps[0]
+	for i, n := range c.Notes {
+		for si := range timeStamps[timeStampIdx:] {
+			if n.Time < timeStamps[timeStampIdx+si].nextTime {
+				if si != 0 {
+					ts = timeStamps[timeStampIdx+si]
+					timeStampIdx += si
+				}
+				break
+			}
+		}
+		s.notes[i].position = float64(n.Time-ts.time)*ts.factor + ts.position
+	}
 	s.lnotes = make([]LNSprite, 0, c.LNCount())
 	lastLNHeads := make([]int, c.Keys)
 	for i, n := range c.Notes {
@@ -166,22 +184,6 @@ func newSceneNotes(c *Chart, timeStamps []timeStamp) sceneNotes {
 		}
 	}
 
-	// set position of notes
-	// performance: range timeStamps를 outer loop로 두고 짜도 큰 차이 없을 듯
-	var timeStampIdx int
-	ts := timeStamps[0]
-	for i, n := range c.Notes {
-		for si := range timeStamps[timeStampIdx:] {
-			if n.Time < timeStamps[timeStampIdx+si].nextTime {
-				if si != 0 {
-					ts = timeStamps[timeStampIdx+si]
-					timeStampIdx += si
-				}
-				break
-			}
-		}
-		s.notes[i].position = float64(n.Time-ts.time)*ts.factor + ts.position
-	}
 	return *s
 }
 
@@ -215,7 +217,6 @@ func newSceneTally() sceneTally {
 
 func NewScene(c *Chart, mods Mods) *Scene {
 	s := new(Scene)
-	// s.initUpdate = false // no use
 	s.sceneSettings = newSceneSettings()
 	s.sceneChart = newSceneChart(c, mods)
 	s.sceneImage = newSceneImage(c)
@@ -223,13 +224,14 @@ func NewScene(c *Chart, mods Mods) *Scene {
 	s.sceneState = newSceneState(c)
 	s.sceneTally = newSceneTally()
 	s.AudioPlayer = game.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename))
+	s.auto = s.chart.GenAutoKeyEvents()
 	s.ready = true
+	// fmt.Println(s.speed, s.displayScale) 여기서부터
 	return s
 }
 
 func (s *Scene) Ready() bool { return s.ready }
 
-// deltaTime 써볼까
 func (s *Scene) Update() error {
 	var now int64
 	if !s.initUpdate {
@@ -266,8 +268,7 @@ func (s *Scene) Update() error {
 	s.Tick++
 
 	// judge: score과 staged도 따라서 업데이트
-	var keyEvents []keyEvent
-	for _, e := range keyEvents {
+	for _, e := range s.auto(now) {
 		s.judge(e)
 	}
 

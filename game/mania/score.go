@@ -115,8 +115,14 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 		s.combo = 0
 	}
 	// hp
-	s.hp += n.hp * j.HP
-
+	if s.hp > 0 {
+		s.hp += n.hp * j.HP
+		if s.hp > 100 {
+			s.hp = 100
+		} else {
+			s.hp = 0
+		}
+	}
 	// apply one more for LNTail when LNHead is missed
 	if n.Type == TypeLNHead && j == miss {
 		s.applyScore(n.next, miss)

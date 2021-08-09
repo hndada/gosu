@@ -1,4 +1,5 @@
-"오토"로 돌아가게 설정
+치면 효과음 나오게 -> 싱크 확인에 적절
+키보드 hook
 
 * Song -> Music
 * Title -> MusicName
