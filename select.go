@@ -26,8 +26,9 @@ type sceneSelect struct {
 	cursor    int
 	holdCount int
 
-	args argsSelect2Mania
-	done bool
+	args  argsSelect2Mania
+	ready bool
+	done  bool
 }
 
 func newSceneSelect(path string) *sceneSelect {
@@ -39,7 +40,7 @@ func newSceneSelect(path string) *sceneSelect {
 		Mirror:   false,
 	}
 	_ = s.checkCharts()
-	s.done = false
+	s.ready = true
 	return s
 }
 
@@ -49,6 +50,7 @@ type argsSelect2Mania struct {
 	Mods  mania.Mods
 }
 
+func (s *sceneSelect) Ready() bool { return s.ready }
 func (s *sceneSelect) Done(args *game.TransSceneArgs) bool {
 	if s.done && args.Next == "" {
 		args.Next = "mania.Scene"
@@ -56,7 +58,6 @@ func (s *sceneSelect) Done(args *game.TransSceneArgs) bool {
 	}
 	return s.done
 }
-func (s *sceneSelect) Init() {}
 func (s *sceneSelect) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		s.args = argsSelect2Mania{
@@ -66,7 +67,7 @@ func (s *sceneSelect) Update() error {
 		s.done = true
 		s.holdCount = 0
 	} else if ebiten.IsKeyPressed(ebiten.KeyDown) {
-		if s.holdCount >= 10 {
+		if s.holdCount >= 2 { // todo: MaxTPS가 변하여도 체감 시간은 그대로이게 설정
 			s.cursor++
 			if s.cursor >= len(s.charts) {
 				s.cursor = 0
@@ -76,7 +77,7 @@ func (s *sceneSelect) Update() error {
 			s.holdCount++
 		}
 	} else if ebiten.IsKeyPressed(ebiten.KeyUp) {
-		if s.holdCount >= 10 {
+		if s.holdCount >= 2 {
 			s.cursor--
 			if s.cursor < 0 {
 				s.cursor = len(s.charts) - 1

@@ -19,6 +19,9 @@ type Scene struct {
 	sceneNotes    // partially constant
 	sceneState
 	sceneTally
+
+	ready       bool // whether scene has been loaded
+	firstUpdate bool
 }
 type sceneSettings struct {
 	speed        float64
@@ -164,18 +167,18 @@ func newSceneNotes(c *Chart, timeStamps []timeStamp) sceneNotes {
 	// set position of notes
 	// performance: range timeStamps를 outer loop로 두고 짜도 큰 차이 없을 듯
 	var timeStampIdx int
-	timeStamp := timeStamps[0]
+	ts := timeStamps[0]
 	for i, n := range c.Notes {
 		for si := range timeStamps[timeStampIdx:] {
 			if n.Time < timeStamps[timeStampIdx+si].nextTime {
 				if si != 0 {
-					timeStamp = timeStamps[timeStampIdx+si]
+					ts = timeStamps[timeStampIdx+si]
 					timeStampIdx += si
 				}
 				break
 			}
 		}
-		s.notes[i].position = float64(n.Time-timeStamp.time)*timeStamp.factor + timeStamp.position
+		s.notes[i].position = float64(n.Time-ts.time)*ts.factor + ts.position
 	}
 	return *s
 }
@@ -217,26 +220,34 @@ func NewScene(c *Chart, mods Mods) *Scene {
 	s.sceneState = newSceneState(c)
 	s.sceneTally = newSceneTally()
 	s.AudioPlayer = game.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename))
+	s.Tick = 0 // 초기화
+	s.ready = true
 	return s
 }
 
+func (s *Scene) Ready() bool { return s.ready }
+
 func (s *Scene) Update() error {
-	if ebiten.IsKeyPressed(ebiten.KeyEscape) {
+	if ebiten.IsKeyPressed(ebiten.KeyEscape) || s.Time() > s.endTime+2000 { // temp: 2초 여유 두기
 		_ = s.AudioPlayer.Close()
 		s.done = true
 	}
-
+	if !s.firstUpdate {
+		ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", s.chart.MusicName, s.chart.ChartName))
+		s.AudioPlayer.Play()
+		s.firstUpdate = true
+	}
 	now := s.Time()
-	var timeStamp timeStamp
+	var ts timeStamp
 	for si := range s.timeStamps[s.timeStampIdx:] {
 		if now < s.timeStamps[s.timeStampIdx+si].nextTime {
-			timeStamp = s.timeStamps[s.timeStampIdx+si]
+			ts = s.timeStamps[s.timeStampIdx+si]
 			s.timeStampIdx += si
 			break
 		}
 	}
 
-	measure := float64(now-timeStamp.time)*timeStamp.factor + timeStamp.position
+	measure := float64(now-ts.time)*ts.factor + ts.position
 	for i, n := range s.notes {
 		pos := (n.position-measure)*s.speed - s.hitPosition
 		s.notes[i].y = -pos*s.displayScale + float64(n.h)/2
@@ -256,6 +267,9 @@ func (s *Scene) Update() error {
 	lost := func(timeDiff int64) bool { return timeDiff < -bad.Window } // never hit
 	flushable := func(n Note, timeDiff int64) bool { return n.scored && timeDiff < miss.Window }
 	for k, i := range s.staged {
+		if i < 0 {
+			continue
+		}
 		n := s.chart.Notes[i]
 		timeDiff := n.Time - s.Time()
 
@@ -292,11 +306,6 @@ hp: %.2f
 combo: %d
 `, ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000,
 		s.score, s.karma, s.hp, s.combo))
-}
-
-func (s *Scene) Init() {
-	ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", s.chart.MusicName, s.chart.ChartName))
-	s.AudioPlayer.Play()
 }
 
 func (s *Scene) Done(args *game.TransSceneArgs) bool {

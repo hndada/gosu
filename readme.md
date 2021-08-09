@@ -1,3 +1,5 @@
+"오토"로 돌아가게 설정
+
 * Song -> Music
 * Title -> MusicName
 * BaseChart -> ChartHeader 
