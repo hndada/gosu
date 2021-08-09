@@ -1,9 +1,10 @@
 package mania
 
 import (
-	"github.com/moutend/go-hook/pkg/types"
 	"image"
 	"image/color"
+
+	"github.com/moutend/go-hook/pkg/types"
 )
 
 // 매냐: 세로 100 기준으로 가로 얼마 만큼 쓸래
@@ -51,7 +52,7 @@ func ResetSettings() {
 	}
 	Settings.NoteHeigth = 3
 	Settings.StagePosition = 50
-	Settings.HitPosition = 77
+	Settings.HitPosition = 85
 	Settings.ComboPosition = 50
 	Settings.HitResultPosition = 60
 	Settings.SpotlightColor = [4]color.RGBA{
