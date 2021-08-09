@@ -2,6 +2,7 @@ package mania
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
@@ -20,8 +21,9 @@ type Scene struct {
 	sceneState
 	sceneTally
 
-	ready       bool // whether scene has been loaded
-	firstUpdate bool
+	ready      bool      // whether scene has been loaded
+	startTime  time.Time // int64
+	initUpdate bool
 }
 type sceneSettings struct {
 	speed        float64
@@ -213,6 +215,7 @@ func newSceneTally() sceneTally {
 
 func NewScene(c *Chart, mods Mods) *Scene {
 	s := new(Scene)
+	// s.initUpdate = false // no use
 	s.sceneSettings = newSceneSettings()
 	s.sceneChart = newSceneChart(c, mods)
 	s.sceneImage = newSceneImage(c)
@@ -220,24 +223,29 @@ func NewScene(c *Chart, mods Mods) *Scene {
 	s.sceneState = newSceneState(c)
 	s.sceneTally = newSceneTally()
 	s.AudioPlayer = game.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename))
-	s.Tick = 0 // 초기화
 	s.ready = true
 	return s
 }
 
 func (s *Scene) Ready() bool { return s.ready }
 
+// deltaTime 써볼까
 func (s *Scene) Update() error {
-	if ebiten.IsKeyPressed(ebiten.KeyEscape) || s.Time() > s.endTime+2000 { // temp: 2초 여유 두기
-		_ = s.AudioPlayer.Close()
-		s.done = true
-	}
-	if !s.firstUpdate {
+	var now int64
+	if !s.initUpdate {
 		ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", s.chart.MusicName, s.chart.ChartName))
 		s.AudioPlayer.Play()
-		s.firstUpdate = true
+		// s.Tick = 0 // 초기화
+		s.startTime = time.Now()
+		s.initUpdate = true
+	} else {
+		// now := s.Time()
+		now = time.Now().Sub(s.startTime).Milliseconds()
+		if ebiten.IsKeyPressed(ebiten.KeyEscape) || now > s.endTime+2000 { // temp: 2초 여유 두기
+			_ = s.AudioPlayer.Close()
+			s.done = true
+		}
 	}
-	now := s.Time()
 	var ts timeStamp
 	for si := range s.timeStamps[s.timeStampIdx:] {
 		if now < s.timeStamps[s.timeStampIdx+si].nextTime {
@@ -271,7 +279,7 @@ func (s *Scene) Update() error {
 			continue
 		}
 		n := s.chart.Notes[i]
-		timeDiff := n.Time - s.Time()
+		timeDiff := n.Time - now
 
 		if lost(timeDiff) {
 			s.applyScore(i, miss)
@@ -285,6 +293,7 @@ func (s *Scene) Update() error {
 }
 
 func (s *Scene) Draw(screen *ebiten.Image) {
+	now := time.Now().Sub(s.startTime).Milliseconds()
 	screen.DrawImage(s.bg, s.bgop)
 	screen.DrawImage(s.fixedStageSprite, &ebiten.DrawImageOptions{})
 	for _, n := range s.lnotes {
@@ -304,7 +313,7 @@ score: %f
 karma: %.2f
 hp: %.2f
 combo: %d
-`, ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000,
+`, ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(now)/1000,
 		s.score, s.karma, s.hp, s.combo))
 }
 
