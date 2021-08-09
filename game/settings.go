@@ -90,10 +90,10 @@ func LoadSettings() {
 // }
 
 func ResetSettings() {
-	Settings.maxTPS = 240
+	Settings.maxTPS = 60
 	Settings.screenSize = image.Pt(800, 600)
 	Settings.generalDimness = 30
-	Settings.volumeMaster = 100
+	Settings.volumeMaster = 30
 	// Settings.volumeBGM = 50
 	// Settings.volumeSFX = 50
 }

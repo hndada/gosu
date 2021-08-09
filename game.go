@@ -30,10 +30,8 @@ type Game struct {
 	args game.TransSceneArgs
 }
 
-// Scene: an actual thing that control the game
-// 다음 scene에게 필요한 정보를 넘겨줘야 함
 type Scene interface {
-	Init()
+	Ready() bool
 	Update() error
 	Draw(screen *ebiten.Image)           // Draws scene to screen
 	Done(args *game.TransSceneArgs) bool // 모든 passed parameter는 Passed by Value.
@@ -89,13 +87,14 @@ func (g *Game) Update(screen *ebiten.Image) error {
 	// count down has just been from non-zero to zero
 	g.Scene = g.NextScene
 	g.NextScene = nil
-	g.Scene.Init()
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	if g.TransCountdown == 0 {
-		g.Scene.Draw(screen)
+		if g.Scene.Ready() {
+			g.Scene.Draw(screen)
+		}
 		return
 	}
 	var value float64
