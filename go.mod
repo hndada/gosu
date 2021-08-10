@@ -12,7 +12,7 @@ require (
 	github.com/moutend/go-hook v0.1.0
 	github.com/robotn/gohook v0.30.6
 	golang.org/x/exp v0.0.0-20200901203048-c4f52b2c50aa // indirect
-	golang.org/x/image v0.0.0-20200801110659-972c09e46d76
+	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
 	golang.org/x/mobile v0.0.0-20200801112145-973feb4309de // indirect
 	golang.org/x/sys v0.0.0-20200831180312-196b9ba8737a // indirect
 	gopkg.in/check.v1 v1.0.0-20200902074654-038fdea0a05b // indirect
