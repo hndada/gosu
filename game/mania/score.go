@@ -25,26 +25,30 @@ type Score struct {
 // LN holdHP. 추가하고자 한다면 lastPressed에 time value까지 추가
 // log 삭제. 리플레이는 별도 함수에서 처리하는 걸로
 func (c *Chart) allotScore() {
-	// 	var sumStrain float64
-	// 	for _, n := range c.Notes {
-	// 		sumStrain += n.strain
-	// 	}
-	// 	var avgStrain float64
-	// 	if len(c.Notes) != 0 {
-	// 		avgStrain = sumStrain / float64(len(c.Notes))
-	// 	}
+	var sumStrain float64
+	for _, n := range c.Notes {
+		sumStrain += n.strain
+	}
+	var avgStrain float64
+	if len(c.Notes) != 0 {
+		avgStrain = sumStrain / float64(len(c.Notes))
+	}
 	for i := range c.Notes {
-		// c.Notes[i].score = game.MaxScore * (n.strain / sumStrain)
-		// c.Notes[i].karma = math.Min(n.strain/avgStrain, 2.5)          // 0 ~ 2.5
-		// c.Notes[i].hp = math.Min(n.strain/(3*avgStrain)+2.0/3.0, 1.5) // 0 ~ 1.5
-		c.Notes[i].score = 1
-		c.Notes[i].karma = 1
-		c.Notes[i].hp = 1
+		n := c.Notes[i]
+		c.Notes[i].score = game.MaxScore * (n.strain / sumStrain)
+		c.Notes[i].karma = math.Min(n.strain/avgStrain, 2.5)          // 0 ~ 2.5
+		c.Notes[i].hp = math.Min(n.strain/(3*avgStrain)+2.0/3.0, 1.5) // 0 ~ 1.5
+		// c.Notes[i].score = 1
+		// c.Notes[i].karma = 1
+		// c.Notes[i].hp = 1
 	}
 }
 
 func (s *Scene) judge(e keyEvent) {
-	i := s.staged[e.key]  // index of a staged note
+	i := s.staged[e.key] // index of a staged note
+	if i < 0 {
+		return // todo: play sfx
+	}
 	n := s.chart.Notes[i] // staged note
 	keyAction := KeyAction(s.lastPressed[e.key], e.pressed)
 	timeDiff := n.Time - e.time
@@ -122,6 +126,9 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 		} else {
 			s.hp = 0
 		}
+	}
+	if n.Type != TypeLNTail && j != miss {
+		s.playSE()
 	}
 	// apply one more for LNTail when LNHead is missed
 	if n.Type == TypeLNHead && j == miss {
