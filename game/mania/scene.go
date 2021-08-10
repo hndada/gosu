@@ -6,10 +6,17 @@ import (
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
+	"github.com/hajimehoshi/ebiten/text"
 	"github.com/hndada/gosu/game"
 
 	"image"
+	"image/color"
 	_ "image/jpeg"
+)
+
+var (
+	screenWidth  = 800 //  game.ScreenSize().X // temp
+	screenHeight = 600 // game.ScreenSize().Y // temp
 )
 
 type Scene struct {
@@ -224,7 +231,7 @@ func NewScene(c *Chart, mods Mods) *Scene {
 	s.sceneNotes = newSceneNotes(c, s.timeStamps)
 	s.sceneState = newSceneState(c)
 	s.sceneTally = newSceneTally()
-	s.AudioPlayer = game.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename))
+	s.AudioPlayer = game.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename), 64)
 	s.AudioPlayer.Play()
 	s.AudioPlayer.Pause()
 	s.auto = s.chart.GenAutoKeyEvents()
@@ -318,6 +325,10 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 		s.notes[i].op.GeoM.Translate(n.x, n.y)
 		screen.DrawImage(n.i, s.notes[i].op)
 	}
+	scoreStr := fmt.Sprintf("%d", int(s.score))
+	comboStr := fmt.Sprintf("%d", s.combo)
+	text.Draw(screen, scoreStr, arcadeFont, screenWidth-4*fontSize, fontSize, color.White)
+	text.Draw(screen, comboStr, titleArcadeFont, screenWidth/2-1.5*fontSize/2, screenHeight/2-fontSize, color.White)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		`CurrentFPS: %.2f
 CurrentTPS: %.2f

@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten"
@@ -147,6 +148,13 @@ func (s *sceneSelect) LoadCharts() error {
 			}
 		}
 	}
+	sort.Slice(s.charts, func(i, j int) bool {
+		if s.charts[i].chart.Keys == s.charts[j].chart.Keys {
+			return s.charts[i].chart.Level < s.charts[j].chart.Level
+		} else {
+			return s.charts[i].chart.Keys < s.charts[j].chart.Keys
+		}
+	})
 	return nil
 }
 
@@ -169,7 +177,7 @@ func newChartPanel(c *mania.Chart) chartPanel {
 		Face: basicfont.Face7x13,
 		Dot:  point,
 	}
-	d.DrawString(fmt.Sprintf("(%dKey Lv.%.2f) %s [%s]", c.Keys, c.Level, c.MusicName, c.ChartName))
+	d.DrawString(fmt.Sprintf("(%dKey Lv %.1f) %s [%s]", c.Keys, c.Level, c.MusicName, c.ChartName))
 	cp.box, _ = ebiten.NewImageFromImage(img, ebiten.FilterDefault)
 	cp.op = &ebiten.DrawImageOptions{}
 	cp.chart = c

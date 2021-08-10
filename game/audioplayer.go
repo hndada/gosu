@@ -33,7 +33,7 @@ type AudioPlayer struct {
 }
 
 // todo: timeRate
-func NewAudioPlayer(audioPath string) *AudioPlayer {
+func NewAudioPlayer(audioPath string, volume int) *AudioPlayer {
 	b, err := ioutil.ReadFile(audioPath)
 	if err != nil {
 		panic(err)
