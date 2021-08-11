@@ -2,11 +2,12 @@ package game
 
 import (
 	"bytes"
-	"github.com/hajimehoshi/ebiten"
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
 	"io/ioutil"
+
+	"github.com/hajimehoshi/ebiten"
 )
 
 func BackgroundOp(screen, bg image.Point) *ebiten.DrawImageOptions {

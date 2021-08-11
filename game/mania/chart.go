@@ -1,6 +1,9 @@
 package mania
 
 import (
+	"path/filepath"
+	"strings"
+
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/rg-parser/osugame/osu"
 )
@@ -12,17 +15,26 @@ type Chart struct {
 }
 
 // raw 차트에는 Mods가 들어가면 안됨
-// Mods마다 TransPoint(TimingPoint), Note건듦
-func NewChartFromOsu(o *osu.Format, path string) (*Chart, error) {
+// Mods마다 TransPoint(TimingPoint), Note건드림
+func NewChart(path string) (*Chart, error) {
 	var c Chart
-	c.BaseChart = game.NewBaseChartFromOsu(o, path)
-	c.Keys = int(c.Parameter["Scale"])
-	err := c.loadNotes(o)
-	if err != nil {
-		panic(err)
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".osu":
+		o, err := osu.Parse(path)
+		if err != nil {
+			panic(err)
+		}
+		c.BaseChart = game.NewBaseChartFromOsu(o, path)
+		c.Keys = int(c.Parameter["Scale"])
+		err = c.loadNotesFromOsu(o)
+		if err != nil {
+			panic(err)
+		}
+		c.CalcDifficulty()
+		return &c, nil
+	default:
+		panic("not reach")
 	}
-	c.CalcDifficulty()
-	return &c, nil
 }
 
 func (c *Chart) ApplyMods(mods Mods) *Chart {
