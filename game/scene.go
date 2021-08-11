@@ -1,8 +1,10 @@
 package game
 
+import "github.com/hajimehoshi/ebiten/audio"
+
 type PlayScene struct {
 	Tick        int64
-	AudioPlayer *AudioPlayer
+	AudioPlayer *audio.Player
 }
 
 type TransSceneArgs struct {
@@ -10,11 +12,6 @@ type TransSceneArgs struct {
 	Next string // next scene name
 	Args interface{}
 }
-
-// always follows audio's time
-// func (s *Scene) Time() int64 {
-// 	return s.audioPlayer.Time().Milliseconds()
-// }
 
 // 이 방법을 하려면 tps가 게임 중에 변하지 않아야 함
 // CurrentTPS가 약간 딱 떨어지지 않는 게 마음에 걸리지만, 곧 보충되어 결과적으로 일정히 유지 된다고 상정하겠음
