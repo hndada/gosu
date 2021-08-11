@@ -14,7 +14,6 @@ import (
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/mania"
-	"github.com/hndada/rg-parser/osugame/osu"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
@@ -130,16 +129,12 @@ func (s *sceneSelect) LoadCharts() error {
 			return err
 		}
 		for _, f := range files {
-			switch strings.ToLower(filepath.Ext(f.Name())) {
+			fpath := filepath.Join(dpath, f.Name())
+			switch strings.ToLower(filepath.Ext(fpath)) {
 			case ".osu":
-				fpath := filepath.Join(dpath, f.Name())
-				o, err := osu.Parse(fpath)
-				if err != nil {
-					panic(err) // todo: log and continue
-				}
-				switch o.Mode {
-				case 3: // osu.ModeMania
-					c, err := mania.NewChartFromOsu(o, fpath)
+				switch game.OsuMode(fpath) {
+				case game.ModeMania:
+					c, err := mania.NewChart(fpath)
 					if err != nil {
 						panic(err) // todo: log and continue
 					}

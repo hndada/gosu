@@ -2,9 +2,10 @@ package mania
 
 import (
 	"errors"
+	"sort"
+
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/rg-parser/osugame/osu"
-	"sort"
 )
 
 const (
@@ -51,7 +52,7 @@ type Note struct {
 var ErrDuration = errors.New("invalid duration: not a positive value")
 
 // todo: Keys는 아무래도 헷갈리니, KeyCount로?
-func (c *Chart) loadNotes(o *osu.Format) error {
+func (c *Chart) loadNotesFromOsu(o *osu.Format) error {
 	c.Notes = make([]Note, 0, len(o.HitObjects)*2)
 	for _, ho := range o.HitObjects {
 		ns, err := newNote(ho, c.Keys)

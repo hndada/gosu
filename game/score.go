@@ -19,7 +19,6 @@ type BaseScore struct {
 	Combo      int32
 }
 
-// 인터페이스를 어케 쓰는지 뭔가 알았다
 // todo: mods
 type Score interface {
 	JudgeCounts() []int64
