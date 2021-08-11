@@ -231,7 +231,7 @@ func NewScene(c *Chart, mods Mods) *Scene {
 	s.sceneNotes = newSceneNotes(c, s.timeStamps)
 	s.sceneState = newSceneState(c)
 	s.sceneTally = newSceneTally()
-	s.AudioPlayer = game.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename), 64)
+	s.AudioPlayer = game.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename))
 	s.AudioPlayer.Play()
 	s.AudioPlayer.Pause()
 	s.auto = s.chart.GenAutoKeyEvents()
@@ -245,10 +245,7 @@ func (s *Scene) Ready() bool { return s.ready }
 // 음악이 그림보다 느리다
 // 여러번 로딩되면 음악이 그림 속도를 따라가다
 func (s *Scene) Update() error {
-	s.Tick++
-	if s.Tick < 20 { // 별 효용성이 없는 듯
-		return nil
-	}
+	// s.Tick++
 	var now int64
 	if !s.initUpdate {
 		ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", s.chart.MusicName, s.chart.ChartName))
@@ -256,19 +253,19 @@ func (s *Scene) Update() error {
 		// s.Tick = 0 // 초기화
 		s.startTime = time.Now()
 		s.initUpdate = true
-	} else {
-		// now := s.Time()
-		now = time.Now().Sub(s.startTime).Milliseconds() // - 180
-		// unsafe: 꼬로록 소리 남
-		// if now < 3000 {
-		//		s.AudioPlayer.Seek(time.Now().Sub(s.startTime))
-		//		}
-		if ebiten.IsKeyPressed(ebiten.KeyEscape) || now > s.endTime+2000 { // temp: 2초 여유 두기
-			_ = s.AudioPlayer.Close()
-			s.done = true
-		}
+		return nil
 	}
-	// fmt.Println(s.AudioPlayer.Time())
+	if !game.AudioContext.IsReady() {
+		return nil
+	}
+	now = time.Now().Sub(s.startTime).Milliseconds() // - 180
+	// if now < 3000 { // unsafe: 꼬로록 소리 남
+	//		s.AudioPlayer.Seek(time.Now().Sub(s.startTime))
+	//		}
+	if ebiten.IsKeyPressed(ebiten.KeyEscape) || now > s.endTime+2000 { // temp: 2초 여유 두기
+		_ = s.AudioPlayer.Close()
+		s.done = true
+	}
 	var ts timeStamp
 	for si := range s.timeStamps[s.timeStampIdx:] {
 		if now < s.timeStamps[s.timeStampIdx+si].nextTime {

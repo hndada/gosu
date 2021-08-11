@@ -7,7 +7,7 @@ func SEPlayer() func() {
 	skinPath := `E:\gosu\Skin\`
 	fname := "soft-slidertick.wav"
 	path = skinPath + fname
-	ap := game.NewAudioPlayer(path, 16) // 매번 새로 load?
+	ap := game.NewAudioPlayer(path)
 	return func() {
 		ap.Play()
 		ap.Rewind()
