@@ -14,13 +14,8 @@ import (
 	_ "image/jpeg"
 )
 
-var (
-	screenWidth  = 800 //  game.ScreenSize().X // temp
-	screenHeight = 600 // game.ScreenSize().Y // temp
-)
-
 type Scene struct {
-	game.PlayScene
+	game.Scene
 	sceneSettings // constant
 	sceneChart    // constant
 	sceneImage    // constant
@@ -78,14 +73,14 @@ type timeStamp struct {
 	factor   float64
 }
 
-func newSceneSettings() sceneSettings {
+func newSceneSettings(p image.Point) sceneSettings {
 	s := new(sceneSettings)
 	switch {
 	default:
 		s.speed = Settings.GeneralSpeed
 	}
 	s.hitPosition = Settings.HitPosition
-	s.displayScale = game.ScaleY()
+	s.displayScale = float64(p.Y / 100)
 	// s.layout = Settings.KeyLayout[s.chart.Keys]
 	return *s
 }
@@ -117,19 +112,15 @@ func newSceneChart(c *Chart, mods Mods) sceneChart {
 	}
 	return *s
 }
-func newSceneImage(c *Chart) sceneImage {
+func newSceneImage(c *Chart, p image.Point) sceneImage {
+	const dimness = 30
 	s := new(sceneImage)
 	bg, err := c.Background()
 	if err != nil {
 		panic(err)
 	}
 	s.bg = bg
-	s.bgop = game.BackgroundOp(game.ScreenSize(), image.Pt(s.bg.Size()))
-	var dimness uint8
-	switch {
-	default:
-		dimness = game.GeneralDimness()
-	}
+	s.bgop = game.BackgroundOp(p, image.Pt(s.bg.Size()))
 	s.bgop.ColorM.ChangeHSV(0, 1, float64(dimness)/100)
 	s.fixedStageSprite = SpriteMap.Stages[c.Keys].Fixed.Image()
 	return *s
@@ -224,18 +215,20 @@ func newSceneTally() sceneTally {
 	return *s
 }
 
-func NewScene(c *Chart, mods Mods) *Scene {
+func NewScene(c *Chart, mods Mods, p image.Point) *Scene {
+	const instability = 2 // 0~100; 0 is Auto
 	s := new(Scene)
-	s.sceneSettings = newSceneSettings()
+	s.ScreenSize = p
+	s.sceneSettings = newSceneSettings(p)
 	s.sceneChart = newSceneChart(c, mods)
-	s.sceneImage = newSceneImage(c)
+	s.sceneImage = newSceneImage(c, p)
 	s.sceneNotes = newSceneNotes(c, s.timeStamps)
 	s.sceneState = newSceneState(c)
 	s.sceneTally = newSceneTally()
 	s.AudioPlayer = game.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename))
 	s.AudioPlayer.Play()
 	s.AudioPlayer.Pause()
-	s.auto = s.chart.GenAutoKeyEvents(15)
+	s.auto = s.chart.GenAutoKeyEvents(instability)
 	s.playSE = SEPlayer()
 	s.ready = true
 	return s
@@ -325,8 +318,8 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 	}
 	scoreStr := fmt.Sprintf("%d", int(s.score))
 	comboStr := fmt.Sprintf("%d", s.combo)
-	text.Draw(screen, scoreStr, arcadeFont, screenWidth-4*fontSize, fontSize, color.White)
-	text.Draw(screen, comboStr, titleArcadeFont, screenWidth/2-1.5*fontSize/2, screenHeight/2-fontSize, color.White)
+	text.Draw(screen, scoreStr, arcadeFont, s.ScreenSize.X-4*fontSize, fontSize, color.White)
+	text.Draw(screen, comboStr, titleArcadeFont, s.ScreenSize.X/2-1.5*fontSize/2, s.ScreenSize.Y/2-fontSize, color.White)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		`CurrentFPS: %.2f
 CurrentTPS: %.2f
