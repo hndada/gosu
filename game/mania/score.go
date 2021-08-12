@@ -6,10 +6,10 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
-type Score struct {
-	game.BaseScore
-	Counts [len(judgments)]int
-}
+// type Score struct {
+// 	game.BaseScore
+// 	Counts [len(judgments)]int
+// }
 
 // 'Late hit' gets negative value in hit time difference
 // 놓친 롱노트 끝날 때 리플레이가 어떻게 박히는지는 아직 확인 안함
@@ -91,9 +91,24 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 	s.chart.Notes[i].scored = true
 	s.staged[n.Key] = n.next
 
+	switch j {
+	case kool:
+		s.judgeCounts[0]++
+	case cool:
+		s.judgeCounts[1]++
+	case good:
+		s.judgeCounts[2]++
+	case bad:
+		s.judgeCounts[3]++
+	case miss:
+		s.judgeCounts[4]++
+	default:
+		panic("not reach")
+	}
+
 	// score
 	if j.Value == 0 {
-		s.score += math.Max(-1e4, -4*n.score) // not lower than -10,000
+		s.score += math.Max(-800, -4*n.score) // not lower than -800
 		if s.score < 0 {                      // score is non-negative
 			s.score = 0
 		}
@@ -123,7 +138,7 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 		s.hp += n.hp * j.HP
 		if s.hp > 100 {
 			s.hp = 100
-		} else {
+		} else if s.hp < 0 {
 			s.hp = 0
 		}
 	}
@@ -136,15 +151,15 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 	}
 }
 
-func (s Score) JudgeCounts() []int { return s.Counts[:] }
-func (s Score) IsFullCombo() bool  { return s.Counts[4] == 0 }
-func (s Score) IsPerfect() bool {
-	for _, c := range s.Counts[2:] {
-		if c != 0 {
-			return false
-		}
-	}
-	return true
-}
+// func (s Score) JudgeCounts() []int { return s.Counts[:] }
+// func (s Score) IsFullCombo() bool  { return s.Counts[4] == 0 }
+// func (s Score) IsPerfect() bool {
+// 	for _, c := range s.Counts[2:] {
+// 		if c != 0 {
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }
 
 const holdUnitHP = 0.002 // 롱노트를 눌렀을 때 1ms 당 차오르는 체력

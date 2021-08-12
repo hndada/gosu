@@ -10,6 +10,8 @@ import (
 )
 
 func main() {
+	const instability = 15
+
 	path := `E:\gosu\Music\932851 Kurokotei - wtf\Kurokotei - wtf (FAMoss) [easy].osu`
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".osu":
@@ -19,7 +21,7 @@ func main() {
 			if err != nil {
 				panic(err) // todo: log and continue
 			}
-			autoGen := c.GenAutoKeyEvents()
+			autoGen := c.GenAutoKeyEvents(instability)
 			for t := 0; t < int(c.EndTime()); t += 60 {
 				fmt.Println(autoGen(int64(t)))
 			}
