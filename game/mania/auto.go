@@ -1,34 +1,49 @@
 package mania
 
-import "sort"
+import (
+	"math/rand"
+	"sort"
+)
 
-func (c Chart) GenAutoKeyEvents() func(int64) []keyEvent {
-	i := 0
+func (c Chart) GenAutoKeyEvents(instability float64) func(int64) []keyEvent {
+	i := 0 // closure
 	keyEvents := make([]keyEvent, 0, len(c.Notes)*2)
+	deviation := func(v float64) int64 {
+		d := int64(rand.NormFloat64() * v * 2)
+		if d > 20 { // temp: KOOL 더 띄우기
+			d = int64(rand.NormFloat64() * v * 2)
+		}
+		return d
+	}
+	var d int64
 	for _, n := range c.Notes {
+		d = deviation(instability)
+		if d > miss.Window { // lost
+			continue
+		}
 		switch n.Type {
 		case TypeNote:
 			e1 := keyEvent{
-				time:    n.Time,
+				time:    n.Time + d,
 				key:     n.Key,
 				pressed: true,
 			}
 			e2 := keyEvent{
-				time:    n.Time + 1,
+				time:    n.Time + 1 + d,
 				key:     n.Key,
 				pressed: false,
 			}
 			keyEvents = append(keyEvents, e1, e2)
 		case TypeLNHead:
 			e := keyEvent{
-				time:    n.Time,
+				time:    n.Time + d,
 				key:     n.Key,
 				pressed: true,
 			}
 			keyEvents = append(keyEvents, e)
 		case TypeLNTail:
 			e := keyEvent{
-				time:    n.Time, // Time2: opposite time
+				time:    n.Time + d, // Time2: opposite time
 				key:     n.Key,
 				pressed: false,
 			}

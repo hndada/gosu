@@ -2,12 +2,13 @@ package game
 
 import (
 	"fmt"
-	"github.com/hajimehoshi/ebiten"
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
 	"os"
 	"path/filepath"
+
+	"github.com/hajimehoshi/ebiten"
 )
 
 // todo: backward-compatibility하면 게임 스킨 파싱 버전 안 적어도 되나?

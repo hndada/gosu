@@ -28,11 +28,12 @@ type Scene struct {
 	sceneState
 	sceneTally
 
-	ready      bool      // whether scene has been loaded
-	startTime  time.Time // int64
-	initUpdate bool
-	auto       func(int64) []keyEvent
-	playSE     func()
+	ready       bool      // whether scene has been loaded
+	startTime   time.Time // int64
+	initUpdate  bool
+	auto        func(int64) []keyEvent
+	playSE      func()
+	judgeCounts [len(judgments)]int
 }
 type sceneSettings struct {
 	speed        float64
@@ -234,7 +235,7 @@ func NewScene(c *Chart, mods Mods) *Scene {
 	s.AudioPlayer = game.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename))
 	s.AudioPlayer.Play()
 	s.AudioPlayer.Pause()
-	s.auto = s.chart.GenAutoKeyEvents()
+	s.auto = s.chart.GenAutoKeyEvents(15)
 	s.playSE = SEPlayer()
 	s.ready = true
 	return s
@@ -335,8 +336,9 @@ score: %.0f
 karma: %.2f
 hp: %.2f
 combo: %d
+judge: %v
 `, ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(now)/1000,
-		s.score, s.karma, s.hp, s.combo))
+		s.score, s.karma, s.hp, s.combo, s.judgeCounts))
 }
 
 func (s *Scene) Done(args *game.TransSceneArgs) bool {
