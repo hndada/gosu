@@ -1,11 +1,12 @@
 package mania
 
 import (
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hndada/gosu/game"
 	"image"
 	"image/color"
 	"image/draw"
+
+	"github.com/hajimehoshi/ebiten"
+	"github.com/hndada/gosu/game"
 )
 
 // general setting 도 필요하고, mania 전용 setting도 필요하고
@@ -34,7 +35,7 @@ type Stage struct {
 
 var SpriteMap SpriteMapTemplate
 
-func LoadSpriteMap(skinPath string) {
+func LoadSpriteMap(skinPath string, p image.Point) {
 	if !game.SpriteMap.Loaded() {
 		game.LoadSpriteMap(skinPath)
 	}
@@ -45,14 +46,14 @@ func LoadSpriteMap(skinPath string) {
 	// for key := range keyKinds {
 	for _, key := range []int{4, 7} {
 		stage := Stage{Keys: key}
-		stage.Draw()
+		stage.Draw(p)
 		SpriteMap.Stages[key] = stage
 	}
 }
 
-func (s *Stage) Draw() {
+func (s *Stage) Draw(p image.Point) { // p: screen Size
 	// HPBarFrame: (폭맞춤, screenHeigth)
-	scale := game.ScaleY()
+	scale := float64(p.Y / 100)
 	noteKinds := keyKinds[s.Keys]
 	noteWidths := make([]int, s.Keys&ScratchMask)
 	h := int(Settings.NoteHeigth * scale)
@@ -62,11 +63,11 @@ func (s *Stage) Draw() {
 		noteWidths[key] = w
 		fieldWidth += w
 	}
-	stageOffset := StageCenter(game.ScreenSize()) - (fieldWidth)/2 // int - int. 전자는 Position일 뿐.
+	stageOffset := StageCenter(p) - (fieldWidth)/2 // int - int. 전자는 Position일 뿐.
 	{
-		fixed := image.NewRGBA(image.Rectangle{image.Pt(0, 0), game.ScreenSize()})
+		fixed := image.NewRGBA(image.Rectangle{image.Pt(0, 0), p})
 		black := image.NewUniform(color.RGBA{0, 0, 0, 128})
-		mainRect := image.Rect(stageOffset, 0, stageOffset+fieldWidth, game.ScreenSize().Y)
+		mainRect := image.Rect(stageOffset, 0, stageOffset+fieldWidth, p.Y)
 		draw.Draw(fixed, mainRect, black, mainRect.Min, draw.Over)
 
 		const hintHeight float64 = 2

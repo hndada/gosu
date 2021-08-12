@@ -19,19 +19,23 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
+// todo: 바로 하기
+// var argsToMania = argsSelect2Mania
+
 type sceneSelect struct {
-	path      string
-	mods      mania.Mods
-	charts    []chartPanel
-	cursor    int
-	holdCount int
+	game.Scene // includes ScreenSize
+	path       string
+	mods       mania.Mods
+	charts     []chartPanel
+	cursor     int
+	holdCount  int
 
 	args  argsSelect2Mania
 	ready bool
 	done  bool
 }
 
-func newSceneSelect(path string) *sceneSelect {
+func newSceneSelect(path string, size image.Point) *sceneSelect {
 	s := new(sceneSelect)
 	ebiten.SetWindowTitle("gosu")
 	s.path = path
@@ -41,13 +45,15 @@ func newSceneSelect(path string) *sceneSelect {
 	}
 	_ = s.checkCharts()
 	s.ready = true
+	s.ScreenSize = size
 	return s
 }
 
 // reflect: fields should be exported
 type argsSelect2Mania struct {
-	Chart *mania.Chart
-	Mods  mania.Mods
+	Chart      *mania.Chart
+	Mods       mania.Mods
+	ScreenSize image.Point
 }
 
 func (s *sceneSelect) Ready() bool { return s.ready }
@@ -61,8 +67,9 @@ func (s *sceneSelect) Done(args *game.TransSceneArgs) bool {
 func (s *sceneSelect) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		s.args = argsSelect2Mania{
-			Chart: s.charts[s.cursor].chart,
-			Mods:  s.mods,
+			Chart:      s.charts[s.cursor].chart,
+			Mods:       s.mods,
+			ScreenSize: s.ScreenSize,
 		}
 		s.done = true
 		s.holdCount = 0
@@ -90,10 +97,9 @@ func (s *sceneSelect) Update() error {
 		s.holdCount = 0
 	}
 
-	screenSize := game.ScreenSize()
 	for i := range s.charts {
-		mid := (screenSize.Y - 40) / 2 // 현재 선택된 차트 focus 틀 위치 고정
-		s.charts[i].x = screenSize.X - 400
+		mid := (s.ScreenSize.Y - 40) / 2 // 현재 선택된 차트 focus 틀 위치 고정
+		s.charts[i].x = s.ScreenSize.X - 400
 		s.charts[i].y = mid + 40*(i-s.cursor)
 	}
 	s.charts[s.cursor].x -= 30

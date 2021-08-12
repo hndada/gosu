@@ -6,6 +6,8 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
+const maxScore = 1e6
+
 // type Score struct {
 // 	game.BaseScore
 // 	Counts [len(judgments)]int
@@ -35,7 +37,7 @@ func (c *Chart) allotScore() {
 	}
 	for i := range c.Notes {
 		n := c.Notes[i]
-		c.Notes[i].score = game.MaxScore * (n.strain / sumStrain)
+		c.Notes[i].score = maxScore * (n.strain / sumStrain)
 		c.Notes[i].karma = math.Min(n.strain/avgStrain, 2.5)          // 0 ~ 2.5
 		c.Notes[i].hp = math.Min(n.strain/(3*avgStrain)+2.0/3.0, 1.5) // 0 ~ 1.5
 		// c.Notes[i].score = 1

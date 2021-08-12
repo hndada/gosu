@@ -1,6 +1,7 @@
 package gosu
 
 import (
+	"image"
 	"reflect"
 
 	"github.com/hajimehoshi/ebiten"
@@ -15,8 +16,6 @@ var MaxTransCountDown int
 
 const gosuPath = `E:\gosu\`
 
-// BasePlayScene (base struct), PlayScene (interface)
-// PlayScene, 각 mode 패키지에다가 구현해야 할까?
 // Game: path + Renderer
 type Game struct {
 	cwd            string // current working dir
@@ -27,7 +26,8 @@ type Game struct {
 	TransSceneTo   *ebiten.Image
 	TransCountdown int
 
-	args game.TransSceneArgs
+	args       game.TransSceneArgs
+	screenSize image.Point
 }
 
 type Scene interface {
@@ -38,22 +38,26 @@ type Scene interface {
 }
 
 func NewGame() *Game {
+	const maxTPS = 60
 	g := &Game{}
 	g.path = gosuPath
 
-	game.LoadSettings()
-	mania.ResetSettings()
-	mania.LoadSpriteMap(filepath.Join(g.path, "Skin"))
-	g.Scene = newSceneSelect(g.path)
+	p := image.Pt(800, 600)
+	g.screenSize = p
+	ebiten.SetWindowSize(p.X, p.Y)
 
-	p := game.ScreenSize()
-	g.TransSceneFrom, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
-	g.TransSceneTo, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
-	MaxTransCountDown = game.MaxTPS() * 4 / 5
+	mania.ResetSettings()
+	mania.LoadSpriteMap(filepath.Join(g.path, "Skin"), p)
+	g.Scene = newSceneSelect(g.path, p)
 
 	g.args = game.TransSceneArgs{}
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetRunnableOnUnfocused(true)
+	ebiten.SetMaxTPS(maxTPS)
+
+	g.TransSceneFrom, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
+	g.TransSceneTo, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
+	MaxTransCountDown = ebiten.MaxTPS() * 4 / 5
 	return g
 }
 
@@ -67,11 +71,12 @@ func (g *Game) Update(screen *ebiten.Image) error {
 					v := reflect.ValueOf(g.args.Args)
 					chart := v.FieldByName("Chart").Interface().(*mania.Chart)
 					mods := v.FieldByName("Mods").Interface().(mania.Mods)
-					s2 := mania.NewScene(chart, mods)
+					p := v.FieldByName("ScreenSize").Interface().(image.Point)
+					s2 := mania.NewScene(chart, mods, p)
 					g.ChangeScene(s2)
 				}
 			case *mania.Scene:
-				s2 := newSceneSelect(g.path) // temp: 매번 새로 만들 필요는 없음
+				s2 := newSceneSelect(g.path, g.screenSize) // temp: 매번 새로 만들 필요는 없음
 				g.ChangeScene(s2)
 			default:
 				panic("not reach")
@@ -117,7 +122,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return game.ScreenSize().X, game.ScreenSize().Y
+	return g.screenSize.X, g.screenSize.Y
 }
 
 func (g *Game) ChangeScene(s Scene) {

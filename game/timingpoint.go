@@ -4,6 +4,7 @@ import (
 	"github.com/hndada/rg-parser/osugame/osu"
 )
 
+// TransPoint? TimingPoint?
 type TimingPoints struct {
 	SpeedFactors []SpeedFactorPoint
 	Tempos       []TempoPoint

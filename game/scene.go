@@ -1,9 +1,14 @@
 package game
 
-import "github.com/hajimehoshi/ebiten/audio"
+import (
+	"image"
 
-type PlayScene struct {
+	"github.com/hajimehoshi/ebiten/audio"
+)
+
+type Scene struct {
 	Tick        int64
+	ScreenSize  image.Point
 	AudioPlayer *audio.Player
 }
 
