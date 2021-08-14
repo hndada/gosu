@@ -16,11 +16,11 @@ const (
 )
 
 func (beatmap *TaikoBeatmap) SetCurves() {
-	beatmap.Curves = make(map[string][]game.Segment)
-	beatmap.Curves["Trill"] = game.GetSegments(
+	beatmap.Curves = make(map[string]game.Segments)
+	beatmap.Curves["Trill"] = game.NewSegments(
 		[]float64{0, beatmap.HitWindows["100"] + TrillBonusXOffset1, beatmap.HitWindows["0"]},
 		[]float64{MaxChordPenalty, MaxTrillBonus, 0})
-	beatmap.Curves["Jack"] = game.GetSegments(
+	beatmap.Curves["Jack"] = game.NewSegments(
 		[]float64{0, beatmap.HitWindows["100"], beatmap.HitWindows["0"] + JackBonusXOffset2},
 		[]float64{MaxJackBonus, Max2JackBonus, 0})
 }

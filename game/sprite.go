@@ -1,8 +1,14 @@
 package game
 
 import (
-	"github.com/hajimehoshi/ebiten"
+	"fmt"
 	"image"
+	_ "image/jpeg"
+	_ "image/png"
+	"os"
+	"path/filepath"
+
+	"github.com/hajimehoshi/ebiten"
 )
 
 // 포인터 여부는 상관 없게. 메소드로 한번 감싸다
@@ -47,7 +53,7 @@ type LongSprite struct {
 // 	op.GeoM.Translate(float64(s.x), float64(s.y))
 // }
 
-// Stands for Expandible sprite
+// expandible sprite
 // type ExpSprite struct {
 // 	vertical bool
 // 	i        *ebiten.Image
@@ -87,3 +93,61 @@ type LongSprite struct {
 // 	op.GeoM.Reset()
 // 	op.GeoM.Translate(float64(s.x), float64(s.y))
 // }
+
+// spritesheet
+// 마지막으로 불러온 스킨 불러오기: 처음 불러오는 등 err != nil 일 경우 defaultSkin
+const (
+	ScoreComma = iota + 10
+	ScoreDot
+	ScorePercent
+)
+
+// todo: image.Image로 바꾸기
+var Skin struct {
+	name       string
+	score      [10]*ebiten.Image
+	combo      [10]*ebiten.Image
+	hpBarFrame *ebiten.Image
+	hpBarColor *ebiten.Image
+	// boxLeft         *ebiten.Image
+	// boxMiddle       *ebiten.Image
+	// boxRight        *ebiten.Image
+	// chartPanelFrame *ebiten.Image
+}
+
+func LoadSkin(skinPath string) {
+	var filename, path string
+	var ok bool
+	for i := 0; i < 10; i++ {
+		filename = fmt.Sprintf("score-%d.png", i)
+		path = filepath.Join(skinPath, filename)
+		if Skin.score[i], ok = LoadImage(path); !ok {
+			panic("failed to load images")
+		}
+	}
+	for i := 0; i < 10; i++ {
+		filename = fmt.Sprintf("combo-%d.png", i)
+		path = filepath.Join(skinPath, filename)
+		if Skin.combo[i], ok = LoadImage(path); !ok {
+			panic("failed to load images")
+		}
+	}
+}
+
+// loadSkinImage로 한번에 표시하려면 reflect 써야함
+func LoadImage(path string) (*ebiten.Image, bool) {
+	empty, _ := ebiten.NewImage(0, 0, ebiten.FilterDefault)
+	f, err := os.Open(path)
+	if err != nil {
+		return empty, false
+	}
+	defer f.Close()
+	src, _, err := image.Decode(f)
+	if err != nil {
+		return empty, false
+	}
+	img, _ := ebiten.NewImageFromImage(src, ebiten.FilterDefault)
+	return img, true
+}
+
+// 길이/4, 높이에 해당하는 거 만큼 롱노트 SubImage

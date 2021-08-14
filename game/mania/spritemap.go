@@ -36,9 +36,6 @@ type Stage struct {
 var SpriteMap SpriteMapTemplate
 
 func LoadSpriteMap(skinPath string, p image.Point) {
-	if !game.SpriteMap.Loaded() {
-		game.LoadSpriteMap(skinPath)
-	}
 	loadSkin(skinPath)
 	if SpriteMap.Stages == nil {
 		SpriteMap.Stages = make(map[int]Stage)
