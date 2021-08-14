@@ -19,8 +19,13 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
-// todo: 바로 하기
-// var argsToMania = argsSelect2Mania
+// anonymous struct: grouped globals
+// reflect: fields should be exported
+var argsSelectToMania struct {
+	Chart      *mania.Chart
+	Mods       mania.Mods
+	ScreenSize image.Point
+}
 
 type sceneSelect struct {
 	game.Scene // includes ScreenSize
@@ -30,7 +35,6 @@ type sceneSelect struct {
 	cursor     int
 	holdCount  int
 
-	args  argsSelect2Mania
 	ready bool
 	done  bool
 }
@@ -49,28 +53,19 @@ func newSceneSelect(path string, size image.Point) *sceneSelect {
 	return s
 }
 
-// reflect: fields should be exported
-type argsSelect2Mania struct {
-	Chart      *mania.Chart
-	Mods       mania.Mods
-	ScreenSize image.Point
-}
-
 func (s *sceneSelect) Ready() bool { return s.ready }
 func (s *sceneSelect) Done(args *game.TransSceneArgs) bool {
 	if s.done && args.Next == "" {
 		args.Next = "mania.Scene"
-		args.Args = s.args
+		args.Args = argsSelectToMania // s.args
 	}
 	return s.done
 }
 func (s *sceneSelect) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
-		s.args = argsSelect2Mania{
-			Chart:      s.charts[s.cursor].chart,
-			Mods:       s.mods,
-			ScreenSize: s.ScreenSize,
-		}
+		argsSelectToMania.Chart = s.charts[s.cursor].chart
+		argsSelectToMania.Mods = s.mods
+		argsSelectToMania.ScreenSize = s.ScreenSize
 		s.done = true
 		s.holdCount = 0
 	} else if ebiten.IsKeyPressed(ebiten.KeyDown) {

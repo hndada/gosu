@@ -216,7 +216,7 @@ func newSceneTally() sceneTally {
 }
 
 func NewScene(c *Chart, mods Mods, p image.Point) *Scene {
-	const instability = 2 // 0~100; 0 is Auto
+	const instability = 8 // 0~100; 0 is Auto
 	s := new(Scene)
 	s.ScreenSize = p
 	s.sceneSettings = newSceneSettings(p)

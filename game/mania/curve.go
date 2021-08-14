@@ -23,13 +23,13 @@ const (
 var (
 	maxDeltaChord   int64
 	maxDeltaTrill   int64
-	curveTrillChord []game.Segment
-	curveJack       []game.Segment
-	curveTail       []game.Segment
+	curveTrillChord game.Segments
+	curveJack       game.Segments
+	curveTail       game.Segments
 )
 
 func init() {
-	curveTrillChord = game.GetSegments(
+	curveTrillChord = game.NewSegments(
 		[]float64{
 			0,
 			float64(good.Window + 30),
@@ -39,7 +39,7 @@ func init() {
 			MaxTrillBonus,
 			0})
 
-	curveJack = game.GetSegments(
+	curveJack = game.NewSegments(
 		[]float64{
 			0,
 			Max2DeltaJack,
@@ -49,7 +49,7 @@ func init() {
 			Max2JackBonus,
 			0})
 
-	curveTail = game.GetSegments(
+	curveTail = game.NewSegments(
 		[]float64{
 			0,
 			float64(kool.Window),
@@ -59,7 +59,7 @@ func init() {
 			MinHoldTailStrain,
 			MaxHoldTailStrain})
 
-	xValues := game.SolveX(curveTrillChord, 0)
+	xValues := curveTrillChord.SolveX(0)
 	if len(xValues) != 2 {
 		panic("incorrect numbers of xValues")
 	}
