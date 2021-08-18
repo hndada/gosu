@@ -116,7 +116,7 @@ func (s *sceneSelect) checkCharts() error {
 // 로드된 차트 데이터는 gob로 저장
 func (s *sceneSelect) LoadCharts() error {
 	s.charts = make([]chartPanel, 0, 100)
-	dirs, err := ioutil.ReadDir(filepath.Join(s.path, "Music"))
+	dirs, err := ioutil.ReadDir(filepath.Join(s.path, "music"))
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func (s *sceneSelect) LoadCharts() error {
 		if !d.IsDir() {
 			continue
 		}
-		dpath := filepath.Join(s.path, "Music", d.Name())
+		dpath := filepath.Join(s.path, "music", d.Name())
 		files, err := ioutil.ReadDir(dpath)
 		if err != nil {
 			return err
@@ -145,10 +145,10 @@ func (s *sceneSelect) LoadCharts() error {
 		}
 	}
 	sort.Slice(s.charts, func(i, j int) bool {
-		if s.charts[i].chart.Keys == s.charts[j].chart.Keys {
+		if s.charts[i].chart.KeyCount == s.charts[j].chart.KeyCount {
 			return s.charts[i].chart.Level < s.charts[j].chart.Level
 		} else {
-			return s.charts[i].chart.Keys < s.charts[j].chart.Keys
+			return s.charts[i].chart.KeyCount < s.charts[j].chart.KeyCount
 		}
 	})
 	return nil
@@ -173,7 +173,7 @@ func newChartPanel(c *mania.Chart) chartPanel {
 		Face: basicfont.Face7x13,
 		Dot:  point,
 	}
-	d.DrawString(fmt.Sprintf("(%dKey Lv %.1f) %s [%s]", c.Keys, c.Level, c.MusicName, c.ChartName))
+	d.DrawString(fmt.Sprintf("(%dKey Lv %.1f) %s [%s]", c.KeyCount, c.Level, c.MusicName, c.ChartName))
 	cp.box, _ = ebiten.NewImageFromImage(img, ebiten.FilterDefault)
 	cp.op = &ebiten.DrawImageOptions{}
 	cp.chart = c

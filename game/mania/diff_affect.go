@@ -5,7 +5,7 @@ const noFound = -1
 func (c *Chart) markAffect() {
 	// scan the notes whether its affectable, chordable or not
 	// further lanes which cause *miss* when be hit at the same time goes 'chuck cutter'
-	prevs := make([]int, c.Keys)
+	prevs := make([]int, c.KeyCount)
 	for k := range prevs {
 		prevs[k] = -1
 	}

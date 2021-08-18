@@ -2,24 +2,24 @@ package gosu
 
 import (
 	"image"
+	"log"
+	"os"
 	"reflect"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/mania"
-
 	// _ "github.com/silbinarywolf/preferdiscretegpu"
-	"path/filepath"
 )
 
 var MaxTransCountDown int
 
-const gosuPath = `E:\gosu\`
+// const gosuPath = `E:\gosu\` // temp
 
 // Game: path + Renderer
 type Game struct {
-	cwd            string // current working dir
-	path           string
+	cwd string // current working dir
+	// path           string
 	Scene          Scene
 	NextScene      Scene
 	TransSceneFrom *ebiten.Image
@@ -39,24 +39,27 @@ type Scene interface {
 
 func NewGame() *Game {
 	const maxTPS = 60
+	var err error
 	g := &Game{}
-	g.path = gosuPath
+	// g.path = gosuPath
+	g.cwd, err = os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	game.LoadSkin(g.cwd)
+	mania.LoadSkin(g.cwd)
 
-	p := image.Pt(800, 600)
-	g.screenSize = p
-	ebiten.SetWindowSize(p.X, p.Y)
-
-	mania.ResetSettings()
-	mania.LoadSpriteMap(filepath.Join(g.path, "Skin"), p)
-	g.Scene = newSceneSelect(g.path, p)
+	g.screenSize = image.Pt(1600, 900)
+	ebiten.SetWindowSize(g.screenSize.X, g.screenSize.Y)
+	g.Scene = newSceneSelect(g.cwd, g.screenSize)
 
 	g.args = game.TransSceneArgs{}
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetRunnableOnUnfocused(true)
 	ebiten.SetMaxTPS(maxTPS)
 
-	g.TransSceneFrom, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
-	g.TransSceneTo, _ = ebiten.NewImage(p.X, p.Y, ebiten.FilterDefault)
+	g.TransSceneFrom, _ = ebiten.NewImage(g.screenSize.X, g.screenSize.Y, ebiten.FilterDefault)
+	g.TransSceneTo, _ = ebiten.NewImage(g.screenSize.X, g.screenSize.Y, ebiten.FilterDefault)
 	MaxTransCountDown = ebiten.MaxTPS() * 4 / 5
 	return g
 }
@@ -76,7 +79,7 @@ func (g *Game) Update(screen *ebiten.Image) error {
 					g.ChangeScene(s2)
 				}
 			case *mania.Scene:
-				s2 := newSceneSelect(g.path, g.screenSize) // temp: 매번 새로 만들 필요는 없음
+				s2 := newSceneSelect(g.cwd, g.screenSize) // temp: 매번 새로 만들 필요는 없음
 				g.ChangeScene(s2)
 			default:
 				panic("not reach")
@@ -128,8 +131,4 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 func (g *Game) ChangeScene(s Scene) {
 	g.NextScene = s
 	g.TransCountdown = MaxTransCountDown
-}
-
-func (g Game) CWD() string {
-	return g.cwd
 }

@@ -28,12 +28,12 @@ func init() {
 func (c *Chart) CalcStrain() {
 	c.markAffect()
 	for i, n := range c.Notes {
-		c.Notes[i].hand = hand(c.Keys, n.Key)
+		c.Notes[i].hand = hand(c.KeyCount, n.Key)
 		c.Notes[i].settleAlterHand()
 	}
 	c.setHoldImpacts()
 	for i, n := range c.Notes {
-		c.Notes[i].baseStrain = baseStrain(c.Keys, n)
+		c.Notes[i].baseStrain = baseStrain(c.KeyCount, n)
 		c.Notes[i].chordPenalty = c.chordPenalty(n)
 		c.Notes[i].jackBonus = c.jackBonus(n)
 		c.Notes[i].trillBonus = c.trillBonus(n)
@@ -43,8 +43,8 @@ func (c *Chart) CalcStrain() {
 }
 
 // todo: time2, prev/next를 이용하면 대체 가능
-func baseStrain(keys int, n Note) float64 {
-	base := 1 + fingerBonus[finger(keys, n.Key)]
+func baseStrain(keyCount int, n Note) float64 {
+	base := 1 + fingerBonus[finger(keyCount, n.Key)]
 	if n.Type == TypeLNTail { // a tail of hold note will get partial strain
 		lnDuration := float64(n.Time - n.Time2)
 		base *= curveTail.SolveY(lnDuration)
@@ -172,13 +172,13 @@ func (c *Chart) holdBonus(n Note) float64 {
 			continue
 		}
 		switch {
-		case isHoldOuter(holdKey, n.Key, c.Keys):
+		case isHoldOuter(holdKey, n.Key, c.KeyCount):
 			if !existOuter {
 				bonus += holdOuterOnceBonus
 			}
 			existOuter = true
-		case isHoldInner(holdKey, n.Key, c.Keys):
-			if isHoldInnerAdj(holdKey, n.Key, c.Keys) {
+		case isHoldInner(holdKey, n.Key, c.KeyCount):
+			if isHoldInnerAdj(holdKey, n.Key, c.KeyCount) {
 				bonus += holdInnerAdjOnceBonus
 			}
 			if !existInner {
@@ -189,7 +189,7 @@ func (c *Chart) holdBonus(n Note) float64 {
 		if impact < 0 {
 			impact *= -1
 		}
-		bonus += holdRemainBonus * fingerBonus[finger(c.Keys, holdKey)] * impact
+		bonus += holdRemainBonus * fingerBonus[finger(c.KeyCount, holdKey)] * impact
 	}
 	return bonus
 }

@@ -2,7 +2,9 @@ package game
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/md5"
+	"image"
 	"io/ioutil"
 	"log"
 	"os"
@@ -10,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/rg-parser/osugame/osu"
 )
 
@@ -23,7 +26,7 @@ const (
 )
 
 // TransPoint를 Base에 두지 않는다면, ChartHeader로 바꾸어도 된다고 생각
-type BaseChart struct {
+type ChartHeader struct {
 	Path          string // path of chart source file
 	ChartID       int64  // 6byte: setID, 2byte: subID
 	MusicName     string
@@ -48,8 +51,8 @@ type BaseChart struct {
 	Level float64 // 모드 별 레벨의 필요성
 }
 
-func NewBaseChartFromOsu(o *osu.Format, path string) *BaseChart {
-	b := BaseChart{
+func NewChartHeaderFromOsu(o *osu.Format, path string) *ChartHeader {
+	c := ChartHeader{
 		Path:          path,
 		MusicName:     o.Title,
 		MusicUnicode:  o.TitleUnicode,
@@ -67,13 +70,26 @@ func NewBaseChartFromOsu(o *osu.Format, path string) *BaseChart {
 	if !ok {
 		panic("failed to load bg")
 	}
-	b.ImageFilename = bg.Filename
-	b.TimingPoints = newTimingPointsFromOsu(o)
-	if dat, err := ioutil.ReadFile(b.AbsPath(b.AudioFilename)); err == nil {
-		b.AudioHash = md5.Sum(dat)
+	c.ImageFilename = bg.Filename
+
+	c.TimingPoints = newTimingPointsFromOsu(o)
+	if dat, err := ioutil.ReadFile(c.AbsPath(c.AudioFilename)); err == nil {
+		c.AudioHash = md5.Sum(dat)
 	}
-	b.Parameter["Scale"] = o.CircleSize
-	return &b
+	c.Parameter["Scale"] = o.CircleSize
+	return &c
+}
+
+func (c *ChartHeader) Background() (*ebiten.Image, error) {
+	dat, err := ioutil.ReadFile(c.AbsPath(c.ImageFilename))
+	if err != nil {
+		return nil, err
+	}
+	src, _, err := image.Decode(bytes.NewReader(dat))
+	if err != nil {
+		return nil, err
+	}
+	return ebiten.NewImageFromImage(src, ebiten.FilterDefault)
 }
 
 func OsuMode(path string) int {
@@ -102,6 +118,7 @@ func OsuMode(path string) int {
 	}
 	return defaultMode
 }
-func (b *BaseChart) AbsPath(filename string) string {
-	return filepath.Join(filepath.Dir(b.Path), filename)
+
+func (c ChartHeader) AbsPath(filename string) string {
+	return filepath.Join(filepath.Dir(c.Path), filename)
 }

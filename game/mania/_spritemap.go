@@ -19,11 +19,11 @@ type SpriteMapTemplate struct {
 	Stages     map[int]Stage   // 키별로 option 다름
 }
 type Stage struct {
-	Keys    int           // todo: int8
-	Notes   []game.Sprite // key
-	LNHeads []game.Sprite
-	LNTails []game.Sprite
-	LNBodys [][]game.Sprite // key // animation
+	KeyCount int           // todo: int8
+	Notes    []game.Sprite // key
+	LNHeads  []game.Sprite
+	LNTails  []game.Sprite
+	LNBodys  [][]game.Sprite // key // animation
 	// KeyButtons        []Sprite
 	// KeyPressedButtons []Sprite
 	// NoteLightings     []Sprite // unscaled
@@ -40,9 +40,9 @@ func LoadSpriteMap(skinPath string, p image.Point) {
 	if SpriteMap.Stages == nil {
 		SpriteMap.Stages = make(map[int]Stage)
 	}
-	// for key := range keyKinds {
+	// for key := range keyKindsMap {
 	for _, key := range []int{4, 7} {
-		stage := Stage{Keys: key}
+		stage := Stage{KeyCount: key}
 		stage.Draw(p)
 		SpriteMap.Stages[key] = stage
 	}
@@ -51,12 +51,12 @@ func LoadSpriteMap(skinPath string, p image.Point) {
 func (s *Stage) Draw(p image.Point) { // p: screen Size
 	// HPBarFrame: (폭맞춤, screenHeigth)
 	scale := float64(p.Y / 100)
-	noteKinds := keyKinds[s.Keys]
-	noteWidths := make([]int, s.Keys&ScratchMask)
+	noteKinds := keyKindsMap[s.KeyCount]
+	noteWidths := make([]int, s.KeyCount&ScratchMask)
 	h := int(Settings.NoteHeigth * scale)
 	var fieldWidth int
 	for key, kind := range noteKinds {
-		w := int(Settings.NoteWidths[s.Keys&ScratchMask][kind] * scale)
+		w := int(Settings.NoteWidths[s.KeyCount&ScratchMask][kind] * scale)
 		noteWidths[key] = w
 		fieldWidth += w
 	}

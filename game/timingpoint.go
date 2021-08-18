@@ -4,6 +4,15 @@ import (
 	"github.com/hndada/rg-parser/osugame/osu"
 )
 
+var DefaultSpeedFactor = SpeedFactorPoint{Time: 0, Factor: 1}
+
+type TimeStamp struct {
+	Time     int64
+	NextTime int64
+	Position float64
+	Factor   float64
+}
+
 // TransPoint? TimingPoint?
 type TimingPoints struct {
 	SpeedFactors []SpeedFactorPoint

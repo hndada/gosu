@@ -15,7 +15,7 @@
 # vendor/
 
 # Test Data
-/cmd/gosu/Music
-/cmd/gosu/Skin
+/cmd/gosu/music
+/cmd/gosu/skin
 
 /cmd/calc/charts

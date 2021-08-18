@@ -164,4 +164,4 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 // 	return true
 // }
 
-const holdUnitHP = 0.002 // 롱노트를 눌렀을 때 1ms 당 차오르는 체력
+// const holdUnitHP = 0.002 // 롱노트를 눌렀을 때 1ms 당 차오르는 체력
