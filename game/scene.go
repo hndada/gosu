@@ -7,7 +7,7 @@ import (
 )
 
 type Scene struct {
-	Tick        int64
+	// Tick        int64
 	ScreenSize  image.Point
 	AudioPlayer *audio.Player
 }

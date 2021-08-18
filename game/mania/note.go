@@ -21,21 +21,21 @@ const (
 
 // 난이도 및 점수 관련은 나중에
 // 아래와 같이 난이도 계산에만 쓰이는 값들은 unexported로 할듯
+// note의 sprite는 speed와 screen size, settings:note widths가 결정되어야 값이 결정됨
 type Note struct {
-	game.BaseNote
-	Key int
+	game.Note
+	Key int // todo: Key -> key
 
-	position float64
-	score    float64
-	karma    float64
-	hp       float64
-	prev     int // prev note index
-	next     int // next note index
-	scored   bool
+	score  float64
+	karma  float64
+	hp     float64
+	prev   int // prev note index
+	next   int // next note index
+	scored bool
 
-	hand    int
-	strain  float64
-	stamina float64
+	hand   int
+	strain float64
+	// stamina float64
 	// Read
 
 	chord       []int
@@ -47,15 +47,16 @@ type Note struct {
 	trillBonus   float64
 	jackBonus    float64
 	holdBonus    float64 // score 필요함
+
+	game.Sprite
+	position        float64 // sv is applied, unscaled by speed yet
+	game.LongSprite         // temp
 }
 
-var ErrDuration = errors.New("invalid duration: not a positive value")
-
-// todo: Keys는 아무래도 헷갈리니, KeyCount로?
 func (c *Chart) loadNotesFromOsu(o *osu.Format) error {
 	c.Notes = make([]Note, 0, len(o.HitObjects)*2)
 	for _, ho := range o.HitObjects {
-		ns, err := newNote(ho, c.Keys)
+		ns, err := newNoteFromOsu(ho, c.KeyCount)
 		if err != nil {
 			return errors.New("invalid hit object")
 		}
@@ -69,7 +70,7 @@ func (c *Chart) loadNotesFromOsu(o *osu.Format) error {
 		return c.Notes[i].Time < c.Notes[j].Time
 	})
 
-	prevs := make([]int, c.Keys)
+	prevs := make([]int, c.KeyCount)
 	for k := range prevs {
 		prevs[k] = -1 // no found
 	}
@@ -86,8 +87,7 @@ func (c *Chart) loadNotesFromOsu(o *osu.Format) error {
 	}
 	return nil
 }
-
-func newNote(ho osu.HitObject, keys int) ([]Note, error) {
+func newNoteFromOsu(ho osu.HitObject, keyCount int) ([]Note, error) {
 	ns := make([]Note, 0, 2)
 	var n Note
 	switch ho.NoteType & osu.ComboMask {
@@ -98,18 +98,18 @@ func newNote(ho osu.HitObject, keys int) ([]Note, error) {
 	default:
 		return ns, errors.New("invalid hit object")
 	}
-	n.Key = ho.Column(keys)
+	n.Key = ho.Column(keyCount)
 	n.Time = int64(ho.Time)
 	n.SampleFilename = ho.HitSample.Filename
 	n.SampleVolume = uint8(ho.HitSample.Volume)
-	n.initSliceFields(keys)
+	n.init(keyCount)
 
 	if n.Type == typeLongNote {
 		n.Type = TypeLNHead
 		n.Time2 = int64(ho.EndTime)
 		ns = append(ns, n)
 		if n.Time2-n.Time <= 0 {
-			return ns, ErrDuration
+			return ns, errors.New("invalid duration: not a positive value")
 		}
 
 		var n2 Note
@@ -117,7 +117,7 @@ func newNote(ho osu.HitObject, keys int) ([]Note, error) {
 		n2.Key = n.Key
 		n2.Time = n.Time2
 		n2.Time2 = n.Time
-		n2.initSliceFields(keys)
+		n2.init(keyCount)
 		ns = append(ns, n2)
 	} else {
 		ns = append(ns, n)
@@ -125,12 +125,31 @@ func newNote(ho osu.HitObject, keys int) ([]Note, error) {
 	return ns, nil
 }
 
-func (n *Note) initSliceFields(keys int) {
-	n.chord = make([]int, keys)
-	n.trillJack = make([]int, keys)
-	n.holdImpacts = make([]float64, keys)
-	for k := 0; k < keys; k++ {
+func (n *Note) init(keyCount int) {
+	n.chord = make([]int, keyCount)
+	n.trillJack = make([]int, keyCount)
+	n.holdImpacts = make([]float64, keyCount)
+	for k := 0; k < keyCount; k++ {
 		n.chord[k] = -1
 		n.trillJack[k] = -1
+	}
+}
+
+// should precede to lnotes loading
+// performance: range stamps를 outer loop로 두고 짜도 큰 차이 없을 듯
+func (c *Chart) setNotePosition() {
+	var cursor int
+	s := c.TimeStamps[0]
+	for ni, n := range c.Notes {
+		for si := range c.TimeStamps[cursor:] { // todo: 자동으로 s = stamps[cursor+si]?
+			if n.Time < c.TimeStamps[cursor+si].NextTime {
+				if si != 0 {
+					s = c.TimeStamps[cursor+si]
+					cursor += si
+				}
+				break
+			}
+		}
+		c.Notes[ni].position = float64(n.Time-s.Time)*s.Factor + s.Position
 	}
 }

@@ -11,33 +11,33 @@ const (
 const defaultHand = right
 
 // only for init
-func finger(keys, key int) int {
-	actualKeys := keys & ScratchMask
+func finger(keyCount, key int) int {
+	actualKeyCount := keyCount & ScratchMask
 	switch {
-	case keys&ScratchLeft != 0:
+	case keyCount&leftScratch != 0:
 		if key == 0 {
-			return finger(actualKeys-1, 0) + 1
+			return finger(actualKeyCount-1, 0) + 1
 		}
-		return finger(actualKeys-1, key-1)
-	case keys&ScratchRight != 0:
-		if key == actualKeys-1 {
-			return finger(actualKeys-1, actualKeys-2) + 1
+		return finger(actualKeyCount-1, key-1)
+	case keyCount&rightScratch != 0:
+		if key == actualKeyCount-1 {
+			return finger(actualKeyCount-1, actualKeyCount-2) + 1
 		}
-		return finger(actualKeys-1, key)
+		return finger(actualKeyCount-1, key)
 	default:
-		if keys%2 == 0 {
+		if keyCount%2 == 0 {
 			var v int
-			if key >= keys/2 {
-				v = key - keys/2 + 1
+			if key >= keyCount/2 {
+				v = key - keyCount/2 + 1
 			} else {
-				v = keys/2 - key
+				v = keyCount/2 - key
 			}
-			if keys == 10 {
+			if keyCount == 10 {
 				v--
 			}
 			return v
 		} else {
-			v := key - keys/2
+			v := key - keyCount/2
 			if v < 0 {
 				return -v
 			}
@@ -46,27 +46,27 @@ func finger(keys, key int) int {
 	}
 }
 
-func hand(keys, key int) int {
-	actualKeys := keys & ScratchMask
+func hand(keyCount, key int) int {
+	actualKeyCount := keyCount & ScratchMask
 	switch {
-	case keys&ScratchLeft != 0:
+	case keyCount&leftScratch != 0:
 		if key == 0 {
 			return left
 		}
-		return hand(actualKeys-1, key-1)
-	case keys&ScratchRight != 0:
-		if key == actualKeys-1 {
+		return hand(actualKeyCount-1, key-1)
+	case keyCount&rightScratch != 0:
+		if key == actualKeyCount-1 {
 			return right
 		}
-		return hand(actualKeys-1, key)
+		return hand(actualKeyCount-1, key)
 	default:
 		switch {
-		case key < keys/2:
+		case key < keyCount/2:
 			return left
-		case key > keys/2:
+		case key > keyCount/2:
 			return right
-		default: // key == keys/2:
-			if keys%2 == 0 {
+		default: // key == keyCount/2:
+			if keyCount%2 == 0 {
 				return right
 			}
 			return alter // odd key count use thumb, which is alterable

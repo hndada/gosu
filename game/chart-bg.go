@@ -1,15 +1,14 @@
 package game
 
 import (
-	"bytes"
 	"image"
 	_ "image/jpeg"
 	_ "image/png"
-	"io/ioutil"
 
 	"github.com/hajimehoshi/ebiten"
 )
 
+// BG 옵션은 한번 해놓으면 웬만하면 안바뀌니 저장 후 쓰는 걸로
 func BackgroundOp(screen, bg image.Point) *ebiten.DrawImageOptions {
 	op := &ebiten.DrawImageOptions{}
 	bx, by := float64(bg.X), float64(bg.Y)
@@ -31,17 +30,4 @@ func BackgroundOp(screen, bg image.Point) *ebiten.DrawImageOptions {
 	x, y := bx*ratio, by*ratio
 	op.GeoM.Translate((sx-x)/2, (sy-y)/2)
 	return op
-}
-
-// mode 모듈은 ebiten으로부터 독립적이었으면 했는데 어려울 듯
-func (b *BaseChart) Background() (*ebiten.Image, error) {
-	dat, err := ioutil.ReadFile(b.AbsPath(b.ImageFilename))
-	if err != nil {
-		return nil, err
-	}
-	src, _, err := image.Decode(bytes.NewReader(dat))
-	if err != nil {
-		return nil, err
-	}
-	return ebiten.NewImageFromImage(src, ebiten.FilterDefault)
 }

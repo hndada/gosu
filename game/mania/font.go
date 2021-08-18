@@ -22,7 +22,7 @@ var (
 
 func init() {
 	var path string
-	skinPath := `E:\gosu\Skin\`
+	skinPath := `E:\gosu\skin\`
 	fname := "Raleway-Bold.ttf"
 	path = skinPath + fname
 	b, err := ioutil.ReadFile(path)

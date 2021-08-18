@@ -13,7 +13,7 @@ const (
 
 func (c *Chart) calcStamina() {
 	var instant, gradual float64
-	prevTimes := make([]int64, c.Keys)
+	prevTimes := make([]int64, c.KeyCount)
 	for i, n := range c.Notes {
 		time := n.Time - prevTimes[n.Key]
 		instant *= game.DecayFactor(instantDecay, time)

@@ -40,6 +40,7 @@ func NewAudioPlayer(path string) *audio.Player {
 		s, err = wav.Decode(AudioContext, audio.BytesReadSeekCloser(b))
 	}
 	p, err := audio.NewPlayer(AudioContext, s)
+	p.SetVolume(0.25) // temp
 	if err != nil {
 		panic(err)
 	}
