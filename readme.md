@@ -1,13 +1,12 @@
 체력, 스테이지 커버 (지나간 노트 가리기)
 애니메이션: 노트/롱노트 히트 이펙트 
 - 애니메이션 시간초, MaxTPS 를 param으로 하여 각 프레임마다 띄울 이미지 index 정하기 
-위치 조정: 스코어, 콤보 
-연출: 스코어, 콤보 튕기기 (프레임마다 op다르게 주면 될듯)
 
 키보드 hook
 주석, docs 정리
 VNC server 구축
-
+연출: 스코어 스크롤, 콤보 튕기기 (프레임마다 op다르게 주면 될듯)
+game->engine, game(common) 으로 구분
 
 * Song -> Music
 * Title -> MusicName

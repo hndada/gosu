@@ -1,8 +1,11 @@
 package mania
 
 import (
+	"fmt"
 	"math"
+	"strconv"
 
+	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/game"
 )
 
@@ -40,9 +43,6 @@ func (c *Chart) allotScore() {
 		c.Notes[i].score = maxScore * (n.strain / sumStrain)
 		c.Notes[i].karma = math.Min(n.strain/avgStrain, 2.5)          // 0 ~ 2.5
 		c.Notes[i].hp = math.Min(n.strain/(3*avgStrain)+2.0/3.0, 1.5) // 0 ~ 1.5
-		// c.Notes[i].score = 1
-		// c.Notes[i].karma = 1
-		// c.Notes[i].hp = 1
 	}
 }
 
@@ -166,3 +166,26 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 // }
 
 // const holdUnitHP = 0.002 // 롱노트를 눌렀을 때 1ms 당 차오르는 체력
+
+func (s *Scene) drawCombo(screen *ebiten.Image) {
+	gap := int(game.Settings.ComboGap * game.DisplayScale())
+	str := fmt.Sprint(s.combo)
+	w := s.combos[0].W
+	wNumbers := (w-gap)*len(str) + gap
+	for i, letter := range str {
+		num, _ := strconv.ParseInt(string(letter), 0, 0)
+		s.combos[num].X = game.Settings.ScreenSize.X/2 - wNumbers/2 + i*(w-gap)
+		s.combos[num].Draw(screen)
+	}
+}
+
+func (s *Scene) drawScore(screen *ebiten.Image) {
+	str := fmt.Sprintf("%.0f", s.score)
+	w := s.scores[0].W
+	wNumbers := w * len(str)
+	for i, letter := range str {
+		num, _ := strconv.ParseInt(string(letter), 0, 0)
+		s.scores[num].X = game.Settings.ScreenSize.X - wNumbers + i*w
+		s.scores[num].Draw(screen)
+	}
+}

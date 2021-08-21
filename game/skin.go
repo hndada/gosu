@@ -20,8 +20,8 @@ const (
 
 // image.Image가 아닌 *ebiten.Image로 해야 이미지 자체가 한 번만 로드 됨
 var Skin struct {
-	Number [13]*ebiten.Image // including dot, comma, percent
-	// Combo     [10]*ebiten.Image
+	Number1 [13]*ebiten.Image // including dot, comma, percent
+	Number2 [13]*ebiten.Image
 	BoxLeft   *ebiten.Image
 	BoxRight  *ebiten.Image
 	BoxMiddle *ebiten.Image
@@ -52,7 +52,15 @@ func LoadSkin(cwd string) {
 	for i := 0; i < 10; i++ {
 		name := fmt.Sprintf("score-%d.png", i)
 		path := filepath.Join(dir, name)
-		Skin.Number[i], err = LoadImage(path)
+		Skin.Number1[i], err = LoadImage(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+	for i := 0; i < 10; i++ {
+		name := fmt.Sprintf("combo-%d.png", i)
+		path := filepath.Join(dir, name)
+		Skin.Number2[i], err = LoadImage(path)
 		if err != nil {
 			log.Fatal(err)
 		}

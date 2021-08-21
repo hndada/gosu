@@ -32,7 +32,7 @@ var Skin struct {
 }
 
 func LoadSkin(cwd string) {
-	loadFont(cwd) // temp: load font
+	// loadFont(cwd) // temp: load font
 
 	dir := filepath.Join(cwd, "skin")
 	var path string
