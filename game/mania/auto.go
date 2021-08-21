@@ -18,7 +18,7 @@ func (c Chart) GenAutoKeyEvents(instability float64) func(int64) []keyEvent {
 	var d int64
 	for _, n := range c.Notes {
 		d = deviation(instability)
-		if d > miss.Window { // lost
+		if d > Miss.Window { // lost
 			continue
 		}
 		switch n.Type {

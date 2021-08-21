@@ -10,7 +10,7 @@ const maxScore = 1e6
 
 // type Score struct {
 // 	game.BaseScore
-// 	Counts [len(judgments)]int
+// 	Counts [len(Judgments)]int
 // }
 
 // 'Late hit' gets negative value in hit time difference
@@ -72,7 +72,7 @@ func (s *Scene) judge(e keyEvent) {
 		if timeDiff < 0 { // absolute value
 			timeDiff *= -1
 		}
-		for _, j := range judgments {
+		for _, j := range Judgments {
 			if timeDiff <= j.Window {
 				return j
 			}
@@ -80,6 +80,7 @@ func (s *Scene) judge(e keyEvent) {
 		return empty // 너무 빨리 누름. 너무 늦게 누른 경우(아예 안 누르다)는 scene update에서 별도 처리
 	}
 	j := judge(n.Type, keyAction, timeDiff)
+	s.timeDiffs = append(s.timeDiffs, timeDiff)
 	s.applyScore(i, j)
 	s.lastPressed[e.key] = e.pressed
 }
@@ -94,15 +95,15 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 	s.staged[n.Key] = n.next
 
 	switch j {
-	case kool:
+	case Kool:
 		s.judgeCounts[0]++
-	case cool:
+	case Cool:
 		s.judgeCounts[1]++
-	case good:
+	case Good:
 		s.judgeCounts[2]++
-	case bad:
+	case Bad:
 		s.judgeCounts[3]++
-	case miss:
+	case Miss:
 		s.judgeCounts[4]++
 	default:
 		panic("not reach")
@@ -130,7 +131,7 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 		}
 	}
 	// combo
-	if j != miss {
+	if j != Miss {
 		s.combo++
 	} else {
 		s.combo = 0
@@ -144,12 +145,12 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 			s.hp = 0
 		}
 	}
-	if n.Type != TypeLNTail && j != miss {
+	if n.Type != TypeLNTail && j != Miss {
 		s.playSE()
 	}
 	// apply one more for LNTail when LNHead is missed
-	if n.Type == TypeLNHead && j == miss {
-		s.applyScore(n.next, miss)
+	if n.Type == TypeLNHead && j == Miss {
+		s.applyScore(n.next, Miss)
 	}
 }
 

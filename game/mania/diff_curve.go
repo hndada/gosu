@@ -32,8 +32,8 @@ func init() {
 	curveTrillChord = game.NewSegments(
 		[]float64{
 			0,
-			float64(good.Window + 30),
-			float64(miss.Window + 30)},
+			float64(Good.Window + 30),
+			float64(Miss.Window + 30)},
 		[]float64{
 			MaxChordPenalty,
 			MaxTrillBonus,
@@ -52,8 +52,8 @@ func init() {
 	curveTail = game.NewSegments(
 		[]float64{
 			0,
-			float64(kool.Window),
-			float64(bad.Window) + 50},
+			float64(Kool.Window),
+			float64(Bad.Window) + 50},
 		[]float64{
 			ZeroHoldTailStrain,
 			MinHoldTailStrain,

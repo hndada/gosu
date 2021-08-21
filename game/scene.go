@@ -10,6 +10,7 @@ type Scene struct {
 	// Tick        int64
 	ScreenSize  image.Point
 	AudioPlayer *audio.Player
+	// CWD         string
 }
 
 type TransSceneArgs struct {

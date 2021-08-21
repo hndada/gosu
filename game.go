@@ -14,20 +14,17 @@ import (
 
 var MaxTransCountDown int
 
-// const gosuPath = `E:\gosu\` // temp
-
 // Game: path + Renderer
 type Game struct {
-	cwd string // current working dir
-	// path           string
+	cwd            string // current working dir
 	Scene          Scene
 	NextScene      Scene
 	TransSceneFrom *ebiten.Image
 	TransSceneTo   *ebiten.Image
 	TransCountdown int
 
-	args       game.TransSceneArgs
-	screenSize image.Point
+	args game.TransSceneArgs
+	// screenSize image.Point
 }
 
 type Scene interface {
@@ -40,26 +37,26 @@ type Scene interface {
 func NewGame() *Game {
 	const maxTPS = 60
 	var err error
+
 	g := &Game{}
-	// g.path = gosuPath
 	g.cwd, err = os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
+	game.Settings.ScreenSize = image.Pt(800, 600)
 	game.LoadSkin(g.cwd)
 	mania.LoadSkin(g.cwd)
 
-	g.screenSize = image.Pt(1600, 900)
-	ebiten.SetWindowSize(g.screenSize.X, g.screenSize.Y)
-	g.Scene = newSceneSelect(g.cwd, g.screenSize)
+	ebiten.SetWindowSize(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y)
+	g.Scene = newSceneSelect(g.cwd, game.Settings.ScreenSize)
 
 	g.args = game.TransSceneArgs{}
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetRunnableOnUnfocused(true)
 	ebiten.SetMaxTPS(maxTPS)
 
-	g.TransSceneFrom, _ = ebiten.NewImage(g.screenSize.X, g.screenSize.Y, ebiten.FilterDefault)
-	g.TransSceneTo, _ = ebiten.NewImage(g.screenSize.X, g.screenSize.Y, ebiten.FilterDefault)
+	g.TransSceneFrom, _ = ebiten.NewImage(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y, ebiten.FilterDefault)
+	g.TransSceneTo, _ = ebiten.NewImage(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y, ebiten.FilterDefault)
 	MaxTransCountDown = ebiten.MaxTPS() * 4 / 5
 	return g
 }
@@ -75,11 +72,11 @@ func (g *Game) Update(screen *ebiten.Image) error {
 					chart := v.FieldByName("Chart").Interface().(*mania.Chart)
 					mods := v.FieldByName("Mods").Interface().(mania.Mods)
 					p := v.FieldByName("ScreenSize").Interface().(image.Point)
-					s2 := mania.NewScene(chart, mods, p)
+					s2 := mania.NewScene(chart, mods, p, g.cwd)
 					g.ChangeScene(s2)
 				}
 			case *mania.Scene:
-				s2 := newSceneSelect(g.cwd, g.screenSize) // temp: 매번 새로 만들 필요는 없음
+				s2 := newSceneSelect(g.cwd, game.Settings.ScreenSize) // temp: 매번 새로 만들 필요는 없음
 				g.ChangeScene(s2)
 			default:
 				panic("not reach")
@@ -125,7 +122,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return g.screenSize.X, g.screenSize.Y
+	return game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y
 }
 
 func (g *Game) ChangeScene(s Scene) {
