@@ -52,7 +52,7 @@ func (s *Scene) judge(e keyEvent) {
 		return // todo: play sfx
 	}
 	n := s.chart.Notes[i] // staged note
-	keyAction := KeyAction(s.lastPressed[e.key], e.pressed)
+	keyAction := KeyAction(s.lastPressed[e.key].Value, e.pressed)
 	timeDiff := n.Time - e.time
 
 	// Idle, Hit, Release, Hold (lost는 아예 별개의 개념. 시간 지나도록 X면)
@@ -82,7 +82,7 @@ func (s *Scene) judge(e keyEvent) {
 	j := judge(n.Type, keyAction, timeDiff)
 	s.timeDiffs = append(s.timeDiffs, timeDiff)
 	s.applyScore(i, j)
-	s.lastPressed[e.key] = e.pressed
+	s.lastPressed[e.key] = TimeBool{Time: e.time, Value: e.pressed}
 }
 
 // LNTail은 롱노트 끝나기 전까지 계속 staged. 처음 scored 된 뒤로는 score 영향 안 끼침

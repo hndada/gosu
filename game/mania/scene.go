@@ -12,6 +12,10 @@ import (
 	_ "image/jpeg"
 )
 
+type TimeBool struct {
+	Time  int64
+	Value bool
+}
 type Scene struct {
 	game.Scene
 
@@ -22,7 +26,7 @@ type Scene struct {
 	mods  Mods
 	chart *Chart
 
-	lastPressed []bool
+	lastPressed []TimeBool // todo: time도 있어야 여러 프레임동안 pressed할 수 있음
 	staged      []int
 
 	score float64
@@ -49,6 +53,9 @@ type Scene struct {
 
 	combos [10]game.Sprite
 	scores [10]game.Sprite
+
+	lastJudge   game.Judgment
+	judgeSprite game.Sprite
 }
 
 func NewScene(c *Chart, mods Mods, p image.Point, cwd string) *Scene {
@@ -75,7 +82,7 @@ func NewScene(c *Chart, mods Mods, p image.Point, cwd string) *Scene {
 		img = Skin.Note[kinds[n.Key]]
 		s.chart.Notes[i].Sprite.SetImage(img)
 	}
-	s.lastPressed = make([]bool, c.KeyCount)
+	s.lastPressed = make([]TimeBool, c.KeyCount)
 	s.initStaged(c)
 
 	s.karma = 100
@@ -117,6 +124,7 @@ func (s *Scene) Update() error {
 	// if now < 3000 { // unsafe: 꼬로록 소리 남
 	//		s.AudioPlayer.Seek(time.Now().Sub(s.startTime))
 	//		}
+	s.lastJudge = empty
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) || now > s.chart.EndTime()+2000 { // temp: 2초 여유 두기
 		_ = s.AudioPlayer.Close()
 		s.done = true
@@ -169,7 +177,7 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 	for _, n := range s.chart.Notes {
 		n.Sprite.Draw(screen)
 	}
-	s.jm.Sprite.Draw(screen)
+
 	// s.jm.DrawTiming(screen, s.timeDiffs)
 	// if len(s.timeDiffs) > 20 {
 	// 	s.timeDiffs = s.timeDiffs[:20]
@@ -192,6 +200,14 @@ judge: %v
 		s.score, s.karma, s.hp, s.combo, s.judgeCounts))
 	s.drawCombo(screen)
 	s.drawScore(screen)
+	for i, tb := range s.lastPressed {
+		if tb.Value || now-tb.Time < 90 { // temp
+			s.ui.stageKeysPressed[i].Draw(screen)
+		} else {
+			s.ui.stageKeys[i].Draw(screen)
+		}
+	}
+	s.jm.Sprite.Draw(screen)
 }
 
 func (s *Scene) initStaged(c *Chart) {

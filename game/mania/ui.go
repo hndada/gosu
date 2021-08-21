@@ -1,6 +1,7 @@
 package mania
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -15,8 +16,10 @@ var (
 )
 
 type sceneUI struct {
-	noteWidths []int
-	playfield  game.Sprite
+	noteWidths       []int
+	playfield        game.Sprite
+	stageKeys        []game.Sprite
+	stageKeysPressed []game.Sprite
 }
 
 // 가로가 늘어난다고 같이 늘리면 오히려 어색하므로 세로에만 맞춰 늘리기: 100 기준
@@ -50,11 +53,44 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 			draw.Draw(i, r, &image.Uniform{red}, image.ZP, draw.Over)
 		}
 		s.playfield.SetImage(i)
-		p := Settings.StagePosition / 100                  // position in proportion
-		s.playfield.X = int(float64(screenSize.X)*p) - w/2 // int - int
-		s.playfield.Y = 0
+		p := Settings.StagePosition / 100 // position in proportion
 		s.playfield.W = w
 		s.playfield.H = screenSize.Y
+		s.playfield.X = int(float64(screenSize.X)*p) - w/2 // int - int
+		s.playfield.Y = 0
+	}
+	{
+		s.stageKeys = make([]game.Sprite, keyCount)
+		s.stageKeysPressed = make([]game.Sprite, keyCount)
+		for k := 0; k < keyCount; k++ {
+			var sprite game.Sprite
+			src := Skin.StageKeys[keyKinds[k]]
+			sprite.SetEbitenImage(src)
+			sprite.W = s.noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
+
+			// scale := float64(sprite.W) / float64(src.Bounds().Size().X)
+			// sprite.H = int(float64(src.Bounds().Size().Y) * scale)
+			y := int((Settings.HitPosition - Settings.NoteHeigth/2) * game.DisplayScale()) //
+			sprite.H = game.Settings.ScreenSize.Y - y
+			x := s.playfield.X
+			for k2 := 0; k2 < k; k2++ {
+				x += s.noteWidths[k2]
+			}
+			sprite.X = x
+			sprite.Y = y
+			op := &ebiten.DrawImageOptions{}
+			op.GeoM.Scale(float64(sprite.W)/float64(src.Bounds().Size().X),
+				float64(sprite.H)/float64(src.Bounds().Size().Y)) // todo: duplicated code
+			op.GeoM.Translate(float64(sprite.X), float64(sprite.Y))
+			sprite.Op = op
+			s.stageKeys[k] = sprite
+
+			sprite2 := sprite
+			src2 := Skin.StageKeysPressed[keyKinds[k]]
+			sprite2.SetEbitenImage(src2)
+			s.stageKeysPressed[k] = sprite2
+			fmt.Println(sprite, game.Settings.ScreenSize)
+		}
 	}
 	return *s
 }
@@ -103,7 +139,7 @@ func (s *Scene) setNoteSprites() {
 		ls.W = tail.Sprite.W
 		ls.H = head.Sprite.Y - tail.Sprite.Y
 		ls.X = tail.Sprite.X
-		ls.Y = tail.Sprite.Y // + 50*tail.Sprite.H // todo: why?
+		ls.Y = tail.Sprite.Y
 		s.chart.Notes[i].LongSprite = ls
 	}
 }
