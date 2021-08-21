@@ -6,11 +6,9 @@ import (
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
-	"github.com/hajimehoshi/ebiten/text"
 	"github.com/hndada/gosu/game"
 
 	"image"
-	"image/color"
 	_ "image/jpeg"
 )
 
@@ -47,11 +45,14 @@ type Scene struct {
 	lns []game.LongSprite
 
 	timeDiffs []int64
-	jm        *game.JudgmentMeter //temp
+	jm        *game.JudgmentMeter // temp
+
+	combos [10]game.Sprite
+	scores [10]game.Sprite
 }
 
 func NewScene(c *Chart, mods Mods, p image.Point, cwd string) *Scene {
-	const instability = 12 // 0~100; 0 is Auto
+	const instability = 0 // 0~100; 0 is Auto
 	s := new(Scene)
 	// s.CWD = cwd
 	s.ScreenSize = p
@@ -90,6 +91,9 @@ func NewScene(c *Chart, mods Mods, p image.Point, cwd string) *Scene {
 	s.setNoteSprites()
 	s.ready = true
 	s.jm = game.NewJudgmentMeter(Judgments[:])
+
+	s.combos = game.LoadNumbers(game.NumberCombo)
+	s.scores = game.LoadNumbers(game.NumberScore)
 	return s
 }
 
@@ -166,14 +170,14 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 		n.Sprite.Draw(screen)
 	}
 	s.jm.Sprite.Draw(screen)
-	s.jm.DrawTiming(screen, s.timeDiffs)
+	// s.jm.DrawTiming(screen, s.timeDiffs)
 	// if len(s.timeDiffs) > 20 {
 	// 	s.timeDiffs = s.timeDiffs[:20]
 	// }
-	scoreStr := fmt.Sprintf("%.0f", s.score)
-	comboStr := fmt.Sprintf("%d", s.combo)
-	text.Draw(screen, scoreStr, arcadeFont, s.ScreenSize.X-4*fontSize, fontSize, color.White)
-	text.Draw(screen, comboStr, titleArcadeFont, s.ScreenSize.X/2-1.5*fontSize/2, s.ScreenSize.Y/2-fontSize, color.White)
+	// scoreStr := fmt.Sprintf("%.0f", s.score)
+	// text.Draw(screen, scoreStr, arcadeFont, s.ScreenSize.X-4*fontSize, fontSize, color.White)
+	// comboStr := fmt.Sprintf("%d", s.combo)
+	// text.Draw(screen, comboStr, titleArcadeFont, s.ScreenSize.X/2-1.5*fontSize/2, s.ScreenSize.Y/2-fontSize, color.White)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		`CurrentFPS: %.2f
 CurrentTPS: %.2f
@@ -186,6 +190,8 @@ combo: %d
 judge: %v
 `, ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(now)/1000,
 		s.score, s.karma, s.hp, s.combo, s.judgeCounts))
+	s.drawCombo(screen)
+	s.drawScore(screen)
 }
 
 func (s *Scene) initStaged(c *Chart) {

@@ -33,7 +33,6 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 	jm := new(JudgmentMeter)
 	jm.Judgments = js
 
-	const scale = 2 // 1ms 당 2px
 	var sprite Sprite
 	var base *ebiten.Image
 
@@ -41,8 +40,8 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 		// todo: 검은색 바탕 상자가 안 그려진다
 		const height = 5 // 높이는 세로 전체 100 기준 5
 		j := jm.Judgments[len(jm.Judgments)-1]
-		w := int(scale*j.Window) * 2
-		h := int(Scale() * height)
+		w := int(Settings.JudgmentMeterScale*float64(j.Window)) * 2
+		h := int(DisplayScale() * height)
 		x := Settings.ScreenSize.X/2 - w/2
 		y := Settings.ScreenSize.Y - h
 		sprite.Op = &ebiten.DrawImageOptions{}
@@ -56,11 +55,11 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 	}
 	{ // set color box
 		const height = 1 // base 대비 1
-		h := int(Scale() * height)
+		h := int(DisplayScale() * height)
 		y := (base.Bounds().Dy() - h) / 2
 		for i := range jm.Judgments {
 			j := jm.Judgments[len(jm.Judgments)-1-i]
-			w := int(scale*j.Window) * 2
+			w := int(Settings.JudgmentMeterScale*float64(j.Window)) * 2
 			x := base.Bounds().Dx()/2 - w/2
 
 			op := &ebiten.DrawImageOptions{}
@@ -73,7 +72,7 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 	{ // set middle line
 		const height = 5 // 높이는 세로 전체 100 기준 5
 		w := 1
-		h := int(Scale() * height)
+		h := int(DisplayScale() * height)
 		x := base.Bounds().Dx()/2 - w
 		y := 0
 		op := &ebiten.DrawImageOptions{}
@@ -89,14 +88,13 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 
 // "early" goes plus
 func (jm JudgmentMeter) DrawTiming(screen *ebiten.Image, timeDiffs []int64) {
-	const scale = 2 // 1ms 당 2px
 	for _, t := range timeDiffs {
-		w := scale
+		w := int(Settings.JudgmentMeterScale)
 		h := jm.Sprite.H
 		i, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
 		i.Fill(color.White)
 
-		x := Settings.ScreenSize.X/2 - int(scale*t)
+		x := Settings.ScreenSize.X/2 - int(Settings.JudgmentMeterScale*float64(t))
 		y := jm.Sprite.Y
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(float64(x), float64(y))
