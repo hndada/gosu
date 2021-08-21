@@ -13,16 +13,23 @@ type Sprite struct {
 	src  *ebiten.Image
 	W, H int // desired w, h
 	X, Y int
+	Op   *ebiten.DrawImageOptions
 }
+
+func (s Sprite) Fixed() bool { return s.Op != nil } // 한번 정해진 자리에서 계속 있는 애들
 
 func (s Sprite) Draw(screen *ebiten.Image) {
 	if s.src == nil {
 		log.Fatal("s.src is nil")
 	}
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(s.ScaleW(), s.ScaleH())
-	op.GeoM.Translate(float64(s.X), float64(s.Y))
-	screen.DrawImage(s.src, op)
+	if s.Fixed() {
+		screen.DrawImage(s.src, s.Op)
+	} else {
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Scale(s.ScaleW(), s.ScaleH())
+		op.GeoM.Translate(float64(s.X), float64(s.Y))
+		screen.DrawImage(s.src, op)
+	}
 }
 
 func (s *Sprite) SetImage(i image.Image) {
@@ -31,6 +38,11 @@ func (s *Sprite) SetImage(i image.Image) {
 		log.Fatal(err)
 	}
 	s.src = i2
+}
+
+// temp
+func (s *Sprite) SetEbitenImage(i *ebiten.Image) {
+	s.src = i
 }
 
 func (s Sprite) ScaleW() float64 {

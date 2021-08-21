@@ -1,12 +1,15 @@
 package mania
 
-import "github.com/hndada/gosu/game"
+import (
+	"path/filepath"
 
-func SEPlayer() func() {
-	var path string
-	skinPath := `E:\gosu\skin\`
-	fname := "soft-slidertick.wav"
-	path = skinPath + fname
+	"github.com/hndada/gosu/game"
+)
+
+func SEPlayer(cwd string) func() {
+	dir := filepath.Join(cwd, "skin")
+	name := "soft-slidertick.wav"
+	path := filepath.Join(dir, name)
 	ap := game.NewAudioPlayer(path)
 	return func() {
 		ap.Play()

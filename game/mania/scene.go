@@ -39,17 +39,21 @@ type Scene struct {
 	initUpdate  bool
 	auto        func(int64) []keyEvent
 	playSE      func()
-	judgeCounts [len(judgments)]int
+	judgeCounts [len(Judgments)]int
 
 	timeStamp func(time int64) game.TimeStamp
 
 	ui  sceneUI
 	lns []game.LongSprite
+
+	timeDiffs []int64
+	jm        *game.JudgmentMeter //temp
 }
 
-func NewScene(c *Chart, mods Mods, p image.Point) *Scene {
-	const instability = 0 // 0~100; 0 is Auto
+func NewScene(c *Chart, mods Mods, p image.Point, cwd string) *Scene {
+	const instability = 12 // 0~100; 0 is Auto
 	s := new(Scene)
+	// s.CWD = cwd
 	s.ScreenSize = p
 	s.speed = Settings.GeneralSpeed
 	s.mods = mods
@@ -80,11 +84,12 @@ func NewScene(c *Chart, mods Mods, p image.Point) *Scene {
 	s.AudioPlayer.Play()
 	s.AudioPlayer.Pause()
 	s.auto = s.chart.GenAutoKeyEvents(instability)
-	s.playSE = SEPlayer()
+	s.playSE = SEPlayer(cwd)
 	s.timeStamp = c.TimeStampFinder()
 	s.ui = newSceneUI(p, s.chart.KeyCount)
 	s.setNoteSprites()
 	s.ready = true
+	s.jm = game.NewJudgmentMeter(Judgments[:])
 	return s
 }
 
@@ -127,8 +132,8 @@ func (s *Scene) Update() error {
 	}
 
 	// 따로 처리: lost, scored되고 시간 다 된 LNTail
-	lost := func(timeDiff int64) bool { return timeDiff < -bad.Window } // never hit
-	flushable := func(n Note, timeDiff int64) bool { return n.scored && timeDiff < miss.Window }
+	lost := func(timeDiff int64) bool { return timeDiff < -Bad.Window } // never hit
+	flushable := func(n Note, timeDiff int64) bool { return n.scored && timeDiff < Miss.Window }
 	for k, i := range s.staged {
 		if i < 0 {
 			continue
@@ -137,7 +142,7 @@ func (s *Scene) Update() error {
 		timeDiff := n.Time - now
 
 		if lost(timeDiff) {
-			s.applyScore(i, miss)
+			s.applyScore(i, Miss)
 		}
 
 		if n.Type == TypeLNTail && flushable(n, timeDiff) {
@@ -160,7 +165,12 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 	for _, n := range s.chart.Notes {
 		n.Sprite.Draw(screen)
 	}
-	scoreStr := fmt.Sprintf("%d", int(s.score))
+	s.jm.Sprite.Draw(screen)
+	s.jm.DrawTiming(screen, s.timeDiffs)
+	// if len(s.timeDiffs) > 20 {
+	// 	s.timeDiffs = s.timeDiffs[:20]
+	// }
+	scoreStr := fmt.Sprintf("%.0f", s.score)
 	comboStr := fmt.Sprintf("%d", s.combo)
 	text.Draw(screen, scoreStr, arcadeFont, s.ScreenSize.X-4*fontSize, fontSize, color.White)
 	text.Draw(screen, comboStr, titleArcadeFont, s.ScreenSize.X/2-1.5*fontSize/2, s.ScreenSize.Y/2-fontSize, color.White)

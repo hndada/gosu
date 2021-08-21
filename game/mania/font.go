@@ -3,6 +3,7 @@ package mania
 import (
 	"io/ioutil"
 	"log"
+	"path/filepath"
 
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/opentype"
@@ -20,11 +21,10 @@ var (
 	smallArcadeFont font.Face
 )
 
-func init() {
-	var path string
-	skinPath := `E:\gosu\skin\`
-	fname := "Raleway-Bold.ttf"
-	path = skinPath + fname
+func loadFont(cwd string) {
+	dir := filepath.Join(cwd, "skin")
+	name := "Raleway-Bold.ttf"
+	path := filepath.Join(dir, name)
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
