@@ -24,7 +24,7 @@ func LoadNumbers(mode int) [10]Sprite {
 		srcs = Skin.Number2
 	}
 	for i := 0; i < 10; i++ {
-		numbers[i].SetEbitenImage(srcs[i])
+		numbers[i].SetImage(srcs[i])
 		numbers[i].H = int(height * DisplayScale())
 		if i == 0 { // todo: 한 set 안에서 이미지 크기 다른 거 상정하기?
 			scale = float64(numbers[i].H) / float64(srcs[i].Bounds().Size().Y)

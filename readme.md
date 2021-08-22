@@ -7,16 +7,10 @@ Sprite
 판정, 체력, 노트/롱노트 히트 이펙트, 판정
 
 input 
-https://github.com/eiannone/keyboard
-goroutine
+1. https://github.com/eiannone/keyboard
+2. goroutine
 
 주석, docs, taiko 정리
 game->engine, game(common) 으로 구분
+NewHeaderFromOsu()에서 Path 삭제 시도
 VNC server 구축
-
-* TimingPoint는 각 모드 별로 알아서 불러오는 걸로
-* NewBaseChartFromOsu() 에서 path 파라미터 제거, path 대입 삭제
-    - ParseHeaderFromOsu() 로 변경
-* Level은 Header에 있으면 복잡할듯. 
-    - mods마다 바뀌는 level.
-* Header에 path 필요 없음

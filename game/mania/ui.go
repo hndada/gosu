@@ -68,7 +68,7 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 		for k := 0; k < keyCount; k++ {
 			var sprite game.Sprite
 			src := Skin.StageKeys[keyKinds[k]]
-			sprite.SetEbitenImage(src)
+			sprite.SetImage(src)
 			sprite.W = s.noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
 
 			// scale := float64(sprite.W) / float64(src.Bounds().Size().X)
@@ -91,7 +91,7 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 
 			sprite2 := sprite
 			src2 := Skin.StageKeysPressed[keyKinds[k]]
-			sprite2.SetEbitenImage(src2)
+			sprite2.SetImage(src2)
 			s.stageKeysPressed[k] = sprite2
 		}
 	}
@@ -102,7 +102,7 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 	for i := range s.judgeSprite {
 		src := Skin.Judge[i]
 		var sprite game.Sprite
-		sprite.SetEbitenImage(src)
+		sprite.SetImage(src)
 
 		sprite.H = int(Settings.JudgeHeight * game.DisplayScale())
 		scale := float64(sprite.H) / float64(src.Bounds().Dy())

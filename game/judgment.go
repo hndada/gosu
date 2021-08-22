@@ -81,7 +81,7 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 		box.Fill(color.White)
 		_ = base.DrawImage(box, op)
 	}
-	sprite.SetEbitenImage(base)
+	sprite.SetImage(base)
 	jm.Sprite = sprite
 	return jm
 }

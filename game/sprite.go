@@ -36,17 +36,22 @@ func (s Sprite) Draw(screen *ebiten.Image) {
 }
 
 func (s *Sprite) SetImage(i image.Image) {
-	i2, err := ebiten.NewImageFromImage(i, ebiten.FilterDefault)
-	if err != nil {
-		log.Fatal(err)
+	switch i.(type) { // doesn't work
+	case *ebiten.Image:
+		s.src = i.(*ebiten.Image)
+	default:
+		i2, err := ebiten.NewImageFromImage(i, ebiten.FilterDefault)
+		if err != nil {
+			log.Fatal(err)
+		}
+		s.src = i2
 	}
-	s.src = i2
 }
 
-// temp
-func (s *Sprite) SetEbitenImage(i *ebiten.Image) {
-	s.src = i
-}
+// // todo: SetImage 자체를 *ebiten.Image만 받게.
+// func (s *Sprite) SetImage(i *ebiten.Image) {
+// 	s.src = i
+// }
 
 func (s Sprite) ScaleW() float64 {
 	w1, _ := s.src.Size()
