@@ -148,6 +148,10 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 	if n.Type != TypeLNTail && j != Miss {
 		s.playSE()
 	}
+	if s.lastJudge.Penalty < j.Penalty {
+		s.lastJudge = j
+	}
+
 	// apply one more for LNTail when LNHead is missed
 	if n.Type == TypeLNHead && j == Miss {
 		s.applyScore(n.next, Miss)

@@ -18,6 +18,7 @@ var Settings struct {
 	HitPosition    float64            // object which is now set at 'options'
 	ComboPosition  float64
 	JudgePosition  float64
+	JudgeHeight    float64
 	SpotlightColor [4]color.RGBA
 	// LineInHint        bool
 	// LNHeadCustom      bool  // if false, head uses normal note image.
@@ -53,4 +54,5 @@ func init() {
 		{64, 48, 0, 64},
 		{40, 0, 40, 64},
 	}
+	Settings.JudgeHeight = 10
 }

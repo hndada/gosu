@@ -182,7 +182,7 @@ func newChartPanel(c *mania.Chart) chartPanel {
 
 // var ModePrefix = map[int]string{0: "o", 1: "t", 2: "c", 3: "m"}
 // 폴더 두번 스캔: mapsets, maps
-func LoadSongList(root, ext string) ([]string, error) {
+func LoadMusicList(root, ext string) ([]string, error) {
 	var songs []string
 	if info, err := os.Stat(root); err != nil || !info.IsDir() {
 		return songs, errors.New("invalid root dir")
