@@ -9,11 +9,14 @@ import (
 	"github.com/hajimehoshi/ebiten"
 )
 
+// todo: Life, fade-in
 type Sprite struct {
-	src  *ebiten.Image
-	W, H int // desired w, h
-	X, Y int
-	Op   *ebiten.DrawImageOptions
+	src      *ebiten.Image
+	W, H     int // desired w, h
+	X, Y     int
+	Op       *ebiten.DrawImageOptions
+	BornTime int64
+	LifeTime int64
 }
 
 func (s Sprite) Fixed() bool { return s.Op != nil } // 한번 정해진 자리에서 계속 있는 애들

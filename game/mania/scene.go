@@ -45,17 +45,12 @@ type Scene struct {
 
 	timeStamp func(time int64) game.TimeStamp
 
-	ui  sceneUI
+	sceneUI
 	lns []game.LongSprite
 
 	timeDiffs []int64
 	jm        *game.JudgmentMeter // temp
-
-	combos [10]game.Sprite
-	scores [10]game.Sprite
-
-	lastJudge   game.Judgment
-	judgeSprite game.Sprite
+	lastJudge game.Judgment
 }
 
 func NewScene(c *Chart, mods Mods, p image.Point, cwd string) *Scene {
@@ -94,13 +89,11 @@ func NewScene(c *Chart, mods Mods, p image.Point, cwd string) *Scene {
 	s.auto = s.chart.GenAutoKeyEvents(instability)
 	s.playSE = SEPlayer(cwd)
 	s.timeStamp = c.TimeStampFinder()
-	s.ui = newSceneUI(p, s.chart.KeyCount)
+	s.sceneUI = newSceneUI(p, s.chart.KeyCount)
 	s.setNoteSprites()
 	s.ready = true
 	s.jm = game.NewJudgmentMeter(Judgments[:])
 
-	s.combos = game.LoadNumbers(game.NumberCombo)
-	s.scores = game.LoadNumbers(game.NumberScore)
 	return s
 }
 
@@ -124,7 +117,6 @@ func (s *Scene) Update() error {
 	// if now < 3000 { // unsafe: 꼬로록 소리 남
 	//		s.AudioPlayer.Seek(time.Now().Sub(s.startTime))
 	//		}
-	s.lastJudge = empty
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) || now > s.chart.EndTime()+2000 { // temp: 2초 여유 두기
 		_ = s.AudioPlayer.Close()
 		s.done = true
@@ -139,6 +131,7 @@ func (s *Scene) Update() error {
 		}
 	}
 	// judge: score과 staged도 따라서 업데이트
+	s.lastJudge = empty
 	for _, e := range s.auto(now) {
 		s.judge(e)
 	}
@@ -167,7 +160,14 @@ func (s *Scene) Update() error {
 func (s *Scene) Draw(screen *ebiten.Image) {
 	now := time.Since(s.startTime).Milliseconds()
 	screen.DrawImage(s.bg, s.bgop)
-	s.ui.Draw(screen)
+	s.playfield.Draw(screen)
+	// for i, j := range Judgments {
+	// 	if s.lastJudge == j {
+	// 		s.judgeSprite[i].Draw(screen)
+	// 		break
+	// 	}
+	// }
+	s.judgeSprite[0].Draw(screen)
 	for _, n := range s.chart.Notes {
 		if n.Type == TypeLNTail {
 			n.LongSprite.Draw(screen)
@@ -202,9 +202,9 @@ judge: %v
 	s.drawScore(screen)
 	for i, tb := range s.lastPressed {
 		if tb.Value || now-tb.Time < 90 { // temp
-			s.ui.stageKeysPressed[i].Draw(screen)
+			s.stageKeysPressed[i].Draw(screen)
 		} else {
-			s.ui.stageKeys[i].Draw(screen)
+			s.stageKeys[i].Draw(screen)
 		}
 	}
 	s.jm.Sprite.Draw(screen)

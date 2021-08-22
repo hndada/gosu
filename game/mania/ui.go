@@ -1,7 +1,6 @@
 package mania
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -20,6 +19,10 @@ type sceneUI struct {
 	playfield        game.Sprite
 	stageKeys        []game.Sprite
 	stageKeysPressed []game.Sprite
+
+	combos      [10]game.Sprite
+	scores      [10]game.Sprite
+	judgeSprite [len(Judgments)]game.Sprite
 }
 
 // 가로가 늘어난다고 같이 늘리면 오히려 어색하므로 세로에만 맞춰 늘리기: 100 기준
@@ -70,7 +73,8 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 
 			// scale := float64(sprite.W) / float64(src.Bounds().Size().X)
 			// sprite.H = int(float64(src.Bounds().Size().Y) * scale)
-			y := int((Settings.HitPosition - Settings.NoteHeigth/2) * game.DisplayScale()) //
+			y := int((Settings.HitPosition - Settings.NoteHeigth/2 -
+				6*Settings.NoteHeigth/2) * game.DisplayScale()) // todo: why?
 			sprite.H = game.Settings.ScreenSize.Y - y
 			x := s.playfield.X
 			for k2 := 0; k2 < k; k2++ {
@@ -89,14 +93,29 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 			src2 := Skin.StageKeysPressed[keyKinds[k]]
 			sprite2.SetEbitenImage(src2)
 			s.stageKeysPressed[k] = sprite2
-			fmt.Println(sprite, game.Settings.ScreenSize)
 		}
 	}
-	return *s
-}
 
-func (s sceneUI) Draw(screen *ebiten.Image) {
-	s.playfield.Draw(screen)
+	s.combos = game.LoadNumbers(game.NumberCombo)
+	s.scores = game.LoadNumbers(game.NumberScore)
+
+	for i := range s.judgeSprite {
+		src := Skin.Judge[i]
+		var sprite game.Sprite
+		sprite.SetEbitenImage(src)
+
+		sprite.H = int(Settings.JudgeHeight * game.DisplayScale())
+		scale := float64(sprite.H) / float64(src.Bounds().Dy())
+		sprite.W = int(float64(src.Bounds().Dx()) * scale)
+		sprite.X = (game.Settings.ScreenSize.X - sprite.W) / 2
+		sprite.Y = int(Settings.JudgePosition*game.DisplayScale()) - sprite.H/2
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Scale(scale, scale)
+		op.GeoM.Translate(float64(sprite.X), float64(sprite.Y))
+		sprite.Op = op
+		s.judgeSprite[i] = sprite
+	}
+	return *s
 }
 
 // todo: n.scored 시 명암 처리
@@ -113,10 +132,10 @@ func (s *Scene) setNoteSprites() {
 
 		scale := float64(s.ScreenSize.Y) / 100
 		sprite.H = int(Settings.NoteHeigth * scale)
-		sprite.W = s.ui.noteWidths[n.Key]
-		x := s.ui.playfield.X
+		sprite.W = s.noteWidths[n.Key]
+		x := s.playfield.X
 		for k := 0; k < n.Key; k++ {
-			x += s.ui.noteWidths[k]
+			x += s.noteWidths[k]
 		}
 		sprite.X = x
 		y := Settings.HitPosition - n.position*s.speed - float64(sprite.H)/2
