@@ -48,7 +48,7 @@ type ChartHeader struct {
 	Parameter map[string]float64
 	TimingPoints
 
-	Level float64 // 모드 별 레벨의 필요성
+	Level float64 // todo: mods may change level
 }
 
 func NewChartHeaderFromOsu(o *osu.Format, path string) *ChartHeader {
