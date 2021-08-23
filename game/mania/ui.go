@@ -61,11 +61,13 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 		s.playfield.H = screenSize.Y
 		s.playfield.X = int(float64(screenSize.X)*p) - w/2 // int - int
 		s.playfield.Y = 0
+		s.playfield.Saturation = 1
+		s.playfield.Dimness = 1
 	}
 	{
 		s.stageKeys = make([]game.Sprite, keyCount)
 		s.stageKeysPressed = make([]game.Sprite, keyCount)
-		for k := 0; k < keyCount; k++ {
+		for k := 0; k < keyCount&ScratchMask; k++ {
 			var sprite game.Sprite
 			src := Skin.StageKeys[keyKinds[k]]
 			sprite.SetImage(src)
@@ -74,7 +76,7 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 			// scale := float64(sprite.W) / float64(src.Bounds().Size().X)
 			// sprite.H = int(float64(src.Bounds().Size().Y) * scale)
 			y := int((Settings.HitPosition - Settings.NoteHeigth/2 -
-				6*Settings.NoteHeigth/2) * game.DisplayScale()) // todo: why?
+				4*Settings.NoteHeigth/2) * game.DisplayScale()) // todo: why?
 			sprite.H = game.Settings.ScreenSize.Y - y
 			x := s.playfield.X
 			for k2 := 0; k2 < k; k2++ {
@@ -82,10 +84,13 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 			}
 			sprite.X = x
 			sprite.Y = y
+			sprite.Saturation = 1
+			sprite.Dimness = 1
 			op := &ebiten.DrawImageOptions{}
 			op.GeoM.Scale(float64(sprite.W)/float64(src.Bounds().Size().X),
 				float64(sprite.H)/float64(src.Bounds().Size().Y)) // todo: duplicated code
 			op.GeoM.Translate(float64(sprite.X), float64(sprite.Y))
+			op.ColorM.ChangeHSV(0, sprite.Saturation, sprite.Dimness)
 			sprite.Op = op
 			s.stageKeys[k] = sprite
 
@@ -109,9 +114,12 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 		sprite.W = int(float64(src.Bounds().Dx()) * scale)
 		sprite.X = (game.Settings.ScreenSize.X - sprite.W) / 2
 		sprite.Y = int(Settings.JudgePosition*game.DisplayScale()) - sprite.H/2
+		sprite.Saturation = 1
+		sprite.Dimness = 1
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(scale, scale)
 		op.GeoM.Translate(float64(sprite.X), float64(sprite.Y))
+		op.ColorM.ChangeHSV(0, sprite.Saturation, sprite.Dimness)
 		sprite.Op = op
 		s.judgeSprite[i] = sprite
 	}
@@ -140,6 +148,8 @@ func (s *Scene) setNoteSprites() {
 		sprite.X = x
 		y := Settings.HitPosition - n.position*s.speed - float64(sprite.H)/2
 		sprite.Y = int(y * scale)
+		sprite.Saturation = 1
+		sprite.Dimness = 1
 		s.chart.Notes[i].Sprite = sprite
 	}
 
@@ -159,6 +169,8 @@ func (s *Scene) setNoteSprites() {
 		ls.H = head.Sprite.Y - tail.Sprite.Y
 		ls.X = tail.Sprite.X
 		ls.Y = tail.Sprite.Y
+		ls.Saturation = 1
+		ls.Dimness = 1
 		s.chart.Notes[i].LongSprite = ls
 	}
 }

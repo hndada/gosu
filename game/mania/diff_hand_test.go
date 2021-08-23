@@ -27,14 +27,14 @@ func TestScratchFinger(t *testing.T) {
 		fmt.Printf("%+v\n", fs[keyCount])
 	}
 	for keyCount := 2; keyCount <= 8; keyCount++ {
-		fs[keyCount|leftScratch] = append([]int{fingers[keyCount-1][0] + 1}, fingers[keyCount-1]...)
-		fmt.Printf("%+v\n", fs[keyCount|leftScratch])
-		fs[keyCount|rightScratch] = append(fingers[keyCount-1], fingers[keyCount-1][keyCount-2]+1)
-		fmt.Printf("%+v\n", fs[keyCount|rightScratch])
+		fs[keyCount|LeftScratch] = append([]int{fingers[keyCount-1][0] + 1}, fingers[keyCount-1]...)
+		fmt.Printf("%+v\n", fs[keyCount|LeftScratch])
+		fs[keyCount|RightScratch] = append(fingers[keyCount-1], fingers[keyCount-1][keyCount-2]+1)
+		fmt.Printf("%+v\n", fs[keyCount|RightScratch])
 	}
 	fmt.Println("fingers:")
 	for keyCount := 2; keyCount <= 8; keyCount++ {
-		fmt.Printf("%+v\n", fingers[keyCount|leftScratch])
-		fmt.Printf("%+v\n", fingers[keyCount|rightScratch])
+		fmt.Printf("%+v\n", fingers[keyCount|LeftScratch])
+		fmt.Printf("%+v\n", fingers[keyCount|RightScratch])
 	}
 }

@@ -64,6 +64,9 @@ func (s *sceneSelect) Done(args *game.TransSceneArgs) bool {
 func (s *sceneSelect) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		argsSelectToMania.Chart = s.charts[s.cursor].chart
+		// if argsSelectToMania.Chart.KeyCount == 8 { // temp
+		// 	argsSelectToMania.Chart.KeyCount += mania.LeftScratch
+		// }
 		argsSelectToMania.Mods = s.mods
 		argsSelectToMania.ScreenSize = s.ScreenSize
 		s.done = true

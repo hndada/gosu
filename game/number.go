@@ -8,7 +8,6 @@ const (
 )
 
 func LoadNumbers(mode int) [10]Sprite {
-	var scale float64
 	var numbers [10]Sprite
 	var height float64
 	var position float64
@@ -26,11 +25,12 @@ func LoadNumbers(mode int) [10]Sprite {
 	for i := 0; i < 10; i++ {
 		numbers[i].SetImage(srcs[i])
 		numbers[i].H = int(height * DisplayScale())
-		if i == 0 { // todo: 한 set 안에서 이미지 크기 다른 거 상정하기?
-			scale = float64(numbers[i].H) / float64(srcs[i].Bounds().Size().Y)
-		}
+		// set scale on every image: each image may has different size
+		scale := float64(numbers[i].H) / float64(srcs[i].Bounds().Size().Y)
 		numbers[i].W = int(float64(srcs[i].Bounds().Size().X) * scale)
 		numbers[i].Y = int(position*DisplayScale()) - numbers[i].H/2
+		numbers[i].Saturation = 1
+		numbers[i].Dimness = 1
 	}
 	return numbers
 }
