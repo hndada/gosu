@@ -19,7 +19,8 @@ type Sprite struct {
 	LifeTime int64
 }
 
-func (s Sprite) Fixed() bool { return s.Op != nil } // 한번 정해진 자리에서 계속 있는 애들
+// todo: IsFixed bool field로 대체하기
+func (s Sprite) Fixed() bool { return s.Op != nil } // A sprite that never moves once appears
 
 func (s Sprite) Draw(screen *ebiten.Image) {
 	if s.src == nil {

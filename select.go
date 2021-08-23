@@ -137,7 +137,7 @@ func (s *sceneSelect) LoadCharts() error {
 				case game.ModeMania:
 					c, err := mania.NewChart(fpath)
 					if err != nil {
-						panic(err) // todo: log and continue
+						panic("failed to parse chart") // todo: log and continue
 					}
 					s.charts = append(s.charts, newChartPanel(c))
 				}

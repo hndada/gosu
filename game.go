@@ -43,7 +43,7 @@ func NewGame() *Game {
 	if err != nil {
 		log.Fatal(err)
 	}
-	game.Settings.ScreenSize = image.Pt(800, 600)
+	game.Settings.ScreenSize = image.Pt(1600, 900)
 	game.LoadSkin(g.cwd)
 	mania.LoadSkin(g.cwd)
 
