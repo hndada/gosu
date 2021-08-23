@@ -65,7 +65,7 @@ func NewScene(c *Chart, mods Mods, p image.Point, cwd string) *Scene {
 	const dimness = 30
 	bg, err := c.Background()
 	if err != nil {
-		panic(err)
+		panic("failed to parse bg")
 	}
 	s.bg = bg
 	s.bgop = game.BackgroundOp(p, image.Pt(s.bg.Size()))

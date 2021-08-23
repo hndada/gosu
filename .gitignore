@@ -17,5 +17,6 @@
 # Test Data
 /cmd/gosu/music
 /cmd/gosu/skin
+/cmd/gosu/skin-old
 
 /cmd/calc/charts
