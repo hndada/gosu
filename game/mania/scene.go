@@ -26,7 +26,7 @@ type Scene struct {
 	mods  Mods
 	chart *Chart
 
-	lastPressed []TimeBool // todo: time도 있어야 여러 프레임동안 pressed할 수 있음
+	lastPressed []TimeBool
 	staged      []int
 
 	score float64
@@ -127,12 +127,19 @@ func (s *Scene) Update() error {
 		rp := (n.position-cursor)*s.speed - Settings.HitPosition // relative position
 		s.chart.Notes[i].Sprite.Y = int(-rp*(float64(s.ScreenSize.Y)/100) + float64(n.Sprite.H)/2)
 		if n.Type == TypeLNTail {
-			s.chart.Notes[i].LongSprite.Y = n.Sprite.Y + n.Sprite.H // todo: why?
+			s.chart.Notes[i].LongSprite.Y = n.Sprite.Y + n.Sprite.H // why?: n.Sprite.H 그래야 길이가 딱 맞나?
+			if s.chart.Notes[i].scored {
+				s.chart.Notes[i].LongSprite.Saturation = 0.5
+				s.chart.Notes[i].LongSprite.Dimness = 0.3
+			} else {
+				s.chart.Notes[n.prev].Sprite.Saturation = 1
+				s.chart.Notes[n.prev].Sprite.Dimness = 1
+			}
 		}
 	}
 	// judge: score과 staged도 따라서 업데이트
 	s.lastJudge = empty
-	for _, e := range s.auto(now) {
+	for _, e := range s.auto(now) { //[]keyEvent{}
 		s.judge(e)
 	}
 
@@ -167,7 +174,6 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 	// 		break
 	// 	}
 	// }
-	s.judgeSprite[0].Draw(screen)
 	for _, n := range s.chart.Notes {
 		if n.Type == TypeLNTail {
 			n.LongSprite.Draw(screen)
@@ -200,14 +206,16 @@ judge: %v
 		s.score, s.karma, s.hp, s.combo, s.judgeCounts))
 	s.drawCombo(screen)
 	s.drawScore(screen)
-	for i, tb := range s.lastPressed {
-		if tb.Value || now-tb.Time < 90 { // temp
-			s.stageKeysPressed[i].Draw(screen)
-		} else {
-			s.stageKeys[i].Draw(screen)
-		}
-	}
+	// for i, tb := range s.lastPressed {
+	// 	if tb.Value || now-tb.Time < 90 { // temp
+	// 		s.stageKeysPressed[i].Draw(screen)
+	// 	} else {
+	// 		s.stageKeys[i].Draw(screen)
+	// 	}
+	// }
 	s.jm.Sprite.Draw(screen)
+
+	s.judgeSprite[0].Draw(screen) // temp
 }
 
 func (s *Scene) initStaged(c *Chart) {

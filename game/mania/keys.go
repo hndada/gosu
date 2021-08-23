@@ -3,10 +3,10 @@ package mania
 // applied at keyCount
 // 40 = 32 + 8; 8 keyCount with left-scratch
 const (
-	leftScratch  = 1 << 5 // 32
-	rightScratch = 1 << 6 // 64
+	LeftScratch  = 1 << 5 // 32
+	RightScratch = 1 << 6 // 64
 )
-const ScratchMask = ^(leftScratch | rightScratch)
+const ScratchMask = ^(LeftScratch | RightScratch)
 
 type keyKind uint8
 
@@ -34,8 +34,8 @@ func init() {
 	keyKindsMap[10] = []keyKind{pinky, one, two, one, middle, middle, one, two, one, pinky}
 
 	for k := 2; k <= 8; k++ { // 정말 잘 짠듯
-		keyKindsMap[k|leftScratch] = append([]keyKind{pinky}, keyKindsMap[k-1]...)
-		keyKindsMap[k|rightScratch] = append(keyKindsMap[k-1], pinky)
+		keyKindsMap[k|LeftScratch] = append([]keyKind{pinky}, keyKindsMap[k-1]...)
+		keyKindsMap[k|RightScratch] = append(keyKindsMap[k-1], pinky)
 	}
 
 	fingers[0] = []int{}
@@ -51,7 +51,7 @@ func init() {
 	fingers[10] = []int{4, 3, 2, 1, 0, 0, 1, 2, 3, 4}
 
 	for k := 2; k <= 8; k++ {
-		fingers[k|leftScratch] = append([]int{fingers[k-1][0] + 1}, fingers[k-1]...)
-		fingers[k|rightScratch] = append(fingers[k-1], fingers[k-1][k-2]+1)
+		fingers[k|LeftScratch] = append([]int{fingers[k-1][0] + 1}, fingers[k-1]...)
+		fingers[k|RightScratch] = append(fingers[k-1], fingers[k-1][k-2]+1)
 	}
 }

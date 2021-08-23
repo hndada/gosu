@@ -50,6 +50,8 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 		sprite.H = h
 		sprite.X = x
 		sprite.Y = y
+		sprite.Saturation = 1
+		sprite.Dimness = 1
 		base, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
 		base.Fill(color.RGBA64{0, 0, 0, 255})
 	}

@@ -14,12 +14,12 @@ const defaultHand = right
 func finger(keyCount, key int) int {
 	actualKeyCount := keyCount & ScratchMask
 	switch {
-	case keyCount&leftScratch != 0:
+	case keyCount&LeftScratch != 0:
 		if key == 0 {
 			return finger(actualKeyCount-1, 0) + 1
 		}
 		return finger(actualKeyCount-1, key-1)
-	case keyCount&rightScratch != 0:
+	case keyCount&RightScratch != 0:
 		if key == actualKeyCount-1 {
 			return finger(actualKeyCount-1, actualKeyCount-2) + 1
 		}
@@ -49,12 +49,12 @@ func finger(keyCount, key int) int {
 func hand(keyCount, key int) int {
 	actualKeyCount := keyCount & ScratchMask
 	switch {
-	case keyCount&leftScratch != 0:
+	case keyCount&LeftScratch != 0:
 		if key == 0 {
 			return left
 		}
 		return hand(actualKeyCount-1, key-1)
-	case keyCount&rightScratch != 0:
+	case keyCount&RightScratch != 0:
 		if key == actualKeyCount-1 {
 			return right
 		}

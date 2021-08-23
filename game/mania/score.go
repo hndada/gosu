@@ -92,21 +92,15 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 		return
 	}
 	s.chart.Notes[i].scored = true
+	s.chart.Notes[i].Sprite.Saturation = 0.5
+	s.chart.Notes[i].Sprite.Dimness = 0.3
 	s.staged[n.Key] = n.next
 
-	switch j {
-	case Kool:
-		s.judgeCounts[0]++
-	case Cool:
-		s.judgeCounts[1]++
-	case Good:
-		s.judgeCounts[2]++
-	case Bad:
-		s.judgeCounts[3]++
-	case Miss:
-		s.judgeCounts[4]++
-	default:
-		panic("not reach")
+	for i, j2 := range Judgments {
+		if j == j2 {
+			s.judgeCounts[i]++
+			break
+		}
 	}
 
 	// score
