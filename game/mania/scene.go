@@ -206,13 +206,13 @@ judge: %v
 		s.score, s.karma, s.hp, s.combo, s.judgeCounts))
 	s.drawCombo(screen)
 	s.drawScore(screen)
-	// for i, tb := range s.lastPressed {
-	// 	if tb.Value || now-tb.Time < 90 { // temp
-	// 		s.stageKeysPressed[i].Draw(screen)
-	// 	} else {
-	// 		s.stageKeys[i].Draw(screen)
-	// 	}
-	// }
+	for i, tb := range s.lastPressed {
+		if tb.Value { // || now-tb.Time < 90 { // temp
+			s.stageKeysPressed[i].Draw(screen)
+		} else {
+			s.stageKeys[i].Draw(screen)
+		}
+	}
 	s.jm.Sprite.Draw(screen)
 
 	s.judgeSprite[0].Draw(screen) // temp

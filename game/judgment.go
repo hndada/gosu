@@ -44,16 +44,11 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 		h := int(DisplayScale() * height)
 		x := Settings.ScreenSize.X/2 - w/2
 		y := Settings.ScreenSize.Y - h
-		sprite.Op = &ebiten.DrawImageOptions{}
-		sprite.Op.GeoM.Translate(float64(x), float64(y))
-		sprite.W = w // todo: WHXY 과 Op 한번에 결정
-		sprite.H = h
-		sprite.X = x
-		sprite.Y = y
-		sprite.Saturation = 1
-		sprite.Dimness = 1
+
 		base, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
 		base.Fill(color.RGBA64{0, 0, 0, 255})
+		sprite = NewSprite(base) // base is just for providingsize info
+		sprite.SetFixedOp(w, h, x, y)
 	}
 	{ // set color box
 		const height = 1 // base 대비 1
