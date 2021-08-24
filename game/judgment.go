@@ -84,17 +84,16 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 }
 
 // "early" goes plus
-func (jm JudgmentMeter) DrawTiming(screen *ebiten.Image, timeDiffs []int64) {
-	for _, t := range timeDiffs {
-		w := int(Settings.JudgmentMeterScale)
-		h := jm.Sprite.H
-		i, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
-		i.Fill(color.White)
-
-		x := Settings.ScreenSize.X/2 - int(Settings.JudgmentMeterScale*float64(t))
-		y := jm.Sprite.Y
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(float64(x), float64(y))
-		screen.DrawImage(i, op)
-	}
+// todo: 종종 x값이 음수가 나옴. 저 멀리의 노트로 timeDiff를 계산하는 걸수도 있음
+func (jm JudgmentMeter) NewTimingSprite(timeDiff int64) Sprite {
+	w := int(Settings.JudgmentMeterScale)
+	h := jm.Sprite.H
+	i, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
+	i.Fill(color.White)
+	x := Settings.ScreenSize.X/2 - int(Settings.JudgmentMeterScale*float64(timeDiff))
+	y := jm.Sprite.Y
+	sprite := NewSprite(i)
+	sprite.SetFixedOp(w, h, x, y)
+	// fmt.Println(w, h, x, y)
+	return sprite
 }

@@ -8,28 +8,30 @@ import (
 
 // const left = 30
 
+// const (
+// 	LNTailModeHead = iota
+// 	LNTailModeBody
+// 	LNTailModeCustom
+// )
+
 var Settings struct {
 	KeyLayout    map[int][]types.VKCode // todo: 무결성 검사, 겹치는거 있는지 매번 확인
 	GeneralSpeed float64
 
-	NoteWidths     map[int][4]float64 // 키마다 width 설정. 단위는 window size 대비 percent
-	NoteHeigth     float64            // 두께; 키 관계없이 동일
-	StagePosition  float64            // 0 ~ 100; 50 is a center
-	HitPosition    float64            // object which is now set at 'options'
-	ComboPosition  float64
-	JudgePosition  float64
-	JudgeHeight    float64
-	SpotlightColor [4]color.RGBA
+	NoteWidths      map[int][4]float64 // 키마다 width 설정. 단위는 window size 대비 percent
+	NoteHeigth      float64            // 두께; 키 관계없이 동일
+	StagePosition   float64            // 0 ~ 100; 50 is a center
+	HitPosition     float64            // HitPosition*DisplayScale() goes *the center* of Y value
+	ComboPosition   float64
+	JudgePosition   float64
+	JudgeHeight     float64
+	SpotlightColor  [4]color.RGBA
+	JudgeLineHeight float64
+
 	// LineInHint        bool
 	// LNHeadCustom      bool  // if false, head uses normal note image.
 	// LNTailMode        uint8 // 0: Tail=Head 1: Tail=Body 2: Custom
 }
-
-const (
-	LNTailModeHead = iota
-	LNTailModeBody
-	LNTailModeCustom
-)
 
 func init() {
 	Settings.KeyLayout = map[int][]types.VKCode{
@@ -60,4 +62,5 @@ func init() {
 		{40, 0, 40, 64},
 	}
 	Settings.JudgeHeight = 10
+	Settings.JudgeLineHeight = 2
 }

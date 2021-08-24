@@ -19,16 +19,17 @@ var Skin struct {
 	Lighting   []*ebiten.Image
 	LightingLN []*ebiten.Image
 
-	// StageLeft *ebiten.Image
-	StageRight       *ebiten.Image
-	StageBottom      *ebiten.Image
-	StageLight       *ebiten.Image // mask
+	StageLeft   *ebiten.Image
+	StageRight  *ebiten.Image
+	StageHint   *ebiten.Image // todo: HitPosition 대신 필요할 듯
+	StageBottom *ebiten.Image
+	StageLight  *ebiten.Image // mask
+	HPBar       *ebiten.Image
+	// MaskingBorder
+
 	StageKeys        [4]*ebiten.Image
 	StageKeysPressed [4]*ebiten.Image
-	// MaskingBorder
-	StageHint  *ebiten.Image // todo: HitPosition 대신 필요할 듯
-	HPBar      *ebiten.Image
-	HPBarColor *ebiten.Image
+	HPBarColor       *ebiten.Image
 }
 
 func LoadSkin(cwd string) {
@@ -60,22 +61,24 @@ func LoadSkin(cwd string) {
 	}
 
 	// LN Body
-	path = filepath.Join(dir, "mania-note1L-0.png")
+	// todo: mania-note1"H" and flip for tail
+	// todo: animated sprites on LN
+	path = filepath.Join(dir, "mania-note1L.png")
 	Skin.LNBody[0], err = game.LoadImage(path)
 	if err != nil {
 		log.Fatal(err)
 	}
-	path = filepath.Join(dir, "mania-note2L-0.png")
+	path = filepath.Join(dir, "mania-note2L.png")
 	Skin.LNBody[1], err = game.LoadImage(path)
 	if err != nil {
 		log.Fatal(err)
 	}
-	path = filepath.Join(dir, "mania-noteSL-0.png")
+	path = filepath.Join(dir, "mania-noteSL.png")
 	Skin.LNBody[2], err = game.LoadImage(path)
 	if err != nil {
 		log.Fatal(err)
 	}
-	path = filepath.Join(dir, "mania-noteSCL-0.png")
+	path = filepath.Join(dir, "mania-noteSCL.png")
 	Skin.LNBody[3], err = game.LoadImage(path)
 	if err != nil {
 		log.Fatal(err)
@@ -110,8 +113,34 @@ func LoadSkin(cwd string) {
 
 	// stage
 	// key-hit은 기본 pressed, key-glow는 점수 나는 pressed인가?
+	// todo: StageLeft가 없다면 StageRight 쓰게 하기
+	path = filepath.Join(dir, "mania-stage-left.png")
+	Skin.StageLeft, err = game.LoadImage(path)
+	if err != nil {
+		log.Fatal(err)
+	}
 	path = filepath.Join(dir, "mania-stage-right.png")
 	Skin.StageRight, err = game.LoadImage(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	// path = filepath.Join(dir, "mania-stage-bottom.png")
+	// Skin.StageBottom, err = game.LoadImage(path)
+	// if err != nil {
+	// 		log.Fatal(err)
+	// }
+	path = filepath.Join(dir, "mania-stage-hint.png")
+	Skin.StageHint, err = game.LoadImage(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	path = filepath.Join(dir, "scorebar-bg.png")
+	Skin.HPBar, err = game.LoadImage(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	path = filepath.Join(dir, "scorebar-colour.png")
+	Skin.HPBarColor, err = game.LoadImage(path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -154,12 +183,6 @@ func LoadSkin(cwd string) {
 	}
 	path = filepath.Join(dir, "mania-keySD.png") // temp: use keyS
 	Skin.StageKeysPressed[3], err = game.LoadImage(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	path = filepath.Join(dir, "mania-stage-hint.png")
-	Skin.StageHint, err = game.LoadImage(path)
 	if err != nil {
 		log.Fatal(err)
 	}

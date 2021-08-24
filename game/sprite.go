@@ -5,6 +5,7 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 	"log"
+	"time"
 
 	"github.com/hajimehoshi/ebiten"
 )
@@ -15,11 +16,10 @@ type Sprite struct {
 	X, Y  int
 	fixed bool // a sprite that never moves once appears
 	op    *ebiten.DrawImageOptions
-	// BornTime int64
-	// LifeTime int64
 
 	Saturation float64
 	Dimness    float64
+	BornTime   time.Time
 }
 
 func (s Sprite) IsOut(screenSize image.Point) bool {
@@ -36,7 +36,6 @@ func (s Sprite) Draw(screen *ebiten.Image) {
 	}
 	if s.fixed {
 		screen.DrawImage(s.src, s.op)
-		// fmt.Println(s.W, s.H, s.X, s.Y)
 	} else {
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(s.ScaleW(), s.ScaleH())
@@ -80,10 +79,11 @@ func (s *Sprite) SetFixedOp(w, h, x, y int) {
 	s.fixed = true
 }
 
-func NewSprite(src *ebiten.Image) Sprite {
+func NewSprite(src image.Image) Sprite {
 	var sprite Sprite
-	sprite.src = src
+	sprite.SetImage(src)
 
+	sprite.BornTime = time.Now()
 	sprite.Saturation = 1
 	sprite.Dimness = 1
 	return sprite
