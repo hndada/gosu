@@ -11,24 +11,8 @@ import (
 
 const maxScore = 1e6
 
-// type Score struct {
-// 	game.BaseScore
-// 	Counts [len(Judgments)]int
-// }
+// const holdUnitHP = 0.002 // 롱노트를 눌렀을 때 1ms 당 차오르는 체력
 
-// 'Late hit' gets negative value in hit time difference
-// 놓친 롱노트 끝날 때 리플레이가 어떻게 박히는지는 아직 확인 안함
-// 시간 내에 correct한 action이 없을 경우 마지막에 miss 판정 내고 끝나는 걸로 상정 -> 여러 케이스 확인해봐야함 (sv2)
-// 1. 노트, 롱노트 미리 누른 상태로 안 떼고 있을 경우
-// 2. 롱노트 처음에 잘 치다가 뗀 경우, 그리고 다시 친 경우
-// 그런데, 계속 누르고 있었으면 그냥 1 1 로 지속됐을 것 같음
-// 현재 missed, 등호포함 부등호인데 legacy 할때는 풀어야 할 수도 있음 -> 너무 귀찮아지면 그냥 생략
-
-// 핵심은, 롱노트를 놔서 최종 미스 판정을 받았더라도 staged에 ln tail 이 있어야 한다는 것
-// Tail 이면서 unscored이고 press나 idle일순 없음
-
-// LN holdHP. 추가하고자 한다면 lastPressed에 time value까지 추가
-// log 삭제. 리플레이는 별도 함수에서 처리하는 걸로
 func (c *Chart) allotScore() {
 	var sumStrain float64
 	for _, n := range c.Notes {
@@ -46,6 +30,7 @@ func (c *Chart) allotScore() {
 	}
 }
 
+// LNTail 이면서 unscored이고 press나 idle일순 없음
 func (s *Scene) judge(e keyEvent) {
 	i := s.staged[e.key] // index of a staged note
 	if i < 0 {
@@ -80,7 +65,9 @@ func (s *Scene) judge(e keyEvent) {
 		return empty // 너무 빨리 누름. 너무 늦게 누른 경우(아예 안 누르다)는 scene update에서 별도 처리
 	}
 	j := judge(n.Type, keyAction, timeDiff)
-	s.timeDiffs = append(s.timeDiffs, timeDiff)
+
+	ts := s.jm.NewTimingSprite(timeDiff)
+	s.timingSprites = append(s.timingSprites, ts)
 	s.applyScore(i, j)
 	s.lastPressed[e.key] = TimeBool{Time: e.time, Value: e.pressed}
 }
@@ -162,8 +149,6 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 // 	}
 // 	return true
 // }
-
-// const holdUnitHP = 0.002 // 롱노트를 눌렀을 때 1ms 당 차오르는 체력
 
 func (s *Scene) drawCombo(screen *ebiten.Image) {
 	gap := int(game.Settings.ComboGap * game.DisplayScale())

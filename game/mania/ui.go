@@ -3,8 +3,8 @@ package mania
 import (
 	"image"
 	"image/color"
-	"image/draw"
 
+	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/game"
 )
 
@@ -14,7 +14,7 @@ var (
 )
 
 type sceneUI struct {
-	noteWidths       []int
+	noteWidths       []int // todo: setNoteSprites()에서만 쓰임
 	playfield        game.Sprite
 	stageKeys        []game.Sprite
 	stageKeysPressed []game.Sprite
@@ -26,70 +26,134 @@ type sceneUI struct {
 
 // 가로가 늘어난다고 같이 늘리면 오히려 어색하므로 세로에만 맞춰 늘리기: 100 기준
 func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
+	// todo: playfield가 지금 x,y가 설정이 잘 안되어있는 듯
 	s := new(sceneUI)
 	scale := float64(screenSize.Y) / 100
 	keyKinds := keyKindsMap[keyCount]
 	unscaledNoteWidths := Settings.NoteWidths[keyCount&ScratchMask]
 
-	s.noteWidths = make([]int, keyCount&ScratchMask)
+	noteWidths := make([]int, keyCount&ScratchMask)
 	for key, kind := range keyKinds {
-		s.noteWidths[key] = int(unscaledNoteWidths[kind] * scale)
+		noteWidths[key] = int(unscaledNoteWidths[kind] * scale)
 	}
+	i, _ := ebiten.NewImage(screenSize.X, screenSize.Y, ebiten.FilterDefault)
 
-	{ // playfield
-		var w int
-		for _, nw := range s.noteWidths {
-			w += nw
+	p := Settings.StagePosition / 100 // proportion
+	center := int(float64(screenSize.X) * p)
+	var wLeft, wMiddle int
+	{ // main
+		for _, nw := range noteWidths {
+			wMiddle += nw
 		}
+		h := screenSize.Y
+		main, _ := ebiten.NewImage(wMiddle, h, ebiten.FilterDefault)
+		main.Fill(color.Black)
 
-		i := image.NewRGBA(image.Rect(0, 0, w, screenSize.Y))
-		{ // main
-			r := image.Rectangle{image.ZP, i.Bounds().Size()}
-			draw.Draw(i, r, &image.Uniform{black}, image.ZP, draw.Over)
-		}
-		{ // hint
-			hp := int(Settings.HitPosition * scale)
-			h := int(Settings.NoteHeigth * scale)
-			sp := image.Point{0, hp - h/2}
-			r := image.Rectangle{sp, sp.Add(image.Pt(w, h))}
-			draw.Draw(i, r, &image.Uniform{red}, image.ZP, draw.Over)
-		}
-		s.playfield.SetImage(i)
-		p := Settings.StagePosition / 100 // position in proportion
-		s.playfield.W = w
-		s.playfield.H = screenSize.Y
-		s.playfield.X = int(float64(screenSize.X)*p) - w/2 // int - int
-		s.playfield.Y = 0
-		s.playfield.Saturation = 1
-		s.playfield.Dimness = 1
+		x := center - wMiddle/2 // int - int
+		y := 0
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(float64(x), float64(y))
+		i.DrawImage(main, op)
+
+		// main := image.NewRGBA(image.Rect(0, 0, w, screenSize.Y))
+		// r := image.Rectangle{image.ZP, i.Bounds().Size()}
+		// draw.Draw(main, r, &image.Uniform{black}, image.ZP, draw.Over)
+	}
+	// important: mania-stage-hint에서 판정선이 이미지의 맨 아래에 있다는 보장이 없음
+	// 직접 그려야겠다
+	// var hHint int
+	{
+		h := int(Settings.JudgeLineHeight * game.DisplayScale())
+		hint, _ := ebiten.NewImage(wMiddle, h, ebiten.FilterDefault)
+		hint.Fill(red)
+
+		x := center - wMiddle/2 // int - int
+		y := int(Settings.HitPosition*game.DisplayScale()) - h
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(float64(x), float64(y))
+		i.DrawImage(hint, op)
+	}
+	// {
+	// 	src := Skin.StageHint
+	// 	scale := float64(wMiddle) / float64(src.Bounds().Dx())
+	// 	h := int(float64(src.Bounds().Dy()) * scale)
+	// 	x := center - wMiddle/2
+	// 	y := int(Settings.HitPosition*game.DisplayScale()) - h
+	// 	op := &ebiten.DrawImageOptions{}
+	// 	op.GeoM.Scale(scale, scale)
+	// 	op.GeoM.Translate(float64(x), float64(y))
+	// 	i.DrawImage(src, op)
+	// 	// hHint = h
+	// }
+	{
+		src := Skin.StageLeft
+		h := screenSize.Y
+		scale := float64(h) / float64(src.Bounds().Dy())
+		wLeft = int(float64(src.Bounds().Dx()) * scale)
+		x := center - wMiddle/2 - wLeft
+		y := 0
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Scale(scale, scale)
+		op.GeoM.Translate(float64(x), float64(y))
+		i.DrawImage(src, op)
 	}
 	{
-		s.stageKeys = make([]game.Sprite, keyCount)
-		s.stageKeysPressed = make([]game.Sprite, keyCount)
-		for k := 0; k < keyCount&ScratchMask; k++ {
-			var sprite game.Sprite
-			src := Skin.StageKeys[keyKinds[k]]
-			sprite = game.NewSprite(src)
+		src := Skin.StageRight
+		h := screenSize.Y
+		scale := float64(h) / float64(src.Bounds().Dy())
+		// wRight = int(float64(src.Bounds().Dx()) * scale)
+		x := center + wMiddle/2
+		y := 0
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Scale(scale, scale)
+		op.GeoM.Translate(float64(x), float64(y))
+		i.DrawImage(src, op)
+	}
+	{
+		//		src := Skin.HPBar
+		//		h := screenSize.Y
+		//		scale := float64(h) / float64(src.Bounds().Dy())
+		//		// wRight = int(float64(src.Bounds().Dx()) * scale)
+		//		x := center + wMiddle/2
+		//		y := 0
+		//		fmt.Println("hpbar", center, x, y)
+		//		op := &ebiten.DrawImageOptions{}
+		//		op.GeoM.Scale(scale, scale)
+		//		op.GeoM.Translate(float64(x), float64(y))
+		//		i.DrawImage(src, op)
+	}
+	s.playfield = game.NewSprite(i)
+	s.playfield.SetFixedOp(screenSize.X, screenSize.Y, 0, 0) // todo: 여기에 bg 추가
 
-			w := s.noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
+	s.stageKeys = make([]game.Sprite, keyCount)
+	s.stageKeysPressed = make([]game.Sprite, keyCount)
 
-			// scale := float64(sprite.W) / float64(src.Bounds().Size().X)
-			// sprite.H = int(float64(src.Bounds().Size().Y) * scale)
-			y := int((Settings.HitPosition - Settings.NoteHeigth/2 -
-				4*Settings.NoteHeigth/2) * game.DisplayScale()) // todo: why?
-			h := game.Settings.ScreenSize.Y - y
-			x := s.playfield.X
-			for k2 := 0; k2 < k; k2++ {
-				x += s.noteWidths[k2]
-			}
-			sprite.SetFixedOp(w, h, x, y)
-			s.stageKeys[k] = sprite
+	for k := 0; k < keyCount&ScratchMask; k++ {
+		var sprite game.Sprite
+		src := Skin.StageKeys[keyKinds[k]]
+		sprite = game.NewSprite(src)
 
-			sprite2 := sprite
-			src2 := Skin.StageKeysPressed[keyKinds[k]]
-			sprite2.SetImage(src2)
-			s.stageKeysPressed[k] = sprite2
+		w := noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
+
+		// scale := float64(sprite.W) / float64(src.Bounds().Size().X)
+		// sprite.H = int(float64(src.Bounds().Size().Y) * scale)
+		x := center - wMiddle/2 // int - int
+		for k2 := 0; k2 < k; k2++ {
+			x += noteWidths[k2]
 		}
+		y := int(Settings.HitPosition * game.DisplayScale()) // + hHint/2
+		// fmt.Println(hHint)
+		// y := int((Settings.HitPosition - Settings.NoteHeigth/2 -
+		// 	4*Settings.NoteHeigth/2) * game.DisplayScale()) // todo: why?
+		h := game.Settings.ScreenSize.Y - y
+
+		sprite.SetFixedOp(w, h, x, y)
+		s.stageKeys[k] = sprite
+
+		sprite2 := sprite
+		src2 := Skin.StageKeysPressed[keyKinds[k]]
+		sprite2.SetImage(src2)
+		s.stageKeysPressed[k] = sprite2
 	}
 
 	s.combos = game.LoadNumbers(game.NumberCombo)
@@ -101,38 +165,43 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 		h := int(Settings.JudgeHeight * game.DisplayScale())
 		scale := float64(h) / float64(src.Bounds().Dy())
 		w := int(float64(src.Bounds().Dx()) * scale)
-		x := (game.Settings.ScreenSize.X - w) / 2
+		x := center - w/2
 		y := int(Settings.JudgePosition*game.DisplayScale()) - h/2
 		sprite.SetFixedOp(w, h, x, y)
 		s.judgeSprite[i] = sprite
 	}
+	s.noteWidths = noteWidths
+
 	return *s
 }
 
-// todo: n.scored 시 명암 처리
 // length: 시간적 길이 // height: 공간적 길이. 이미지 길이.
 func (s *Scene) setNoteSprites() {
-	var sprite game.Sprite
 	keyKinds := keyKindsMap[s.chart.KeyCount]
+
+	var wMiddle int
+	for k := 0; k < s.chart.KeyCount&ScratchMask; k++ {
+		wMiddle += s.noteWidths[k]
+	}
+	xStart := (game.Settings.ScreenSize.X - wMiddle) / 2
 	for i, n := range s.chart.Notes {
+		var sprite game.Sprite
 		kind := keyKinds[n.Key]
 		switch n.Type {
 		case TypeNote, TypeLNHead, TypeLNTail: // temp
-			sprite.SetImage(Skin.Note[kind])
+			sprite = game.NewSprite(Skin.Note[kind])
 		}
 
 		scale := float64(s.ScreenSize.Y) / 100
 		sprite.H = int(Settings.NoteHeigth * scale)
 		sprite.W = s.noteWidths[n.Key]
-		x := s.playfield.X
+		x := xStart
 		for k := 0; k < n.Key; k++ {
 			x += s.noteWidths[k]
 		}
 		sprite.X = x
 		y := Settings.HitPosition - n.position*s.speed - float64(sprite.H)/2
 		sprite.Y = int(y * scale)
-		sprite.Saturation = 1
-		sprite.Dimness = 1
 		s.chart.Notes[i].Sprite = sprite
 	}
 
