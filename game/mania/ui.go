@@ -5,7 +5,6 @@ import (
 	"image/color"
 	"image/draw"
 
-	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/game"
 )
 
@@ -70,28 +69,20 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 		for k := 0; k < keyCount&ScratchMask; k++ {
 			var sprite game.Sprite
 			src := Skin.StageKeys[keyKinds[k]]
-			sprite.SetImage(src)
-			sprite.W = s.noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
+			sprite = game.NewSprite(src)
+
+			w := s.noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
 
 			// scale := float64(sprite.W) / float64(src.Bounds().Size().X)
 			// sprite.H = int(float64(src.Bounds().Size().Y) * scale)
 			y := int((Settings.HitPosition - Settings.NoteHeigth/2 -
 				4*Settings.NoteHeigth/2) * game.DisplayScale()) // todo: why?
-			sprite.H = game.Settings.ScreenSize.Y - y
+			h := game.Settings.ScreenSize.Y - y
 			x := s.playfield.X
 			for k2 := 0; k2 < k; k2++ {
 				x += s.noteWidths[k2]
 			}
-			sprite.X = x
-			sprite.Y = y
-			sprite.Saturation = 1
-			sprite.Dimness = 1
-			op := &ebiten.DrawImageOptions{}
-			op.GeoM.Scale(float64(sprite.W)/float64(src.Bounds().Size().X),
-				float64(sprite.H)/float64(src.Bounds().Size().Y)) // todo: duplicated code
-			op.GeoM.Translate(float64(sprite.X), float64(sprite.Y))
-			op.ColorM.ChangeHSV(0, sprite.Saturation, sprite.Dimness)
-			sprite.Op = op
+			sprite.SetFixedOp(w, h, x, y)
 			s.stageKeys[k] = sprite
 
 			sprite2 := sprite
@@ -106,21 +97,13 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 
 	for i := range s.judgeSprite {
 		src := Skin.Judge[i]
-		var sprite game.Sprite
-		sprite.SetImage(src)
-
-		sprite.H = int(Settings.JudgeHeight * game.DisplayScale())
-		scale := float64(sprite.H) / float64(src.Bounds().Dy())
-		sprite.W = int(float64(src.Bounds().Dx()) * scale)
-		sprite.X = (game.Settings.ScreenSize.X - sprite.W) / 2
-		sprite.Y = int(Settings.JudgePosition*game.DisplayScale()) - sprite.H/2
-		sprite.Saturation = 1
-		sprite.Dimness = 1
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(scale, scale)
-		op.GeoM.Translate(float64(sprite.X), float64(sprite.Y))
-		op.ColorM.ChangeHSV(0, sprite.Saturation, sprite.Dimness)
-		sprite.Op = op
+		sprite := game.NewSprite(src)
+		h := int(Settings.JudgeHeight * game.DisplayScale())
+		scale := float64(h) / float64(src.Bounds().Dy())
+		w := int(float64(src.Bounds().Dx()) * scale)
+		x := (game.Settings.ScreenSize.X - w) / 2
+		y := int(Settings.JudgePosition*game.DisplayScale()) - h/2
+		sprite.SetFixedOp(w, h, x, y)
 		s.judgeSprite[i] = sprite
 	}
 	return *s

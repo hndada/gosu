@@ -10,13 +10,13 @@ import (
 )
 
 type Sprite struct {
-	src      *ebiten.Image
-	W, H     int // desired w, h
-	X, Y     int
-	fixed    bool // a sprite that never moves once appears
-	Op       *ebiten.DrawImageOptions
-	BornTime int64
-	LifeTime int64
+	src   *ebiten.Image
+	W, H  int // desired w, h
+	X, Y  int
+	fixed bool // a sprite that never moves once appears
+	op    *ebiten.DrawImageOptions
+	// BornTime int64
+	// LifeTime int64
 
 	Saturation float64
 	Dimness    float64
@@ -35,7 +35,8 @@ func (s Sprite) Draw(screen *ebiten.Image) {
 		return
 	}
 	if s.fixed {
-		screen.DrawImage(s.src, s.Op)
+		screen.DrawImage(s.src, s.op)
+		// fmt.Println(s.W, s.H, s.X, s.Y)
 	} else {
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(s.ScaleW(), s.ScaleH())
@@ -67,9 +68,25 @@ func (s Sprite) ScaleH() float64 {
 	return float64(s.H) / float64(h1)
 }
 
-func (s *Sprite) SetFixedOp() {
-
+func (s *Sprite) SetFixedOp(w, h, x, y int) {
+	s.W = w
+	s.H = h
+	s.X = x
+	s.Y = y
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(s.ScaleW(), s.ScaleH())
+	op.GeoM.Translate(float64(x), float64(y))
+	s.op = op
 	s.fixed = true
+}
+
+func NewSprite(src *ebiten.Image) Sprite {
+	var sprite Sprite
+	sprite.src = src
+
+	sprite.Saturation = 1
+	sprite.Dimness = 1
+	return sprite
 }
 
 type LongSprite struct {

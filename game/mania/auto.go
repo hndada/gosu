@@ -29,7 +29,7 @@ func (c Chart) GenAutoKeyEvents(instability float64) func(int64) []keyEvent {
 				pressed: true,
 			}
 			e2 := keyEvent{
-				time:    n.Time + 1 + d,
+				time:    n.Time + 40 + d,
 				key:     n.Key,
 				pressed: false,
 			}
