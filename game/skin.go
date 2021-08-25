@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten"
 )
@@ -20,8 +21,8 @@ const (
 
 // image.Image가 아닌 *ebiten.Image로 해야 이미지 자체가 한 번만 로드 됨
 var Skin struct {
-	Number1 [13]*ebiten.Image // including dot, comma, percent
-	Number2 [13]*ebiten.Image
+	Number1   [13]*ebiten.Image // including dot, comma, percent
+	Number2   [13]*ebiten.Image
 	BoxLeft   *ebiten.Image
 	BoxRight  *ebiten.Image
 	BoxMiddle *ebiten.Image
@@ -33,9 +34,28 @@ var Skin struct {
 }
 
 func LoadImage(path string) (*ebiten.Image, error) {
-	f, err := os.Open(path)
+	// temp: @2x 빠르게 적용
+	var hdPath string
+	if !strings.Contains(path, "@2x.") {
+		switch filepath.Ext(path) {
+		case ".png":
+			hdPath = strings.Replace(path, ".png", "@2x.png", 1)
+		case ".jpg":
+			hdPath = strings.Replace(path, ".jpg", "@2x.jpg", 1)
+		case ".jpeg":
+			hdPath = strings.Replace(path, ".jpeg", "@2x.jpeg", 1)
+		}
+	}
+	f, err := os.Open(hdPath)
 	if err != nil {
-		return nil, err
+		if os.IsNotExist(err) {
+			f, err = os.Open(path)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	}
 	defer f.Close()
 	i, _, err := image.Decode(f)
