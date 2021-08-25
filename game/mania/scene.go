@@ -53,6 +53,9 @@ type Scene struct {
 
 	timingSprites []game.Sprite
 	lastJudge     game.Judgment
+
+	// hpSprite game.Sprite
+	hpScreen *ebiten.Image
 }
 
 func NewScene(c *Chart, mods Mods, screenSize image.Point, cwd string) *Scene {
@@ -96,6 +99,7 @@ func NewScene(c *Chart, mods Mods, screenSize image.Point, cwd string) *Scene {
 	s.ready = true
 	s.jm = game.NewJudgmentMeter(Judgments[:])
 
+	s.hpScreen, _ = ebiten.NewImage(screenSize.X, screenSize.Y, ebiten.FilterDefault)
 	return s
 }
 
@@ -173,6 +177,7 @@ func (s *Scene) Update() error {
 		}
 	}
 	s.timingSprites = ts2
+	s.HPBarMask.H = int(float64(s.HPBarColor.H) * (100 - s.hp) / 100)
 	return nil
 }
 
@@ -225,8 +230,15 @@ judge: %v
 		s.score, s.karma, s.hp, s.combo, s.judgeCounts))
 	s.drawCombo(screen)
 	s.drawScore(screen)
-	s.jm.Sprite.Draw(screen)
+
 	// s.judgeSprite[0].Draw(screen) // temp
+	// s.HPBar.Draw(screen) // temp: HPBar 와 HP color가 서로 맞추기 어려우니 임시로 color만 사용
+
+	s.hpScreen.Clear()
+	s.HPBarColor.Draw(s.hpScreen)
+	s.HPBarMask.Draw(s.hpScreen)
+	screen.DrawImage(s.hpScreen, &ebiten.DrawImageOptions{})
+	s.jm.Sprite.Draw(screen)
 }
 
 func (s *Scene) initStaged(c *Chart) {

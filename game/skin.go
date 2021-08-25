@@ -30,7 +30,9 @@ var Skin struct {
 	Cursor      *ebiten.Image
 	CursorSmoke *ebiten.Image
 
-	DefaultBG *ebiten.Image
+	HPBar      *ebiten.Image
+	HPBarColor *ebiten.Image
+	DefaultBG  *ebiten.Image
 }
 
 func LoadImage(path string) (*ebiten.Image, error) {
@@ -84,5 +86,18 @@ func LoadSkin(cwd string) {
 		if err != nil {
 			log.Fatal(err)
 		}
+	}
+
+	// temp: 현재 90도 미리 돌려놓음
+	var path string
+	path = filepath.Join(dir, "scorebar-bg.png")
+	Skin.HPBar, err = LoadImage(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	path = filepath.Join(dir, "scorebar-colour.png")
+	Skin.HPBarColor, err = LoadImage(path)
+	if err != nil {
+		log.Fatal(err)
 	}
 }

@@ -23,6 +23,10 @@ type sceneUI struct {
 	scores      [10]game.Sprite
 	judgeSprite [len(Judgments)]game.Sprite
 	Spotlights  []game.Sprite // 키를 눌렀을 때 불 들어오는 거
+
+	HPBar      game.Sprite // it can go to playfield
+	HPBarColor game.Sprite // actually, it can also go to playfield
+	HPBarMask  game.Sprite
 }
 
 // 가로가 늘어난다고 같이 늘리면 오히려 어색하므로 세로에만 맞춰 늘리기: 100 기준
@@ -109,18 +113,41 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 		op.GeoM.Translate(float64(x), float64(y))
 		i.DrawImage(src, op)
 	}
-	// {
-	// 	src := Skin.HPBar
-	// 	h := screenSize.Y
-	// 	scale := float64(h) / float64(src.Bounds().Dy())
-	// 	// wRight = int(float64(src.Bounds().Dx()) * scale)
-	// 	x := center + wMiddle/2
-	// 	y := 0
-	// 	op := &ebiten.DrawImageOptions{}
-	// 	op.GeoM.Scale(scale, scale)
-	// 	op.GeoM.Translate(float64(x), float64(y))
-	// 	i.DrawImage(src, op)
-	// }
+
+	{ // 90도 돌아갈 이미지이므로 whxy 설정에 유의
+		src := game.Skin.HPBar
+		sprite := game.NewSprite(src)
+		// sprite.Theta = 90
+		h := int(Settings.HPHeight * game.DisplayScale())
+		scale := float64(h) / float64(src.Bounds().Dy())
+		w := int(float64(src.Bounds().Dx()) * scale)
+		x := center + wMiddle/2
+		y := game.Settings.ScreenSize.Y - h
+		sprite.SetFixedOp(w, h, x, y)
+		s.HPBar = sprite
+	}
+	{ // HP Bar 이미지와 크기가 다를 수 있음
+		src := game.Skin.HPBarColor
+		sprite := game.NewSprite(src)
+		// sprite.Theta = 90
+		h := int(Settings.HPHeight * game.DisplayScale())
+		scale := float64(h) / float64(src.Bounds().Dy())
+		w := int(float64(src.Bounds().Dx()) * scale)
+		x := center + wMiddle/2 // + s.HPBar.W/2
+		y := game.Settings.ScreenSize.Y - h
+		// y := int(Settings.HitPosition*game.DisplayScale()) - h
+		sprite.SetFixedOp(w, h, x, y)
+		s.HPBarColor = sprite
+
+		mask, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
+		sprite2 := game.NewSprite(mask)
+		sprite2.W = w
+		sprite2.H = 0 // hp가 100일 때 0
+		sprite2.X = x
+		sprite2.Y = y
+		sprite2.CompositeMode = ebiten.CompositeModeSourceOut
+		s.HPBarMask = sprite2
+	}
 	s.playfield = game.NewSprite(i)
 	s.playfield.SetFixedOp(screenSize.X, screenSize.Y, 0, 0) // todo: 여기에 bg 추가
 
@@ -167,9 +194,8 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 				x += noteWidths[k2]
 			}
 			y := int(Settings.HitPosition*game.DisplayScale()) - h
-			// sprite.SetFixedOp(w, h, x, y)
-			clr := Settings.SpotlightColor[keyKinds[k]]
-			sprite.SetFixedOpWithColor(w, h, x, y, clr)
+			sprite.Color = Settings.SpotlightColor[keyKinds[k]]
+			sprite.SetFixedOp(w, h, x, y)
 			s.Spotlights[k] = sprite
 		}
 	}
@@ -187,7 +213,6 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 		sprite.SetFixedOp(w, h, x, y)
 		s.judgeSprite[i] = sprite
 	}
-
 	s.noteWidths = noteWidths
 	return *s
 }

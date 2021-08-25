@@ -1,6 +1,7 @@
 package game
 
 import (
+	"fmt"
 	"image"
 	"image/color"
 	_ "image/jpeg"
@@ -12,15 +13,20 @@ import (
 )
 
 type Sprite struct {
-	src   *ebiten.Image
-	W, H  int // desired w, h
-	X, Y  int
+	src  *ebiten.Image
+	W, H int // desired w, h
+	X, Y int
+
 	fixed bool // a sprite that never moves once appears
 	op    *ebiten.DrawImageOptions
 
 	Saturation float64
 	Dimness    float64
-	BornTime   time.Time
+	// Theta      float64
+	Color color.Color
+
+	BornTime time.Time
+	ebiten.CompositeMode
 }
 
 func (s Sprite) IsOut(screenSize image.Point) bool {
@@ -42,6 +48,9 @@ func (s Sprite) Draw(screen *ebiten.Image) {
 		op.GeoM.Scale(s.ScaleW(), s.ScaleH())
 		op.GeoM.Translate(float64(s.X), float64(s.Y))
 		op.ColorM.ChangeHSV(0, s.Saturation, s.Dimness)
+		if s.CompositeMode != 0 {
+			op.CompositeMode = s.CompositeMode
+		}
 		screen.DrawImage(s.src, op)
 	}
 }
@@ -68,38 +77,33 @@ func (s Sprite) ScaleH() float64 {
 	return float64(s.H) / float64(h1)
 }
 
+// Suppose minor parameter has already been set
 func (s *Sprite) SetFixedOp(w, h, x, y int) {
 	s.W = w
 	s.H = h
 	s.X = x
 	s.Y = y
 	op := &ebiten.DrawImageOptions{}
+	// op.GeoM.Rotate(s.Theta)
 	op.GeoM.Scale(s.ScaleW(), s.ScaleH())
 	op.GeoM.Translate(float64(x), float64(y))
+	if s.Color != nil {
+		r, g, b, _ := s.Color.RGBA()
+		op.ColorM.Scale(0, 0, 0, 1)
+		op.ColorM.Translate(
+			float64(r)/0xff,
+			float64(g)/0xff,
+			float64(b)/0xff,
+			0, // temp
+		)
+	}
 	s.op = op
 	s.fixed = true
 }
 
-// temp
-func (s *Sprite) SetFixedOpWithColor(w, h, x, y int, c color.Color) {
-	s.W = w
-	s.H = h
-	s.X = x
-	s.Y = y
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(s.ScaleW(), s.ScaleH())
-	op.GeoM.Translate(float64(x), float64(y))
-	r, g, b, _ := c.RGBA()
-	op.ColorM.Scale(0, 0, 0, 1)
-	op.ColorM.Translate(
-		float64(r)/0xff,
-		float64(g)/0xff,
-		float64(b)/0xff,
-		0.1,
-	)
-	s.op = op
-	s.fixed = true
-	// fmt.Println(op)
+// for debugging
+func (s Sprite) PrintWHXY(comment string) {
+	fmt.Println(comment, s.W, s.H, s.X, s.Y)
 }
 
 func NewSprite(src image.Image) Sprite {

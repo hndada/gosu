@@ -27,6 +27,7 @@ var Settings struct {
 	JudgeHeight     float64
 	SpotlightColor  [4]color.RGBA
 	JudgeLineHeight float64
+	HPHeight        float64
 
 	// LineInHint        bool
 	// LNHeadCustom      bool  // if false, head uses normal note image.
@@ -64,4 +65,5 @@ func init() {
 	// Settings.SpotlightColor = [4]float64{}
 	Settings.JudgeHeight = 10
 	Settings.JudgeLineHeight = 2
+	Settings.HPHeight = 65
 }
