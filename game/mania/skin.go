@@ -24,12 +24,10 @@ var Skin struct {
 	StageHint   *ebiten.Image // todo: HitPosition 대신 필요할 듯
 	StageBottom *ebiten.Image
 	StageLight  *ebiten.Image // mask
-	HPBar       *ebiten.Image
-	// MaskingBorder
 
+	// MaskingBorder
 	StageKeys        [4]*ebiten.Image
 	StageKeysPressed [4]*ebiten.Image
-	HPBarColor       *ebiten.Image
 }
 
 func LoadSkin(cwd string) {
@@ -136,16 +134,6 @@ func LoadSkin(cwd string) {
 	}
 	path = filepath.Join(dir, "mania-stage-hint.png")
 	Skin.StageHint, err = game.LoadImage(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	path = filepath.Join(dir, "scorebar-bg.png")
-	Skin.HPBar, err = game.LoadImage(path)
-	if err != nil {
-		log.Fatal(err)
-	}
-	path = filepath.Join(dir, "scorebar-colour.png")
-	Skin.HPBarColor, err = game.LoadImage(path)
 	if err != nil {
 		log.Fatal(err)
 	}
