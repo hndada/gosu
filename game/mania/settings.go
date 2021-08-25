@@ -56,11 +56,12 @@ func init() {
 	Settings.ComboPosition = 50
 	Settings.JudgePosition = 60
 	Settings.SpotlightColor = [4]color.RGBA{
-		{64, 0, 0, 64},
-		{0, 0, 64, 64},
-		{64, 48, 0, 64},
-		{40, 0, 40, 64},
+		{64, 0, 0, 0xff},
+		{0, 0, 64, 0xff},
+		{64, 48, 0, 0xff},
+		{40, 0, 40, 0xff},
 	}
+	// Settings.SpotlightColor = [4]float64{}
 	Settings.JudgeHeight = 10
 	Settings.JudgeLineHeight = 2
 }

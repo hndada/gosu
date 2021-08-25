@@ -2,6 +2,7 @@ package game
 
 import (
 	"image"
+	"image/color"
 	_ "image/jpeg"
 	_ "image/png"
 	"log"
@@ -77,6 +78,28 @@ func (s *Sprite) SetFixedOp(w, h, x, y int) {
 	op.GeoM.Translate(float64(x), float64(y))
 	s.op = op
 	s.fixed = true
+}
+
+// temp
+func (s *Sprite) SetFixedOpWithColor(w, h, x, y int, c color.Color) {
+	s.W = w
+	s.H = h
+	s.X = x
+	s.Y = y
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(s.ScaleW(), s.ScaleH())
+	op.GeoM.Translate(float64(x), float64(y))
+	r, g, b, _ := c.RGBA()
+	op.ColorM.Scale(0, 0, 0, 1)
+	op.ColorM.Translate(
+		float64(r)/0xff,
+		float64(g)/0xff,
+		float64(b)/0xff,
+		0.1,
+	)
+	s.op = op
+	s.fixed = true
+	// fmt.Println(op)
 }
 
 func NewSprite(src image.Image) Sprite {

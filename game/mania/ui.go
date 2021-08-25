@@ -22,11 +22,11 @@ type sceneUI struct {
 	combos      [10]game.Sprite
 	scores      [10]game.Sprite
 	judgeSprite [len(Judgments)]game.Sprite
+	Spotlights  []game.Sprite // 키를 눌렀을 때 불 들어오는 거
 }
 
 // 가로가 늘어난다고 같이 늘리면 오히려 어색하므로 세로에만 맞춰 늘리기: 100 기준
 func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
-	// todo: playfield가 지금 x,y가 설정이 잘 안되어있는 듯
 	s := new(sceneUI)
 	scale := float64(screenSize.Y) / 100
 	keyKinds := keyKindsMap[keyCount]
@@ -60,9 +60,9 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 		// draw.Draw(main, r, &image.Uniform{black}, image.ZP, draw.Over)
 	}
 	// important: mania-stage-hint에서 판정선이 이미지의 맨 아래에 있다는 보장이 없음
-	// 직접 그려야겠다
+	// 아마 mania-stage-bottom 때문인듯
 	// var hHint int
-	{
+	{ // no-skin ver
 		h := int(Settings.JudgeLineHeight * game.DisplayScale())
 		hint, _ := ebiten.NewImage(wMiddle, h, ebiten.FilterDefault)
 		hint.Fill(red)
@@ -109,19 +109,18 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 		op.GeoM.Translate(float64(x), float64(y))
 		i.DrawImage(src, op)
 	}
-	{
-		//		src := Skin.HPBar
-		//		h := screenSize.Y
-		//		scale := float64(h) / float64(src.Bounds().Dy())
-		//		// wRight = int(float64(src.Bounds().Dx()) * scale)
-		//		x := center + wMiddle/2
-		//		y := 0
-		//		fmt.Println("hpbar", center, x, y)
-		//		op := &ebiten.DrawImageOptions{}
-		//		op.GeoM.Scale(scale, scale)
-		//		op.GeoM.Translate(float64(x), float64(y))
-		//		i.DrawImage(src, op)
-	}
+	// {
+	// 	src := Skin.HPBar
+	// 	h := screenSize.Y
+	// 	scale := float64(h) / float64(src.Bounds().Dy())
+	// 	// wRight = int(float64(src.Bounds().Dx()) * scale)
+	// 	x := center + wMiddle/2
+	// 	y := 0
+	// 	op := &ebiten.DrawImageOptions{}
+	// 	op.GeoM.Scale(scale, scale)
+	// 	op.GeoM.Translate(float64(x), float64(y))
+	// 	i.DrawImage(src, op)
+	// }
 	s.playfield = game.NewSprite(i)
 	s.playfield.SetFixedOp(screenSize.X, screenSize.Y, 0, 0) // todo: 여기에 bg 추가
 
@@ -155,7 +154,25 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 		sprite2.SetImage(src2)
 		s.stageKeysPressed[k] = sprite2
 	}
-
+	{
+		src := Skin.StageLight
+		sprite := game.NewSprite(src)
+		s.Spotlights = make([]game.Sprite, keyCount)
+		for k := 0; k < keyCount&ScratchMask; k++ {
+			w := noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
+			scale := float64(w) / float64(src.Bounds().Size().X)
+			h := int(float64(src.Bounds().Size().Y) * scale)
+			x := center - wMiddle/2 // int - int
+			for k2 := 0; k2 < k; k2++ {
+				x += noteWidths[k2]
+			}
+			y := int(Settings.HitPosition*game.DisplayScale()) - h
+			// sprite.SetFixedOp(w, h, x, y)
+			clr := Settings.SpotlightColor[keyKinds[k]]
+			sprite.SetFixedOpWithColor(w, h, x, y, clr)
+			s.Spotlights[k] = sprite
+		}
+	}
 	s.combos = game.LoadNumbers(game.NumberCombo)
 	s.scores = game.LoadNumbers(game.NumberScore)
 
@@ -170,12 +187,11 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 		sprite.SetFixedOp(w, h, x, y)
 		s.judgeSprite[i] = sprite
 	}
-	s.noteWidths = noteWidths
 
+	s.noteWidths = noteWidths
 	return *s
 }
 
-// length: 시간적 길이 // height: 공간적 길이. 이미지 길이.
 func (s *Scene) setNoteSprites() {
 	keyKinds := keyKindsMap[s.chart.KeyCount]
 

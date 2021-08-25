@@ -129,6 +129,11 @@ func LoadSkin(cwd string) {
 	// if err != nil {
 	// 		log.Fatal(err)
 	// }
+	path = filepath.Join(dir, "mania-stage-light.png")
+	Skin.StageLight, err = game.LoadImage(path)
+	if err != nil {
+		log.Fatal(err)
+	}
 	path = filepath.Join(dir, "mania-stage-hint.png")
 	Skin.StageHint, err = game.LoadImage(path)
 	if err != nil {

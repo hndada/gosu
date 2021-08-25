@@ -186,6 +186,11 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 	// 		break
 	// 	}
 	// }
+	for i, tb := range s.lastPressed {
+		if tb.Value {
+			s.Spotlights[i].Draw(screen)
+		}
+	}
 	for _, n := range s.chart.Notes {
 		if n.Type == TypeLNTail {
 			n.LongSprite.Draw(screen)
@@ -194,6 +199,13 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 	// to make sure LNs go most behind
 	for _, n := range s.chart.Notes {
 		n.Sprite.Draw(screen)
+	}
+	for i, tb := range s.lastPressed {
+		if tb.Value { // || now-tb.Time < 90 { // temp
+			s.stageKeysPressed[i].Draw(screen)
+		} else {
+			s.stageKeys[i].Draw(screen)
+		}
 	}
 	// for _, sprite := range s.timingSprites {
 	// 	// fmt.Println(sprite.W, sprite.H, sprite.X, sprite.Y)
@@ -213,13 +225,6 @@ judge: %v
 		s.score, s.karma, s.hp, s.combo, s.judgeCounts))
 	s.drawCombo(screen)
 	s.drawScore(screen)
-	for i, tb := range s.lastPressed {
-		if tb.Value { // || now-tb.Time < 90 { // temp
-			s.stageKeysPressed[i].Draw(screen)
-		} else {
-			s.stageKeys[i].Draw(screen)
-		}
-	}
 	s.jm.Sprite.Draw(screen)
 	// s.judgeSprite[0].Draw(screen) // temp
 }
