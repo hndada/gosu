@@ -21,18 +21,17 @@ const (
 
 // image.Image가 아닌 *ebiten.Image로 해야 이미지 자체가 한 번만 로드 됨
 var Skin struct {
-	Number1   [13]*ebiten.Image // including dot, comma, percent
-	Number2   [13]*ebiten.Image
-	BoxLeft   *ebiten.Image
-	BoxRight  *ebiten.Image
-	BoxMiddle *ebiten.Image
-
-	Cursor      *ebiten.Image
-	CursorSmoke *ebiten.Image
-
+	Number1    [13]*ebiten.Image // including dot, comma, percent
+	Number2    [13]*ebiten.Image
 	HPBar      *ebiten.Image
 	HPBarColor *ebiten.Image
-	DefaultBG  *ebiten.Image
+
+	BoxLeft     *ebiten.Image
+	BoxRight    *ebiten.Image
+	BoxMiddle   *ebiten.Image
+	Cursor      *ebiten.Image
+	CursorSmoke *ebiten.Image
+	DefaultBG   *ebiten.Image
 }
 
 func LoadImage(path string) (*ebiten.Image, error) {

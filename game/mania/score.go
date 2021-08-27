@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"time"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/game"
@@ -129,8 +130,34 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 	if n.Type != TypeLNTail && j != Miss {
 		s.playSE()
 	}
-	if s.lastJudge.Penalty < j.Penalty {
-		s.lastJudge = j
+	for idx, j2 := range Judgments { // temp
+		if j == j2 && time.Since(s.judgeSprite[idx].BornTime) > 1000*time.Millisecond {
+			s.judgeSprite[idx].BornTime = time.Now()
+			s.judgeSprite[idx].Rep = 2 // temp
+			s.lowestJudgeIdx = idx
+			break
+		}
+	}
+	// if j.Penalty >= Judgments[s.lowestJudgeIdx].Penalty {
+	// 	for idx, j2 := range Judgments {
+	// 		if j == j2 {
+	// 			s.judgeSprite[s.lowestJudgeIdx].Rep = 0
+	// 			s.judgeSprite[idx].BornTime = time.Now()
+	// 			s.judgeSprite[idx].Rep = 4 // temp
+	// 			s.lowestJudgeIdx = idx
+	// 			// fmt.Println("update lowest judge from ", j, "to ", j2, "idx: ", idx)
+	// 			break
+	// 		}
+	// 	}
+	// }
+	switch n.Type {
+	case typeNote:
+		s.Lighting[n.Key].BornTime = time.Now()
+		s.Lighting[n.Key].Rep = 1
+	case TypeLNHead:
+		s.LightingLN[n.Key].Rep = game.RepInfinite
+	case TypeLNTail:
+		s.LightingLN[n.Key].Rep = 0
 	}
 
 	// apply one more for LNTail when LNHead is missed
@@ -138,17 +165,6 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 		s.applyScore(n.next, Miss)
 	}
 }
-
-// func (s Score) JudgeCounts() []int { return s.Counts[:] }
-// func (s Score) IsFullCombo() bool  { return s.Counts[4] == 0 }
-// func (s Score) IsPerfect() bool {
-// 	for _, c := range s.Counts[2:] {
-// 		if c != 0 {
-// 			return false
-// 		}
-// 	}
-// 	return true
-// }
 
 func (s *Scene) drawCombo(screen *ebiten.Image) {
 	gap := int(game.Settings.ComboGap * game.DisplayScale())
@@ -172,3 +188,14 @@ func (s *Scene) drawScore(screen *ebiten.Image) {
 		s.scores[num].Draw(screen)
 	}
 }
+
+// func (s Score) JudgeCounts() []int { return s.Counts[:] }
+// func (s Score) IsFullCombo() bool  { return s.Counts[4] == 0 }
+// func (s Score) IsPerfect() bool {
+// 	for _, c := range s.Counts[2:] {
+// 		if c != 0 {
+// 			return false
+// 		}
+// 	}
+// 	return true
+// }

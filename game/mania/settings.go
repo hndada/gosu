@@ -29,6 +29,9 @@ var Settings struct {
 	JudgeLineHeight float64
 	HPHeight        float64
 
+	LightingScale   float64
+	LightingLNScale float64
+
 	// LineInHint        bool
 	// LNHeadCustom      bool  // if false, head uses normal note image.
 	// LNTailMode        uint8 // 0: Tail=Head 1: Tail=Body 2: Custom
@@ -62,8 +65,9 @@ func init() {
 		{64, 48, 0, 0xff},
 		{40, 0, 40, 0xff},
 	}
-	// Settings.SpotlightColor = [4]float64{}
 	Settings.JudgeHeight = 10
 	Settings.JudgeLineHeight = 2
 	Settings.HPHeight = 65
+	Settings.LightingScale = 1.4
+	Settings.LightingLNScale = 1.4
 }
