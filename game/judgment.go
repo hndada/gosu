@@ -85,15 +85,19 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 
 // "early" goes plus
 // todo: 종종 x값이 음수가 나옴. 저 멀리의 노트로 timeDiff를 계산하는 걸수도 있음
-func (jm JudgmentMeter) NewTimingSprite(timeDiff int64) Sprite {
+func (jm JudgmentMeter) NewTimingSprite(timeDiff int64) Animation {
 	w := int(Settings.JudgmentMeterScale)
 	h := jm.Sprite.H
-	i, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
-	i.Fill(color.White)
 	x := Settings.ScreenSize.X/2 - int(Settings.JudgmentMeterScale*float64(timeDiff))
 	y := jm.Sprite.Y
-	sprite := NewSprite(i)
-	sprite.SetFixedOp(w, h, x, y)
-	// fmt.Println(w, h, x, y)
-	return sprite
+	i, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
+	i.Fill(color.White)
+
+	a := NewAnimation([]*ebiten.Image{i})
+	a.W = w
+	a.H = h
+	a.X = x
+	a.Y = y
+	a.Rep = 10 // temp
+	return a
 }

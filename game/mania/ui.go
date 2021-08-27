@@ -3,6 +3,7 @@ package mania
 import (
 	"image"
 	"image/color"
+	"image/draw"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/game"
@@ -54,9 +55,14 @@ func newSceneUI(screenSize image.Point, keyCountWithScratchMode int) sceneUI {
 			wMiddle += nw
 		}
 		h := screenSize.Y
-		main, _ := ebiten.NewImage(wMiddle, h, ebiten.FilterDefault)
-		main.Fill(color.Black) // todo: Fill이 alpha value를 안 받는다면
-		// draw.Draw로 해줘야하나? DrawOptions으로 안되나.
+
+		// temp: Fill이 alpha value를 안 받는 것 같아 draw.Draw 사용 중
+		mainSrc := image.NewRGBA(image.Rect(0, 0, wMiddle, h))
+		r := image.Rectangle{image.ZP, i.Bounds().Size()}
+		draw.Draw(mainSrc, r, &image.Uniform{black}, image.ZP, draw.Over)
+		main, _ := ebiten.NewImageFromImage(mainSrc, ebiten.FilterDefault)
+		// main, _ := ebiten.NewImage(wMiddle, h, ebiten.FilterDefault)
+		// main.Fill(color.Black)
 
 		x := center - wMiddle/2 // int - int
 		y := 0
@@ -67,10 +73,6 @@ func newSceneUI(screenSize image.Point, keyCountWithScratchMode int) sceneUI {
 		const dimness = 30 // temp
 		op.ColorM.ChangeHSV(0, 1, float64(dimness)/100)
 		i.DrawImage(main, op)
-
-		// main := image.NewRGBA(image.Rect(0, 0, w, screenSize.Y))
-		// r := image.Rectangle{image.ZP, i.Bounds().Size()}
-		// draw.Draw(main, r, &image.Uniform{black}, image.ZP, draw.Over)
 	}
 	// important: mania-stage-hint에서 판정선이 이미지의 맨 아래에 있다는 보장이 없음
 	// 아마 mania-stage-bottom 때문인듯
