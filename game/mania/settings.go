@@ -68,6 +68,6 @@ func init() {
 	Settings.JudgeHeight = 10
 	Settings.JudgeLineHeight = 2
 	Settings.HPHeight = 65
-	Settings.LightingScale = 1.4
-	Settings.LightingLNScale = 1.4
+	Settings.LightingScale = 0.66
+	Settings.LightingLNScale = 1
 }

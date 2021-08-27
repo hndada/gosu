@@ -29,7 +29,7 @@ var argsSelectToMania struct {
 
 type sceneSelect struct {
 	game.Scene // includes ScreenSize
-	path       string
+	cwd        string
 	mods       mania.Mods
 	charts     []chartPanel
 	cursor     int
@@ -37,12 +37,14 @@ type sceneSelect struct {
 
 	ready bool
 	done  bool
+
+	playSE func()
 }
 
-func newSceneSelect(path string, size image.Point) *sceneSelect {
+func newSceneSelect(cwd string, size image.Point) *sceneSelect {
 	s := new(sceneSelect)
 	ebiten.SetWindowTitle("gosu")
-	s.path = path
+	s.cwd = cwd
 	s.mods = mania.Mods{
 		TimeRate: 1,
 		Mirror:   false,
@@ -50,6 +52,8 @@ func newSceneSelect(path string, size image.Point) *sceneSelect {
 	_ = s.checkCharts()
 	s.ready = true
 	s.ScreenSize = size
+
+	s.playSE = mania.SEPlayer(cwd)
 	return s
 }
 
@@ -73,6 +77,7 @@ func (s *sceneSelect) Update() error {
 		s.holdCount = 0
 	} else if ebiten.IsKeyPressed(ebiten.KeyDown) {
 		if s.holdCount >= 2 { // todo: MaxTPS가 변하여도 체감 시간은 그대로이게 설정
+			s.playSE()
 			s.cursor++
 			if s.cursor >= len(s.charts) {
 				s.cursor = 0
@@ -83,6 +88,7 @@ func (s *sceneSelect) Update() error {
 		}
 	} else if ebiten.IsKeyPressed(ebiten.KeyUp) {
 		if s.holdCount >= 2 {
+			s.playSE()
 			s.cursor--
 			if s.cursor < 0 {
 				s.cursor = len(s.charts) - 1
@@ -119,7 +125,7 @@ func (s *sceneSelect) checkCharts() error {
 // 로드된 차트 데이터는 gob로 저장
 func (s *sceneSelect) LoadCharts() error {
 	s.charts = make([]chartPanel, 0, 100)
-	dirs, err := ioutil.ReadDir(filepath.Join(s.path, "music"))
+	dirs, err := ioutil.ReadDir(filepath.Join(s.cwd, "music"))
 	if err != nil {
 		return err
 	}
@@ -127,7 +133,7 @@ func (s *sceneSelect) LoadCharts() error {
 		if !d.IsDir() {
 			continue
 		}
-		dpath := filepath.Join(s.path, "music", d.Name())
+		dpath := filepath.Join(s.cwd, "music", d.Name())
 		files, err := ioutil.ReadDir(dpath)
 		if err != nil {
 			return err

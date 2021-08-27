@@ -66,11 +66,12 @@ func (s *Scene) judge(e keyEvent) {
 		return empty // 너무 빨리 누름. 너무 늦게 누른 경우(아예 안 누르다)는 scene update에서 별도 처리
 	}
 	j := judge(n.Type, keyAction, timeDiff)
-
-	ts := s.jm.NewTimingSprite(timeDiff)
-	s.timingSprites = append(s.timingSprites, ts)
 	s.applyScore(i, j)
-	s.lastPressed[e.key] = TimeBool{Time: e.time, Value: e.pressed}
+
+	if timeDiff <= Miss.Window {
+		ts := s.jm.NewTimingSprite(timeDiff)
+		s.timingSprites = append(s.timingSprites, ts)
+	}
 }
 
 // LNTail은 롱노트 끝나기 전까지 계속 staged. 처음 scored 된 뒤로는 score 영향 안 끼침
@@ -84,9 +85,9 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 	s.chart.Notes[i].Sprite.Dimness = 0.3
 	s.staged[n.Key] = n.next
 
-	for i, j2 := range Judgments {
+	for idx, j2 := range Judgments {
 		if j == j2 {
-			s.judgeCounts[i]++
+			s.judgeCounts[idx]++
 			break
 		}
 	}
@@ -130,26 +131,14 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 	if n.Type != TypeLNTail && j != Miss {
 		s.playSE()
 	}
-	for idx, j2 := range Judgments { // temp
-		if j == j2 && time.Since(s.judgeSprite[idx].BornTime) > 1000*time.Millisecond {
-			s.judgeSprite[idx].BornTime = time.Now()
+	for idx, j2 := range Judgments {
+		if j == j2 {
 			s.judgeSprite[idx].Rep = 2 // temp
-			s.lowestJudgeIdx = idx
+			s.judgeSprite[idx].BornTime = time.Now()
 			break
 		}
 	}
-	// if j.Penalty >= Judgments[s.lowestJudgeIdx].Penalty {
-	// 	for idx, j2 := range Judgments {
-	// 		if j == j2 {
-	// 			s.judgeSprite[s.lowestJudgeIdx].Rep = 0
-	// 			s.judgeSprite[idx].BornTime = time.Now()
-	// 			s.judgeSprite[idx].Rep = 4 // temp
-	// 			s.lowestJudgeIdx = idx
-	// 			// fmt.Println("update lowest judge from ", j, "to ", j2, "idx: ", idx)
-	// 			break
-	// 		}
-	// 	}
-	// }
+
 	switch n.Type {
 	case typeNote:
 		s.Lighting[n.Key].BornTime = time.Now()

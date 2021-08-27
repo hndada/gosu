@@ -51,14 +51,13 @@ type Scene struct {
 	// timeDiffs []int64
 	jm *game.JudgmentMeter // temp
 
-	timingSprites  []game.Sprite
-	lowestJudgeIdx int
+	timingSprites []game.Animation
 
 	hpScreen *ebiten.Image
 }
 
 func NewScene(c *Chart, mods Mods, screenSize image.Point, cwd string) *Scene {
-	const instability = 0 // 0~100; 0 is Auto
+	const instability = 11 // 0~100; 0 is Auto
 	s := new(Scene)
 	s.ScreenSize = screenSize
 	s.speed = Settings.GeneralSpeed
@@ -99,6 +98,7 @@ func NewScene(c *Chart, mods Mods, screenSize image.Point, cwd string) *Scene {
 	s.jm = game.NewJudgmentMeter(Judgments[:])
 
 	s.hpScreen, _ = ebiten.NewImage(screenSize.X, screenSize.Y, ebiten.FilterDefault)
+	s.timingSprites = make([]game.Animation, 0, len(s.chart.Notes))
 	return s
 }
 
@@ -143,9 +143,9 @@ func (s *Scene) Update() error {
 		}
 	}
 	// judge: score과 staged도 따라서 업데이트
-	s.lowestJudgeIdx = 0
 	for _, e := range s.auto(now) { //[]keyEvent{}
 		s.judge(e)
+		s.lastPressed[e.key] = TimeBool{Time: e.time, Value: e.pressed} // scored되지 않는 누름에도 업데이트 되어야함
 	}
 
 	// 따로 처리: lost, scored되고 시간 다 된 LNTail
@@ -167,15 +167,6 @@ func (s *Scene) Update() error {
 			s.staged[k] = n.next
 		}
 	}
-	const lifetime = 6000 * time.Millisecond
-	timeNow := time.Now()
-	ts2 := make([]game.Sprite, 0, len(s.timingSprites))
-	for _, sprite := range s.timingSprites {
-		if timeNow.Sub(sprite.BornTime) < lifetime {
-			ts2 = append(ts2, sprite)
-		}
-	}
-	s.timingSprites = ts2
 	s.HPBarMask.H = int(float64(s.HPBarColor.H) * (100 - s.hp) / 100)
 	return nil
 }
@@ -184,13 +175,7 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 	now := time.Since(s.startTime).Milliseconds()
 	screen.DrawImage(s.bg, s.bgop)
 	s.playfield.Draw(screen)
-	s.judgeSprite[s.lowestJudgeIdx].Draw(screen)
-	// for i, j := range Judgments {
-	// 	if s.lowestJudgeIdx == j {
-	// 		s.judgeSprite[i].Draw(screen)
-	// 		break
-	// 	}
-	// }
+
 	for i, tb := range s.lastPressed {
 		if tb.Value {
 			s.Spotlights[i].Draw(screen)
@@ -218,10 +203,15 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 	for _, l := range s.LightingLN {
 		l.Draw(screen)
 	}
-	// for _, sprite := range s.timingSprites {
-	// 	// fmt.Println(sprite.W, sprite.H, sprite.X, sprite.Y)
-	// 	sprite.Draw(screen)
-	// }
+	{
+		var latest int
+		for i, js := range s.judgeSprite {
+			if js.BornTime.After(s.judgeSprite[latest].BornTime) {
+				latest = i
+			}
+		}
+		s.judgeSprite[latest].Draw(screen)
+	}
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		`CurrentFPS: %.2f
 CurrentTPS: %.2f
@@ -234,7 +224,9 @@ combo: %d
 judge: %v
 `, ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(now)/1000,
 		s.score, s.karma, s.hp, s.combo, s.judgeCounts))
-	s.drawCombo(screen)
+	if s.combo > 0 {
+		s.drawCombo(screen)
+	}
 	s.drawScore(screen)
 
 	// s.HPBar.Draw(screen) // temp: HPBar 와 HP color가 서로 맞추기 어려우니 임시로 color만 사용
@@ -243,6 +235,9 @@ judge: %v
 	s.HPBarMask.Draw(s.hpScreen)
 	screen.DrawImage(s.hpScreen, &ebiten.DrawImageOptions{})
 	s.jm.Sprite.Draw(screen)
+	// for _, sprite := range s.timingSprites {
+	// 	sprite.Draw(screen)
+	// }
 }
 
 func (s *Scene) initStaged(c *Chart) {
