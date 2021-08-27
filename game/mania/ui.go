@@ -21,22 +21,26 @@ type sceneUI struct {
 
 	combos      [10]game.Sprite
 	scores      [10]game.Sprite
-	judgeSprite [len(Judgments)]game.Sprite
-	Spotlights  []game.Sprite // 키를 눌렀을 때 불 들어오는 거
+	judgeSprite [len(Judgments)]game.Animation // todo: rename
+	Spotlights  []game.Sprite                  // 키를 눌렀을 때 불 들어오는 거
 
 	HPBar      game.Sprite // it can go to playfield
 	HPBarColor game.Sprite // actually, it can also go to playfield
 	HPBarMask  game.Sprite
+
+	Lighting   []game.Animation // 여러 lane에서 동시에 그려져야함
+	LightingLN []game.Animation
 }
 
 // 가로가 늘어난다고 같이 늘리면 오히려 어색하므로 세로에만 맞춰 늘리기: 100 기준
-func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
+func newSceneUI(screenSize image.Point, keyCountWithScratchMode int) sceneUI {
+	keyCount := keyCountWithScratchMode & ScratchMask // temp
 	s := new(sceneUI)
 	scale := float64(screenSize.Y) / 100
 	keyKinds := keyKindsMap[keyCount]
-	unscaledNoteWidths := Settings.NoteWidths[keyCount&ScratchMask]
+	unscaledNoteWidths := Settings.NoteWidths[keyCount]
 
-	noteWidths := make([]int, keyCount&ScratchMask)
+	noteWidths := make([]int, keyCount)
 	for key, kind := range keyKinds {
 		noteWidths[key] = int(unscaledNoteWidths[kind] * scale)
 	}
@@ -51,12 +55,17 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 		}
 		h := screenSize.Y
 		main, _ := ebiten.NewImage(wMiddle, h, ebiten.FilterDefault)
-		main.Fill(color.Black)
+		main.Fill(color.Black) // todo: Fill이 alpha value를 안 받는다면
+		// draw.Draw로 해줘야하나? DrawOptions으로 안되나.
 
 		x := center - wMiddle/2 // int - int
 		y := 0
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(float64(x), float64(y))
+		op.ColorM.Scale(0, 0, 0, 1)
+
+		const dimness = 30 // temp
+		op.ColorM.ChangeHSV(0, 1, float64(dimness)/100)
 		i.DrawImage(main, op)
 
 		// main := image.NewRGBA(image.Rect(0, 0, w, screenSize.Y))
@@ -154,7 +163,7 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 	s.stageKeys = make([]game.Sprite, keyCount)
 	s.stageKeysPressed = make([]game.Sprite, keyCount)
 
-	for k := 0; k < keyCount&ScratchMask; k++ {
+	for k := 0; k < keyCount; k++ {
 		var sprite game.Sprite
 		src := Skin.StageKeys[keyKinds[k]]
 		sprite = game.NewSprite(src)
@@ -185,7 +194,7 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 		src := Skin.StageLight
 		sprite := game.NewSprite(src)
 		s.Spotlights = make([]game.Sprite, keyCount)
-		for k := 0; k < keyCount&ScratchMask; k++ {
+		for k := 0; k < keyCount; k++ {
 			w := noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
 			scale := float64(w) / float64(src.Bounds().Size().X)
 			h := int(float64(src.Bounds().Size().Y) * scale)
@@ -204,16 +213,50 @@ func newSceneUI(screenSize image.Point, keyCount int) sceneUI {
 
 	for i := range s.judgeSprite {
 		src := Skin.Judge[i]
-		sprite := game.NewSprite(src)
-		h := int(Settings.JudgeHeight * game.DisplayScale())
-		scale := float64(h) / float64(src.Bounds().Dy())
-		w := int(float64(src.Bounds().Dx()) * scale)
-		x := center - w/2
-		y := int(Settings.JudgePosition*game.DisplayScale()) - h/2
-		sprite.SetFixedOp(w, h, x, y)
-		s.judgeSprite[i] = sprite
+		a := game.NewAnimation([]*ebiten.Image{src})
+		a.H = int(Settings.JudgeHeight * game.DisplayScale())
+		scale := float64(a.H) / float64(src.Bounds().Dy())
+		a.W = int(float64(src.Bounds().Dx()) * scale)
+		a.X = center - a.W/2
+		a.Y = int(Settings.JudgePosition*game.DisplayScale()) - a.H/2
+		// a.CompositeMode = ebiten.CompositeModeSourceOver
+		s.judgeSprite[i] = a
 	}
-	s.noteWidths = noteWidths
+	s.noteWidths = noteWidths // temp
+
+	s.Lighting = make([]game.Animation, keyCount)
+	s.LightingLN = make([]game.Animation, keyCount)
+	centerXs := make([]int, keyCount)
+	for k := range centerXs {
+		x := center - wMiddle/2
+		for k2 := 0; k2 < k; k2++ {
+			x += noteWidths[k2]
+		}
+		x += noteWidths[k] / 2
+		centerXs[k] = x
+	}
+	{ // suppose all frame has same size
+		a := game.NewAnimation(Skin.Lighting)
+		a.W = int(float64(Skin.Lighting[0].Bounds().Dx()) * Settings.LightingScale)
+		a.H = int(float64(Skin.Lighting[0].Bounds().Dy()) * Settings.LightingScale)
+		a.Y = int(Settings.HitPosition*game.DisplayScale()) - a.H/2
+		a.CompositeMode = ebiten.CompositeModeLighter
+		for k := 0; k < keyCount; k++ {
+			s.Lighting[k] = a
+			s.Lighting[k].X = centerXs[k] - a.W/2
+		}
+	}
+	{
+		a := game.NewAnimation(Skin.LightingLN)
+		a.W = int(float64(Skin.LightingLN[0].Bounds().Dx()) * Settings.LightingLNScale)
+		a.H = int(float64(Skin.LightingLN[0].Bounds().Dy()) * Settings.LightingLNScale)
+		a.Y = int(Settings.HitPosition*game.DisplayScale()) - a.H/2
+		a.CompositeMode = ebiten.CompositeModeLighter
+		for k := 0; k < keyCount; k++ {
+			s.LightingLN[k] = a
+			s.LightingLN[k].X = centerXs[k] - a.W/2
+		}
+	}
 	return *s
 }
 
@@ -221,7 +264,7 @@ func (s *Scene) setNoteSprites() {
 	keyKinds := keyKindsMap[s.chart.KeyCount]
 
 	var wMiddle int
-	for k := 0; k < s.chart.KeyCount&ScratchMask; k++ {
+	for k := 0; k < s.chart.KeyCount; k++ {
 		wMiddle += s.noteWidths[k]
 	}
 	xStart := (game.Settings.ScreenSize.X - wMiddle) / 2

@@ -1,6 +1,7 @@
 package mania
 
 import (
+	"fmt"
 	"log"
 	"path/filepath"
 
@@ -19,11 +20,11 @@ var Skin struct {
 	Lighting   []*ebiten.Image
 	LightingLN []*ebiten.Image
 
-	StageLeft   *ebiten.Image
-	StageRight  *ebiten.Image
-	StageHint   *ebiten.Image // todo: HitPosition 대신 필요할 듯
-	StageBottom *ebiten.Image
-	StageLight  *ebiten.Image // mask
+	StageLeft  *ebiten.Image
+	StageRight *ebiten.Image
+	StageHint  *ebiten.Image // todo: HitPosition 대신 필요할 듯
+	// StageBottom *ebiten.Image
+	StageLight *ebiten.Image // mask
 
 	// MaskingBorder
 	StageKeys        [4]*ebiten.Image
@@ -178,5 +179,50 @@ func LoadSkin(cwd string) {
 	Skin.StageKeysPressed[3], err = game.LoadImage(path)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	var name string
+	var i *ebiten.Image // todo: i is ambiguous, should rename to img
+	var count int
+	Skin.Lighting = make([]*ebiten.Image, 0, 10)
+	for {
+		name = fmt.Sprintf("lightingN-%d.png", count)
+		path = filepath.Join(dir, name)
+		i, err = game.LoadImage(path)
+		if err != nil {
+			break
+		} else {
+			Skin.Lighting = append(Skin.Lighting, i)
+		}
+		count++
+	}
+	if len(Skin.Lighting) == 0 {
+		path = filepath.Join(dir, "lightingN.png")
+		i, err = game.LoadImage(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		Skin.Lighting = append(Skin.Lighting, i)
+	}
+	count = 0
+	Skin.LightingLN = make([]*ebiten.Image, 0, 10)
+	for {
+		name = fmt.Sprintf("lightingL-%d.png", count)
+		path = filepath.Join(dir, name)
+		i, err = game.LoadImage(path)
+		if err != nil {
+			break
+		} else {
+			Skin.LightingLN = append(Skin.LightingLN, i)
+		}
+		count++
+	}
+	if len(Skin.LightingLN) == 0 {
+		path = filepath.Join(dir, "lightingL.png")
+		i, err = game.LoadImage(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		Skin.LightingLN = append(Skin.LightingLN, i)
 	}
 }

@@ -51,23 +51,22 @@ type Scene struct {
 	// timeDiffs []int64
 	jm *game.JudgmentMeter // temp
 
-	timingSprites []game.Sprite
-	lastJudge     game.Judgment
+	timingSprites  []game.Sprite
+	lowestJudgeIdx int
 
-	// hpSprite game.Sprite
 	hpScreen *ebiten.Image
 }
 
 func NewScene(c *Chart, mods Mods, screenSize image.Point, cwd string) *Scene {
 	const instability = 0 // 0~100; 0 is Auto
 	s := new(Scene)
-	// s.CWD = cwd
 	s.ScreenSize = screenSize
 	s.speed = Settings.GeneralSpeed
 	s.mods = mods
 	s.chart = c.ApplyMods(s.mods)
+	// fmt.Println(s.chart.ScratchMode)
 
-	const dimness = 30
+	const dimness = 30 // temp
 	bg, err := c.Background()
 	if err != nil {
 		panic("failed to parse bg")
@@ -77,7 +76,7 @@ func NewScene(c *Chart, mods Mods, screenSize image.Point, cwd string) *Scene {
 	s.bgop.ColorM.ChangeHSV(0, 1, float64(dimness)/100)
 
 	var img *ebiten.Image
-	kinds := keyKindsMap[c.KeyCount]
+	kinds := keyKindsMap[c.KeyCount|s.chart.ScratchMode]
 	for i, n := range c.Notes { // temp: Note, LNHead, LNTail 전부 Note 이미지 사용
 		img = Skin.Note[kinds[n.Key]]
 		s.chart.Notes[i].Sprite.SetImage(img)
@@ -94,7 +93,7 @@ func NewScene(c *Chart, mods Mods, screenSize image.Point, cwd string) *Scene {
 	s.auto = s.chart.GenAutoKeyEvents(instability)
 	s.playSE = SEPlayer(cwd)
 	s.timeStamp = c.TimeStampFinder()
-	s.sceneUI = newSceneUI(s.ScreenSize, s.chart.KeyCount)
+	s.sceneUI = newSceneUI(s.ScreenSize, s.chart.KeyCount|s.chart.ScratchMode)
 	s.setNoteSprites()
 	s.ready = true
 	s.jm = game.NewJudgmentMeter(Judgments[:])
@@ -144,7 +143,7 @@ func (s *Scene) Update() error {
 		}
 	}
 	// judge: score과 staged도 따라서 업데이트
-	s.lastJudge = empty
+	s.lowestJudgeIdx = 0
 	for _, e := range s.auto(now) { //[]keyEvent{}
 		s.judge(e)
 	}
@@ -185,8 +184,9 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 	now := time.Since(s.startTime).Milliseconds()
 	screen.DrawImage(s.bg, s.bgop)
 	s.playfield.Draw(screen)
+	s.judgeSprite[s.lowestJudgeIdx].Draw(screen)
 	// for i, j := range Judgments {
-	// 	if s.lastJudge == j {
+	// 	if s.lowestJudgeIdx == j {
 	// 		s.judgeSprite[i].Draw(screen)
 	// 		break
 	// 	}
@@ -212,6 +212,12 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 			s.stageKeys[i].Draw(screen)
 		}
 	}
+	for _, l := range s.Lighting {
+		l.Draw(screen)
+	}
+	for _, l := range s.LightingLN {
+		l.Draw(screen)
+	}
 	// for _, sprite := range s.timingSprites {
 	// 	// fmt.Println(sprite.W, sprite.H, sprite.X, sprite.Y)
 	// 	sprite.Draw(screen)
@@ -231,9 +237,7 @@ judge: %v
 	s.drawCombo(screen)
 	s.drawScore(screen)
 
-	// s.judgeSprite[0].Draw(screen) // temp
 	// s.HPBar.Draw(screen) // temp: HPBar 와 HP color가 서로 맞추기 어려우니 임시로 color만 사용
-
 	s.hpScreen.Clear()
 	s.HPBarColor.Draw(s.hpScreen)
 	s.HPBarMask.Draw(s.hpScreen)

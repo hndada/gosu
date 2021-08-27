@@ -26,6 +26,7 @@ type Sprite struct {
 	Color color.Color
 
 	BornTime time.Time
+	// LifeTime time.Time // zero value goes eternal
 	ebiten.CompositeMode
 }
 
@@ -89,7 +90,7 @@ func (s *Sprite) SetFixedOp(w, h, x, y int) {
 	op.GeoM.Translate(float64(x), float64(y))
 	if s.Color != nil {
 		r, g, b, _ := s.Color.RGBA()
-		op.ColorM.Scale(0, 0, 0, 1)
+		op.ColorM.Scale(0, 0, 0, 1) // reset
 		op.ColorM.Translate(
 			float64(r)/0xff,
 			float64(g)/0xff,
@@ -114,6 +115,70 @@ func NewSprite(src image.Image) Sprite {
 	sprite.Saturation = 1
 	sprite.Dimness = 1
 	return sprite
+}
+
+// each frame has same interval
+type Animation struct {
+	srcs   []*ebiten.Image
+	Sprite // no use src
+	// Duration time.Time // temp: using global duration
+
+	Rep int64 // 반복 횟수
+	ebiten.CompositeMode
+}
+
+const RepInfinite = -1
+
+func NewAnimation(srcs []*ebiten.Image) Animation {
+	var a Animation
+	a.srcs = make([]*ebiten.Image, len(srcs))
+	// temp: only []*ebiten.Image can be passed
+	for i, src := range srcs {
+		a.srcs[i] = src
+	}
+	a.BornTime = time.Now()
+	a.Saturation = 1
+	a.Dimness = 1
+	return a
+}
+
+// 800ms 마다 1회 재생되는 8프레임짜리 애니메이션
+// 0~99 100~199... 2 3 4 5 6 7
+// 현재 2000ms, 4번째 frame이 보여지면 됨
+// 2010ms에도 4번째 frame이 보여지면 됨
+// todo: frameTime을 int로 구해버리고 그걸로 다시 나누면 실제 AnimatinoDuration보다 작아지는 효과
+// duration이 100ms이고 6프레임이면
+// 프레임당 16.6ms
+const AnimationDuration = 450 // temp: global duration in ms
+
+func (a Animation) Draw(screen *ebiten.Image) {
+	frameTime := AnimationDuration / float64(len(a.srcs))
+	elapsedTime := time.Since(a.BornTime).Milliseconds()
+	rep := elapsedTime / AnimationDuration
+	if a.Rep != RepInfinite && rep >= a.Rep {
+		return
+	}
+	t := elapsedTime % AnimationDuration
+	i := int(float64(t) / frameTime)
+	// temp: suppose all animation goes not fixed
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(a.ScaleW(), a.ScaleH())
+	op.GeoM.Translate(float64(a.X), float64(a.Y))
+	op.ColorM.ChangeHSV(0, a.Saturation, a.Dimness)
+	if a.CompositeMode != 0 {
+		op.CompositeMode = a.CompositeMode
+	}
+	screen.DrawImage(a.srcs[i], op)
+}
+
+// temp: suppose all frames have same size in an animation
+func (a Animation) ScaleW() float64 {
+	w1, _ := a.srcs[0].Size()
+	return float64(a.W) / float64(w1)
+}
+func (a Animation) ScaleH() float64 {
+	_, h1 := a.srcs[0].Size()
+	return float64(a.H) / float64(h1)
 }
 
 type LongSprite struct {

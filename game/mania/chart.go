@@ -10,9 +10,10 @@ import (
 
 type Chart struct {
 	*game.ChartHeader
-	KeyCount   int
-	Notes      []Note
-	TimeStamps []game.TimeStamp
+	KeyCount    int
+	ScratchMode int
+	Notes       []Note
+	TimeStamps  []game.TimeStamp
 }
 
 // raw 차트에는 Mods가 들어가면 안됨
@@ -48,6 +49,7 @@ func (c *Chart) ApplyMods(mods Mods) *Chart {
 	var c2 Chart
 	c2.ChartHeader = c.ChartHeader // todo: pointer?
 	c2.KeyCount = c.KeyCount
+	c2.ScratchMode = mods.ScratchMode // temp
 	c2.Notes = make([]Note, len(c.Notes))
 	for i, n := range c.Notes {
 		n.Time = int64(float64(n.Time) / mods.TimeRate)
