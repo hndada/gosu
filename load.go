@@ -3,17 +3,28 @@ package gosu
 import (
 	"io/ioutil"
 	"log"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/mania"
 )
 
-// todo: 새 것만 로드하기
+var lastUpdateTime time.Time
+
 func updateCharts(cwd string) {
-	// loadCharts(cwd)
+	root := filepath.Join(cwd, "music")
+	di, err := os.Stat(root)
+	if err != nil {
+		log.Fatal(err)
+	}
+	if di.ModTime().After(lastUpdateTime) {
+		loadCharts(cwd) // todo: 새 것만 로드하기
+	}
+	lastUpdateTime = time.Now()
 }
 
 // 로드된 차트 데이터는 gob로 저장
