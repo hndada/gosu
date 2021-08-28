@@ -132,7 +132,7 @@ func (s *Scene) Update() error {
 		rp := (n.position-cursor)*s.speed - Settings.HitPosition                                   // relative position
 		s.chart.Notes[i].Sprite.Y = int(-rp*(float64(s.ScreenSize.Y)/100) - float64(n.Sprite.H)/2) // +가 아니고 -가 맞을듯
 		if n.Type == TypeLNTail {
-			s.chart.Notes[i].LongSprite.Y = n.Sprite.Y + n.Sprite.H // why?: n.Sprite.H 그래야 길이가 딱 맞나?
+			s.chart.Notes[i].LongSprite.Y = n.Sprite.Y + n.Sprite.H // why?: center of tail sprite ~ center of head sprite
 			if s.chart.Notes[i].scored {
 				s.chart.Notes[i].LongSprite.Saturation = 0.5
 				s.chart.Notes[i].LongSprite.Dimness = 0.3
