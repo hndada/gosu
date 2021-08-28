@@ -52,8 +52,10 @@ func NewGame() *Game {
 	ebiten.SetWindowSize(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y)
 
 	charts = loadCharts(g.cwd)
+	updateCharts(g.cwd)
 
-	g.Scene = newSceneSelect(g.cwd, game.Settings.ScreenSize)
+	sceneSelect = newSceneSelect(g.cwd, game.Settings.ScreenSize)
+	g.Scene = sceneSelect
 
 	g.args = game.TransSceneArgs{}
 	ebiten.SetWindowTitle("gosu")
@@ -70,7 +72,7 @@ func (g *Game) Update(screen *ebiten.Image) error {
 	if g.TransCountdown <= 0 { // == 0
 		if g.Scene.Done(&g.args) {
 			switch g.Scene.(type) {
-			case *sceneSelect:
+			case *SceneSelect:
 				switch g.args.Next {
 				case "mania.Scene":
 					v := reflect.ValueOf(g.args.Args)
@@ -81,8 +83,10 @@ func (g *Game) Update(screen *ebiten.Image) error {
 					g.ChangeScene(s2)
 				}
 			case *mania.Scene:
-				s2 := newSceneSelect(g.cwd, game.Settings.ScreenSize) // temp: 매번 새로 만들 필요는 없음
-				g.ChangeScene(s2)
+				// s2 := newSceneSelect(g.cwd, game.Settings.ScreenSize) // temp: 매번 새로 만들 필요는 없음
+				updateCharts(g.cwd)
+				sceneSelect.done = false
+				g.ChangeScene(sceneSelect)
 			default:
 				panic("not reach")
 			}

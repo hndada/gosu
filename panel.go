@@ -27,7 +27,7 @@ type ChartPanel struct {
 // Key - MusicName
 // Level - ChartName
 // X와 Y는 update에서 매번 새로 설정
-func (s sceneSelect) NewChartPanel(c *mania.Chart) ChartPanel {
+func (s SceneSelect) NewChartPanel(c *mania.Chart) ChartPanel {
 	const ChartPanelHeight = 40
 	var cp ChartPanel
 	cp.Body.Sprite = game.NewSprite(game.Skin.BoxMiddle)

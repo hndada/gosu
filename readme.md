@@ -1,4 +1,3 @@
-한번 load한 music은 재load하지 않게 하기
 input: 시간, 키, down/up
     https://github.com/eiannone/keyboard 
     목표: 누른 거 떼는 것도 파악

@@ -258,7 +258,7 @@ func (s *Scene) initStaged(c *Chart) {
 
 func (s *Scene) Done(args *game.TransSceneArgs) bool {
 	if s.done && args.Next == "" {
-		args.Next = "sceneSelect"
+		args.Next = "SceneSelect"
 		args.Args = nil
 	}
 	return s.done

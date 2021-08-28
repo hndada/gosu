@@ -3,6 +3,7 @@ package gosu
 import (
 	"image"
 	"math"
+	"time"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hndada/gosu/game"
@@ -17,7 +18,9 @@ var argsSelectToMania struct {
 	ScreenSize image.Point
 }
 
-type sceneSelect struct {
+var sceneSelect *SceneSelect
+
+type SceneSelect struct {
 	game.Scene // includes ScreenSize
 	cwd        string
 	mods       mania.Mods
@@ -31,10 +34,12 @@ type sceneSelect struct {
 
 	playSE    func()
 	defaultBG game.Sprite
+
+	bornTime time.Time
 }
 
-func newSceneSelect(cwd string, size image.Point) *sceneSelect {
-	s := new(sceneSelect)
+func newSceneSelect(cwd string, size image.Point) *SceneSelect {
+	s := new(SceneSelect)
 	ebiten.SetWindowTitle("gosu")
 	s.cwd = cwd
 	s.mods = mania.Mods{
@@ -52,10 +57,10 @@ func newSceneSelect(cwd string, size image.Point) *sceneSelect {
 
 	s.playSE = mania.SEPlayer(cwd)
 	s.defaultBG = game.DefaultBG()
+	s.bornTime = time.Now()
 	return s
 }
-
-func (s *sceneSelect) Update() error {
+func (s *SceneSelect) Update() error {
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		argsSelectToMania.Chart = charts[s.cursor]
 		if argsSelectToMania.Chart.KeyCount == 8 { // temp
@@ -110,7 +115,7 @@ func (s *sceneSelect) Update() error {
 
 var bgs []*ebiten.Image
 
-func (s *sceneSelect) Draw(screen *ebiten.Image) {
+func (s *SceneSelect) Draw(screen *ebiten.Image) {
 	//for i, cp := range s.chartPanels {
 	//		if i == s.cursor {
 	//screen.DrawImage(cp.BG, cp.OpBG)
@@ -123,8 +128,8 @@ func (s *sceneSelect) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (s *sceneSelect) Ready() bool { return s.ready }
-func (s *sceneSelect) Done(args *game.TransSceneArgs) bool {
+func (s *SceneSelect) Ready() bool { return s.ready }
+func (s *SceneSelect) Done(args *game.TransSceneArgs) bool {
 	if s.done && args.Next == "" {
 		args.Next = "mania.Scene"
 		args.Args = argsSelectToMania // s.args
