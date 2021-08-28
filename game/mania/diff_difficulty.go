@@ -1,8 +1,6 @@
 package mania
 
 import (
-	"fmt"
-
 	"github.com/hndada/gosu/game"
 )
 
@@ -32,7 +30,7 @@ func (c *Chart) CalcDifficulty() {
 	}
 
 	if len(ds) != sectionCounts {
-		fmt.Println(len(ds), sectionCounts)
+		// fmt.Println(len(ds), sectionCounts)
 		panic("section count mismatch")
 	}
 	c.Level = game.WeightedSum(ds, diffWeightDecay) / 20

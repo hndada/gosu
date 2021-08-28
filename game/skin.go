@@ -99,4 +99,20 @@ func LoadSkin(cwd string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	path = filepath.Join(dir, "button-left.png")
+	Skin.BoxLeft, err = LoadImage(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	path = filepath.Join(dir, "button-middle.png")
+	Skin.BoxMiddle, err = LoadImage(path)
+	if err != nil {
+		log.Fatal(err)
+	}
+	path = filepath.Join(dir, "button-right.png")
+	Skin.BoxRight, err = LoadImage(path)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

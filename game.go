@@ -27,6 +27,8 @@ type Game struct {
 	// screenSize image.Point
 }
 
+var charts []*mania.Chart // temp
+
 type Scene interface {
 	Ready() bool
 	Update() error
@@ -48,6 +50,9 @@ func NewGame() *Game {
 	mania.LoadSkin(g.cwd)
 
 	ebiten.SetWindowSize(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y)
+
+	charts = loadCharts(g.cwd)
+
 	g.Scene = newSceneSelect(g.cwd, game.Settings.ScreenSize)
 
 	g.args = game.TransSceneArgs{}
