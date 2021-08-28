@@ -16,6 +16,10 @@ import (
 var lastUpdateTime time.Time
 
 func updateCharts(cwd string) {
+	//c := time.Tick(3 * time.Second)
+	//for range c {
+	//	fmt.Println("yey ok")
+	//}
 	root := filepath.Join(cwd, "music")
 	di, err := os.Stat(root)
 	if err != nil {
