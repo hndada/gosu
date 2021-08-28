@@ -115,4 +115,10 @@ func LoadSkin(cwd string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	path = filepath.Join(dir, "menu-background.jpg")
+	Skin.DefaultBG, err = LoadImage(path)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

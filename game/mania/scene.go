@@ -173,6 +173,7 @@ func (s *Scene) Update() error {
 
 func (s *Scene) Draw(screen *ebiten.Image) {
 	now := time.Since(s.startTime).Milliseconds()
+	//s.chart.BG.Draw(screen)
 	screen.DrawImage(s.bg, s.bgop)
 	s.playfield.Draw(screen)
 

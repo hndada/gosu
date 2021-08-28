@@ -44,6 +44,7 @@ type ChartHeader struct {
 	ImageFilename string
 	// VideoFilename string
 	// VideoOffset   int64
+	BG Sprite
 
 	Parameter map[string]float64
 	TimingPoints
@@ -71,6 +72,7 @@ func NewChartHeaderFromOsu(o *osu.Format, path string) *ChartHeader {
 		panic("failed to load bg")
 	}
 	c.ImageFilename = bg.Filename
+	//c.SetBG(bg.Filename)
 
 	c.TimingPoints = newTimingPointsFromOsu(o)
 	if dat, err := ioutil.ReadFile(c.AbsPath(c.AudioFilename)); err == nil {
@@ -78,18 +80,6 @@ func NewChartHeaderFromOsu(o *osu.Format, path string) *ChartHeader {
 	}
 	c.Parameter["Scale"] = o.CircleSize
 	return &c
-}
-
-func (c *ChartHeader) Background() (*ebiten.Image, error) {
-	dat, err := ioutil.ReadFile(c.AbsPath(c.ImageFilename))
-	if err != nil {
-		return nil, err
-	}
-	src, _, err := image.Decode(bytes.NewReader(dat))
-	if err != nil {
-		return nil, err
-	}
-	return ebiten.NewImageFromImage(src, ebiten.FilterDefault)
 }
 
 func OsuMode(path string) int {
@@ -121,4 +111,42 @@ func OsuMode(path string) int {
 
 func (c ChartHeader) AbsPath(filename string) string {
 	return filepath.Join(filepath.Dir(c.Path), filename)
+}
+
+// temp: ChartHeader가 Sprite를 가진다
+// 한편 Sprite는 ScreenSize에 종속이다
+// gob 등으로 정보를 재활용하고자 할 때에는 Sprite Reload 등의 작업이 필요할 것으로 예상
+func (c *ChartHeader) SetBG(fname string) {
+	path := c.AbsPath(fname)
+	dat, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err) // log.Fatal은 에러가 난 위치를 알려주지 않는 듯
+	}
+	src, _, err := image.Decode(bytes.NewReader(dat))
+	if err != nil {
+		panic(err)
+	}
+	i, _ := ebiten.NewImageFromImage(src, ebiten.FilterDefault)
+
+	sprite := NewSprite(i)
+
+	sw := i.Bounds().Dx()
+	sh := i.Bounds().Dy()
+	screenX := Settings.ScreenSize.X
+	screenY := Settings.ScreenSize.Y
+	w, h := sw, sh
+	if sw > screenX || sh > screenY { // 스크린이 그림보다 작을 경우 그림 크기 줄이기
+		minRatio := screenX / sw
+		if minRatio > screenY/sh {
+			minRatio = screenY / sh
+		}
+		w *= minRatio
+		h *= minRatio
+	}
+
+	x := screenX/2 - w/2
+	y := screenY/2 - h/2
+	// x, y := bx*ratio, by*ratio // x와 y 둘 중 하나는 스크린 크기와 일치는 보류
+	sprite.SetFixedOp(w, h, x, y)
+	c.BG = sprite
 }

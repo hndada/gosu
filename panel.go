@@ -20,6 +20,8 @@ type ChartPanel struct {
 	Right    game.Sprite
 	//idx   int
 	Chart *mania.Chart
+	BG    *ebiten.Image
+	OpBG  *ebiten.DrawImageOptions
 }
 
 // Key - MusicName
@@ -70,6 +72,8 @@ func (s sceneSelect) NewChartPanel(c *mania.Chart) ChartPanel {
 		cp.BodyText = sprite
 	}
 	cp.Chart = c
+	//cp.BG, _ = c.Background()
+	//cp.OpBG = game.BackgroundOp(s.ScreenSize, image.Pt(cp.BG.Size()))
 	return cp
 }
 

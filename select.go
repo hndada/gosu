@@ -29,7 +29,8 @@ type sceneSelect struct {
 	ready bool
 	done  bool
 
-	playSE func()
+	playSE    func()
+	defaultBG game.Sprite
 }
 
 func newSceneSelect(cwd string, size image.Point) *sceneSelect {
@@ -50,6 +51,7 @@ func newSceneSelect(cwd string, size image.Point) *sceneSelect {
 	s.ScreenSize = size
 
 	s.playSE = mania.SEPlayer(cwd)
+	s.defaultBG = game.DefaultBG()
 	return s
 }
 
@@ -99,15 +101,23 @@ func (s *sceneSelect) Update() error {
 		x += int(math.Pow(1.55, float64(d)))
 		y := mid + 40*(i-s.cursor)
 		if d == 0 {
-			x -= 50
+			x -= 40
 		}
 		s.chartPanels[i].SetXY(x, y)
 	}
-	// charts[s.cursor].x -= 30
 	return nil
 }
 
+var bgs []*ebiten.Image
+
 func (s *sceneSelect) Draw(screen *ebiten.Image) {
+	//for i, cp := range s.chartPanels {
+	//		if i == s.cursor {
+	//screen.DrawImage(cp.BG, cp.OpBG)
+	//break
+	//	}
+	//}
+	s.defaultBG.Draw(screen)
 	for _, cp := range s.chartPanels {
 		cp.Draw(screen)
 	}
