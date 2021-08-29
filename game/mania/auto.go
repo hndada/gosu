@@ -24,38 +24,38 @@ func (c Chart) GenAutoKeyEvents(instability float64) func(int64) []keyEvent {
 		switch n.Type {
 		case TypeNote:
 			e1 := keyEvent{
-				time:    n.Time + d,
-				key:     n.Key,
-				pressed: true,
+				Time:    n.Time + d,
+				Key:     n.Key,
+				Pressed: true,
 			}
 			e2 := keyEvent{
-				time:    n.Time + 30 + d,
-				key:     n.Key,
-				pressed: false,
+				Time:    n.Time + 30 + d,
+				Key:     n.Key,
+				Pressed: false,
 			}
 			keyEvents = append(keyEvents, e1, e2)
 		case TypeLNHead:
 			e := keyEvent{
-				time:    n.Time + d,
-				key:     n.Key,
-				pressed: true,
+				Time:    n.Time + d,
+				Key:     n.Key,
+				Pressed: true,
 			}
 			keyEvents = append(keyEvents, e)
 		case TypeLNTail:
 			e := keyEvent{
-				time:    n.Time + d, // Time2: opposite time
-				key:     n.Key,
-				pressed: false,
+				Time:    n.Time + d, // Time2: opposite time
+				Key:     n.Key,
+				Pressed: false,
 			}
 			keyEvents = append(keyEvents, e)
 		}
 	}
-	sort.Slice(keyEvents, func(i, j int) bool { return keyEvents[i].time < keyEvents[j].time })
+	sort.Slice(keyEvents, func(i, j int) bool { return keyEvents[i].Time < keyEvents[j].Time })
 	return func(time int64) []keyEvent {
 		var c int
 		window := make([]keyEvent, 0, 10)
 		for _, e := range keyEvents[i:] {
-			if e.time <= time {
+			if e.Time <= time {
 				window = append(window, e)
 				c++
 			} else {

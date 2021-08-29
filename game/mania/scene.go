@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
+	"github.com/hndada/gosu/engine/kb"
 	"github.com/hndada/gosu/game"
 
 	"image"
@@ -54,6 +55,8 @@ type Scene struct {
 	timingSprites []game.Animation
 
 	hpScreen *ebiten.Image
+
+	keyLayout []kb.Code
 }
 
 func NewScene(c *Chart, mods Mods, screenSize image.Point, cwd string) *Scene {
@@ -99,7 +102,18 @@ func NewScene(c *Chart, mods Mods, screenSize image.Point, cwd string) *Scene {
 
 	s.hpScreen, _ = ebiten.NewImage(screenSize.X, screenSize.Y, ebiten.FilterDefault)
 	s.timingSprites = make([]game.Animation, 0, len(s.chart.Notes))
+	s.keyLayout = Settings.KeyLayout[s.chart.KeyCount]
+	go kb.Listen()
 	return s
+}
+
+func (s Scene) KeyIndex(c kb.Code) int {
+	for i, v := range s.keyLayout {
+		if v == c {
+			return i
+		}
+	}
+	return -1 // not found
 }
 
 func (s *Scene) Ready() bool { return s.ready }
@@ -111,7 +125,9 @@ func (s *Scene) Update() error {
 	if !s.initUpdate {
 		ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", s.chart.MusicName, s.chart.ChartName))
 		s.AudioPlayer.Play()
-		s.startTime = time.Now()
+		startTime := time.Now()
+		kb.SetTime(startTime)
+		s.startTime = startTime
 		s.initUpdate = true
 		return nil
 	}
@@ -143,9 +159,25 @@ func (s *Scene) Update() error {
 		}
 	}
 	// judge: score과 staged도 따라서 업데이트
-	for _, e := range s.auto(now) { //[]keyEvent{}
-		s.judge(e)
-		s.lastPressed[e.key] = TimeBool{Time: e.time, Value: e.pressed} // scored되지 않는 누름에도 업데이트 되어야함
+	// for _, e := range s.auto(now) { //[]keyEvent{}
+	// 	s.judge(e)
+	// 	s.lastPressed[e.key] = TimeBool{Time: e.time, Value: e.pressed} // scored되지 않는 누름에도 업데이트 되어야함
+	// }
+	events := kb.Fetch()
+	// fmt.Printf("%+v\n", events)
+	for _, e := range events { //[]keyEvent{}
+		k := s.KeyIndex(e.KeyCode)
+		if k == -1 {
+			continue
+		}
+		e2 := keyEvent{
+			Time:    e.Time,
+			KeyCode: e.KeyCode,
+			Pressed: e.Pressed,
+			Key:     k,
+		}
+		s.judge(e2)
+		s.lastPressed[k] = TimeBool{Time: e.Time, Value: e.Pressed} // scored되지 않는 누름에도 업데이트 되어야함
 	}
 
 	// 따로 처리: lost, scored되고 시간 다 된 LNTail
@@ -192,7 +224,7 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 		n.Sprite.Draw(screen)
 	}
 	for i, tb := range s.lastPressed {
-		if tb.Value { // || now-tb.Time < 90 { // temp
+		if tb.Value {
 			s.stageKeysPressed[i].Draw(screen)
 		} else {
 			s.stageKeys[i].Draw(screen)
