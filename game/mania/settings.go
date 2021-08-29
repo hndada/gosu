@@ -3,7 +3,7 @@ package mania
 import (
 	"image/color"
 
-	"github.com/moutend/go-hook/pkg/types"
+	"github.com/hndada/gosu/engine/kb"
 )
 
 // const left = 30
@@ -15,7 +15,7 @@ import (
 // )
 
 var Settings struct {
-	KeyLayout    map[int][]types.VKCode // todo: 무결성 검사, 겹치는거 있는지 매번 확인
+	KeyLayout    map[int][]kb.Code // todo: 무결성 검사, 겹치는거 있는지 매번 확인
 	GeneralSpeed float64
 
 	NoteWidths      map[int][4]float64 // 키마다 width 설정. 단위는 window size 대비 percent
@@ -38,10 +38,11 @@ var Settings struct {
 }
 
 func init() {
-	Settings.KeyLayout = map[int][]types.VKCode{
-		4: {types.VK_D, types.VK_F, types.VK_J, types.VK_K},
-		7: {types.VK_S, types.VK_D, types.VK_F,
-			types.VK_SPACE, types.VK_J, types.VK_K, types.VK_L},
+	Settings.KeyLayout = map[int][]kb.Code{
+		4: {kb.CodeD, kb.CodeF, kb.CodeJ, kb.CodeK},
+		5: {kb.CodeD, kb.CodeF, kb.CodeSpacebar, kb.CodeJ, kb.CodeK},
+		6: {kb.CodeS, kb.CodeD, kb.CodeF, kb.CodeJ, kb.CodeK, kb.CodeL},
+		7: {kb.CodeS, kb.CodeD, kb.CodeF, kb.CodeSpacebar, kb.CodeJ, kb.CodeK, kb.CodeL},
 	}
 	Settings.GeneralSpeed = 0.115
 

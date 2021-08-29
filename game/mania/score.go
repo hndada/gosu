@@ -33,13 +33,13 @@ func (c *Chart) allotScore() {
 
 // LNTail 이면서 unscored이고 press나 idle일순 없음
 func (s *Scene) judge(e keyEvent) {
-	i := s.staged[e.key] // index of a staged note
+	i := s.staged[e.Key] // index of a staged note
 	if i < 0 {
 		return // todo: play sfx
 	}
 	n := s.chart.Notes[i] // staged note
-	keyAction := KeyAction(s.lastPressed[e.key].Value, e.pressed)
-	timeDiff := n.Time - e.time
+	keyAction := KeyAction(s.lastPressed[e.Key].Value, e.Pressed)
+	timeDiff := n.Time - e.Time
 
 	// Idle, Hit, Release, Hold (lost는 아예 별개의 개념. 시간 지나도록 X면)
 	// 일반   노트: X, O, X, X
@@ -140,18 +140,21 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 	}
 
 	switch n.Type {
-	case typeNote:
-		s.Lighting[n.Key].BornTime = time.Now()
-		s.Lighting[n.Key].Rep = 1
-	case TypeLNHead:
-		s.LightingLN[n.Key].Rep = game.RepInfinite
 	case TypeLNTail:
 		s.LightingLN[n.Key].Rep = 0
 	}
-
-	// apply one more for LNTail when LNHead is missed
-	if n.Type == TypeLNHead && j == Miss {
-		s.applyScore(n.next, Miss)
+	if j != Miss {
+		switch n.Type {
+		case typeNote:
+			s.Lighting[n.Key].BornTime = time.Now()
+			s.Lighting[n.Key].Rep = 1
+		case TypeLNHead:
+			s.LightingLN[n.Key].Rep = game.RepInfinite
+		}
+		// apply one more for LNTail when LNHead is missed
+		if n.Type == TypeLNHead && j == Miss {
+			s.applyScore(n.next, Miss)
+		}
 	}
 }
 
