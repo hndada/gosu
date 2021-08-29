@@ -9,7 +9,7 @@
 // On-screen software keyboards do not send key events.
 //
 // See the golang.org/x/mobile/app package for details on the event model.
-package main
+package kb
 
 import (
 	"fmt"
