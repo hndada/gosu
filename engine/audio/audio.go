@@ -1,4 +1,4 @@
-package game
+package audio
 
 import (
 	"io/ioutil"
@@ -10,20 +10,25 @@ import (
 	"github.com/hajimehoshi/ebiten/audio/wav"
 )
 
+// todo: oto v2 import
 const bytesPerSample = 4
 const sampleRate = 44100
 
-var AudioContext *audio.Context
+var Context *audio.Context
+
+type Player struct {
+	*audio.Player
+}
 
 func init() {
 	var err error
-	AudioContext, err = audio.NewContext(sampleRate)
+	Context, err = audio.NewContext(sampleRate)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func NewAudioPlayer(path string) *audio.Player {
+func NewPlayer(path string) *Player {
 	b, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
@@ -35,14 +40,17 @@ func NewAudioPlayer(path string) *audio.Player {
 	var s audioStream
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".mp3":
-		s, err = mp3.Decode(AudioContext, audio.BytesReadSeekCloser(b))
+		s, err = mp3.Decode(Context, audio.BytesReadSeekCloser(b))
 	case ".wav":
-		s, err = wav.Decode(AudioContext, audio.BytesReadSeekCloser(b))
+		s, err = wav.Decode(Context, audio.BytesReadSeekCloser(b))
 	}
-	p, err := audio.NewPlayer(AudioContext, s)
+	p, err := audio.NewPlayer(Context, s)
 	p.SetVolume(0.25) // temp
 	if err != nil {
 		panic(err)
 	}
-	return p
+	p2 := &Player{
+		Player: p,
+	}
+	return p2
 }

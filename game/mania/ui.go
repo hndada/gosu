@@ -14,6 +14,10 @@ var (
 	red   = color.RGBA{254, 53, 53, 128}
 )
 
+type TimeBool struct {
+	Time  int64
+	Value bool
+}
 type sceneUI struct {
 	noteWidths       []int // todo: setNoteSprites()에서만 쓰임
 	playfield        game.Sprite
@@ -28,33 +32,44 @@ type sceneUI struct {
 	HPBar      game.Sprite // it can go to playfield
 	HPBarColor game.Sprite // actually, it can also go to playfield
 	HPBarMask  game.Sprite
+	hpScreen   *ebiten.Image
 
 	Lighting   []game.Animation // 여러 lane에서 동시에 그려져야함
 	LightingLN []game.Animation
+
+	jm            *game.JudgmentMeter // temp
+	timingSprites []game.Animation    // temp
+
+	bg game.Sprite
 }
 
 // 가로가 늘어난다고 같이 늘리면 오히려 어색하므로 세로에만 맞춰 늘리기: 100 기준
-func newSceneUI(screenSize image.Point, keyCountWithScratchMode int) sceneUI {
-	keyCount := keyCountWithScratchMode & ScratchMask // temp
+func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
 	s := new(sceneUI)
-	scale := float64(screenSize.Y) / 100
+	keyCount := keyCountWithScratchMode & ScratchMask // temp
+	scale := float64(game.Settings.ScreenSize.Y) / 100
 	keyKinds := keyKindsMap[keyCount]
 	unscaledNoteWidths := Settings.NoteWidths[keyCount]
+
+	const dimness = 30 // temp
+	s.bg = c.BG()
+	// todo: fixed에서 dimness 적용시키기
+	// s.bgop.ColorM.ChangeHSV(0, 1, float64(dimness)/100)
 
 	noteWidths := make([]int, keyCount)
 	for key, kind := range keyKinds {
 		noteWidths[key] = int(unscaledNoteWidths[kind] * scale)
 	}
-	i, _ := ebiten.NewImage(screenSize.X, screenSize.Y, ebiten.FilterDefault)
+	i, _ := ebiten.NewImage(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y, ebiten.FilterDefault)
 
 	p := Settings.StagePosition / 100 // proportion
-	center := int(float64(screenSize.X) * p)
+	center := int(float64(game.Settings.ScreenSize.X) * p)
 	var wLeft, wMiddle int
 	{ // main
 		for _, nw := range noteWidths {
 			wMiddle += nw
 		}
-		h := screenSize.Y
+		h := game.Settings.ScreenSize.Y
 
 		// temp: Fill이 alpha value를 안 받는 것 같아 draw.Draw 사용 중
 		mainSrc := image.NewRGBA(image.Rect(0, 0, wMiddle, h))
@@ -102,7 +117,7 @@ func newSceneUI(screenSize image.Point, keyCountWithScratchMode int) sceneUI {
 	// }
 	{
 		src := Skin.StageLeft
-		h := screenSize.Y
+		h := game.Settings.ScreenSize.Y
 		scale := float64(h) / float64(src.Bounds().Dy())
 		wLeft = int(float64(src.Bounds().Dx()) * scale)
 		x := center - wMiddle/2 - wLeft
@@ -114,7 +129,7 @@ func newSceneUI(screenSize image.Point, keyCountWithScratchMode int) sceneUI {
 	}
 	{
 		src := Skin.StageRight
-		h := screenSize.Y
+		h := game.Settings.ScreenSize.Y
 		scale := float64(h) / float64(src.Bounds().Dy())
 		// wRight = int(float64(src.Bounds().Dx()) * scale)
 		x := center + wMiddle/2
@@ -160,7 +175,7 @@ func newSceneUI(screenSize image.Point, keyCountWithScratchMode int) sceneUI {
 		s.HPBarMask = sprite2
 	}
 	s.playfield = game.NewSprite(i)
-	s.playfield.SetFixedOp(screenSize.X, screenSize.Y, 0, 0) // todo: 여기에 bg 추가
+	s.playfield.SetFixedOp(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y, 0, 0) // todo: 여기에 bg 추가
 
 	s.stageKeys = make([]game.Sprite, keyCount)
 	s.stageKeysPressed = make([]game.Sprite, keyCount)
@@ -278,7 +293,7 @@ func (s *Scene) setNoteSprites() {
 			sprite = game.NewSprite(Skin.Note[kind])
 		}
 
-		scale := float64(s.ScreenSize.Y) / 100
+		scale := float64(game.Settings.ScreenSize.Y) / 100
 		sprite.H = int(Settings.NoteHeigth * scale)
 		sprite.W = s.noteWidths[n.Key]
 		x := xStart

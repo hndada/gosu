@@ -1,140 +1,90 @@
 package gosu
 
 import (
-	"image"
-	"log"
 	"os"
 	"reflect"
 
 	"github.com/hajimehoshi/ebiten"
+	"github.com/hndada/gosu/engine/scene"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/mania"
 	// _ "github.com/silbinarywolf/preferdiscretegpu"
 )
 
-var MaxTransCountDown int
-
-// Game: path + Renderer
-type Game struct {
-	cwd            string // current working dir
-	Scene          Scene
-	NextScene      Scene
-	TransSceneFrom *ebiten.Image
-	TransSceneTo   *ebiten.Image
-	TransCountdown int
-
-	args game.TransSceneArgs
-	// screenSize image.Point
-}
-
+var cwd string            // current working dir
 var charts []*mania.Chart // temp
 
-type Scene interface {
-	Ready() bool
-	Update() error
-	Draw(screen *ebiten.Image)           // Draws scene to screen
-	Done(args *game.TransSceneArgs) bool // 모든 passed parameter는 Passed by Value.
+// background goes lazy loaded
+type Game struct {
+	scene   scene.Scene
+	args    *scene.Args
+	changer *scene.Changer
 }
 
 func NewGame() *Game {
-	const maxTPS = 60
-	var err error
-
-	g := &Game{}
-	g.cwd, err = os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-	game.Settings.ScreenSize = image.Pt(1600, 900)
-	game.LoadSkin(g.cwd)
-	mania.LoadSkin(g.cwd)
-
 	ebiten.SetWindowSize(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y)
-
-	charts = loadCharts(g.cwd)
-	updateCharts(g.cwd)
-
-	sceneSelect = newSceneSelect(g.cwd, game.Settings.ScreenSize)
-	g.Scene = sceneSelect
-
-	g.args = game.TransSceneArgs{}
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetRunnableOnUnfocused(true)
-	ebiten.SetMaxTPS(maxTPS)
+	ebiten.SetMaxTPS(game.Settings.MaxTPS)
 
-	g.TransSceneFrom, _ = ebiten.NewImage(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y, ebiten.FilterDefault)
-	g.TransSceneTo, _ = ebiten.NewImage(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y, ebiten.FilterDefault)
-	MaxTransCountDown = ebiten.MaxTPS() * 4 / 5
+	var err error
+	cwd, err = os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+
+	game.LoadSkin(cwd)
+	mania.LoadSkin(cwd)
+	charts = loadCharts(cwd)
+	sceneSelect = newSceneSelect(cwd)
+
+	g := &Game{}
+	g.scene = sceneSelect
+	g.args = &scene.Args{}
+	g.changer = scene.NewChanger()
 	return g
 }
 
+// whether changer or scene goes updated
 func (g *Game) Update(screen *ebiten.Image) error {
-	if g.TransCountdown <= 0 { // == 0
-		if g.Scene.Done(&g.args) {
-			switch g.Scene.(type) {
-			case *SceneSelect:
-				switch g.args.Next {
-				case "mania.Scene":
-					v := reflect.ValueOf(g.args.Args)
-					chart := v.FieldByName("Chart").Interface().(*mania.Chart)
-					mods := v.FieldByName("Mods").Interface().(mania.Mods)
-					p := v.FieldByName("ScreenSize").Interface().(image.Point)
-					s2 := mania.NewScene(chart, mods, p, g.cwd)
-					g.ChangeScene(s2)
-				}
-			case *mania.Scene:
-				// s2 := newSceneSelect(g.cwd, game.Settings.ScreenSize) // temp: 매번 새로 만들 필요는 없음
-				updateCharts(g.cwd)
-				sceneSelect.done = false
-				g.ChangeScene(sceneSelect)
-			default:
-				panic("not reach")
+	if !g.changer.Done() {
+		return g.changer.Update()
+	}
+	if g.scene.Close(g.args) {
+		switch g.scene.(type) {
+		case *SceneSelect:
+			switch g.args.Next {
+			case "mania.Scene":
+				v := reflect.ValueOf(g.args.Args)
+				chart := v.FieldByName("Chart").Interface().(*mania.Chart)
+				mods := v.FieldByName("Mods").Interface().(mania.Mods)
+				s2 := mania.NewScene(chart, mods, cwd)
+				g.changer.Change(g.scene, s2)
+				g.scene = s2
 			}
-			g.args = game.TransSceneArgs{}
+		case *mania.Scene:
+			updateCharts(cwd)
+			sceneSelect.close = false
+			g.changer.Change(g.scene, sceneSelect)
+			g.scene = sceneSelect
+		default:
+			panic("not reach")
 		}
-		return g.Scene.Update()
+		// g.args = &scene.Args{}
+	} else {
+		return g.scene.Update()
 	}
-	g.TransCountdown--
-	if g.TransCountdown > 0 {
-		return nil
-	}
-	// count down has just been from non-zero to zero
-	g.Scene = g.NextScene
-	g.NextScene = nil
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	if g.TransCountdown == 0 {
-		if g.Scene.Ready() {
-			g.Scene.Draw(screen)
-		}
-		return
-	}
-	var value float64
-	{
-		value = float64(g.TransCountdown) / float64(MaxTransCountDown)
-		g.TransSceneFrom.Clear()
-		g.Scene.Draw(g.TransSceneFrom)
-		op := ebiten.DrawImageOptions{}
-		op.ColorM.ChangeHSV(0, 1, value)
-		screen.DrawImage(g.TransSceneFrom, &op)
-	}
-	{
-		value = 1 - value
-		g.TransSceneTo.Clear()
-		g.NextScene.Draw(g.TransSceneTo)
-		op := ebiten.DrawImageOptions{}
-		op.ColorM.ChangeHSV(0, 1, value)
-		screen.DrawImage(g.TransSceneTo, &op)
+	if g.changer.Done() {
+		g.scene.Draw(screen)
+	} else {
+		g.changer.Draw(screen)
 	}
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y
-}
-
-func (g *Game) ChangeScene(s Scene) {
-	g.NextScene = s
-	g.TransCountdown = MaxTransCountDown
 }

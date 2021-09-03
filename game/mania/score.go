@@ -12,25 +12,6 @@ import (
 
 const maxScore = 1e6
 
-// const holdUnitHP = 0.002 // 롱노트를 눌렀을 때 1ms 당 차오르는 체력
-
-func (c *Chart) allotScore() {
-	var sumStrain float64
-	for _, n := range c.Notes {
-		sumStrain += n.strain
-	}
-	var avgStrain float64
-	if len(c.Notes) != 0 {
-		avgStrain = sumStrain / float64(len(c.Notes))
-	}
-	for i := range c.Notes {
-		n := c.Notes[i]
-		c.Notes[i].score = maxScore * (n.strain / sumStrain)
-		c.Notes[i].karma = math.Min(n.strain/avgStrain, 2.5)          // 0 ~ 2.5
-		c.Notes[i].hp = math.Min(n.strain/(3*avgStrain)+2.0/3.0, 1.5) // 0 ~ 1.5
-	}
-}
-
 // LNTail 이면서 unscored이고 press나 idle일순 없음
 func (s *Scene) judge(e keyEvent) {
 	i := s.staged[e.Key] // index of a staged note

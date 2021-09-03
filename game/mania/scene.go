@@ -6,76 +6,59 @@ import (
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
+	"github.com/hndada/gosu/engine/audio"
 	"github.com/hndada/gosu/engine/kb"
+	"github.com/hndada/gosu/engine/scene"
 	"github.com/hndada/gosu/game"
 
-	"image"
 	_ "image/jpeg"
 )
 
-type TimeBool struct {
-	Time  int64
-	Value bool
-}
 type Scene struct {
-	game.Scene
+	ready      bool // whether scene has been loaded
+	close      bool
+	startTime  time.Time
+	initUpdate bool
 
-	speed float64
-	bg    *ebiten.Image
-	bgop  *ebiten.DrawImageOptions
-
-	mods  Mods
-	chart *Chart
-
-	lastPressed []TimeBool
-	staged      []int
-
-	score float64
-	karma float64
-	hp    float64
-	combo int32
-
-	done bool
-
-	ready       bool      // whether scene has been loaded
-	startTime   time.Time // int64
-	initUpdate  bool
-	auto        func(int64) []keyEvent
-	playSE      func()
-	judgeCounts [len(Judgments)]int
-
-	timeStamp func(time int64) game.TimeStamp
+	mods        Mods
+	chart       *Chart
+	keyLayout   []kb.Code
+	audioPlayer *audio.Player
+	speed       float64
 
 	sceneUI
-	lns []game.LongSprite
+	bg   *ebiten.Image // todo:  bgop와 함께 삭제
+	bgop *ebiten.DrawImageOptions
 
-	// timeDiffs []int64
-	jm *game.JudgmentMeter // temp
+	score       float64
+	karma       float64
+	hp          float64
+	combo       int32
+	judgeCounts [len(Judgments)]int
+	staged      []int
 
-	timingSprites []game.Animation
+	timeStamp func(time int64) game.TimeStamp
+	auto      func(int64) []keyEvent
+	playSE    func()
 
-	hpScreen *ebiten.Image
-
-	keyLayout []kb.Code
+	lastPressed []TimeBool // todo: []TimeBool to []bool
 }
 
-func NewScene(c *Chart, mods Mods, screenSize image.Point, cwd string) *Scene {
-	const instability = 11 // 0~100; 0 is Auto
+func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	s := new(Scene)
-	s.ScreenSize = screenSize
+	const instability = 11 // 0~100; 0 is Auto
+
 	s.speed = Settings.GeneralSpeed
 	s.mods = mods
 	s.chart = c.ApplyMods(s.mods)
-	// fmt.Println(s.chart.ScratchMode)
+	s.auto = s.chart.GenAutoKeyEvents(instability)
+	s.playSE = SEPlayer(cwd)
+	s.timeStamp = c.TimeStampFinder()
+	s.keyLayout = Settings.KeyLayout[s.chart.KeyCount]
 
-	const dimness = 30 // temp
-	bg, err := c.Background()
-	if err != nil {
-		panic("failed to parse bg")
-	}
-	s.bg = bg
-	s.bgop = game.BackgroundOp(screenSize, image.Pt(s.bg.Size()))
-	s.bgop.ColorM.ChangeHSV(0, 1, float64(dimness)/100)
+	s.audioPlayer = audio.NewPlayer(s.chart.Path(s.chart.AudioFilename))
+	// s.audioPlayer.Play()
+	// s.audioPlayer.Pause()
 
 	var img *ebiten.Image
 	kinds := keyKindsMap[c.KeyCount|s.chart.ScratchMode]
@@ -84,36 +67,33 @@ func NewScene(c *Chart, mods Mods, screenSize image.Point, cwd string) *Scene {
 		s.chart.Notes[i].Sprite.SetImage(img)
 	}
 	s.lastPressed = make([]TimeBool, c.KeyCount)
-	s.initStaged(c)
+	{
+		s.staged = make([]int, c.KeyCount)
+		for k := range s.staged {
+			s.staged[k] = -1
+		}
+		for k := range s.staged {
+			for i, n := range c.Notes {
+				if n.Key == k {
+					s.staged[k] = i
+					break
+				}
+			}
+		}
+	}
 
 	s.karma = 100
 	s.hp = 100
-
-	s.AudioPlayer = game.NewAudioPlayer(s.chart.AbsPath(s.chart.AudioFilename))
-	s.AudioPlayer.Play()
-	s.AudioPlayer.Pause()
-	s.auto = s.chart.GenAutoKeyEvents(instability)
-	s.playSE = SEPlayer(cwd)
-	s.timeStamp = c.TimeStampFinder()
-	s.sceneUI = newSceneUI(s.ScreenSize, s.chart.KeyCount|s.chart.ScratchMode)
+	s.sceneUI = newSceneUI(s.chart, s.chart.KeyCount|s.chart.ScratchMode)
 	s.setNoteSprites()
-	s.ready = true
+
 	s.jm = game.NewJudgmentMeter(Judgments[:])
 
-	s.hpScreen, _ = ebiten.NewImage(screenSize.X, screenSize.Y, ebiten.FilterDefault)
+	s.hpScreen, _ = ebiten.NewImage(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y, ebiten.FilterDefault)
 	s.timingSprites = make([]game.Animation, 0, len(s.chart.Notes))
-	s.keyLayout = Settings.KeyLayout[s.chart.KeyCount]
 	go kb.Listen()
+	s.ready = true
 	return s
-}
-
-func (s Scene) KeyIndex(c kb.Code) int {
-	for i, v := range s.keyLayout {
-		if v == c {
-			return i
-		}
-	}
-	return -1 // not found
 }
 
 func (s *Scene) Ready() bool { return s.ready }
@@ -124,29 +104,29 @@ func (s *Scene) Update() error {
 	var now int64
 	if !s.initUpdate {
 		ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", s.chart.MusicName, s.chart.ChartName))
-		s.AudioPlayer.Play()
+		s.audioPlayer.Play()
 		startTime := time.Now()
 		kb.SetTime(startTime)
 		s.startTime = startTime
 		s.initUpdate = true
 		return nil
 	}
-	if !game.AudioContext.IsReady() {
+	if !audio.Context.IsReady() {
 		return nil
 	}
 	now = time.Since(s.startTime).Milliseconds()
 	// if now < 3000 { // unsafe: 꼬로록 소리 남
-	//		s.AudioPlayer.Seek(time.Now().Sub(s.startTime))
+	//		s.audioPlayer.Seek(time.Now().Sub(s.startTime))
 	//		}
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) || now > s.chart.EndTime()+2000 { // temp: 2초 여유 두기
-		_ = s.AudioPlayer.Close()
-		s.done = true
+		_ = s.audioPlayer.Close()
+		s.close = true
 	}
 	ts := s.timeStamp(now)
 	cursor := float64(now-ts.Time)*ts.Factor + ts.Position
 	for i, n := range s.chart.Notes {
-		rp := (n.position-cursor)*s.speed - Settings.HitPosition                                   // relative position
-		s.chart.Notes[i].Sprite.Y = int(-rp*(float64(s.ScreenSize.Y)/100) - float64(n.Sprite.H)/2) // +가 아니고 -가 맞을듯
+		rp := (n.position-cursor)*s.speed - Settings.HitPosition                                               // relative position
+		s.chart.Notes[i].Sprite.Y = int(-rp*(float64(game.Settings.ScreenSize.Y)/100) - float64(n.Sprite.H)/2) // +가 아니고 -가 맞을듯
 		if n.Type == TypeLNTail {
 			s.chart.Notes[i].LongSprite.Y = n.Sprite.Y + n.Sprite.H // why?: center of tail sprite ~ center of head sprite
 			if s.chart.Notes[i].scored {
@@ -164,20 +144,20 @@ func (s *Scene) Update() error {
 	// 	s.lastPressed[e.key] = TimeBool{Time: e.time, Value: e.pressed} // scored되지 않는 누름에도 업데이트 되어야함
 	// }
 	events := kb.Fetch()
-	// fmt.Printf("%+v\n", events)
 	for _, e := range events { //[]keyEvent{}
-		k := s.KeyIndex(e.KeyCode)
-		if k == -1 {
-			continue
+		for k, v := range s.keyLayout {
+			if v == e.KeyCode {
+				e2 := keyEvent{
+					Time:    e.Time,
+					KeyCode: e.KeyCode,
+					Pressed: e.Pressed,
+					Key:     k,
+				}
+				s.judge(e2)
+				s.lastPressed[k] = TimeBool{Time: e.Time, Value: e.Pressed} // scored되지 않는 누름에도 업데이트 되어야함
+				continue
+			}
 		}
-		e2 := keyEvent{
-			Time:    e.Time,
-			KeyCode: e.KeyCode,
-			Pressed: e.Pressed,
-			Key:     k,
-		}
-		s.judge(e2)
-		s.lastPressed[k] = TimeBool{Time: e.Time, Value: e.Pressed} // scored되지 않는 누름에도 업데이트 되어야함
 	}
 
 	// 따로 처리: lost, scored되고 시간 다 된 LNTail
@@ -206,7 +186,7 @@ func (s *Scene) Update() error {
 func (s *Scene) Draw(screen *ebiten.Image) {
 	now := time.Since(s.startTime).Milliseconds()
 	//s.chart.BG.Draw(screen)
-	screen.DrawImage(s.bg, s.bgop)
+	// screen.DrawImage(s.bg, s.bgop)
 	s.playfield.Draw(screen)
 
 	for i, tb := range s.lastPressed {
@@ -273,25 +253,10 @@ judge: %v
 	// }
 }
 
-func (s *Scene) initStaged(c *Chart) {
-	s.staged = make([]int, c.KeyCount)
-	for k := range s.staged {
-		s.staged[k] = -1
-	}
-	for k := range s.staged {
-		for i, n := range c.Notes {
-			if n.Key == k {
-				s.staged[k] = i
-				break
-			}
-		}
-	}
-}
-
-func (s *Scene) Done(args *game.TransSceneArgs) bool {
-	if s.done && args.Next == "" {
+func (s *Scene) Close(args *scene.Args) bool {
+	if s.close && args.Next == "" {
 		args.Next = "SceneSelect"
 		args.Args = nil
 	}
-	return s.done
+	return s.close
 }

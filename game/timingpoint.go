@@ -69,7 +69,7 @@ type EffectPoint struct {
 
 // uninherited: BPM, meter
 // should be run at whole slice at once
-func newTimingPointsFromOsu(o *osu.Format) TimingPoints {
+func NewTimingPointsFromOsu(o *osu.Format) TimingPoints {
 	var (
 		lastSpeedFactor float64 = 1
 		lastBPM         float64
