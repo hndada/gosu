@@ -17,7 +17,7 @@ type Judgment struct {
 
 type JudgmentMeter struct {
 	Judgments []Judgment
-	Sprite    Sprite
+	Sprite    FixedSprite
 }
 
 var (
@@ -35,7 +35,7 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 	jm := new(JudgmentMeter)
 	jm.Judgments = js
 
-	var sprite Sprite
+	var sprite FixedSprite
 	var base *ebiten.Image
 
 	{ // set base box
@@ -49,8 +49,12 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 
 		base, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
 		base.Fill(color.RGBA64{0, 0, 0, 255})
-		sprite = NewSprite(base) // base is just for providingsize info
-		sprite.SetFixedOp(w, h, x, y)
+		sprite = NewFixedSprite(base) // base is just for providingsize info
+		sprite.W = w
+		sprite.H = h
+		sprite.X = x
+		sprite.Y = y
+		sprite.Fix()
 	}
 	{ // set color box
 		const height = 1 // base 대비 1

@@ -96,7 +96,7 @@ func (c ChartHeader) Path(fname string) string {
 	d := filepath.Dir(c.ChartPath)
 	return filepath.Join(d, fname)
 }
-func (c ChartHeader) BG() Sprite {
+func (c ChartHeader) BG(dimness float64) FixedSprite {
 	var src *ebiten.Image
 	path := c.Path(c.ImageFilename) // chart's own background file path
 	dat, err := ioutil.ReadFile(path)
@@ -109,7 +109,7 @@ func (c ChartHeader) BG() Sprite {
 		}
 		src, _ = ebiten.NewImageFromImage(i, ebiten.FilterDefault)
 	}
-	sprite := NewSprite(src)
+	sprite := NewFixedSprite(src)
 	sw := src.Bounds().Dx()
 	sh := src.Bounds().Dy()
 	screenX := Settings.ScreenSize.X
@@ -125,12 +125,18 @@ func (c ChartHeader) BG() Sprite {
 	h = int(float64(h) * minRatio)
 	x := screenX/2 - w/2
 	y := screenY/2 - h/2
-	sprite.SetFixedOp(w, h, x, y)
+	sprite.W = w
+	sprite.H = h
+	sprite.X = x
+	sprite.Y = y
+	sprite.Dimness = dimness
+	sprite.Fix()
 	return sprite
 }
 
-func DefaultBG() Sprite {
-	return ChartHeader{}.BG() // default background goes returned when error occurs
+func DefaultBG() FixedSprite {
+	const dimness = 1
+	return ChartHeader{}.BG(dimness) // default background goes returned when error occurs
 }
 
 // Use when want to know the mode with no parsing whole .osu file

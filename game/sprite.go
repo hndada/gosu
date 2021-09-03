@@ -16,44 +16,30 @@ type Sprite struct {
 	src  *ebiten.Image
 	W, H int // desired w, h
 	X, Y int
+	// fixed bool
+	// op    *ebiten.DrawImageOptions
 
-	fixed bool // a sprite that never moves once appears
-	op    *ebiten.DrawImageOptions
-
+	Color      color.Color
 	Saturation float64
 	Dimness    float64
-	// Theta      float64
-	Color color.Color
 
 	BornTime time.Time
-	// LifeTime time.Time // zero value goes eternal
 	ebiten.CompositeMode
+	// LifeTime time.Time // zero value goes eternal
 }
 
-func (s Sprite) IsOut(screenSize image.Point) bool {
+func NewSprite(src image.Image) Sprite {
+	var sprite Sprite
+	sprite.SetImage(src)
+	sprite.BornTime = time.Now()
+	sprite.Saturation = 1
+	sprite.Dimness = 1
+	return sprite
+}
+
+func (s Sprite) isOut(screenSize image.Point) bool {
 	return (s.X+s.W < 0 || s.X > screenSize.X ||
 		s.Y+s.H < 0 || s.Y > screenSize.Y)
-}
-
-func (s Sprite) Draw(screen *ebiten.Image) {
-	if s.src == nil {
-		log.Fatal("s.src is nil")
-	}
-	if s.IsOut(screen.Bounds().Max) {
-		return
-	}
-	if s.fixed {
-		screen.DrawImage(s.src, s.op)
-	} else {
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(s.ScaleW(), s.ScaleH())
-		op.GeoM.Translate(float64(s.X), float64(s.Y))
-		op.ColorM.ChangeHSV(0, s.Saturation, s.Dimness)
-		if s.CompositeMode != 0 {
-			op.CompositeMode = s.CompositeMode
-		}
-		screen.DrawImage(s.src, op)
-	}
 }
 
 func (s *Sprite) SetImage(i image.Image) {
@@ -69,25 +55,66 @@ func (s *Sprite) SetImage(i image.Image) {
 	}
 }
 
-func (s Sprite) ScaleW() float64 {
+func (s Sprite) scaleW() float64 {
 	w1, _ := s.src.Size()
 	return float64(s.W) / float64(w1)
 }
-func (s Sprite) ScaleH() float64 {
+func (s Sprite) scaleH() float64 {
 	_, h1 := s.src.Size()
 	return float64(s.H) / float64(h1)
 }
-
-// Suppose minor parameter has already been set
-func (s *Sprite) SetFixedOp(w, h, x, y int) {
-	s.W = w
-	s.H = h
-	s.X = x
-	s.Y = y
+func (s Sprite) Draw(screen *ebiten.Image) {
+	if s.src == nil {
+		panic("s.src is nil")
+	}
+	if s.isOut(screen.Bounds().Max) {
+		return
+	}
 	op := &ebiten.DrawImageOptions{}
-	// op.GeoM.Rotate(s.Theta)
-	op.GeoM.Scale(s.ScaleW(), s.ScaleH())
-	op.GeoM.Translate(float64(x), float64(y))
+	op.GeoM.Scale(s.scaleW(), s.scaleH())
+	op.GeoM.Translate(float64(s.X), float64(s.Y))
+	op.ColorM.ChangeHSV(0, s.Saturation, s.Dimness)
+	if s.CompositeMode != 0 {
+		op.CompositeMode = s.CompositeMode
+	}
+	screen.DrawImage(s.src, op)
+}
+
+// for debugging
+func (s Sprite) PrintWHXY(comment string) {
+	fmt.Println(comment, s.W, s.H, s.X, s.Y)
+}
+
+type FixedSprite struct { // a sprite that never moves once appears
+	Sprite
+	op *ebiten.DrawImageOptions
+}
+
+func NewFixedSprite(src image.Image) FixedSprite {
+	return FixedSprite{
+		Sprite: NewSprite(src),
+	}
+}
+func (s FixedSprite) Draw(screen *ebiten.Image) {
+	if s.src == nil {
+		panic("s.src is nil")
+	}
+	if s.isOut(screen.Bounds().Max) {
+		return
+	}
+	screen.DrawImage(s.src, s.op)
+}
+
+// todo: Fixed는 이제 미리 WHXY 미리 해야함
+// Suppose minor parameter has already been set
+func (s *FixedSprite) Fix() {
+	op := &ebiten.DrawImageOptions{}
+	if s.CompositeMode != 0 {
+		op.CompositeMode = s.CompositeMode
+	}
+	op.GeoM.Scale(s.scaleW(), s.scaleH())
+	op.GeoM.Translate(float64(s.X), float64(s.Y))
+
 	if s.Color != nil {
 		r, g, b, _ := s.Color.RGBA()
 		op.ColorM.Scale(0, 0, 0, 1) // reset
@@ -98,23 +125,8 @@ func (s *Sprite) SetFixedOp(w, h, x, y int) {
 			0, // temp
 		)
 	}
+	op.ColorM.ChangeHSV(0, s.Saturation, s.Dimness)
 	s.op = op
-	s.fixed = true
-}
-
-// for debugging
-func (s Sprite) PrintWHXY(comment string) {
-	fmt.Println(comment, s.W, s.H, s.X, s.Y)
-}
-
-func NewSprite(src image.Image) Sprite {
-	var sprite Sprite
-	sprite.SetImage(src)
-
-	sprite.BornTime = time.Now()
-	sprite.Saturation = 1
-	sprite.Dimness = 1
-	return sprite
 }
 
 // each frame has same interval
@@ -162,7 +174,7 @@ func (a Animation) Draw(screen *ebiten.Image) {
 	i := int(float64(t) / frameTime)
 	// temp: suppose all animation goes not fixed
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(a.ScaleW(), a.ScaleH())
+	op.GeoM.Scale(a.scaleW(), a.scaleH())
 	op.GeoM.Translate(float64(a.X), float64(a.Y))
 	op.ColorM.ChangeHSV(0, a.Saturation, a.Dimness)
 	if a.CompositeMode != 0 {
@@ -172,11 +184,11 @@ func (a Animation) Draw(screen *ebiten.Image) {
 }
 
 // temp: suppose all frames have same size in an animation
-func (a Animation) ScaleW() float64 {
+func (a Animation) scaleW() float64 {
 	w1, _ := a.srcs[0].Size()
 	return float64(a.W) / float64(w1)
 }
-func (a Animation) ScaleH() float64 {
+func (a Animation) scaleH() float64 {
 	_, h1 := a.srcs[0].Size()
 	return float64(a.H) / float64(h1)
 }
@@ -187,7 +199,7 @@ type LongSprite struct {
 }
 
 // temp: no need to be method of LongSprite, to make sure only LongSprite uses this
-func (s LongSprite) IsOut(w, h, x, y int, screenSize image.Point) bool {
+func (s LongSprite) isOut(w, h, x, y int, screenSize image.Point) bool {
 	return x+w < 0 || x > screenSize.X || y+h < 0 || y > screenSize.Y
 }
 
@@ -197,7 +209,7 @@ func (s LongSprite) Draw(screen *ebiten.Image) {
 	w1, h1 := s.src.Size()
 	switch s.Vertical {
 	case true:
-		op.GeoM.Scale(s.ScaleW(), 1) // height 쪽은 굳이 scale 하지 않는다
+		op.GeoM.Scale(s.scaleW(), 1) // height 쪽은 굳이 scale 하지 않는다
 		// important: op is not AB = BA
 		x, y := s.X, s.Y
 		op.GeoM.Translate(float64(x), float64(y))
@@ -206,14 +218,14 @@ func (s LongSprite) Draw(screen *ebiten.Image) {
 		first := s.src.Bounds()
 		w, h := s.W, r
 		first.Min = image.Pt(0, h1-r)
-		if !s.IsOut(w, h, x, y, screen.Bounds().Size()) {
+		if !s.isOut(w, h, x, y, screen.Bounds().Size()) {
 			screen.DrawImage(s.src.SubImage(first).(*ebiten.Image), op)
 		}
 		op.GeoM.Translate(0, float64(h))
 		y += h
 		h = h1
 		for i := 0; i < q; i++ {
-			if !s.IsOut(w, h, x, y, screen.Bounds().Size()) {
+			if !s.isOut(w, h, x, y, screen.Bounds().Size()) {
 				screen.DrawImage(s.src, op)
 			}
 			op.GeoM.Translate(0, float64(h))
@@ -221,7 +233,7 @@ func (s LongSprite) Draw(screen *ebiten.Image) {
 		}
 
 	default:
-		op.GeoM.Scale(1, s.ScaleH())
+		op.GeoM.Scale(1, s.scaleH())
 		op.GeoM.Translate(float64(s.X), float64(s.Y))
 		q, r := s.W/w1, s.W%w1+1 // temp: +1
 

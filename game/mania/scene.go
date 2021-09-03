@@ -27,8 +27,6 @@ type Scene struct {
 	speed       float64
 
 	sceneUI
-	bg   *ebiten.Image // todo:  bgop와 함께 삭제
-	bgop *ebiten.DrawImageOptions
 
 	score       float64
 	karma       float64
@@ -185,8 +183,7 @@ func (s *Scene) Update() error {
 
 func (s *Scene) Draw(screen *ebiten.Image) {
 	now := time.Since(s.startTime).Milliseconds()
-	//s.chart.BG.Draw(screen)
-	// screen.DrawImage(s.bg, s.bgop)
+	s.bg.Draw(screen)
 	s.playfield.Draw(screen)
 
 	for i, tb := range s.lastPressed {
