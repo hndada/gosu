@@ -11,6 +11,7 @@ var Settings struct {
 	ComboHeight        float64 // todo: mode마다 combo 위치가 다르므로 game package에 있으면 안됨
 	ComboPosition      float64
 	ComboGap           float64
+	BackgroundDimness  float64
 }
 
 func init() {
@@ -21,6 +22,7 @@ func init() {
 	Settings.ComboPosition = 40
 	Settings.ComboGap = 0.8
 	Settings.MaxTPS = 60
+	Settings.BackgroundDimness = 0.3
 }
 
 func DisplayScale() float64 {

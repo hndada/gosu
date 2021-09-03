@@ -20,17 +20,17 @@ type TimeBool struct {
 }
 type sceneUI struct {
 	noteWidths       []int // todo: setNoteSprites()에서만 쓰임
-	playfield        game.Sprite
-	stageKeys        []game.Sprite
-	stageKeysPressed []game.Sprite
+	playfield        game.FixedSprite
+	stageKeys        []game.FixedSprite
+	stageKeysPressed []game.FixedSprite
 
 	combos      [10]game.Sprite
 	scores      [10]game.Sprite
 	judgeSprite [len(Judgments)]game.Animation // todo: rename
-	Spotlights  []game.Sprite                  // 키를 눌렀을 때 불 들어오는 거
+	Spotlights  []game.FixedSprite             // 키를 눌렀을 때 불 들어오는 거
 
-	HPBar      game.Sprite // it can go to playfield
-	HPBarColor game.Sprite // actually, it can also go to playfield
+	HPBar      game.FixedSprite // it can be in playfield
+	HPBarColor game.FixedSprite // actually, it can also go to playfield
 	HPBarMask  game.Sprite
 	hpScreen   *ebiten.Image
 
@@ -40,7 +40,7 @@ type sceneUI struct {
 	jm            *game.JudgmentMeter // temp
 	timingSprites []game.Animation    // temp
 
-	bg game.Sprite
+	bg game.FixedSprite
 }
 
 // 가로가 늘어난다고 같이 늘리면 오히려 어색하므로 세로에만 맞춰 늘리기: 100 기준
@@ -51,10 +51,7 @@ func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
 	keyKinds := keyKindsMap[keyCount]
 	unscaledNoteWidths := Settings.NoteWidths[keyCount]
 
-	const dimness = 30 // temp
-	s.bg = c.BG()
-	// todo: fixed에서 dimness 적용시키기
-	// s.bgop.ColorM.ChangeHSV(0, 1, float64(dimness)/100)
+	s.bg = c.BG(game.Settings.BackgroundDimness)
 
 	noteWidths := make([]int, keyCount)
 	for key, kind := range keyKinds {
@@ -142,19 +139,23 @@ func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
 
 	{ // 90도 돌아갈 이미지이므로 whxy 설정에 유의
 		src := game.Skin.HPBar
-		sprite := game.NewSprite(src)
+		sprite := game.NewFixedSprite(src)
 		// sprite.Theta = 90
 		h := int(Settings.HPHeight * game.DisplayScale())
 		scale := float64(h) / float64(src.Bounds().Dy())
 		w := int(float64(src.Bounds().Dx()) * scale)
 		x := center + wMiddle/2
 		y := game.Settings.ScreenSize.Y - h
-		sprite.SetFixedOp(w, h, x, y)
+		sprite.W = w
+		sprite.H = h
+		sprite.X = x
+		sprite.Y = y
+		sprite.Fix()
 		s.HPBar = sprite
 	}
 	{ // HP Bar 이미지와 크기가 다를 수 있음
 		src := game.Skin.HPBarColor
-		sprite := game.NewSprite(src)
+		sprite := game.NewFixedSprite(src)
 		// sprite.Theta = 90
 		h := int(Settings.HPHeight * game.DisplayScale())
 		scale := float64(h) / float64(src.Bounds().Dy())
@@ -162,7 +163,11 @@ func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
 		x := center + wMiddle/2 // + s.HPBar.W/2
 		y := game.Settings.ScreenSize.Y - h
 		// y := int(Settings.HitPosition*game.DisplayScale()) - h
-		sprite.SetFixedOp(w, h, x, y)
+		sprite.W = w
+		sprite.H = h
+		sprite.X = x
+		sprite.Y = y
+		sprite.Fix()
 		s.HPBarColor = sprite
 
 		mask, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
@@ -174,16 +179,20 @@ func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
 		sprite2.CompositeMode = ebiten.CompositeModeSourceOut
 		s.HPBarMask = sprite2
 	}
-	s.playfield = game.NewSprite(i)
-	s.playfield.SetFixedOp(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y, 0, 0) // todo: 여기에 bg 추가
+	s.playfield = game.NewFixedSprite(i)
+	s.playfield.W = game.Settings.ScreenSize.X
+	s.playfield.H = game.Settings.ScreenSize.Y
+	s.playfield.X = 0
+	s.playfield.Y = 0
+	s.playfield.Fix() // todo: 여기에 bg 추가
 
-	s.stageKeys = make([]game.Sprite, keyCount)
-	s.stageKeysPressed = make([]game.Sprite, keyCount)
+	s.stageKeys = make([]game.FixedSprite, keyCount)
+	s.stageKeysPressed = make([]game.FixedSprite, keyCount)
 
 	for k := 0; k < keyCount; k++ {
-		var sprite game.Sprite
+		var sprite game.FixedSprite
 		src := Skin.StageKeys[keyKinds[k]]
-		sprite = game.NewSprite(src)
+		sprite = game.NewFixedSprite(src)
 
 		w := noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
 
@@ -199,7 +208,11 @@ func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
 		// 	4*Settings.NoteHeigth/2) * game.DisplayScale()) // todo: why?
 		h := game.Settings.ScreenSize.Y - y
 
-		sprite.SetFixedOp(w, h, x, y)
+		sprite.W = w
+		sprite.H = h
+		sprite.X = x
+		sprite.Y = y
+		sprite.Fix()
 		s.stageKeys[k] = sprite
 
 		sprite2 := sprite
@@ -209,8 +222,8 @@ func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
 	}
 	{
 		src := Skin.StageLight
-		sprite := game.NewSprite(src)
-		s.Spotlights = make([]game.Sprite, keyCount)
+		sprite := game.NewFixedSprite(src)
+		s.Spotlights = make([]game.FixedSprite, keyCount)
 		for k := 0; k < keyCount; k++ {
 			w := noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
 			scale := float64(w) / float64(src.Bounds().Size().X)
@@ -221,7 +234,11 @@ func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
 			}
 			y := int(Settings.HitPosition*game.DisplayScale()) - h
 			sprite.Color = Settings.SpotlightColor[keyKinds[k]]
-			sprite.SetFixedOp(w, h, x, y)
+			sprite.W = w
+			sprite.H = h
+			sprite.X = x
+			sprite.Y = y
+			sprite.Fix()
 			s.Spotlights[k] = sprite
 		}
 	}

@@ -17,7 +17,7 @@ type SceneSelect struct {
 	close        bool
 	panelHandler graphics.PanelHandler
 	mods         mania.Mods
-	defaultBG    game.Sprite
+	defaultBG    game.FixedSprite
 }
 
 func newSceneSelect(cwd string) *SceneSelect {

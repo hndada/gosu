@@ -1,6 +1,5 @@
 game->engine, game(common) 으로 구분
 Sprite WHXY 설정 간소화
-chart-bg.go 정리
 SceneMania 정리
 
 롱노트 Head / Tail 손보기
