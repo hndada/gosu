@@ -1,7 +1,7 @@
 package mania
 
 import (
-	"github.com/hndada/gosu/game"
+	"sort"
 )
 
 const (
@@ -33,6 +33,17 @@ func (c *Chart) CalcDifficulty() {
 		// fmt.Println(len(ds), sectionCounts)
 		panic("section count mismatch")
 	}
-	c.Level = game.WeightedSum(ds, diffWeightDecay) / 20
+	c.Level = WeightedSum(ds, diffWeightDecay) / 20
 	c.allotScore()
+}
+
+// Maclaurin series
+func WeightedSum(series []float64, weightDecay float64) float64 {
+	sort.Slice(series, func(i, j int) bool { return series[i] > series[j] })
+	sum, weight := 0.0, 1.0
+	for _, term := range series {
+		sum += weight * term
+		weight *= weightDecay
+	}
+	return sum
 }

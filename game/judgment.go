@@ -1,7 +1,9 @@
 package game
 
 import (
+	"image"
 	"image/color"
+	"image/draw"
 
 	"github.com/hajimehoshi/ebiten"
 )
@@ -90,14 +92,19 @@ func (jm JudgmentMeter) NewTimingSprite(timeDiff int64) Animation {
 	h := jm.Sprite.H
 	x := Settings.ScreenSize.X/2 - int(Settings.JudgmentMeterScale*float64(timeDiff))
 	y := jm.Sprite.Y
-	i, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
-	i.Fill(color.White)
+
+	src := image.NewRGBA(image.Rect(0, 0, w, h))
+	r := image.Rectangle{image.ZP, src.Bounds().Size()}
+	draw.Draw(src, r, &image.Uniform{color.RGBA{255, 255, 255, 128}}, image.ZP, draw.Over)
+	i, _ := ebiten.NewImageFromImage(src, ebiten.FilterDefault)
+	// i, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
+	// i.Fill(color.White)
 
 	a := NewAnimation([]*ebiten.Image{i})
 	a.W = w
 	a.H = h
 	a.X = x
 	a.Y = y
-	a.Rep = 10 // temp
+	a.Rep = 20 // temp
 	return a
 }

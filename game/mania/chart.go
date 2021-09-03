@@ -10,6 +10,7 @@ import (
 
 type Chart struct {
 	*game.ChartHeader
+	game.TimingPoints
 	KeyCount    int
 	ScratchMode int
 	Notes       []Note
@@ -27,7 +28,8 @@ func NewChart(path string) (*Chart, error) {
 			panic(err)
 		}
 		c.ChartHeader = game.NewChartHeaderFromOsu(o, path)
-		c.KeyCount = int(c.Parameter["Scale"])
+		c.TimingPoints = game.NewTimingPointsFromOsu(o)
+		c.KeyCount = int(c.Parameter["KeyCount"])
 		err = c.loadNotesFromOsu(o)
 		if err != nil {
 			panic(err)

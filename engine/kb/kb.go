@@ -34,6 +34,7 @@ var (
 func Listen() {
 	done = false
 	for !done {
+		t := time.Now()
 		for i := 0; i < 0xFF; i++ { // Query key mapped to integer `0x00` to `0xFF` if it's pressed.
 			keyCode := convVirtualKeyCode(uint32(i))
 			if keyCode == 0 || keyCode == CodeUnknown {
@@ -61,7 +62,9 @@ func Listen() {
 				lastPressed[i] = false
 			}
 		}
-		time.Sleep(1 * time.Microsecond) // prevents 100% CPU usage
+		u := time.Now()
+		wait := 1*time.Millisecond - u.Sub(t) - 1
+		time.Sleep(wait) // prevents 100% CPU usage
 	}
 }
 func SetTime(time time.Time) {

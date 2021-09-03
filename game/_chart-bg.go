@@ -1,17 +1,12 @@
 package game
 
 import (
-	"bytes"
-	"image"
 	_ "image/jpeg"
 	_ "image/png"
-	"io/ioutil"
-
-	"github.com/hajimehoshi/ebiten"
 )
 
 func (c *ChartHeader) Background() (*ebiten.Image, error) {
-	dat, err := ioutil.ReadFile(c.AbsPath(c.ImageFilename))
+	dat, err := ioutil.ReadFile(c.Path(c.ImageFilename))
 	if err != nil {
 		return nil, err
 	}
@@ -44,27 +39,4 @@ func BackgroundOp(screen, bg image.Point) *ebiten.DrawImageOptions {
 	x, y := bx*ratio, by*ratio
 	op.GeoM.Translate((sx-x)/2, (sy-y)/2)
 	return op
-}
-
-func DefaultBG() Sprite {
-	src := Skin.DefaultBG
-	sprite := NewSprite(src)
-
-	sw := src.Bounds().Dx()
-	sh := src.Bounds().Dy()
-	screenX := Settings.ScreenSize.X
-	screenY := Settings.ScreenSize.Y
-	w, h := sw, sh
-	ratioW, ratioH := float64(screenX)/float64(sw), float64(screenY)/float64(sh)
-	minRatio := ratioW
-	if minRatio > ratioH {
-		minRatio = ratioH
-	}
-	// BG가 스크린보다 크든 작든 min ratio 곱해지면 딱 맞춰짐
-	w = int(float64(w) * minRatio)
-	h = int(float64(h) * minRatio)
-	x := screenX/2 - w/2
-	y := screenY/2 - h/2
-	sprite.SetFixedOp(w, h, x, y)
-	return sprite
 }

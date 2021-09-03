@@ -2,6 +2,7 @@ package mania
 
 import (
 	"errors"
+	"math"
 	"sort"
 
 	"github.com/hndada/gosu/game"
@@ -151,5 +152,24 @@ func (c *Chart) setNotePosition() {
 			}
 		}
 		c.Notes[ni].position = float64(n.Time-s.Time)*s.Factor + s.Position
+	}
+}
+
+// const holdUnitHP = 0.002 // 롱노트를 눌렀을 때 1ms 당 차오르는 체력
+
+func (c *Chart) allotScore() {
+	var sumStrain float64
+	for _, n := range c.Notes {
+		sumStrain += n.strain
+	}
+	var avgStrain float64
+	if len(c.Notes) != 0 {
+		avgStrain = sumStrain / float64(len(c.Notes))
+	}
+	for i := range c.Notes {
+		n := c.Notes[i]
+		c.Notes[i].score = maxScore * (n.strain / sumStrain)
+		c.Notes[i].karma = math.Min(n.strain/avgStrain, 2.5)          // 0 ~ 2.5
+		c.Notes[i].hp = math.Min(n.strain/(3*avgStrain)+2.0/3.0, 1.5) // 0 ~ 1.5
 	}
 }
