@@ -14,6 +14,8 @@ import (
 	_ "image/jpeg"
 )
 
+const auto = true
+
 type Scene struct {
 	ready      bool // whether scene has been loaded
 	close      bool
@@ -39,12 +41,12 @@ type Scene struct {
 	auto      func(int64) []keyEvent
 	playSE    func()
 
-	lastPressed []TimeBool // todo: []TimeBool to []bool
+	lastPressed []bool
 }
 
 func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	s := new(Scene)
-	const instability = 11 // 0~100; 0 is Auto
+	const instability = 0 // 0~100; 0 is Auto
 
 	s.speed = Settings.GeneralSpeed
 	s.mods = mods
@@ -65,7 +67,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 		img = Skin.Note[kinds[n.Key]]
 		s.chart.Notes[i].Sprite.SetImage(img)
 	}
-	s.lastPressed = make([]TimeBool, c.KeyCount)
+	s.lastPressed = make([]bool, c.KeyCount)
 	{
 		s.staged = make([]int, c.KeyCount)
 		for k := range s.staged {
@@ -90,7 +92,9 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 
 	s.hpScreen, _ = ebiten.NewImage(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y, ebiten.FilterDefault)
 	s.timingSprites = make([]game.Animation, 0, len(s.chart.Notes))
-	go kb.Listen()
+	if !auto {
+		go kb.Listen()
+	}
 	s.ready = true
 	return s
 }
@@ -138,23 +142,26 @@ func (s *Scene) Update() error {
 		}
 	}
 	// judge: score과 staged도 따라서 업데이트
-	// for _, e := range s.auto(now) { //[]keyEvent{}
-	// 	s.judge(e)
-	// 	s.lastPressed[e.key] = TimeBool{Time: e.time, Value: e.pressed} // scored되지 않는 누름에도 업데이트 되어야함
-	// }
-	events := kb.Fetch()
-	for _, e := range events { //[]keyEvent{}
-		for k, v := range s.keyLayout {
-			if v == e.KeyCode {
-				e2 := keyEvent{
-					Time:    e.Time,
-					KeyCode: e.KeyCode,
-					Pressed: e.Pressed,
-					Key:     k,
+	if auto {
+		for _, e := range s.auto(now) {
+			s.judge(e)
+			s.lastPressed[e.Key] = e.Pressed // scored되지 않는 누름에도 업데이트 되어야함
+		}
+	} else {
+		events := kb.Fetch()
+		for _, e := range events {
+			for k, v := range s.keyLayout {
+				if v == e.KeyCode {
+					e2 := keyEvent{
+						Time:    e.Time,
+						KeyCode: e.KeyCode,
+						Pressed: e.Pressed,
+						Key:     k,
+					}
+					s.judge(e2)
+					s.lastPressed[k] = e.Pressed // scored되지 않는 누름에도 업데이트 되어야함
+					continue
 				}
-				s.judge(e2)
-				s.lastPressed[k] = TimeBool{Time: e.Time, Value: e.Pressed} // scored되지 않는 누름에도 업데이트 되어야함
-				continue
 			}
 		}
 	}
@@ -187,8 +194,8 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 	s.bg.Draw(screen)
 	s.playfield.Draw(screen)
 
-	for i, tb := range s.lastPressed {
-		if tb.Value {
+	for i, pressed := range s.lastPressed {
+		if pressed {
 			s.Spotlights[i].Draw(screen)
 		}
 	}
@@ -201,8 +208,8 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 	for _, n := range s.chart.Notes {
 		n.Sprite.Draw(screen)
 	}
-	for i, tb := range s.lastPressed {
-		if tb.Value {
+	for i, pressed := range s.lastPressed {
+		if pressed {
 			s.stageKeysPressed[i].Draw(screen)
 		} else {
 			s.stageKeys[i].Draw(screen)
