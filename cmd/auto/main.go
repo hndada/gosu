@@ -19,7 +19,7 @@ func main() {
 		case game.ModeMania:
 			c, err := mania.NewChart(path)
 			if err != nil {
-				panic(err) // todo: log and continue
+				panic(err)
 			}
 			autoGen := c.GenAutoKeyEvents(instability)
 			for t := 0; t < int(c.EndTime()); t += 60 {

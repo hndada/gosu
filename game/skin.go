@@ -24,7 +24,7 @@ var Skin struct {
 	Number1    [13]*ebiten.Image // including dot, comma, percent
 	Number2    [13]*ebiten.Image
 	HPBar      *ebiten.Image
-	HPBarColor *ebiten.Image
+	HPBarColor *ebiten.Image // todo: Animation
 
 	BoxLeft     *ebiten.Image
 	BoxRight    *ebiten.Image

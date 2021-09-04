@@ -142,7 +142,7 @@ func (c *Chart) setNotePosition() {
 	var cursor int
 	s := c.TimeStamps[0]
 	for ni, n := range c.Notes {
-		for si := range c.TimeStamps[cursor:] { // todo: 자동으로 s = stamps[cursor+si]?
+		for si := range c.TimeStamps[cursor:] {
 			if n.Time < c.TimeStamps[cursor+si].NextTime {
 				if si != 0 {
 					s = c.TimeStamps[cursor+si]

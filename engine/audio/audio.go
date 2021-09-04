@@ -10,7 +10,6 @@ import (
 	"github.com/hajimehoshi/ebiten/audio/wav"
 )
 
-// todo: oto v2 import
 const bytesPerSample = 4
 const sampleRate = 44100
 
@@ -54,3 +53,5 @@ func NewPlayer(path string) *Player {
 	}
 	return p2
 }
+
+// func (p *Player) SetVolume(v float64) { p.SetVolume(v) }

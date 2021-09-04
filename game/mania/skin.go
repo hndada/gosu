@@ -11,10 +11,10 @@ import (
 
 // StartPoint, Width, Height, Name 총 4가지 알면 spritesheet 에서 이미지 빼올 수 있음
 var Skin struct {
-	Note [4]*ebiten.Image // one, two, middle, pinky
-	// LNHead [4]*ebiten.Image
+	Note   [4]*ebiten.Image // one, two, middle, pinky
+	LNHead [4]*ebiten.Image // optional
 	LNBody [4]*ebiten.Image // animation
-	// LNTail [4]*ebiten.Image   // never nil; LNHead 복사를 하더라도
+	LNTail [4]*ebiten.Image // optional
 
 	Judge      [5]*ebiten.Image
 	Lighting   []*ebiten.Image
@@ -59,9 +59,9 @@ func LoadSkin(cwd string) {
 		log.Fatal(err)
 	}
 
-	// LN Body
 	// todo: mania-note1"H" and flip for tail
-	// todo: animated sprites on LN
+	
+	// LN Body // todo: animated sprites on LN
 	path = filepath.Join(dir, "mania-note1L.png")
 	Skin.LNBody[0], err = game.LoadImage(path)
 	if err != nil {
@@ -182,47 +182,47 @@ func LoadSkin(cwd string) {
 	}
 
 	var name string
-	var i *ebiten.Image // todo: i is ambiguous, should rename to img
+	var img *ebiten.Image
 	var count int
 	Skin.Lighting = make([]*ebiten.Image, 0, 10)
 	for {
 		name = fmt.Sprintf("lightingN-%d.png", count)
 		path = filepath.Join(dir, name)
-		i, err = game.LoadImage(path)
+		img, err = game.LoadImage(path)
 		if err != nil {
 			break
 		} else {
-			Skin.Lighting = append(Skin.Lighting, i)
+			Skin.Lighting = append(Skin.Lighting, img)
 		}
 		count++
 	}
 	if len(Skin.Lighting) == 0 {
 		path = filepath.Join(dir, "lightingN.png")
-		i, err = game.LoadImage(path)
+		img, err = game.LoadImage(path)
 		if err != nil {
 			log.Fatal(err)
 		}
-		Skin.Lighting = append(Skin.Lighting, i)
+		Skin.Lighting = append(Skin.Lighting, img)
 	}
 	count = 0
 	Skin.LightingLN = make([]*ebiten.Image, 0, 10)
 	for {
 		name = fmt.Sprintf("lightingL-%d.png", count)
 		path = filepath.Join(dir, name)
-		i, err = game.LoadImage(path)
+		img, err = game.LoadImage(path)
 		if err != nil {
 			break
 		} else {
-			Skin.LightingLN = append(Skin.LightingLN, i)
+			Skin.LightingLN = append(Skin.LightingLN, img)
 		}
 		count++
 	}
 	if len(Skin.LightingLN) == 0 {
 		path = filepath.Join(dir, "lightingL.png")
-		i, err = game.LoadImage(path)
+		img, err = game.LoadImage(path)
 		if err != nil {
 			log.Fatal(err)
 		}
-		Skin.LightingLN = append(Skin.LightingLN, i)
+		Skin.LightingLN = append(Skin.LightingLN, img)
 	}
 }
