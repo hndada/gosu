@@ -3,6 +3,7 @@ module github.com/hndada/gosu
 go 1.14
 
 require (
+	github.com/fogleman/gg v1.3.0 // indirect
 	github.com/gofrs/flock v0.8.0 // indirect
 	github.com/hajimehoshi/ebiten v1.12.0-alpha.8.0.20200812044722-50cd33ed9bb6
 	github.com/hajimehoshi/go-mp3 v0.3.1 // indirect

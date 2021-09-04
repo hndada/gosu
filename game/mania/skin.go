@@ -59,8 +59,27 @@ func LoadSkin(cwd string) {
 		log.Fatal(err)
 	}
 
-	// todo: mania-note1"H" and flip for tail
-	
+	// LNHead: Note image is used when fails at loading
+	path = filepath.Join(dir, "mania-note1H.png")
+	Skin.LNHead[0], err = game.LoadImage(path)
+	if err != nil {
+		Skin.LNHead[0] = Skin.Note[0]
+	}
+	path = filepath.Join(dir, "mania-note2H.png")
+	Skin.LNHead[1], err = game.LoadImage(path)
+	if err != nil {
+		Skin.LNHead[1] = Skin.Note[1]
+	}
+	path = filepath.Join(dir, "mania-noteSH.png")
+	Skin.LNHead[2], err = game.LoadImage(path)
+	if err != nil {
+		Skin.LNHead[2] = Skin.Note[2]
+	}
+	path = filepath.Join(dir, "mania-noteSCH.png")
+	Skin.LNHead[3], err = game.LoadImage(path)
+	if err != nil {
+		Skin.LNHead[3] = Skin.Note[3]
+	}
 	// LN Body // todo: animated sprites on LN
 	path = filepath.Join(dir, "mania-note1L.png")
 	Skin.LNBody[0], err = game.LoadImage(path)
@@ -82,6 +101,8 @@ func LoadSkin(cwd string) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// flip for tail
+	// todo: Scale(1, -1) 시도
 
 	// judge
 	path = filepath.Join(dir, "mania-hit300g.png")
