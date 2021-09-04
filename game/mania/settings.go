@@ -35,6 +35,8 @@ var Settings struct {
 	// LineInHint        bool
 	// LNHeadCustom      bool  // if false, head uses normal note image.
 	// LNTailMode        uint8 // 0: Tail=Head 1: Tail=Body 2: Custom
+
+	PlayfieldDimness float64
 }
 
 func init() {
@@ -71,4 +73,5 @@ func init() {
 	Settings.HPHeight = 65
 	Settings.LightingScale = 0.66
 	Settings.LightingLNScale = 1
+	Settings.PlayfieldDimness = 0.3
 }

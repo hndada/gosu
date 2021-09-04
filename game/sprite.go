@@ -16,8 +16,6 @@ type Sprite struct {
 	src  *ebiten.Image
 	W, H int // desired w, h
 	X, Y int
-	// fixed bool
-	// op    *ebiten.DrawImageOptions
 
 	Color      color.Color
 	Saturation float64
@@ -31,9 +29,11 @@ type Sprite struct {
 func NewSprite(src image.Image) Sprite {
 	var sprite Sprite
 	sprite.SetImage(src)
-	sprite.BornTime = time.Now()
+
 	sprite.Saturation = 1
 	sprite.Dimness = 1
+
+	sprite.BornTime = time.Now()
 	return sprite
 }
 
@@ -105,8 +105,7 @@ func (s FixedSprite) Draw(screen *ebiten.Image) {
 	screen.DrawImage(s.src, s.op)
 }
 
-// todo: Fixed는 이제 미리 WHXY 미리 해야함
-// Suppose minor parameter has already been set
+// minor parameter should already been set
 func (s *FixedSprite) Fix() {
 	op := &ebiten.DrawImageOptions{}
 	if s.CompositeMode != 0 {
@@ -154,24 +153,17 @@ func NewAnimation(srcs []*ebiten.Image) Animation {
 	return a
 }
 
-// 800ms 마다 1회 재생되는 8프레임짜리 애니메이션
-// 0~99 100~199... 2 3 4 5 6 7
-// 현재 2000ms, 4번째 frame이 보여지면 됨
-// 2010ms에도 4번째 frame이 보여지면 됨
-// todo: frameTime을 int로 구해버리고 그걸로 다시 나누면 실제 AnimatinoDuration보다 작아지는 효과
-// duration이 100ms이고 6프레임이면
-// 프레임당 16.6ms
 const AnimationDuration = 450 // temp: global duration in ms
 
 func (a Animation) Draw(screen *ebiten.Image) {
-	frameTime := AnimationDuration / float64(len(a.srcs))
+	timePerFrame := AnimationDuration / float64(len(a.srcs))
 	elapsedTime := time.Since(a.BornTime).Milliseconds()
 	rep := elapsedTime / AnimationDuration
 	if a.Rep != RepInfinite && rep >= a.Rep {
 		return
 	}
 	t := elapsedTime % AnimationDuration
-	i := int(float64(t) / frameTime)
+	i := int(float64(t) / timePerFrame)
 	// temp: suppose all animation goes not fixed
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(a.scaleW(), a.scaleH())

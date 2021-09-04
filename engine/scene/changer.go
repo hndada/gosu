@@ -7,7 +7,8 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
-var initCountDown = ebiten.MaxTPS() * 4 / 5 // todo: private variable
+// todo: tick-based? time-based?
+var initCountDown = ebiten.MaxTPS() * 4 / 5
 
 type Changer struct {
 	scene      Scene

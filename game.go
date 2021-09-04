@@ -70,7 +70,7 @@ func (g *Game) Update(screen *ebiten.Image) error {
 		default:
 			panic("not reach")
 		}
-		// g.args = &scene.Args{}
+		g.args = &scene.Args{} // todo: must?
 	} else {
 		return g.scene.Update()
 	}

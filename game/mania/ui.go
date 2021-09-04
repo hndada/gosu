@@ -68,28 +68,25 @@ func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
 		}
 		h := game.Settings.ScreenSize.Y
 
-		// temp: Fill이 alpha value를 안 받는 것 같아 draw.Draw 사용 중
+		// seems ebiten's Fill() doesn't accept alpha value
 		mainSrc := image.NewRGBA(image.Rect(0, 0, wMiddle, h))
 		r := image.Rectangle{image.ZP, i.Bounds().Size()}
 		draw.Draw(mainSrc, r, &image.Uniform{black}, image.ZP, draw.Over)
 		main, _ := ebiten.NewImageFromImage(mainSrc, ebiten.FilterDefault)
-		// main, _ := ebiten.NewImage(wMiddle, h, ebiten.FilterDefault)
-		// main.Fill(color.Black)
 
 		x := center - wMiddle/2 // int - int
 		y := 0
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(float64(x), float64(y))
 		op.ColorM.Scale(0, 0, 0, 1)
-
-		const dimness = 30 // temp
-		op.ColorM.ChangeHSV(0, 1, float64(dimness)/100)
+		op.ColorM.ChangeHSV(0, 1, Settings.PlayfieldDimness)
 		i.DrawImage(main, op)
 	}
 	// important: mania-stage-hint에서 판정선이 이미지의 맨 아래에 있다는 보장이 없음
 	// 아마 mania-stage-bottom 때문인듯
 	// var hHint int
 	{ // no-skin ver
+
 		h := int(Settings.JudgeLineHeight * game.DisplayScale())
 		hint, _ := ebiten.NewImage(wMiddle, h, ebiten.FilterDefault)
 		hint.Fill(red)
@@ -136,11 +133,9 @@ func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
 		op.GeoM.Translate(float64(x), float64(y))
 		i.DrawImage(src, op)
 	}
-
 	{ // 90도 돌아갈 이미지이므로 whxy 설정에 유의
 		src := game.Skin.HPBar
 		sprite := game.NewFixedSprite(src)
-		// sprite.Theta = 90
 		h := int(Settings.HPHeight * game.DisplayScale())
 		scale := float64(h) / float64(src.Bounds().Dy())
 		w := int(float64(src.Bounds().Dx()) * scale)
@@ -156,7 +151,6 @@ func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
 	{ // HP Bar 이미지와 크기가 다를 수 있음
 		src := game.Skin.HPBarColor
 		sprite := game.NewFixedSprite(src)
-		// sprite.Theta = 90
 		h := int(Settings.HPHeight * game.DisplayScale())
 		scale := float64(h) / float64(src.Bounds().Dy())
 		w := int(float64(src.Bounds().Dx()) * scale)
@@ -189,6 +183,7 @@ func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
 	s.stageKeys = make([]game.FixedSprite, keyCount)
 	s.stageKeysPressed = make([]game.FixedSprite, keyCount)
 
+	// 스킨마다 저마다의 여백이 있다
 	for k := 0; k < keyCount; k++ {
 		var sprite game.FixedSprite
 		src := Skin.StageKeys[keyKinds[k]]

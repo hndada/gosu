@@ -49,14 +49,14 @@ func NewChart(path string) (*Chart, error) {
 
 func (c *Chart) ApplyMods(mods Mods) *Chart {
 	var c2 Chart
-	c2.ChartHeader = c.ChartHeader // todo: pointer?
+	c2.ChartHeader = c.ChartHeader // todo: value -> pointer?
 	c2.KeyCount = c.KeyCount
 	c2.ScratchMode = mods.ScratchMode // temp
 	c2.Notes = make([]Note, len(c.Notes))
 	for i, n := range c.Notes {
 		n.Time = int64(float64(n.Time) / mods.TimeRate)
 		n.Time2 = int64(float64(n.Time2) / mods.TimeRate)
-		if mods.Mirror { // todo: scartch는 따로 분리? -> 까다로워질지도, 아니면 미러로 그냥 쇼부 봐
+		if mods.Mirror { // todo: scartch lane은 따로 분리?
 			n.Key = c.KeyCount - 1 - n.Key
 		}
 		c2.Notes[i] = n

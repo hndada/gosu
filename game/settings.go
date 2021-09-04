@@ -12,6 +12,10 @@ var Settings struct {
 	ComboPosition      float64
 	ComboGap           float64
 	BackgroundDimness  float64
+
+	MusicVolume  float64
+	SFXVolume    float64
+	MasterVolume float64
 }
 
 func init() {
@@ -23,8 +27,18 @@ func init() {
 	Settings.ComboGap = 0.8
 	Settings.MaxTPS = 60
 	Settings.BackgroundDimness = 0.3
+	Settings.MusicVolume = 0.25
+	Settings.SFXVolume = 0.25
+	Settings.MasterVolume = 1
 }
 
+// Deprecated
 func DisplayScale() float64 {
 	return float64(Settings.ScreenSize.Y) / 100
+}
+
+// Scale returns scaled value based on screen size
+func Scale(v float64) int {
+	scale := float64(Settings.ScreenSize.Y) / 100
+	return int(v * scale)
 }

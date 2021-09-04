@@ -55,6 +55,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	s.keyLayout = Settings.KeyLayout[s.chart.KeyCount]
 
 	s.audioPlayer = audio.NewPlayer(s.chart.Path(s.chart.AudioFilename))
+	// s.audioPlayer.SetVolume(game.Settings.MasterVolume * game.Settings.MusicVolume)
 	// s.audioPlayer.Play()
 	// s.audioPlayer.Pause()
 

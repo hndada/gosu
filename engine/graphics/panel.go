@@ -99,7 +99,6 @@ func NewPanelHandler() PanelHandler {
 	return h
 }
 
-// todo: input에 Enter 눌렸다는 신호도 줘야함
 func (h *PanelHandler) Update() int {
 	i := -1
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
