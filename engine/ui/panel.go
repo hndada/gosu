@@ -1,4 +1,4 @@
-package graphics
+package ui
 
 import (
 	"image"
@@ -57,7 +57,7 @@ func NewPanel(t string) Panel {
 		}
 		d.DrawString(t)
 
-		src:= ebiten.NewImageFromImage(img)
+		src := ebiten.NewImageFromImage(img)
 		sprite := game.NewSprite(src)
 		sprite.W = 450
 		sprite.H = 40
@@ -104,7 +104,7 @@ func (h *PanelHandler) Update() int {
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) {
 		i = h.cursor
 		h.holdCount = 0
-	} else if ebiten.IsKeyPressed(ebiten.KeyDown) {
+	} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
 		if h.holdCount >= 2 { // todo: MaxTPS가 변하여도 체감 시간은 그대로이게 설정
 			// h.playSE()
 			h.cursor++
@@ -115,7 +115,7 @@ func (h *PanelHandler) Update() int {
 		} else {
 			h.holdCount++
 		}
-	} else if ebiten.IsKeyPressed(ebiten.KeyUp) {
+	} else if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		if h.holdCount >= 2 {
 			// h.playSE()
 			h.cursor--

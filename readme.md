@@ -1,8 +1,5 @@
-oto v2
-game->engine, game(common) 으로 구분
 Sprite WHXY 설정 간소화: Scale(), 중심에 놓기 설정
-
-키음 추가
+키음 추가: keysound-only 
 롱노트 Tail: flip
 HP Bar: 90 rotate
 
