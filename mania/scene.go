@@ -6,10 +6,10 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hndada/gosu/common"
 	"github.com/hndada/gosu/engine/audio"
 	"github.com/hndada/gosu/engine/kb"
 	"github.com/hndada/gosu/engine/scene"
-	"github.com/hndada/gosu/game"
 
 	_ "image/jpeg"
 )
@@ -29,9 +29,9 @@ type Scene struct {
 	speed       float64
 
 	sceneUI
-	bg            game.FixedSprite
-	jm            *game.JudgmentMeter // temp
-	timingSprites []game.Animation    // temp
+	bg            common.FixedSprite
+	jm            *common.JudgmentMeter // temp
+	timingSprites []common.Animation    // temp
 
 	score       float64
 	karma       float64
@@ -40,7 +40,7 @@ type Scene struct {
 	judgeCounts [len(Judgments)]int
 	staged      []int
 
-	timeStamp func(time int64) game.TimeStamp
+	timeStamp func(time int64) common.TimeStamp
 	auto      func(int64) []keyEvent
 	playSE    func()
 
@@ -65,7 +65,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 
 		}
 		s.audioPlayer = audio.NewPlayer(path)
-		// s.audioPlayer.SetVolume(game.Settings.MasterVolume * game.Settings.MusicVolume)
+		// s.audioPlayer.SetVolume(common.Settings.MasterVolume * common.Settings.MusicVolume)
 		// s.audioPlayer.Play()
 		// s.audioPlayer.Pause()
 	}
@@ -96,11 +96,11 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 
 	s.sceneUI = newSceneUI(c.KeyCount)
 	s.setNoteSprites()
-	s.bg = c.BG(game.Settings.BackgroundDimness)
-	// s.jm = game.NewJudgmentMeter(Judgments[:])
+	s.bg = c.BG(common.Settings.BackgroundDimness)
+	// s.jm = common.NewJudgmentMeter(Judgments[:])
 
-	s.hpScreen = ebiten.NewImage(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y)
-	s.timingSprites = make([]game.Animation, 0, len(s.chart.Notes))
+	s.hpScreen = ebiten.NewImage(common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y)
+	s.timingSprites = make([]common.Animation, 0, len(s.chart.Notes))
 	if !auto {
 		go kb.Listen()
 	}
@@ -137,8 +137,8 @@ func (s *Scene) Update() error {
 	ts := s.timeStamp(now)
 	cursor := float64(now-ts.Time)*ts.Factor + ts.Position
 	for i, n := range s.chart.Notes {
-		rp := (n.position-cursor)*s.speed - Settings.HitPosition                                               // relative position
-		s.chart.Notes[i].Sprite.Y = int(-rp*(float64(game.Settings.ScreenSize.Y)/100) - float64(n.Sprite.H)/2) // +가 아니고 -가 맞을듯
+		rp := (n.position-cursor)*s.speed - Settings.HitPosition                                                 // relative position
+		s.chart.Notes[i].Sprite.Y = int(-rp*(float64(common.Settings.ScreenSize.Y)/100) - float64(n.Sprite.H)/2) // +가 아니고 -가 맞을듯
 		if n.Type == TypeLNTail {
 			s.chart.Notes[i].LongSprite.Y = n.Sprite.Y + n.Sprite.H // why?: center of tail sprite ~ center of head sprite
 			if s.chart.Notes[i].scored {

@@ -6,38 +6,38 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/common"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
 )
 
 type Panel struct {
-	BodyText game.Sprite
-	Body     game.LongSprite
-	Left     game.Sprite
-	Right    game.Sprite
+	BodyText common.Sprite
+	Body     common.LongSprite
+	Left     common.Sprite
+	Right    common.Sprite
 }
 
 // X와 Y는 update에서 매번 새로 설정
 func NewPanel(t string) Panel {
 	const PanelHeight = 40
 	var p Panel
-	p.Body.Sprite = game.NewSprite(game.Skin.BoxMiddle)
+	p.Body.Sprite = common.NewSprite(common.Skin.BoxMiddle)
 	p.Body.Vertical = false
 	p.Body.W = 450
 	p.Body.H = PanelHeight
 	{
-		src := game.Skin.BoxLeft
-		sprite := game.NewSprite(src)
+		src := common.Skin.BoxLeft
+		sprite := common.NewSprite(src)
 		sprite.H = PanelHeight
 		scale := float64(sprite.H) / float64(src.Bounds().Dy())
 		sprite.W = int(float64(src.Bounds().Dx()) * scale)
 		p.Left = sprite
 	}
 	{
-		src := game.Skin.BoxRight
-		sprite := game.NewSprite(src)
+		src := common.Skin.BoxRight
+		sprite := common.NewSprite(src)
 		sprite.H = PanelHeight
 		scale := float64(sprite.H) / float64(src.Bounds().Dy())
 		sprite.W = int(float64(src.Bounds().Dx()) * scale)
@@ -58,7 +58,7 @@ func NewPanel(t string) Panel {
 		d.DrawString(t)
 
 		src := ebiten.NewImageFromImage(img)
-		sprite := game.NewSprite(src)
+		sprite := common.NewSprite(src)
 		sprite.W = 450
 		sprite.H = 40
 		p.BodyText = sprite
@@ -131,8 +131,8 @@ func (h *PanelHandler) Update() int {
 	}
 
 	for i := range h.panels {
-		mid := game.Settings.ScreenSize.Y / 2 // 현재 선택된 차트 focus 틀 위치 고정
-		x := game.Settings.ScreenSize.X - 400
+		mid := common.Settings.ScreenSize.Y / 2 // 현재 선택된 차트 focus 틀 위치 고정
+		x := common.Settings.ScreenSize.X - 400
 		d := i - h.cursor
 		if d < 0 {
 			d = -d

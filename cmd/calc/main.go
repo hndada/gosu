@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hndada/gosu/game/mania"
+	"github.com/hndada/gosu/mania"
 )
 
 func main() {

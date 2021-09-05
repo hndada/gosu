@@ -5,12 +5,12 @@ import (
 	"math"
 	"sort"
 
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/common"
 	"github.com/hndada/rg-parser/osugame/osu"
 )
 
 const (
-	typeNote game.NoteType = 1 << iota
+	typeNote common.NoteType = 1 << iota
 	typeReleaseNote
 	typeLongNote
 )
@@ -24,7 +24,7 @@ const (
 // 아래와 같이 난이도 계산에만 쓰이는 값들은 unexported로 할듯
 // note의 sprite는 speed와 screen size, settings:note widths가 결정되어야 값이 결정됨
 type Note struct {
-	game.Note
+	common.Note
 	Key int // todo: Key -> key
 
 	score  float64
@@ -49,9 +49,9 @@ type Note struct {
 	jackBonus    float64
 	holdBonus    float64 // score 필요함
 
-	game.Sprite
-	position        float64 // sv is applied, unscaled by speed yet
-	game.LongSprite         // temp
+	common.Sprite
+	position          float64 // sv is applied, unscaled by speed yet
+	common.LongSprite         // temp
 }
 
 func (c *Chart) loadNotesFromOsu(o *osu.Format) error {

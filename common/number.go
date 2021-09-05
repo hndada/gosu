@@ -1,4 +1,4 @@
-package game
+package common
 
 import "github.com/hajimehoshi/ebiten/v2"
 
