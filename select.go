@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/engine/graphics"
 	"github.com/hndada/gosu/engine/scene"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/mania"
@@ -15,7 +14,7 @@ var sceneSelect *SceneSelect
 type SceneSelect struct {
 	ready        bool // todo: 채널 이용하여 wait 시도?
 	close        bool
-	panelHandler graphics.PanelHandler
+	panelHandler ui.PanelHandler
 	mods         mania.Mods
 	defaultBG    game.FixedSprite
 }
@@ -79,7 +78,7 @@ func (s *SceneSelect) reload() {
 func (s *SceneSelect) updatePanels(cs []*mania.Chart) {
 	for _, c := range cs {
 		t := fmt.Sprintf("(%dKey Lv %.1f) %s [%s]", c.KeyCount, c.Level, c.MusicName, c.ChartName)
-		p := graphics.NewPanel(t)
+		p := ui.NewPanel(t)
 		s.panelHandler.Append(p)
 	}
 }
