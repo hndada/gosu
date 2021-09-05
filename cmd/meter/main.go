@@ -6,15 +6,15 @@ import (
 	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/game"
-	"github.com/hndada/gosu/game/mania"
+	"github.com/hndada/gosu/common"
+	"github.com/hndada/gosu/mania"
 )
 
 type Game struct {
-	jm *game.JudgmentMeter
+	jm *common.JudgmentMeter
 }
 
-func (g *Game) Update(screen *ebiten.Image) error {
+func (g *Game) Update() error {
 	return nil
 }
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -22,12 +22,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.jm.Sprite.Draw(screen)
 }
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y
+	return common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y
 }
 func main() {
 	g := &Game{}
-	game.Settings.ScreenSize = image.Pt(800, 600)
-	g.jm = game.NewJudgmentMeter(mania.Judgments[:])
+	common.Settings.ScreenSize = image.Pt(800, 600)
+	g.jm = common.NewJudgmentMeter(mania.Judgments[:])
 	if err := ebiten.RunGame(g); err != nil {
 		log.Fatal(err)
 	}

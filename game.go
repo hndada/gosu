@@ -5,9 +5,9 @@ import (
 	"reflect"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/common"
 	"github.com/hndada/gosu/engine/scene"
-	"github.com/hndada/gosu/game"
-	"github.com/hndada/gosu/game/mania"
+	"github.com/hndada/gosu/mania"
 	// _ "github.com/silbinarywolf/preferdiscretegpu"
 )
 
@@ -22,10 +22,10 @@ type Game struct {
 }
 
 func NewGame() *Game {
-	ebiten.SetWindowSize(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y)
+	ebiten.SetWindowSize(common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y)
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetRunnableOnUnfocused(true)
-	ebiten.SetMaxTPS(game.Settings.MaxTPS)
+	ebiten.SetMaxTPS(common.Settings.MaxTPS)
 
 	var err error
 	cwd, err = os.Getwd()
@@ -33,7 +33,7 @@ func NewGame() *Game {
 		panic(err)
 	}
 
-	game.LoadSkin(cwd)
+	common.LoadSkin(cwd)
 	mania.LoadSkin(cwd)
 	charts = loadCharts(cwd)
 	sceneSelect = newSceneSelect(cwd)
@@ -86,5 +86,5 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y
+	return common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y
 }

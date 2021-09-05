@@ -4,17 +4,17 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/common"
 	"github.com/hndada/rg-parser/osugame/osu"
 )
 
 type Chart struct {
-	*game.ChartHeader
-	game.TimingPoints
+	*common.ChartHeader
+	common.TimingPoints
 	KeyCount    int
 	ScratchMode int
 	Notes       []Note
-	TimeStamps  []game.TimeStamp
+	TimeStamps  []common.TimeStamp
 }
 
 // raw 차트에는 Mods가 들어가면 안됨
@@ -27,15 +27,15 @@ func NewChart(path string) (*Chart, error) {
 		if err != nil {
 			panic(err)
 		}
-		c.ChartHeader = game.NewChartHeaderFromOsu(o, path)
-		c.TimingPoints = game.NewTimingPointsFromOsu(o)
+		c.ChartHeader = common.NewChartHeaderFromOsu(o, path)
+		c.TimingPoints = common.NewTimingPointsFromOsu(o)
 		c.KeyCount = int(c.Parameter["KeyCount"])
 		err = c.loadNotesFromOsu(o)
 		if err != nil {
 			panic(err)
 		}
 		c.TimingPoints.SpeedFactors = append(
-			[]game.SpeedFactorPoint{game.DefaultSpeedFactor},
+			[]common.SpeedFactorPoint{common.DefaultSpeedFactor},
 			c.TimingPoints.SpeedFactors...)
 
 		c.setStamps()
@@ -68,9 +68,9 @@ func (c *Chart) setStamps() {
 	const maxInt64 = 9223372036854775807
 	var position float64
 	fs := c.TimingPoints.SpeedFactors
-	stamps := make([]game.TimeStamp, len(fs))
+	stamps := make([]common.TimeStamp, len(fs))
 	for i, f := range fs {
-		s := game.TimeStamp{
+		s := common.TimeStamp{
 			Time:     f.Time,
 			Position: position,
 			Factor:   f.Factor,
@@ -91,9 +91,9 @@ func (c Chart) EndTime() int64 {
 }
 
 // return value: timeStamp()
-func (c Chart) TimeStampFinder() func(time int64) game.TimeStamp {
+func (c Chart) TimeStampFinder() func(time int64) common.TimeStamp {
 	var cursor int
-	return func(time int64) game.TimeStamp {
+	return func(time int64) common.TimeStamp {
 		for si := range c.TimeStamps[cursor:] {
 			if time < c.TimeStamps[cursor+si].NextTime {
 				ts := c.TimeStamps[cursor+si]

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hndada/gosu/game"
-	"github.com/hndada/gosu/game/mania"
+	"github.com/hndada/gosu/common"
+	"github.com/hndada/gosu/mania"
 )
 
 var lastUpdateTime time.Time
@@ -59,8 +59,8 @@ func loadCharts(cwd string) []*mania.Chart {
 			fpath := filepath.Join(dirPath, f.Name())
 			switch strings.ToLower(filepath.Ext(fpath)) {
 			case ".osu":
-				switch game.OsuMode(fpath) {
-				case game.ModeMania:
+				switch common.OsuMode(fpath) {
+				case common.ModeMania:
 					c, err := mania.NewChart(fpath)
 					if err != nil {
 						panic(err)

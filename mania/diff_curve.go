@@ -3,7 +3,7 @@ package mania
 import (
 	"math"
 
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/common"
 )
 
 const (
@@ -23,13 +23,13 @@ const (
 var (
 	maxDeltaChord   int64
 	maxDeltaTrill   int64
-	curveTrillChord game.Segments
-	curveJack       game.Segments
-	curveTail       game.Segments
+	curveTrillChord common.Segments
+	curveJack       common.Segments
+	curveTail       common.Segments
 )
 
 func init() {
-	curveTrillChord = game.NewSegments(
+	curveTrillChord = common.NewSegments(
 		[]float64{
 			0,
 			float64(Good.Window + 30),
@@ -39,7 +39,7 @@ func init() {
 			MaxTrillBonus,
 			0})
 
-	curveJack = game.NewSegments(
+	curveJack = common.NewSegments(
 		[]float64{
 			0,
 			Max2DeltaJack,
@@ -49,7 +49,7 @@ func init() {
 			Max2JackBonus,
 			0})
 
-	curveTail = game.NewSegments(
+	curveTail = common.NewSegments(
 		[]float64{
 			0,
 			float64(Kool.Window),

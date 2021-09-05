@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/common"
 )
 
 const maxScore = 1e6
@@ -26,13 +26,13 @@ func (s *Scene) judge(e keyEvent) {
 	// 일반   노트: X, O, X, X
 	// 롱노트 머리: X, O, X, X (단, miss시 꼬리까지 miss)
 	// 롱노트 꼬리: X, X, O, X (현재 hold 시 HP보너스 생략)
-	judgeable := func(t game.NoteType, keyAction int) bool { // judge 가능 action이나 premature(너무 빨리 누른 경우)인 경우 score 안됨.
+	judgeable := func(t common.NoteType, keyAction int) bool { // judge 가능 action이나 premature(너무 빨리 누른 경우)인 경우 score 안됨.
 		if t == TypeLNTail {
 			return keyAction == release
 		}
 		return keyAction == press
 	}
-	judge := func(t game.NoteType, keyAction int, timeDiff int64) game.Judgment {
+	judge := func(t common.NoteType, keyAction int, timeDiff int64) common.Judgment {
 		if !judgeable(t, keyAction) {
 			return empty
 		}
@@ -56,7 +56,7 @@ func (s *Scene) judge(e keyEvent) {
 }
 
 // LNTail은 롱노트 끝나기 전까지 계속 staged. 처음 scored 된 뒤로는 score 영향 안 끼침
-func (s *Scene) applyScore(i int, j game.Judgment) {
+func (s *Scene) applyScore(i int, j common.Judgment) {
 	n := s.chart.Notes[i]
 	if j == empty || n.scored { // scored되었는데 judge될 대상은 미리 뗀 LNTail 밖에 없음. LNTail은 scene update에서 별도 처리
 		return
@@ -130,7 +130,7 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 			s.Lighting[n.Key].BornTime = time.Now()
 			s.Lighting[n.Key].Rep = 1
 		case TypeLNHead:
-			s.LightingLN[n.Key].Rep = game.RepInfinite
+			s.LightingLN[n.Key].Rep = common.RepInfinite
 		}
 		// apply one more for LNTail when LNHead is missed
 		if n.Type == TypeLNHead && j == Miss {
@@ -140,13 +140,13 @@ func (s *Scene) applyScore(i int, j game.Judgment) {
 }
 
 func (s *Scene) drawCombo(screen *ebiten.Image) {
-	gap := int(game.Settings.ComboGap * game.DisplayScale())
+	gap := int(common.Settings.ComboGap * common.DisplayScale())
 	str := fmt.Sprint(s.combo)
 	w := s.combos[0].W
 	wNumbers := (w-gap)*len(str) + gap
 	for i, letter := range str {
 		num, _ := strconv.ParseInt(string(letter), 0, 0)
-		s.combos[num].X = game.Settings.ScreenSize.X/2 - wNumbers/2 + i*(w-gap)
+		s.combos[num].X = common.Settings.ScreenSize.X/2 - wNumbers/2 + i*(w-gap)
 		s.combos[num].Draw(screen)
 	}
 }
@@ -157,7 +157,7 @@ func (s *Scene) drawScore(screen *ebiten.Image) {
 	wNumbers := w * len(str)
 	for i, letter := range str {
 		num, _ := strconv.ParseInt(string(letter), 0, 0)
-		s.scores[num].X = game.Settings.ScreenSize.X - wNumbers + i*w
+		s.scores[num].X = common.Settings.ScreenSize.X - wNumbers + i*w
 		s.scores[num].Draw(screen)
 	}
 }

@@ -4,9 +4,10 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/common"
 	"github.com/hndada/gosu/engine/scene"
-	"github.com/hndada/gosu/game"
-	"github.com/hndada/gosu/game/mania"
+	"github.com/hndada/gosu/engine/ui"
+	"github.com/hndada/gosu/mania"
 )
 
 var sceneSelect *SceneSelect
@@ -16,13 +17,13 @@ type SceneSelect struct {
 	close        bool
 	panelHandler ui.PanelHandler
 	mods         mania.Mods
-	defaultBG    game.FixedSprite
+	defaultBG    common.FixedSprite
 }
 
 func newSceneSelect(cwd string) *SceneSelect {
 	s := new(SceneSelect)
 	s.mods = mania.NewMods()
-	s.defaultBG = game.DefaultBG()
+	s.defaultBG = common.DefaultBG()
 	s.reload()
 	return s
 }

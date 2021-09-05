@@ -1,4 +1,4 @@
-package game
+package common
 
 // time rate has been applied in advance
 type Note struct {

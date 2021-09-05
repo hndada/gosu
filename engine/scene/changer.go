@@ -4,7 +4,7 @@ import (
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/common"
 )
 
 // todo: tick-based? time-based?
@@ -29,15 +29,15 @@ const (
 var blackScreen *ebiten.Image
 
 func init() {
-	blackScreen = ebiten.NewImage(game.Settings.ScreenSize.X,
-		game.Settings.ScreenSize.Y)
+	blackScreen = ebiten.NewImage(common.Settings.ScreenSize.X,
+		common.Settings.ScreenSize.Y)
 	blackScreen.Fill(color.Black)
 }
 
 func NewChanger() *Changer {
 	c := &Changer{}
-	c.transScene = ebiten.NewImage(game.Settings.ScreenSize.X,
-		game.Settings.ScreenSize.Y)
+	c.transScene = ebiten.NewImage(common.Settings.ScreenSize.X,
+		common.Settings.ScreenSize.Y)
 
 	return c
 }
