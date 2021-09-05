@@ -14,7 +14,7 @@ func (c *ChartHeader) Background() (*ebiten.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	return ebiten.NewImageFromImage(src, ebiten.FilterDefault)
+	return ebiten.NewImageFromImage(src)
 }
 
 // BG 옵션은 한번 해놓으면 웬만하면 안바뀌니 저장 후 쓰는 걸로

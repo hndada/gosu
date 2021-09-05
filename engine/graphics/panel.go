@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"math"
 
-	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/game"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
@@ -57,7 +57,7 @@ func NewPanel(t string) Panel {
 		}
 		d.DrawString(t)
 
-		src, _ := ebiten.NewImageFromImage(img, ebiten.FilterDefault)
+		src:= ebiten.NewImageFromImage(img)
 		sprite := game.NewSprite(src)
 		sprite.W = 450
 		sprite.H = 40

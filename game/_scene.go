@@ -3,7 +3,7 @@ package game
 import (
 	"image"
 
-	"github.com/hajimehoshi/ebiten/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio"
 )
 
 type Scene struct {

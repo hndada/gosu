@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/rg-parser/osugame/osu"
 )
 
@@ -107,7 +107,7 @@ func (c ChartHeader) BG(dimness float64) FixedSprite {
 		if err != nil {
 			panic(err)
 		}
-		src, _ = ebiten.NewImageFromImage(i, ebiten.FilterDefault)
+		src = ebiten.NewImageFromImage(i)
 	}
 	sprite := NewFixedSprite(src)
 	sw := src.Bounds().Dx()

@@ -1,7 +1,7 @@
 package scene
 
 import (
-	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 // common unexported fields는 별 수 없이 매번 넣어줘야함

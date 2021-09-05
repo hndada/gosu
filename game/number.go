@@ -1,6 +1,6 @@
 package game
 
-import "github.com/hajimehoshi/ebiten"
+import "github.com/hajimehoshi/ebiten/v2"
 
 const (
 	NumberCombo = iota

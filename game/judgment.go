@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"image/draw"
 
-	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type Judgment struct {
@@ -47,7 +47,7 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 		x := Settings.ScreenSize.X/2 - w/2
 		y := Settings.ScreenSize.Y - h
 
-		base, _ = ebiten.NewImage(w, h, ebiten.FilterDefault)
+		base = ebiten.NewImage(w, h)
 		base.Fill(color.RGBA64{0, 0, 0, 255})
 		sprite = NewFixedSprite(base) // base is just for providingsize info
 		sprite.W = w
@@ -67,9 +67,9 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 
 			op := &ebiten.DrawImageOptions{}
 			op.GeoM.Translate(float64(x), float64(y))
-			box, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
+			box := ebiten.NewImage(w, h)
 			box.Fill(judgmentMeterColor[i])
-			_ = base.DrawImage(box, op)
+			base.DrawImage(box, op)
 		}
 	}
 	{ // set middle line
@@ -80,9 +80,9 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 		y := 0
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(float64(x), float64(y))
-		box, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
+		box := ebiten.NewImage(w, h)
 		box.Fill(color.White)
-		_ = base.DrawImage(box, op)
+		base.DrawImage(box, op)
 	}
 	sprite.SetImage(base)
 	jm.Sprite = sprite
@@ -100,8 +100,8 @@ func (jm JudgmentMeter) NewTimingSprite(timeDiff int64) Animation {
 	src := image.NewRGBA(image.Rect(0, 0, w, h))
 	r := image.Rectangle{image.ZP, src.Bounds().Size()}
 	draw.Draw(src, r, &image.Uniform{color.RGBA{255, 255, 255, 128}}, image.ZP, draw.Over)
-	i, _ := ebiten.NewImageFromImage(src, ebiten.FilterDefault)
-	// i, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
+	i := ebiten.NewImageFromImage(src)
+	// i := ebiten.NewImage(w, h)
 	// i.Fill(color.White)
 
 	a := NewAnimation([]*ebiten.Image{i})

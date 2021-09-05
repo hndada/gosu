@@ -6,10 +6,9 @@ import (
 	"image/color"
 	_ "image/jpeg"
 	_ "image/png"
-	"log"
 	"time"
 
-	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 type Sprite struct {
@@ -47,10 +46,7 @@ func (s *Sprite) SetImage(i image.Image) {
 	case *ebiten.Image:
 		s.src = i.(*ebiten.Image)
 	default:
-		i2, err := ebiten.NewImageFromImage(i, ebiten.FilterDefault)
-		if err != nil {
-			log.Fatal(err)
-		}
+		i2 := ebiten.NewImageFromImage(i)
 		s.src = i2
 	}
 }
