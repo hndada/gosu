@@ -30,13 +30,17 @@ func newSceneSelect(cwd string) *SceneSelect {
 
 func (s *SceneSelect) Ready() bool { return s.ready }
 
+// anonymous struct: grouped globals
+// reflect: fields should be exported
+var argsSelectToMania struct {
+	Chart *mania.Chart
+	Mods  mania.Mods
+}
+
 func (s *SceneSelect) Update() error {
 	idx := s.panelHandler.Update()
 	if idx != -1 {
 		argsSelectToMania.Chart = charts[idx]
-		// if argsSelectToMania.Chart.KeyCount == 8 { // temp
-		// 	argsSelectToMania.Mods.ScratchMode = mania.LeftScratch
-		// }
 		argsSelectToMania.Mods = s.mods
 		s.close = true
 	}
@@ -61,13 +65,6 @@ func (s *SceneSelect) Close(args *scene.Args) bool {
 		args.Args = argsSelectToMania
 	}
 	return s.close
-}
-
-// anonymous struct: grouped globals
-// reflect: fields should be exported
-var argsSelectToMania struct {
-	Chart *mania.Chart
-	Mods  mania.Mods
 }
 
 func (s *SceneSelect) reload() {

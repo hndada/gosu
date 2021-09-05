@@ -55,3 +55,5 @@ func init() {
 		fingers[k|RightScratch] = append(fingers[k-1], fingers[k-1][k-2]+1)
 	}
 }
+
+func WithScratch(keyCount int) int { return keyCount | Settings.ScratchMode[keyCount] }

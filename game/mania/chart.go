@@ -51,7 +51,6 @@ func (c *Chart) ApplyMods(mods Mods) *Chart {
 	var c2 Chart
 	c2.ChartHeader = c.ChartHeader // todo: value -> pointer?
 	c2.KeyCount = c.KeyCount
-	c2.ScratchMode = mods.ScratchMode // temp
 	c2.Notes = make([]Note, len(c.Notes))
 	for i, n := range c.Notes {
 		n.Time = int64(float64(n.Time) / mods.TimeRate)

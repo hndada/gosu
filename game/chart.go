@@ -134,6 +134,13 @@ func (c ChartHeader) BG(dimness float64) FixedSprite {
 	return sprite
 }
 
+func (c ChartHeader) AudioPath() string {
+	if c.AudioFilename == "virtual" { // keysound only
+		return ""
+	}
+	return c.Path(c.AudioFilename)
+}
+
 func DefaultBG() FixedSprite {
 	const dimness = 1
 	return ChartHeader{}.BG(dimness) // default background goes returned when error occurs
