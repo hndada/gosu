@@ -14,7 +14,7 @@ import (
 	_ "image/jpeg"
 )
 
-const auto = true
+const auto = false
 
 type Scene struct {
 	ready      bool // whether scene has been loaded
@@ -29,6 +29,9 @@ type Scene struct {
 	speed       float64
 
 	sceneUI
+	bg            game.FixedSprite
+	jm            *game.JudgmentMeter // temp
+	timingSprites []game.Animation    // temp
 
 	score       float64
 	karma       float64
@@ -51,20 +54,25 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	s.speed = Settings.GeneralSpeed
 	s.mods = mods
 	s.chart = c.ApplyMods(s.mods)
+	s.chart.ScratchMode = Settings.ScratchMode[c.KeyCount] // only for replay
 	s.auto = s.chart.GenAutoKeyEvents(instability)
 	s.playSE = SEPlayer(cwd)
 	s.timeStamp = c.TimeStampFinder()
-	s.keyLayout = Settings.KeyLayout[s.chart.KeyCount]
+	s.keyLayout = Settings.KeyLayout[WithScratch(c.KeyCount)]
+	{
+		path := s.chart.AudioPath()
+		if path == "" { // keysound-only, or no music
 
-	s.audioPlayer = audio.NewPlayer(s.chart.Path(s.chart.AudioFilename))
-	// s.audioPlayer.SetVolume(game.Settings.MasterVolume * game.Settings.MusicVolume)
-	// s.audioPlayer.Play()
-	// s.audioPlayer.Pause()
-
+		}
+		s.audioPlayer = audio.NewPlayer(path)
+		// s.audioPlayer.SetVolume(game.Settings.MasterVolume * game.Settings.MusicVolume)
+		// s.audioPlayer.Play()
+		// s.audioPlayer.Pause()
+	}
 	var img *ebiten.Image
-	kinds := keyKindsMap[c.KeyCount|s.chart.ScratchMode]
+	keyKinds := keyKindsMap[WithScratch(c.KeyCount)]
 	for i, n := range c.Notes { // temp: Note, LNHead, LNTail 전부 Note 이미지 사용
-		img = Skin.Note[kinds[n.Key]]
+		img = Skin.Note[keyKinds[n.Key]]
 		s.chart.Notes[i].Sprite.SetImage(img)
 	}
 	s.lastPressed = make([]bool, c.KeyCount)
@@ -85,10 +93,11 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 
 	s.karma = 100
 	s.hp = 100
-	s.sceneUI = newSceneUI(s.chart, s.chart.KeyCount|s.chart.ScratchMode)
-	s.setNoteSprites()
 
-	s.jm = game.NewJudgmentMeter(Judgments[:])
+	s.sceneUI = newSceneUI(c.KeyCount)
+	s.setNoteSprites()
+	s.bg = c.BG(game.Settings.BackgroundDimness)
+	// s.jm = game.NewJudgmentMeter(Judgments[:])
 
 	s.hpScreen, _ = ebiten.NewImage(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y, ebiten.FilterDefault)
 	s.timingSprites = make([]game.Animation, 0, len(s.chart.Notes))
@@ -252,7 +261,7 @@ judge: %v
 	s.HPBarColor.Draw(s.hpScreen)
 	s.HPBarMask.Draw(s.hpScreen)
 	screen.DrawImage(s.hpScreen, &ebiten.DrawImageOptions{})
-	s.jm.Sprite.Draw(screen)
+	// s.jm.Sprite.Draw(screen)
 	// for _, sprite := range s.timingSprites {
 	// 	sprite.Draw(screen)
 	// }

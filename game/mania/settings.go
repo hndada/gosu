@@ -37,16 +37,21 @@ var Settings struct {
 	// LNTailMode        uint8 // 0: Tail=Head 1: Tail=Body 2: Custom
 
 	PlayfieldDimness float64
+	ScratchMode      map[int]int
 }
 
 func init() {
 	Settings.KeyLayout = map[int][]kb.Code{
-		4: {kb.CodeD, kb.CodeF, kb.CodeJ, kb.CodeK},
-		5: {kb.CodeD, kb.CodeF, kb.CodeSpacebar, kb.CodeJ, kb.CodeK},
-		6: {kb.CodeS, kb.CodeD, kb.CodeF, kb.CodeJ, kb.CodeK, kb.CodeL},
-		7: {kb.CodeS, kb.CodeD, kb.CodeF, kb.CodeSpacebar, kb.CodeJ, kb.CodeK, kb.CodeL},
+		4:               {kb.CodeD, kb.CodeF, kb.CodeJ, kb.CodeK},
+		5:               {kb.CodeD, kb.CodeF, kb.CodeSpacebar, kb.CodeJ, kb.CodeK},
+		6:               {kb.CodeS, kb.CodeD, kb.CodeF, kb.CodeJ, kb.CodeK, kb.CodeL},
+		7:               {kb.CodeS, kb.CodeD, kb.CodeF, kb.CodeSpacebar, kb.CodeJ, kb.CodeK, kb.CodeL},
+		8 + LeftScratch: {kb.CodeA, kb.CodeS, kb.CodeD, kb.CodeF, kb.CodeSpacebar, kb.CodeJ, kb.CodeK, kb.CodeL},
+		8:               {kb.CodeA, kb.CodeS, kb.CodeD, kb.CodeF, kb.CodeJ, kb.CodeK, kb.CodeL, kb.CodeSemicolon},
+		9:               {kb.CodeA, kb.CodeS, kb.CodeD, kb.CodeF, kb.CodeSpacebar, kb.CodeJ, kb.CodeK, kb.CodeL, kb.CodeSemicolon},
+		10:              {kb.CodeA, kb.CodeS, kb.CodeD, kb.CodeF, kb.CodeV, kb.CodeN, kb.CodeJ, kb.CodeK, kb.CodeL, kb.CodeSemicolon},
 	}
-	Settings.GeneralSpeed = 0.115
+	Settings.GeneralSpeed = 0.16
 
 	Settings.NoteWidths = map[int][4]float64{
 		4:  {10, 9, 10, 11},
@@ -74,4 +79,7 @@ func init() {
 	Settings.LightingScale = 0.66
 	Settings.LightingLNScale = 1
 	Settings.PlayfieldDimness = 0.3
+	Settings.ScratchMode = map[int]int{
+		8: LeftScratch,
+	}
 }

@@ -1,10 +1,10 @@
 package mania
 
 type Mods struct {
-	TimeRate    float64
-	Mirror      bool
-	ScratchMode int
-	Pitch       bool
+	TimeRate float64
+	Mirror   bool
+	// ScratchMode int
+	Pitch bool
 }
 
 func NewMods() Mods {

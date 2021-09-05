@@ -1,11 +1,10 @@
-롱노트 Tail: flip
-HP Bar: 90 rotate
-8키 1+7
-키음 추가
-
 upgrade: go 1.17, ebiten v2, oto v2
 game->engine, game(common) 으로 구분
 Sprite WHXY 설정 간소화: Scale(), 중심에 놓기 설정
+
+키음 추가
+롱노트 Tail: flip
+HP Bar: 90 rotate
 
 서버 구축
 판정오차 막대기: timeDiff append 부터 Draw까지 곳곳에서 랙 발생

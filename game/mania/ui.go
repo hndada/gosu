@@ -36,22 +36,14 @@ type sceneUI struct {
 
 	Lighting   []game.Animation // 여러 lane에서 동시에 그려져야함
 	LightingLN []game.Animation
-
-	jm            *game.JudgmentMeter // temp
-	timingSprites []game.Animation    // temp
-
-	bg game.FixedSprite
 }
 
 // 가로가 늘어난다고 같이 늘리면 오히려 어색하므로 세로에만 맞춰 늘리기: 100 기준
-func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
+func newSceneUI(keyCount int) sceneUI {
 	s := new(sceneUI)
-	keyCount := keyCountWithScratchMode & ScratchMask // temp
 	scale := float64(game.Settings.ScreenSize.Y) / 100
-	keyKinds := keyKindsMap[keyCount]
+	keyKinds := keyKindsMap[WithScratch(keyCount)]
 	unscaledNoteWidths := Settings.NoteWidths[keyCount]
-
-	s.bg = c.BG(game.Settings.BackgroundDimness)
 
 	noteWidths := make([]int, keyCount)
 	for key, kind := range keyKinds {
@@ -290,7 +282,7 @@ func newSceneUI(c *Chart, keyCountWithScratchMode int) sceneUI {
 }
 
 func (s *Scene) setNoteSprites() {
-	keyKinds := keyKindsMap[s.chart.KeyCount]
+	keyKinds := keyKindsMap[WithScratch(s.chart.KeyCount)]
 
 	var wMiddle int
 	for k := 0; k < s.chart.KeyCount; k++ {
@@ -300,9 +292,12 @@ func (s *Scene) setNoteSprites() {
 	for i, n := range s.chart.Notes {
 		var sprite game.Sprite
 		kind := keyKinds[n.Key]
+		// fmt.Println(n.Key, kind)
 		switch n.Type {
-		case TypeNote, TypeLNHead, TypeLNTail: // temp
+		case TypeNote, TypeLNTail: // temp
 			sprite = game.NewSprite(Skin.Note[kind])
+		case TypeLNHead:
+			sprite = game.NewSprite(Skin.LNHead[kind])
 		}
 
 		scale := float64(game.Settings.ScreenSize.Y) / 100
@@ -320,7 +315,6 @@ func (s *Scene) setNoteSprites() {
 
 	// LN body sprite
 	// 모든 Sprite는 자신의 값을 갱신 시켜줄 개체와 connect되어 있어야 함
-	kinds := keyKindsMap[s.chart.KeyCount]
 	for i, tail := range s.chart.Notes {
 		if tail.Type != TypeLNTail {
 			continue
@@ -329,7 +323,7 @@ func (s *Scene) setNoteSprites() {
 		ls := game.LongSprite{
 			Vertical: true,
 		}
-		ls.SetImage(Skin.LNBody[kinds[tail.Key]]) // temp: no animation support
+		ls.SetImage(Skin.LNBody[keyKinds[tail.Key]]) // temp: no animation support
 		ls.W = tail.Sprite.W
 		ls.H = head.Sprite.Y - tail.Sprite.Y
 		ls.X = tail.Sprite.X
