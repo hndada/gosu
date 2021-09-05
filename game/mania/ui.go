@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"image/draw"
 
-	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/game"
 )
 
@@ -49,7 +49,7 @@ func newSceneUI(keyCount int) sceneUI {
 	for key, kind := range keyKinds {
 		noteWidths[key] = int(unscaledNoteWidths[kind] * scale)
 	}
-	i, _ := ebiten.NewImage(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y, ebiten.FilterDefault)
+	i := ebiten.NewImage(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y)
 
 	p := Settings.StagePosition / 100 // proportion
 	center := int(float64(game.Settings.ScreenSize.X) * p)
@@ -64,7 +64,7 @@ func newSceneUI(keyCount int) sceneUI {
 		mainSrc := image.NewRGBA(image.Rect(0, 0, wMiddle, h))
 		r := image.Rectangle{image.ZP, i.Bounds().Size()}
 		draw.Draw(mainSrc, r, &image.Uniform{black}, image.ZP, draw.Over)
-		main, _ := ebiten.NewImageFromImage(mainSrc, ebiten.FilterDefault)
+		main := ebiten.NewImageFromImage(mainSrc)
 
 		x := center - wMiddle/2 // int - int
 		y := 0
@@ -80,7 +80,7 @@ func newSceneUI(keyCount int) sceneUI {
 	{ // no-skin ver
 
 		h := int(Settings.JudgeLineHeight * game.DisplayScale())
-		hint, _ := ebiten.NewImage(wMiddle, h, ebiten.FilterDefault)
+		hint := ebiten.NewImage(wMiddle, h)
 		hint.Fill(red)
 
 		x := center - wMiddle/2 // int - int
@@ -156,7 +156,7 @@ func newSceneUI(keyCount int) sceneUI {
 		sprite.Fix()
 		s.HPBarColor = sprite
 
-		mask, _ := ebiten.NewImage(w, h, ebiten.FilterDefault)
+		mask := ebiten.NewImage(w, h)
 		sprite2 := game.NewSprite(mask)
 		sprite2.W = w
 		sprite2.H = 0 // hp가 100일 때 0

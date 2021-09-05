@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 // skin -> spritesheet
@@ -63,7 +63,7 @@ func LoadImage(path string) (*ebiten.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	ei, _ := ebiten.NewImageFromImage(i, ebiten.FilterDefault)
+	ei := ebiten.NewImageFromImage(i)
 	return ei, nil
 }
 

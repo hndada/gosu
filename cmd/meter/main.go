@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"log"
 
-	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/mania"
 )

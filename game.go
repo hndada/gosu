@@ -4,7 +4,7 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/engine/scene"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/mania"
@@ -46,7 +46,7 @@ func NewGame() *Game {
 }
 
 // whether changer or scene goes updated
-func (g *Game) Update(screen *ebiten.Image) error {
+func (g *Game) Update() error {
 	if !g.changer.Done() {
 		return g.changer.Update()
 	}

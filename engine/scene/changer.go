@@ -3,7 +3,7 @@ package scene
 import (
 	"image/color"
 
-	"github.com/hajimehoshi/ebiten"
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/game"
 )
 
@@ -29,15 +29,15 @@ const (
 var blackScreen *ebiten.Image
 
 func init() {
-	blackScreen, _ = ebiten.NewImage(game.Settings.ScreenSize.X,
-		game.Settings.ScreenSize.Y, ebiten.FilterDefault)
+	blackScreen = ebiten.NewImage(game.Settings.ScreenSize.X,
+		game.Settings.ScreenSize.Y)
 	blackScreen.Fill(color.Black)
 }
 
 func NewChanger() *Changer {
 	c := &Changer{}
-	c.transScene, _ = ebiten.NewImage(game.Settings.ScreenSize.X,
-		game.Settings.ScreenSize.Y, ebiten.FilterDefault)
+	c.transScene = ebiten.NewImage(game.Settings.ScreenSize.X,
+		game.Settings.ScreenSize.Y)
 
 	return c
 }

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hajimehoshi/ebiten"
-	"github.com/hajimehoshi/ebiten/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/engine/audio"
 	"github.com/hndada/gosu/engine/kb"
 	"github.com/hndada/gosu/engine/scene"
@@ -99,7 +99,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	s.bg = c.BG(game.Settings.BackgroundDimness)
 	// s.jm = game.NewJudgmentMeter(Judgments[:])
 
-	s.hpScreen, _ = ebiten.NewImage(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y, ebiten.FilterDefault)
+	s.hpScreen = ebiten.NewImage(game.Settings.ScreenSize.X, game.Settings.ScreenSize.Y)
 	s.timingSprites = make([]game.Animation, 0, len(s.chart.Notes))
 	if !auto {
 		go kb.Listen()
