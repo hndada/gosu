@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/common"
 	"github.com/hndada/gosu/engine/scene"
 	"github.com/hndada/gosu/engine/ui"
@@ -44,6 +45,17 @@ func (s *SceneSelect) Update() error {
 		argsSelectToMania.Mods = s.mods
 		s.close = true
 	}
+	if ebiten.IsKeyPressed(ebiten.KeyO) {
+		mania.Settings.GeneralSpeed += 0.005
+		if mania.Settings.GeneralSpeed > 0.4 {
+			mania.Settings.GeneralSpeed = 0.4
+		}
+	} else if ebiten.IsKeyPressed(ebiten.KeyP) {
+		mania.Settings.GeneralSpeed -= 0.005
+		if mania.Settings.GeneralSpeed < 0.01 {
+			mania.Settings.GeneralSpeed = 0.01
+		}
+	}
 	return nil
 }
 
@@ -56,6 +68,8 @@ func (s *SceneSelect) Draw(screen *ebiten.Image) {
 	// }
 	s.defaultBG.Draw(screen)
 	s.panelHandler.Draw(screen)
+	ebitenutil.DebugPrint(screen, fmt.Sprintf(
+		`Speed: %.1f`, mania.Settings.GeneralSpeed*100))
 }
 
 // todo: args != nil 필요한가?

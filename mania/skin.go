@@ -5,8 +5,10 @@ import (
 	"log"
 	"path/filepath"
 
+	"github.com/disintegration/imaging"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/common"
+	"github.com/hndada/gosu/engine/ui"
 )
 
 // StartPoint, Width, Height, Name 총 4가지 알면 spritesheet 에서 이미지 빼올 수 있음
@@ -29,6 +31,10 @@ var Skin struct {
 	// MaskingBorder
 	StageKeys        [4]*ebiten.Image
 	StageKeysPressed [4]*ebiten.Image
+
+	// Mania mode should have its own HPBar image: rotated version
+	HPBar      *ebiten.Image
+	HPBarColor *ebiten.Image // todo: Animation
 }
 
 func LoadSkin(cwd string) {
@@ -101,9 +107,80 @@ func LoadSkin(cwd string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// flip for tail
-	// todo: Scale(1, -1) 시도
-
+	// LNHead image is used when fails at loading
+	// Note image is used when fails even at loading LNHead image
+	{
+		path = filepath.Join(dir, "mania-note1T.png")
+		i1, err := ui.LoadImageImage(path)
+		if err != nil {
+			path = filepath.Join(dir, "mania-note1H.png")
+			i1, err = ui.LoadImageImage(path)
+			if err != nil {
+				path = filepath.Join(dir, "mania-note1.png")
+				i1, err = ui.LoadImageImage(path)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+		i2 := imaging.FlipV(i1)
+		i3 := ebiten.NewImageFromImage(i2)
+		Skin.LNTail[0] = i3
+	}
+	{
+		path = filepath.Join(dir, "mania-note2T.png")
+		i1, err := ui.LoadImageImage(path)
+		if err != nil {
+			path = filepath.Join(dir, "mania-note2H.png")
+			i1, err = ui.LoadImageImage(path)
+			if err != nil {
+				path = filepath.Join(dir, "mania-note2.png")
+				i1, err = ui.LoadImageImage(path)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+		i2 := imaging.FlipV(i1)
+		i3 := ebiten.NewImageFromImage(i2)
+		Skin.LNTail[1] = i3
+	}
+	{
+		path = filepath.Join(dir, "mania-noteST.png")
+		i1, err := ui.LoadImageImage(path)
+		if err != nil {
+			path = filepath.Join(dir, "mania-noteSH.png")
+			i1, err = ui.LoadImageImage(path)
+			if err != nil {
+				path = filepath.Join(dir, "mania-noteS.png")
+				i1, err = ui.LoadImageImage(path)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+		i2 := imaging.FlipV(i1)
+		i3 := ebiten.NewImageFromImage(i2)
+		Skin.LNTail[2] = i3
+	}
+	{
+		path = filepath.Join(dir, "mania-noteSCT.png")
+		i1, err := ui.LoadImageImage(path)
+		if err != nil {
+			path = filepath.Join(dir, "mania-noteSCH.png")
+			i1, err = ui.LoadImageImage(path)
+			if err != nil {
+				path = filepath.Join(dir, "mania-noteSC.png")
+				i1, err = ui.LoadImageImage(path)
+				if err != nil {
+					log.Fatal(err)
+				}
+			}
+		}
+		i2 := imaging.FlipV(i1)
+		i3 := ebiten.NewImageFromImage(i2)
+		Skin.LNTail[3] = i3
+	}
 	// judge
 	path = filepath.Join(dir, "mania-hit300g.png")
 	Skin.Judge[0], err = common.LoadImage(path)
@@ -245,5 +322,25 @@ func LoadSkin(cwd string) {
 			log.Fatal(err)
 		}
 		Skin.LightingLN = append(Skin.LightingLN, img)
+	}
+	{
+		path = filepath.Join(dir, "scorebar-bg.png")
+		i1, err := ui.LoadImageImage(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		i2 := imaging.Rotate90(i1)
+		i3 := ebiten.NewImageFromImage(i2)
+		Skin.HPBar = i3
+	}
+	{
+		path = filepath.Join(dir, "scorebar-colour.png")
+		i1, err := ui.LoadImageImage(path)
+		if err != nil {
+			log.Fatal(err)
+		}
+		i2 := imaging.Rotate90(i1)
+		i3 := ebiten.NewImageFromImage(i2)
+		Skin.HPBarColor = i3
 	}
 }
