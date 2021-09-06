@@ -2,6 +2,7 @@ package gosu
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -24,7 +25,12 @@ type SceneSelect struct {
 
 func newSceneSelect(cwd string) *SceneSelect {
 	s := new(SceneSelect)
-	s.panelHandler = ui.NewPanelHandler(common.Settings.ScreenSize)
+	{
+		dir := filepath.Join(cwd, "skin")
+		name := "soft-slidertick.wav"
+		sePath := filepath.Join(dir, name)
+		s.panelHandler = ui.NewPanelHandler(common.Settings.ScreenSize, sePath)
+	}
 	s.mods = mania.NewMods()
 	s.defaultBG = common.DefaultBG()
 	s.boxSkin = ui.BoxSkin{

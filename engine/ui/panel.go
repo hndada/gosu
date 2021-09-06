@@ -6,6 +6,7 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/engine/audio"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
@@ -99,10 +100,10 @@ type PanelHandler struct {
 }
 
 // todo: SEPlayer
-func NewPanelHandler(screenSize image.Point) PanelHandler {
+func NewPanelHandler(screenSize image.Point, sePath string) PanelHandler {
 	h := PanelHandler{}
 	h.size = screenSize
-	// h.playSE = mania.SEPlayer(cwd)
+	h.playSE = audio.SEPlayer(sePath)
 	return h
 }
 
@@ -113,7 +114,7 @@ func (h *PanelHandler) Update() int {
 		h.holdCount = 0
 	} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
 		if h.holdCount >= 2 { // todo: MaxTPS가 변하여도 체감 시간은 그대로이게 설정
-			// h.playSE()
+			h.playSE()
 			h.cursor++
 			if h.cursor >= len(h.panels) {
 				h.cursor = 0
@@ -124,7 +125,7 @@ func (h *PanelHandler) Update() int {
 		}
 	} else if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
 		if h.holdCount >= 2 {
-			// h.playSE()
+			h.playSE()
 			h.cursor--
 			if h.cursor < 0 {
 				h.cursor = len(h.panels) - 1

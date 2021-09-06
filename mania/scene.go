@@ -2,6 +2,7 @@ package mania
 
 import (
 	"fmt"
+	"path/filepath"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -57,7 +58,12 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	s.chart = c.ApplyMods(s.mods)
 	s.chart.ScratchMode = Settings.ScratchMode[c.KeyCount] // only for replay
 	s.auto = s.chart.GenAutoKeyEvents(instability)
-	s.playSE = SEPlayer(cwd)
+	{
+		dir := filepath.Join(cwd, "skin")
+		name := "soft-slidertick.wav"
+		sePath := filepath.Join(dir, name)
+		s.playSE = audio.SEPlayer(sePath)
+	}
 	s.timeStamp = c.TimeStampFinder()
 	s.keyLayout = Settings.KeyLayout[WithScratch(c.KeyCount)]
 	{
