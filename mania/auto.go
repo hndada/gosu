@@ -25,26 +25,26 @@ func (c Chart) GenAutoKeyEvents(instability float64) func(int64) []keyEvent {
 		case TypeNote:
 			e1 := keyEvent{
 				Time:    n.Time + d,
-				Key:     n.Key,
+				Key:     n.key,
 				Pressed: true,
 			}
 			e2 := keyEvent{
 				Time:    n.Time + 30 + d,
-				Key:     n.Key,
+				Key:     n.key,
 				Pressed: false,
 			}
 			keyEvents = append(keyEvents, e1, e2)
 		case TypeLNHead:
 			e := keyEvent{
 				Time:    n.Time + d,
-				Key:     n.Key,
+				Key:     n.key,
 				Pressed: true,
 			}
 			keyEvents = append(keyEvents, e)
 		case TypeLNTail:
 			e := keyEvent{
 				Time:    n.Time + d, // Time2: opposite time
-				Key:     n.Key,
+				Key:     n.key,
 				Pressed: false,
 			}
 			keyEvents = append(keyEvents, e)

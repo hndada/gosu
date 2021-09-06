@@ -12,7 +12,7 @@ func (c *Chart) markAffect() {
 	for i, n := range c.Notes {
 		c.markPrevAffect(i, prevs)
 		c.markNextAffect(i)
-		prevs[n.Key] = i
+		prevs[n.key] = i
 	}
 }
 
@@ -24,7 +24,7 @@ func (c *Chart) markPrevAffect(i int, prevs []int) {
 		}
 		prevNote := c.Notes[prevIdx]
 		time := n.Time - prevNote.Time
-		switch prevNote.Key == n.Key {
+		switch prevNote.key == n.key {
 		case true: // jack
 			if time <= maxDeltaJack {
 				c.Notes[i].trillJack[prevKey] = prevIdx
@@ -40,7 +40,7 @@ func (c *Chart) markPrevAffect(i int, prevs []int) {
 			}
 		}
 	}
-	c.Notes[i].chord[n.Key] = i // putting note itself to chord
+	c.Notes[i].chord[n.key] = i // putting note itself to chord
 }
 
 func (c *Chart) markNextAffect(i int) {
@@ -53,13 +53,13 @@ func (c *Chart) markNextAffect(i int) {
 			break
 		}
 		if nextNote.Type != TypeLNTail &&
-			nextNote.Key != n.Key && // jack is not relevant
-			c.Notes[i].chord[nextNote.Key] == noFound { // prev notes is prior to next notes
+			nextNote.key != n.key && // jack is not relevant
+			c.Notes[i].chord[nextNote.key] == noFound { // prev notes is prior to next notes
 			switch {
 			case time <= maxDeltaChord:
-				c.Notes[i].chord[nextNote.Key] = nextIdx
+				c.Notes[i].chord[nextNote.key] = nextIdx
 				// default:
-				// 	ns[i].chord[nextNote.Key] = cut
+				// 	ns[i].chord[nextNote.key] = cut
 			}
 		}
 		nextIdx++

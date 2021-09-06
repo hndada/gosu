@@ -79,7 +79,7 @@ func (n *Note) settleAlterHand() {
 		return
 	}
 	// rule 1: use default hand if there is a note very next to alterable note
-	if n.chord[n.Key+defaultHand] != -1 {
+	if n.chord[n.key+defaultHand] != -1 {
 		n.hand = defaultHand
 		return
 	}
@@ -87,13 +87,13 @@ func (n *Note) settleAlterHand() {
 	// rule 2: the hand which has more notes in the chord
 	// rule 3: default hand if each hand has same number of notes
 	leftCount, rightCount := 0, 0
-	for k := n.Key - 1; k >= 0; k-- {
+	for k := n.key - 1; k >= 0; k-- {
 		if n.chord[k] <= -1 {
 			break
 		}
 		leftCount++
 	}
-	for k := n.Key + 1; k < len(n.chord); k++ {
+	for k := n.key + 1; k < len(n.chord); k++ {
 		if n.chord[k] <= -1 {
 			break
 		}

@@ -62,24 +62,24 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 		dir := filepath.Join(cwd, "skin")
 		name := "soft-slidertick.wav"
 		sePath := filepath.Join(dir, name)
-		s.playSE = audio.SEPlayer(sePath)
+		s.playSE = audio.NewSEPlayer(sePath, 25) // temp: volume
 	}
 	s.timeStamp = c.TimeStampFinder()
 	s.keyLayout = Settings.KeyLayout[WithScratch(c.KeyCount)]
 	{
 		path := s.chart.AudioPath()
-		if path == "" { // keysound-only, or no music
-
+		if path != "" { // keysound-only, or no music
+			s.audioPlayer = audio.NewPlayer(path)
+			s.audioPlayer.SetVolume(0.25) // temp
+			// s.audioPlayer.SetVolume(common.Settings.MasterVolume * common.Settings.MusicVolume)
+			// s.audioPlayer.Play()
+			// s.audioPlayer.Pause()
 		}
-		s.audioPlayer = audio.NewPlayer(path)
-		// s.audioPlayer.SetVolume(common.Settings.MasterVolume * common.Settings.MusicVolume)
-		// s.audioPlayer.Play()
-		// s.audioPlayer.Pause()
 	}
 	var img *ebiten.Image
 	keyKinds := keyKindsMap[WithScratch(c.KeyCount)]
 	for i, n := range c.Notes { // temp: Note, LNHead, LNTail 전부 Note 이미지 사용
-		img = Skin.Note[keyKinds[n.Key]]
+		img = Skin.Note[keyKinds[n.key]]
 		s.chart.Notes[i].Sprite.SetImage(img)
 	}
 	s.lastPressed = make([]bool, c.KeyCount)
@@ -90,7 +90,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 		}
 		for k := range s.staged {
 			for i, n := range c.Notes {
-				if n.Key == k {
+				if n.key == k {
 					s.staged[k] = i
 					break
 				}
@@ -123,7 +123,9 @@ func (s *Scene) Update() error {
 	var now int64
 	if !s.initUpdate {
 		ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", s.chart.MusicName, s.chart.ChartName))
-		s.audioPlayer.Play()
+		if s.audioPlayer != nil { // There could be keysound-only chart, aka virtual
+			s.audioPlayer.Play()
+		}
 		startTime := time.Now()
 		kb.SetTime(startTime)
 		s.startTime = startTime
@@ -138,7 +140,9 @@ func (s *Scene) Update() error {
 	//		s.audioPlayer.Seek(time.Now().Sub(s.startTime))
 	//		}
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) || now > s.chart.EndTime()+2000 { // temp: 2초 여유 두기
-		_ = s.audioPlayer.Close()
+		if s.audioPlayer != nil {
+			_ = s.audioPlayer.Close()
+		}
 		s.close = true
 	}
 	ts := s.timeStamp(now)
