@@ -32,7 +32,6 @@ func init() {
 	Settings.MasterVolume = 1
 }
 
-// Deprecated
 func DisplayScale() float64 {
 	return float64(Settings.ScreenSize.Y) / 100
 }

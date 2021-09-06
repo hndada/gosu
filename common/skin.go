@@ -2,10 +2,7 @@ package common
 
 import (
 	"fmt"
-	"image"
-	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/engine/ui"
@@ -33,38 +30,38 @@ var Skin struct {
 	DefaultBG *ebiten.Image
 }
 
-func LoadImage(path string) (*ebiten.Image, error) {
-	// temp: @2x 빠르게 적용
-	var hdPath string
-	if !strings.Contains(path, "@2x.") {
-		switch filepath.Ext(path) {
-		case ".png":
-			hdPath = strings.Replace(path, ".png", "@2x.png", 1)
-		case ".jpg":
-			hdPath = strings.Replace(path, ".jpg", "@2x.jpg", 1)
-		case ".jpeg":
-			hdPath = strings.Replace(path, ".jpeg", "@2x.jpeg", 1)
-		}
-	}
-	f, err := os.Open(hdPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			f, err = os.Open(path)
-			if err != nil {
-				return nil, err
-			}
-		} else {
-			return nil, err
-		}
-	}
-	defer f.Close()
-	i, _, err := image.Decode(f)
-	if err != nil {
-		return nil, err
-	}
-	ei := ebiten.NewImageFromImage(i)
-	return ei, nil
-}
+// func LoadImage(path string) (*ebiten.Image, error) {
+// 	// temp: @2x 빠르게 적용
+// 	var hdPath string
+// 	if !strings.Contains(path, "@2x.") {
+// 		switch filepath.Ext(path) {
+// 		case ".png":
+// 			hdPath = strings.Replace(path, ".png", "@2x.png", 1)
+// 		case ".jpg":
+// 			hdPath = strings.Replace(path, ".jpg", "@2x.jpg", 1)
+// 		case ".jpeg":
+// 			hdPath = strings.Replace(path, ".jpeg", "@2x.jpeg", 1)
+// 		}
+// 	}
+// 	f, err := os.Open(hdPath)
+// 	if err != nil {
+// 		if os.IsNotExist(err) {
+// 			f, err = os.Open(path)
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 		} else {
+// 			return nil, err
+// 		}
+// 	}
+// 	defer f.Close()
+// 	i, _, err := image.Decode(f)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	ei := ebiten.NewImageFromImage(i)
+// 	return ei, nil
+// }
 
 func LoadSkin(cwd string) {
 	var err error
