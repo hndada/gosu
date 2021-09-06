@@ -1,6 +1,7 @@
 package mania
 
 import (
+	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -41,6 +42,7 @@ func NewChart(path string) (*Chart, error) {
 		c.setStamps()
 		c.setNotePosition()
 		c.CalcDifficulty()
+		fmt.Println(c.MusicName, c.ChartName)
 		return &c, nil
 	default:
 		panic("not reach")
@@ -56,7 +58,7 @@ func (c *Chart) ApplyMods(mods Mods) *Chart {
 		n.Time = int64(float64(n.Time) / mods.TimeRate)
 		n.Time2 = int64(float64(n.Time2) / mods.TimeRate)
 		if mods.Mirror { // todo: scartch lane은 따로 분리?
-			n.Key = c.KeyCount - 1 - n.Key
+			n.key = c.KeyCount - 1 - n.key
 		}
 		c2.Notes[i] = n
 	}

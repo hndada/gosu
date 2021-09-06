@@ -6,7 +6,7 @@ type Note struct {
 	Time  int64
 	Time2 int64 // ex) ln end time
 
-	SampleVolume   uint8
+	SampleVolume   int
 	SampleFilename string
 }
 

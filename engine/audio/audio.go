@@ -9,6 +9,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/audio/mp3"
+	"github.com/hajimehoshi/ebiten/v2/audio/vorbis"
 	"github.com/hajimehoshi/ebiten/v2/audio/wav"
 )
 
@@ -34,11 +35,21 @@ func NewPlayer(path string) *Player {
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".mp3":
 		s, err = mp3.Decode(Context, bytes.NewReader(b))
+		if err != nil {
+			panic(err)
+		}
 	case ".wav":
 		s, err = wav.Decode(Context, bytes.NewReader(b))
+		if err != nil {
+			panic(err)
+		}
+	case ".ogg":
+		s, err = vorbis.Decode(Context, bytes.NewReader(b))
+		if err != nil {
+			panic(err)
+		}
 	}
 	p, err := audio.NewPlayer(Context, s)
-	p.SetVolume(0.25) // temp
 	if err != nil {
 		panic(err)
 	}

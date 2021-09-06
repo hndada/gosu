@@ -1,4 +1,4 @@
-키음 추가: keysound-only 
+키음 추가: lazy load
 
 싱크 맞추기
 o2jam 파일 파싱

@@ -21,34 +21,21 @@ const (
 	TypeLNTail = typeLongNote | typeReleaseNote
 )
 
-// 난이도 및 점수 관련은 나중에
-// 아래와 같이 난이도 계산에만 쓰이는 값들은 unexported로 할듯
-// note의 sprite는 speed와 screen size, settings:note widths가 결정되어야 값이 결정됨
+// note의 sprite는 speed와 screen size, widths가 결정되어야 값이 결정됨
 type Note struct {
 	common.Note
-	Key int // todo: Key -> key
+	key int
 
+	prev   int // index of previous note
+	next   int // index of next note
 	score  float64
 	karma  float64
 	hp     float64
-	prev   int // prev note index
-	next   int // next note index
 	scored bool
 
-	hand   int
-	strain float64
-	// stamina float64
-	// Read
+	noteDifficulty
 
-	chord       []int
-	trillJack   []int
-	holdImpacts []float64
-
-	baseStrain   float64
-	chordPenalty float64
-	trillBonus   float64
-	jackBonus    float64
-	holdBonus    float64 // score 필요함
+	playSE func()
 
 	ui.Sprite
 	position      float64 // sv is applied, unscaled by speed yet
@@ -58,7 +45,7 @@ type Note struct {
 func (c *Chart) loadNotesFromOsu(o *osu.Format) error {
 	c.Notes = make([]Note, 0, len(o.HitObjects)*2)
 	for _, ho := range o.HitObjects {
-		ns, err := newNoteFromOsu(ho, c.KeyCount)
+		ns, err := newNoteFromOsu(ho, c.KeyCount, c.Path(ho.HitSample.Filename))
 		if err != nil {
 			return errors.New("invalid hit object")
 		}
@@ -67,7 +54,7 @@ func (c *Chart) loadNotesFromOsu(o *osu.Format) error {
 
 	sort.Slice(c.Notes, func(i, j int) bool {
 		if c.Notes[i].Time == c.Notes[j].Time {
-			return c.Notes[i].Key < c.Notes[j].Key
+			return c.Notes[i].key < c.Notes[j].key
 		}
 		return c.Notes[i].Time < c.Notes[j].Time
 	})
@@ -77,19 +64,21 @@ func (c *Chart) loadNotesFromOsu(o *osu.Format) error {
 		prevs[k] = -1 // no found
 	}
 	for next, n := range c.Notes {
-		prev := prevs[n.Key]
+		prev := prevs[n.key]
 		c.Notes[next].prev = prev
 		if prev != -1 {
 			c.Notes[prev].next = next
 		}
-		prevs[n.Key] = next
+		prevs[n.key] = next
 	}
 	for _, lastIdx := range prevs {
 		c.Notes[lastIdx].next = -1
 	}
 	return nil
 }
-func newNoteFromOsu(ho osu.HitObject, keyCount int) ([]Note, error) {
+
+// todo: sound should be lazy loaded
+func newNoteFromOsu(ho osu.HitObject, keyCount int, sePath string) ([]Note, error) {
 	ns := make([]Note, 0, 2)
 	var n Note
 	switch ho.NoteType & osu.ComboMask {
@@ -100,13 +89,16 @@ func newNoteFromOsu(ho osu.HitObject, keyCount int) ([]Note, error) {
 	default:
 		return ns, errors.New("invalid hit object")
 	}
-	n.Key = ho.Column(keyCount)
+	n.key = ho.Column(keyCount)
 	n.Time = int64(ho.Time)
 	n.SampleFilename = ho.HitSample.Filename
-	n.SampleVolume = uint8(ho.HitSample.Volume)
+	n.SampleVolume = ho.HitSample.Volume
+	// if n.SampleFilename != "" {
+	// 	n.playSE = audio.NewSEPlayer(sePath, int(n.SampleVolume))
+	// }
 	n.init(keyCount)
 
-	if n.Type == typeLongNote {
+	if n.Type == typeLongNote { // LNTail has no sample sound
 		n.Type = TypeLNHead
 		n.Time2 = int64(ho.EndTime)
 		ns = append(ns, n)
@@ -116,7 +108,7 @@ func newNoteFromOsu(ho osu.HitObject, keyCount int) ([]Note, error) {
 
 		var n2 Note
 		n2.Type = TypeLNTail
-		n2.Key = n.Key
+		n2.key = n.key
 		n2.Time = n.Time2
 		n2.Time2 = n.Time
 		n2.init(keyCount)

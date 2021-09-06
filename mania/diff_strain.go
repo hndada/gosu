@@ -16,6 +16,23 @@ const outerBonus = 1 // 0.025 * 3.5
 
 var fingerBonus = [5]float64{1.15, 0, 1, 1.2, 1.3} // from thumb to little finger
 
+type noteDifficulty struct {
+	hand   int
+	strain float64
+	// stamina float64
+	// Read
+
+	chord       []int
+	trillJack   []int
+	holdImpacts []float64
+
+	baseStrain   float64
+	chordPenalty float64
+	trillBonus   float64
+	jackBonus    float64
+	holdBonus    float64 // score 필요함
+}
+
 func init() {
 	for i := range fingerBonus {
 		// fingerBonus[i] *= outerBonus
@@ -28,7 +45,7 @@ func init() {
 func (c *Chart) CalcStrain() {
 	c.markAffect()
 	for i, n := range c.Notes {
-		c.Notes[i].hand = hand(c.KeyCount, n.Key)
+		c.Notes[i].hand = hand(c.KeyCount, n.key)
 		c.Notes[i].settleAlterHand()
 	}
 	c.setHoldImpacts()
@@ -44,7 +61,7 @@ func (c *Chart) CalcStrain() {
 
 // todo: time2, prev/next를 이용하면 대체 가능
 func baseStrain(keyCount int, n Note) float64 {
-	base := 1 + fingerBonus[finger(keyCount, n.Key)]
+	base := 1 + fingerBonus[finger(keyCount, n.key)]
 	if n.Type == TypeLNTail { // a tail of hold note will get partial strain
 		lnDuration := float64(n.Time - n.Time2)
 		base *= curveTail.SolveY(lnDuration)
@@ -54,7 +71,7 @@ func baseStrain(keyCount int, n Note) float64 {
 
 func (c *Chart) chordPenalty(n Note) float64 {
 	var penalty float64
-	// for _, idx := range tools.Neighbors(n.chord, n.Key) {
+	// for _, idx := range tools.Neighbors(n.chord, n.key) {
 	for _, idx := range n.chord {
 		if idx == noFound {
 			continue
@@ -62,11 +79,11 @@ func (c *Chart) chordPenalty(n Note) float64 {
 		chordNote := c.Notes[idx]
 		var div float64
 		switch {
-		case chordNote.Key == n.Key: // note itself
+		case chordNote.key == n.key: // note itself
 			continue
 		case chordNote.hand == -n.hand:
 			div = 2
-		case chordNote.Key-n.Key == 1, chordNote.Key-n.Key == -1:
+		case chordNote.key-n.key == 1, chordNote.key-n.key == -1:
 			div = 1
 		default:
 			div = 1.5
@@ -76,7 +93,7 @@ func (c *Chart) chordPenalty(n Note) float64 {
 		// }
 		time := math.Abs(float64(n.Time - chordNote.Time))
 		v := curveTrillChord.SolveY(time)
-		// keyDistance = math.Max(1, float64(tools.AbsInt(n.Key-chordNote.Key)))
+		// keyDistance = math.Max(1, float64(tools.AbsInt(n.key-chordNote.key)))
 		penalty += v / div
 	}
 	if penalty < -1 {
@@ -89,8 +106,8 @@ func (c *Chart) jackBonus(n Note) float64 {
 	if n.Type == TypeLNTail {
 		return 0 // no jack bonus to hold note tail
 	}
-	if n.trillJack[n.Key] != noFound {
-		jackNote := c.Notes[n.trillJack[n.Key]]
+	if n.trillJack[n.key] != noFound {
+		jackNote := c.Notes[n.trillJack[n.key]]
 		time := float64(n.Time - jackNote.Time)
 		return curveJack.SolveY(time)
 	}
@@ -107,7 +124,7 @@ func (c *Chart) trillBonus(n Note) float64 {
 	if n.jackBonus <= 0 {
 		return 0 // only anchor gets trill bonus
 	}
-	// for _, idx := range tools.Neighbors(n.trillJack, n.Key) {
+	// for _, idx := range tools.Neighbors(n.trillJack, n.key) {
 	for _, idx := range n.trillJack {
 		if idx == noFound {
 			continue
@@ -115,18 +132,18 @@ func (c *Chart) trillBonus(n Note) float64 {
 		trillNote := c.Notes[idx]
 		var div float64
 		switch {
-		case trillNote.Key == n.Key: // note itself
+		case trillNote.key == n.key: // note itself
 			continue
 		case trillNote.hand == -n.hand:
 			div = 2
-		case trillNote.Key-n.Key == 1, trillNote.Key-n.Key == -1:
+		case trillNote.key-n.key == 1, trillNote.key-n.key == -1:
 			div = 1
 		default:
 			div = 1.5
 		}
 		time := float64(n.Time - trillNote.Time)
 		v := curveTrillChord.SolveY(time)
-		// keyDistance = math.Max(1, float64(tools.AbsInt(n.Key-trillNote.Key)))
+		// keyDistance = math.Max(1, float64(tools.AbsInt(n.key-trillNote.Key)))
 		bonus += v / div
 	}
 	return bonus
@@ -148,7 +165,7 @@ func (c *Chart) setHoldImpacts() {
 			remainedTime := float64(ln.Time2 - n.Time)
 			if elapsedTime >= holdAffectDelta {
 				impact := math.Max(0, 0.5+math.Min(remainedTime, holdAffectDelta)/(2*holdAffectDelta))
-				c.Notes[j].holdImpacts[ln.Key] = impact * float64(ln.hand)
+				c.Notes[j].holdImpacts[ln.key] = impact * float64(ln.hand)
 				if ln.hand == alter {
 					panic("still alter")
 				}
@@ -172,13 +189,13 @@ func (c *Chart) holdBonus(n Note) float64 {
 			continue
 		}
 		switch {
-		case isHoldOuter(holdKey, n.Key, c.KeyCount):
+		case isHoldOuter(holdKey, n.key, c.KeyCount):
 			if !existOuter {
 				bonus += holdOuterOnceBonus
 			}
 			existOuter = true
-		case isHoldInner(holdKey, n.Key, c.KeyCount):
-			if isHoldInnerAdj(holdKey, n.Key, c.KeyCount) {
+		case isHoldInner(holdKey, n.key, c.KeyCount):
+			if isHoldInnerAdj(holdKey, n.key, c.KeyCount) {
 				bonus += holdInnerAdjOnceBonus
 			}
 			if !existInner {

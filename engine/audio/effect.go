@@ -1,9 +1,8 @@
 package audio
 
-func SEPlayer(path string) func() {
+func NewSEPlayer(path string, vol int) func() {
 	ap := NewPlayer(path)
-	// ap.SetVolume(common.Settings.MasterVolume * common.Settings.SFXVolume)
-	ap.SetVolume(0.25) // temp
+	ap.SetVolume(float64(vol) / 100)
 	return func() {
 		ap.Play()
 		ap.Rewind()

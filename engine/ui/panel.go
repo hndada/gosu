@@ -99,11 +99,10 @@ type PanelHandler struct {
 	size      image.Point
 }
 
-// todo: SEPlayer
 func NewPanelHandler(screenSize image.Point, sePath string) PanelHandler {
 	h := PanelHandler{}
 	h.size = screenSize
-	h.playSE = audio.SEPlayer(sePath)
+	h.playSE = audio.NewSEPlayer(sePath, 25) // temp: volume
 	return h
 }
 
