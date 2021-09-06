@@ -6,38 +6,43 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/common"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
 )
 
 type Panel struct {
-	BodyText common.Sprite
-	Body     common.LongSprite
-	Left     common.Sprite
-	Right    common.Sprite
+	BodyText Sprite
+	Body     LongSprite
+	Left     Sprite
+	Right    Sprite
+}
+
+type BoxSkin struct {
+	Left   *ebiten.Image
+	Middle *ebiten.Image
+	Right  *ebiten.Image
 }
 
 // X와 Y는 update에서 매번 새로 설정
-func NewPanel(t string) Panel {
+func NewPanel(t string, skin BoxSkin) Panel {
 	const PanelHeight = 40
 	var p Panel
-	p.Body.Sprite = common.NewSprite(common.Skin.BoxMiddle)
+	p.Body.Sprite = NewSprite(skin.Middle)
 	p.Body.Vertical = false
 	p.Body.W = 450
 	p.Body.H = PanelHeight
 	{
-		src := common.Skin.BoxLeft
-		sprite := common.NewSprite(src)
+		src := skin.Left
+		sprite := NewSprite(src)
 		sprite.H = PanelHeight
 		scale := float64(sprite.H) / float64(src.Bounds().Dy())
 		sprite.W = int(float64(src.Bounds().Dx()) * scale)
 		p.Left = sprite
 	}
 	{
-		src := common.Skin.BoxRight
-		sprite := common.NewSprite(src)
+		src := skin.Right
+		sprite := NewSprite(src)
 		sprite.H = PanelHeight
 		scale := float64(sprite.H) / float64(src.Bounds().Dy())
 		sprite.W = int(float64(src.Bounds().Dx()) * scale)
@@ -58,7 +63,7 @@ func NewPanel(t string) Panel {
 		d.DrawString(t)
 
 		src := ebiten.NewImageFromImage(img)
-		sprite := common.NewSprite(src)
+		sprite := NewSprite(src)
 		sprite.W = 450
 		sprite.H = 40
 		p.BodyText = sprite
@@ -90,11 +95,13 @@ type PanelHandler struct {
 	cursor    int
 	holdCount int
 	playSE    func()
+	size      image.Point
 }
 
 // todo: SEPlayer
-func NewPanelHandler() PanelHandler {
+func NewPanelHandler(screenSize image.Point) PanelHandler {
 	h := PanelHandler{}
+	h.size = screenSize
 	// h.playSE = mania.SEPlayer(cwd)
 	return h
 }
@@ -131,8 +138,8 @@ func (h *PanelHandler) Update() int {
 	}
 
 	for i := range h.panels {
-		mid := common.Settings.ScreenSize.Y / 2 // 현재 선택된 차트 focus 틀 위치 고정
-		x := common.Settings.ScreenSize.X - 400
+		mid := h.size.Y / 2 // 현재 선택된 차트 focus 틀 위치 고정
+		x := h.size.X - 400
 		d := i - h.cursor
 		if d < 0 {
 			d = -d

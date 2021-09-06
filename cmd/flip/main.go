@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/common"
 	"github.com/hndada/gosu/engine/ui"
@@ -33,14 +31,14 @@ func main() {
 	ei := ebiten.NewImageFromImage(ri)
 	g.i = ei
 	if err := ebiten.RunGame(g); err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }
 
 // this doesn't work
 // func main() {
 // 	g := &Game{}
-// 	i, err := common.LoadImage("test.png")
+// 	i, err := ui.LoadImageHD("test.png")
 // 	if err != nil {
 // 		panic(err)
 // 	}
@@ -48,6 +46,6 @@ func main() {
 // 	ei := ebiten.NewImageFromImage(ri)
 // 	g.i = ei
 // 	if err := ebiten.RunGame(g); err != nil {
-// 		log.Fatal(err)
+// 		panic(err)
 // 	}
 // }

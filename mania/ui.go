@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/common"
+	"github.com/hndada/gosu/engine/ui"
 )
 
 var (
@@ -20,22 +21,22 @@ type TimeBool struct {
 }
 type sceneUI struct {
 	noteWidths       []int // todo: setNoteSprites()에서만 쓰임
-	playfield        common.FixedSprite
-	stageKeys        []common.FixedSprite
-	stageKeysPressed []common.FixedSprite
+	playfield        ui.FixedSprite
+	stageKeys        []ui.FixedSprite
+	stageKeysPressed []ui.FixedSprite
 
-	combos      [10]common.Sprite
-	scores      [10]common.Sprite
-	judgeSprite [len(Judgments)]common.Animation // todo: rename
-	Spotlights  []common.FixedSprite             // 키를 눌렀을 때 불 들어오는 거
+	combos      [10]ui.Sprite
+	scores      [10]ui.Sprite
+	judgeSprite [len(Judgments)]ui.Animation // todo: rename
+	Spotlights  []ui.FixedSprite             // 키를 눌렀을 때 불 들어오는 거
 
-	HPBar      common.FixedSprite // it can be in playfield
-	HPBarColor common.FixedSprite // actually, it can also go to playfield
-	HPBarMask  common.Sprite
+	HPBar      ui.FixedSprite // it can be in playfield
+	HPBarColor ui.FixedSprite // actually, it can also go to playfield
+	HPBarMask  ui.Sprite
 	hpScreen   *ebiten.Image
 
-	Lighting   []common.Animation // 여러 lane에서 동시에 그려져야함
-	LightingLN []common.Animation
+	Lighting   []ui.Animation // 여러 lane에서 동시에 그려져야함
+	LightingLN []ui.Animation
 }
 
 // 가로가 늘어난다고 같이 늘리면 오히려 어색하므로 세로에만 맞춰 늘리기: 100 기준
@@ -127,7 +128,7 @@ func newSceneUI(keyCount int) sceneUI {
 	}
 	{ // 90도 돌아갈 이미지이므로 whxy 설정에 유의
 		src := Skin.HPBar
-		sprite := common.NewFixedSprite(src)
+		sprite := ui.NewFixedSprite(src)
 		h := int(Settings.HPHeight * common.DisplayScale())
 		scale := float64(h) / float64(src.Bounds().Dy())
 		w := int(float64(src.Bounds().Dx()) * scale)
@@ -142,7 +143,7 @@ func newSceneUI(keyCount int) sceneUI {
 	}
 	{ // HP Bar 이미지와 크기가 다를 수 있음
 		src := Skin.HPBarColor
-		sprite := common.NewFixedSprite(src)
+		sprite := ui.NewFixedSprite(src)
 		h := int(Settings.HPHeight * common.DisplayScale())
 		scale := float64(h) / float64(src.Bounds().Dy())
 		w := int(float64(src.Bounds().Dx()) * scale)
@@ -157,7 +158,7 @@ func newSceneUI(keyCount int) sceneUI {
 		s.HPBarColor = sprite
 
 		mask := ebiten.NewImage(w, h)
-		sprite2 := common.NewSprite(mask)
+		sprite2 := ui.NewSprite(mask)
 		sprite2.W = w
 		sprite2.H = 0 // hp가 100일 때 0
 		sprite2.X = x
@@ -165,21 +166,21 @@ func newSceneUI(keyCount int) sceneUI {
 		sprite2.CompositeMode = ebiten.CompositeModeSourceOut
 		s.HPBarMask = sprite2
 	}
-	s.playfield = common.NewFixedSprite(i)
+	s.playfield = ui.NewFixedSprite(i)
 	s.playfield.W = common.Settings.ScreenSize.X
 	s.playfield.H = common.Settings.ScreenSize.Y
 	s.playfield.X = 0
 	s.playfield.Y = 0
 	s.playfield.Fix() // todo: 여기에 bg 추가
 
-	s.stageKeys = make([]common.FixedSprite, keyCount)
-	s.stageKeysPressed = make([]common.FixedSprite, keyCount)
+	s.stageKeys = make([]ui.FixedSprite, keyCount)
+	s.stageKeysPressed = make([]ui.FixedSprite, keyCount)
 
 	// 스킨마다 저마다의 여백이 있다
 	for k := 0; k < keyCount; k++ {
-		var sprite common.FixedSprite
+		var sprite ui.FixedSprite
 		src := Skin.StageKeys[keyKinds[k]]
-		sprite = common.NewFixedSprite(src)
+		sprite = ui.NewFixedSprite(src)
 
 		w := noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
 
@@ -209,8 +210,8 @@ func newSceneUI(keyCount int) sceneUI {
 	}
 	{
 		src := Skin.StageLight
-		sprite := common.NewFixedSprite(src)
-		s.Spotlights = make([]common.FixedSprite, keyCount)
+		sprite := ui.NewFixedSprite(src)
+		s.Spotlights = make([]ui.FixedSprite, keyCount)
 		for k := 0; k < keyCount; k++ {
 			w := noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
 			scale := float64(w) / float64(src.Bounds().Size().X)
@@ -234,7 +235,7 @@ func newSceneUI(keyCount int) sceneUI {
 
 	for i := range s.judgeSprite {
 		src := Skin.Judge[i]
-		a := common.NewAnimation([]*ebiten.Image{src})
+		a := ui.NewAnimation([]*ebiten.Image{src})
 		a.H = int(Settings.JudgeHeight * common.DisplayScale())
 		scale := float64(a.H) / float64(src.Bounds().Dy())
 		a.W = int(float64(src.Bounds().Dx()) * scale)
@@ -245,8 +246,8 @@ func newSceneUI(keyCount int) sceneUI {
 	}
 	s.noteWidths = noteWidths // temp
 
-	s.Lighting = make([]common.Animation, keyCount)
-	s.LightingLN = make([]common.Animation, keyCount)
+	s.Lighting = make([]ui.Animation, keyCount)
+	s.LightingLN = make([]ui.Animation, keyCount)
 	centerXs := make([]int, keyCount)
 	for k := range centerXs {
 		x := center - wMiddle/2
@@ -257,7 +258,7 @@ func newSceneUI(keyCount int) sceneUI {
 		centerXs[k] = x
 	}
 	{ // suppose all frame has same size
-		a := common.NewAnimation(Skin.Lighting)
+		a := ui.NewAnimation(Skin.Lighting)
 		a.W = int(float64(Skin.Lighting[0].Bounds().Dx()) * Settings.LightingScale)
 		a.H = int(float64(Skin.Lighting[0].Bounds().Dy()) * Settings.LightingScale)
 		a.Y = int(Settings.HitPosition*common.DisplayScale()) - a.H/2
@@ -268,7 +269,7 @@ func newSceneUI(keyCount int) sceneUI {
 		}
 	}
 	{
-		a := common.NewAnimation(Skin.LightingLN)
+		a := ui.NewAnimation(Skin.LightingLN)
 		a.W = int(float64(Skin.LightingLN[0].Bounds().Dx()) * Settings.LightingLNScale)
 		a.H = int(float64(Skin.LightingLN[0].Bounds().Dy()) * Settings.LightingLNScale)
 		a.Y = int(Settings.HitPosition*common.DisplayScale()) - a.H/2
@@ -290,14 +291,14 @@ func (s *Scene) setNoteSprites() {
 	}
 	xStart := (common.Settings.ScreenSize.X - wMiddle) / 2
 	for i, n := range s.chart.Notes {
-		var sprite common.Sprite
+		var sprite ui.Sprite
 		kind := keyKinds[n.Key]
 		// fmt.Println(n.Key, kind)
 		switch n.Type {
 		case TypeNote, TypeLNTail: // temp
-			sprite = common.NewSprite(Skin.Note[kind])
+			sprite = ui.NewSprite(Skin.Note[kind])
 		case TypeLNHead:
-			sprite = common.NewSprite(Skin.LNHead[kind])
+			sprite = ui.NewSprite(Skin.LNHead[kind])
 		}
 
 		scale := float64(common.Settings.ScreenSize.Y) / 100
@@ -320,7 +321,7 @@ func (s *Scene) setNoteSprites() {
 			continue
 		}
 		head := s.chart.Notes[tail.prev]
-		ls := common.LongSprite{
+		ls := ui.LongSprite{
 			Vertical: true,
 		}
 		ls.SetImage(Skin.LNBody[keyKinds[tail.Key]]) // temp: no animation support

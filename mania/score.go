@@ -8,6 +8,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/common"
+	"github.com/hndada/gosu/engine/ui"
 )
 
 const maxScore = 1e6
@@ -130,7 +131,7 @@ func (s *Scene) applyScore(i int, j common.Judgment) {
 			s.Lighting[n.Key].BornTime = time.Now()
 			s.Lighting[n.Key].Rep = 1
 		case TypeLNHead:
-			s.LightingLN[n.Key].Rep = common.RepInfinite
+			s.LightingLN[n.Key].Rep = ui.RepInfinite
 		}
 		// apply one more for LNTail when LNHead is missed
 		if n.Type == TypeLNHead && j == Miss {

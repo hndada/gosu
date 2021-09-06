@@ -36,6 +36,7 @@ var Settings struct {
 	// LNHeadCustom      bool  // if false, head uses normal note image.
 	// LNTailMode        uint8 // 0: Tail=Head 1: Tail=Body 2: Custom
 	// LNTailFlip        bool
+
 	PlayfieldDimness float64
 	ScratchMode      map[int]int
 }

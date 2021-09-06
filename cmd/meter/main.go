@@ -3,7 +3,6 @@ package main
 import (
 	"image"
 	"image/color"
-	"log"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/common"
@@ -29,6 +28,6 @@ func main() {
 	common.Settings.ScreenSize = image.Pt(800, 600)
 	g.jm = common.NewJudgmentMeter(mania.Judgments[:])
 	if err := ebiten.RunGame(g); err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }

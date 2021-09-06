@@ -3,12 +3,12 @@ package common
 import (
 	"fmt"
 	"image"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/engine/ui"
 )
 
 // skin -> spritesheet
@@ -25,13 +25,12 @@ var Skin struct {
 	Number2    [13]*ebiten.Image
 	HPBar      *ebiten.Image
 	HPBarColor *ebiten.Image // todo: Animation
-
-	BoxLeft     *ebiten.Image
-	BoxRight    *ebiten.Image
-	BoxMiddle   *ebiten.Image
-	Cursor      *ebiten.Image
-	CursorSmoke *ebiten.Image
-	DefaultBG   *ebiten.Image
+	BoxLeft    *ebiten.Image
+	BoxRight   *ebiten.Image
+	BoxMiddle  *ebiten.Image
+	// Cursor      *ebiten.Image
+	// CursorSmoke *ebiten.Image
+	DefaultBG *ebiten.Image
 }
 
 func LoadImage(path string) (*ebiten.Image, error) {
@@ -73,52 +72,49 @@ func LoadSkin(cwd string) {
 	for i := 0; i < 10; i++ {
 		name := fmt.Sprintf("score-%d.png", i)
 		path := filepath.Join(dir, name)
-		Skin.Number1[i], err = LoadImage(path)
+		Skin.Number1[i], err = ui.LoadImageHD(path)
 		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
 	}
 	for i := 0; i < 10; i++ {
 		name := fmt.Sprintf("combo-%d.png", i)
 		path := filepath.Join(dir, name)
-		Skin.Number2[i], err = LoadImage(path)
+		Skin.Number2[i], err = ui.LoadImageHD(path)
 		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
 	}
 
-	// temp: 현재 90도 미리 돌려놓음
 	var path string
 	path = filepath.Join(dir, "scorebar-bg.png")
-	Skin.HPBar, err = LoadImage(path)
+	Skin.HPBar, err = ui.LoadImageHD(path)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	path = filepath.Join(dir, "scorebar-colour.png")
-	Skin.HPBarColor, err = LoadImage(path)
+	Skin.HPBarColor, err = ui.LoadImageHD(path)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-
 	path = filepath.Join(dir, "button-left.png")
-	Skin.BoxLeft, err = LoadImage(path)
+	Skin.BoxLeft, err = ui.LoadImageHD(path)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	path = filepath.Join(dir, "button-middle.png")
-	Skin.BoxMiddle, err = LoadImage(path)
+	Skin.BoxMiddle, err = ui.LoadImageHD(path)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	path = filepath.Join(dir, "button-right.png")
-	Skin.BoxRight, err = LoadImage(path)
+	Skin.BoxRight, err = ui.LoadImageHD(path)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
-
 	path = filepath.Join(dir, "menu-background.jpg")
-	Skin.DefaultBG, err = LoadImage(path)
+	Skin.DefaultBG, err = ui.LoadImageHD(path)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }

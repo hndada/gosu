@@ -1,12 +1,11 @@
-common.LoadImage
 Sprite WHXY 설정 간소화: Scale(), 중심에 놓기 설정
 키음 추가: keysound-only 
+SEPlayer
 
 싱크 맞추기
-SEPlayer
 o2jam 파일 파싱
-
 서버 구축
+
 select scene에서 bg preview: 랙 발생
 select scene에서 music preview
 
