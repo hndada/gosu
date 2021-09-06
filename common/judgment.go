@@ -6,6 +6,7 @@ import (
 	"image/draw"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/engine/ui"
 )
 
 type Judgment struct {
@@ -17,7 +18,7 @@ type Judgment struct {
 
 type JudgmentMeter struct {
 	Judgments []Judgment
-	Sprite    FixedSprite
+	Sprite    ui.FixedSprite
 }
 
 var (
@@ -35,7 +36,7 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 	jm := new(JudgmentMeter)
 	jm.Judgments = js
 
-	var sprite FixedSprite
+	var sprite ui.FixedSprite
 	var base *ebiten.Image
 
 	{ // set base box
@@ -49,7 +50,7 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 
 		base = ebiten.NewImage(w, h)
 		base.Fill(color.RGBA64{0, 0, 0, 255})
-		sprite = NewFixedSprite(base) // base is just for providingsize info
+		sprite = ui.NewFixedSprite(base) // base is just for providingsize info
 		sprite.W = w
 		sprite.H = h
 		sprite.X = x
@@ -91,7 +92,7 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 
 // "early" goes plus
 // todo: 종종 x값이 음수가 나옴. 저 멀리의 노트로 timeDiff를 계산하는 걸수도 있음
-func (jm JudgmentMeter) NewTimingSprite(timeDiff int64) Animation {
+func (jm JudgmentMeter) NewTimingSprite(timeDiff int64) ui.Animation {
 	w := int(Settings.JudgmentMeterScale)
 	h := jm.Sprite.H
 	x := Settings.ScreenSize.X/2 - int(Settings.JudgmentMeterScale*float64(timeDiff))
@@ -104,7 +105,7 @@ func (jm JudgmentMeter) NewTimingSprite(timeDiff int64) Animation {
 	// i := ebiten.NewImage(w, h)
 	// i.Fill(color.White)
 
-	a := NewAnimation([]*ebiten.Image{i})
+	a := ui.NewAnimation([]*ebiten.Image{i})
 	a.W = w
 	a.H = h
 	a.X = x

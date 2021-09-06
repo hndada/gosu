@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 
 	// _ "net/http/pprof"
 
@@ -15,6 +14,6 @@ func main() {
 	// }()
 	g := gosu.NewGame()
 	if err := ebiten.RunGame(g); err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }

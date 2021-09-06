@@ -6,13 +6,13 @@ import (
 	"crypto/md5"
 	"image"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/engine/ui"
 	"github.com/hndada/rg-parser/osugame/osu"
 )
 
@@ -96,7 +96,7 @@ func (c ChartHeader) Path(fname string) string {
 	d := filepath.Dir(c.ChartPath)
 	return filepath.Join(d, fname)
 }
-func (c ChartHeader) BG(dimness float64) FixedSprite {
+func (c ChartHeader) BG(dimness float64) ui.FixedSprite {
 	var src *ebiten.Image
 	path := c.Path(c.ImageFilename) // chart's own background file path
 	dat, err := ioutil.ReadFile(path)
@@ -109,7 +109,7 @@ func (c ChartHeader) BG(dimness float64) FixedSprite {
 		}
 		src = ebiten.NewImageFromImage(i)
 	}
-	sprite := NewFixedSprite(src)
+	sprite := ui.NewFixedSprite(src)
 	sw := src.Bounds().Dx()
 	sh := src.Bounds().Dy()
 	screenX := Settings.ScreenSize.X
@@ -141,7 +141,7 @@ func (c ChartHeader) AudioPath() string {
 	return c.Path(c.AudioFilename)
 }
 
-func DefaultBG() FixedSprite {
+func DefaultBG() ui.FixedSprite {
 	const dimness = 1
 	return ChartHeader{}.BG(dimness) // default background goes returned when error occurs
 }
@@ -154,7 +154,7 @@ func OsuMode(path string) int {
 	}
 	file, err := os.Open(path)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	defer file.Close()
 

@@ -10,6 +10,7 @@ import (
 	"github.com/hndada/gosu/engine/audio"
 	"github.com/hndada/gosu/engine/kb"
 	"github.com/hndada/gosu/engine/scene"
+	"github.com/hndada/gosu/engine/ui"
 
 	_ "image/jpeg"
 )
@@ -29,9 +30,9 @@ type Scene struct {
 	speed       float64
 
 	sceneUI
-	bg            common.FixedSprite
+	bg            ui.FixedSprite
 	jm            *common.JudgmentMeter // temp
-	timingSprites []common.Animation    // temp
+	timingSprites []ui.Animation        // temp
 
 	score       float64
 	karma       float64
@@ -100,7 +101,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	// s.jm = common.NewJudgmentMeter(Judgments[:])
 
 	s.hpScreen = ebiten.NewImage(common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y)
-	s.timingSprites = make([]common.Animation, 0, len(s.chart.Notes))
+	s.timingSprites = make([]ui.Animation, 0, len(s.chart.Notes))
 	if !auto {
 		go kb.Listen()
 	}

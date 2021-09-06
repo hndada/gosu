@@ -7,7 +7,6 @@ import (
 	"image/draw"
 	"image/png"
 	"io/ioutil"
-	"log"
 	"os"
 )
 
@@ -18,7 +17,7 @@ func main() {
 		fname := fmt.Sprintf("score-%d.png", i)
 		b, err := ioutil.ReadFile(fname)
 		if err != nil {
-			log.Fatal(err)
+			panic(err)
 		}
 		r := bytes.NewReader(b)
 		img, err := png.Decode(r)
@@ -34,12 +33,12 @@ func main() {
 	}
 	f, err := os.Create("score.png")
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	defer f.Close()
 	err = png.Encode(f, mergedImg)
 	if err != nil {
 		f.Close()
-		log.Fatal(err)
+		panic(err)
 	}
 }

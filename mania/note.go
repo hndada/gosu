@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/hndada/gosu/common"
+	"github.com/hndada/gosu/engine/ui"
 	"github.com/hndada/rg-parser/osugame/osu"
 )
 
@@ -49,9 +50,9 @@ type Note struct {
 	jackBonus    float64
 	holdBonus    float64 // score 필요함
 
-	common.Sprite
-	position          float64 // sv is applied, unscaled by speed yet
-	common.LongSprite         // temp
+	ui.Sprite
+	position      float64 // sv is applied, unscaled by speed yet
+	ui.LongSprite         // temp
 }
 
 func (c *Chart) loadNotesFromOsu(o *osu.Format) error {

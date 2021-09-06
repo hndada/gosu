@@ -2,7 +2,6 @@ package mania
 
 import (
 	"io/ioutil"
-	"log"
 	"path/filepath"
 
 	"golang.org/x/image/font"
@@ -31,7 +30,7 @@ func loadFont(cwd string) {
 	}
 	tt, err := opentype.Parse(b)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	const dpi = 72
@@ -41,7 +40,7 @@ func loadFont(cwd string) {
 		Hinting: font.HintingFull,
 	})
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	arcadeFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
 		Size:    fontSize,
@@ -49,7 +48,7 @@ func loadFont(cwd string) {
 		Hinting: font.HintingFull,
 	})
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	smallArcadeFont, err = opentype.NewFace(tt, &opentype.FaceOptions{
 		Size:    smallFontSize,
@@ -57,6 +56,6 @@ func loadFont(cwd string) {
 		Hinting: font.HintingFull,
 	})
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }

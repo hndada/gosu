@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 	"strings"
 
@@ -14,7 +13,7 @@ func main() {
 	const dirname = "./bms"
 	files, err := ioutil.ReadDir(dirname)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	for _, f := range files {
 		s := filepath.Join(dirname, f.Name())

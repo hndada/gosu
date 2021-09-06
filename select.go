@@ -18,13 +18,20 @@ type SceneSelect struct {
 	close        bool
 	panelHandler ui.PanelHandler
 	mods         mania.Mods
-	defaultBG    common.FixedSprite
+	defaultBG    ui.FixedSprite
+	boxSkin      ui.BoxSkin
 }
 
 func newSceneSelect(cwd string) *SceneSelect {
 	s := new(SceneSelect)
+	s.panelHandler = ui.NewPanelHandler(common.Settings.ScreenSize)
 	s.mods = mania.NewMods()
 	s.defaultBG = common.DefaultBG()
+	s.boxSkin = ui.BoxSkin{
+		Left:   common.Skin.BoxLeft,
+		Middle: common.Skin.BoxMiddle,
+		Right:  common.Skin.BoxRight,
+	}
 	s.reload()
 	return s
 }
@@ -81,19 +88,15 @@ func (s *SceneSelect) Close(args *scene.Args) bool {
 	return s.close
 }
 
+// 폴더에서 직접 삭제하면 새로 고침해야함
 func (s *SceneSelect) reload() {
 	s.ready = false
 	ebiten.SetWindowTitle("gosu")
 	cs := updateCharts(cwd)
-	s.updatePanels(cs)
-	s.ready = true
-}
-
-// 폴더에서 직접 삭제하면 새로 고침해야함
-func (s *SceneSelect) updatePanels(cs []*mania.Chart) {
 	for _, c := range cs {
 		t := fmt.Sprintf("(%dKey Lv %.1f) %s [%s]", c.KeyCount, c.Level, c.MusicName, c.ChartName)
-		p := ui.NewPanel(t)
+		p := ui.NewPanel(t, s.boxSkin)
 		s.panelHandler.Append(p)
 	}
+	s.ready = true
 }

@@ -1,14 +1,17 @@
 package common
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/engine/ui"
+)
 
 const (
 	NumberCombo = iota
 	NumberScore
 )
 
-func LoadNumbers(mode int) [10]Sprite {
-	var numbers [10]Sprite
+func LoadNumbers(mode int) [10]ui.Sprite {
+	var numbers [10]ui.Sprite
 	var height float64
 	var position float64
 	var srcs [13]*ebiten.Image
