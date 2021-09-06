@@ -126,7 +126,7 @@ func newSceneUI(keyCount int) sceneUI {
 		i.DrawImage(src, op)
 	}
 	{ // 90도 돌아갈 이미지이므로 whxy 설정에 유의
-		src := common.Skin.HPBar
+		src := Skin.HPBar
 		sprite := common.NewFixedSprite(src)
 		h := int(Settings.HPHeight * common.DisplayScale())
 		scale := float64(h) / float64(src.Bounds().Dy())
@@ -141,7 +141,7 @@ func newSceneUI(keyCount int) sceneUI {
 		s.HPBar = sprite
 	}
 	{ // HP Bar 이미지와 크기가 다를 수 있음
-		src := common.Skin.HPBarColor
+		src := Skin.HPBarColor
 		sprite := common.NewFixedSprite(src)
 		h := int(Settings.HPHeight * common.DisplayScale())
 		scale := float64(h) / float64(src.Bounds().Dy())
