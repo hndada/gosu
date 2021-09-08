@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/faiface/beep"
+	"github.com/faiface/beep/speaker"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/common"
@@ -24,10 +26,11 @@ type Scene struct {
 	startTime  time.Time
 	initUpdate bool
 
-	mods        Mods
-	chart       *Chart
-	keyLayout   []kb.Code
-	audioPlayer *audio.Player
+	mods      Mods
+	chart     *Chart
+	keyLayout []kb.Code
+	// audioPlayer *audio.Player
+	audioPlayer beep.StreamSeekCloser
 	speed       float64
 
 	sceneUI
@@ -62,18 +65,20 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 		dir := filepath.Join(cwd, "skin")
 		name := "soft-slidertick.wav"
 		sePath := filepath.Join(dir, name)
-		s.playSE = audio.NewSEPlayer(sePath, 25) // temp: volume
+		// s.playSE = audio.NewSEPlayer(sePath, 25) // temp: volume
+		s.playSE = audio.NewSEPlayer2(sePath)
 	}
 	s.timeStamp = c.TimeStampFinder()
 	s.keyLayout = Settings.KeyLayout[WithScratch(c.KeyCount)]
 	{
 		path := s.chart.AudioPath()
 		if path != "" { // keysound-only, or no music
-			s.audioPlayer = audio.NewPlayer(path)
-			s.audioPlayer.SetVolume(0.25) // temp
+			// s.audioPlayer = audio.NewPlayer(path)
+			// s.audioPlayer.SetVolume(0.25) // temp
 			// s.audioPlayer.SetVolume(common.Settings.MasterVolume * common.Settings.MusicVolume)
 			// s.audioPlayer.Play()
 			// s.audioPlayer.Pause()
+			s.audioPlayer = audio.NewPlayer2(path)
 		}
 	}
 	var img *ebiten.Image
@@ -119,12 +124,23 @@ func (s *Scene) Ready() bool { return s.ready }
 
 // 음악이 그림보다 느리다
 // 여러번 로딩되면 음악이 그림 속도를 따라가다
+
+// todo: Position이 변하지 않는다
 func (s *Scene) Update() error {
 	var now int64
+	// fmt.Println(s.audioPlayer.Position())
 	if !s.initUpdate {
 		ebiten.SetWindowTitle(fmt.Sprintf("gosu - %s [%s]", s.chart.MusicName, s.chart.ChartName))
 		if s.audioPlayer != nil { // There could be keysound-only chart, aka virtual
-			s.audioPlayer.Play()
+			// s.audioPlayer.Play()
+
+			speaker.Play(s.audioPlayer)
+			// 	done := make(chan bool)
+			// 	speaker.Play(beep.Seq(s.audioPlayer, beep.Callback(func() {
+			// 		done <- true
+			// 	})))
+			// 	<-done
+			// 	fmt.Println(s.audioPlayer.Len())
 		}
 		startTime := time.Now()
 		kb.SetTime(startTime)
@@ -132,9 +148,9 @@ func (s *Scene) Update() error {
 		s.initUpdate = true
 		return nil
 	}
-	if !audio.Context.IsReady() {
-		return nil
-	}
+	// if !audio.Context.IsReady() {
+	// 	return nil
+	// }
 	now = time.Since(s.startTime).Milliseconds()
 	// if now < 3000 { // unsafe: 꼬로록 소리 남
 	//		s.audioPlayer.Seek(time.Now().Sub(s.startTime))

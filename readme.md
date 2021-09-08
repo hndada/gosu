@@ -1,11 +1,12 @@
-키음 추가: lazy load
+https://github.com/faiface/beep/wiki/Hello,-Beep!
 
-싱크 맞추기
 o2jam 파일 파싱
+싱크 맞추기
 서버 구축
 
 select scene에서 bg preview: 랙 발생
 select scene에서 music preview
+키음 추가: lazy load, 소리 이상하게 들림, 배경 키음 추가
 
 VNC server 구축
 https://github.com/Hucaru/Valhalla
