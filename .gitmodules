@@ -1,0 +1,3 @@
+[submodule "rg-parser"]
+	path = rg-parser
+	url = http://github.com/hndada/rg-parser
