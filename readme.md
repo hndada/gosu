@@ -1,6 +1,9 @@
 https://github.com/faiface/beep/wiki/Hello,-Beep!
+http://cosmic.mearie.org/2005/03/bmsguide/
 
-o2jam 파일 파싱
+bms 테스트 chart 다운로드
+
+rg-parser
 싱크 맞추기
 서버 구축
 
