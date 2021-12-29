@@ -19,7 +19,7 @@ func main() {
 		s := filepath.Join(dirname, f.Name())
 		c, _ := mania.NewChart(s)
 		c.CalcDifficulty()
-		fmt.Printf("%s %1.2f: %s\n", getManualLV(f.Name()), c.Level/18, f.Name())
+		fmt.Printf("%s %5.2f: %s\n", getManualLV(f.Name()), c.Level/18, f.Name())
 	}
 }
 
