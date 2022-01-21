@@ -20,9 +20,9 @@ func (s *Scene) judge(e keyEvent) {
 		return
 	}
 	n := s.chart.Notes[i] // staged note
-	if n.playSE != nil {
-		n.playSE()
-	}
+	// if n.playSE != nil {
+	// 	n.playSE()
+	// }
 	keyAction := KeyAction(s.lastPressed[e.Key], e.Pressed)
 	timeDiff := n.Time - e.Time
 
@@ -114,11 +114,12 @@ func (s *Scene) applyScore(i int, j common.Judgment) {
 		}
 	}
 	if n.Type != TypeLNTail && j != Miss {
-		if n.playSE != nil {
-			n.playSE()
-		} else {
-			s.playSE() // default sample effect
-		}
+		s.playSE()
+		// if n.playSE != nil {
+		// 	n.playSE()
+		// } else {
+		// 	s.playSE() // default sample effect
+		// }
 	}
 	for idx, j2 := range Judgments {
 		if j == j2 {
