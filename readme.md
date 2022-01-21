@@ -1,5 +1,5 @@
 ## Notion page under construction!
-TBD
+TBA
 
 ## Todo
 [ ] Revise difficulty calculation
