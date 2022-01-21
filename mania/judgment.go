@@ -14,6 +14,12 @@ var Judgments = [5]common.Judgment{Kool, Cool, Good, Bad, Miss}
 
 // var JudgmentMeter common.JudgmentMeter
 
+func init() {
+	for i := range Judgments {
+		Judgments[i].Window = int64(float64(Judgments[i].Window) * 1.5)
+	}
+}
+
 const (
 	idle = iota
 	press

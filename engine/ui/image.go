@@ -11,8 +11,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// process flow: from image.Image to image.Image
-
+// LoadImage loads from file to ebiten.Image
+// The function internally loads LoadImageImage, which loads from file to image.Image
 func LoadImage(path string) (*ebiten.Image, error) {
 	i, err := LoadImageImage(path)
 	if err != nil {
@@ -29,7 +29,7 @@ func LoadImageHD(path string) (*ebiten.Image, error) {
 	return ebiten.NewImageFromImage(i), nil
 }
 
-// LoadImageImage loads from file path to image.Image
+// LoadImageImage loads from file to image.Image
 func LoadImageImage(path string) (image.Image, error) {
 	f, err := os.Open(path)
 	if err != nil {

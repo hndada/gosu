@@ -9,7 +9,7 @@ import (
 	"github.com/hndada/gosu/engine/ui"
 )
 
-// StartPoint, Width, Height, Name 총 4가지 알면 spritesheet 에서 이미지 빼올 수 있음
+// Spritesheet: requires 'start point', 'width', 'height', 'name' to extract an image from the sheet.
 var Skin struct {
 	Note   [4]*ebiten.Image // one, two, middle, pinky
 	LNHead [4]*ebiten.Image // optional
@@ -22,7 +22,7 @@ var Skin struct {
 
 	StageLeft  *ebiten.Image
 	StageRight *ebiten.Image
-	StageHint  *ebiten.Image // todo: HitPosition 대신 필요할 듯
+	StageHint  *ebiten.Image // TODO: HitPosition 대신 필요할 듯
 	// StageBottom *ebiten.Image
 	StageLight *ebiten.Image // mask
 
@@ -32,7 +32,7 @@ var Skin struct {
 
 	// Mania mode should have its own HPBar image: rotated version
 	HPBar      *ebiten.Image
-	HPBarColor *ebiten.Image // todo: Animation
+	HPBarColor *ebiten.Image // TODO: Animation
 }
 
 func LoadSkin(cwd string) {
@@ -82,7 +82,7 @@ func LoadSkin(cwd string) {
 	if err != nil {
 		Skin.LNHead[3] = Skin.Note[3]
 	}
-	// LN Body // todo: animated sprites on LN
+	// LN Body // TODO: animated sprites on LN
 	path = filepath.Join(dir, "mania-note1L.png")
 	Skin.LNBody[0], err = ui.LoadImageHD(path)
 	if err != nil {
@@ -206,7 +206,7 @@ func LoadSkin(cwd string) {
 
 	// stage
 	// key-hit은 기본 pressed, key-glow는 점수 나는 pressed인가?
-	// todo: StageLeft가 없다면 StageRight 쓰게 하기
+	// TODO: use StageRight when there's no StageLeft
 	path = filepath.Join(dir, "mania-stage-left.png")
 	Skin.StageLeft, err = ui.LoadImageHD(path)
 	if err != nil {

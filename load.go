@@ -31,8 +31,8 @@ func updateCharts(cwd string) []*mania.Chart {
 	return cs
 }
 
-// todo:로드된 차트 데이터는 gob로 저장?
-// 새로 만들어진 것만 추가로 로드
+// TODO: Load / save loaded chart data as gob?
+// Append newly added musics only
 func loadCharts(cwd string) []*mania.Chart {
 	cs := make([]*mania.Chart, 0, 40)
 	root := filepath.Join(cwd, "music")

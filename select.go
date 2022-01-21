@@ -15,7 +15,7 @@ import (
 var sceneSelect *SceneSelect
 
 type SceneSelect struct {
-	ready        bool // todo: 채널 이용하여 wait 시도?
+	ready        bool // TODO: use channel?
 	close        bool
 	panelHandler ui.PanelHandler
 	mods         mania.Mods
@@ -23,6 +23,7 @@ type SceneSelect struct {
 	boxSkin      ui.BoxSkin
 }
 
+// TODO: bg, music preview
 func newSceneSelect(cwd string) *SceneSelect {
 	s := new(SceneSelect)
 	{
@@ -85,7 +86,7 @@ func (s *SceneSelect) Draw(screen *ebiten.Image) {
 		`Speed: %.1f`, mania.Settings.GeneralSpeed*100))
 }
 
-// todo: args != nil 필요한가?
+// TODO: Dose it need args != nil ?
 func (s *SceneSelect) Close(args *scene.Args) bool {
 	if s.close && args.Next == "" {
 		args.Next = "mania.Scene"
@@ -94,7 +95,7 @@ func (s *SceneSelect) Close(args *scene.Args) bool {
 	return s.close
 }
 
-// 폴더에서 직접 삭제하면 새로 고침해야함
+// Need to refresh manually when one has deleted directly on file explorer
 func (s *SceneSelect) reload() {
 	s.ready = false
 	ebiten.SetWindowTitle("gosu")

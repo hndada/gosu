@@ -1,22 +1,9 @@
-https://github.com/faiface/beep/wiki/Hello,-Beep!
-http://cosmic.mearie.org/2005/03/bmsguide/
+## Notion page under construction!
+TBD
 
-bms 테스트 chart 다운로드
-
-rg-parser
-싱크 맞추기
-서버 구축
-
-select scene에서 bg preview: 랙 발생
-select scene에서 music preview
-키음 추가: lazy load, 소리 이상하게 들림, 배경 키음 추가
-
-VNC server 구축
-https://github.com/Hucaru/Valhalla
-input system on linux
-sedyh's ebiten ecs model (ref: https://github.com/andygeiss/ecs)
-Sprite 연출: 스코어 스크롤, 콤보 튕기기, Fade-in.
-    - 프레임마다 op다르게 주면 될듯
-    - 전용 패키지 만들어보기
-
-판정오차 막대기: timeDiff append 부터 Draw까지 곳곳에서 랙 발생
+## Todo
+[ ] Revise difficulty calculation
+    - Strain value spectrum is way too extreme
+[ ] Input system on Linux
+[ ] Enable loading key-sound
+[ ] Sprite effect: dynamic score increment, bouncing combo

@@ -20,26 +20,26 @@ type TimeBool struct {
 	Value bool
 }
 type sceneUI struct {
-	noteWidths       []int // todo: setNoteSprites()에서만 쓰임
+	noteWidths       []int // TODO: It is currently used only at setNoteSprites()
 	playfield        ui.FixedSprite
 	stageKeys        []ui.FixedSprite
 	stageKeysPressed []ui.FixedSprite
 
 	combos      [10]ui.Sprite
 	scores      [10]ui.Sprite
-	judgeSprite [len(Judgments)]ui.Animation // todo: rename
-	Spotlights  []ui.FixedSprite             // 키를 눌렀을 때 불 들어오는 거
+	judgeSprite [len(Judgments)]ui.Animation // TODO: rename
+	Spotlights  []ui.FixedSprite             // Blinking component when pressing keys
 
 	HPBar      ui.FixedSprite // it can be in playfield
 	HPBarColor ui.FixedSprite // actually, it can also go to playfield
 	HPBarMask  ui.Sprite
 	hpScreen   *ebiten.Image
 
-	Lighting   []ui.Animation // 여러 lane에서 동시에 그려져야함
+	Lighting   []ui.Animation // It should be able to be drawn simultaneously in all lanes
 	LightingLN []ui.Animation
 }
 
-// 가로가 늘어난다고 같이 늘리면 오히려 어색하므로 세로에만 맞춰 늘리기: 100 기준
+// A width of screen size doesn't affect to UI size; only height does: standard is 100
 func newSceneUI(keyCount int) sceneUI {
 	s := new(sceneUI)
 	scale := float64(common.Settings.ScreenSize.Y) / 100
@@ -75,8 +75,9 @@ func newSceneUI(keyCount int) sceneUI {
 		op.ColorM.ChangeHSV(0, 1, Settings.PlayfieldDimness)
 		i.DrawImage(main, op)
 	}
-	// important: mania-stage-hint에서 판정선이 이미지의 맨 아래에 있다는 보장이 없음
-	// 아마 mania-stage-bottom 때문인듯
+	// Important: There's no guarantee that judge-line locates at the very bottom at 'mania-stage-hint' image.
+	// cf. 'mania-stage-bottom'
+
 	// var hHint int
 	{ // no-skin ver
 
@@ -126,7 +127,7 @@ func newSceneUI(keyCount int) sceneUI {
 		op.GeoM.Translate(float64(x), float64(y))
 		i.DrawImage(src, op)
 	}
-	{ // 90도 돌아갈 이미지이므로 whxy 설정에 유의
+	{ // Beware of setting WHXY: the image goes 90-degree rotating
 		src := Skin.HPBar
 		sprite := ui.NewFixedSprite(src)
 		h := int(Settings.HPHeight * common.DisplayScale())
@@ -141,7 +142,7 @@ func newSceneUI(keyCount int) sceneUI {
 		sprite.Fix()
 		s.HPBar = sprite
 	}
-	{ // HP Bar 이미지와 크기가 다를 수 있음
+	{ // Its size can be different with HP Bar Image's.
 		src := Skin.HPBarColor
 		sprite := ui.NewFixedSprite(src)
 		h := int(Settings.HPHeight * common.DisplayScale())
@@ -160,7 +161,7 @@ func newSceneUI(keyCount int) sceneUI {
 		mask := ebiten.NewImage(w, h)
 		sprite2 := ui.NewSprite(mask)
 		sprite2.W = w
-		sprite2.H = 0 // hp가 100일 때 0
+		sprite2.H = 0 // HP:100
 		sprite2.X = x
 		sprite2.Y = y
 		sprite2.CompositeMode = ebiten.CompositeModeSourceOut
@@ -171,18 +172,18 @@ func newSceneUI(keyCount int) sceneUI {
 	s.playfield.H = common.Settings.ScreenSize.Y
 	s.playfield.X = 0
 	s.playfield.Y = 0
-	s.playfield.Fix() // todo: 여기에 bg 추가
+	s.playfield.Fix() // TODO: add BG at here
 
 	s.stageKeys = make([]ui.FixedSprite, keyCount)
 	s.stageKeysPressed = make([]ui.FixedSprite, keyCount)
 
-	// 스킨마다 저마다의 여백이 있다
+	// Each skin has own empty space.
 	for k := 0; k < keyCount; k++ {
 		var sprite ui.FixedSprite
 		src := Skin.StageKeys[keyKinds[k]]
 		sprite = ui.NewFixedSprite(src)
 
-		w := noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
+		w := noteWidths[k] // Note widths can be different, while its source image size is same.
 
 		// scale := float64(sprite.W) / float64(src.Bounds().Size().X)
 		// sprite.H = int(float64(src.Bounds().Size().Y) * scale)
@@ -193,7 +194,7 @@ func newSceneUI(keyCount int) sceneUI {
 		y := int(Settings.HitPosition * common.DisplayScale()) // + hHint/2
 		// fmt.Println(hHint)
 		// y := int((Settings.HitPosition - Settings.NoteHeigth/2 -
-		// 	4*Settings.NoteHeigth/2) * common.DisplayScale()) // todo: why?
+		// 	4*Settings.NoteHeigth/2) * common.DisplayScale()) // TODO: why?
 		h := common.Settings.ScreenSize.Y - y
 
 		sprite.W = w
@@ -213,7 +214,7 @@ func newSceneUI(keyCount int) sceneUI {
 		sprite := ui.NewFixedSprite(src)
 		s.Spotlights = make([]ui.FixedSprite, keyCount)
 		for k := 0; k < keyCount; k++ {
-			w := noteWidths[k] // 이미지는 크기가 같지만, w가 달라진다
+			w := noteWidths[k] // Note widths can be different, while its source image size is same.
 			scale := float64(w) / float64(src.Bounds().Size().X)
 			h := int(float64(src.Bounds().Size().Y) * scale)
 			x := center - wMiddle/2 // int - int
@@ -293,7 +294,6 @@ func (s *Scene) setNoteSprites() {
 	for i, n := range s.chart.Notes {
 		var sprite ui.Sprite
 		kind := keyKinds[n.key]
-		// fmt.Println(n.key, kind)
 		switch n.Type {
 		case TypeNote, TypeLNTail: // temp
 			sprite = ui.NewSprite(Skin.Note[kind])
@@ -315,7 +315,7 @@ func (s *Scene) setNoteSprites() {
 	}
 
 	// LN body sprite
-	// 모든 Sprite는 자신의 값을 갱신 시켜줄 개체와 connect되어 있어야 함
+	// All sprites should be connected with objects which update sprites' value
 	for i, tail := range s.chart.Notes {
 		if tail.Type != TypeLNTail {
 			continue

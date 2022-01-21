@@ -18,7 +18,7 @@ func (s LongSprite) isOut(w, h, x, y int, screenSize image.Point) bool {
 	return x+w < 0 || x > screenSize.X || y+h < 0 || y > screenSize.Y
 }
 
-// 사이즈 제한 있어서 *ebiten.Image로 직접 그리면 X
+// A long image should be drawn in pieces; there's height limit in *ebiten.Image
 func (s LongSprite) Draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
 	w1, h1 := s.src.Size()

@@ -7,8 +7,8 @@ var Settings struct {
 	MaxTPS     int
 
 	JudgmentMeterScale float64 // 1ms 당 2px
-	ScoreHeight        float64 // todo: ScoreHeight -> ScoreImageScale
-	ComboHeight        float64 // todo: mode마다 combo 위치가 다르므로 game package에 있으면 안됨
+	ScoreHeight        float64 // TODO: ScoreHeight -> ScoreImageScale
+	ComboHeight        float64 // TODO: mode마다 combo 위치가 다르므로 game package에 있으면 안됨
 	ComboPosition      float64
 	ComboGap           float64
 	BackgroundDimness  float64

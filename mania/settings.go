@@ -15,11 +15,11 @@ import (
 // )
 
 var Settings struct {
-	KeyLayout    map[int][]kb.Code // todo: 무결성 검사, 겹치는거 있는지 매번 확인
+	KeyLayout    map[int][]kb.Code // TODO: Integrity check: need to check duplicated keys in every before game play
 	GeneralSpeed float64
 
-	NoteWidths      map[int][4]float64 // 키마다 width 설정. 단위는 window size 대비 percent
-	NoteHeigth      float64            // 두께; 키 관계없이 동일
+	NoteWidths      map[int][4]float64 // Unit: percentage comparing to screen size.
+	NoteHeigth      float64            // Universal to all notes
 	StagePosition   float64            // 0 ~ 100; 50 is a center
 	HitPosition     float64            // HitPosition*DisplayScale() goes *the center* of Y value
 	ComboPosition   float64

@@ -10,7 +10,7 @@ func (c Chart) GenAutoKeyEvents(instability float64) func(int64) []keyEvent {
 	keyEvents := make([]keyEvent, 0, len(c.Notes)*2)
 	deviation := func(v float64) int64 {
 		d := int64(rand.NormFloat64() * v * 2)
-		if d > 20 { // temp: KOOL 더 띄우기
+		if d > 20 { // temp: more biased to KOOL
 			d = int64(rand.NormFloat64() * v * 2)
 		}
 		return d

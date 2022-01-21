@@ -74,7 +74,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	}
 	var img *ebiten.Image
 	keyKinds := keyKindsMap[WithScratch(c.KeyCount)]
-	for i, n := range c.Notes { // temp: Note, LNHead, LNTail 전부 Note 이미지 사용
+	for i, n := range c.Notes { // temp: All Note, LNHead, LNTail use skin's 'Note' image
 		img = Skin.Note[keyKinds[n.key]]
 		s.chart.Notes[i].Sprite.SetImage(img)
 	}
@@ -100,7 +100,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	s.sceneUI = newSceneUI(c.KeyCount)
 	s.setNoteSprites()
 	s.bg = c.BG(common.Settings.BackgroundDimness)
-	// s.jm = common.NewJudgmentMeter(Judgments[:]) // todo: resolve performance issue
+	// s.jm = common.NewJudgmentMeter(Judgments[:]) // TODO: severely lagged
 
 	s.hpScreen = ebiten.NewImage(common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y)
 	s.timingSprites = make([]ui.Animation, 0, len(s.chart.Notes))
@@ -128,7 +128,7 @@ func (s *Scene) Update() error {
 	}
 
 	now = time.Since(s.startTime).Milliseconds()
-	// if now < 3000 { // unsafe: 꼬로록 소리 남
+	// if now < 3000 { // unsafe: It sounds sinking noise
 	//		s.audioPlayer.Seek(time.Now().Sub(s.startTime))
 	//		}
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) || now > s.chart.EndTime()+2000 { // temp: 2초 여유 두기
@@ -140,8 +140,8 @@ func (s *Scene) Update() error {
 	ts := s.timeStamp(now)
 	cursor := float64(now-ts.Time)*ts.Factor + ts.Position
 	for i, n := range s.chart.Notes {
-		rp := (n.position-cursor)*s.speed - Settings.HitPosition                                                 // relative position
-		s.chart.Notes[i].Sprite.Y = int(-rp*(float64(common.Settings.ScreenSize.Y)/100) - float64(n.Sprite.H)/2) // +가 아니고 -가 맞을듯
+		rp := (n.position-cursor)*s.speed - Settings.HitPosition // relative position
+		s.chart.Notes[i].Sprite.Y = int(-rp*(float64(common.Settings.ScreenSize.Y)/100) - float64(n.Sprite.H)/2)
 		if n.Type == TypeLNTail {
 			s.chart.Notes[i].LongSprite.Y = n.Sprite.Y + n.Sprite.H // why?: center of tail sprite ~ center of head sprite
 			if s.chart.Notes[i].scored {
@@ -178,8 +178,8 @@ func (s *Scene) Update() error {
 		}
 	}
 
-	// 따로 처리: lost, scored되고 시간 다 된 LNTail
-	// LN을 중간에 놔서 미스 판정을 받았어도 staged에 LNTail 이 있어야 함
+	// Handle timed-out LNTail after handling lost and scored
+	// LNTail should be kept staged even when a player held off LN in middle, got missed.
 	lost := func(timeDiff int64) bool { return timeDiff < -Bad.Window } // never hit
 	flushable := func(n Note, timeDiff int64) bool { return n.scored && timeDiff < Miss.Window }
 	for k, i := range s.staged {
@@ -259,7 +259,7 @@ judge: %v
 	}
 	s.drawScore(screen)
 
-	// s.HPBar.Draw(screen) // temp: HPBar 와 HP color가 서로 맞추기 어려우니 임시로 color만 사용
+	// s.HPBar.Draw(screen) // temp: hard to keep consistent HPBar image and HP color
 	s.hpScreen.Clear()
 	s.HPBarColor.Draw(s.hpScreen)
 	s.HPBarMask.Draw(s.hpScreen)

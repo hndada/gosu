@@ -7,7 +7,7 @@ import (
 	"github.com/hndada/gosu/common"
 )
 
-// todo: tick-based? time-based?
+// TODO: tick-based? time-based?
 var initCountDown = ebiten.MaxTPS() * 4 / 5
 
 type Changer struct {
@@ -51,7 +51,7 @@ func (c *Changer) Change(s1, s2 Scene) {
 	c.phase = phaseFadeOut
 }
 
-// countdown 동안 scene이 fade되면서 변화
+// A scene goes faded, then changed during countdown
 func (c *Changer) Update() error {
 	switch c.phase {
 	case phaseIdle:

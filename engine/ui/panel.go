@@ -25,7 +25,7 @@ type BoxSkin struct {
 	Right  *ebiten.Image
 }
 
-// X와 Y는 update에서 매번 새로 설정
+// X and Y position values are updated on every Update()
 func NewPanel(t string, skin BoxSkin) Panel {
 	const PanelHeight = 40
 	var p Panel
@@ -103,7 +103,6 @@ func NewPanelHandler(screenSize image.Point, sePath string) PanelHandler {
 	h := PanelHandler{}
 	h.size = screenSize
 	h.playSE = audio.NewSEPlayer(sePath, 25) // temp: volume
-	// h.playSE = audio.NewSEPlayer2(sePath)
 	return h
 }
 
@@ -113,7 +112,7 @@ func (h *PanelHandler) Update() int {
 		i = h.cursor
 		h.holdCount = 0
 	} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		if h.holdCount >= 2 { // todo: MaxTPS가 변하여도 체감 시간은 그대로이게 설정
+		if h.holdCount >= 2 { // TODO: actual duration should be consistent independent of maxTPS
 			h.playSE()
 			h.cursor++
 			if h.cursor >= len(h.panels) {
@@ -139,7 +138,7 @@ func (h *PanelHandler) Update() int {
 	}
 
 	for i := range h.panels {
-		mid := h.size.Y / 2 // 현재 선택된 차트 focus 틀 위치 고정
+		mid := h.size.Y / 2 // A position of 'Currently selected chart' is fixed.
 		x := h.size.X - 400
 		d := i - h.cursor
 		if d < 0 {

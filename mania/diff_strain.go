@@ -30,7 +30,7 @@ type noteDifficulty struct {
 	chordPenalty float64
 	trillBonus   float64
 	jackBonus    float64
-	holdBonus    float64 // score 필요함
+	holdBonus    float64 // holdBonus might be needed at score (or not)
 }
 
 func init() {
@@ -40,8 +40,8 @@ func init() {
 	}
 }
 
-// todo: hand와 finger는 note 불러올 때 미리 계산
-// todo: memory-less 인 애들은 루프 분리
+// TODO: hand와 finger는 note 불러올 때 미리 계산
+// TODO: memory-less 인 애들은 루프 분리
 func (c *Chart) CalcStrain() {
 	c.markAffect()
 	for i, n := range c.Notes {
@@ -59,7 +59,7 @@ func (c *Chart) CalcStrain() {
 	}
 }
 
-// todo: time2, prev/next를 이용하면 대체 가능
+// TODO: time2, prev/next를 이용하면 대체 가능
 func baseStrain(keyCount int, n Note) float64 {
 	base := 1 + fingerBonus[finger(keyCount, n.key)]
 	if n.Type == TypeLNTail { // a tail of hold note will get partial strain
@@ -218,7 +218,7 @@ func (n *Note) calcStrain() {
 	v += n.jackBonus
 	v += n.holdBonus
 	v += n.chordPenalty
-	if v < 0 { // todo: why happens
+	if v < 0 { // TODO: why happens
 		v = 0
 		// panic("negative strain")
 	}
