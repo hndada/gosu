@@ -3,7 +3,7 @@ package mania
 import "github.com/hndada/gosu/engine/kb"
 
 type keyEvent struct {
-	// kb.KeyEvent // todo: 왜 embed가 안되지
+	// kb.KeyEvent // TODO: 왜 embed가 안되지
 	Time    int64
 	KeyCode kb.Code
 	Pressed bool
@@ -11,7 +11,7 @@ type keyEvent struct {
 }
 
 // 업데이트 때마다 마지막 index 이후 최신 log 불러오기
-// todo: ESC 눌러서 일시 정지되었을 때
+// TODO: ESC 눌러서 일시 정지되었을 때
 // type keyEvent struct {
 // 	time    int64
 // 	key     int

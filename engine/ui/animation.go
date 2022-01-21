@@ -14,7 +14,7 @@ type Animation struct {
 	Sprite // no use src
 	// Duration time.Time // temp: using global duration
 
-	Rep int64 // 반복 횟수
+	Rep int64 // repetition
 	ebiten.CompositeMode
 }
 

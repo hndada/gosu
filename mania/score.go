@@ -13,7 +13,7 @@ import (
 
 const maxScore = 1e6
 
-// LNTail 이면서 unscored이고 press나 idle일순 없음
+// Theorem: LNTail can't be unscored when key state is press or idle.
 func (s *Scene) judge(e keyEvent) {
 	i := s.staged[e.Key] // index of a staged note
 	if i < 0 {
@@ -26,11 +26,7 @@ func (s *Scene) judge(e keyEvent) {
 	keyAction := KeyAction(s.lastPressed[e.Key], e.Pressed)
 	timeDiff := n.Time - e.Time
 
-	// Idle, Hit, Release, Hold (lost는 아예 별개의 개념. 시간 지나도록 X면)
-	// 일반   노트: X, O, X, X
-	// 롱노트 머리: X, O, X, X (단, miss시 꼬리까지 miss)
-	// 롱노트 꼬리: X, X, O, X (현재 hold 시 HP보너스 생략)
-	judgeable := func(t common.NoteType, keyAction int) bool { // judge 가능 action이나 premature(너무 빨리 누른 경우)인 경우 score 안됨.
+	judgeable := func(t common.NoteType, keyAction int) bool {
 		if t == TypeLNTail {
 			return keyAction == release
 		}
@@ -48,7 +44,7 @@ func (s *Scene) judge(e keyEvent) {
 				return j
 			}
 		}
-		return empty // 너무 빨리 누름. 너무 늦게 누른 경우(아예 안 누르다)는 scene update에서 별도 처리
+		return empty // When a player hit too early
 	}
 	j := judge(n.Type, keyAction, timeDiff)
 	s.applyScore(i, j)
@@ -59,10 +55,9 @@ func (s *Scene) judge(e keyEvent) {
 	// }
 }
 
-// LNTail은 롱노트 끝나기 전까지 계속 staged. 처음 scored 된 뒤로는 score 영향 안 끼침
 func (s *Scene) applyScore(i int, j common.Judgment) {
 	n := s.chart.Notes[i]
-	if j == empty || n.scored { // scored되었는데 judge될 대상은 미리 뗀 LNTail 밖에 없음. LNTail은 scene update에서 별도 처리
+	if j == empty || n.scored {
 		return
 	}
 	s.chart.Notes[i].scored = true

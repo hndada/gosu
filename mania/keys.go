@@ -33,7 +33,7 @@ func init() {
 	keyKindsMap[9] = []keyKind{pinky, one, two, one, middle, one, two, one, pinky}
 	keyKindsMap[10] = []keyKind{pinky, one, two, one, middle, middle, one, two, one, pinky}
 
-	for k := 2; k <= 8; k++ { // Very efficient code imo
+	for k := 2; k <= 8; k++ { // I'm proud of writing these code by myself uwu
 		keyKindsMap[k|LeftScratch] = append([]keyKind{pinky}, keyKindsMap[k-1]...)
 		keyKindsMap[k|RightScratch] = append(keyKindsMap[k-1], pinky)
 	}

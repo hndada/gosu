@@ -9,7 +9,7 @@ const (
 	sectionLength   = 800
 )
 
-// Chart가 Load됨과 동시에 계산되어야 할까?
+// TODO: Should charts' difficulties be calculated once they are loaded?
 func (c *Chart) CalcDifficulty() {
 	if len(c.Notes) == 0 {
 		return

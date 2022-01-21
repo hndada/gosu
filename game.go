@@ -70,7 +70,7 @@ func (g *Game) Update() error {
 		default:
 			panic("not reach")
 		}
-		g.args = &scene.Args{} // todo: must?
+		g.args = &scene.Args{} // TODO: must?
 	} else {
 		return g.scene.Update()
 	}

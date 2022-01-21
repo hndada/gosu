@@ -17,8 +17,7 @@ type Chart struct {
 	TimeStamps  []common.TimeStamp
 }
 
-// raw 차트에는 Mods가 들어가면 안됨
-// Mods마다 TransPoint(TimingPoint), Note건드림
+// A raw chart data should be not 'Mods-affected': Mods modify TransPoint(TimingPoint) and Note.
 func NewChart(path string) (*Chart, error) {
 	var c Chart
 	switch strings.ToLower(filepath.Ext(path)) {
@@ -50,13 +49,13 @@ func NewChart(path string) (*Chart, error) {
 
 func (c *Chart) ApplyMods(mods Mods) *Chart {
 	var c2 Chart
-	c2.ChartHeader = c.ChartHeader // todo: value -> pointer?
+	c2.ChartHeader = c.ChartHeader // TODO: value -> pointer?
 	c2.KeyCount = c.KeyCount
 	c2.Notes = make([]Note, len(c.Notes))
 	for i, n := range c.Notes {
 		n.Time = int64(float64(n.Time) / mods.TimeRate)
 		n.Time2 = int64(float64(n.Time2) / mods.TimeRate)
-		if mods.Mirror { // todo: scartch lane은 따로 분리?
+		if mods.Mirror { // TODO: separate scartch lane?
 			n.key = c.KeyCount - 1 - n.key
 		}
 		c2.Notes[i] = n

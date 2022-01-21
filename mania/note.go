@@ -21,7 +21,7 @@ const (
 	TypeLNTail = typeLongNote | typeReleaseNote
 )
 
-// note의 sprite는 speed와 screen size, widths가 결정되어야 값이 결정됨
+// A note sprite's WHXY values are dependent of speed, screen size and widths-settings
 type Note struct {
 	common.Note
 	key int
@@ -77,7 +77,7 @@ func (c *Chart) loadNotesFromOsu(o *osu.Format) error {
 	return nil
 }
 
-// todo: sound should be lazy loaded
+// TODO: sound should be lazy loaded
 func newNoteFromOsu(ho osu.HitObject, keyCount int, sePath string) ([]Note, error) {
 	ns := make([]Note, 0, 2)
 	var n Note
@@ -130,7 +130,7 @@ func (n *Note) init(keyCount int) {
 }
 
 // should precede to lnotes loading
-// performance: range stamps를 outer loop로 두고 짜도 큰 차이 없을 듯
+// There seems little performance difference between inner loop and outer loop about range stamps
 func (c *Chart) setNotePosition() {
 	var cursor int
 	s := c.TimeStamps[0]
@@ -148,7 +148,7 @@ func (c *Chart) setNotePosition() {
 	}
 }
 
-// const holdUnitHP = 0.002 // 롱노트를 눌렀을 때 1ms 당 차오르는 체력
+// const holdUnitHP = 0.002 // Indicates about how much HP increase per 1ms when holding LN.
 
 func (c *Chart) allotScore() {
 	var sumStrain float64

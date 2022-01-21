@@ -40,7 +40,7 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 	var base *ebiten.Image
 
 	{ // set base box
-		// todo: 검은색 바탕 상자가 안 그려진다
+		// TODO: 검은색 바탕 상자가 안 그려진다
 		const height = 5 // 높이는 세로 전체 100 기준 5
 		j := jm.Judgments[len(jm.Judgments)-1]
 		w := int(Settings.JudgmentMeterScale*float64(j.Window)) * 2
@@ -91,7 +91,7 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 }
 
 // "early" goes plus
-// todo: 종종 x값이 음수가 나옴. 저 멀리의 노트로 timeDiff를 계산하는 걸수도 있음
+// TODO: 종종 x값이 음수가 나옴. 저 멀리의 노트로 timeDiff를 계산하는 걸수도 있음
 func (jm JudgmentMeter) NewTimingSprite(timeDiff int64) ui.Animation {
 	w := int(Settings.JudgmentMeterScale)
 	h := jm.Sprite.H
