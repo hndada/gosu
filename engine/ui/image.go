@@ -48,7 +48,6 @@ func LoadImageImage(path string) (image.Image, error) {
 func LoadImageImageHD(path string) (image.Image, error) {
 	ext := filepath.Ext(path)
 	name := strings.TrimSuffix(path, ext)
-	// fmt.Println(path, ext, name)
 	name = strings.TrimSuffix(name, "@2x")
 	path2x := name + "@2x" + ext
 	path1x := name + ext

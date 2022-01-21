@@ -1,7 +1,6 @@
 package mania
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -42,7 +41,7 @@ func NewChart(path string) (*Chart, error) {
 		c.setStamps()
 		c.setNotePosition()
 		c.CalcDifficulty()
-		fmt.Println(c.MusicName, c.ChartName)
+		// fmt.Println(c.MusicName, c.ChartName)
 		return &c, nil
 	default:
 		panic("not reach")

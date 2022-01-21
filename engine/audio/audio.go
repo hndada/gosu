@@ -16,7 +16,7 @@ import (
 const bytesPerSample = 4
 const sampleRate = 44100
 
-var Context *audio.Context // = audio.NewContext(sampleRate)
+var Context *audio.Context = audio.NewContext(sampleRate)
 
 type Player struct {
 	*audio.Player
@@ -57,4 +57,12 @@ func NewPlayer(path string) *Player {
 		Player: p,
 	}
 	return p2
+}
+func NewSEPlayer(path string, vol int) func() {
+	ap := NewPlayer(path)
+	ap.SetVolume(float64(vol) / 100)
+	return func() {
+		ap.Play()
+		ap.Rewind()
+	}
 }

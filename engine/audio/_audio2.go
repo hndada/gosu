@@ -50,3 +50,11 @@ func NewPlayer2(path string) beep.StreamSeekCloser {
 	// speaker.Play(streamer)
 	return streamer
 }
+
+func NewSEPlayer2(path string) func() {
+	ap := NewPlayer2(path)
+	return func() {
+		speaker.Play(ap) // I guess speaker cannot play players more than one
+		// ap.Seek(0)
+	}
+}
