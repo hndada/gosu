@@ -1,3 +1,7 @@
+## Build
+1. Run `cmd` and set current directory to `./cmd/gosu`
+2. `go build -o gosu.exe main.go`
+
 ## Notion page under construction!
 TBA
 
