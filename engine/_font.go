@@ -1,4 +1,4 @@
-package mania
+package engine
 
 import (
 	"io/ioutil"

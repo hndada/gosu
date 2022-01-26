@@ -21,7 +21,7 @@ func (s LongSprite) isOut(w, h, x, y int, screenSize image.Point) bool {
 // A long image should be drawn in pieces; there's height limit in *ebiten.Image
 func (s LongSprite) Draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
-	w1, h1 := s.src.Size()
+	w1, h1 := s.i.Size()
 	switch s.Vertical {
 	case true:
 		op.GeoM.Scale(s.scaleW(), 1) // height 쪽은 굳이 scale 하지 않는다
@@ -30,18 +30,18 @@ func (s LongSprite) Draw(screen *ebiten.Image) {
 		op.GeoM.Translate(float64(x), float64(y))
 		q, r := s.H/h1, s.H%h1+1 // quotient, remainder // temp: +1
 
-		first := s.src.Bounds()
+		first := s.i.Bounds()
 		w, h := s.W, r
 		first.Min = image.Pt(0, h1-r)
 		if !s.isOut(w, h, x, y, screen.Bounds().Size()) {
-			screen.DrawImage(s.src.SubImage(first).(*ebiten.Image), op)
+			screen.DrawImage(s.i.SubImage(first).(*ebiten.Image), op)
 		}
 		op.GeoM.Translate(0, float64(h))
 		y += h
 		h = h1
 		for i := 0; i < q; i++ {
 			if !s.isOut(w, h, x, y, screen.Bounds().Size()) {
-				screen.DrawImage(s.src, op)
+				screen.DrawImage(s.i, op)
 			}
 			op.GeoM.Translate(0, float64(h))
 			y += h
@@ -53,12 +53,12 @@ func (s LongSprite) Draw(screen *ebiten.Image) {
 		q, r := s.W/w1, s.W%w1+1 // temp: +1
 
 		for i := 0; i < q; i++ {
-			screen.DrawImage(s.src, op)
+			screen.DrawImage(s.i, op)
 			op.GeoM.Translate(float64(w1), 0)
 		}
 
-		last := s.src.Bounds()
+		last := s.i.Bounds()
 		last.Max = image.Pt(r, h1)
-		screen.DrawImage(s.src.SubImage(last).(*ebiten.Image), op)
+		screen.DrawImage(s.i.SubImage(last).(*ebiten.Image), op)
 	}
 }

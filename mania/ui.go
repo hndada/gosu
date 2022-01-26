@@ -41,7 +41,7 @@ type sceneUI struct {
 
 // A width of screen size doesn't affect to UI size; only height does: standard is 100
 func newSceneUI(keyCount int) sceneUI {
-	s := new(sceneUI)
+	sUI := new(sceneUI)
 	scale := float64(common.Settings.ScreenSize.Y) / 100
 	keyKinds := keyKindsMap[WithScratch(keyCount)]
 	unscaledNoteWidths := Settings.NoteWidths[keyCount]
@@ -50,7 +50,7 @@ func newSceneUI(keyCount int) sceneUI {
 	for key, kind := range keyKinds {
 		noteWidths[key] = int(unscaledNoteWidths[kind] * scale)
 	}
-	i := ebiten.NewImage(common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y)
+	playfieldImage := ebiten.NewImage(common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y)
 
 	p := Settings.StagePosition / 100 // proportion
 	center := int(float64(common.Settings.ScreenSize.X) * p)
@@ -63,7 +63,7 @@ func newSceneUI(keyCount int) sceneUI {
 
 		// seems ebiten's Fill() doesn't accept alpha value
 		mainSrc := image.NewRGBA(image.Rect(0, 0, wMiddle, h))
-		r := image.Rectangle{image.ZP, i.Bounds().Size()}
+		r := image.Rectangle{image.ZP, playfieldImage.Bounds().Size()}
 		draw.Draw(mainSrc, r, &image.Uniform{black}, image.ZP, draw.Over)
 		main := ebiten.NewImageFromImage(mainSrc)
 
@@ -73,7 +73,7 @@ func newSceneUI(keyCount int) sceneUI {
 		op.GeoM.Translate(float64(x), float64(y))
 		op.ColorM.Scale(0, 0, 0, 1)
 		op.ColorM.ChangeHSV(0, 1, Settings.PlayfieldDimness)
-		i.DrawImage(main, op)
+		playfieldImage.DrawImage(main, op)
 	}
 	// Important: There's no guarantee that judge-line locates at the very bottom at 'mania-stage-hint' image.
 	// cf. 'mania-stage-bottom'
@@ -89,7 +89,7 @@ func newSceneUI(keyCount int) sceneUI {
 		y := int(Settings.HitPosition*common.DisplayScale()) - h
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(float64(x), float64(y))
-		i.DrawImage(hint, op)
+		playfieldImage.DrawImage(hint, op)
 	}
 	// {
 	// 	src := Skin.StageHint
@@ -113,7 +113,7 @@ func newSceneUI(keyCount int) sceneUI {
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(scale, scale)
 		op.GeoM.Translate(float64(x), float64(y))
-		i.DrawImage(src, op)
+		playfieldImage.DrawImage(src, op)
 	}
 	{
 		src := Skin.StageRight
@@ -125,116 +125,86 @@ func newSceneUI(keyCount int) sceneUI {
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(scale, scale)
 		op.GeoM.Translate(float64(x), float64(y))
-		i.DrawImage(src, op)
+		playfieldImage.DrawImage(src, op)
 	}
 	{ // Beware of setting WHXY: the image goes 90-degree rotating
 		src := Skin.HPBar
-		sprite := ui.NewFixedSprite(src)
-		h := int(Settings.HPHeight * common.DisplayScale())
-		scale := float64(h) / float64(src.Bounds().Dy())
-		w := int(float64(src.Bounds().Dx()) * scale)
-		x := center + wMiddle/2
-		y := common.Settings.ScreenSize.Y - h
-		sprite.W = w
-		sprite.H = h
-		sprite.X = x
-		sprite.Y = y
-		sprite.Fix()
-		s.HPBar = sprite
+		sp := ui.NewSprite(src)
+		sp.H = int(Settings.HPHeight * common.DisplayScale())
+		scale := float64(sp.H) / float64(src.Bounds().Dy())
+		sp.W = int(float64(src.Bounds().Dx()) * scale)
+		sp.X = center + wMiddle/2
+		sp.Y = common.Settings.ScreenSize.Y - sp.H
+		sUI.HPBar = ui.NewFixedSprite(sp)
 	}
 	{ // Its size can be different with HP Bar Image's.
 		src := Skin.HPBarColor
-		sprite := ui.NewFixedSprite(src)
-		h := int(Settings.HPHeight * common.DisplayScale())
-		scale := float64(h) / float64(src.Bounds().Dy())
-		w := int(float64(src.Bounds().Dx()) * scale)
-		x := center + wMiddle/2 // + s.HPBar.W/2
-		y := common.Settings.ScreenSize.Y - h
+		sp := ui.NewSprite(src)
+		sp.H = int(Settings.HPHeight * common.DisplayScale())
+		scale := float64(sp.H) / float64(src.Bounds().Dy())
+		sp.W = int(float64(src.Bounds().Dx()) * scale)
+		sp.X = center + wMiddle/2 // + s.HPBar.W/2
+		sp.Y = common.Settings.ScreenSize.Y - sp.H
 		// y := int(Settings.HitPosition*common.DisplayScale()) - h
-		sprite.W = w
-		sprite.H = h
-		sprite.X = x
-		sprite.Y = y
-		sprite.Fix()
-		s.HPBarColor = sprite
+		sUI.HPBarColor = ui.NewFixedSprite(sp)
 
-		mask := ebiten.NewImage(w, h)
-		sprite2 := ui.NewSprite(mask)
-		sprite2.W = w
-		sprite2.H = 0 // HP:100
-		sprite2.X = x
-		sprite2.Y = y
-		sprite2.CompositeMode = ebiten.CompositeModeSourceOut
-		s.HPBarMask = sprite2
+		sp2 := ui.NewSprite(ebiten.NewImage(sp.W, sp.H))
+		sp2.W = sp.W
+		sp2.H = 0 // HP:100
+		sp2.X = sp.X
+		sp2.Y = sp.Y
+		sp2.CompositeMode = ebiten.CompositeModeSourceOut
+		sUI.HPBarMask = sp2
 	}
-	s.playfield = ui.NewFixedSprite(i)
-	s.playfield.W = common.Settings.ScreenSize.X
-	s.playfield.H = common.Settings.ScreenSize.Y
-	s.playfield.X = 0
-	s.playfield.Y = 0
-	s.playfield.Fix() // TODO: add BG at here
+	playfieldSprite := ui.NewSprite(playfieldImage)
+	playfieldSprite.W = common.Settings.ScreenSize.X
+	playfieldSprite.H = common.Settings.ScreenSize.Y
+	playfieldSprite.X = 0
+	playfieldSprite.Y = 0
+	sUI.playfield = ui.NewFixedSprite(playfieldSprite)
 
-	s.stageKeys = make([]ui.FixedSprite, keyCount)
-	s.stageKeysPressed = make([]ui.FixedSprite, keyCount)
+	sUI.stageKeys = make([]ui.FixedSprite, keyCount)
+	sUI.stageKeysPressed = make([]ui.FixedSprite, keyCount)
 
 	// Each skin has own empty space.
 	for k := 0; k < keyCount; k++ {
-		var sprite ui.FixedSprite
-		src := Skin.StageKeys[keyKinds[k]]
-		sprite = ui.NewFixedSprite(src)
-
-		w := noteWidths[k] // Note widths can be different, while its source image size is same.
-
-		// scale := float64(sprite.W) / float64(src.Bounds().Size().X)
-		// sprite.H = int(float64(src.Bounds().Size().Y) * scale)
-		x := center - wMiddle/2 // int - int
+		sp := ui.NewSprite(Skin.StageKeys[keyKinds[k]])
+		sp.W = noteWidths[k]      // Note widths can be different, while its source image size is same.
+		sp.X = center - wMiddle/2 // int - int
 		for k2 := 0; k2 < k; k2++ {
-			x += noteWidths[k2]
+			sp.X += noteWidths[k2]
 		}
-		y := int(Settings.HitPosition * common.DisplayScale()) // + hHint/2
-		// fmt.Println(hHint)
-		// y := int((Settings.HitPosition - Settings.NoteHeigth/2 -
-		// 	4*Settings.NoteHeigth/2) * common.DisplayScale()) // TODO: why?
-		h := common.Settings.ScreenSize.Y - y
+		sp.Y = int(Settings.HitPosition * common.DisplayScale()) // + hHint/2
+		sp.H = common.Settings.ScreenSize.Y - sp.Y
+		sUI.stageKeys[k] = ui.NewFixedSprite(sp)
 
-		sprite.W = w
-		sprite.H = h
-		sprite.X = x
-		sprite.Y = y
-		sprite.Fix()
-		s.stageKeys[k] = sprite
-
-		sprite2 := sprite
+		sp2 := sp
 		src2 := Skin.StageKeysPressed[keyKinds[k]]
-		sprite2.SetImage(src2)
-		s.stageKeysPressed[k] = sprite2
+		sp2.SetImage(src2)
+		sUI.stageKeysPressed[k] = ui.NewFixedSprite(sp2)
 	}
 	{
 		src := Skin.StageLight
-		sprite := ui.NewFixedSprite(src)
-		s.Spotlights = make([]ui.FixedSprite, keyCount)
+		sp := ui.NewSprite(src)
+		sUI.Spotlights = make([]ui.FixedSprite, keyCount)
 		for k := 0; k < keyCount; k++ {
 			w := noteWidths[k] // Note widths can be different, while its source image size is same.
 			scale := float64(w) / float64(src.Bounds().Size().X)
-			h := int(float64(src.Bounds().Size().Y) * scale)
-			x := center - wMiddle/2 // int - int
+			sp.H = int(float64(src.Bounds().Size().Y) * scale)
+			sp.X = center - wMiddle/2 // int - int
 			for k2 := 0; k2 < k; k2++ {
-				x += noteWidths[k2]
+				sp.X += noteWidths[k2]
 			}
-			y := int(Settings.HitPosition*common.DisplayScale()) - h
-			sprite.Color = Settings.SpotlightColor[keyKinds[k]]
-			sprite.W = w
-			sprite.H = h
-			sprite.X = x
-			sprite.Y = y
-			sprite.Fix()
-			s.Spotlights[k] = sprite
+			sp.Y = int(Settings.HitPosition*common.DisplayScale()) - sp.H
+			sp.Color = Settings.SpotlightColor[keyKinds[k]]
+			sp.W = w
+			sUI.Spotlights[k] = ui.NewFixedSprite(sp)
 		}
 	}
-	s.combos = common.LoadNumbers(common.NumberCombo)
-	s.scores = common.LoadNumbers(common.NumberScore)
+	sUI.combos = common.LoadNumbers(common.NumberCombo)
+	sUI.scores = common.LoadNumbers(common.NumberScore)
 
-	for i := range s.judgeSprite {
+	for i := range sUI.judgeSprite {
 		src := Skin.Judge[i]
 		a := ui.NewAnimation([]*ebiten.Image{src})
 		a.H = int(Settings.JudgeHeight * common.DisplayScale())
@@ -243,12 +213,12 @@ func newSceneUI(keyCount int) sceneUI {
 		a.X = center - a.W/2
 		a.Y = int(Settings.JudgePosition*common.DisplayScale()) - a.H/2
 		// a.CompositeMode = ebiten.CompositeModeSourceOver
-		s.judgeSprite[i] = a
+		sUI.judgeSprite[i] = a
 	}
-	s.noteWidths = noteWidths // temp
+	sUI.noteWidths = noteWidths // temp
 
-	s.Lighting = make([]ui.Animation, keyCount)
-	s.LightingLN = make([]ui.Animation, keyCount)
+	sUI.Lighting = make([]ui.Animation, keyCount)
+	sUI.LightingLN = make([]ui.Animation, keyCount)
 	centerXs := make([]int, keyCount)
 	for k := range centerXs {
 		x := center - wMiddle/2
@@ -265,8 +235,8 @@ func newSceneUI(keyCount int) sceneUI {
 		a.Y = int(Settings.HitPosition*common.DisplayScale()) - a.H/2
 		a.CompositeMode = ebiten.CompositeModeLighter
 		for k := 0; k < keyCount; k++ {
-			s.Lighting[k] = a
-			s.Lighting[k].X = centerXs[k] - a.W/2
+			sUI.Lighting[k] = a
+			sUI.Lighting[k].X = centerXs[k] - a.W/2
 		}
 	}
 	{
@@ -276,11 +246,11 @@ func newSceneUI(keyCount int) sceneUI {
 		a.Y = int(Settings.HitPosition*common.DisplayScale()) - a.H/2
 		a.CompositeMode = ebiten.CompositeModeLighter
 		for k := 0; k < keyCount; k++ {
-			s.LightingLN[k] = a
-			s.LightingLN[k].X = centerXs[k] - a.W/2
+			sUI.LightingLN[k] = a
+			sUI.LightingLN[k].X = centerXs[k] - a.W/2
 		}
 	}
-	return *s
+	return *sUI
 }
 
 func (s *Scene) setNoteSprites() {

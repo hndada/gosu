@@ -34,19 +34,19 @@ func NewPanel(t string, skin BoxSkin) Panel {
 	p.Body.W = 450
 	p.Body.H = PanelHeight
 	{
-		src := skin.Left
-		sprite := NewSprite(src)
+		i := skin.Left
+		sprite := NewSprite(i)
 		sprite.H = PanelHeight
-		scale := float64(sprite.H) / float64(src.Bounds().Dy())
-		sprite.W = int(float64(src.Bounds().Dx()) * scale)
+		scale := float64(sprite.H) / float64(i.Bounds().Dy())
+		sprite.W = int(float64(i.Bounds().Dx()) * scale)
 		p.Left = sprite
 	}
 	{
-		src := skin.Right
-		sprite := NewSprite(src)
+		i := skin.Right
+		sprite := NewSprite(i)
 		sprite.H = PanelHeight
-		scale := float64(sprite.H) / float64(src.Bounds().Dy())
-		sprite.W = int(float64(src.Bounds().Dx()) * scale)
+		scale := float64(sprite.H) / float64(i.Bounds().Dy())
+		sprite.W = int(float64(i.Bounds().Dx()) * scale)
 		p.Right = sprite
 	}
 	{
@@ -63,8 +63,8 @@ func NewPanel(t string, skin BoxSkin) Panel {
 		}
 		d.DrawString(t)
 
-		src := ebiten.NewImageFromImage(img)
-		sprite := NewSprite(src)
+		i := ebiten.NewImageFromImage(img)
+		sprite := NewSprite(i)
 		sprite.W = 450
 		sprite.H = 40
 		p.BodyText = sprite
