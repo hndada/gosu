@@ -1,9 +1,7 @@
 package common
 
 import (
-	"image"
 	"image/color"
-	"image/draw"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/engine/ui"
@@ -36,26 +34,23 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 	jm := new(JudgmentMeter)
 	jm.Judgments = js
 
-	var sprite ui.FixedSprite
+	var s ui.Sprite
 	var base *ebiten.Image
-
 	{ // set base box
 		// TODO: 검은색 바탕 상자가 안 그려진다
 		const height = 5 // 높이는 세로 전체 100 기준 5
 		j := jm.Judgments[len(jm.Judgments)-1]
 		w := int(Settings.JudgmentMeterScale*float64(j.Window)) * 2
 		h := int(DisplayScale() * height)
-		x := Settings.ScreenSize.X/2 - w/2
-		y := Settings.ScreenSize.Y - h
 
 		base = ebiten.NewImage(w, h)
 		base.Fill(color.RGBA64{0, 0, 0, 255})
-		sprite = ui.NewFixedSprite(base) // base is just for providingsize info
-		sprite.W = w
-		sprite.H = h
-		sprite.X = x
-		sprite.Y = y
-		sprite.Fix()
+
+		s = ui.NewSprite(base) // base is just for providing size info
+		s.W = w
+		s.H = h
+		s.X = Settings.ScreenSize.X/2 - s.W/2
+		s.Y = Settings.ScreenSize.Y - s.H
 	}
 	{ // set color box
 		const height = 1 // base 대비 1
@@ -85,31 +80,31 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 		box.Fill(color.White)
 		base.DrawImage(box, op)
 	}
-	sprite.SetImage(base)
-	jm.Sprite = sprite
+	s.SetImage(base)
+	jm.Sprite = ui.NewFixedSprite(s)
 	return jm
 }
 
-// "early" goes plus
-// TODO: 종종 x값이 음수가 나옴. 저 멀리의 노트로 timeDiff를 계산하는 걸수도 있음
-func (jm JudgmentMeter) NewTimingSprite(timeDiff int64) ui.Animation {
-	w := int(Settings.JudgmentMeterScale)
-	h := jm.Sprite.H
-	x := Settings.ScreenSize.X/2 - int(Settings.JudgmentMeterScale*float64(timeDiff))
-	y := jm.Sprite.Y
+// // "early" goes plus
+// // TODO: 종종 x값이 음수가 나옴. 저 멀리의 노트로 timeDiff를 계산하는 걸수도 있음
+// func (jm JudgmentMeter) NewTimingSprite(timeDiff int64) ui.Animation {
+// 	w := int(Settings.JudgmentMeterScale)
+// 	h := jm.Sprite.H
+// 	x := Settings.ScreenSize.X/2 - int(Settings.JudgmentMeterScale*float64(timeDiff))
+// 	y := jm.Sprite.Y
 
-	src := image.NewRGBA(image.Rect(0, 0, w, h))
-	r := image.Rectangle{image.ZP, src.Bounds().Size()}
-	draw.Draw(src, r, &image.Uniform{color.RGBA{255, 255, 255, 128}}, image.ZP, draw.Over)
-	i := ebiten.NewImageFromImage(src)
-	// i := ebiten.NewImage(w, h)
-	// i.Fill(color.White)
+// 	i := image.NewRGBA(image.Rect(0, 0, w, h))
+// 	r := image.Rectangle{image.ZP, i.Bounds().Size()}
+// 	draw.Draw(i, r, &image.Uniform{color.RGBA{255, 255, 255, 128}}, image.ZP, draw.Over)
+// 	i := ebiten.NewImageFromImage(i)
+// 	// i := ebiten.NewImage(w, h)
+// 	// i.Fill(color.White)
 
-	a := ui.NewAnimation([]*ebiten.Image{i})
-	a.W = w
-	a.H = h
-	a.X = x
-	a.Y = y
-	a.Rep = 20 // temp
-	return a
-}
+// 	a := ui.NewAnimation([]*ebiten.Image{i})
+// 	a.W = w
+// 	a.H = h
+// 	a.X = x
+// 	a.Y = y
+// 	a.Rep = 20 // temp
+// 	return a
+// }

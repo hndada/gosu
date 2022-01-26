@@ -97,41 +97,38 @@ func (c ChartHeader) Path(fname string) string {
 	return filepath.Join(d, fname)
 }
 func (c ChartHeader) BG(dimness float64) ui.FixedSprite {
-	var src *ebiten.Image
 	path := c.Path(c.ImageFilename) // chart's own background file path
 	dat, err := ioutil.ReadFile(path)
+	var i *ebiten.Image
 	if err != nil {
-		src = Skin.DefaultBG
+		i = Skin.DefaultBG
 	} else {
-		i, _, err := image.Decode(bytes.NewReader(dat))
+		src, _, err := image.Decode(bytes.NewReader(dat))
 		if err != nil {
 			panic(err)
 		}
-		src = ebiten.NewImageFromImage(i)
+		i = ebiten.NewImageFromImage(src)
 	}
-	sprite := ui.NewFixedSprite(src)
-	sw := src.Bounds().Dx()
-	sh := src.Bounds().Dy()
+
+	srcW := i.Bounds().Dx()
+	srcH := i.Bounds().Dy()
 	screenX := Settings.ScreenSize.X
 	screenY := Settings.ScreenSize.Y
-	w, h := sw, sh
-	ratioW, ratioH := float64(screenX)/float64(sw), float64(screenY)/float64(sh)
+
+	ratioW, ratioH := float64(screenX)/float64(srcW), float64(screenY)/float64(srcH)
 	minRatio := ratioW
 	if minRatio > ratioH {
 		minRatio = ratioH
 	}
+
 	// BG가 스크린보다 크든 작든 min ratio 곱해지면 딱 맞춰짐
-	w = int(float64(w) * minRatio)
-	h = int(float64(h) * minRatio)
-	x := screenX/2 - w/2
-	y := screenY/2 - h/2
-	sprite.W = w
-	sprite.H = h
-	sprite.X = x
-	sprite.Y = y
-	sprite.Dimness = dimness
-	sprite.Fix()
-	return sprite
+	s := ui.NewSprite(i)
+	s.W = int(float64(srcW) * minRatio)
+	s.H = int(float64(srcH) * minRatio)
+	s.X = screenX/2 - s.W/2
+	s.Y = screenY/2 - s.H/2
+	s.Dimness = dimness
+	return ui.NewFixedSprite(s)
 }
 
 func (c ChartHeader) AudioPath() string {

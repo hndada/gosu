@@ -197,7 +197,7 @@ func (s *Scene) Update() error {
 			s.staged[k] = n.next
 		}
 	}
-	s.HPBarMask.H = int(float64(s.HPBarColor.H) * (100 - s.hp) / 100)
+	s.HPBarMask.H = int(float64(int(Settings.HPHeight*common.DisplayScale())) * (100 - s.hp) / 100)
 	return nil
 }
 

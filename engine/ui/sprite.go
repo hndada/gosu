@@ -11,23 +11,26 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// Y-axis towards bottom
+
+// concept: Depth ~= layer; drawing order
 type Sprite struct {
-	src  *ebiten.Image
-	W, H int // desired w, h
-	X, Y int
+	i          *ebiten.Image
+	W, H, X, Y int
+	Theta      float64
 
 	Color      color.Color
 	Saturation float64
 	Dimness    float64
+	ebiten.CompositeMode
 
 	BornTime time.Time
-	ebiten.CompositeMode
 	// LifeTime time.Time // zero value goes eternal
 }
 
-func NewSprite(src image.Image) Sprite {
+func NewSprite(i image.Image) Sprite {
 	var sprite Sprite
-	sprite.SetImage(src)
+	sprite.SetImage(i)
 
 	sprite.Saturation = 1
 	sprite.Dimness = 1
@@ -41,72 +44,19 @@ func (s Sprite) isOut(screenSize image.Point) bool {
 		s.Y+s.H < 0 || s.Y > screenSize.Y)
 }
 
-func (s *Sprite) SetImage(i image.Image) {
-	switch i.(type) {
-	case *ebiten.Image:
-		s.src = i.(*ebiten.Image)
-	default:
-		i2 := ebiten.NewImageFromImage(i)
-		s.src = i2
-	}
-}
-
 func (s Sprite) scaleW() float64 {
-	w1, _ := s.src.Size()
+	w1, _ := s.i.Size()
 	return float64(s.W) / float64(w1)
 }
 func (s Sprite) scaleH() float64 {
-	_, h1 := s.src.Size()
+	_, h1 := s.i.Size()
 	return float64(s.H) / float64(h1)
 }
-func (s Sprite) Draw(screen *ebiten.Image) {
-	if s.src == nil {
-		panic("s.src is nil")
-	}
-	if s.isOut(screen.Bounds().Max) {
-		return
-	}
+
+func (s Sprite) op() *ebiten.DrawImageOptions {
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(s.scaleW(), s.scaleH())
-	op.GeoM.Translate(float64(s.X), float64(s.Y))
-	op.ColorM.ChangeHSV(0, s.Saturation, s.Dimness)
-	if s.CompositeMode != 0 {
-		op.CompositeMode = s.CompositeMode
-	}
-	screen.DrawImage(s.src, op)
-}
 
-// for debugging
-func (s Sprite) PrintWHXY(comment string) {
-	fmt.Println(comment, s.W, s.H, s.X, s.Y)
-}
-
-type FixedSprite struct { // a sprite that never moves once appears
-	Sprite
-	op *ebiten.DrawImageOptions
-}
-
-func NewFixedSprite(src image.Image) FixedSprite {
-	return FixedSprite{
-		Sprite: NewSprite(src),
-	}
-}
-func (s FixedSprite) Draw(screen *ebiten.Image) {
-	if s.src == nil {
-		panic("s.src is nil")
-	}
-	if s.isOut(screen.Bounds().Max) {
-		return
-	}
-	screen.DrawImage(s.src, s.op)
-}
-
-// minor parameter should already been set
-func (s *FixedSprite) Fix() {
-	op := &ebiten.DrawImageOptions{}
-	if s.CompositeMode != 0 {
-		op.CompositeMode = s.CompositeMode
-	}
+	op.GeoM.Rotate(s.Theta)
 	op.GeoM.Scale(s.scaleW(), s.scaleH())
 	op.GeoM.Translate(float64(s.X), float64(s.Y))
 
@@ -121,5 +71,35 @@ func (s *FixedSprite) Fix() {
 		)
 	}
 	op.ColorM.ChangeHSV(0, s.Saturation, s.Dimness)
-	s.op = op
+
+	if s.CompositeMode != 0 {
+		op.CompositeMode = s.CompositeMode
+	}
+
+	return op
+}
+
+func (s *Sprite) SetImage(i image.Image) {
+	switch i.(type) {
+	case *ebiten.Image:
+		s.i = i.(*ebiten.Image)
+	default:
+		s.i = ebiten.NewImageFromImage(i)
+	}
+}
+
+// Rotate -> Scale -> Translate
+func (s Sprite) Draw(screen *ebiten.Image) {
+	if s.i == nil {
+		panic("no image")
+	}
+	if s.isOut(screen.Bounds().Max) {
+		return
+	}
+	screen.DrawImage(s.i, s.op())
+}
+
+// for debugging
+func (s Sprite) PrintWHXY(comment string) {
+	fmt.Println(comment, s.W, s.H, s.X, s.Y)
 }
