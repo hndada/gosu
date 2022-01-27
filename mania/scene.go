@@ -16,8 +16,6 @@ import (
 	_ "image/jpeg"
 )
 
-const auto = false
-
 type Scene struct {
 	ready      bool // whether scene has been loaded
 	close      bool
@@ -51,13 +49,11 @@ type Scene struct {
 
 func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	s := new(Scene)
-	const instability = 0 // 0~100; 0 makes the play 'Perfect'
-
 	s.speed = Settings.GeneralSpeed
 	s.mods = mods
 	s.chart = c.ApplyMods(s.mods)
 	s.chart.ScratchMode = Settings.ScratchMode[c.KeyCount] // only for replay
-	s.auto = s.chart.GenAutoKeyEvents(instability)
+	s.auto = s.chart.GenAutoKeyEvents(common.Settings.AutoInstability)
 	{
 		dir := filepath.Join(cwd, "skin")
 		name := "soft-slidertick.wav"
@@ -104,7 +100,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 
 	s.hpScreen = ebiten.NewImage(common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y)
 	s.timingSprites = make([]ui.Animation, 0, len(s.chart.Notes))
-	if !auto {
+	if !common.Settings.IsAuto {
 		go kb.Listen()
 	}
 	s.ready = true
@@ -153,8 +149,8 @@ func (s *Scene) Update() error {
 			}
 		}
 	}
-	// judge: score과 staged도 따라서 업데이트
-	if auto {
+	// Judge: score and staged goes updated as well
+	if common.Settings.IsAuto {
 		for _, e := range s.auto(now) {
 			s.judge(e)
 			s.lastPressed[e.Key] = e.Pressed // scored되지 않는 누름에도 업데이트 되어야함
@@ -165,10 +161,12 @@ func (s *Scene) Update() error {
 			for k, v := range s.keyLayout {
 				if v == e.KeyCode {
 					e2 := keyEvent{
-						Time:    e.Time,
-						KeyCode: e.KeyCode,
-						Pressed: e.Pressed,
-						Key:     k,
+						KeyEvent: kb.KeyEvent{
+							Time:    e.Time,
+							KeyCode: e.KeyCode,
+							Pressed: e.Pressed,
+						},
+						Key: k,
 					}
 					s.judge(e2)
 					s.lastPressed[k] = e.Pressed // scored되지 않는 누름에도 업데이트 되어야함
@@ -258,7 +256,9 @@ judge: %v
 		s.drawCombo(screen)
 	}
 	s.drawScore(screen)
-
+	if common.Settings.ScoreMode == common.ScoreModeWeighted {
+		s.drawNotesValue(screen)
+	}
 	// s.HPBar.Draw(screen) // temp: hard to keep consistent HPBar image and HP color
 	s.hpScreen.Clear()
 	s.HPBarColor.Draw(s.hpScreen)

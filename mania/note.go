@@ -2,12 +2,18 @@ package mania
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"sort"
 
+	"github.com/golang/freetype/truetype"
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hndada/gosu/common"
 	"github.com/hndada/gosu/engine/ui"
 	"github.com/hndada/rg-parser/osugame/osu"
+	"golang.org/x/image/font"
+	"golang.org/x/image/font/gofont/gobold"
 )
 
 const (
@@ -40,6 +46,7 @@ type Note struct {
 	ui.Sprite
 	position      float64 // sv is applied, unscaled by speed yet
 	ui.LongSprite         // temp
+	debug         ui.Sprite
 }
 
 func (c *Chart) loadNotesFromOsu(o *osu.Format) error {
@@ -164,5 +171,28 @@ func (c *Chart) allotScore() {
 		c.Notes[i].score = maxScore * (n.strain / sumStrain)
 		c.Notes[i].karma = math.Min(n.strain/avgStrain, 2.5)          // 0 ~ 2.5
 		c.Notes[i].hp = math.Min(n.strain/(3*avgStrain)+2.0/3.0, 1.5) // 0 ~ 1.5
+	}
+}
+
+var (
+	myFont *truetype.Font
+	face   font.Face
+)
+
+func init() {
+	var err error
+	myFont, err = truetype.Parse(gobold.TTF)
+	if err != nil {
+		panic(err)
+	}
+	opts := &truetype.Options{}
+	opts.Size = 25
+	face = truetype.NewFace(myFont, opts)
+}
+
+func (s *Scene) drawNotesValue(screen *ebiten.Image) {
+	for _, n := range s.chart.Notes {
+		str := fmt.Sprintf("%.3f", n.strain)
+		text.Draw(screen, str, face, n.Sprite.X, n.Sprite.Y+n.Sprite.H/2, black)
 	}
 }

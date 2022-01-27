@@ -71,43 +71,60 @@ func (s *Scene) applyScore(i int, j common.Judgment) {
 			break
 		}
 	}
+	switch common.Settings.ScoreMode {
+	case common.ScoreModeNaive:
+		unit := maxScore / float64(len(s.chart.Notes))
+		s.score += unit * j.Value
+		if s.hp > 0 {
+			s.hp += 0.005 * j.Value
+			if s.hp > 100 {
+				s.hp = 100
+			} else if s.hp < 0 {
+				s.hp = 0
+			}
+		}
+	case common.ScoreModeWeighted:
+		// score
+		if j.Value == 0 {
+			s.score += math.Max(-800, -4*n.score) // not lower than -800
+			if s.score < 0 {                      // score is non-negative
+				s.score = 0
+			}
+		} else {
+			s.score += n.score * j.Value * (1 + s.karma/100) * 0.5
+		}
 
-	// score
-	if j.Value == 0 {
-		s.score += math.Max(-800, -4*n.score) // not lower than -800
-		if s.score < 0 {                      // score is non-negative
-			s.score = 0
+		// karma
+		if j.Penalty == 0 {
+			s.karma += n.karma
+			if s.karma > 100 {
+				s.karma = 100
+			}
+		} else {
+			s.karma -= j.Penalty
+			if s.karma < 0 {
+				s.karma = 0
+			}
 		}
-	} else {
-		s.score += n.score * j.Value * (1 + s.karma/100) * 0.5
+
+		// hp
+		if s.hp > 0 {
+			s.hp += n.hp * j.HP
+			if s.hp > 100 {
+				s.hp = 100
+			} else if s.hp < 0 {
+				s.hp = 0
+			}
+		}
 	}
-	// karma
-	if j.Penalty == 0 {
-		s.karma += n.karma
-		if s.karma > 100 {
-			s.karma = 100
-		}
-	} else {
-		s.karma -= j.Penalty
-		if s.karma < 0 {
-			s.karma = 0
-		}
-	}
+
 	// combo
 	if j != Miss {
 		s.combo++
 	} else {
 		s.combo = 0
 	}
-	// hp
-	if s.hp > 0 {
-		s.hp += n.hp * j.HP
-		if s.hp > 100 {
-			s.hp = 100
-		} else if s.hp < 0 {
-			s.hp = 0
-		}
-	}
+
 	if n.Type != TypeLNTail && j != Miss {
 		s.playSE()
 		// if n.playSE != nil {

@@ -6,10 +6,18 @@
 TBA
 
 ## Todo
+[ ] Enhance engine and separate to independent module called *doggo*
+
 [ ] Revise difficulty calculation
     - Strain value spectrum is way too extreme
+    [v] Show difficulty value in-game
 
-[ ] Input system on Linux
+[v] Input system on Linux
+
+[ ] Sound Volume
+
+[ ] Efficient chart select scene
+    - [ ] various level calculation comparison 
 
 [ ] Enable loading key-sound
 

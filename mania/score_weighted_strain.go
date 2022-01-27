@@ -4,22 +4,22 @@ import (
 	"math"
 )
 
-const holdAffectDelta = 16
+const holdAffectDelta = 0 // 16
 const (
-	holdOuterOnceBonus    = 0.08 * 3
-	holdInnerOnceBonus    = 0.08 * 3
-	holdInnerAdjOnceBonus = 0.04 * 3
-	holdRemainBonus       = 0.03 * 3
+	holdOuterOnceBonus    = 0 //  0.08 * 3
+	holdInnerOnceBonus    = 0 // 0.08 * 3
+	holdInnerAdjOnceBonus = 0 // 0.04 * 3
+	holdRemainBonus       = 0 // 0.03 * 3
 )
 
-const outerBonus = 1 // 0.025 * 3.5
-
-var fingerBonus = [5]float64{1.15, 0, 1, 1.2, 1.3} // from thumb to little finger
+const outerBonus = 0 //  1 // 0.025 * 3.5
+// var fingerBonus = [5]float64{1.15, 0, 1, 1.2, 1.3} // from thumb to little finger
+var fingerBonus = [5]float64{0, 0, 0, 0, 0} // from thumb to little finger
 
 type noteDifficulty struct {
-	hand   int
-	strain float64
-	// stamina float64
+	hand    int
+	strain  float64
+	stamina float64
 	// Read
 
 	chord       []int

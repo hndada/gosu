@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/disintegration/imaging v1.6.2
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/hajimehoshi/ebiten/v2 v2.2.4
 	github.com/hndada/rg-parser v0.0.0-20211016143438-cb0c0f85263f
 	golang.org/x/image v0.0.0-20211028202545-6944b10bf410

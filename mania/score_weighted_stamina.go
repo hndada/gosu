@@ -1,5 +1,7 @@
 package mania
 
+import "math"
+
 const (
 	instantScale = 0.025
 	instantDecay = 0.1

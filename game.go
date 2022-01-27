@@ -45,7 +45,9 @@ func NewGame() *Game {
 	return g
 }
 
-// whether changer or scene goes updated
+// Whether changer or scene goes updated
+// Chart, Mods: fixed once enters to scene
+// Speed: mutable in-scene
 func (g *Game) Update() error {
 	if !g.changer.Done() {
 		return g.changer.Update()

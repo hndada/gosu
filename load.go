@@ -34,7 +34,7 @@ func updateCharts(cwd string) []*mania.Chart {
 // TODO: Load / save loaded chart data as gob?
 // Append newly added musics only
 func loadCharts(cwd string) []*mania.Chart {
-	cs := make([]*mania.Chart, 0, 40)
+	cs := make([]*mania.Chart, 0, 100)
 	root := filepath.Join(cwd, "music")
 	dirs, err := ioutil.ReadDir(root) // music dirs
 	if err != nil {
@@ -44,18 +44,20 @@ func loadCharts(cwd string) []*mania.Chart {
 		if !dir.IsDir() {
 			continue
 		}
-		if dir.ModTime().Before(lastUpdateTime) {
-			continue
-		}
+		// TEMP: This works, but passed for hot-fix
+		// if dir.ModTime().Before(lastUpdateTime) {
+		// 	continue
+		// }
 		dirPath := filepath.Join(root, dir.Name())
 		files, err := ioutil.ReadDir(dirPath)
 		if err != nil {
 			panic(err)
 		}
 		for _, f := range files {
-			if f.ModTime().Before(lastUpdateTime) {
-				continue
-			}
+			// TEMP: This works, but passed for hot-fix
+			// if f.ModTime().Before(lastUpdateTime) {
+			// 	continue
+			// }
 			fpath := filepath.Join(dirPath, f.Name())
 			switch strings.ToLower(filepath.Ext(fpath)) {
 			case ".osu":
