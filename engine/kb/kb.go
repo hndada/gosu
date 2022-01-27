@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// 업데이트 때마다 마지막 index 이후 최신 log 불러오기
+// TEMP: Should I update KeyEvent logs in every update?
 type KeyEvent struct {
 	Time    int64 // Millisecond
 	KeyCode Code

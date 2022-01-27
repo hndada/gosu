@@ -10,7 +10,7 @@ type FixedSprite struct { // a sprite that never moves once appears
 func NewFixedSprite(s Sprite) FixedSprite {
 	return FixedSprite{
 		sprite: s,
-		op:     s.op(),
+		op:     s.Op(),
 	}
 }
 func (s FixedSprite) Draw(screen *ebiten.Image) {

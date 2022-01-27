@@ -16,6 +16,10 @@ var Settings struct {
 	MusicVolume  float64
 	SFXVolume    float64
 	MasterVolume float64
+
+	ScoreMode       int
+	IsAuto          bool
+	AutoInstability float64
 }
 
 func init() {
@@ -30,7 +34,17 @@ func init() {
 	Settings.MusicVolume = 0.25
 	Settings.SFXVolume = 0.25
 	Settings.MasterVolume = 1
+
+	Settings.ScoreMode = ScoreModeNaive
+	Settings.IsAuto = true
+	Settings.AutoInstability = 0 // 0~100; 0 makes the play 'Perfect'
 }
+
+const (
+	ScoreModeNaive = iota
+	ScoreModeWeighted
+	ScoreModeOsuLegacy
+)
 
 func DisplayScale() float64 {
 	return float64(Settings.ScreenSize.Y) / 100

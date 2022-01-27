@@ -29,14 +29,12 @@ type Sprite struct {
 }
 
 func NewSprite(i image.Image) Sprite {
-	var sprite Sprite
-	sprite.SetImage(i)
-
-	sprite.Saturation = 1
-	sprite.Dimness = 1
-
-	sprite.BornTime = time.Now()
-	return sprite
+	var s Sprite
+	s.SetImage(i)
+	s.Saturation = 1
+	s.Dimness = 1
+	s.BornTime = time.Now()
+	return s
 }
 
 func (s Sprite) isOut(screenSize image.Point) bool {
@@ -53,7 +51,7 @@ func (s Sprite) scaleH() float64 {
 	return float64(s.H) / float64(h1)
 }
 
-func (s Sprite) op() *ebiten.DrawImageOptions {
+func (s Sprite) Op() *ebiten.DrawImageOptions {
 	op := &ebiten.DrawImageOptions{}
 
 	op.GeoM.Rotate(s.Theta)
@@ -96,7 +94,7 @@ func (s Sprite) Draw(screen *ebiten.Image) {
 	if s.isOut(screen.Bounds().Max) {
 		return
 	}
-	screen.DrawImage(s.i, s.op())
+	screen.DrawImage(s.i, s.Op())
 }
 
 // for debugging

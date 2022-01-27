@@ -2,6 +2,7 @@ package gosu
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -60,14 +61,43 @@ func (s *SceneSelect) Update() error {
 		s.close = true
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyO) {
+		mania.Settings.GeneralSpeed -= 0.005
+		if mania.Settings.GeneralSpeed < 0.01 {
+			mania.Settings.GeneralSpeed = 0.01
+		}
+	} else if ebiten.IsKeyPressed(ebiten.KeyP) {
 		mania.Settings.GeneralSpeed += 0.005
 		if mania.Settings.GeneralSpeed > 0.4 {
 			mania.Settings.GeneralSpeed = 0.4
 		}
-	} else if ebiten.IsKeyPressed(ebiten.KeyP) {
-		mania.Settings.GeneralSpeed -= 0.005
-		if mania.Settings.GeneralSpeed < 0.01 {
-			mania.Settings.GeneralSpeed = 0.01
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyDigit1) {
+		common.Settings.ScoreMode = common.ScoreModeNaive
+		cwd, _ := os.Getwd()
+		loadCharts(cwd)
+	} else if ebiten.IsKeyPressed(ebiten.KeyDigit2) {
+		common.Settings.ScoreMode = common.ScoreModeWeighted
+		cwd, _ := os.Getwd()
+		loadCharts(cwd)
+	} else if ebiten.IsKeyPressed(ebiten.KeyDigit3) {
+		common.Settings.ScoreMode = common.ScoreModeOsuLegacy
+		cwd, _ := os.Getwd()
+		loadCharts(cwd)
+	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyA) {
+		common.Settings.IsAuto = !common.Settings.IsAuto
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyZ) {
+		common.Settings.AutoInstability -= 1
+		if common.Settings.AutoInstability < 0 {
+			common.Settings.AutoInstability = 0
+		}
+	} else if ebiten.IsKeyPressed(ebiten.KeyX) {
+		common.Settings.AutoInstability += 1
+		if common.Settings.AutoInstability > 100 {
+			common.Settings.AutoInstability = 100
 		}
 	}
 	return nil
@@ -82,8 +112,22 @@ func (s *SceneSelect) Draw(screen *ebiten.Image) {
 	// }
 	s.defaultBG.Draw(screen)
 	s.panelHandler.Draw(screen)
+
+	var scoreMode string
+	switch common.Settings.ScoreMode {
+	case common.ScoreModeNaive:
+		scoreMode = "Naive"
+	case common.ScoreModeWeighted:
+		scoreMode = "Weighted"
+	case common.ScoreModeOsuLegacy:
+		scoreMode = "osu! legacy"
+	}
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
-		`Speed: %.1f`, mania.Settings.GeneralSpeed*100))
+		`Speed(Press O/P): %.1f
+Score mode(Press 1/2/3): %s
+Auto mode(Press A): %t
+Auto instability(Press Z/X): %.0f
+`, mania.Settings.GeneralSpeed*100, scoreMode, common.Settings.IsAuto, common.Settings.AutoInstability))
 }
 
 // TODO: Dose it need args != nil ?

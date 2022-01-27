@@ -3,6 +3,8 @@ package mania
 import (
 	"math/rand"
 	"sort"
+
+	"github.com/hndada/gosu/engine/kb"
 )
 
 func (c Chart) GenAutoKeyEvents(instability float64) func(int64) []keyEvent {
@@ -24,28 +26,36 @@ func (c Chart) GenAutoKeyEvents(instability float64) func(int64) []keyEvent {
 		switch n.Type {
 		case TypeNote:
 			e1 := keyEvent{
-				Time:    n.Time + d,
-				Key:     n.key,
-				Pressed: true,
+				KeyEvent: kb.KeyEvent{
+					Time:    n.Time + d,
+					Pressed: true,
+				},
+				Key: n.key,
 			}
 			e2 := keyEvent{
-				Time:    n.Time + 30 + d,
-				Key:     n.key,
-				Pressed: false,
+				KeyEvent: kb.KeyEvent{
+					Time:    n.Time + 30 + d,
+					Pressed: false,
+				},
+				Key: n.key,
 			}
 			keyEvents = append(keyEvents, e1, e2)
 		case TypeLNHead:
 			e := keyEvent{
-				Time:    n.Time + d,
-				Key:     n.key,
-				Pressed: true,
+				KeyEvent: kb.KeyEvent{
+					Time:    n.Time + d,
+					Pressed: true,
+				},
+				Key: n.key,
 			}
 			keyEvents = append(keyEvents, e)
 		case TypeLNTail:
 			e := keyEvent{
-				Time:    n.Time + d, // Time2: opposite time
-				Key:     n.key,
-				Pressed: false,
+				KeyEvent: kb.KeyEvent{
+					Time:    n.Time + d, // Time2: opposite time
+					Pressed: false,
+				},
+				Key: n.key,
 			}
 			keyEvents = append(keyEvents, e)
 		}
