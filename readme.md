@@ -10,13 +10,17 @@ TBA
 
 [ ] Revise difficulty calculation
     - Strain value spectrum is way too extreme
-    [v] Show difficulty value in-game
+
+[v] Show difficulty value in-game
 
 [v] Input system on Linux
 
 [ ] Sound Volume
 
+[ ] Web integration
+
 [ ] Efficient chart select scene
+
     - [ ] various level calculation comparison 
 
 [ ] Enable loading key-sound
