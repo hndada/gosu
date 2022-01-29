@@ -143,7 +143,7 @@ func Search(params SearchParameter) {
 			} else if ban[r.SetId] {
 				fmt.Printf("banned: %s\n", r.filename())
 			} else {
-				if r.download() != nil {
+				if r.Download() != nil {
 					panic(err)
 				}
 				fmt.Printf("downloaded: %s\n", r.filename())
@@ -155,7 +155,7 @@ func Search(params SearchParameter) {
 	}
 }
 
-func (r ChimuResult) download() error {
+func (r ChimuResult) Download() error {
 	const noVideo = 1
 	u := fmt.Sprintf("%s%d?n=%d", chimuURLDownload, r.SetId, noVideo)
 	fmt.Printf("download URL: %s\n", u)
