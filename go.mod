@@ -3,6 +3,7 @@ module github.com/hndada/gosu
 go 1.17
 
 require (
+	github.com/blizzy78/ebitenui v0.0.0-20211114161546-ca1a302d930b
 	github.com/disintegration/imaging v1.6.2
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 	github.com/hajimehoshi/ebiten/v2 v2.2.4
@@ -12,6 +13,7 @@ require (
 )
 
 require (
+	github.com/BurntSushi/toml v1.0.0 // indirect
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20211213063430-748e38ca8aec // indirect
 	github.com/hajimehoshi/go-mp3 v0.3.2 // indirect
 	github.com/hajimehoshi/oto/v2 v2.1.0-alpha.5 // indirect
