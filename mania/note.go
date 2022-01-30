@@ -46,7 +46,6 @@ type Note struct {
 	ui.Sprite
 	position      float64 // sv is applied, unscaled by speed yet
 	ui.LongSprite         // temp
-	debug         ui.Sprite
 }
 
 func (c *Chart) loadNotesFromOsu(o *osu.Format) error {

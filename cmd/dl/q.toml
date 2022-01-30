@@ -1,3 +1,5 @@
+MusicDir = "./"
+
 Query = "miiro"
 Status = 1
 Mode = 3

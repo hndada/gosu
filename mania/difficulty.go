@@ -139,6 +139,7 @@ func (c *Chart) CalcDifficulty() {
 		}
 		c.LevelOsuLegacy = WeightedSum(strainTable, weightDecayBase) * srScalingFactor
 	}
+	c.Level = c.LevelOsuLegacy
 }
 
 // Maclaurin series

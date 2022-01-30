@@ -70,6 +70,19 @@ func (s *SceneSelect) Update() error {
 			mania.Settings.GeneralSpeed = 0.4
 		}
 	}
+
+	if ebiten.IsKeyPressed(ebiten.KeyQ) {
+		common.Settings.MasterVolume -= 0.05
+		if common.Settings.MasterVolume < 0 {
+			common.Settings.MasterVolume = 0
+		}
+	} else if ebiten.IsKeyPressed(ebiten.KeyW) {
+		common.Settings.MasterVolume += 0.05
+		if common.Settings.MasterVolume > 1 {
+			common.Settings.MasterVolume = 1
+		}
+	}
+
 	updateCharts(cwd)
 	if ebiten.IsKeyPressed(ebiten.KeyA) {
 		common.Settings.IsAuto = !common.Settings.IsAuto
@@ -99,9 +112,10 @@ func (s *SceneSelect) Draw(screen *ebiten.Image) {
 	s.panelHandler.Draw(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		`Speed(Press O/P): %.1f
+Volume (Press Q/W): %.0f
 Auto mode(Press A): %t
 Auto instability(Press Z/X): %.0f
-`, mania.Settings.GeneralSpeed*100, common.Settings.IsAuto, common.Settings.AutoUnstability))
+`, mania.Settings.GeneralSpeed*100, common.Settings.MasterVolume*100, common.Settings.IsAuto, common.Settings.AutoUnstability))
 }
 
 // TODO: Dose it need args != nil ?

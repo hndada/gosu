@@ -63,8 +63,8 @@ func newSceneUI(keyCount int) sceneUI {
 
 		// seems ebiten's Fill() doesn't accept alpha value
 		mainSrc := image.NewRGBA(image.Rect(0, 0, wMiddle, h))
-		r := image.Rectangle{image.ZP, playfieldImage.Bounds().Size()}
-		draw.Draw(mainSrc, r, &image.Uniform{black}, image.ZP, draw.Over)
+		r := image.Rectangle{image.Point{}, playfieldImage.Bounds().Size()}
+		draw.Draw(mainSrc, r, &image.Uniform{black}, image.Point{}, draw.Over)
 		main := ebiten.NewImageFromImage(mainSrc)
 
 		x := center - wMiddle/2 // int - int

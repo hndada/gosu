@@ -33,9 +33,9 @@ func init() {
 	Settings.ComboGap = 0.8
 	Settings.BackgroundDimness = 0.3
 
-	Settings.MusicVolume = 0.25
-	Settings.SFXVolume = 0.25
-	Settings.MasterVolume = 1
+	// Settings.MusicVolume = 0.25
+	// Settings.SFXVolume = 0.25
+	Settings.MasterVolume = 0.5
 
 	Settings.IsAuto = true
 	Settings.AutoUnstability = 0 // 0~100; 0 makes the play 'Perfect'
