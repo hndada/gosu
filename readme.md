@@ -25,4 +25,4 @@ TBA
 
 [ ] Enable loading key-sound
 
-[ ] Sprite effect: dynamic score increment, bouncing combo
+[x] Sprite effect: dynamic score increment, bouncing combo

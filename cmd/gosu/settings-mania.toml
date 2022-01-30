@@ -1,0 +1,14 @@
+GeneralSpeed = 0.14
+
+NoteHeigth = 3
+StagePosition = 50
+HitPosition = 85
+ComboPosition = 50
+JudgePosition = 60
+
+JudgeHeight = 10
+JudgeLineHeight = 2
+HPHeight = 65
+LightingScale = 0.66
+LightingLNScale = 1
+PlayfieldDimness = 0.3

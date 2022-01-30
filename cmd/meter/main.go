@@ -1,7 +1,6 @@
 package main
 
 import (
-	"image"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -21,11 +20,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	g.jm.Sprite.Draw(screen)
 }
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y
+	return common.Settings.ScreenSizeX, common.Settings.ScreenSizeY
 }
 func main() {
 	g := &Game{}
-	common.Settings.ScreenSize = image.Pt(800, 600)
+	common.Settings.ScreenSizeX = 800
+	common.Settings.ScreenSizeX = 600
 	g.jm = common.NewJudgmentMeter(mania.Judgments[:])
 	if err := ebiten.RunGame(g); err != nil {
 		panic(err)

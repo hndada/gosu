@@ -112,8 +112,8 @@ func (c ChartHeader) BG(dimness float64) ui.FixedSprite {
 
 	srcW := i.Bounds().Dx()
 	srcH := i.Bounds().Dy()
-	screenX := Settings.ScreenSize.X
-	screenY := Settings.ScreenSize.Y
+	screenX := Settings.ScreenSizeX
+	screenY := Settings.ScreenSizeY
 
 	ratioW, ratioH := float64(screenX)/float64(srcW), float64(screenY)/float64(srcH)
 	minRatio := ratioW

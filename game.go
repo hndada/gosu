@@ -2,8 +2,10 @@ package gosu
 
 import (
 	"os"
+	"path/filepath"
 	"reflect"
 
+	"github.com/BurntSushi/toml"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/common"
 	"github.com/hndada/gosu/engine/scene"
@@ -22,16 +24,24 @@ type Game struct {
 }
 
 func NewGame() *Game {
-	ebiten.SetWindowSize(common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y)
-	ebiten.SetWindowTitle("gosu")
-	ebiten.SetRunnableOnUnfocused(true)
-	ebiten.SetMaxTPS(common.Settings.MaxTPS)
-
 	var err error
 	cwd, err = os.Getwd()
 	if err != nil {
 		panic(err)
 	}
+	_, err = toml.DecodeFile(filepath.Join(cwd, "settings.toml"), &common.Settings)
+	if err != nil {
+		panic(err)
+	}
+	_, err = toml.DecodeFile(filepath.Join(cwd, "settings-mania.toml"), &mania.Settings)
+	if err != nil {
+		panic(err)
+	}
+
+	ebiten.SetWindowSize(common.Settings.ScreenSizeX, common.Settings.ScreenSizeY)
+	ebiten.SetWindowTitle("gosu")
+	ebiten.SetRunnableOnUnfocused(true)
+	ebiten.SetMaxTPS(common.Settings.MaxTPS)
 
 	common.LoadSkin(cwd)
 	mania.LoadSkin(cwd)
@@ -88,5 +98,5 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y
+	return common.Settings.ScreenSizeX, common.Settings.ScreenSizeY
 }

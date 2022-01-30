@@ -14,7 +14,7 @@ import (
 
 var lastUpdateTime time.Time
 
-// temp: currently only mania chart
+// TEMP: currently only mania chart
 // returns a slice of newly update charts
 func updateCharts(cwd string) []*mania.Chart {
 	root := filepath.Join(cwd, "music")
@@ -44,20 +44,18 @@ func loadCharts(cwd string) []*mania.Chart {
 		if !dir.IsDir() {
 			continue
 		}
-		// TEMP: This works, but passed for hot-fix
-		// if dir.ModTime().Before(lastUpdateTime) {
-		// 	continue
-		// }
+		if dir.ModTime().Before(lastUpdateTime) {
+			continue
+		}
 		dirPath := filepath.Join(root, dir.Name())
 		files, err := ioutil.ReadDir(dirPath)
 		if err != nil {
 			panic(err)
 		}
 		for _, f := range files {
-			// TEMP: This works, but passed for hot-fix
-			// if f.ModTime().Before(lastUpdateTime) {
-			// 	continue
-			// }
+			if f.ModTime().Before(lastUpdateTime) {
+				continue
+			}
 			fpath := filepath.Join(dirPath, f.Name())
 			switch strings.ToLower(filepath.Ext(fpath)) {
 			case ".osu":

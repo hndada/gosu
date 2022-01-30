@@ -28,16 +28,15 @@ const (
 
 var blackScreen *ebiten.Image
 
-func init() {
-	blackScreen = ebiten.NewImage(common.Settings.ScreenSize.X,
-		common.Settings.ScreenSize.Y)
-	blackScreen.Fill(color.Black)
-}
-
 func NewChanger() *Changer {
+	if blackScreen == nil {
+		blackScreen = ebiten.NewImage(common.Settings.ScreenSizeX,
+			common.Settings.ScreenSizeY)
+		blackScreen.Fill(color.Black)
+	}
 	c := &Changer{}
-	c.transScene = ebiten.NewImage(common.Settings.ScreenSize.X,
-		common.Settings.ScreenSize.Y)
+	c.transScene = ebiten.NewImage(common.Settings.ScreenSizeX,
+		common.Settings.ScreenSizeY)
 
 	return c
 }

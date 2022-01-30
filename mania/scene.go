@@ -53,7 +53,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	s.mods = mods
 	s.chart = c.ApplyMods(s.mods)
 	s.chart.ScratchMode = Settings.ScratchMode[c.KeyCount] // only for replay
-	s.auto = s.chart.GenAutoKeyEvents(common.Settings.AutoInstability)
+	s.auto = s.chart.GenAutoKeyEvents(common.Settings.AutoUnstability)
 	{
 		dir := filepath.Join(cwd, "skin")
 		name := "soft-slidertick.wav"
@@ -98,7 +98,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	s.bg = c.BG(common.Settings.BackgroundDimness)
 	// s.jm = common.NewJudgmentMeter(Judgments[:]) // TODO: severely lagged
 
-	s.hpScreen = ebiten.NewImage(common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y)
+	s.hpScreen = ebiten.NewImage(common.Settings.ScreenSizeX, common.Settings.ScreenSizeY)
 	s.timingSprites = make([]ui.Animation, 0, len(s.chart.Notes))
 	if !common.Settings.IsAuto {
 		go kb.Listen()
@@ -137,7 +137,7 @@ func (s *Scene) Update() error {
 	cursor := float64(now-ts.Time)*ts.Factor + ts.Position
 	for i, n := range s.chart.Notes {
 		rp := (n.position-cursor)*s.speed - Settings.HitPosition // relative position
-		s.chart.Notes[i].Sprite.Y = int(-rp*(float64(common.Settings.ScreenSize.Y)/100) - float64(n.Sprite.H)/2)
+		s.chart.Notes[i].Sprite.Y = int(-rp*(float64(common.Settings.ScreenSizeY)/100) - float64(n.Sprite.H)/2)
 		if n.Type == TypeLNTail {
 			s.chart.Notes[i].LongSprite.Y = n.Sprite.Y + n.Sprite.H // why?: center of tail sprite ~ center of head sprite
 			if s.chart.Notes[i].scored {
@@ -256,7 +256,7 @@ judge: %v
 		s.drawCombo(screen)
 	}
 	s.drawScore(screen)
-	if common.Settings.ScoreMode == common.ScoreModeWeighted {
+	if scoreMode == scoreModeWeighted {
 		s.drawNotesValue(screen)
 	}
 	// s.HPBar.Draw(screen) // temp: hard to keep consistent HPBar image and HP color

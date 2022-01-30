@@ -3,8 +3,6 @@ package mania
 import (
 	"math"
 	"sort"
-
-	"github.com/hndada/gosu/common"
 )
 
 const (
@@ -22,8 +20,7 @@ func (c *Chart) CalcDifficulty() {
 	var d float64
 	ds := make([]float64, 0, sectionCounts)
 
-	switch common.Settings.ScoreMode {
-	case common.ScoreModeNaive:
+	{ // LevelNaive
 		c.CalcStrain()
 		for _, n := range c.Notes {
 			for n.Time >= sectionEndTime {
@@ -41,9 +38,10 @@ func (c *Chart) CalcDifficulty() {
 		if len(ds) != sectionCounts {
 			panic("section count mismatch")
 		}
-		c.Level = WeightedSum(ds, diffWeightDecay) / 20
+		c.LevelNaive = WeightedSum(ds, diffWeightDecay) / 20
+	}
 
-	case common.ScoreModeWeighted: // ultimate goal
+	{ // LevelWeighted: ultimate goal
 		c.CalcStrain()
 		for _, n := range c.Notes {
 			for n.Time >= sectionEndTime {
@@ -57,10 +55,10 @@ func (c *Chart) CalcDifficulty() {
 		if len(ds) != sectionCounts {
 			panic("section count mismatch")
 		}
-		c.Level = WeightedSum(ds, diffWeightDecay) / 20
+		c.LevelWeighted = WeightedSum(ds, diffWeightDecay) / 20
 		c.allotScore()
-
-	case common.ScoreModeOsuLegacy:
+	}
+	{ // LevelOsuLegacy
 		type noteOsuLegacy struct {
 			Note
 			strain           float64
@@ -139,7 +137,7 @@ func (c *Chart) CalcDifficulty() {
 			maximumStrain = math.Max(n.individualStrain[n.key]+prevNote.strain, maximumStrain)
 			prevNote = n
 		}
-		c.Level = WeightedSum(strainTable, weightDecayBase) * srScalingFactor
+		c.LevelOsuLegacy = WeightedSum(strainTable, weightDecayBase) * srScalingFactor
 	}
 }
 
