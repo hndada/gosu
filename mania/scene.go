@@ -29,9 +29,9 @@ type Scene struct {
 	speed       float64
 
 	sceneUI
-	bg            ui.FixedSprite
-	jm            *common.JudgmentMeter // temp
-	timingSprites []ui.Animation        // temp
+	bg ui.FixedSprite
+	// jm            *common.JudgmentMeter // temp
+	// timingSprites []ui.Animation // temp
 
 	score       float64
 	karma       float64
@@ -66,6 +66,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 		path := s.chart.AudioPath()
 		if path != "" { // There could be keysound-only music
 			s.audioPlayer = audio.NewPlayer(path)
+			s.audioPlayer.SetVolume(common.Settings.MasterVolume)
 		}
 	}
 	var img *ebiten.Image
@@ -99,7 +100,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	// s.jm = common.NewJudgmentMeter(Judgments[:]) // TODO: severely lagged
 
 	s.hpScreen = ebiten.NewImage(common.Settings.ScreenSizeX, common.Settings.ScreenSizeY)
-	s.timingSprites = make([]ui.Animation, 0, len(s.chart.Notes))
+	// s.timingSprites = make([]ui.Animation, 0, len(s.chart.Notes))
 	if !common.Settings.IsAuto {
 		go kb.Listen()
 	}

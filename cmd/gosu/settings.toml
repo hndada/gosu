@@ -11,7 +11,7 @@ BackgroundDimness = 0.3
 # Mutable in-game
 MusicVolume = 0.25
 SFXVolume = 0.25
-MasterVolume = 1
+MasterVolume = 0.5
 
 IsAuto = false
 AutoUnstability = 0 # Larger value makes auto's play more unstable

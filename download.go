@@ -1,6 +1,7 @@
 package gosu
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -35,11 +36,6 @@ const (
 const amount = 50
 
 var offset int
-
-var (
-	Exist map[int]bool
-	Ban   map[int]bool
-)
 
 const (
 	chimuURL         = "https://api.chimu.moe/v1/"
@@ -86,7 +82,7 @@ type ChimuResult struct {
 }
 
 // set searchParameter value
-func Search(params SearchParameter) {
+func Search(params SearchParameter) []ChimuResult {
 	u, err := url.Parse(chimuURLSearch)
 	if err != nil {
 		panic(err)
@@ -105,14 +101,15 @@ func Search(params SearchParameter) {
 	vs.Add("max_length", strconv.Itoa(params.MaxLength))
 	u.RawQuery = vs.Encode()
 
+	results := make([]ChimuResult, 0, amount)
 	for {
 		resp, err := http.Get(u.String())
 		if err != nil {
 			panic(err)
 		} else if resp.StatusCode == 404 {
-			fmt.Printf("URL: %s\n", u.String())
-			fmt.Println("no more result")
-			os.Exit(1)
+			// fmt.Printf("URL: %s\n", u.String())
+			fmt.Println("search finish")
+			break
 		}
 		j, err := ioutil.ReadAll(resp.Body)
 		resp.Body.Close()
@@ -129,44 +126,26 @@ func Search(params SearchParameter) {
 		if err != nil {
 			panic(err)
 		}
-		// if len(result.Data) == 0 {
-		// 	fmt.Println("no data")
-		// 	break
-		// }
-		cwd, err := os.Getwd()
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("cwd: %s\n", cwd)
-		for _, r := range result.Data {
-			if Exist[r.SetId] {
-				fmt.Printf("existed: %s\n", r.filename())
-			} else if Ban[r.SetId] {
-				fmt.Printf("banned: %s\n", r.filename())
-			} else {
-				if r.Download() != nil {
-					panic(err)
-				}
-				fmt.Printf("downloaded: %s\n", r.filename())
-			}
-		}
+
+		results = append(results, result.Data...)
 		offset += amount
 		vs.Set("offset", strconv.Itoa(offset))
 		u.RawQuery = vs.Encode()
 	}
+	return results
 }
 
-func (r ChimuResult) Download() error {
+func (r ChimuResult) Download(dir string) error {
 	const noVideo = 1
 	u := fmt.Sprintf("%s%d?n=%d", chimuURLDownload, r.SetId, noVideo)
-	fmt.Printf("download URL: %s\n", u)
+	// fmt.Printf("download URL: %s\n", u)
 	resp, err := http.Get(u)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
 
-	f, err := os.Create(filepath.Join(cwd, r.filename()))
+	f, err := os.Create(filepath.Join(dir, r.Filename()))
 	if err != nil {
 		return err
 	}
@@ -175,10 +154,53 @@ func (r ChimuResult) Download() error {
 	_, err = io.Copy(f, resp.Body)
 	return err
 }
-func (r ChimuResult) filename() string {
+func (r ChimuResult) Filename() string {
 	name := fmt.Sprintf("%d %s - %s.osz", r.SetId, r.Artist, r.Title)
 	for _, letter := range []string{"<", ">", ":", "\"", "/", "\\", "|", "?", "*"} {
 		name = strings.ReplaceAll(name, letter, "-")
 	}
 	return name
+}
+
+func ChartSetList(root string) map[int]bool {
+	l := make(map[int]bool)
+	dirs, err := ioutil.ReadDir(root) // music dirs
+	if err != nil {
+		panic(err)
+	}
+	for _, dir := range dirs {
+		if dir.IsDir() || filepath.Ext(dir.Name()) == ".osz" {
+			s := strings.Split(dir.Name(), " ")
+			setId, err := strconv.Atoi(s[0])
+			if err != nil {
+				fmt.Printf("%s: %s\n", err, s)
+				continue
+			}
+			l[setId] = true
+		}
+	}
+	return l
+}
+
+func BanList(path string) map[int]bool {
+	ban := make(map[int]bool)
+	f, err := os.Open(path)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		s := scanner.Text()
+		if s == "" || s[0] == '#' {
+			continue
+		}
+		id, err := strconv.Atoi(s)
+		if err != nil {
+			continue
+		}
+		ban[id] = true
+	}
+	return ban
 }
