@@ -52,7 +52,7 @@ func init() {
 		9:               {kb.CodeA, kb.CodeS, kb.CodeD, kb.CodeF, kb.CodeSpacebar, kb.CodeJ, kb.CodeK, kb.CodeL, kb.CodeSemicolon},
 		10:              {kb.CodeA, kb.CodeS, kb.CodeD, kb.CodeF, kb.CodeV, kb.CodeN, kb.CodeJ, kb.CodeK, kb.CodeL, kb.CodeSemicolon},
 	}
-	Settings.GeneralSpeed = 0.16
+	// Settings.GeneralSpeed = 0.16
 
 	Settings.NoteWidths = map[int][4]float64{
 		4:  {10, 9, 10, 11},

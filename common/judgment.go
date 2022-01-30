@@ -30,6 +30,8 @@ var (
 // temp
 var judgmentMeterColor []color.RGBA = []color.RGBA{brown, yellow, green, lightblue, blue}
 
+const JudgmentMeterScale = 2
+
 func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 	jm := new(JudgmentMeter)
 	jm.Judgments = js
@@ -40,7 +42,7 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 		// TODO: 검은색 바탕 상자가 안 그려진다
 		const height = 5 // 높이는 세로 전체 100 기준 5
 		j := jm.Judgments[len(jm.Judgments)-1]
-		w := int(Settings.JudgmentMeterScale*float64(j.Window)) * 2
+		w := int(JudgmentMeterScale*float64(j.Window)) * 2
 		h := int(DisplayScale() * height)
 
 		base = ebiten.NewImage(w, h)
@@ -49,8 +51,8 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 		s = ui.NewSprite(base) // base is just for providing size info
 		s.W = w
 		s.H = h
-		s.X = Settings.ScreenSize.X/2 - s.W/2
-		s.Y = Settings.ScreenSize.Y - s.H
+		s.X = Settings.ScreenSizeX/2 - s.W/2
+		s.Y = Settings.ScreenSizeY - s.H
 	}
 	{ // set color box
 		const height = 1 // base 대비 1
@@ -58,7 +60,7 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 		y := (base.Bounds().Dy() - h) / 2
 		for i := range jm.Judgments {
 			j := jm.Judgments[len(jm.Judgments)-1-i]
-			w := int(Settings.JudgmentMeterScale*float64(j.Window)) * 2
+			w := int(JudgmentMeterScale*float64(j.Window)) * 2
 			x := base.Bounds().Dx()/2 - w/2
 
 			op := &ebiten.DrawImageOptions{}
@@ -90,7 +92,7 @@ func NewJudgmentMeter(js []Judgment) *JudgmentMeter {
 // func (jm JudgmentMeter) NewTimingSprite(timeDiff int64) ui.Animation {
 // 	w := int(Settings.JudgmentMeterScale)
 // 	h := jm.Sprite.H
-// 	x := Settings.ScreenSize.X/2 - int(Settings.JudgmentMeterScale*float64(timeDiff))
+// 	x := Settings.ScreenSizeX/2 - int(Settings.JudgmentMeterScale*float64(timeDiff))
 // 	y := jm.Sprite.Y
 
 // 	i := image.NewRGBA(image.Rect(0, 0, w, h))

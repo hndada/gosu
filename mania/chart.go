@@ -15,6 +15,10 @@ type Chart struct {
 	ScratchMode int
 	Notes       []Note
 	TimeStamps  []common.TimeStamp
+
+	LevelNaive     float64
+	LevelWeighted  float64
+	LevelOsuLegacy float64
 }
 
 // A raw chart data should be not 'Mods-affected': Mods modify TransPoint(TimingPoint) and Note.

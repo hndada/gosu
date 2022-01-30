@@ -18,7 +18,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	screen.DrawImage(g.i, op)
 }
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
-	return common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y
+	return common.Settings.ScreenSizeX, common.Settings.ScreenSizeY
 }
 func main() {
 	g := &Game{}

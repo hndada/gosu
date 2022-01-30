@@ -26,18 +26,19 @@ type SearchParameter struct {
 }
 
 const (
-	unranked = iota
-	ranked
-	approved
-	qualified
-	loved
+	Unranked = iota
+	Ranked
+	Approved
+	Qualified
+	Loved
 )
-const amount = 5
+const amount = 50
 
 var offset int
+
 var (
-	exist map[int]bool
-	ban   map[int]bool
+	Exist map[int]bool
+	Ban   map[int]bool
 )
 
 const (
@@ -138,9 +139,9 @@ func Search(params SearchParameter) {
 		}
 		fmt.Printf("cwd: %s\n", cwd)
 		for _, r := range result.Data {
-			if exist[r.SetId] {
+			if Exist[r.SetId] {
 				fmt.Printf("existed: %s\n", r.filename())
-			} else if ban[r.SetId] {
+			} else if Ban[r.SetId] {
 				fmt.Printf("banned: %s\n", r.filename())
 			} else {
 				if r.Download() != nil {

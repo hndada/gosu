@@ -42,7 +42,7 @@ type sceneUI struct {
 // A width of screen size doesn't affect to UI size; only height does: standard is 100
 func newSceneUI(keyCount int) sceneUI {
 	sUI := new(sceneUI)
-	scale := float64(common.Settings.ScreenSize.Y) / 100
+	scale := float64(common.Settings.ScreenSizeY) / 100
 	keyKinds := keyKindsMap[WithScratch(keyCount)]
 	unscaledNoteWidths := Settings.NoteWidths[keyCount]
 
@@ -50,16 +50,16 @@ func newSceneUI(keyCount int) sceneUI {
 	for key, kind := range keyKinds {
 		noteWidths[key] = int(unscaledNoteWidths[kind] * scale)
 	}
-	playfieldImage := ebiten.NewImage(common.Settings.ScreenSize.X, common.Settings.ScreenSize.Y)
+	playfieldImage := ebiten.NewImage(common.Settings.ScreenSizeX, common.Settings.ScreenSizeY)
 
 	p := Settings.StagePosition / 100 // proportion
-	center := int(float64(common.Settings.ScreenSize.X) * p)
+	center := int(float64(common.Settings.ScreenSizeX) * p)
 	var wLeft, wMiddle int
 	{ // main
 		for _, nw := range noteWidths {
 			wMiddle += nw
 		}
-		h := common.Settings.ScreenSize.Y
+		h := common.Settings.ScreenSizeY
 
 		// seems ebiten's Fill() doesn't accept alpha value
 		mainSrc := image.NewRGBA(image.Rect(0, 0, wMiddle, h))
@@ -105,7 +105,7 @@ func newSceneUI(keyCount int) sceneUI {
 	// }
 	{
 		src := Skin.StageLeft
-		h := common.Settings.ScreenSize.Y
+		h := common.Settings.ScreenSizeY
 		scale := float64(h) / float64(src.Bounds().Dy())
 		wLeft = int(float64(src.Bounds().Dx()) * scale)
 		x := center - wMiddle/2 - wLeft
@@ -117,7 +117,7 @@ func newSceneUI(keyCount int) sceneUI {
 	}
 	{
 		src := Skin.StageRight
-		h := common.Settings.ScreenSize.Y
+		h := common.Settings.ScreenSizeY
 		scale := float64(h) / float64(src.Bounds().Dy())
 		// wRight = int(float64(src.Bounds().Dx()) * scale)
 		x := center + wMiddle/2
@@ -134,7 +134,7 @@ func newSceneUI(keyCount int) sceneUI {
 		scale := float64(sp.H) / float64(src.Bounds().Dy())
 		sp.W = int(float64(src.Bounds().Dx()) * scale)
 		sp.X = center + wMiddle/2
-		sp.Y = common.Settings.ScreenSize.Y - sp.H
+		sp.Y = common.Settings.ScreenSizeY - sp.H
 		sUI.HPBar = ui.NewFixedSprite(sp)
 	}
 	{ // Its size can be different with HP Bar Image's.
@@ -144,7 +144,7 @@ func newSceneUI(keyCount int) sceneUI {
 		scale := float64(sp.H) / float64(src.Bounds().Dy())
 		sp.W = int(float64(src.Bounds().Dx()) * scale)
 		sp.X = center + wMiddle/2 // + s.HPBar.W/2
-		sp.Y = common.Settings.ScreenSize.Y - sp.H
+		sp.Y = common.Settings.ScreenSizeY - sp.H
 		// y := int(Settings.HitPosition*common.DisplayScale()) - h
 		sUI.HPBarColor = ui.NewFixedSprite(sp)
 
@@ -157,8 +157,8 @@ func newSceneUI(keyCount int) sceneUI {
 		sUI.HPBarMask = sp2
 	}
 	playfieldSprite := ui.NewSprite(playfieldImage)
-	playfieldSprite.W = common.Settings.ScreenSize.X
-	playfieldSprite.H = common.Settings.ScreenSize.Y
+	playfieldSprite.W = common.Settings.ScreenSizeX
+	playfieldSprite.H = common.Settings.ScreenSizeY
 	playfieldSprite.X = 0
 	playfieldSprite.Y = 0
 	sUI.playfield = ui.NewFixedSprite(playfieldSprite)
@@ -175,7 +175,7 @@ func newSceneUI(keyCount int) sceneUI {
 			sp.X += noteWidths[k2]
 		}
 		sp.Y = int(Settings.HitPosition * common.DisplayScale()) // + hHint/2
-		sp.H = common.Settings.ScreenSize.Y - sp.Y
+		sp.H = common.Settings.ScreenSizeY - sp.Y
 		sUI.stageKeys[k] = ui.NewFixedSprite(sp)
 
 		sp2 := sp
@@ -260,7 +260,7 @@ func (s *Scene) setNoteSprites() {
 	for k := 0; k < s.chart.KeyCount; k++ {
 		wMiddle += s.noteWidths[k]
 	}
-	xStart := (common.Settings.ScreenSize.X - wMiddle) / 2
+	xStart := (common.Settings.ScreenSizeX - wMiddle) / 2
 	for i, n := range s.chart.Notes {
 		var sprite ui.Sprite
 		kind := keyKinds[n.key]
@@ -271,7 +271,7 @@ func (s *Scene) setNoteSprites() {
 			sprite = ui.NewSprite(Skin.LNHead[kind])
 		}
 
-		scale := float64(common.Settings.ScreenSize.Y) / 100
+		scale := float64(common.Settings.ScreenSizeY) / 100
 		sprite.H = int(Settings.NoteHeigth * scale)
 		sprite.W = s.noteWidths[n.key]
 		x := xStart

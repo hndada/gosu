@@ -12,6 +12,12 @@ import (
 )
 
 const maxScore = 1e6
+const scoreMode = scoreModeNaive
+const (
+	scoreModeNaive = iota
+	scoreModeWeighted
+	scoreModeOsuLegacy
+)
 
 // Theorem: LNTail can't be unscored when key state is press or idle.
 func (s *Scene) judge(e keyEvent) {
@@ -71,8 +77,8 @@ func (s *Scene) applyScore(i int, j common.Judgment) {
 			break
 		}
 	}
-	switch common.Settings.ScoreMode {
-	case common.ScoreModeNaive:
+	switch scoreMode {
+	case scoreModeNaive:
 		unit := maxScore / float64(len(s.chart.Notes))
 		s.score += unit * j.Value
 		if s.hp > 0 {
@@ -83,7 +89,7 @@ func (s *Scene) applyScore(i int, j common.Judgment) {
 				s.hp = 0
 			}
 		}
-	case common.ScoreModeWeighted:
+	case scoreModeWeighted:
 		// score
 		if j.Value == 0 {
 			s.score += math.Max(-800, -4*n.score) // not lower than -800
@@ -167,7 +173,7 @@ func (s *Scene) drawCombo(screen *ebiten.Image) {
 	wNumbers := (w-gap)*len(str) + gap
 	for i, letter := range str {
 		num, _ := strconv.ParseInt(string(letter), 0, 0)
-		s.combos[num].X = common.Settings.ScreenSize.X/2 - wNumbers/2 + i*(w-gap)
+		s.combos[num].X = common.Settings.ScreenSizeX/2 - wNumbers/2 + i*(w-gap)
 		s.combos[num].Draw(screen)
 	}
 }
@@ -178,7 +184,7 @@ func (s *Scene) drawScore(screen *ebiten.Image) {
 	wNumbers := w * len(str)
 	for i, letter := range str {
 		num, _ := strconv.ParseInt(string(letter), 0, 0)
-		s.scores[num].X = common.Settings.ScreenSize.X - wNumbers + i*w
+		s.scores[num].X = common.Settings.ScreenSizeX - wNumbers + i*w
 		s.scores[num].Draw(screen)
 	}
 }
