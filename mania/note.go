@@ -6,14 +6,11 @@ import (
 	"math"
 	"sort"
 
-	"github.com/golang/freetype/truetype"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hndada/gosu/common"
 	"github.com/hndada/gosu/engine/ui"
 	"github.com/hndada/rg-parser/osugame/osu"
-	"golang.org/x/image/font"
-	"golang.org/x/image/font/gofont/gobold"
 )
 
 const (
@@ -97,6 +94,7 @@ func newNoteFromOsu(ho osu.HitObject, keyCount int, sePath string) ([]Note, erro
 	}
 	n.key = ho.Column(keyCount)
 	n.Time = int64(ho.Time)
+	n.Time2 = n.Time
 	n.SampleFilename = ho.HitSample.Filename
 	n.SampleVolume = ho.HitSample.Volume
 	// if n.SampleFilename != "" {
@@ -173,25 +171,9 @@ func (c *Chart) allotScore() {
 	}
 }
 
-var (
-	myFont *truetype.Font
-	face   font.Face
-)
-
-func init() {
-	var err error
-	myFont, err = truetype.Parse(gobold.TTF)
-	if err != nil {
-		panic(err)
-	}
-	opts := &truetype.Options{}
-	opts.Size = 25
-	face = truetype.NewFace(myFont, opts)
-}
-
 func (s *Scene) drawNotesValue(screen *ebiten.Image) {
 	for _, n := range s.chart.Notes {
 		str := fmt.Sprintf("%.3f", n.strain)
-		text.Draw(screen, str, face, n.Sprite.X, n.Sprite.Y+n.Sprite.H/2, black)
+		text.Draw(screen, str, ui.FontBoldFace, n.Sprite.X, n.Sprite.Y+n.Sprite.H/2, black)
 	}
 }

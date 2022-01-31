@@ -35,7 +35,7 @@ func init() {
 
 	// Settings.MusicVolume = 0.25
 	// Settings.SFXVolume = 0.25
-	Settings.MasterVolume = 0.5
+	Settings.MasterVolume = 0.05
 
 	Settings.IsAuto = true
 	Settings.AutoUnstability = 0 // 0~100; 0 makes the play 'Perfect'
@@ -52,5 +52,5 @@ func Scale(v float64) int {
 }
 
 func ScreenSize() image.Point {
-	return image.Pt(Settings.ScreenSizeX, Settings.ScreenSizeX)
+	return image.Pt(Settings.ScreenSizeX, Settings.ScreenSizeY)
 }

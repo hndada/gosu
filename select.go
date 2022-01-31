@@ -53,6 +53,8 @@ var argsSelectToMania struct {
 }
 
 func (s *SceneSelect) Update() error {
+	updateCharts(cwd)
+
 	idx := s.panelHandler.Update()
 	if idx != -1 {
 		argsSelectToMania.Chart = charts[idx]
@@ -83,7 +85,6 @@ func (s *SceneSelect) Update() error {
 		}
 	}
 
-	updateCharts(cwd)
 	if ebiten.IsKeyPressed(ebiten.KeyA) {
 		common.Settings.IsAuto = !common.Settings.IsAuto
 	}
@@ -133,7 +134,7 @@ func (s *SceneSelect) reload() {
 	ebiten.SetWindowTitle("gosu")
 	cs := updateCharts(cwd)
 	for _, c := range cs {
-		t := fmt.Sprintf("(%dKey Lv %.1f) %s [%s]", c.KeyCount, c.Level, c.MusicName, c.ChartName)
+		t := fmt.Sprintf("(%dKey Lv %.2f) %s [%s]", c.KeyCount, c.Level, c.MusicName, c.ChartName)
 		p := ui.NewPanel(t, s.boxSkin)
 		s.panelHandler.Append(p)
 	}

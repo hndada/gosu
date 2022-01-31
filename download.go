@@ -108,7 +108,7 @@ func Search(params SearchParameter) []ChimuResult {
 			panic(err)
 		} else if resp.StatusCode == 404 {
 			// fmt.Printf("URL: %s\n", u.String())
-			fmt.Println("search finish")
+			fmt.Println("Search finished")
 			break
 		}
 		j, err := ioutil.ReadAll(resp.Body)

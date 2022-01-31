@@ -1,5 +1,5 @@
-ScreenSizeX = 800
-ScreenSizeY = 600
+ScreenSizeX = 1600
+ScreenSizeY = 900
 MaxTPS = 60
 
 ScoreHeight = 7
@@ -9,9 +9,9 @@ ComboGap = 0.8
 BackgroundDimness = 0.3
 
 # Mutable in-game
-MusicVolume = 0.25
-SFXVolume = 0.25
-MasterVolume = 0.5
+# MusicVolume = 0.05
+# SFXVolume = 0.05
+MasterVolume = 0.05
 
 IsAuto = false
 AutoUnstability = 0 # Larger value makes auto's play more unstable

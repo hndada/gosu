@@ -78,9 +78,9 @@ func (s Sprite) Op() *ebiten.DrawImageOptions {
 }
 
 func (s *Sprite) SetImage(i image.Image) {
-	switch i.(type) {
+	switch t := i.(type) {
 	case *ebiten.Image:
-		s.i = i.(*ebiten.Image)
+		s.i = t
 	default:
 		s.i = ebiten.NewImageFromImage(i)
 	}

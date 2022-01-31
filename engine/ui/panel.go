@@ -3,12 +3,10 @@ package ui
 import (
 	"image"
 	"image/color"
-	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/engine/audio"
 	"golang.org/x/image/font"
-	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
 )
 
@@ -25,32 +23,36 @@ type BoxSkin struct {
 	Right  *ebiten.Image
 }
 
+const (
+	pWidth  = 600
+	pHeight = 100
+)
+
 // X and Y position values are updated on every Update()
 func NewPanel(t string, skin BoxSkin) Panel {
-	const PanelHeight = 40
 	var p Panel
 	p.Body.Sprite = NewSprite(skin.Middle)
 	p.Body.Vertical = false
-	p.Body.W = 450
-	p.Body.H = PanelHeight
+	p.Body.W = pWidth
+	p.Body.H = pHeight
 	{
 		i := skin.Left
-		sprite := NewSprite(i)
-		sprite.H = PanelHeight
-		scale := float64(sprite.H) / float64(i.Bounds().Dy())
-		sprite.W = int(float64(i.Bounds().Dx()) * scale)
-		p.Left = sprite
+		s := NewSprite(i)
+		s.H = pHeight
+		scale := float64(s.H) / float64(i.Bounds().Dy())
+		s.W = int(float64(i.Bounds().Dx()) * scale)
+		p.Left = s
 	}
 	{
 		i := skin.Right
-		sprite := NewSprite(i)
-		sprite.H = PanelHeight
-		scale := float64(sprite.H) / float64(i.Bounds().Dy())
-		sprite.W = int(float64(i.Bounds().Dx()) * scale)
-		p.Right = sprite
+		s := NewSprite(i)
+		s.H = pHeight
+		scale := float64(s.H) / float64(i.Bounds().Dy())
+		s.W = int(float64(i.Bounds().Dx()) * scale)
+		p.Right = s
 	}
 	{
-		rect := image.Rect(0, 0, 450, 40)
+		rect := image.Rect(0, 0, pWidth, pHeight)
 		img := image.NewRGBA(rect)
 		PanelTextcolor := color.Black
 		x, y := 20, 30
@@ -58,16 +60,16 @@ func NewPanel(t string, skin BoxSkin) Panel {
 		d := &font.Drawer{
 			Dst:  img,
 			Src:  image.NewUniform(PanelTextcolor),
-			Face: basicfont.Face7x13,
+			Face: FontBoldFace,
 			Dot:  point,
 		}
 		d.DrawString(t)
 
 		i := ebiten.NewImageFromImage(img)
-		sprite := NewSprite(i)
-		sprite.W = 450
-		sprite.H = 40
-		p.BodyText = sprite
+		s := NewSprite(i)
+		s.W = pWidth
+		s.H = pHeight
+		p.BodyText = s
 	}
 	return p
 }
@@ -102,7 +104,7 @@ type PanelHandler struct {
 func NewPanelHandler(screenSize image.Point, sePath string) PanelHandler {
 	h := PanelHandler{}
 	h.size = screenSize
-	h.playSE = audio.NewSEPlayer(sePath, 25) // temp: volume
+	h.playSE = audio.NewSEPlayer(sePath, 25) // TEMP: volume
 	return h
 }
 
@@ -112,7 +114,7 @@ func (h *PanelHandler) Update() int {
 		i = h.cursor
 		h.holdCount = 0
 	} else if ebiten.IsKeyPressed(ebiten.KeyArrowDown) {
-		if h.holdCount >= 2 { // TODO: actual duration should be consistent independent of maxTPS
+		if h.holdCount >= 4 { // TODO: actual duration should be consistent independent of maxTPS
 			h.playSE()
 			h.cursor++
 			if h.cursor >= len(h.panels) {
@@ -123,7 +125,7 @@ func (h *PanelHandler) Update() int {
 			h.holdCount++
 		}
 	} else if ebiten.IsKeyPressed(ebiten.KeyArrowUp) {
-		if h.holdCount >= 2 {
+		if h.holdCount >= 4 {
 			h.playSE()
 			h.cursor--
 			if h.cursor < 0 {
@@ -136,18 +138,13 @@ func (h *PanelHandler) Update() int {
 	} else {
 		h.holdCount = 0
 	}
-
 	for i := range h.panels {
 		mid := h.size.Y / 2 // A position of 'Currently selected chart' is fixed.
-		x := h.size.X - 400
-		d := i - h.cursor
-		if d < 0 {
-			d = -d
-		}
-		x += int(math.Pow(1.55, float64(d)))
-		y := mid + 40*(i-h.cursor)
-		if d == 0 {
-			x -= 40
+		x := h.size.X - pWidth/2
+		y := mid + pHeight*(i-h.cursor)
+		x -= y / 5
+		if i == h.cursor {
+			x -= pHeight - 15
 		}
 		h.panels[i].SetXY(x, y)
 	}

@@ -1,6 +1,7 @@
 package mania
 
 import (
+	"fmt"
 	"math"
 	"sort"
 )
@@ -59,17 +60,18 @@ func (c *Chart) CalcDifficulty() {
 		c.allotScore()
 	}
 	{ // LevelOsuLegacy
+		// There's some deviation with an amount of around 0.01 ~ 0.2
 		type noteOsuLegacy struct {
 			Note
-			strain           float64
-			heldUntil        []int64
-			individualStrain []float64
+
+			holdEndtimes      []int64
+			individualStrains []float64
+
+			individualStrain float64
+			overallStrain    float64
 		}
-		var (
-			strainStep          int64   = 400
-			weightDecayBase     float64 = 0.9
+		const (
 			individualDecayBase float64 = 0.125
-			srScalingFactor     float64 = 0.018
 			overallDecayBase    float64 = 0.3
 		)
 
@@ -77,64 +79,75 @@ func (c *Chart) CalcDifficulty() {
 		var prevNote noteOsuLegacy
 		for i, n0 := range c.Notes {
 			n := noteOsuLegacy{
-				Note:             n0,
-				heldUntil:        make([]int64, c.KeyCount),
-				individualStrain: make([]float64, c.KeyCount),
+				Note:              n0,
+				holdEndtimes:      make([]int64, c.KeyCount),
+				individualStrains: make([]float64, c.KeyCount),
+
+				overallStrain: 1,
 			}
 			if i == 0 {
 				prevNote = n
 				notes = append(notes, n)
 				continue
 			}
-			if n0.Type == TypeLNTail {
+			if n.Type == TypeLNTail {
 				continue
 			}
-			timeElapsed := (n0.Time - prevNote.Time)
-			individualDecay := math.Pow(individualDecayBase, float64(timeElapsed)/1000)
-			overallDecay := math.Pow(overallDecayBase, float64(timeElapsed)/1000)
-
+			if n.Time > n.Time2 {
+				fmt.Printf("%+v\n", n)
+				panic("LN tail reaches")
+			}
+			timeElapsed := float64(n.Time-prevNote.Time) / 1000 // second
+			indDecay := math.Pow(individualDecayBase, timeElapsed)
+			ovDecay := math.Pow(overallDecayBase, timeElapsed)
 			var (
 				holdFactor   float64 = 1.0
 				holdAddition float64 = 0.0
 			)
 			for k := 0; k < c.KeyCount; k++ {
-				n.heldUntil[k] = prevNote.heldUntil[k]
-				if n.Time < n.heldUntil[k] && n.Time2 > n.heldUntil[k] {
+				n.holdEndtimes[k] = prevNote.holdEndtimes[k]
+				if definitelyBigger(n.holdEndtimes[k], n.Time, 1) && definitelyBigger(n.Time2, n.holdEndtimes[k], 1) {
 					holdAddition = 1
-				} else if n.Time2 == n.heldUntil[k] {
+				} else if almostEquals(n.Time2, n.holdEndtimes[k], 1) {
 					holdAddition = 0
-				} else if n.Time2 < n.heldUntil[k] {
+				} else if definitelyBigger(n.holdEndtimes[k], n.Time2, 1) {
 					holdFactor = 1.25
 				}
-				n.individualStrain[k] = prevNote.individualStrain[k] * individualDecay
+				n.individualStrains[k] = prevNote.individualStrains[k] * indDecay
 			}
-			n.heldUntil[n.key] = n.Time2
-			n.individualStrain[n.key] += 2.0 * holdFactor
-			n.strain = prevNote.strain*overallDecay + (1.0+holdAddition)*holdFactor
+			n.holdEndtimes[n.key] = n.Time2
+			n.individualStrains[n.key] += 2.0 * holdFactor
+			n.individualStrain = n.individualStrains[n.key]
+			n.overallStrain = prevNote.overallStrain*ovDecay + (1+holdAddition)*holdFactor
 			prevNote = n
 			notes = append(notes, n)
 		}
 
+		const (
+			strainStep      int64   = 400
+			weightDecayBase float64 = 0.9
+			srScalingFactor float64 = 0.018
+		)
 		var (
 			strainTable     []float64
 			intervalEndTime = strainStep
-			maximumStrain   float64
+			maxStrain       float64
 		)
 		prevNote = noteOsuLegacy{}
+		// StrainValueAt: CurrentStrain + individualStrain + overallStrain - CurrentStrain
 		for _, n := range notes {
 			for n.Time > int64(intervalEndTime) {
-				strainTable = append(strainTable, maximumStrain)
-				if prevNote.heldUntil == nil { // rough way to check whether prevNote is empty
-					intervalEndTime += strainStep
-					continue
+				strainTable = append(strainTable, maxStrain)
+				if prevNote.holdEndtimes == nil { // rough way to check whether prevNote is empty
+					maxStrain = 0
+				} else {
+					deltaTime := float64(intervalEndTime-prevNote.Time) / 1000
+					// should be prev note
+					maxStrain = prevNote.individualStrains[n.key]*math.Pow(individualDecayBase, deltaTime) + prevNote.overallStrain*math.Pow(overallDecayBase, deltaTime)
 				}
-				individualDecay := math.Pow(individualDecayBase, float64(intervalEndTime-prevNote.Time)/1000.0)
-				overallDecay := math.Pow(overallDecayBase, float64(intervalEndTime-prevNote.Time)/1000.0)
-				maximumStrain = n.individualStrain[n.key]*individualDecay + n.strain*overallDecay
-
 				intervalEndTime += strainStep
 			}
-			maximumStrain = math.Max(n.individualStrain[n.key]+prevNote.strain, maximumStrain)
+			maxStrain = math.Max(n.individualStrains[n.key]+n.overallStrain, maxStrain)
 			prevNote = n
 		}
 		c.LevelOsuLegacy = WeightedSum(strainTable, weightDecayBase) * srScalingFactor
@@ -152,3 +165,6 @@ func WeightedSum(series []float64, weightDecay float64) float64 {
 	}
 	return sum
 }
+
+func definitelyBigger(v1, v2, e int64) bool { return v1-e > v2 }
+func almostEquals(v1, v2, e int64) bool     { return math.Abs(float64(v1)-float64(v2)) < float64(e) }

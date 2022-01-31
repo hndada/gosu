@@ -257,9 +257,9 @@ judge: %v
 		s.drawCombo(screen)
 	}
 	s.drawScore(screen)
-	if scoreMode == scoreModeWeighted {
-		s.drawNotesValue(screen)
-	}
+	// if scoreMode == scoreModeWeighted {
+	// 	s.drawNotesValue(screen)
+	// }
 	// s.HPBar.Draw(screen) // temp: hard to keep consistent HPBar image and HP color
 	s.hpScreen.Clear()
 	s.HPBarColor.Draw(s.hpScreen)
