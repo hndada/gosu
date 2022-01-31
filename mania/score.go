@@ -12,7 +12,7 @@ import (
 )
 
 const maxScore = 1e6
-const scoreMode = scoreModeNaive
+const scoreMode = scoreModeWeighted
 const (
 	scoreModeNaive = iota
 	scoreModeWeighted
@@ -72,7 +72,7 @@ func (s *Scene) applyScore(i int, j common.Judgment) {
 	s.staged[n.key] = n.next
 
 	for idx, j2 := range Judgments {
-		if j == j2 {
+		if j.Value == j2.Value { // Window is not same, temporarily
 			s.judgeCounts[idx]++
 			break
 		}
@@ -141,7 +141,7 @@ func (s *Scene) applyScore(i int, j common.Judgment) {
 	}
 	for idx, j2 := range Judgments {
 		if j == j2 {
-			s.judgeSprite[idx].Rep = 2 // temp
+			s.judgeSprite[idx].Rep = 2 // TEMP
 			s.judgeSprite[idx].BornTime = time.Now()
 			break
 		}

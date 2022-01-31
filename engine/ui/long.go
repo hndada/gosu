@@ -13,7 +13,7 @@ type LongSprite struct {
 	Vertical bool
 }
 
-// temp: no need to be method of LongSprite, to make sure only LongSprite uses this
+// TEMP: no need to be method of LongSprite, to make sure only LongSprite uses this
 func (s LongSprite) isOut(w, h, x, y int, screenSize image.Point) bool {
 	return x+w < 0 || x > screenSize.X || y+h < 0 || y > screenSize.Y
 }
@@ -24,11 +24,11 @@ func (s LongSprite) Draw(screen *ebiten.Image) {
 	w1, h1 := s.i.Size()
 	switch s.Vertical {
 	case true:
-		op.GeoM.Scale(s.scaleW(), 1) // height 쪽은 굳이 scale 하지 않는다
+		op.GeoM.Scale(s.scaleW(), 1) // Height doesn't need to do a scale
 		// important: op is not AB = BA
 		x, y := s.X, s.Y
 		op.GeoM.Translate(float64(x), float64(y))
-		q, r := s.H/h1, s.H%h1+1 // quotient, remainder // temp: +1
+		q, r := s.H/h1, s.H%h1+1 // quotient, remainder // TEMP: +1
 
 		first := s.i.Bounds()
 		w, h := s.W, r
@@ -50,7 +50,7 @@ func (s LongSprite) Draw(screen *ebiten.Image) {
 	default:
 		op.GeoM.Scale(1, s.scaleH())
 		op.GeoM.Translate(float64(s.X), float64(s.Y))
-		q, r := s.W/w1, s.W%w1+1 // temp: +1
+		q, r := s.W/w1, s.W%w1+1 // TEMP: +1
 
 		for i := 0; i < q; i++ {
 			screen.DrawImage(s.i, op)
