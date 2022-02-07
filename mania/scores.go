@@ -12,12 +12,11 @@ import (
 )
 
 var (
-	Kool  = common.Judgment{Value: 1.0000, Penalty: 0, HP: 0.75, Window: 16}
-	Cool  = common.Judgment{Value: 0.9375, Penalty: 0, HP: 0.5, Window: 40} // 15/16
-	Good  = common.Judgment{Value: 0.625, Penalty: 4, HP: 0.25, Window: 70} // 10/16
-	Bad   = common.Judgment{Value: 0.25, Penalty: 10, HP: 0, Window: 100}
-	Miss  = common.Judgment{Value: 0, Penalty: 25, HP: -3, Window: 150}
-	empty = common.Judgment{}
+	Kool = common.Judgment{Value: 1.0000, Penalty: 0, HP: 0.75, Window: 16, ComboBreak: false}
+	Cool = common.Judgment{Value: 0.9375, Penalty: 0, HP: 0.5, Window: 40, ComboBreak: false} // 15/16
+	Good = common.Judgment{Value: 0.625, Penalty: 4, HP: 0.25, Window: 70, ComboBreak: false} // 10/16
+	Bad  = common.Judgment{Value: 0.25, Penalty: 10, HP: 0, Window: 100, ComboBreak: false}
+	Miss = common.Judgment{Value: 0, Penalty: 25, HP: -3, Window: 150, ComboBreak: true}
 )
 
 const maxScore = 1e6
@@ -52,7 +51,7 @@ func (s scores) judgable(t common.NoteType, a common.KeyActionState) bool {
 // Theorem: LNTail can't be unscored when key state is press or idle.
 func (s *Scene) applyScore(i int, j common.Judgment) {
 	n := s.chart.Notes[i]
-	if j == empty || n.scored {
+	if j.Window == 0 || n.scored {
 		return
 	}
 	s.chart.Notes[i].scored = true
@@ -107,14 +106,7 @@ func (s *Scene) applyScore(i int, j common.Judgment) {
 			}
 		}
 	}
-
-	// combo
-	if j != Miss {
-		s.Combo++
-	} else {
-		s.Combo = 0
-	}
-
+	s.CountCombo(j)
 	if n.Type != TypeLNTail && j != Miss {
 		// s.playSE() // TODO: Laggy
 		// if n.playSE != nil {

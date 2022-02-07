@@ -30,7 +30,8 @@ func main() {
 			fmt.Printf("banned: %s\n", r.Filename())
 		} else {
 			if r.Download(params.MusicDir) != nil {
-				panic(err)
+				fmt.Println(err)
+				continue
 			}
 			fmt.Printf("downloaded: %s\n", r.Filename())
 		}
