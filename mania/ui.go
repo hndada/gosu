@@ -27,8 +27,8 @@ type sceneUI struct {
 
 	combos      [10]ui.Sprite
 	scores      [10]ui.Sprite
-	judgeSprite [len(Judgments)]ui.Animation // TODO: rename
-	Spotlights  []ui.FixedSprite             // Blinking component when pressing keys
+	judgeSprite [5]ui.Animation  // TODO: rename
+	Spotlights  []ui.FixedSprite // Blinking component when pressing keys
 
 	HPBar      ui.FixedSprite // it can be in playfield
 	HPBarColor ui.FixedSprite // actually, it can also go to playfield

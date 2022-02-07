@@ -30,18 +30,12 @@ type Scene struct {
 
 	sceneUI
 	bg ui.FixedSprite
-	// jm            *common.JudgmentMeter // temp
-	// timingSprites []ui.Animation // temp
 
-	score       float64
-	karma       float64
-	hp          float64
-	combo       int32
-	judgeCounts [len(Judgments)]int
-	staged      []int
+	scores
+	staged []int
 
 	timeStamp func(time int64) common.TimeStamp
-	auto      func(int64) []keyEvent
+	auto      func(int64) []common.PlayKeyEvent
 	playSE    func()
 
 	lastPressed []bool
@@ -52,7 +46,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	s.speed = Settings.GeneralSpeed
 	s.mods = mods
 	s.chart = c.ApplyMods(s.mods)
-	s.chart.ScratchMode = Settings.ScratchMode[c.KeyCount] // only for replay
+	// s.chart.ScratchMode = Settings.ScratchMode[c.KeyCount] // only for replay
 	s.auto = s.chart.GenAutoKeyEvents(common.Settings.AutoUnstability)
 	{
 		dir := filepath.Join(cwd, "skin")
@@ -90,17 +84,13 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 			}
 		}
 	}
-
-	s.karma = 100
-	s.hp = 100
-
+	s.scores = newScores()
+	// s.ScaleWindow(1.5) // TEMP
 	s.sceneUI = newSceneUI(c.KeyCount)
 	s.setNoteSprites()
 	s.bg = c.BG(common.Settings.BackgroundDimness)
-	// s.jm = common.NewJudgmentMeter(Judgments[:]) // TODO: severely lagged
 
 	s.hpScreen = ebiten.NewImage(common.Settings.ScreenSizeX, common.Settings.ScreenSizeY)
-	// s.timingSprites = make([]ui.Animation, 0, len(s.chart.Notes))
 	if !common.Settings.IsAuto {
 		go kb.Listen()
 	}
@@ -125,9 +115,6 @@ func (s *Scene) Update() error {
 	}
 
 	now = time.Since(s.startTime).Milliseconds()
-	// if now < 3000 { // unsafe: It sounds sinking noise
-	//		s.audioPlayer.Seek(time.Now().Sub(s.startTime))
-	//		}
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) || now > s.chart.EndTime()+2000 { // temp: 2초 여유 두기
 		if s.audioPlayer != nil {
 			_ = s.audioPlayer.Close()
@@ -151,52 +138,48 @@ func (s *Scene) Update() error {
 		}
 	}
 	// Judge: score and staged goes updated as well
+	var es []common.PlayKeyEvent
 	if common.Settings.IsAuto {
-		for _, e := range s.auto(now) {
-			s.judge(e)
-			s.lastPressed[e.Key] = e.Pressed // scored되지 않는 누름에도 업데이트 되어야함
-		}
+		es = s.auto(now)
 	} else {
 		events := kb.Fetch()
+		es = make([]common.PlayKeyEvent, 0)
 		for _, e := range events {
-			for k, v := range s.keyLayout {
-				if v == e.KeyCode {
-					e2 := keyEvent{
-						KeyEvent: kb.KeyEvent{
-							Time:    e.Time,
-							KeyCode: e.KeyCode,
-							Pressed: e.Pressed,
-						},
-						Key: k,
-					}
-					s.judge(e2)
-					s.lastPressed[k] = e.Pressed // scored되지 않는 누름에도 업데이트 되어야함
-					continue
-				}
+			e2 := common.ToPlayKeyEvent(s.keyLayout, e)
+			if e2.Key != -1 {
+				es = append(es, e2)
 			}
 		}
+	}
+	for _, e := range es {
+		i := s.staged[e.Key] // index of a staged note
+		if i < 0 {
+			continue
+		}
+		n := s.chart.Notes[i] // staged note
+		a := common.KeyAction(s.lastPressed[e.Key], e.Pressed)
+		t := n.Time - e.Time
+		j := s.Judge(n.Type, a, t)
+		s.applyScore(i, j)
+		s.lastPressed[e.Key] = e.Pressed
 	}
 
 	// Handle timed-out LNTail after handling lost and scored
 	// LNTail should be kept staged even when a player held off LN in middle, got missed.
-	lost := func(timeDiff int64) bool { return timeDiff < -Bad.Window } // never hit
-	flushable := func(n Note, timeDiff int64) bool { return n.scored && timeDiff < Miss.Window }
 	for k, i := range s.staged {
 		if i < 0 {
 			continue
 		}
 		n := s.chart.Notes[i]
-		timeDiff := n.Time - now
-
-		if lost(timeDiff) {
+		t := n.Time - now
+		if lost(t) {
 			s.applyScore(i, Miss)
 		}
-
-		if n.Type == TypeLNTail && flushable(n, timeDiff) {
+		if n.Type == TypeLNTail && discardable(n, t) {
 			s.staged[k] = n.next
 		}
 	}
-	s.HPBarMask.H = int(float64(int(Settings.HPHeight*common.DisplayScale())) * (100 - s.hp) / 100)
+	s.HPBarMask.H = int(float64(int(Settings.HPHeight*common.DisplayScale())) * (100 - s.HP) / 100)
 	return nil
 }
 
@@ -232,15 +215,13 @@ func (s *Scene) Draw(screen *ebiten.Image) {
 	for _, l := range s.LightingLN {
 		l.Draw(screen)
 	}
-	{
-		var latest int
-		for i, js := range s.judgeSprite {
-			if js.BornTime.After(s.judgeSprite[latest].BornTime) {
-				latest = i
-			}
+	var latest int
+	for i, js := range s.judgeSprite {
+		if js.BornTime.After(s.judgeSprite[latest].BornTime) {
+			latest = i
 		}
-		s.judgeSprite[latest].Draw(screen)
 	}
+	s.judgeSprite[latest].Draw(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		`CurrentFPS: %.2f
 CurrentTPS: %.2f
@@ -252,8 +233,8 @@ hp: %.2f
 combo: %d
 judge: %v
 `, ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(now)/1000,
-		s.score, s.karma, s.hp, s.combo, s.judgeCounts))
-	if s.combo > 0 {
+		s.Score, s.Karma, s.HP, s.Combo, s.JudgeCounts))
+	if s.Combo > 0 {
 		s.drawCombo(screen)
 	}
 	s.drawScore(screen)
@@ -265,10 +246,6 @@ judge: %v
 	s.HPBarColor.Draw(s.hpScreen)
 	s.HPBarMask.Draw(s.hpScreen)
 	screen.DrawImage(s.hpScreen, &ebiten.DrawImageOptions{})
-	// s.jm.Sprite.Draw(screen)
-	// for _, sprite := range s.timingSprites {
-	// 	sprite.Draw(screen)
-	// }
 }
 
 func (s *Scene) Close(args *scene.Args) bool {
