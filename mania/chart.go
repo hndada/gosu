@@ -9,7 +9,7 @@ import (
 )
 
 type Chart struct {
-	*common.ChartHeader
+	common.ChartHeader
 	common.TimingPoints
 	KeyCount    int
 	ScratchMode int

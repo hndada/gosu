@@ -51,7 +51,7 @@ type ChartHeader struct {
 // Sprite는 ScreenSize에 종속이다.
 // gob 등으로 정보를 재활용하고자 할 때에는 Sprite Reload 등의 작업이 필요할 것으로 예상
 // path is needed for lazy load: BG, Video
-func NewChartHeaderFromOsu(o *osu.Format, path string) *ChartHeader {
+func NewChartHeaderFromOsu(o *osu.Format, path string) ChartHeader {
 	c := ChartHeader{
 		ChartPath:     path,
 		MusicName:     o.Title,
@@ -89,7 +89,7 @@ func NewChartHeaderFromOsu(o *osu.Format, path string) *ChartHeader {
 	case ModeMania:
 		c.Parameter["KeyCount"] = o.CircleSize
 	}
-	return &c
+	return c
 }
 
 func (c ChartHeader) Path(fname string) string {
