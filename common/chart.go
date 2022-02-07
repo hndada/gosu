@@ -43,9 +43,11 @@ type ChartHeader struct {
 	ImageFilename   string
 	VideoFilename   string
 	VideoTimeOffset int64
-
-	Parameter map[string]float64
-	Level     float64
+	Parameter       struct {
+		CircleSize float64
+		KeyCount   int
+	}
+	Level float64
 }
 
 // Sprite는 ScreenSize에 종속이다.
@@ -64,7 +66,6 @@ func NewChartHeaderFromOsu(o *osu.Format, path string) ChartHeader {
 
 		AudioFilename: o.AudioFilename,
 		PreviewTime:   int64(o.PreviewTime),
-		Parameter:     make(map[string]float64),
 	}
 	if dat, err := ioutil.ReadFile(c.Path(c.AudioFilename)); err == nil {
 		c.AudioHash = md5.Sum(dat)
@@ -85,9 +86,9 @@ func NewChartHeaderFromOsu(o *osu.Format, path string) ChartHeader {
 	}
 	switch o.General.Mode {
 	case ModeStandard, ModeCatch:
-		c.Parameter["CircleSize"] = o.CircleSize
+		c.Parameter.CircleSize = o.CircleSize
 	case ModeMania:
-		c.Parameter["KeyCount"] = o.CircleSize
+		c.Parameter.KeyCount = int(o.CircleSize)
 	}
 	return c
 }

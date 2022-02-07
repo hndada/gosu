@@ -32,7 +32,7 @@ func NewChart(path string) (*Chart, error) {
 		}
 		c.ChartHeader = common.NewChartHeaderFromOsu(o, path)
 		c.TimingPoints = common.NewTimingPointsFromOsu(o)
-		c.KeyCount = int(c.Parameter["KeyCount"])
+		c.KeyCount = c.Parameter.KeyCount
 		err = c.loadNotesFromOsu(o)
 		if err != nil {
 			panic(err)
