@@ -78,7 +78,7 @@ type ChimuResult struct {
 	Genre        int
 	Language     int
 	Favourites   int
-	Disabled     bool
+	Disabled     int
 }
 
 // set searchParameter value
@@ -103,6 +103,7 @@ func Search(params SearchParameter) []ChimuResult {
 
 	results := make([]ChimuResult, 0, amount)
 	for {
+		fmt.Printf("Search page %d...\n", offset/amount)
 		resp, err := http.Get(u.String())
 		if err != nil {
 			panic(err)
@@ -126,7 +127,12 @@ func Search(params SearchParameter) []ChimuResult {
 		if err != nil {
 			panic(err)
 		}
-
+		if len(result.Data) == 0 {
+			fmt.Printf("Final URL: %s\n", u.String())
+			fmt.Println("Search finished")
+			break
+		}
+		// fmt.Printf("%d from %s\n", len(result.Data), u.String())
 		results = append(results, result.Data...)
 		offset += amount
 		vs.Set("offset", strconv.Itoa(offset))
@@ -138,7 +144,7 @@ func Search(params SearchParameter) []ChimuResult {
 func (r ChimuResult) Download(dir string) error {
 	const noVideo = 1
 	u := fmt.Sprintf("%s%d?n=%d", chimuURLDownload, r.SetId, noVideo)
-	// fmt.Printf("download URL: %s\n", u)
+	fmt.Printf("download URL: %s\n", u)
 	resp, err := http.Get(u)
 	if err != nil {
 		return err
@@ -173,7 +179,7 @@ func ChartSetList(root string) map[int]bool {
 			s := strings.Split(dir.Name(), " ")
 			setId, err := strconv.Atoi(s[0])
 			if err != nil {
-				fmt.Printf("%s: %s\n", err, s)
+				// fmt.Printf("%s: %s\n", err, s)
 				continue
 			}
 			l[setId] = true
