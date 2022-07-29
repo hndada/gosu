@@ -115,9 +115,9 @@ func (c *Chart) CalcDifficulty() {
 				}
 				n.individualStrains[k] = prevNote.individualStrains[k] * indDecay
 			}
-			n.holdEndtimes[n.key] = n.Time2
-			n.individualStrains[n.key] += 2.0 * holdFactor
-			n.individualStrain = n.individualStrains[n.key]
+			n.holdEndtimes[n.Key] = n.Time2
+			n.individualStrains[n.Key] += 2.0 * holdFactor
+			n.individualStrain = n.individualStrains[n.Key]
 			n.overallStrain = prevNote.overallStrain*ovDecay + (1+holdAddition)*holdFactor
 			prevNote = n
 			notes = append(notes, n)
@@ -143,11 +143,11 @@ func (c *Chart) CalcDifficulty() {
 				} else {
 					deltaTime := float64(intervalEndTime-prevNote.Time) / 1000
 					// should be prev note
-					maxStrain = prevNote.individualStrains[n.key]*math.Pow(individualDecayBase, deltaTime) + prevNote.overallStrain*math.Pow(overallDecayBase, deltaTime)
+					maxStrain = prevNote.individualStrains[n.Key]*math.Pow(individualDecayBase, deltaTime) + prevNote.overallStrain*math.Pow(overallDecayBase, deltaTime)
 				}
 				intervalEndTime += strainStep
 			}
-			maxStrain = math.Max(n.individualStrains[n.key]+n.overallStrain, maxStrain)
+			maxStrain = math.Max(n.individualStrains[n.Key]+n.overallStrain, maxStrain)
 			prevNote = n
 		}
 		c.LevelOsuLegacy = WeightedSum(strainTable, weightDecayBase) * srScalingFactor

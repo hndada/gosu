@@ -66,7 +66,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 	var img *ebiten.Image
 	keyKinds := keyKindsMap[WithScratch(c.KeyCount)]
 	for i, n := range c.Notes { // temp: All Note, LNHead, LNTail use skin's 'Note' image
-		img = Skin.Note[keyKinds[n.key]]
+		img = Skin.Note[keyKinds[n.Key]]
 		s.chart.Notes[i].Sprite.SetImage(img)
 	}
 	s.lastPressed = make([]bool, c.KeyCount)
@@ -77,7 +77,7 @@ func NewScene(c *Chart, mods Mods, cwd string) *Scene {
 		}
 		for k := range s.staged {
 			for i, n := range c.Notes {
-				if n.key == k {
+				if n.Key == k {
 					s.staged[k] = i
 					break
 				}

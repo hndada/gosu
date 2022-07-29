@@ -59,7 +59,7 @@ func (c *Chart) ApplyMods(mods Mods) *Chart {
 		n.Time = int64(float64(n.Time) / mods.TimeRate)
 		n.Time2 = int64(float64(n.Time2) / mods.TimeRate)
 		if mods.Mirror { // TODO: separate scartch lane?
-			n.key = c.KeyCount - 1 - n.key
+			n.Key = c.KeyCount - 1 - n.Key
 		}
 		c2.Notes[i] = n
 	}

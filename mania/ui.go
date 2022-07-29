@@ -263,7 +263,7 @@ func (s *Scene) setNoteSprites() {
 	xStart := (common.Settings.ScreenSizeX - wMiddle) / 2
 	for i, n := range s.chart.Notes {
 		var sprite ui.Sprite
-		kind := keyKinds[n.key]
+		kind := keyKinds[n.Key]
 		switch n.Type {
 		case TypeNote, TypeLNTail: // temp
 			sprite = ui.NewSprite(Skin.Note[kind])
@@ -273,9 +273,9 @@ func (s *Scene) setNoteSprites() {
 
 		scale := float64(common.Settings.ScreenSizeY) / 100
 		sprite.H = int(Settings.NoteHeigth * scale)
-		sprite.W = s.noteWidths[n.key]
+		sprite.W = s.noteWidths[n.Key]
 		x := xStart
-		for k := 0; k < n.key; k++ {
+		for k := 0; k < n.Key; k++ {
 			x += s.noteWidths[k]
 		}
 		sprite.X = x
@@ -294,7 +294,7 @@ func (s *Scene) setNoteSprites() {
 		ls := ui.LongSprite{
 			Vertical: true,
 		}
-		ls.SetImage(Skin.LNBody[keyKinds[tail.key]]) // temp: no animation support
+		ls.SetImage(Skin.LNBody[keyKinds[tail.Key]]) // temp: no animation support
 		ls.W = tail.Sprite.W
 		ls.H = head.Sprite.Y - tail.Sprite.Y
 		ls.X = tail.Sprite.X

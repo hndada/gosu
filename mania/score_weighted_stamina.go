@@ -13,7 +13,7 @@ func (c *Chart) calcStamina() {
 	var instant, gradual float64
 	prevTimes := make([]int64, c.KeyCount)
 	for i, n := range c.Notes {
-		time := n.Time - prevTimes[n.key]
+		time := n.Time - prevTimes[n.Key]
 		instant *= DecayFactor(instantDecay, time)
 		instant += instantScale * n.strain
 		gradual *= DecayFactor(gradualDecay, time)
@@ -22,7 +22,7 @@ func (c *Chart) calcStamina() {
 			panic("negative stamina")
 		}
 		c.Notes[i].stamina = instant + gradual
-		prevTimes[n.key] = n.Time
+		prevTimes[n.Key] = n.Time
 	}
 }
 
