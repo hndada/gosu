@@ -27,7 +27,7 @@ const (
 // A note sprite's WHXY values are dependent of speed, screen size and widths-settings
 type Note struct {
 	common.Note
-	key int
+	Key int
 
 	prev   int // index of previous note
 	next   int // index of next note
@@ -57,7 +57,7 @@ func (c *Chart) loadNotesFromOsu(o *osu.Format) error {
 
 	sort.Slice(c.Notes, func(i, j int) bool {
 		if c.Notes[i].Time == c.Notes[j].Time {
-			return c.Notes[i].key < c.Notes[j].key
+			return c.Notes[i].Key < c.Notes[j].Key
 		}
 		return c.Notes[i].Time < c.Notes[j].Time
 	})
@@ -67,12 +67,12 @@ func (c *Chart) loadNotesFromOsu(o *osu.Format) error {
 		prevs[k] = -1 // no found
 	}
 	for next, n := range c.Notes {
-		prev := prevs[n.key]
+		prev := prevs[n.Key]
 		c.Notes[next].prev = prev
 		if prev != -1 {
 			c.Notes[prev].next = next
 		}
-		prevs[n.key] = next
+		prevs[n.Key] = next
 	}
 	for _, lastIdx := range prevs {
 		c.Notes[lastIdx].next = -1
@@ -92,7 +92,7 @@ func newNoteFromOsu(ho osu.HitObject, keyCount int, sePath string) ([]Note, erro
 	default:
 		return ns, errors.New("invalid hit object")
 	}
-	n.key = ho.Column(keyCount)
+	n.Key = ho.Column(keyCount)
 	n.Time = int64(ho.Time)
 	n.Time2 = n.Time
 	n.SampleFilename = ho.HitSample.Filename
@@ -112,7 +112,7 @@ func newNoteFromOsu(ho osu.HitObject, keyCount int, sePath string) ([]Note, erro
 
 		var n2 Note
 		n2.Type = TypeLNTail
-		n2.key = n.key
+		n2.Key = n.Key
 		n2.Time = n.Time2
 		n2.Time2 = n.Time
 		n2.init(keyCount)

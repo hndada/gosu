@@ -28,26 +28,26 @@ func (c Chart) GenAutoKeyEvents(instability float64) func(int64) []common.PlayKe
 			e1 := common.PlayKeyEvent{
 				Time:    n.Time + d,
 				Pressed: true,
-				Key:     n.key,
+				Key:     n.Key,
 			}
 			e2 := common.PlayKeyEvent{
 				Time:    n.Time + 30 + d,
 				Pressed: false,
-				Key:     n.key,
+				Key:     n.Key,
 			}
 			es = append(es, e1, e2)
 		case TypeLNHead:
 			e := common.PlayKeyEvent{
 				Time:    n.Time + d,
 				Pressed: true,
-				Key:     n.key,
+				Key:     n.Key,
 			}
 			es = append(es, e)
 		case TypeLNTail:
 			e := common.PlayKeyEvent{
 				Time:    n.Time + d, // Time2: opposite time
 				Pressed: false,
-				Key:     n.key,
+				Key:     n.Key,
 			}
 			es = append(es, e)
 		}

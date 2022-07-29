@@ -57,7 +57,7 @@ func (s *Scene) applyScore(i int, j common.Judgment) {
 	s.chart.Notes[i].scored = true
 	s.chart.Notes[i].Sprite.Saturation = 0.5
 	s.chart.Notes[i].Sprite.Dimness = 0.3
-	s.staged[n.key] = n.next
+	s.staged[n.Key] = n.next
 	s.CountJudge(j)
 
 	switch scoreMode {
@@ -125,15 +125,15 @@ func (s *Scene) applyScore(i int, j common.Judgment) {
 
 	switch n.Type {
 	case TypeLNTail:
-		s.LightingLN[n.key].Rep = 0
+		s.LightingLN[n.Key].Rep = 0
 	}
 	if j != Miss {
 		switch n.Type {
 		case typeNote:
-			s.Lighting[n.key].BornTime = time.Now()
-			s.Lighting[n.key].Rep = 1
+			s.Lighting[n.Key].BornTime = time.Now()
+			s.Lighting[n.Key].Rep = 1
 		case TypeLNHead:
-			s.LightingLN[n.key].Rep = ui.RepInfinite
+			s.LightingLN[n.Key].Rep = ui.RepInfinite
 		}
 		// apply one more for LNTail when LNHead is missed
 		if n.Type == TypeLNHead && j == Miss {
