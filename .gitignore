@@ -20,3 +20,5 @@
 /cmd/gosu/skin-old
 
 /cmd/calc/charts
+
+*.zip
