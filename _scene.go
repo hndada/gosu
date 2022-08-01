@@ -26,3 +26,7 @@ func NewScene() {
 		c.Notes[lastIdx].next = -1
 	}
 }
+
+func Update() {
+	ProcessScore()
+}
