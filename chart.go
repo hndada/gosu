@@ -2,9 +2,12 @@ package main
 
 import (
 	"errors"
+	"io/ioutil"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/hndada/gosu/parse/osu"
 )
 
 const (
@@ -40,15 +43,14 @@ type ChartHeader struct {
 	Level float64
 }
 
-// TimeStamp도 Scene에서 관리해야 할 것 같다
-// Chart 자체에는 중복 데이터가 되도록 없어야 함
+// Chart should avoid redundant data as much as possible
 type Chart struct {
 	ChartHeader
-	TimingPoints
 	KeyCount    int
 	ScratchMode int
-	Notes       []Note
-	// TimeStamps  []TimeStamp // To save notes' modified position
+
+	TransPoints
+	Notes []Note
 }
 
 func NewChartHeaderFromOsu(o *osu.Format) ChartHeader {
@@ -77,12 +79,16 @@ func NewChart(path string) (*Chart, error) {
 	var c Chart
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".osu":
-		o, err := osu.Parse(path)
+		dat, err := ioutil.ReadFile(path)
 		if err != nil {
 			return nil, err
 		}
-		c.ChartHeader = NewChartHeaderFromOsu(o, path)
-		c.TimingPoints = NewTimingPointsFromOsu(o)
+		o, err := osu.Parse(dat)
+		if err != nil {
+			return nil, err
+		}
+		c.ChartHeader = NewChartHeaderFromOsu(o)
+		c.TransPoints = NewTransPointsFromOsu(o)
 		c.KeyCount = c.Parameter.KeyCount
 		c.Notes = make([]Note, 0, len(o.HitObjects)*2)
 		for _, ho := range o.HitObjects {
