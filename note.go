@@ -1,5 +1,7 @@
 package main
 
+import "github.com/hndada/gosu/parse/osu"
+
 type NoteType int
 
 const (

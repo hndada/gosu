@@ -1,5 +1,13 @@
 package main
 
+// TimeStamp도 Scene에서 관리해야 할 것 같다
+// type TimeStamp struct {
+// 	Time     int64
+// 	NextTime int64
+// 	Position float64
+// 	Factor   float64
+// }
+
 func NewScene() {
 	// Notes 준비 단계
 	prevs := make([]int, c.KeyCount)
