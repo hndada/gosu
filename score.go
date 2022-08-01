@@ -1,30 +1,31 @@
 package main
 
-
-if done {
-    if 롱노트 꼬리 {
-        (시간-miss 범위) 지났으면 flush/fetch (ff)
-    } else {
-        panic // 다른 노트는 done이면 이미 ff 되었어야 함
-    }
-} else {
-    result := miss
-    // 시간차 = note.Time - 현재 시간
-    // 시간차 < - miss 범위 이면 더 처리할 것 없음
-    if 시간차 >= - miss 범위 && 시간차 < miss 범위 && judgable(type, action) {
-        if 시간차 < 0 {
-            시간차 *= -1
+func ProcessScore(){
+    if done {
+        if 롱노트 꼬리 {
+            (시간-miss 범위) 지났으면 flush/fetch (ff)
+        } else {
+            panic // 다른 노트는 done이면 이미 ff 되었어야 함
         }
-        for j, w := range ws {
-            if 시간차 < w.Window {
-                result = j
-                break
+    } else {
+        result := miss
+        // 시간차 = note.Time - 현재 시간
+        // 시간차 < - miss 범위 이면 더 처리할 것 없음
+        if 시간차 >= - miss 범위 && 시간차 < miss 범위 && judgable(type, action) {
+            if 시간차 < 0 {
+                시간차 *= -1
+            }
+            for j, w := range ws {
+                if 시간차 < w.Window {
+                    result = j
+                    break
+                }
             }
         }
+        mark(notes, i, j)
+        // 키음 재생
+        staged[key] = notes[i].next
     }
-    mark(notes, i, j)
-    // 키음 재생
-    staged[key] = notes[i].next
 }
 
 func mark(notes, i, j) {
