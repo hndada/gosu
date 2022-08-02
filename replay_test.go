@@ -31,8 +31,8 @@ func TestReplayScore(t *testing.T) {
 		// 	fmt.Println(s.Tick, s.CurrentScore(), s.JudgmentCounts, s.ReplayCursor, s.Pressed)
 		// }
 	}
-	fmt.Printf("Song: %s\n", "GOODTEK")
-	fmt.Printf("Diff: %s\n", "bbu2's 7K Another")
+	fmt.Printf("Song: %s\n", c.MusicName)
+	fmt.Printf("Diff: %s\n", c.ChartName)
 	fmt.Printf("Player: %s\n", rf.PlayerName)
 	fmt.Printf("Original score: %d/1m\n", rf.Score)
 	fmt.Printf("New score: %d/1.1m\n", s.CurrentScore())
