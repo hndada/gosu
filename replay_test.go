@@ -13,7 +13,7 @@ func TestReplayScore(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	rd, err := ioutil.ReadFile("4k.osr")
+	rd, err := ioutil.ReadFile("4k-3.osr")
 	if err != nil {
 		panic(err)
 	}
@@ -27,7 +27,7 @@ func TestReplayScore(t *testing.T) {
 	s.Tick = -2 * MaxTPS
 	for !s.IsFinished() {
 		s.Update()
-		if s.Tick%300 == 0 {
+		if s.Tick%1000 == 0 {
 			fmt.Println(s.Tick, s.CurrentScore(), s.JudgmentCounts, s.ReplayCursor, s.Pressed)
 		}
 	}
