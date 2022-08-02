@@ -14,6 +14,8 @@ Resources in */skin* from [https://github.com/ppy/osu-resources]
     * 800x600 fixed
 * Music
     * osu resources로 짧게 형식만
+* level
+    * Unbalanced chart will be penalized with strict decay factor 
 
 ## Issue
 * Precise input time 
