@@ -9,11 +9,11 @@ import (
 )
 
 func TestReplayScore(t *testing.T) {
-	c, err := NewChart("4k.osu")
+	c, err := NewChart("7k-gt.osu")
 	if err != nil {
 		panic(err)
 	}
-	rd, err := ioutil.ReadFile("4k-3.osr")
+	rd, err := ioutil.ReadFile("7k-gt.osr")
 	if err != nil {
 		panic(err)
 	}
@@ -27,8 +27,13 @@ func TestReplayScore(t *testing.T) {
 	s.Tick = -2 * MaxTPS
 	for !s.IsFinished() {
 		s.Update()
-		if s.Tick%1000 == 0 {
-			fmt.Println(s.Tick, s.CurrentScore(), s.JudgmentCounts, s.ReplayCursor, s.Pressed)
-		}
+		// if s.Tick%1000 == 0 {
+		// 	fmt.Println(s.Tick, s.CurrentScore(), s.JudgmentCounts, s.ReplayCursor, s.Pressed)
+		// }
 	}
+	fmt.Printf("Song: %s\n", "GOODTEK")
+	fmt.Printf("Diff: %s\n", "bbu2's 7K Another")
+	fmt.Printf("Player: %s\n", rf.PlayerName)
+	fmt.Printf("Original score: %d/1m\n", rf.Score)
+	fmt.Printf("New score: %d/1.1m\n", s.CurrentScore())
 }
