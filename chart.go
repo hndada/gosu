@@ -46,11 +46,9 @@ type ChartHeader struct {
 // Chart should avoid redundant data as much as possible
 type Chart struct {
 	ChartHeader
-	KeyCount    int
-	ScratchMode int
-
 	TransPoints
 	Notes []Note
+	// ScratchMode int
 }
 
 func NewChartHeaderFromOsu(o *osu.Format) ChartHeader {
@@ -89,10 +87,10 @@ func NewChart(path string) (*Chart, error) {
 		}
 		c.ChartHeader = NewChartHeaderFromOsu(o)
 		c.TransPoints = NewTransPointsFromOsu(o)
-		c.KeyCount = c.Parameter.KeyCount
+		// c.KeyCount = c.Parameter.KeyCount
 		c.Notes = make([]Note, 0, len(o.HitObjects)*2)
 		for _, ho := range o.HitObjects {
-			c.Notes = append(c.Notes, NewNoteFromOsu(ho, c.KeyCount)...)
+			c.Notes = append(c.Notes, NewNoteFromOsu(ho, c.Parameter.KeyCount)...)
 		}
 		sort.Slice(c.Notes, func(i, j int) bool {
 			if c.Notes[i].Time == c.Notes[j].Time {
