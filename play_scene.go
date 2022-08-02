@@ -1,6 +1,10 @@
 package main
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"fmt"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 // ScenePlay: struct, PlayScene: function
 type ScenePlay struct {
@@ -22,7 +26,8 @@ type ScenePlay struct {
 
 	// In dev
 	ReplayMode   bool
-	ReplayStates []*ReplayState
+	ReplayStates []ReplayState
+	ReplayCursor int
 }
 
 var MaxTPS int64 = 1000 // Todo: mapping to ebiten
@@ -30,9 +35,13 @@ var MaxTPS int64 = 1000 // Todo: mapping to ebiten
 func SecondToTick(t int64) int64 { return t * MaxTPS }
 func NewScenePlay(c *Chart) *ScenePlay {
 	s := new(ScenePlay)
-	s.Tick = -2 * MaxTPS          // Put 2 seconds of waiting
+	s.Tick = -2 * MaxTPS // Put 2 seconds of waiting
+	s.Chart = c
 	s.PlayNotes = NewPlayNotes(c) // Todo: add Mods to input param
-	s.KeySettings = KeySettings[s.Chart.Parameter.KeyCount]
+	// s.KeySettings = KeySettings[s.Chart.Parameter.KeyCount]
+	s.JudgmentCounts = make([]int, 5)
+	s.LastPressed = make([]bool, c.Parameter.KeyCount)
+	s.Pressed = make([]bool, c.Parameter.KeyCount)
 	return s
 }
 
@@ -41,7 +50,11 @@ func (s *ScenePlay) Update() {
 	for k, p := range s.Pressed {
 		s.LastPressed[k] = p
 		if s.ReplayMode {
-			// Todo: ReplayState
+			for s.ReplayCursor < len(s.ReplayStates)-1 && s.Time() < s.ReplayStates[s.ReplayCursor].Time {
+				s.ReplayCursor++
+			}
+			fmt.Println(s.Time(), s.ReplayStates[s.ReplayCursor].Time)
+			s.Pressed = s.ReplayStates[s.ReplayCursor].Pressed
 		} else {
 			s.Pressed[k] = ebiten.IsKeyPressed(s.KeySettings[k])
 		}
@@ -87,7 +100,7 @@ func (s *ScenePlay) Draw() {
 }
 
 func (s ScenePlay) Time() int64 {
-	return int64(float64(s.Tick) / float64(MaxTPS))
+	return int64(float64(s.Tick) / float64(MaxTPS) * 1000)
 }
 
 func (s ScenePlay) IsFinished() bool {

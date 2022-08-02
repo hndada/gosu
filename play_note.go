@@ -16,14 +16,15 @@ func NewPlayNotes(c *Chart) []*PlayNote {
 	prevs := make([]*PlayNote, c.Parameter.KeyCount)
 	for _, n := range c.Notes {
 		prev := prevs[n.Key]
-		next := &PlayNote{
+		pn := &PlayNote{
 			Note: n,
 			Prev: prev,
 		}
 		if prev != nil { // Set Next value later
-			prev.Next = next
+			prev.Next = pn
 		}
-		prevs[n.Key] = next
+		prevs[n.Key] = pn
+		pns = append(pns, pn)
 	}
 	return pns
 }
