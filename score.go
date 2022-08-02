@@ -4,8 +4,8 @@ import (
 	"math"
 )
 
-func Verdict(n *PlayNote, td int64, a KeyAction) Judgment {
-	if n.Type == Tail { // Either Hold or Release when Tail is not scored
+func Verdict(t NoteType, a KeyAction, td int64) Judgment {
+	if t == Tail { // Either Hold or Release when Tail is not scored
 		switch {
 		case td > Miss.Window:
 			if a == Release {

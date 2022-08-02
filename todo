@@ -1,6 +1,0 @@
-play 그림 필수요소: 노트(일반, 머리, 꼬리), 스테이지 뒷배경, 콤보, 판정
-점수나 총 카운트는 debugutil로 출력
-끝나면 "Press Enter to select the song"
-
-select 그림 필수요소: 글자, 글상자 (+배경)
-(정면 바라보고 있는 roll로 할까)

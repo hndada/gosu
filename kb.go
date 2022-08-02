@@ -12,8 +12,8 @@ const (
 )
 
 var KeySettings = map[int][]ebiten.Key{
-	4: []ebiten.Key{ebiten.KeyD, ebiten.KeyF, ebiten.KeyJ, ebiten.KeyK},
-	7: []ebiten.Key{ebiten.KeyS, ebiten.KeyD, ebiten.KeyF,
+	4: {ebiten.KeyD, ebiten.KeyF, ebiten.KeyJ, ebiten.KeyK},
+	7: {ebiten.KeyS, ebiten.KeyD, ebiten.KeyF,
 		ebiten.KeySpace, ebiten.KeyJ, ebiten.KeyK, ebiten.KeyL},
 }
 
