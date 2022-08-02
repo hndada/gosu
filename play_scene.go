@@ -1,8 +1,6 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -37,11 +35,12 @@ func NewScenePlay(c *Chart) *ScenePlay {
 	s := new(ScenePlay)
 	s.Tick = -2 * MaxTPS // Put 2 seconds of waiting
 	s.Chart = c
-	s.PlayNotes = NewPlayNotes(c) // Todo: add Mods to input param
+	s.PlayNotes, s.StagedNotes = NewPlayNotes(c) // Todo: add Mods to input param
 	// s.KeySettings = KeySettings[s.Chart.Parameter.KeyCount]
 	s.JudgmentCounts = make([]int, 5)
 	s.LastPressed = make([]bool, c.Parameter.KeyCount)
 	s.Pressed = make([]bool, c.Parameter.KeyCount)
+	s.Karma = 1
 	return s
 }
 
@@ -50,10 +49,13 @@ func (s *ScenePlay) Update() {
 	for k, p := range s.Pressed {
 		s.LastPressed[k] = p
 		if s.ReplayMode {
-			for s.ReplayCursor < len(s.ReplayStates)-1 && s.Time() < s.ReplayStates[s.ReplayCursor].Time {
+			for s.ReplayCursor < len(s.ReplayStates)-1 && s.Time() > s.ReplayStates[s.ReplayCursor].Time {
 				s.ReplayCursor++
 			}
-			fmt.Println(s.Time(), s.ReplayStates[s.ReplayCursor].Time)
+			s.ReplayCursor--
+			if s.ReplayCursor < 0 {
+				s.ReplayCursor = 0
+			}
 			s.Pressed = s.ReplayStates[s.ReplayCursor].Pressed
 		} else {
 			s.Pressed[k] = ebiten.IsKeyPressed(s.KeySettings[k])

@@ -11,9 +11,10 @@ type PlayNote struct {
 	// LongSprite
 }
 
-func NewPlayNotes(c *Chart) []*PlayNote {
+func NewPlayNotes(c *Chart) ([]*PlayNote, []*PlayNote) { // Second output is initial StagedNotes
 	pns := make([]*PlayNote, 0, len(c.Notes))
 	prevs := make([]*PlayNote, c.Parameter.KeyCount)
+	stagedNotes := make([]*PlayNote, c.Parameter.KeyCount)
 	for _, n := range c.Notes {
 		prev := prevs[n.Key]
 		pn := &PlayNote{
@@ -24,9 +25,12 @@ func NewPlayNotes(c *Chart) []*PlayNote {
 			prev.Next = pn
 		}
 		prevs[n.Key] = pn
+		if stagedNotes[n.Key] == nil {
+			stagedNotes[n.Key] = pn
+		}
 		pns = append(pns, pn)
 	}
-	return pns
+	return pns, stagedNotes
 }
 func (n PlayNote) PlaySE() {}
 
