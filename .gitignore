@@ -19,3 +19,7 @@
 
 # Go workspace file
 go.work
+
+# local test files
+/*.osu
+/*.osr
