@@ -12,67 +12,67 @@ import (
 )
 
 func Parse(dat []byte) (*Format, error) {
-	f := new(Format)
+	var f Format
 	r := bytes.NewReader(dat)
 	var err error
-	if err = binary.Read(r, binary.LittleEndian, f.GameMode); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.GameMode); err != nil {
+		return &f, err
 	}
-	if err = binary.Read(r, binary.LittleEndian, f.GameVersion); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.GameVersion); err != nil {
+		return &f, err
 	}
 	if f.BeatmapMD5, err = readString(r); err != nil {
-		return f, err
+		return &f, err
 	}
 	if f.PlayerName, err = readString(r); err != nil {
-		return f, err
+		return &f, err
 	}
 	if f.ReplayMD5, err = readString(r); err != nil {
-		return f, err
+		return &f, err
 	}
-	if err = binary.Read(r, binary.LittleEndian, f.Num300); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.Num300); err != nil {
+		return &f, err
 	}
-	if err = binary.Read(r, binary.LittleEndian, f.Num100); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.Num100); err != nil {
+		return &f, err
 	}
-	if err = binary.Read(r, binary.LittleEndian, f.Num50); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.Num50); err != nil {
+		return &f, err
 	}
-	if err = binary.Read(r, binary.LittleEndian, f.NumGeki); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.NumGeki); err != nil {
+		return &f, err
 	}
-	if err = binary.Read(r, binary.LittleEndian, f.NumKatu); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.NumKatu); err != nil {
+		return &f, err
 	}
-	if err = binary.Read(r, binary.LittleEndian, f.NumMiss); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.NumMiss); err != nil {
+		return &f, err
 	}
-	if err = binary.Read(r, binary.LittleEndian, f.Score); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.Score); err != nil {
+		return &f, err
 	}
-	if err = binary.Read(r, binary.LittleEndian, f.Combo); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.Combo); err != nil {
+		return &f, err
 	}
-	if err = binary.Read(r, binary.LittleEndian, f.FullCombo); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.FullCombo); err != nil {
+		return &f, err
 	}
-	if err = binary.Read(r, binary.LittleEndian, f.ModsBits); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.ModsBits); err != nil {
+		return &f, err
 	}
 	if f.LifeBar, err = readString(r); err != nil {
-		return f, err
+		return &f, err
 	}
-	if err = binary.Read(r, binary.LittleEndian, f.TimeStamp); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.TimeStamp); err != nil {
+		return &f, err
 	}
 	if f.ReplayData, err = parseReplayData(r); err != nil {
-		return f, err
+		return &f, err
 	}
-	if err = binary.Read(r, binary.LittleEndian, f.OnlineID); err != nil {
-		return f, err
+	if err = binary.Read(r, binary.LittleEndian, &f.OnlineID); err != nil {
+		return &f, err
 	}
-	return f, nil
+	return &f, nil
 }
 
 func readString(r *bytes.Reader) (string, error) {
