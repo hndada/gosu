@@ -1,54 +1,38 @@
 package main
 
-import "math"
+import (
+	"math"
+)
 
-func (s *ScenePlay) CheckScore() {
-	for k, n := range s.StagedNotes {
-		if n == nil {
-			continue
+func Verdict(n *PlayNote, td int64, a KeyAction) Judgment {
+	if n.Type == Tail { // Either Hold or Release when Tail is not scored
+		switch {
+		case td > Miss.Window:
+			if a == Release {
+				return Miss
+			}
+		case td < -Miss.Window:
+			return Miss
+		default: // In range
+			if a == Release { // a != Hold
+				return Judge(td)
+			}
 		}
-		td := n.Time - s.Time // Time difference; negative values means late hit
-		a := s.KeyAction(k)
-
-		if n.Scored {
-			if n.Type != Tail {
-				panic("non-tail note has not flushed")
-			}
-			if td < Miss.Window { // Keep Tail being staged until nearly ends
-				s.StagedNotes[n.Key] = n.Next
-			}
-			continue
-		}
-
-		if n.Type == Tail { // Either Hold or Release when Tail is not scored
-			switch {
-			case td > Miss.Window:
-				if a == Release {
-					s.Score(n, Miss)
-				}
-			case td < -Miss.Window:
-				s.Score(n, Miss)
-			default: // In range
-				if a == Release { // a != Hold
-					s.Score(n, Judge(td))
-				}
-			}
-		} else { // Head, Normal
-			switch {
-			case td > Miss.Window:
-				// Does nothing
-			case td < -Miss.Window:
-				s.Score(n, Miss)
-			default: // In range
-				if a == Hit {
-					s.Score(n, Judge(td))
-				}
+	} else { // Head, Normal
+		switch {
+		case td > Miss.Window:
+			// Does nothing
+		case td < -Miss.Window:
+			return Miss
+		default: // In range
+			if a == Hit {
+				return Judge(td)
 			}
 		}
 	}
+	return Judgment{}
 }
 
-// Todo: make the function unexported
 func (s *ScenePlay) Score(n *PlayNote, j Judgment) {
 	if j == Miss {
 		s.Combo = 0
@@ -75,7 +59,6 @@ func (s *ScenePlay) Score(n *PlayNote, j Judgment) {
 	}
 
 	n.Scored = true
-
 	if n.Type == Head && j == Miss {
 		s.Score(n.Next, Miss)
 	}
@@ -91,7 +74,7 @@ func (s *ScenePlay) Score(n *PlayNote, j Judgment) {
 // Karma recovers fast when its value is low, vice versa: math.Pow(x, a); a < 1
 // Acc and ratio score increase faster as each parameter approaches to max value: math.Pow(x, b); b > 1
 // Karma, Acc, Ratio, Total max score is 700k, 300k, 100k, 1100k each.
-func (s ScenePlay) TotalScore() int {
+func (s ScenePlay) CurrentScore() int {
 	const (
 		a = 0.5
 		b = 5
