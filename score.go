@@ -4,6 +4,13 @@ import (
 	"math"
 )
 
+// Todo: Variate factors based on difficulty-skewed charts
+var (
+	KarmaScoreFactor float64 = 0.5 // a
+	AccScoreFactor   float64 = 5   // b
+	RatioScoreFactor float64 = 2   // c
+)
+
 func Verdict(t NoteType, a KeyAction, td int64) Judgment {
 	if t == Tail { // Either Hold or Release when Tail is not scored
 		switch {
@@ -34,6 +41,9 @@ func Verdict(t NoteType, a KeyAction, td int64) Judgment {
 }
 
 func (s *ScenePlay) Score(n *PlayNote, j Judgment) {
+	var (
+		a = KarmaScoreFactor
+	)
 	if j == Miss {
 		s.Combo = 0
 	} else {
@@ -46,7 +56,7 @@ func (s *ScenePlay) Score(n *PlayNote, j Judgment) {
 	} else if s.Karma > 1 {
 		s.Karma = 1
 	}
-	s.KarmaSum += s.Karma
+	s.KarmaSum += math.Pow(s.Karma, a)
 
 	for i, jk := range Judgments {
 		if jk.Window == j.Window {
@@ -75,10 +85,9 @@ func (s *ScenePlay) Score(n *PlayNote, j Judgment) {
 // Acc and ratio score increase faster as each parameter approaches to max value: math.Pow(x, b); b > 1
 // Karma, Acc, Ratio, Total max score is 700k, 300k, 100k, 1100k each.
 func (s ScenePlay) CurrentScore() int {
-	const (
-		a = 0.5
-		b = 5
-		c = 2
+	var (
+		b = AccScoreFactor
+		c = RatioScoreFactor
 	)
 	nc := float64(len(s.PlayNotes))    // Total note counts
 	kc := float64(s.JudgmentCounts[0]) // Kool counts
