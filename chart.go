@@ -36,7 +36,7 @@ type ChartHeader struct {
 	ImageFilename   string
 	VideoFilename   string
 	VideoTimeOffset int64
-	Parameter       struct {
+	Parameter       struct { // Todo: move mode-specific field to each Chart struct
 		CircleSize float64
 		KeyCount   int
 	}
