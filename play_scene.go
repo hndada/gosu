@@ -5,7 +5,7 @@ import "github.com/hajimehoshi/ebiten/v2"
 // ScenePlay: struct, PlayScene: function
 type ScenePlay struct {
 	// Music Streamer
-	Tick int
+	Tick int64
 
 	Chart       *Chart
 	PlayNotes   []*PlayNote
@@ -19,11 +19,18 @@ type ScenePlay struct {
 	Karma          float64
 	KarmaSum       float64
 	JudgmentCounts []int
+
+	// In dev
+	ReplayMode   bool
+	ReplayStates []*ReplayState
 }
 
+var MaxTPS int64 = 1000 // Todo: mapping to ebiten
+
+func SecondToTick(t int64) int64 { return t * MaxTPS }
 func NewScenePlay(c *Chart) *ScenePlay {
 	s := new(ScenePlay)
-	s.Tick = -2 * ebiten.MaxTPS() // Put 2 seconds of waiting
+	s.Tick = -2 * MaxTPS          // Put 2 seconds of waiting
 	s.PlayNotes = NewPlayNotes(c) // Todo: add Mods to input param
 	s.KeySettings = KeySettings[s.Chart.Parameter.KeyCount]
 	return s
@@ -33,7 +40,11 @@ func (s *ScenePlay) Update() {
 	s.Tick++
 	for k, p := range s.Pressed {
 		s.LastPressed[k] = p
-		s.Pressed[k] = ebiten.IsKeyPressed(s.KeySettings[k])
+		if s.ReplayMode {
+			// Todo: ReplayState
+		} else {
+			s.Pressed[k] = ebiten.IsKeyPressed(s.KeySettings[k])
+		}
 	}
 	for k, n := range s.StagedNotes {
 		if n == nil {
@@ -53,7 +64,7 @@ func (s *ScenePlay) Update() {
 			}
 			continue
 		}
-		if j := Verdict(n, td, s.KeyAction(n.Key)); j.Window != 0 {
+		if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
 			s.Score(n, j)
 		}
 	}
@@ -76,7 +87,7 @@ func (s *ScenePlay) Draw() {
 }
 
 func (s ScenePlay) Time() int64 {
-	return int64(float64(s.Tick) / float64(ebiten.MaxTPS()))
+	return int64(float64(s.Tick) / float64(MaxTPS))
 }
 
 func (s ScenePlay) IsFinished() bool {

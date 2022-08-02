@@ -7,8 +7,8 @@ type PlayNote struct {
 	Next   *PlayNote
 	Scored bool
 
-	Sprite
-	LongSprite
+	// Sprite
+	// LongSprite
 }
 
 func NewPlayNotes(c *Chart) []*PlayNote {
@@ -28,9 +28,8 @@ func NewPlayNotes(c *Chart) []*PlayNote {
 	return pns
 }
 func (n PlayNote) PlaySE() {}
-func (n *PlayNote) UpdateSprite() { // Todo: do
 
-}
+func (n *PlayNote) UpdateSprite() {}
 
 // type TimeStamp struct {
 // 	Time     int64
