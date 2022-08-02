@@ -29,4 +29,4 @@ func Judge(td int64) Judgment {
 	return Judgment{} // Returns None when the input is out of widest range
 }
 
-func inRange(td int64, j Judgment) bool { return td < j.Window && td > -j.Window }
+// func inRange(td int64, j Judgment) bool { return td < j.Window && td > -j.Window }
