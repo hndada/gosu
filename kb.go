@@ -11,6 +11,7 @@ const (
 	Hold
 )
 
+// Todo: ebiten -> general
 var KeySettings = map[int][]ebiten.Key{
 	4: {ebiten.KeyD, ebiten.KeyF, ebiten.KeyJ, ebiten.KeyK},
 	7: {ebiten.KeyS, ebiten.KeyD, ebiten.KeyF,
@@ -33,4 +34,10 @@ func CurrentKeyAction(last, now bool) KeyAction {
 	default:
 		panic("not reach")
 	}
+}
+
+type KeyEvent struct {
+	Time    int64
+	Pressed bool
+	Key     int // Key layout index
 }
