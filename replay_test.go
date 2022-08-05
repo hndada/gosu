@@ -23,7 +23,7 @@ func TestReplayScore(t *testing.T) {
 	}
 	s := NewScenePlay(c)
 	s.ReplayMode = true
-	s.ReplayStates = ExtractReplayState(rf, c.Parameter.KeyCount)
+	s.ReplayStates = ExtractReplayState(rf, c.KeyCount)
 	s.Tick = -2 * MaxTPS
 	for !s.IsFinished() {
 		s.Update()
