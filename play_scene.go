@@ -26,9 +26,12 @@ type ScenePlay struct {
 	ReplayMode   bool
 	ReplayStates []ReplayState
 	ReplayCursor int
+
+	Speed float64
+	TransPoint
 }
 
-var MaxTPS int64 = 1000 // Todo: mapping to ebiten
+// var MaxTPS int64 = 1000 // Todo: mapping to ebiten
 
 func SecondToTick(t int64) int64 { return t * MaxTPS }
 func NewScenePlay(c *Chart) *ScenePlay {
@@ -38,14 +41,33 @@ func NewScenePlay(c *Chart) *ScenePlay {
 	s.PlayNotes, s.StagedNotes = NewPlayNotes(c) // Todo: add Mods to input param
 	// s.KeySettings = KeySettings[s.Chart.Parameter.KeyCount]
 	s.JudgmentCounts = make([]int, 5)
-	s.LastPressed = make([]bool, c.Parameter.KeyCount)
-	s.Pressed = make([]bool, c.Parameter.KeyCount)
+	s.LastPressed = make([]bool, c.KeyCount)
+	s.Pressed = make([]bool, c.KeyCount)
 	s.Karma = 1
+	s.TransPoint = TransPoint{
+		s.Chart.SpeedFactors[0],
+		s.Chart.Tempos[0],
+		s.Chart.Volumes[0],
+		s.Chart.Effects[0],
+	}
 	return s
 }
 
 func (s *ScenePlay) Update() {
 	s.Tick++
+	for s.Time() < s.SpeedFactor.Next.Time {
+		s.SpeedFactor = s.SpeedFactor.Next
+	}
+	for s.Time() < s.Tempo.Next.Time {
+		s.Tempo = s.Tempo.Next
+	}
+	for s.Time() < s.Volume.Next.Time {
+		s.Volume = s.Volume.Next
+	}
+	for s.Time() < s.Effect.Next.Time {
+		s.Effect = s.Effect.Next
+	}
+
 	for k, p := range s.Pressed {
 		s.LastPressed[k] = p
 		if s.ReplayMode {
@@ -83,9 +105,6 @@ func (s *ScenePlay) Update() {
 			s.Score(n, j)
 		}
 	}
-	for _, n := range s.PlayNotes {
-		n.UpdateSprite()
-	}
 }
 
 func (s *ScenePlay) Draw() {
@@ -95,6 +114,7 @@ func (s *ScenePlay) Draw() {
 	}
 	s.DrawBG()
 	s.DrawField()
+	s.DrawLongNote()
 	s.DrawNote()
 	s.DrawCombo()
 	s.DrawJudgment()

@@ -7,3 +7,4 @@ func (s ScenePlay) DrawCombo()    {}
 func (s ScenePlay) DrawJudgment() {}
 func (s ScenePlay) DrawOthers()   {} // Score, judgment counts and other states
 func (s ScenePlay) DrawClear()    {}
+func (s ScenePlay) DrawLongNote() {}

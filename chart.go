@@ -19,8 +19,10 @@ const (
 
 const DefaultMode = ModeStandard
 
+// ChartHeader contains non-play information.
+// Chaning ChartHeader's data will not affect integrity of the chart.
+// Mode-specific fields are moved to each Chart struct
 type ChartHeader struct {
-	// ChartPath     string
 	ChartID       int64 // 6byte: setID, 2byte: subID
 	MusicName     string
 	MusicUnicode  string
@@ -28,50 +30,39 @@ type ChartHeader struct {
 	ArtistUnicode string
 	MusicSource   string
 	ChartName     string // diff name
-	Producer      string
-	HolderID      int64 // 0: gosu Chart Management
+	Producer      string // Name of field may change
+	HolderID      int64  // 0: gosu Chart Management
 
 	AudioFilename   string
 	PreviewTime     int64
 	ImageFilename   string
 	VideoFilename   string
 	VideoTimeOffset int64
-	Parameter       struct { // Todo: move mode-specific field to each Chart struct
-		CircleSize float64
-		KeyCount   int
-	}
-	Level float64
 }
 
 // Chart should avoid redundant data as much as possible
 type Chart struct {
 	ChartHeader
 	TransPoints
-	Notes []Note
+	KeyCount int
+	Notes    []Note
+	Level    float64
 	// ScratchMode int
 }
 
 func NewChartHeaderFromOsu(o *osu.Format) ChartHeader {
-	c := ChartHeader{
-		// ChartPath:     path,
+	return ChartHeader{
 		MusicName:     o.Title,
 		MusicUnicode:  o.TitleUnicode,
 		Artist:        o.Artist,
 		ArtistUnicode: o.ArtistUnicode,
 		MusicSource:   o.Source,
 		ChartName:     o.Version,
-		Producer:      o.Creator, // field name may change
+		Producer:      o.Creator,
 
 		AudioFilename: o.AudioFilename,
 		PreviewTime:   int64(o.PreviewTime),
 	}
-	switch o.General.Mode {
-	case ModeStandard, ModeCatch:
-		c.Parameter.CircleSize = o.CircleSize
-	case ModeMania:
-		c.Parameter.KeyCount = int(o.CircleSize)
-	}
-	return c
 }
 func NewChart(path string) (*Chart, error) {
 	var c Chart
@@ -87,10 +78,10 @@ func NewChart(path string) (*Chart, error) {
 		}
 		c.ChartHeader = NewChartHeaderFromOsu(o)
 		c.TransPoints = NewTransPointsFromOsu(o)
-		// c.KeyCount = c.Parameter.KeyCount
+		c.KeyCount = int(o.CircleSize)
 		c.Notes = make([]Note, 0, len(o.HitObjects)*2)
 		for _, ho := range o.HitObjects {
-			c.Notes = append(c.Notes, NewNoteFromOsu(ho, c.Parameter.KeyCount)...)
+			c.Notes = append(c.Notes, NewNoteFromOsu(ho, c.KeyCount)...)
 		}
 		sort.Slice(c.Notes, func(i, j int) bool {
 			if c.Notes[i].Time == c.Notes[j].Time {
