@@ -2,18 +2,27 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	"github.com/hndada/gosu/parse/osr"
+	"github.com/hndada/gosu/parse/osu"
 )
 
 func TestReplayScore(t *testing.T) {
-	c, err := NewChart("7k-gt.osu")
+	b, err := os.ReadFile("7k-gt.osu")
 	if err != nil {
 		panic(err)
 	}
-	rd, err := ioutil.ReadFile("7k-gt.osr")
+	o, err := osu.Parse(b)
+	if err != nil {
+		panic(err)
+	}
+	c, err := NewChartFromOsu(o)
+	if err != nil {
+		panic(err)
+	}
+	rd, err := os.ReadFile("7k-gt.osr")
 	if err != nil {
 		panic(err)
 	}
@@ -21,7 +30,7 @@ func TestReplayScore(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	s := NewScenePlay(c)
+	s := NewScenePlay(c, "7k-gt.osu") // Temporary chart path
 	s.ReplayMode = true
 	s.ReplayStates = ExtractReplayState(rf, c.KeyCount)
 	s.Tick = -2 * MaxTPS
