@@ -1,4 +1,4 @@
-package ebiten
+package main
 
 import (
 	"bytes"
@@ -14,9 +14,9 @@ import (
 )
 
 const bytesPerSample = 4
-const sampleRate = 44100
+const SampleRate = 44100
 
-var Context *audio.Context = audio.NewContext(sampleRate)
+var Context *audio.Context = audio.NewContext(SampleRate)
 
 type AudioStreamer interface {
 	io.ReadSeeker
@@ -45,8 +45,7 @@ func NewAudioStreamer(path string) (AudioStreamer, error) {
 	}
 }
 func NewSEPlayer(path string, vol int) func() {
-	ap := NewPlayer(path)
-	ap.SetVolume(float64(vol) / 100)
+	// ap := NewPlayer(path)
 	return func() {
 		ap.Play()
 		ap.Rewind()
