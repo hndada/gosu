@@ -10,31 +10,31 @@ const (
 )
 
 var NoteKindsMap = map[int][]NoteKind{
-	0:  []NoteKind{},
-	1:  []NoteKind{Mid},
-	2:  []NoteKind{One, One},
-	3:  []NoteKind{One, Mid, One},
-	4:  []NoteKind{One, Two, Two, One},
-	5:  []NoteKind{One, Two, Mid, Two, One},
-	6:  []NoteKind{One, Two, One, One, Two, One},
-	7:  []NoteKind{One, Two, One, Mid, One, Two, One},
-	8:  []NoteKind{Tip, One, Two, One, One, Two, One, Tip},
-	9:  []NoteKind{Tip, One, Two, One, Mid, One, Two, One, Tip},
-	10: []NoteKind{Tip, One, Two, One, Mid, Mid, One, Two, One, Tip},
+	0:  {},
+	1:  {Mid},
+	2:  {One, One},
+	3:  {One, Mid, One},
+	4:  {One, Two, Two, One},
+	5:  {One, Two, Mid, Two, One},
+	6:  {One, Two, One, One, Two, One},
+	7:  {One, Two, One, Mid, One, Two, One},
+	8:  {Tip, One, Two, One, One, Two, One, Tip},
+	9:  {Tip, One, Two, One, Mid, One, Two, One, Tip},
+	10: {Tip, One, Two, One, Mid, Mid, One, Two, One, Tip},
 }
 
 var FingerMap = map[int][]int{
-	0:  []int{},
-	1:  []int{0},
-	2:  []int{1, 1},
-	3:  []int{1, 0, 1},
-	4:  []int{2, 1, 1, 2},
-	5:  []int{2, 1, 0, 1, 2},
-	6:  []int{3, 2, 1, 1, 2, 3},
-	7:  []int{3, 2, 1, 0, 1, 2, 3},
-	8:  []int{4, 3, 2, 1, 1, 2, 3, 4},
-	9:  []int{4, 3, 2, 1, 0, 1, 2, 3, 4},
-	10: []int{4, 3, 2, 1, 0, 0, 1, 2, 3, 4},
+	0:  {},
+	1:  {0},
+	2:  {1, 1},
+	3:  {1, 0, 1},
+	4:  {2, 1, 1, 2},
+	5:  {2, 1, 0, 1, 2},
+	6:  {3, 2, 1, 1, 2, 3},
+	7:  {3, 2, 1, 0, 1, 2, 3},
+	8:  {4, 3, 2, 1, 1, 2, 3, 4},
+	9:  {4, 3, 2, 1, 0, 1, 2, 3, 4},
+	10: {4, 3, 2, 1, 0, 0, 1, 2, 3, 4},
 }
 
 // 40 = 32 + 8; 8 keyCount with left-scratch

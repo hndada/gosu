@@ -1,19 +1,18 @@
 package main
 
 import (
-	"image"
-
 	"github.com/hndada/gosu/input/hook"
 )
 
+// Todo: separate hook
 var (
-	MaxTPS      int64 = 1000 // 60
-	ScreenSizeX int   = 800
-	ScreenSizeY int   = 600
+	MaxTPS      = 1000
+	ScreenSizeX = 800
+	ScreenSizeY = 600
 
-	MusicVolume float64 = 0.05
-	Speed       float64 = 0.16
-	KeyLayout           = map[int][]hook.Code{
+	Volume    = 0.05
+	Speed     = 0.16
+	KeyLayout = map[int][]hook.Code{
 		4:               {hook.CodeD, hook.CodeF, hook.CodeJ, hook.CodeK},
 		5:               {hook.CodeD, hook.CodeF, hook.CodeSpacebar, hook.CodeJ, hook.CodeK},
 		6:               {hook.CodeS, hook.CodeD, hook.CodeF, hook.CodeJ, hook.CodeK, hook.CodeL},
@@ -23,17 +22,27 @@ var (
 		9:               {hook.CodeA, hook.CodeS, hook.CodeD, hook.CodeF, hook.CodeSpacebar, hook.CodeJ, hook.CodeK, hook.CodeL, hook.CodeSemicolon},
 		10:              {hook.CodeA, hook.CodeS, hook.CodeD, hook.CodeF, hook.CodeV, hook.CodeN, hook.CodeJ, hook.CodeK, hook.CodeL, hook.CodeSemicolon},
 	}
-	// NoteWidths      map[int][4]float64 // Unit: percentage comparing to screen size.
-	// NoteHeigth float64 // Universal to all notes
-	// HitPosition float64 // HitPosition*DisplayScale() goes *the center* of Y value
-	// ComboPosition   float64
-	// JudgePosition   float64
-	// PlayfieldDimness float64
-	// BgDimness        float64
+	// Scaled to 800 x 600.
+	NoteWidths = map[int][4]float64{
+		4:  {50, 50, 50, 50},
+		5:  {50, 50, 50, 50},
+		6:  {50, 50, 50, 50},
+		7:  {50, 50, 50, 50},
+		8:  {45, 45, 45, 45},
+		9:  {45, 45, 45, 45},
+		10: {45, 45, 45, 45},
+	}
+	NoteHeigth    float64 = 30 // Applies all notes
+	ComboPosition float64 = 180
+	JudgePosition float64 = 250
+	HitPosition   float64 = 550 // The middle position of Judge line, not a topmost.
+	// PlayfieldDimness
+	// BgDimness        =0.3
 	// ScratchMode map[int]int
 )
 
 // Scale returns scaled value based on screen size
 // func Scale(v float64) int     { return int(v * DisplayScale()) }
-func DisplayScale() float64   { return float64(ScreenSizeY) / 100 }
-func ScreenSize() image.Point { return image.Pt(ScreenSizeX, ScreenSizeY) }
+// func DisplayScale() float64   { return float64(ScreenSizeY) / 100 }
+// func ScreenSize() image.Point { return image.Pt(ScreenSizeX, ScreenSiz eY) }
+func Scale() float64 { return float64(ScreenSizeY) / 800 } // Value of Scale() is 1 in 800 x 600
