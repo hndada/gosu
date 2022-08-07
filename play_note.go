@@ -38,7 +38,8 @@ func NewPlayNotes(c *Chart) (playNotes []*PlayNote, stagedNotes []*PlayNote) {
 }
 func (n PlayNote) PlaySE() {}
 
-// DrawImageOptions is not commutative. Rotate -> Scale -> Translate.
+// DrawImageOptions is not commutative.
+// Rotate -> Scale -> Translate.
 func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 	const (
 		up   = 10000

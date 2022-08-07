@@ -25,5 +25,12 @@ type Sprite struct {
 	W, H, X, Y float64       // Scaled W, H
 }
 
+// Op does simple calculation only using struct's field.
+func (s Sprite) Op() *ebiten.DrawImageOptions {
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(s.ScaleW(), s.ScaleH())
+	op.GeoM.Translate(s.X, s.Y)
+	return op
+}
 func (s Sprite) ScaleW() float64 { return s.W / float64(s.I.Bounds().Dx()) }
 func (s Sprite) ScaleH() float64 { return s.H / float64(s.I.Bounds().Dy()) }

@@ -36,8 +36,8 @@ var (
 	ComboPosition float64 = 180
 	JudgePosition float64 = 250
 	HintPosition  float64 = 550 // The middle position of Judge line, not a topmost.
-	// PlayfieldDimness
-	// BgDimness        =0.3
+	FieldDark     float64 = 0.95
+	BgDimness     float64 = 0.3
 	// ScratchMode map[int]int
 	ComboWidth    float64 = 40
 	ScoreWidth    float64 = 33

@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 	"io"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 // ScenePlay: struct, PlayScene: function
@@ -42,11 +44,15 @@ type ScenePlay struct {
 	MusicPlayer *audio.Player
 
 	Background      Sprite
+	FieldSprite     Sprite
 	ComboSprites    []Sprite
 	ScoreSprites    []Sprite
 	JudgmentSprites []Sprite
 	ClearSprite     Sprite
 	HintSprite      Sprite
+
+	Judgment          Judgment
+	JudgmentCountdown int
 }
 
 func TickToMsec(tick int) int64 { return int64(1000 * float64(tick) / float64(MaxTPS)) }
@@ -112,6 +118,15 @@ func NewScenePlay(c *Chart, cpath string) *ScenePlay {
 		W: float64(ScreenSizeX),
 		H: float64(ScreenSizeY),
 	}
+	{
+		w := wsum
+		h := ScreenSizeY
+		x := (ScreenSizeX - w) / 2
+		i := ebiten.NewImage(w, h)
+		i.Fill(color.RGBA{0, 0, 0, uint8(255 * FieldDark)})
+		s.FieldSprite = Sprite{i, float64(w), float64(h), float64(x), 0}
+	}
+	s.FieldSprite = Sprite{}
 	s.ComboSprites = make([]Sprite, 10)
 	for i := 0; i < 10; i++ {
 		sp := Sprite{
@@ -190,7 +205,7 @@ func (s *ScenePlay) Update() {
 	for s.Time() < s.Effect.Next.Time {
 		s.Effect = s.Effect.Next
 	}
-
+	// Todo: key input
 	for k, p := range s.Pressed {
 		s.LastPressed[k] = p
 		if s.ReplayMode {
@@ -224,8 +239,18 @@ func (s *ScenePlay) Update() {
 			}
 			continue
 		}
+		var worst Judgment
 		if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
 			s.Score(n, j)
+			if worst.Window < j.Window {
+				worst = j
+			}
+		}
+		if s.Judgment.Window < worst.Window {
+			s.Judgment = worst
+			s.JudgmentCountdown = MsecToTick(1000)
+		} else {
+			s.JudgmentCountdown--
 		}
 	}
 }
@@ -238,22 +263,37 @@ func (s ScenePlay) IsFinished() bool {
 }
 
 func (s *ScenePlay) Draw(screen *ebiten.Image) {
-	if s.IsFinished() {
-		s.DrawClear()
-		return
+	{
+		op := s.Background.Op()
+		op.ColorM.ChangeHSV(0, 1, BgDimness)
+		screen.DrawImage(s.Background.I, op)
 	}
-	s.DrawBG()
-	s.DrawField()
-	s.DrawNotes(screen)
-	s.DrawCombo()
-	s.DrawJudgment()
-	s.DrawOthers() // Score, judgment counts and other states
+	screen.DrawImage(s.FieldSprite.I, s.FieldSprite.Op())
+	if s.IsFinished() {
+		screen.DrawImage(s.ClearSprite.I, s.ClearSprite.Op())
+	} else {
+		s.DrawNotes(screen)
+		if s.Combo > 0 {
+			s.DrawCombo()
+		}
+		if s.JudgmentCountdown > 0 { // Draw the same judgment for a while.
+			for i, j := range Judgments {
+				if j.Window == s.Judgment.Window {
+					sp := s.JudgmentSprites[i]
+					screen.DrawImage(sp.I, sp.Op())
+					break
+				}
+			}
+		}
+		s.DrawScore()
+	}
+	ebitenutil.DebugPrint(screen, fmt.Sprintf(
+		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs\n"+
+			"Score: %.0f\nKarma: %.2f\nCombo: %d\n"+
+			"judge: %v", ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000,
+		s.CurrentScore(), s.Karma, s.Combo,
+		s.JudgmentCounts))
 }
 
-func (s ScenePlay) DrawBG()       {}
-func (s ScenePlay) DrawField()    {}
-func (s ScenePlay) DrawCombo()    {}
-func (s ScenePlay) DrawJudgment() {} // Draw the same judgment for a while.
-func (s ScenePlay) DrawScore()    {}
-func (s ScenePlay) DrawClear()    {}
-func (s ScenePlay) DrawOthers()   {} // judgment counts and scene's state
+func (s ScenePlay) DrawCombo() {}
+func (s ScenePlay) DrawScore() {}
