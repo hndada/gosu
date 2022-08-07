@@ -1,11 +1,8 @@
 package main
 
 import (
-	"errors"
-	"io/ioutil"
 	"path/filepath"
 	"sort"
-	"strings"
 
 	"github.com/hndada/gosu/parse/osu"
 )
@@ -21,7 +18,7 @@ const DefaultMode = ModeStandard
 
 // ChartHeader contains non-play information.
 // Chaning ChartHeader's data will not affect integrity of the chart.
-// Mode-specific fields are moved to each Chart struct
+// Mode-specific fields are located to each Chart struct.
 type ChartHeader struct {
 	ChartID       int64 // 6byte: setID, 2byte: subID
 	MusicName     string
@@ -64,32 +61,25 @@ func NewChartHeaderFromOsu(o *osu.Format) ChartHeader {
 		PreviewTime:   int64(o.PreviewTime),
 	}
 }
-func NewChart(path string) (*Chart, error) {
-	var c Chart
-	switch strings.ToLower(filepath.Ext(path)) {
-	case ".osu":
-		dat, err := ioutil.ReadFile(path)
-		if err != nil {
-			return nil, err
-		}
-		o, err := osu.Parse(dat)
-		if err != nil {
-			return nil, err
-		}
-		c.ChartHeader = NewChartHeaderFromOsu(o)
-		c.TransPoints = NewTransPointsFromOsu(o)
-		c.KeyCount = int(o.CircleSize)
-		c.Notes = make([]Note, 0, len(o.HitObjects)*2)
-		for _, ho := range o.HitObjects {
-			c.Notes = append(c.Notes, NewNoteFromOsu(ho, c.KeyCount)...)
-		}
-		sort.Slice(c.Notes, func(i, j int) bool {
-			if c.Notes[i].Time == c.Notes[j].Time {
-				return c.Notes[i].Key < c.Notes[j].Key
-			}
-			return c.Notes[i].Time < c.Notes[j].Time
-		})
-		return &c, nil
+
+func NewChartFromOsu(o *osu.Format) (*Chart, error) {
+	c := &Chart{
+		ChartHeader: NewChartHeaderFromOsu(o),
+		TransPoints: NewTransPointsFromOsu(o),
+		KeyCount:    int(o.CircleSize),
+		Notes:       make([]Note, 0, len(o.HitObjects)*2),
 	}
-	return nil, errors.New("not supported")
+	for _, ho := range o.HitObjects {
+		c.Notes = append(c.Notes, NewNoteFromOsu(ho, c.KeyCount)...)
+	}
+	sort.Slice(c.Notes, func(i, j int) bool {
+		if c.Notes[i].Time == c.Notes[j].Time {
+			return c.Notes[i].Key < c.Notes[j].Key
+		}
+		return c.Notes[i].Time < c.Notes[j].Time
+	})
+	return c, nil
+}
+func (c ChartHeader) MusicPath(cpath string) string {
+	return filepath.Join(filepath.Dir(cpath), c.MusicName)
 }

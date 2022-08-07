@@ -14,11 +14,11 @@ type PlayNote struct {
 	Scored bool
 }
 
-// Second output is initial StagedNotes
-func NewPlayNotes(c *Chart) ([]*PlayNote, []*PlayNote) {
-	pns := make([]*PlayNote, 0, len(c.Notes))
+// Second output is initial staged notes.
+func NewPlayNotes(c *Chart) (playNotes []*PlayNote, stagedNotes []*PlayNote) {
+	playNotes = make([]*PlayNote, 0, len(c.Notes))
+	stagedNotes = make([]*PlayNote, c.KeyCount)
 	prevs := make([]*PlayNote, c.KeyCount)
-	stagedNotes := make([]*PlayNote, c.KeyCount)
 	for _, n := range c.Notes {
 		prev := prevs[n.Key]
 		pn := &PlayNote{
@@ -32,14 +32,12 @@ func NewPlayNotes(c *Chart) ([]*PlayNote, []*PlayNote) {
 		if stagedNotes[n.Key] == nil {
 			stagedNotes[n.Key] = pn
 		}
-		pns = append(pns, pn)
+		playNotes = append(playNotes, pn)
 	}
-	return pns, stagedNotes
+	return
 }
 func (n PlayNote) PlaySE() {}
 
-// Todo: 노트 이미지
-// 노트 WH는 고정, X는 Map 고정, Y만 매번 바뀜
 // DrawImageOptions is not commutative. Rotate -> Scale -> Translate.
 func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 	const (
@@ -69,40 +67,39 @@ func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 		}
 		d += s.Speed * sf.Factor * float64(n.Time-t) // remained speed factor calc
 
-		x := float64() // 미리 계산되어 Map에 저장된 것 불러오기
-		y := float64(JudgeLine.Y) - d
+		ns := s.NoteSprites[n.Key]
 		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Scale(ns.ScaleW(), ns.ScaleH())
+		x := ns.X
+		y := float64(HitPosition)*Scale() - d - ns.H/2 // A note locates at the center of judge line at the time.
+		if n.Type == Head {
+			DrawLongNote(screen, s.BodySprites[n.Key], 0, y)
+		} else if n.Type == Tail && n.Time2-s.Time() < down { // Avoid drawing long note twice.
+			DrawLongNote(screen, s.BodySprites[n.Key], y, float64(ScreenSizeY))
+		}
 		op.GeoM.Translate(x, y)
 		if n.Scored {
 			op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		}
-		screen.DrawImage(s.i, op)
+		screen.DrawImage(s.NoteSprites[n.Key].I, op)
 	}
 }
 
-// DrawLongNote draws vertically long sprite.
-func DrawLongNote(screen *ebiten.Image) {
-	x, y := s.X, s.Y
-	op.GeoM.Translate(float64(x), float64(y))
-	q, r := s.H/h1, s.H%h1+1 // quotient, remainder // TEMP: +1
+// DrawLongNote draws long note before drawing Head or Tail.
+func DrawLongNote(screen *ebiten.Image, ns Sprite, top, bottom float64) {
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(ns.ScaleW(), ns.ScaleH())
+	op.GeoM.Translate(ns.X, top)
+	length := bottom - top // Bottom has larger value
+	for i := 0; i < int(length/ns.H); i++ {
+		screen.DrawImage(ns.I, op)
+		op.GeoM.Translate(0, ns.H)
+	}
+	last := ns.I.Bounds()
+	last.Max = image.Pt(int(ns.W), int(length)%int(ns.H))
+	screen.DrawImage(ns.I.SubImage(last).(*ebiten.Image), op)
+}
 
-	first := s.i.Bounds()
-	w, h := s.W, r
-	first.Min = image.Pt(0, h1-r)
-	if !isOut(w, h, x, y, screen.Bounds().Size()) {
-		screen.DrawImage(s.i.SubImage(first).(*ebiten.Image), op)
-	}
-	op.GeoM.Translate(0, float64(h))
-	y += h
-	h = h1
-	for i := 0; i < q; i++ {
-		if !s.isOut(w, h, x, y, screen.Bounds().Size()) {
-			screen.DrawImage(s.i, op)
-		}
-		op.GeoM.Translate(0, float64(h))
-		y += h
-	}
-}
-func isOut(w, h, x, y int, screenSize image.Point) bool {
-	return x+w < 0 || x > screenSize.X || y+h < 0 || y > screenSize.Y
-}
+// func isOut(w, h, x, y int) bool {
+// 	return x+w < 0 || x > ScreenSizeX || y+h < 0 || y > ScreenSizeY
+// }

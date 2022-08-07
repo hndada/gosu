@@ -1,13 +1,17 @@
 package main
 
 import (
+	"fmt"
+	"io"
+	"os"
+
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/audio"
 )
 
 // ScenePlay: struct, PlayScene: function
 type ScenePlay struct {
-	// Music Streamer
-	Tick int64
+	Tick int
 
 	Chart       *Chart
 	PlayNotes   []*PlayNote
@@ -29,12 +33,18 @@ type ScenePlay struct {
 
 	Speed float64
 	TransPoint
+	NoteSprites []Sprite
+	BodySprites []Sprite
+	HeadSprites []Sprite
+	TailSprites []Sprite
+
+	MusicFile   io.ReadSeekCloser
+	MusicPlayer *audio.Player
 }
 
-// var MaxTPS int64 = 1000 // Todo: mapping to ebiten
-
-func SecondToTick(t int64) int64 { return t * MaxTPS }
-func NewScenePlay(c *Chart) *ScenePlay {
+func TickToMsec(tick int) int64 { return int64(1000 * float64(tick) / float64(MaxTPS)) }
+func MsecToTick(msec int64) int { return int(msec) * MaxTPS }
+func NewScenePlay(c *Chart, cpath string) *ScenePlay {
 	s := new(ScenePlay)
 	s.Tick = -2 * MaxTPS // Put 2 seconds of waiting
 	s.Chart = c
@@ -50,11 +60,58 @@ func NewScenePlay(c *Chart) *ScenePlay {
 		s.Chart.Volumes[0],
 		s.Chart.Effects[0],
 	}
+	s.NoteSprites = make([]Sprite, c.KeyCount)
+	s.BodySprites = make([]Sprite, c.KeyCount)
+	var wsum int
+	for k, kind := range NoteKindsMap[c.KeyCount] {
+		w := int(NoteWidths[c.KeyCount][int(kind)] * Scale()) // w should be integer, since it is a play note's width.
+		var fpath string
+		fpath = "skin/note/" + fmt.Sprintf("n%d.png", []int{1, 2, 3, 3}) // Todo: 4th note image
+		s.NoteSprites[k] = Sprite{
+			I: NewImage(fpath),
+			W: float64(w),
+			H: NoteHeigth * Scale(),
+		}
+		fpath = "skin/note/" + fmt.Sprintf("l%d.png", []int{1, 2, 3, 3}) // Todo: 4th note image
+		s.BodySprites[k] = Sprite{
+			I: NewImage(fpath),
+			W: float64(w),
+			H: NoteHeigth * Scale(), // Long note body does not have to be scaled though.
+		}
+		wsum += w
+	}
+	s.HeadSprites = make([]Sprite, c.KeyCount)
+	s.TailSprites = make([]Sprite, c.KeyCount)
+	copy(s.HeadSprites, s.NoteSprites)
+	copy(s.TailSprites, s.NoteSprites)
+
+	// Todo: Scratch should be excluded to width sum.
+	x := (ScreenSizeX - wsum) / 2 // x should be integer as well as w
+	for k, kind := range NoteKindsMap[c.KeyCount] {
+		s.NoteSprites[k].X = float64(x)
+		x += int(NoteWidths[c.KeyCount][kind] * Scale())
+	}
+	f, err := os.Open(c.MusicPath(cpath))
+	if err != nil {
+		panic(err)
+	}
+	s.MusicPlayer, err = Context.NewPlayer(f)
+	if err != nil {
+		panic(err)
+	}
 	return s
 }
 
 func (s *ScenePlay) Update() {
 	s.Tick++
+	if s.IsFinished() {
+		s.MusicFile.Close()
+		return
+	}
+	if s.Tick == 0 {
+		s.MusicPlayer.Play()
+	}
+
 	for s.Time() < s.SpeedFactor.Next.Time {
 		s.SpeedFactor = s.SpeedFactor.Next
 	}
@@ -106,21 +163,6 @@ func (s *ScenePlay) Update() {
 		}
 	}
 }
-
-func (s *ScenePlay) Draw() {
-	if s.IsFinished() {
-		s.DrawClear()
-		return
-	}
-	s.DrawBG()
-	s.DrawField()
-	s.DrawLongNote()
-	s.DrawNote()
-	s.DrawCombo()
-	s.DrawJudgment()
-	s.DrawOthers() // Score, judgment counts and other states
-}
-
 func (s ScenePlay) Time() int64 {
 	return int64(float64(s.Tick) / float64(MaxTPS) * 1000)
 }
@@ -128,3 +170,24 @@ func (s ScenePlay) Time() int64 {
 func (s ScenePlay) IsFinished() bool {
 	return s.Time() > 3000+s.PlayNotes[len(s.PlayNotes)-1].Time
 }
+
+func (s *ScenePlay) Draw(screen *ebiten.Image) {
+	if s.IsFinished() {
+		s.DrawClear()
+		return
+	}
+	s.DrawBG()
+	s.DrawField()
+	s.DrawNotes(screen)
+	s.DrawCombo()
+	s.DrawJudgment()
+	s.DrawOthers() // Score, judgment counts and other states
+}
+
+func (s ScenePlay) DrawBG()       {}
+func (s ScenePlay) DrawField()    {}
+func (s ScenePlay) DrawCombo()    {}
+func (s ScenePlay) DrawJudgment() {}
+func (s ScenePlay) DrawScore()    {}
+func (s ScenePlay) DrawClear()    {}
+func (s ScenePlay) DrawOthers()   {} // judgment counts and scene's state
