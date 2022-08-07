@@ -44,5 +44,5 @@ func TestReplayScore(t *testing.T) {
 	fmt.Printf("Diff: %s\n", c.ChartName)
 	fmt.Printf("Player: %s\n", rf.PlayerName)
 	fmt.Printf("Original score: %d/1m\n", rf.Score)
-	fmt.Printf("New score: %d/1.1m\n", s.CurrentScore())
+	fmt.Printf("New score: %.0f/1.1m\n", s.CurrentScore())
 }
