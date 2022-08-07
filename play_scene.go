@@ -40,6 +40,13 @@ type ScenePlay struct {
 
 	MusicFile   io.ReadSeekCloser
 	MusicPlayer *audio.Player
+
+	Background      Sprite
+	ComboSprites    []Sprite
+	ScoreSprites    []Sprite
+	JudgmentSprites []Sprite
+	ClearSprite     Sprite
+	HintSprite      Sprite
 }
 
 func TickToMsec(tick int) int64 { return int64(1000 * float64(tick) / float64(MaxTPS)) }
@@ -99,15 +106,74 @@ func NewScenePlay(c *Chart, cpath string) *ScenePlay {
 	if err != nil {
 		panic(err)
 	}
+
+	s.Background = Sprite{
+		I: NewImage(c.BgPath(cpath)),
+		W: float64(ScreenSizeX),
+		H: float64(ScreenSizeY),
+	}
+	s.ComboSprites = make([]Sprite, 10)
+	for i := 0; i < 10; i++ {
+		sp := Sprite{
+			I: NewImage(fmt.Sprintf("skin/combo/%d.png", i)),
+			W: ComboWidth * Scale(),
+		}
+		sp.H = float64(sp.I.Bounds().Dy()) * (sp.W / float64(sp.I.Bounds().Dx()))
+		sp.Y = ComboPosition - sp.H/2
+		s.ComboSprites[i] = sp
+	}
+	s.ScoreSprites = make([]Sprite, 10)
+	for i := 0; i < 10; i++ {
+		sp := Sprite{
+			I: NewImage(fmt.Sprintf("skin/score/%d.png", i)),
+			W: ScoreWidth * Scale(),
+		}
+		sp.H = float64(sp.I.Bounds().Dy()) * (sp.W / float64(sp.I.Bounds().Dx()))
+		s.ComboSprites[i] = sp
+	}
+	s.JudgmentSprites = make([]Sprite, 5)
+	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
+		sp := Sprite{
+			I: NewImage(fmt.Sprintf("skin/judgment/%s.png", name)),
+			W: JudgmentWidth * Scale(),
+		}
+		sp.H = float64(sp.I.Bounds().Dy()) * (sp.W / float64(sp.I.Bounds().Dx()))
+		sp.X = (float64(ScreenSizeX) - sp.W) / 2
+		sp.Y = JudgePosition*Scale() - sp.H/2
+		s.JudgmentSprites[i] = sp
+	}
+	{
+		sp := Sprite{
+			I: NewImage("skin/play/clear.png"),
+		}
+		sp.W = float64(sp.I.Bounds().Dx())
+		sp.H = float64(sp.I.Bounds().Dy())
+		sp.X = (float64(ScreenSizeX) - sp.W) / 2
+		sp.Y = (float64(ScreenSizeY) - sp.H) / 2
+		s.ClearSprite = sp
+	}
+	{
+		sp := Sprite{
+			I: NewImage("skin/play/hint.png"),
+		}
+		sp.W = float64(wsum)
+		sp.H = HintHeight * Scale()
+		sp.X = (float64(ScreenSizeX) - sp.W) / 2
+		sp.Y = HintPosition*Scale() - sp.H/2
+		s.HintSprite = sp
+	}
 	return s
 }
 
 func (s *ScenePlay) Update() {
-	s.Tick++
 	if s.IsFinished() {
-		s.MusicFile.Close()
+		if s.MusicPlayer != nil {
+			s.MusicFile.Close()
+			s.MusicPlayer = nil // Todo: need a test
+		}
 		return
 	}
+	s.Tick++
 	if s.Tick == 0 {
 		s.MusicPlayer.Play()
 	}
@@ -187,7 +253,7 @@ func (s *ScenePlay) Draw(screen *ebiten.Image) {
 func (s ScenePlay) DrawBG()       {}
 func (s ScenePlay) DrawField()    {}
 func (s ScenePlay) DrawCombo()    {}
-func (s ScenePlay) DrawJudgment() {}
+func (s ScenePlay) DrawJudgment() {} // Draw the same judgment for a while.
 func (s ScenePlay) DrawScore()    {}
 func (s ScenePlay) DrawClear()    {}
 func (s ScenePlay) DrawOthers()   {} // judgment counts and scene's state

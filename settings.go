@@ -35,10 +35,16 @@ var (
 	NoteHeigth    float64 = 30 // Applies all notes
 	ComboPosition float64 = 180
 	JudgePosition float64 = 250
-	HitPosition   float64 = 550 // The middle position of Judge line, not a topmost.
+	HintPosition  float64 = 550 // The middle position of Judge line, not a topmost.
 	// PlayfieldDimness
 	// BgDimness        =0.3
 	// ScratchMode map[int]int
+	ComboWidth    float64 = 40
+	ScoreWidth    float64 = 33
+	ComboGap      float64 = -2
+	ScoreGap      float64 = -2
+	HintHeight    float64 = 5
+	JudgmentWidth float64 = 65
 )
 
 // Scale returns scaled value based on screen size
