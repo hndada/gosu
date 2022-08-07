@@ -83,3 +83,6 @@ func NewChartFromOsu(o *osu.Format) (*Chart, error) {
 func (c ChartHeader) MusicPath(cpath string) string {
 	return filepath.Join(filepath.Dir(cpath), c.MusicName)
 }
+func (c ChartHeader) BgPath(cpath string) string {
+	return filepath.Join(filepath.Dir(cpath), c.ImageFilename)
+}

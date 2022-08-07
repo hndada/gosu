@@ -71,7 +71,7 @@ func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Scale(ns.ScaleW(), ns.ScaleH())
 		x := ns.X
-		y := float64(HitPosition)*Scale() - d - ns.H/2 // A note locates at the center of judge line at the time.
+		y := float64(HintPosition)*Scale() - d - ns.H/2 // A note locates at the center of judge line at the time.
 		if n.Type == Head {
 			DrawLongNote(screen, s.BodySprites[n.Key], 0, y)
 		} else if n.Type == Tail && n.Time2-s.Time() < down { // Avoid drawing long note twice.
