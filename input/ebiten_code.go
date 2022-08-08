@@ -1,20 +1,9 @@
-//go:build !windows
-
-package hook
+package input
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-const numKeys = ebiten.KeyMax
-
-func isKeyPressed(i int) bool {
-	eKey := ebiten.Key(i)
-	return ebiten.IsKeyPressed(eKey)
-}
-
-func getKeyCode(i int) Code {
-	eKey := ebiten.Key(i)
-
-	switch eKey {
+func ebitenKeyToCode(ek int) Code {
+	switch ebiten.Key(ek) {
 	case ebiten.KeyA:
 		return CodeA
 	case ebiten.KeyB:
@@ -210,32 +199,32 @@ func getKeyCode(i int) Code {
 	case ebiten.KeyNumpadEqual:
 		return CodeKeypadEqualSign // =
 
+		// the rest of the keys are not supported by Ebiten yet
 		/*
-			// the rest of the keys are not supported by Ebiten yet
-				case ebiten.KeyF13:
-					return CodeF13
-				case ebiten.KeyF14:
-					return CodeF14
-				case ebiten.KeyF15:
-					return CodeF15
-				case ebiten.KeyF16:
-					return CodeF16
-				case ebiten.KeyF17:
-					return CodeF17
-				case ebiten.KeyF18:
-					return CodeF18
-				case ebiten.KeyF19:
-					return CodeF19
-				case ebiten.KeyF20:
-					return CodeF20
-				case ebiten.KeyF21:
-					return CodeF21
-				case ebiten.KeyF22:
-					return CodeF22
-				case ebiten.KeyF23:
-					return CodeF23
-				case ebiten.KeyF24:
-					return CodeF24
+			case ebiten.KeyF13:
+				return CodeF13
+			case ebiten.KeyF14:
+				return CodeF14
+			case ebiten.KeyF15:
+				return CodeF15
+			case ebiten.KeyF16:
+				return CodeF16
+			case ebiten.KeyF17:
+				return CodeF17
+			case ebiten.KeyF18:
+				return CodeF18
+			case ebiten.KeyF19:
+				return CodeF19
+			case ebiten.KeyF20:
+				return CodeF20
+			case ebiten.KeyF21:
+				return CodeF21
+			case ebiten.KeyF22:
+				return CodeF22
+			case ebiten.KeyF23:
+				return CodeF23
+			case ebiten.KeyF24:
+				return CodeF24
 
 			case ebiten.KeyHelp:
 				return CodeHelp
@@ -265,7 +254,5 @@ func getKeyCode(i int) Code {
 				return CodeRightGUI
 		*/
 	}
-
 	return CodeUnknown
-
 }

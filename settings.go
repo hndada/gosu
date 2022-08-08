@@ -1,27 +1,21 @@
 package main
 
-import (
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/input/hook"
-)
-
-// Todo: separate hook
 var (
 	MaxTPS      = 1000
 	ScreenSizeX = 800
 	ScreenSizeY = 600
 
-	Volume    = 0.05
-	Speed     = 0.16
-	KeyLayout = map[int][]hook.Code{
-		4:               {hook.CodeD, hook.CodeF, hook.CodeJ, hook.CodeK},
-		5:               {hook.CodeD, hook.CodeF, hook.CodeSpacebar, hook.CodeJ, hook.CodeK},
-		6:               {hook.CodeS, hook.CodeD, hook.CodeF, hook.CodeJ, hook.CodeK, hook.CodeL},
-		7:               {hook.CodeS, hook.CodeD, hook.CodeF, hook.CodeSpacebar, hook.CodeJ, hook.CodeK, hook.CodeL},
-		8 + LeftScratch: {hook.CodeA, hook.CodeS, hook.CodeD, hook.CodeF, hook.CodeSpacebar, hook.CodeJ, hook.CodeK, hook.CodeL},
-		8:               {hook.CodeA, hook.CodeS, hook.CodeD, hook.CodeF, hook.CodeJ, hook.CodeK, hook.CodeL, hook.CodeSemicolon},
-		9:               {hook.CodeA, hook.CodeS, hook.CodeD, hook.CodeF, hook.CodeSpacebar, hook.CodeJ, hook.CodeK, hook.CodeL, hook.CodeSemicolon},
-		10:              {hook.CodeA, hook.CodeS, hook.CodeD, hook.CodeF, hook.CodeV, hook.CodeN, hook.CodeJ, hook.CodeK, hook.CodeL, hook.CodeSemicolon},
+	Volume      = 0.05
+	Speed       = 0.16
+	KeySettings = map[int][]Code{
+		4:               {CodeD, CodeF, CodeJ, CodeK},
+		5:               {CodeD, CodeF, CodeSpacebar, CodeJ, CodeK},
+		6:               {CodeS, CodeD, CodeF, CodeJ, CodeK, CodeL},
+		7:               {CodeS, CodeD, CodeF, CodeSpacebar, CodeJ, CodeK, CodeL},
+		8 + LeftScratch: {CodeA, CodeS, CodeD, CodeF, CodeSpacebar, CodeJ, CodeK, CodeL},
+		8:               {CodeA, CodeS, CodeD, CodeF, CodeJ, CodeK, CodeL, CodeSemicolon},
+		9:               {CodeA, CodeS, CodeD, CodeF, CodeSpacebar, CodeJ, CodeK, CodeL, CodeSemicolon},
+		10:              {CodeA, CodeS, CodeD, CodeF, CodeV, CodeN, CodeJ, CodeK, CodeL, CodeSemicolon},
 	}
 	// Scaled to 800 x 600.
 	NoteWidths = map[int][4]float64{
@@ -53,9 +47,3 @@ var (
 // func DisplayScale() float64   { return float64(ScreenSizeY) / 100 }
 // func ScreenSize() image.Point { return image.Pt(ScreenSizeX, ScreenSiz eY) }
 func Scale() float64 { return float64(ScreenSizeY) / 800 } // Value of Scale() is 1 in 800 x 600
-// Todo: ebiten -> general
-var KeySettings = map[int][]ebiten.Key{
-	4: {ebiten.KeyD, ebiten.KeyF, ebiten.KeyJ, ebiten.KeyK},
-	7: {ebiten.KeyS, ebiten.KeyD, ebiten.KeyF,
-		ebiten.KeySpace, ebiten.KeyJ, ebiten.KeyK, ebiten.KeyL},
-}
