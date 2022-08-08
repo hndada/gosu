@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/input/hook"
 )
 
@@ -52,3 +53,9 @@ var (
 // func DisplayScale() float64   { return float64(ScreenSizeY) / 100 }
 // func ScreenSize() image.Point { return image.Pt(ScreenSizeX, ScreenSiz eY) }
 func Scale() float64 { return float64(ScreenSizeY) / 800 } // Value of Scale() is 1 in 800 x 600
+// Todo: ebiten -> general
+var KeySettings = map[int][]ebiten.Key{
+	4: {ebiten.KeyD, ebiten.KeyF, ebiten.KeyJ, ebiten.KeyK},
+	7: {ebiten.KeyS, ebiten.KeyD, ebiten.KeyF,
+		ebiten.KeySpace, ebiten.KeyJ, ebiten.KeyK, ebiten.KeyL},
+}

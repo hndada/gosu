@@ -274,7 +274,7 @@ func (s *ScenePlay) Draw(screen *ebiten.Image) {
 	} else {
 		s.DrawNotes(screen)
 		if s.Combo > 0 {
-			s.DrawCombo()
+			s.DrawCombo(screen)
 		}
 		if s.JudgmentCountdown > 0 { // Draw the same judgment for a while.
 			for i, j := range Judgments {
@@ -285,7 +285,7 @@ func (s *ScenePlay) Draw(screen *ebiten.Image) {
 				}
 			}
 		}
-		s.DrawScore()
+		s.DrawScore(screen)
 	}
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs\n"+
@@ -295,5 +295,45 @@ func (s *ScenePlay) Draw(screen *ebiten.Image) {
 		s.JudgmentCounts))
 }
 
-func (s ScenePlay) DrawCombo() {}
-func (s ScenePlay) DrawScore() {}
+// DrawCombo supposes each number image has different size.
+// Wait, we loaded number image with adjusting size.
+func (s *ScenePlay) DrawCombo(screen *ebiten.Image) {
+	gap := ComboGap * Scale()
+	var wsum int
+	vs := make([]int, 0)
+	for v := s.Combo; v > 0; v /= 10 {
+		vs = append(vs, v%10) // Little endian
+		// vs = append([]int{v % 10}, vs...) // Big endian
+		wsum += int(s.ComboSprites[v%10].W - gap)
+	}
+	wsum += int(gap)
+	x := float64(ScreenSizeX+wsum) / 2
+	for _, v := range vs {
+		x -= s.ComboSprites[v].W + gap
+		y := ComboPosition*Scale() - s.ComboSprites[v].H/2
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(x, y)
+		screen.DrawImage(s.ComboSprites[v].I, op)
+	}
+}
+
+func (s *ScenePlay) DrawScore(screen *ebiten.Image) {
+	var wsum int
+	vs := make([]int, 0)
+	for v := int(s.CurrentScore()); v > 0; v /= 10 {
+		vs = append(vs, v%10) // Little endian
+		// vs = append([]int{v % 10}, vs...) // Big endian
+		wsum += int(s.ComboSprites[v%10].W)
+	}
+	x := float64(ScreenSizeX)
+	for _, v := range vs {
+		x -= s.ScoreSprites[v].W // ScoreWidth * Scale()
+		y := 0.0
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Translate(x, y)
+		screen.DrawImage(s.ScoreSprites[v].I, op)
+	}
+}
+func (s *ScenePlay) KeyAction(k int) KeyAction {
+	return CurrentKeyAction(s.LastPressed[k], s.Pressed[k])
+}
