@@ -6,14 +6,14 @@ import (
 
 // TEMP: Should I update KeyEvent logs in every update?
 type KeyEvent struct {
-	Time    int64 // Millisecond
+	Time    int64
 	KeyCode Code
 	Pressed bool
 }
 
 var (
 	startTime   = time.Now()
-	KeyEvents   = make([]KeyEvent, 0, 2000)
+	KeyEvents   = make([]KeyEvent, 0, 30)
 	current     int // index
 	lastPressed [256]bool
 	done        bool
@@ -68,7 +68,7 @@ func Fetch() []KeyEvent {
 }
 
 func Exit() {
-	KeyEvents = make([]KeyEvent, 0, 2000)
+	KeyEvents = make([]KeyEvent, 0, 30)
 	current = 0
 	lastPressed = [256]bool{}
 	done = true
