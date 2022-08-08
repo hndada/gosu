@@ -1,6 +1,48 @@
 package main
 
-import "github.com/hajimehoshi/ebiten/v2"
+import "time"
+
+type InputMode int
+
+var CurrentInputMode InputMode
+
+const (
+	InputModeEbiten InputMode = iota
+	InputModeHook
+	InputModeReplay
+)
+
+// Replay는 이미 Code->Key 까지 처리되어 있음
+type KeyEvent struct {
+	Time    int64
+	KeyCode Code
+	Pressed bool
+}
+type KeyListener interface {
+	Listen(start time.Time)
+	Flush() []KeyEvent
+	Close()
+}
+
+// type KeyEvent struct {
+// 	Time    int64
+// 	Pressed bool
+// 	Key     int // Key layout index
+// }
+
+// var KeyEvents = make([]KeyEvent, 0)
+
+// Flush supposes Listen has already called when in hook input mode.
+// func Flush() []KeyEvent {
+// 	switch CurrentInputMode {
+// 	case InputModeEbiten:
+
+// 	case InputModeHook:
+
+// 	case InputModeReplay:
+
+// 	}
+// }
 
 type KeyAction int
 
@@ -11,16 +53,6 @@ const (
 	Hold
 )
 
-// Todo: ebiten -> general
-var KeySettings = map[int][]ebiten.Key{
-	4: {ebiten.KeyD, ebiten.KeyF, ebiten.KeyJ, ebiten.KeyK},
-	7: {ebiten.KeyS, ebiten.KeyD, ebiten.KeyF,
-		ebiten.KeySpace, ebiten.KeyJ, ebiten.KeyK, ebiten.KeyL},
-}
-
-func (s *ScenePlay) KeyAction(k int) KeyAction {
-	return CurrentKeyAction(s.LastPressed[k], s.Pressed[k])
-}
 func CurrentKeyAction(last, now bool) KeyAction {
 	switch {
 	case !last && !now:
@@ -34,10 +66,4 @@ func CurrentKeyAction(last, now bool) KeyAction {
 	default:
 		panic("not reach")
 	}
-}
-
-type KeyEvent struct {
-	Time    int64
-	Pressed bool
-	Key     int // Key layout index
 }
