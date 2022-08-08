@@ -205,7 +205,7 @@ func (s *ScenePlay) Update() {
 	for s.Time() < s.Effect.Next.Time {
 		s.Effect = s.Effect.Next
 	}
-	// Todo: key input
+
 	for k, p := range s.Pressed {
 		s.LastPressed[k] = p
 		if s.ReplayMode {

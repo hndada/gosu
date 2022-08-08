@@ -1,4 +1,4 @@
-package main
+package input
 
 // convVirtualKeyCode converts a Win32 virtual key code number
 // into the standard keycodes used by the key package.
