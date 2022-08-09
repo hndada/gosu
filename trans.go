@@ -46,9 +46,8 @@ type EffectPoint struct {
 	Prev      *EffectPoint
 }
 
-// Uninherited: BPM, meter
+// NewTransPointsFromOsu appends to a slice only when following element is different.
 // Should be run at whole slice at once since those are all together at one section in osu format.
-// Append to a slice only when following element is different.
 func NewTransPointsFromOsu(o *osu.Format) TransPoints {
 	sort.Slice(o.TimingPoints, func(i int, j int) bool {
 		return o.TimingPoints[i].Time < o.TimingPoints[j].Time
@@ -68,7 +67,7 @@ func NewTransPointsFromOsu(o *osu.Format) TransPoints {
 	var tps TransPoints
 	for _, tp := range o.TimingPoints {
 		time := int64(tp.Time)
-		if tp.Uninherited {
+		if tp.Uninherited { // Uninherited: BPM, meter
 			bpm, _ := tp.BPM()
 			m := uint8(tp.Meter)
 			if bpm != lastBPM || m != lastMeter {
