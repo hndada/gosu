@@ -2,8 +2,8 @@ package osu
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"testing"
 )
 
@@ -12,7 +12,7 @@ var tests = []string{"testo.osu", "testt.osu", "testc.osu", "testm.osu"}
 
 func TestParse(t *testing.T) {
 	for _, s := range tests {
-		dat, err := ioutil.ReadFile(s)
+		dat, err := os.ReadFile(s)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -26,7 +26,7 @@ func TestParse(t *testing.T) {
 
 func BenchmarkParse(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		dat, err := ioutil.ReadFile("testm.osu")
+		dat, err := os.ReadFile("testm.osu")
 		if err != nil {
 			log.Fatal(err)
 		}
