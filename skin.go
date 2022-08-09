@@ -1,4 +1,4 @@
-package main
+package gosu
 
 type NoteKind int
 

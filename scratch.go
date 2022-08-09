@@ -1,4 +1,4 @@
-package main
+package gosu
 
 // 40 = 32 + 8; 8 keyCount with left-scratch
 const (

@@ -1,4 +1,4 @@
-package main
+package gosu
 
 import "github.com/hndada/gosu/parse/osu"
 

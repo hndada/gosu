@@ -1,4 +1,4 @@
-package main
+package gosu
 
 type Judgment struct {
 	Karma  float64
