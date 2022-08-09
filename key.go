@@ -23,3 +23,6 @@ func CurrentKeyAction(last, now bool) KeyAction {
 		panic("not reach")
 	}
 }
+func (s *ScenePlay) KeyAction(k int) KeyAction {
+	return CurrentKeyAction(s.LastPressed[k], s.Pressed[k])
+}
