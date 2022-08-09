@@ -52,12 +52,13 @@ func NewTransPointsFromOsu(o *osu.Format) TransPoints {
 	sort.Slice(o.TimingPoints, func(i int, j int) bool {
 		return o.TimingPoints[i].Time < o.TimingPoints[j].Time
 	})
+	const bufferTime = 10000
 	var (
 		lastSpeedFactor float64 = 1
-		lastBPM         float64
-		lastMeter       uint8
-		lastVolume      uint8
-		lastHighlight   bool
+		lastBPM         float64 = 0
+		lastMeter       uint8   = 4
+		lastVolume      uint8   = 128
+		lastHighlight   bool    = false
 
 		pTempo       *TempoPoint
 		pSpeedFactor *SpeedFactorPoint
@@ -65,6 +66,11 @@ func NewTransPointsFromOsu(o *osu.Format) TransPoints {
 		pEffect      *EffectPoint
 	)
 	var tps TransPoints
+	{ // First speed factor point
+		p := &SpeedFactorPoint{bufferTime, 1, nil, pSpeedFactor}
+		tps.SpeedFactors = append(tps.SpeedFactors, p)
+		pSpeedFactor = p
+	}
 	for _, tp := range o.TimingPoints {
 		time := int64(tp.Time)
 		if tp.Uninherited { // Uninherited: BPM, meter
@@ -73,7 +79,9 @@ func NewTransPointsFromOsu(o *osu.Format) TransPoints {
 			if bpm != lastBPM || m != lastMeter {
 				p := &TempoPoint{time, bpm, m, nil, pTempo}
 				tps.Tempos = append(tps.Tempos, p)
-				p.Prev.Next = p
+				if p.Prev != nil {
+					p.Prev.Next = p
+				}
 				pTempo = p
 			}
 			lastBPM = bpm
@@ -83,7 +91,9 @@ func NewTransPointsFromOsu(o *osu.Format) TransPoints {
 			if sf != lastSpeedFactor {
 				p := &SpeedFactorPoint{time, sf, nil, pSpeedFactor}
 				tps.SpeedFactors = append(tps.SpeedFactors, p)
-				p.Prev.Next = p
+				if p.Prev != nil {
+					p.Prev.Next = p
+				}
 				pSpeedFactor = p
 			}
 			lastSpeedFactor = sf
@@ -93,7 +103,9 @@ func NewTransPointsFromOsu(o *osu.Format) TransPoints {
 		if v != lastVolume {
 			p := &VolumePoint{time, v, nil, pVolume}
 			tps.Volumes = append(tps.Volumes, p)
-			p.Prev.Next = p
+			if p.Prev != nil {
+				p.Prev.Next = p
+			}
 			pVolume = p
 		}
 		lastVolume = v
@@ -102,7 +114,9 @@ func NewTransPointsFromOsu(o *osu.Format) TransPoints {
 		if h != lastHighlight {
 			p := &EffectPoint{time, h, nil, pEffect}
 			tps.Effects = append(tps.Effects, p)
-			p.Prev.Next = p
+			if p.Prev != nil {
+				p.Prev.Next = p
+			}
 			pEffect = p
 		}
 		lastHighlight = h

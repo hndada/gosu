@@ -48,7 +48,7 @@ type Chart struct {
 }
 
 func NewChartHeaderFromOsu(o *osu.Format) ChartHeader {
-	return ChartHeader{
+	c := ChartHeader{
 		MusicName:     o.Title,
 		MusicUnicode:  o.TitleUnicode,
 		Artist:        o.Artist,
@@ -60,6 +60,12 @@ func NewChartHeaderFromOsu(o *osu.Format) ChartHeader {
 		AudioFilename: o.AudioFilename,
 		PreviewTime:   int64(o.PreviewTime),
 	}
+	var e osu.Event
+	e, _ = o.Background()
+	c.ImageFilename = e.Filename
+	e, _ = o.Video()
+	c.VideoFilename, c.VideoTimeOffset = e.Filename, int64(e.StartTime)
+	return c
 }
 
 func NewChartFromOsu(o *osu.Format) (*Chart, error) {
@@ -81,8 +87,11 @@ func NewChartFromOsu(o *osu.Format) (*Chart, error) {
 	return c, nil
 }
 func (c ChartHeader) MusicPath(cpath string) string {
-	return filepath.Join(filepath.Dir(cpath), c.MusicName)
+	return filepath.Join(filepath.Dir(cpath), c.AudioFilename)
 }
 func (c ChartHeader) BgPath(cpath string) string {
+	if c.ImageFilename == "" {
+		return DefaultBackgroundPath
+	}
 	return filepath.Join(filepath.Dir(cpath), c.ImageFilename)
 }

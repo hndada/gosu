@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/draw"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,8 +31,8 @@ type SceneSelect struct {
 }
 
 const (
-	bw = 350 // Box width
-	bh = 100 // Box height
+	bw = 300 // Box width
+	bh = 40  // Box height
 )
 
 // Todo: play sound effect when moving a cursor
@@ -101,6 +102,7 @@ func NewBox(c *Chart) *ebiten.Image {
 		by = 30
 	)
 	img := image.NewRGBA(image.Rect(0, 0, bw, bh))
+	draw.Draw(img, img.Bounds(), &image.Uniform{color.White}, image.Point{}, draw.Src)
 	t := fmt.Sprintf("(%dKey Lv %.2f) %s [%s]", c.KeyCount, c.Level, c.MusicName, c.ChartName)
 	d := &font.Drawer{
 		Dst:  img,
@@ -116,9 +118,9 @@ func NewBox(c *Chart) *ebiten.Image {
 // Todo: enable to pass replay format pointer to NewScenePlay.
 // Todo: map to *Game g
 func (s *SceneSelect) Update(g *Game) {
-	const threshold = 50 // Require holding for 50ms to move a cursor
+	const threshold = 80 // Require holding for 80ms to move a cursor
 	switch {
-	case ebiten.IsKeyPressed(ebiten.KeyEnter):
+	case ebiten.IsKeyPressed(ebiten.KeyEnter), ebiten.IsKeyPressed(ebiten.KeyNumpadEnter):
 		g.Scene = NewScenePlay(s.Charts[s.Cursor], s.ChartPaths[s.Cursor], nil)
 	case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
 		if TickToMsec(s.Hold) > threshold {
@@ -132,7 +134,9 @@ func (s *SceneSelect) Update(g *Game) {
 		if TickToMsec(s.Hold) > threshold {
 			s.Hold = 0
 			s.Cursor--
-			s.Cursor %= len(s.Charts)
+			if s.Cursor < 0 {
+				s.Cursor += len(s.Charts)
+			}
 		} else {
 			s.Hold++
 		}
