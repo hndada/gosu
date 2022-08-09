@@ -1,270 +1,349 @@
-// Copyright 2015 The Go Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
-
-//go:generate stringer -type=Code
-
-// Package key defines an event for physical keyboard keys.
-//
-// On-screen software keyboards do not send key events.
-//
-// See the golang.org/x/mobile/app package for details on the event model.
 package main
 
-import (
-	"fmt"
-	"strings"
-)
+type Key int
 
-// Event is a key event.
-type Event struct {
-	// Rune is the meaning of the key event as determined by the
-	// operating system. The mapping is determined by system-dependent
-	// current layout, modifiers, lock-states, etc.
-	//
-	// If non-negative, it is a Unicode codepoint: pressing the 'a' key
-	// generates different Runes 'a' or 'A' (but the same Code) depending on
-	// the state of the shift key.
-	//
-	// If -1, the key does not generate a Unicode codepoint. To distinguish
-	// them, look at Code.
-	Rune rune
-
-	// Code is the identity of the physical key relative to a notional
-	// "standard" keyboard, independent of current layout, modifiers,
-	// lock-states, etc
-	//
-	// For standard key codes, its value matches USB HID key codes.
-	// Compare its value to uint32-typed constants in this package, such
-	// as CodeLeftShift and CodeEscape.
-	//
-	// Pressing the regular '2' key and number-pad '2' key (with Num-Lock)
-	// generate different Codes (but the same Rune).
-	Code Code
-
-	// Modifiers is a bitmask representing a set of modifier keys: ModShift,
-	// ModAlt, etc.
-	Modifiers Modifiers
-
-	// Direction is the direction of the key event: DirPress, DirRelease,
-	// or DirNone (for key repeats).
-	Direction Direction
-
-	// TODO: add a Device ID, for multiple input devices?
-	// TODO: add a time.Time?
-}
-
-func (e Event) String() string {
-	if e.Rune >= 0 {
-		return fmt.Sprintf("key.Event{%q (%v), %v, %v}", e.Rune, e.Code, e.Modifiers, e.Direction)
-	}
-	return fmt.Sprintf("key.Event{(%v), %v, %v}", e.Code, e.Modifiers, e.Direction)
-}
-
-// Direction is the direction of the key event.
-type Direction uint8
-
+// The order is consistent with Ebiten.
 const (
-	DirNone    Direction = 0
-	DirPress   Direction = 1
-	DirRelease Direction = 2
+	KeyA Key = iota
+	KeyB
+	KeyC
+	KeyD
+	KeyE
+	KeyF
+	KeyG
+	KeyH
+	KeyI
+	KeyJ
+	KeyK
+	KeyL
+	KeyM
+	KeyN
+	KeyO
+	KeyP
+	KeyQ
+	KeyR
+	KeyS
+	KeyT
+	KeyU
+	KeyV
+	KeyW
+	KeyX
+	KeyY
+	KeyZ
+	KeyAltLeft
+	KeyAltRight
+	KeyArrowDown
+	KeyArrowLeft
+	KeyArrowRight
+	KeyArrowUp
+	KeyBackquote
+	KeyBackslash
+	KeyBackspace
+	KeyBracketLeft
+	KeyBracketRight
+	KeyCapsLock
+	KeyComma
+	KeyContextMenu
+	KeyControlLeft
+	KeyControlRight
+	KeyDelete
+	KeyDigit0
+	KeyDigit1
+	KeyDigit2
+	KeyDigit3
+	KeyDigit4
+	KeyDigit5
+	KeyDigit6
+	KeyDigit7
+	KeyDigit8
+	KeyDigit9
+	KeyEnd
+	KeyEnter
+	KeyEqual
+	KeyEscape
+	KeyF1
+	KeyF2
+	KeyF3
+	KeyF4
+	KeyF5
+	KeyF6
+	KeyF7
+	KeyF8
+	KeyF9
+	KeyF10
+	KeyF11
+	KeyF12
+	KeyHome
+	KeyInsert
+	KeyMetaLeft
+	KeyMetaRight
+	KeyMinus
+	KeyNumLock
+	KeyNumpad0
+	KeyNumpad1
+	KeyNumpad2
+	KeyNumpad3
+	KeyNumpad4
+	KeyNumpad5
+	KeyNumpad6
+	KeyNumpad7
+	KeyNumpad8
+	KeyNumpad9
+	KeyNumpadAdd
+	KeyNumpadDecimal
+	KeyNumpadDivide
+	KeyNumpadEnter
+	KeyNumpadEqual
+	KeyNumpadMultiply
+	KeyNumpadSubtract
+	KeyPageDown
+	KeyPageUp
+	KeyPause
+	KeyPeriod
+	KeyPrintScreen
+	KeyQuote
+	KeyScrollLock
+	KeySemicolon
+	KeyShiftLeft
+	KeyShiftRight
+	KeySlash
+	KeySpace
+	KeyTab
+	KeyReserved0
+	KeyReserved1
+	KeyReserved2
+	KeyReserved3
 )
 
-// Modifiers is a bitmask representing a set of modifier keys.
-type Modifiers uint32
-
-const (
-	ModShift   Modifiers = 1 << 0
-	ModControl Modifiers = 1 << 1
-	ModAlt     Modifiers = 1 << 2
-	ModMeta    Modifiers = 1 << 3 // called "Command" on OS X
-)
-
-// Code is the identity of a key relative to a notional "standard" keyboard.
-type Code uint32
-
-// Physical key codes.
-//
-// For standard key codes, its value matches USB HID key codes.
-// TODO: add missing codes.
-const (
-	CodeUnknown Code = 0
-
-	CodeA Code = 4
-	CodeB Code = 5
-	CodeC Code = 6
-	CodeD Code = 7
-	CodeE Code = 8
-	CodeF Code = 9
-	CodeG Code = 10
-	CodeH Code = 11
-	CodeI Code = 12
-	CodeJ Code = 13
-	CodeK Code = 14
-	CodeL Code = 15
-	CodeM Code = 16
-	CodeN Code = 17
-	CodeO Code = 18
-	CodeP Code = 19
-	CodeQ Code = 20
-	CodeR Code = 21
-	CodeS Code = 22
-	CodeT Code = 23
-	CodeU Code = 24
-	CodeV Code = 25
-	CodeW Code = 26
-	CodeX Code = 27
-	CodeY Code = 28
-	CodeZ Code = 29
-
-	Code1 Code = 30
-	Code2 Code = 31
-	Code3 Code = 32
-	Code4 Code = 33
-	Code5 Code = 34
-	Code6 Code = 35
-	Code7 Code = 36
-	Code8 Code = 37
-	Code9 Code = 38
-	Code0 Code = 39
-
-	CodeReturnEnter        Code = 40
-	CodeEscape             Code = 41
-	CodeDeleteBackspace    Code = 42
-	CodeTab                Code = 43
-	CodeSpacebar           Code = 44
-	CodeHyphenMinus        Code = 45 // -
-	CodeEqualSign          Code = 46 // =
-	CodeLeftSquareBracket  Code = 47 // [
-	CodeRightSquareBracket Code = 48 // ]
-	CodeBackslash          Code = 49 // \
-	CodeSemicolon          Code = 51 // ;
-	CodeApostrophe         Code = 52 // '
-	CodeGraveAccent        Code = 53 // `
-	CodeComma              Code = 54 // ,
-	CodeFullStop           Code = 55 // .
-	CodeSlash              Code = 56 // /
-	CodeCapsLock           Code = 57
-
-	CodeF1  Code = 58
-	CodeF2  Code = 59
-	CodeF3  Code = 60
-	CodeF4  Code = 61
-	CodeF5  Code = 62
-	CodeF6  Code = 63
-	CodeF7  Code = 64
-	CodeF8  Code = 65
-	CodeF9  Code = 66
-	CodeF10 Code = 67
-	CodeF11 Code = 68
-	CodeF12 Code = 69
-
-	CodePause         Code = 72
-	CodeInsert        Code = 73
-	CodeHome          Code = 74
-	CodePageUp        Code = 75
-	CodeDeleteForward Code = 76
-	CodeEnd           Code = 77
-	CodePageDown      Code = 78
-
-	CodeRightArrow Code = 79
-	CodeLeftArrow  Code = 80
-	CodeDownArrow  Code = 81
-	CodeUpArrow    Code = 82
-
-	CodeKeypadNumLock     Code = 83
-	CodeKeypadSlash       Code = 84 // /
-	CodeKeypadAsterisk    Code = 85 // *
-	CodeKeypadHyphenMinus Code = 86 // -
-	CodeKeypadPlusSign    Code = 87 // +
-	CodeKeypadEnter       Code = 88
-	CodeKeypad1           Code = 89
-	CodeKeypad2           Code = 90
-	CodeKeypad3           Code = 91
-	CodeKeypad4           Code = 92
-	CodeKeypad5           Code = 93
-	CodeKeypad6           Code = 94
-	CodeKeypad7           Code = 95
-	CodeKeypad8           Code = 96
-	CodeKeypad9           Code = 97
-	CodeKeypad0           Code = 98
-	CodeKeypadFullStop    Code = 99  // .
-	CodeKeypadEqualSign   Code = 103 // =
-
-	CodeF13 Code = 104
-	CodeF14 Code = 105
-	CodeF15 Code = 106
-	CodeF16 Code = 107
-	CodeF17 Code = 108
-	CodeF18 Code = 109
-	CodeF19 Code = 110
-	CodeF20 Code = 111
-	CodeF21 Code = 112
-	CodeF22 Code = 113
-	CodeF23 Code = 114
-	CodeF24 Code = 115
-
-	CodeHelp Code = 117
-
-	CodeMute       Code = 127
-	CodeVolumeUp   Code = 128
-	CodeVolumeDown Code = 129
-
-	CodeLeftControl  Code = 224
-	CodeLeftShift    Code = 225
-	CodeLeftAlt      Code = 226
-	CodeLeftGUI      Code = 227
-	CodeRightControl Code = 228
-	CodeRightShift   Code = 229
-	CodeRightAlt     Code = 230
-	CodeRightGUI     Code = 231
-
-	// The following codes are not part of the standard USB HID Usage IDs for
-	// keyboards. See http://www.usb.org/developers/hidpage/Hut1_12v2.pdf
-	//
-	// Usage IDs are uint16s, so these non-standard values start at 0x10000.
-
-	// CodeCompose is the Code for a compose key, sometimes called a multi key,
-	// used to input non-ASCII characters such as ñ being composed of n and ~.
-	//
-	// See https://en.wikipedia.org/wiki/Compose_key
-	CodeCompose Code = 0x10000
-)
-
-// TODO: Given we use runes outside the unicode space, should we provide a
-// printing function? Related: it's a little unfortunate that printing a
-// key.Event with %v gives not very readable output like:
-//	{100 7 key.Modifiers() Press}
-
-var mods = [...]struct {
-	m Modifiers
-	s string
-}{
-	{ModShift, "Shift"},
-	{ModControl, "Control"},
-	{ModAlt, "Alt"},
-	{ModMeta, "Meta"},
-}
-
-func (m Modifiers) String() string {
-	var match []string
-	for _, mod := range mods {
-		if mod.m&m != 0 {
-			match = append(match, mod.s)
-		}
+// See https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes for reference.
+// Alt, Shift, and Control has 3 codes: overall, left and right.
+// Order of ArrowKeys are different between Ebiten and Windows VK.
+// Order of Page Up/Down are different between Ebiten and Windows VK.
+// KeyNumpadEnter returns VK_RETURN, while main Enter returns the same.
+// KeyReserved0 ~ KeyReserved3 are skipped.
+// Supposed KeyContextMenu stands for Applications key, which is next to Right control
+// Supposed KeyMeta Left and Right stands for Left and Right Windows key.
+// Supposed KeyNumpadEqual returns VK_OEM_PLUS. I guess this is derived from Apple Keyboard.
+func ToVirtualKey(k Key) uint32 {
+	switch k {
+	case KeyA:
+		return 0x41
+	case KeyB:
+		return 0x42
+	case KeyC:
+		return 0x43
+	case KeyD:
+		return 0x44
+	case KeyE:
+		return 0x45
+	case KeyF:
+		return 0x46
+	case KeyG:
+		return 0x47
+	case KeyH:
+		return 0x48
+	case KeyI:
+		return 0x49
+	case KeyJ:
+		return 0x4A
+	case KeyK:
+		return 0x4B
+	case KeyL:
+		return 0x4C
+	case KeyM:
+		return 0x4D
+	case KeyN:
+		return 0x4E
+	case KeyO:
+		return 0x4F
+	case KeyP:
+		return 0x50
+	case KeyQ:
+		return 0x51
+	case KeyR:
+		return 0x52
+	case KeyS:
+		return 0x53
+	case KeyT:
+		return 0x54
+	case KeyU:
+		return 0x55
+	case KeyV:
+		return 0x56
+	case KeyW:
+		return 0x57
+	case KeyX:
+		return 0x58
+	case KeyY:
+		return 0x59
+	case KeyZ:
+		return 0x5A
+	case KeyAltLeft:
+		return 0xA4 // VK_LMENU
+	case KeyAltRight:
+		return 0xA5 // VK_RMENU
+	case KeyArrowDown:
+		return 0x28
+	case KeyArrowLeft:
+		return 0x25
+	case KeyArrowRight:
+		return 0x27
+	case KeyArrowUp:
+		return 0x26
+	case KeyBackquote: // "`"
+		return 0xC0 // VK_OEM_3
+	case KeyBackslash: // "\"
+		return 0xDC // VK_OEM_5
+	case KeyBackspace:
+		return 0x08
+	case KeyBracketLeft:
+		return 0xDB // VK_OEM_4
+	case KeyBracketRight:
+		return 0xDD // VK_OEM_6
+	case KeyCapsLock:
+		return 0x14
+	case KeyComma:
+		return 0xBC // VK_OEM_COMMA
+	case KeyContextMenu:
+		return 0x5D // VK_APPS
+	case KeyControlLeft:
+		return 0xA2 // VK_LCONTROL
+	case KeyControlRight:
+		return 0xA3 // VK_RCONTROL
+	case KeyDelete:
+		return 0x2E
+	case KeyDigit0:
+		return 0x30
+	case KeyDigit1:
+		return 0x31
+	case KeyDigit2:
+		return 0x32
+	case KeyDigit3:
+		return 0x33
+	case KeyDigit4:
+		return 0x34
+	case KeyDigit5:
+		return 0x35
+	case KeyDigit6:
+		return 0x36
+	case KeyDigit7:
+		return 0x37
+	case KeyDigit8:
+		return 0x38
+	case KeyDigit9:
+		return 0x39
+	case KeyEnd:
+		return 0x23
+	case KeyEnter:
+		return 0x0D
+	case KeyEqual:
+		return 0xBB // VK_OEM_PLUS
+	case KeyEscape:
+		return 0x1B
+	case KeyF1:
+		return 0x70
+	case KeyF2:
+		return 0x71
+	case KeyF3:
+		return 0x72
+	case KeyF4:
+		return 0x73
+	case KeyF5:
+		return 0x74
+	case KeyF6:
+		return 0x75
+	case KeyF7:
+		return 0x76
+	case KeyF8:
+		return 0x77
+	case KeyF9:
+		return 0x78
+	case KeyF10:
+		return 0x79
+	case KeyF11:
+		return 0x7A
+	case KeyF12:
+		return 0x7B
+	case KeyHome:
+		return 0x24
+	case KeyInsert:
+		return 0x2D
+	case KeyMetaLeft:
+		return 0x5B // VK_LWIN
+	case KeyMetaRight:
+		return 0x5C // VK_RWIN
+	case KeyMinus:
+		return 0xBD // VK_OEM_MINUS
+	case KeyNumLock:
+		return 0x90
+	case KeyNumpad0:
+		return 0x60
+	case KeyNumpad1:
+		return 0x61
+	case KeyNumpad2:
+		return 0x62
+	case KeyNumpad3:
+		return 0x63
+	case KeyNumpad4:
+		return 0x64
+	case KeyNumpad5:
+		return 0x65
+	case KeyNumpad6:
+		return 0x66
+	case KeyNumpad7:
+		return 0x67
+	case KeyNumpad8:
+		return 0x68
+	case KeyNumpad9:
+		return 0x69
+	case KeyNumpadAdd:
+		return 0x6B // VK_ADD
+	case KeyNumpadDecimal:
+		return 0x6E
+	case KeyNumpadDivide:
+		return 0x6F
+	case KeyNumpadEnter:
+		return 0x0D // VK_RETURN
+	case KeyNumpadEqual:
+		return 0xBB // VK_OEM_PLUS
+	case KeyNumpadMultiply:
+		return 0x6A
+	case KeyNumpadSubtract:
+		return 0x6D
+	case KeyPageDown:
+		return 0x22 // VK_NEXT
+	case KeyPageUp:
+		return 0x21 // VK_PRIOR
+	case KeyPause:
+		return 0x13
+	case KeyPeriod:
+		return 0xBE // VK_OEM_PERIOD
+	case KeyPrintScreen:
+		return 0x2C // VK_SNAPSHOT
+	case KeyQuote:
+		return 0xDE // VK_OEM_7
+	case KeyScrollLock:
+		return 0x91
+	case KeySemicolon:
+		return 0xBA // VK_OEM_1
+	case KeyShiftLeft:
+		return 0xA0 // VK_LSHIFT
+	case KeyShiftRight:
+		return 0xA1 // // VK_RSHIFT
+	case KeySlash:
+		return 0xBF // VK_OEM_2
+	case KeySpace:
+		return 0x20
+	case KeyTab:
+		return 0x09
+	case KeyReserved0:
+	case KeyReserved1:
+	case KeyReserved2:
+	case KeyReserved3:
 	}
-	return "key.Modifiers(" + strings.Join(match, "|") + ")"
+	return 0x00 // Unknown
 }
 
-func (d Direction) String() string {
-	switch d {
-	case DirNone:
-		return "None"
-	case DirPress:
-		return "Press"
-	case DirRelease:
-		return "Release"
-	default:
-		return fmt.Sprintf("key.Direction(%d)", d)
-	}
-}
+// for i, s := range strings.Split(text, "\n") {
+// 	fmt.Printf("case %s: return 0x%02X\n", s, i+65)
+// }
