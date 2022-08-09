@@ -29,9 +29,9 @@ type ScenePlay struct {
 	JudgmentCounts []int
 
 	// In dev
-	ReplayMode   bool
-	ReplayStates []ReplayState
-	ReplayCursor int
+	// ReplayMode   bool
+	// ReplayStates []ReplayState
+	// ReplayCursor int
 
 	Speed float64
 	TransPoint
@@ -53,6 +53,8 @@ type ScenePlay struct {
 
 	Judgment          Judgment
 	JudgmentCountdown int
+
+	FetchInput func(int64) KeysState
 }
 
 func TickToMsec(tick int) int64 { return int64(1000 * float64(tick) / float64(MaxTPS)) }
@@ -180,6 +182,7 @@ func NewScenePlay(c *Chart, cpath string) *ScenePlay {
 	return s
 }
 
+// TPS affects only on Update(), not on Draw()
 func (s *ScenePlay) Update() {
 	if s.IsFinished() {
 		if s.MusicPlayer != nil {
@@ -209,12 +212,8 @@ func (s *ScenePlay) Update() {
 	for k, p := range s.Pressed {
 		s.LastPressed[k] = p
 		if s.ReplayMode {
-			for s.ReplayCursor < len(s.ReplayStates)-1 && s.Time() > s.ReplayStates[s.ReplayCursor].Time {
+			for s.ReplayCursor < len(s.ReplayStates)-1 && s.Time() >= s.ReplayStates[s.ReplayCursor+1].Time {
 				s.ReplayCursor++
-			}
-			s.ReplayCursor--
-			if s.ReplayCursor < 0 {
-				s.ReplayCursor = 0
 			}
 			s.Pressed = s.ReplayStates[s.ReplayCursor].Pressed
 		} else {
@@ -228,7 +227,6 @@ func (s *ScenePlay) Update() {
 		if n.Type != Tail && s.KeyAction(k) == Hit {
 			n.PlaySE()
 		}
-
 		td := n.Time - s.Time() // Time difference; negative values means late hit
 		if n.Scored {
 			if n.Type != Tail {

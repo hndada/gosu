@@ -16,19 +16,19 @@ type EbitenInput struct {
 // Todo: rename either one of 'start's
 func (ei *EbitenInput) Listen(start time.Time) {
 	ei.start = start
-	ei.keyEvents = make([]KeyEvent, 0, 30)
+	ei.keyEvents = make([]KeyEvent, 0, 10)
 	go ei.scan()
 }
 func (ei *EbitenInput) Flush() []KeyEvent {
 	es := ei.keyEvents
-	ei.keyEvents = make([]KeyEvent, 0, 30)
+	ei.keyEvents = make([]KeyEvent, 0, 10)
 	return es
 }
 func (ei *EbitenInput) Close() { ei.closed = true }
 
 // Todo: has not tested yet.
 func (ei *EbitenInput) scan() {
-	const d = 9 * time.Millisecond // Todo: Test from 9 to 1 gradually
+	const d = 1 * time.Millisecond // Todo: Test from 9 to 1 gradually
 	for {
 		enter := time.Now()
 		t := time.Since(ei.start).Milliseconds()
