@@ -25,7 +25,7 @@ func NewPlayNotes(c *Chart) (playNotes []*PlayNote, stagedNotes []*PlayNote) {
 			Note: n,
 			Prev: prev,
 		}
-		if prev != nil { // Set Next value later
+		if prev != nil { // Next value is set later.
 			prev.Next = pn
 		}
 		prevs[n.Key] = pn
@@ -36,10 +36,7 @@ func NewPlayNotes(c *Chart) (playNotes []*PlayNote, stagedNotes []*PlayNote) {
 	}
 	return
 }
-func (n PlayNote) PlaySE() {}
 
-// DrawImageOptions is not commutative.
-// Rotate -> Scale -> Translate.
 func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 	const (
 		up   = 10000
@@ -68,21 +65,19 @@ func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 		}
 		d += s.Speed * sf.Factor * float64(n.Time-t) // remained speed factor calc
 
-		ns := s.NoteSprites[n.Key]
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Scale(ns.ScaleW(), ns.ScaleH())
-		x := ns.X
-		y := float64(HintPosition)*Scale() - d - ns.H/2 // A note locates at the center of judge line at the time.
+		sprite := s.NoteSprites[n.Key]
+		y := HintPosition - d - sprite.H/2 // A note locates at the center of hint at the time.
+		sprite.Y = y
 		if n.Type == Head {
 			DrawLongNote(screen, s.BodySprites[n.Key], 0, y)
 		} else if n.Type == Tail && n.Time2-s.Time() < down { // Avoid drawing long note twice.
-			DrawLongNote(screen, s.BodySprites[n.Key], y, float64(ScreenSizeY))
+			DrawLongNote(screen, s.BodySprites[n.Key], y, screenSizeY)
 		}
-		op.GeoM.Translate(x, y)
+		op := sprite.Op()
 		if n.Scored {
 			op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		}
-		screen.DrawImage(s.NoteSprites[n.Key].I, op)
+		screen.DrawImage(sprite.I, op)
 	}
 }
 
@@ -101,6 +96,4 @@ func DrawLongNote(screen *ebiten.Image, ns Sprite, top, bottom float64) {
 	screen.DrawImage(ns.I.SubImage(last).(*ebiten.Image), op)
 }
 
-// func isOut(w, h, x, y int) bool {
-// 	return x+w < 0 || x > ScreenSizeX || y+h < 0 || y > ScreenSizeY
-// }
+func (n PlayNote) PlaySE() {}
