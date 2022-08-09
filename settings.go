@@ -1,23 +1,40 @@
 package gosu
 
-var (
-	MaxTPS      = 1000
-	ScreenSizeX = 800
-	ScreenSizeY = 600
+import "github.com/hajimehoshi/ebiten/v2/audio"
 
+// Logical size of in-game screen
+const (
+	screenSizeX = 800
+	screenSizeY = 600
+)
+
+var (
+	WindowSizeX = 800
+	WindowSizeY = 600
+	MaxTPS      = 1000 // MaxTPS should be 1000 or greater.
 	Volume      = 0.05
-	Speed       = 0.16
-	KeySettings = map[int][]Key{
-		4:               {KeyD, KeyF, KeyJ, KeyK},
-		5:               {KeyD, KeyF, KeySpace, KeyJ, KeyK},
-		6:               {KeyS, KeyD, KeyF, KeyJ, KeyK, KeyL},
-		7:               {KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL},
-		8 + LeftScratch: {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL},
-		8:               {KeyA, KeyS, KeyD, KeyF, KeyJ, KeyK, KeyL, KeySemicolon},
-		9:               {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL, KeySemicolon},
-		10:              {KeyA, KeyS, KeyD, KeyF, KeyV, KeyN, KeyJ, KeyK, KeyL, KeySemicolon},
-	}
-	// Scaled to 800 x 600.
+)
+var KeySettings = map[int][]Key{
+	4:               {KeyD, KeyF, KeyJ, KeyK},
+	5:               {KeyD, KeyF, KeySpace, KeyJ, KeyK},
+	6:               {KeyS, KeyD, KeyF, KeyJ, KeyK, KeyL},
+	7:               {KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL},
+	8 + LeftScratch: {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL},
+	8:               {KeyA, KeyS, KeyD, KeyF, KeyJ, KeyK, KeyL, KeySemicolon},
+	9:               {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL, KeySemicolon},
+	10:              {KeyA, KeyS, KeyD, KeyF, KeyV, KeyN, KeyJ, KeyK, KeyL, KeySemicolon},
+}
+var Speed = 0.15
+var (
+	BgDimness     float64 = 0.3
+	ComboPosition float64 = 180
+	ComboWidth    float64 = 40
+	ComboGap      float64 = -2
+	ScoreWidth    float64 = 33
+	JudgePosition float64 = 250
+	JudgmentWidth float64 = 65
+	ClearWidth    float64 = 225
+
 	NoteWidths = map[int][4]float64{
 		4:  {50, 50, 50, 50},
 		5:  {50, 50, 50, 50},
@@ -27,23 +44,12 @@ var (
 		9:  {45, 45, 45, 45},
 		10: {45, 45, 45, 45},
 	}
-	NoteHeigth    float64 = 30 // Applies all notes
-	ComboPosition float64 = 180
-	JudgePosition float64 = 250
-	HintPosition  float64 = 550 // The middle position of Judge line, not a topmost.
-	FieldDark     float64 = 0.95
-	BgDimness     float64 = 0.3
-	// ScratchMode map[int]int
-	ComboWidth    float64 = 40
-	ScoreWidth    float64 = 33
-	ComboGap      float64 = -2
-	ScoreGap      float64 = -2
-	HintHeight    float64 = 5
-	JudgmentWidth float64 = 65
+	NoteHeigth   float64 = 30 // Applies all notes
+	FieldDark    float64 = 0.95
+	HintPosition float64 = 550 // The middle position of Judge line, not a topmost.
+	HintHeight   float64 = 5
 )
 
-// Scale returns scaled value based on screen size
-// func Scale(v float64) int     { return int(v * DisplayScale()) }
-// func DisplayScale() float64   { return float64(ScreenSizeY) / 100 }
-// func ScreenSize() image.Point { return image.Pt(ScreenSizeX, ScreenSiz eY) }
-func Scale() float64 { return float64(ScreenSizeY) / 800 } // Value of Scale() is 1 in 800 x 600
+const SampleRate = 44100
+
+var Context *audio.Context = audio.NewContext(SampleRate)

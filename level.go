@@ -16,6 +16,12 @@ var FingerMap = map[int][]int{
 	10: {4, 3, 2, 1, 0, 0, 1, 2, 3, 4},
 }
 
+func init() {
+	for k := 2; k <= 8; k++ {
+		FingerMap[k|LeftScratch] = append([]int{FingerMap[k-1][0] + 1}, FingerMap[k-1]...)
+		FingerMap[k|RightScratch] = append(FingerMap[k-1], FingerMap[k-1][k-2]+1)
+	}
+}
 func WeightedSum(series []float64, weightDecay float64) float64 {
 	sort.Slice(series, func(i, j int) bool { return series[i] > series[j] })
 	sum, weight := 0.0, 1.0
