@@ -7,15 +7,15 @@ var (
 
 	Volume      = 0.05
 	Speed       = 0.16
-	KeySettings = map[int][]Code{
-		4:               {CodeD, CodeF, CodeJ, CodeK},
-		5:               {CodeD, CodeF, CodeSpacebar, CodeJ, CodeK},
-		6:               {CodeS, CodeD, CodeF, CodeJ, CodeK, CodeL},
-		7:               {CodeS, CodeD, CodeF, CodeSpacebar, CodeJ, CodeK, CodeL},
-		8 + LeftScratch: {CodeA, CodeS, CodeD, CodeF, CodeSpacebar, CodeJ, CodeK, CodeL},
-		8:               {CodeA, CodeS, CodeD, CodeF, CodeJ, CodeK, CodeL, CodeSemicolon},
-		9:               {CodeA, CodeS, CodeD, CodeF, CodeSpacebar, CodeJ, CodeK, CodeL, CodeSemicolon},
-		10:              {CodeA, CodeS, CodeD, CodeF, CodeV, CodeN, CodeJ, CodeK, CodeL, CodeSemicolon},
+	KeySettings = map[int][]Key{
+		4:               {KeyD, KeyF, KeyJ, KeyK},
+		5:               {KeyD, KeyF, KeySpace, KeyJ, KeyK},
+		6:               {KeyS, KeyD, KeyF, KeyJ, KeyK, KeyL},
+		7:               {KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL},
+		8 + LeftScratch: {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL},
+		8:               {KeyA, KeyS, KeyD, KeyF, KeyJ, KeyK, KeyL, KeySemicolon},
+		9:               {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL, KeySemicolon},
+		10:              {KeyA, KeyS, KeyD, KeyF, KeyV, KeyN, KeyJ, KeyK, KeyL, KeySemicolon},
 	}
 	// Scaled to 800 x 600.
 	NoteWidths = map[int][4]float64{

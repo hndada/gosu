@@ -19,8 +19,9 @@ type ScenePlay struct {
 	PlayNotes   []*PlayNote
 	KeySettings []ebiten.Key // Todo: separate ebiten
 
-	Pressed     []bool
-	LastPressed []bool
+	FetchPressed func() []bool
+	Pressed      []bool
+	LastPressed  []bool
 
 	StagedNotes    []*PlayNote
 	Combo          int
@@ -53,8 +54,6 @@ type ScenePlay struct {
 
 	Judgment          Judgment
 	JudgmentCountdown int
-
-	FetchInput func(int64) KeysState
 }
 
 func TickToMsec(tick int) int64 { return int64(1000 * float64(tick) / float64(MaxTPS)) }
@@ -191,11 +190,9 @@ func (s *ScenePlay) Update() {
 		}
 		return
 	}
-	s.Tick++
 	if s.Tick == 0 {
 		s.MusicPlayer.Play()
 	}
-
 	for s.Time() < s.SpeedFactor.Next.Time {
 		s.SpeedFactor = s.SpeedFactor.Next
 	}
@@ -208,18 +205,7 @@ func (s *ScenePlay) Update() {
 	for s.Time() < s.Effect.Next.Time {
 		s.Effect = s.Effect.Next
 	}
-
-	for k, p := range s.Pressed {
-		s.LastPressed[k] = p
-		if s.ReplayMode {
-			for s.ReplayCursor < len(s.ReplayStates)-1 && s.Time() >= s.ReplayStates[s.ReplayCursor+1].Time {
-				s.ReplayCursor++
-			}
-			s.Pressed = s.ReplayStates[s.ReplayCursor].Pressed
-		} else {
-			s.Pressed[k] = ebiten.IsKeyPressed(s.KeySettings[k])
-		}
-	}
+	s.Pressed = s.FetchPressed()
 	for k, n := range s.StagedNotes {
 		if n == nil {
 			continue
@@ -251,6 +237,7 @@ func (s *ScenePlay) Update() {
 			s.JudgmentCountdown--
 		}
 	}
+	s.Tick++
 }
 func (s ScenePlay) Time() int64 {
 	return int64(float64(s.Tick) / float64(MaxTPS) * 1000)

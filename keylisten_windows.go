@@ -11,17 +11,17 @@ var (
 	procGetAsyncKeyState = moduser32.NewProc("GetAsyncKeyState")
 )
 
-func NewListener(keySettings []uint32) func(int64) KeysState {
+func NewListener(keySettings []uint32) func() []bool {
 	const (
 		wasPressed = 0x0001 // deprecated: whether the key was pressed after the previous call to GetAsyncKeyState
 		isPressed  = 0x8000
 	)
-	return func(now int64) KeysState {
-		state := KeysState{now, make([]bool, len(keySettings))}
+	return func() []bool {
+		pressed := make([]bool, len(keySettings))
 		for k, v := range keySettings {
 			v, _, _ := procGetAsyncKeyState.Call(uintptr(v))
-			state.Pressed[k] = v&isPressed != 0
+			pressed[k] = v&isPressed != 0
 		}
-		return state
+		return pressed
 	}
 }

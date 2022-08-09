@@ -1,10 +1,5 @@
 package main
 
-type KeysState struct {
-	Time    int64
-	Pressed []bool
-}
-
 type KeyAction int
 
 const (
