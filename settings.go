@@ -1,4 +1,4 @@
-package main
+package gosu
 
 var (
 	MaxTPS      = 1000

@@ -1,4 +1,4 @@
-package main
+package gosu
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
@@ -16,7 +16,6 @@ type Scene interface {
 const SampleRate = 44100
 
 var Context *audio.Context = audio.NewContext(SampleRate)
-var g *Game
 
 func NewGame() *Game {
 	ebiten.SetWindowTitle("gosu")
@@ -37,11 +36,4 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return ScreenSizeX, ScreenSizeY
-}
-
-func main() {
-	g = NewGame()
-	if err := ebiten.RunGame(g); err != nil {
-		panic(err)
-	}
 }
