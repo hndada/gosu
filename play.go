@@ -3,7 +3,6 @@ package gosu
 import (
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
@@ -42,26 +41,15 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format) *ScenePlay {
 	s := new(ScenePlay)
 	s.Chart = c
 	s.PlayNotes, s.StagedNotes = NewPlayNotes(c) // Todo: add Mods to input param
-
-	var err error
-	s.MusicFile, err = os.Open(c.MusicPath(cpath))
-	if err != nil {
-		panic(err)
-	}
-	s.MusicPlayer, err = Context.NewPlayer(s.MusicFile)
-	if err != nil {
-		panic(err)
-	}
-
+	s.MusicFile, s.MusicPlayer = NewAudioPlayer(c.MusicPath(cpath))
 	s.Skin = SkinMap[c.KeyCount]
 	s.Background = Sprite{
 		I: NewImage(c.BgPath(cpath)),
 		W: screenSizeX,
 		H: screenSizeY,
 	}
-
-	s.Speed = Speed      // From global variable.
-	s.Tick = -2 * MaxTPS // Put 2 seconds of waiting
+	s.Speed = Speed                      // From global variable.
+	s.Tick = int(-1.5 * float64(MaxTPS)) // Put some time of waiting
 	if rf != nil {
 		s.FetchPressed = NewReplayListener(rf, s.Chart.KeyCount)
 	} else {
@@ -75,35 +63,34 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format) *ScenePlay {
 		s.Chart.Volumes[0],
 		s.Chart.Effects[0],
 	}
-
 	s.Karma = 1
 	s.JudgmentCounts = make([]int, 5)
 	return s
 }
 
 // TPS affects only on Update(), not on Draw().
+// Todo: keep playing music when making SceneResult
 func (s *ScenePlay) Update(g *Game) {
-	if s.IsFinished() {
-		if s.MusicPlayer != nil {
-			s.MusicFile.Close()
-			// Music still plays even the chart is finished.
-		}
+	var maxJudgmentCountdown int = MsecToTick(1500)
+	if ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished() {
+		s.MusicPlayer.Close()
+		s.MusicFile.Close()
 		g.Scene = selectScene
 		return
 	}
 	if s.Tick == 0 {
 		s.MusicPlayer.Play()
 	}
-	for s.Time() < s.SpeedFactor.Next.Time {
+	for s.SpeedFactor.Next != nil && s.Time() < s.SpeedFactor.Next.Time {
 		s.SpeedFactor = s.SpeedFactor.Next
 	}
-	for s.Time() < s.Tempo.Next.Time {
+	for s.Tempo.Next != nil && s.Time() < s.Tempo.Next.Time {
 		s.Tempo = s.Tempo.Next
 	}
-	for s.Time() < s.Volume.Next.Time {
+	for s.Volume.Next != nil && s.Time() < s.Volume.Next.Time {
 		s.Volume = s.Volume.Next
 	}
-	for s.Time() < s.Effect.Next.Time {
+	for s.Effect.Next != nil && s.Time() < s.Effect.Next.Time {
 		s.Effect = s.Effect.Next
 	}
 	s.Pressed = s.FetchPressed()
@@ -133,9 +120,12 @@ func (s *ScenePlay) Update(g *Game) {
 		}
 		if s.Judgment.Window < worst.Window {
 			s.Judgment = worst
-			s.JudgmentCountdown = MsecToTick(1000)
+			s.JudgmentCountdown = maxJudgmentCountdown
 		} else {
 			s.JudgmentCountdown--
+		}
+		if s.JudgmentCountdown == 0 {
+			s.Judgment = Judgment{}
 		}
 	}
 	s.Tick++
@@ -146,6 +136,7 @@ func (s *ScenePlay) Draw(screen *ebiten.Image) {
 	screen.DrawImage(s.Background.I, bgop)
 
 	s.FieldSprite.Draw(screen)
+	s.HintSprite.Draw(screen)
 	if s.IsFinished() {
 		s.ClearSprite.Draw(screen)
 	} else {
@@ -215,4 +206,4 @@ func (s ScenePlay) IsFinished() bool {
 	return s.Time() > buffer+s.PlayNotes[len(s.PlayNotes)-1].Time
 }
 func TickToMsec(tick int) int64 { return int64(1000 * float64(tick) / float64(MaxTPS)) }
-func MsecToTick(msec int64) int { return int(msec) * MaxTPS }
+func MsecToTick(msec int64) int { return int(float64(msec) * float64(MaxTPS) / 1000) }

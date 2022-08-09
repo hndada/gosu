@@ -6,6 +6,9 @@ import (
 	"image/color"
 	"os"
 
+	_ "image/jpeg"
+	_ "image/png"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -26,52 +29,60 @@ type Skin struct {
 
 var SkinMap = make(map[int]Skin)
 
+const DefaultBackgroundPath = "skin/bg.jpg"
+
 func LoadSkin() {
 	// Following sprites are independent of key count.
 	var (
-		DefaultBackground Sprite
-		ComboSprites      []Sprite = make([]Sprite, 10)
-		ScoreSprites      []Sprite = make([]Sprite, 10)
-		JudgmentSprites   []Sprite = make([]Sprite, 5)
-		ClearSprite       Sprite
+		defaultBackground Sprite
+		comboSprites      []Sprite = make([]Sprite, 10)
+		scoreSprites      []Sprite = make([]Sprite, 10)
+		judgmentSprites   []Sprite = make([]Sprite, 5)
+		clearSprite       Sprite
 	)
-	DefaultBackground.I = NewImage("skin/bg.jpg")
-	DefaultBackground.W = screenSizeX
-	DefaultBackground.H = screenSizeY
+	defaultBackground.I = NewImage(DefaultBackgroundPath)
+	defaultBackground.W = screenSizeX
+	defaultBackground.H = screenSizeY
 	for i := 0; i < 10; i++ {
 		s := Sprite{
 			I: NewImage(fmt.Sprintf("skin/combo/%d.png", i)),
 		}
-		s.SetWidth(ComboWidth)
+		s.ApplyScale(ComboScale)
 		// ComboSprite's x value is not fixed.
 		s.SetCenterXY(0, ComboPosition)
-		ComboSprites[i] = s
+		comboSprites[i] = s
 	}
 	for i := 0; i < 10; i++ {
 		s := Sprite{
 			I: NewImage(fmt.Sprintf("skin/score/%d.png", i)),
 		}
-		s.SetWidth(ScoreWidth)
+		s.ApplyScale(ScoreScale)
 		// ScoreSprite's x value is not fixed.
 		// ScoreSprite's y value is always 0.
-		ScoreSprites[i] = s
+		scoreSprites[i] = s
 	}
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
 		s := Sprite{
 			I: NewImage(fmt.Sprintf("skin/judgment/%s.png", name)),
 		}
-		s.SetWidth(JudgmentWidth)
-		s.SetCenterXY(screenSizeX/2, JudgePosition)
-		JudgmentSprites[i] = s
+		s.ApplyScale(JudgmentScale)
+		s.SetCenterXY(screenSizeX/2, JudgmentPosition)
+		judgmentSprites[i] = s
 	}
-	ClearSprite.I = NewImage("skin/play/clear.png")
-	ClearSprite.SetWidth(ClearWidth)
-	ClearSprite.SetCenterXY(screenSizeX/2, screenSizeY/2)
+	clearSprite.I = NewImage("skin/play/clear.png")
+	clearSprite.SetWidth(ClearWidth)
+	clearSprite.SetCenterXY(screenSizeX/2, screenSizeY/2)
 
 	// Following sprites are dependent of key count.
 	// Todo: Key 1 ~ 3, scratch
 	for keyCount := 4; keyCount <= 10; keyCount++ {
 		s := Skin{
+			DefaultBackground: defaultBackground,
+			ComboSprites:      comboSprites,
+			ScoreSprites:      scoreSprites,
+			JudgmentSprites:   judgmentSprites,
+			ClearSprite:       clearSprite,
+
 			NoteSprites: make([]Sprite, keyCount&ScratchMask),
 			BodySprites: make([]Sprite, keyCount&ScratchMask),
 			HeadSprites: make([]Sprite, keyCount&ScratchMask),
@@ -81,7 +92,7 @@ func LoadSkin() {
 		var wsum int
 		for k, kind := range NoteKindsMap[keyCount] {
 			s.NoteSprites[k] = Sprite{
-				I: NewImage("skin/note/" + fmt.Sprintf("n%d.png", []int{1, 2, 3, 3})),
+				I: NewImage("skin/note/" + fmt.Sprintf("n%d.png", []int{1, 2, 3, 3}[kind])),
 				W: NoteWidths[keyCount][kind],
 				H: NoteHeigth,
 			}
@@ -99,7 +110,7 @@ func LoadSkin() {
 		x = (screenSizeX - wsum) / 2
 		for k, kind := range NoteKindsMap[keyCount] {
 			s.BodySprites[k] = Sprite{
-				I: NewImage("skin/note/" + fmt.Sprintf("l%d.png", []int{1, 2, 3, 3})),
+				I: NewImage("skin/note/" + fmt.Sprintf("l%d.png", []int{1, 2, 3, 3}[kind])),
 				W: NoteWidths[keyCount][kind],
 				H: NoteHeigth, // Fyi, long note body's height doesn't need to be scaled.
 			}
@@ -125,6 +136,7 @@ func LoadSkin() {
 			H: HintHeight,
 		}
 		s.HintSprite.SetCenterXY(screenSizeX/2, HintPosition)
+		SkinMap[keyCount] = s
 	}
 }
 

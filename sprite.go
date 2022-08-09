@@ -26,8 +26,12 @@ func (s *Sprite) SetHeight(h float64) {
 
 // SetCenterXY assumes Sprite's width and height are set.
 func (s *Sprite) SetCenterXY(x, y float64) {
-	s.X = (x - s.W) / 2
-	s.Y = (y - s.H) / 2
+	s.X = x - s.W/2
+	s.Y = y - s.H/2
+}
+func (s *Sprite) ApplyScale(scale float64) {
+	s.W = float64(s.I.Bounds().Dx()) * scale
+	s.H = float64(s.I.Bounds().Dy()) * scale
 }
 func (s Sprite) ScaleW() float64 { return s.W / float64(s.I.Bounds().Dx()) }
 func (s Sprite) ScaleH() float64 { return s.H / float64(s.I.Bounds().Dy()) }

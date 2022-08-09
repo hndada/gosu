@@ -1,7 +1,5 @@
 package gosu
 
-import "github.com/hajimehoshi/ebiten/v2/audio"
-
 // Logical size of in-game screen
 const (
 	screenSizeX = 800
@@ -24,16 +22,16 @@ var KeySettings = map[int][]Key{
 	9:               {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL, KeySemicolon},
 	10:              {KeyA, KeyS, KeyD, KeyF, KeyV, KeyN, KeyJ, KeyK, KeyL, KeySemicolon},
 }
-var Speed = 0.15
+var Speed = 0.75
 var (
-	BgDimness     float64 = 0.3
-	ComboPosition float64 = 180
-	ComboWidth    float64 = 40
-	ComboGap      float64 = -2
-	ScoreWidth    float64 = 33
-	JudgePosition float64 = 250
-	JudgmentWidth float64 = 65
-	ClearWidth    float64 = 225
+	BgDimness        float64 = 0.3
+	ComboScale       float64 = 0.65
+	ComboPosition    float64 = 240
+	ComboGap         float64 = -2
+	ScoreScale       float64 = 0.55
+	JudgmentScale    float64 = 0.35
+	JudgmentPosition float64 = 400
+	ClearWidth       float64 = 225
 
 	NoteWidths = map[int][4]float64{
 		4:  {50, 50, 50, 50},
@@ -46,10 +44,6 @@ var (
 	}
 	NoteHeigth   float64 = 30 // Applies all notes
 	FieldDark    float64 = 0.95
-	HintPosition float64 = 550 // The middle position of Judge line, not a topmost.
+	HintPosition float64 = 590 // The middle position of Judge line, not a topmost.
 	HintHeight   float64 = 5
 )
-
-const SampleRate = 44100
-
-var Context *audio.Context = audio.NewContext(SampleRate)
