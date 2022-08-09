@@ -1,5 +1,10 @@
 package main
 
+type KeysState struct {
+	Time    int64
+	Pressed []bool
+}
+
 type KeyAction int
 
 const (
@@ -23,18 +28,3 @@ func CurrentKeyAction(last, now bool) KeyAction {
 		panic("not reach")
 	}
 }
-
-type PlayEvent struct {
-	Time    int64
-	Key     int
-	Pressed bool
-}
-type InputMode int
-
-var CurrentInputMode InputMode
-
-const (
-	InputModeEbiten InputMode = iota
-	InputModeHook
-	InputModeReplay
-)

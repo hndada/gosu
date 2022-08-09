@@ -21,12 +21,12 @@ type KeyHook struct {
 // Todo: rename either one of 'start's
 func (h *KeyHook) Listen(start time.Time) {
 	h.start = start
-	h.keyEvents = make([]KeyEvent, 0, 30)
+	h.keyEvents = make([]KeyEvent, 0, 10)
 	go h.scan()
 }
 func (h *KeyHook) Flush() []KeyEvent {
 	es := h.keyEvents
-	h.keyEvents = make([]KeyEvent, 0, 30)
+	h.keyEvents = make([]KeyEvent, 0, 10)
 	return es
 }
 func (h *KeyHook) Close() { h.closed = true }
