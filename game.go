@@ -8,9 +8,11 @@ type Game struct {
 	Scene
 }
 type Scene interface {
-	Update()
+	Update(g *Game)
 	Draw(screen *ebiten.Image)
 }
+
+var selectScene = NewSceneSelect()
 
 func NewGame() *Game {
 	LoadSkin()
@@ -19,12 +21,12 @@ func NewGame() *Game {
 	ebiten.SetMaxTPS(MaxTPS)
 	ebiten.SetRunnableOnUnfocused(true)
 	g := &Game{
-		Scene: NewSceneSelect(),
+		Scene: selectScene,
 	}
 	return g
 }
 func (g *Game) Update() error {
-	g.Scene.Update()
+	g.Scene.Update(g)
 	return nil
 }
 func (g *Game) Draw(screen *ebiten.Image) {
