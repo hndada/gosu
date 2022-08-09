@@ -82,12 +82,13 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format) *ScenePlay {
 }
 
 // TPS affects only on Update(), not on Draw().
-func (s *ScenePlay) Update() {
+func (s *ScenePlay) Update(g *Game) {
 	if s.IsFinished() {
 		if s.MusicPlayer != nil {
 			s.MusicFile.Close()
 			// Music still plays even the chart is finished.
 		}
+		g.Scene = selectScene
 		return
 	}
 	if s.Tick == 0 {

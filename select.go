@@ -115,11 +115,11 @@ func NewBox(c *Chart) *ebiten.Image {
 // Todo: should hold goes reset when different key.
 // Todo: enable to pass replay format pointer to NewScenePlay.
 // Todo: map to *Game g
-func (s *SceneSelect) Update() {
+func (s *SceneSelect) Update(g *Game) {
 	const threshold = 50 // Require holding for 50ms to move a cursor
 	switch {
 	case ebiten.IsKeyPressed(ebiten.KeyEnter):
-		NewScenePlay(s.Charts[s.Cursor], s.ChartPaths[s.Cursor], nil)
+		g.Scene = NewScenePlay(s.Charts[s.Cursor], s.ChartPaths[s.Cursor], nil)
 	case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
 		if TickToMsec(s.Hold) > threshold {
 			s.Hold = 0
