@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -34,11 +33,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Printf("Song: %s\n", c.MusicName)
-	fmt.Printf("Diff: %s\n", c.ChartName)
-	fmt.Printf("Player: %s\n", rf.PlayerName)
-	fmt.Printf("Original score: %d/1m\n", rf.Score)
-	fmt.Printf("New score: %d/1.1m\n", gosu.ReplayScore(c, rf))
 	g := gosu.NewGame()
 	g.Scene = gosu.NewScenePlay(c, cpath, rf, true)
 	if err := ebiten.RunGame(g); err != nil {
