@@ -60,9 +60,11 @@ Work in Progress
 Will also post details at [wiki](https://github.com/hndada/gosu/wiki).
 
 # Build
-`cd cmd/gosu`
-
-`go build .`
+Go to root directory of the repository first. 
+```
+cd cmd/gosu
+go build .
+```
 
 # License
 Skin images and music tracks are from [osu-resources](https://github.com/ppy/osu-resources), licensed under [CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode).
