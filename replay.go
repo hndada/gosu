@@ -30,11 +30,10 @@ func NewReplayListener(f *osr.Format, keyCount int, bufferTime int64) func() []b
 	}
 }
 
-func CalcScoreFromReplay(c *Chart, cpath string, rf *osr.Format) int {
-	g := NewGame()
-	s := NewScenePlay(c, cpath, rf)
+func ReplayScore(c *Chart, rf *osr.Format) int {
+	s := NewScenePlay(c, "", rf, false)
 	for !s.IsFinished() {
-		s.Update(g)
+		s.Update(nil)
 	}
 	return int(s.CurrentScore())
 }

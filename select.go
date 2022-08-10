@@ -108,7 +108,9 @@ func (s *SceneSelect) UpdateBackground() {
 	if len(s.Charts) == 0 {
 		return
 	}
-	img := NewImage(s.Charts[s.ChartCursor].BackgroundPath(s.ChartPaths[s.ChartCursor]))
+	c := s.Charts[s.ChartCursor]
+	cpath := s.ChartPaths[s.ChartCursor]
+	img := NewImage(c.BackgroundPath(cpath))
 	if img != nil {
 		s.Background.I = img
 	}
@@ -144,11 +146,10 @@ const HoldKeyNone = -1
 
 // Require holding for a while to move a cursor
 var (
-	threshold1 = MsecToTick(150)
-	threshold2 = MsecToTick(100)
+	threshold1 = MsecToTick(100)
+	threshold2 = MsecToTick(80)
 )
 
-// Todo: enable to pass replay format pointer to NewScenePlay
 // Default HoldKey value is 0, which is Key0.
 func (s *SceneSelect) Update(g *Game) {
 	if s.HoldKey == HoldKeyNone {
@@ -159,7 +160,6 @@ func (s *SceneSelect) Update(g *Game) {
 	} else {
 		if ebiten.IsKeyPressed(s.HoldKey) {
 			s.Hold++
-
 		} else {
 			s.Hold = 0
 		}
@@ -167,7 +167,9 @@ func (s *SceneSelect) Update(g *Game) {
 	switch {
 	case ebiten.IsKeyPressed(ebiten.KeyEnter), ebiten.IsKeyPressed(ebiten.KeyNumpadEnter):
 		s.PlaySoundSelect()
-		g.Scene = NewScenePlay(s.Charts[s.ChartCursor], s.ChartPaths[s.ChartCursor], nil, true)
+		c := s.Charts[s.ChartCursor]
+		cpath := s.ChartPaths[s.ChartCursor]
+		g.Scene = NewScenePlay(c, cpath, nil, true)
 	case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
 		s.HoldKey = ebiten.KeyArrowDown
 		if s.Hold < threshold1 {
