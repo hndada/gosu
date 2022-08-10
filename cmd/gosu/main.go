@@ -5,7 +5,7 @@ import (
 	"github.com/hndada/gosu"
 )
 
-func main() {
+func _main() {
 	g := gosu.NewGame()
 	if err := ebiten.RunGame(g); err != nil {
 		panic(err)
