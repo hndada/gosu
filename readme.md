@@ -3,7 +3,13 @@
 A classic rhythm game written in go
 
 # Game play preview
+## Video
+[Here is the YouTube link of live-playing! (replay)](https://youtu.be/YMRgGQZHpQo)
 
+## Screenshots
+![4 Key](https://i.imgur.com/6veaLI6.png)
+
+![7 Key](https://i.imgur.com/MJTFmE3.png)
 # Feature
 * osu! files supported
   * .osu (osu! beatmap file)
@@ -33,9 +39,9 @@ A classic rhythm game written in go
   * Fairly scalable for future work 
 
 # Flow of game logic
-(picture)
+Work in Progress
 
-See the detail at [wiki](https://github.com/hndada/gosu/wiki) (WIP)
+Will also post details at [wiki](https://github.com/hndada/gosu/wiki).
 
 # Build
 `cd cmd/gosu`
