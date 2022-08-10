@@ -2,15 +2,15 @@ package gosu
 
 // Logical size of in-game screen
 const (
-	screenSizeX = 800
-	screenSizeY = 600
+	screenSizeX = 1600
+	screenSizeY = 900
 )
 
 var (
-	WindowSizeX = 800
-	WindowSizeY = 600
+	WindowSizeX = 1600
+	WindowSizeY = 900
 	MaxTPS      = 1000 // MaxTPS should be 1000 or greater.
-	Volume      = 0.05
+	Volume      = 0.25
 )
 var KeySettings = map[int][]Key{
 	4:               {KeyD, KeyF, KeyJ, KeyK},
@@ -22,28 +22,43 @@ var KeySettings = map[int][]Key{
 	9:               {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL, KeySemicolon},
 	10:              {KeyA, KeyS, KeyD, KeyF, KeyV, KeyN, KeyJ, KeyK, KeyL, KeySemicolon},
 }
-var Speed = 0.75
-var (
-	BgDimness        float64 = 0.3
-	ComboScale       float64 = 0.65
-	ComboPosition    float64 = 240
-	ComboGap         float64 = -2
-	ScoreScale       float64 = 0.55
-	JudgmentScale    float64 = 0.35
-	JudgmentPosition float64 = 400
-	ClearWidth       float64 = 225
+var Speed = 0.80
+var NoteWidthsMap = map[int][4]float64{
+	4:  {0.065, 0.065, 0.065, 0.065},
+	5:  {0.065, 0.065, 0.065, 0.065},
+	6:  {0.065, 0.065, 0.065, 0.065},
+	7:  {0.065, 0.065, 0.065, 0.065},
+	8:  {0.06, 0.06, 0.06, 0.06},
+	9:  {0.06, 0.06, 0.06, 0.06},
+	10: {0.06, 0.06, 0.06, 0.06},
+}
 
-	NoteWidths = map[int][4]float64{
-		4:  {50, 50, 50, 50},
-		5:  {50, 50, 50, 50},
-		6:  {50, 50, 50, 50},
-		7:  {50, 50, 50, 50},
-		8:  {45, 45, 45, 45},
-		9:  {45, 45, 45, 45},
-		10: {45, 45, 45, 45},
+func init() {
+	ScaleNoteWidthsMap()
+}
+
+// Todo: generalize setting loading function
+func ScaleNoteWidthsMap() {
+	for k, ws := range NoteWidthsMap {
+		ws2 := ws
+		for i, w := range ws2 {
+			ws2[i] = screenSizeX * w
+		}
+		NoteWidthsMap[k] = ws2
 	}
-	NoteHeigth   float64 = 30 // Applies all notes
-	FieldDark    float64 = 0.95
-	HintPosition float64 = 590 // The middle position of Judge line, not a topmost.
-	HintHeight   float64 = 5
+}
+
+var (
+	BgDimness        float64 = 0.5
+	ComboScale       float64 = 0.77
+	ComboPosition    float64 = screenSizeY * 0.45
+	ComboGap         float64 = screenSizeX * -0.001
+	ScoreScale       float64 = 0.67
+	JudgmentScale    float64 = 0.35
+	JudgmentPosition float64 = screenSizeY * 0.67
+	// ClearWidth       float64 = 225
+	NoteHeigth   float64 = screenSizeY * 0.04 // Applies all notes
+	FieldDark    float64 = 0.8
+	HintPosition float64 = screenSizeY * 0.96 // The middle position of Judge line, not a topmost.
+	HintHeight   float64 = screenSizeY * 0.04
 )
