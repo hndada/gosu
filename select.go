@@ -18,12 +18,6 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
-// Require holding for a while to move a cursor
-var (
-	threshold1 = MsecToTick(150)
-	threshold2 = MsecToTick(100)
-)
-
 // Todo: should be ChartHeader instead of Chart
 // Todo: might integrate database here
 type SceneSelect struct {
@@ -40,6 +34,9 @@ type SceneSelect struct {
 
 	Hold    int
 	HoldKey ebiten.Key
+
+	PlaySoundMove   func()
+	PlaySoundSelect func()
 }
 
 const (
@@ -99,6 +96,11 @@ func NewSceneSelect() *SceneSelect {
 		}
 	}
 	s.UpdateBackground()
+	_, apMove := NewAudioPlayer("skin/default-hover.wav")
+	s.PlaySoundMove = apMove.PlaySoundEffect
+	_, apSelect := NewAudioPlayer("skin/restart.wav")
+	s.PlaySoundSelect = apSelect.PlaySoundEffect
+	s.HoldKey = HoldKeyNone
 	return s
 }
 func (s *SceneSelect) UpdateBackground() {
@@ -138,23 +140,40 @@ func NewBox(c *Chart, lv float64) *ebiten.Image {
 	return ebiten.NewImageFromImage(img)
 }
 
+const HoldKeyNone = -1
+
+// Require holding for a while to move a cursor
+var (
+	threshold1 = MsecToTick(150)
+	threshold2 = MsecToTick(100)
+)
+
 // Todo: enable to pass replay format pointer to NewScenePlay
 // Default HoldKey value is 0, which is Key0.
 func (s *SceneSelect) Update(g *Game) {
-	if ebiten.IsKeyPressed(s.HoldKey) {
+	if s.HoldKey == HoldKeyNone {
 		s.Hold++
-
+		if s.Hold > threshold1 {
+			s.Hold = threshold1
+		}
 	} else {
-		s.Hold = 0
+		if ebiten.IsKeyPressed(s.HoldKey) {
+			s.Hold++
+
+		} else {
+			s.Hold = 0
+		}
 	}
 	switch {
 	case ebiten.IsKeyPressed(ebiten.KeyEnter), ebiten.IsKeyPressed(ebiten.KeyNumpadEnter):
+		s.PlaySoundSelect()
 		g.Scene = NewScenePlay(s.Charts[s.ChartCursor], s.ChartPaths[s.ChartCursor], nil)
 	case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
 		s.HoldKey = ebiten.KeyArrowDown
 		if s.Hold < threshold1 {
 			break
 		}
+		s.PlaySoundMove()
 		s.Hold = 0
 		s.ChartCursor++
 		s.ChartCursor %= len(s.Charts)
@@ -164,6 +183,7 @@ func (s *SceneSelect) Update(g *Game) {
 		if s.Hold < threshold1 {
 			break
 		}
+		s.PlaySoundMove()
 		s.Hold = 0
 		s.ChartCursor--
 		if s.ChartCursor < 0 {
@@ -210,6 +230,8 @@ func (s *SceneSelect) Update(g *Game) {
 		if Volume > 1 {
 			Volume = 1
 		}
+	default:
+		s.HoldKey = HoldKeyNone
 	}
 }
 

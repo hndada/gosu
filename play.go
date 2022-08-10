@@ -5,7 +5,6 @@ import (
 	"io"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/parse/osr"
 )
@@ -16,7 +15,7 @@ type ScenePlay struct {
 	PlayNotes []*PlayNote
 
 	MusicFile   io.ReadSeekCloser
-	MusicPlayer *audio.Player
+	MusicPlayer AudioPlayer
 
 	Skin
 	Background            Sprite
