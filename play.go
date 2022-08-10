@@ -10,8 +10,6 @@ import (
 )
 
 // ScenePlay: struct, PlayScene: function
-// I don't like ScenePlay.Play is scattered in the ScenePlay code.
-// There are 5 places that s.Play used in the code.
 type ScenePlay struct {
 	Chart     *Chart
 	PlayNotes []*PlayNote
@@ -21,8 +19,8 @@ type ScenePlay struct {
 	FetchPressed func() []bool
 	LastPressed  []bool
 	Pressed      []bool
-	TransPoint
-	StagedNotes []*PlayNote
+	StagedNotes  []*PlayNote
+	*TransPoint
 
 	Combo          int
 	Karma          float64
@@ -43,13 +41,13 @@ var (
 	WaitBefore int64 = int64(-1.8 * 1000)
 	WaitAfter  int64 = 3 * 1000
 )
+var MaxJudgmentCountdown int = MsecToTick(2250)
 
 func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay {
 	s := new(ScenePlay)
 	s.Chart = c
 	s.PlayNotes, s.StagedNotes = NewPlayNotes(c) // Todo: add Mods to input param
-
-	s.Speed = Speed // From global variable
+	s.Speed = Speed                              // From global variable
 	bufferTime := WaitBefore
 	if rf != nil && rf.BufferTime() < bufferTime {
 		bufferTime = rf.BufferTime()
@@ -62,12 +60,7 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	}
 	s.LastPressed = make([]bool, c.KeyCount)
 	s.Pressed = make([]bool, c.KeyCount)
-	s.TransPoint = TransPoint{
-		s.Chart.SpeedFactors[0],
-		s.Chart.Tempos[0],
-		s.Chart.Volumes[0],
-		s.Chart.Effects[0],
-	}
+	s.TransPoint = s.Chart.TransPoints[0]
 	s.Karma = 1
 	s.JudgmentCounts = make([]int, 5)
 
@@ -90,29 +83,11 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 }
 
 // TPS affects only on Update(), not on Draw().
+// Todo: Apply other values of TransPoint
 // Todo: keep playing music when making SceneResult
 func (s *ScenePlay) Update(g *Game) {
-	var maxJudgmentCountdown int = MsecToTick(2250)
-	if s.Play && (ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished()) {
-		s.MusicPlayer.Close()
-		s.MusicFile.Close()
-		g.Scene = selectScene
-		return
-	}
-	if s.Play && s.Tick == 0 {
-		s.MusicPlayer.Play()
-	}
-	for s.SpeedFactor.Next != nil && s.Time() < s.SpeedFactor.Next.Time {
-		s.SpeedFactor = s.SpeedFactor.Next
-	}
-	for s.Tempo.Next != nil && s.Time() < s.Tempo.Next.Time {
-		s.Tempo = s.Tempo.Next
-	}
-	for s.Volume.Next != nil && s.Time() < s.Volume.Next.Time {
-		s.Volume = s.Volume.Next
-	}
-	for s.Effect.Next != nil && s.Time() < s.Effect.Next.Time {
-		s.Effect = s.Effect.Next
+	for s.TransPoint.Next != nil && s.Time() < s.TransPoint.Next.Time {
+		s.TransPoint = s.TransPoint.Next
 	}
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
@@ -133,20 +108,19 @@ func (s *ScenePlay) Update(g *Game) {
 			}
 			continue
 		}
-		if !s.Play {
-			continue
-		}
 		var worst Judgment
 		if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
-			fmt.Printf("Time difference: %d\n", td)
 			s.Score(n, j)
 			if worst.Window < j.Window {
 				worst = j
 			}
 		}
+		if !s.Play {
+			continue
+		}
 		if worst.Window != 0 {
 			s.LastJudgment = worst
-			s.LastJudgmentCountdown = maxJudgmentCountdown
+			s.LastJudgmentCountdown = MaxJudgmentCountdown
 		}
 		if s.LastJudgmentCountdown == 0 {
 			s.LastJudgment = Judgment{}
@@ -154,13 +128,25 @@ func (s *ScenePlay) Update(g *Game) {
 			s.LastJudgmentCountdown--
 		}
 	}
+	if !s.Play {
+		s.Tick++
+		return
+	}
+	if ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished() {
+		s.MusicPlayer.Close()
+		s.MusicFile.Close()
+		g.Scene = selectScene
+		return
+	}
+	if s.Tick == 0 {
+		s.MusicPlayer.Play()
+	}
 	s.Tick++
 }
 func (s *ScenePlay) Draw(screen *ebiten.Image) {
 	bgop := s.Background.Op()
 	bgop.ColorM.ChangeHSV(0, 1, BgDimness)
 	screen.DrawImage(s.Background.I, bgop)
-
 	s.FieldSprite.Draw(screen)
 	s.HintSprite.Draw(screen)
 	s.DrawLongNotes(screen)

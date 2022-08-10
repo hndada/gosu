@@ -35,12 +35,6 @@ func NewPlayNotes(c *Chart) (playNotes []*PlayNote, stagedNotes []*PlayNote) {
 	return
 }
 
-// Time bound for drawing notes in milliseconds
-const (
-	up   = 10 * 1000
-	down = -2 * 1000
-)
-
 // DrawLongNote draws long note before drawing Head or Tail.
 func (s *ScenePlay) DrawLongNotes(screen *ebiten.Image) {
 	for _, n := range s.PlayNotes {
@@ -80,6 +74,13 @@ func (s *ScenePlay) DrawLongNotes(screen *ebiten.Image) {
 	}
 }
 
+// Time bound for drawing notes in milliseconds.
+// The tight values can be calculated by similar way of NotePosition() does.
+const (
+	up   = 10 * 1000
+	down = -2 * 1000
+)
+
 func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 	for _, n := range s.PlayNotes {
 		td := n.Time - s.Time()
@@ -114,24 +115,26 @@ func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 // y = position - h/2
 func (s ScenePlay) NotePosition(n *PlayNote) float64 {
 	td := n.Time - s.Time()
-	var d float64
-	var t int64 = s.Time()
-	sf := s.SpeedFactor
+	var length float64
+	var time int64 = s.Time()
+	tp := s.TransPoint
 	if td > 0 {
-		for ; sf.Next != nil && sf.Next.Time < n.Time+up; sf = sf.Next {
-			gap := sf.Time - t
-			d += s.Speed * sf.Factor * float64(gap) // Speed may be multiplied at once at the last
-			t += gap
+		// When there are more than 2 TransPoint in 10 seconds.
+		for ; tp.Next != nil && tp.Next.Time < n.Time+up; tp = tp.Next {
+			duration := tp.Time - time
+			length += s.Speed * tp.SpeedFactor * float64(duration)
+			time += duration
 		}
 	} else {
-		for ; sf.Prev != nil && sf.Prev.Time > n.Time+down; sf = sf.Prev {
-			gap := sf.Time - t
-			d += s.Speed * sf.Factor * float64(gap) // Speed may be multiplied at once at the last
-			t -= gap
+		for ; tp.Prev != nil && tp.Prev.Time > n.Time+down; tp = tp.Prev {
+			duration := tp.Time - time // Negative value.
+			length += s.Speed * tp.SpeedFactor * float64(duration)
+			time += duration
 		}
 	}
-	d += s.Speed * sf.Factor * float64(n.Time-t) // Remained speed factor calc
-	return HintPosition - d                      // A note locates at the center of hint at the time.
+	// Calculate the remained speed factor (which is farthest from Hint in 10 seconds.)
+	length += s.Speed * tp.SpeedFactor * float64(n.Time-time)
+	return HintPosition - length
 }
 
 func (n PlayNote) PlaySE() {}
