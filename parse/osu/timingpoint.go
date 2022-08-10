@@ -24,62 +24,53 @@ func newTimingPoint(line string) (TimingPoint, error) {
 	if len(vs) < 8 {
 		return tp, errors.New("invalid timing point: not enough length")
 	}
-	{
-		f, err := strconv.ParseFloat(vs[0], 64)
-		if err != nil {
-			return tp, err
-		}
-		tp.Time = int(f)
+	time, err := strconv.ParseFloat(vs[0], 64)
+	if err != nil {
+		return tp, err
 	}
-	{
-		f, err := strconv.ParseFloat(vs[1], 64)
-		if err != nil {
-			return tp, err
-		}
-		tp.BeatLength = f
+	tp.Time = int(time)
+
+	beatLength, err := strconv.ParseFloat(vs[1], 64)
+	if err != nil {
+		return tp, err
 	}
-	{
-		f, err := strconv.ParseFloat(vs[2], 64)
-		if err != nil {
-			return tp, err
-		}
-		tp.Meter = int(f)
+	tp.BeatLength = beatLength
+
+	meter, err := strconv.ParseFloat(vs[2], 64)
+	if err != nil {
+		return tp, err
 	}
-	{
-		i, err := strconv.Atoi(vs[3])
-		if err != nil {
-			return tp, err
-		}
-		tp.SampleSet = i
+	tp.Meter = int(meter)
+
+	sampleSet, err := strconv.Atoi(vs[3])
+	if err != nil {
+		return tp, err
 	}
-	{
-		i, err := strconv.Atoi(vs[4])
-		if err != nil {
-			return tp, err
-		}
-		tp.SampleIndex = i
+	tp.SampleSet = sampleSet
+
+	sampleIndex, err := strconv.Atoi(vs[4])
+	if err != nil {
+		return tp, err
 	}
-	{
-		f, err := strconv.ParseFloat(vs[5], 64)
-		if err != nil {
-			return tp, err
-		}
-		tp.Volume = int(f)
+	tp.SampleIndex = sampleIndex
+
+	volume, err := strconv.ParseFloat(vs[5], 64)
+	if err != nil {
+		return tp, err
 	}
-	{
-		b, err := strconv.ParseBool(vs[6])
-		if err != nil {
-			return tp, err
-		}
-		tp.Uninherited = b
+	tp.Volume = int(volume)
+
+	uninherited, err := strconv.ParseBool(vs[6])
+	if err != nil {
+		return tp, err
 	}
-	{
-		i, err := strconv.Atoi(vs[7])
-		if err != nil {
-			return tp, err
-		}
-		tp.Effects = i
+	tp.Uninherited = uninherited
+
+	effects, err := strconv.Atoi(vs[7])
+	if err != nil {
+		return tp, err
 	}
+	tp.Effects = effects
 	return tp, nil
 }
 
