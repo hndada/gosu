@@ -1,6 +1,7 @@
 package gosu
 
 import (
+	"crypto/md5"
 	"fmt"
 	"image"
 	"image/color"
@@ -8,10 +9,12 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hndada/gosu/parse/osr"
 	"github.com/hndada/gosu/parse/osu"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
@@ -33,24 +36,28 @@ type SceneSelect struct {
 	Background Sprite
 	Hold       int
 	HoldKey    ebiten.Key
-	ReplayMode bool
+
+	ReplayMode    bool
+	IndexToMD5Map map[int][md5.Size]byte
+	MD5ToIndexMap map[[md5.Size]byte]int
+	Replays       []*osr.Format
 
 	PlaySoundMove   func()
 	PlaySoundSelect func()
 }
 
 const (
-	bw = 300 // Box width
-	bh = 40  // Box height
+	bw  = 450 // Box width
+	bh  = 50  // Box height
+	pop = bw / 10
 )
 
 func NewSceneSelect() *SceneSelect {
 	s := &SceneSelect{
-		ChartInfos: make([]ChartInfo, 0, 50),
-		// Charts:      make([]*Chart, 0, 50),
-		// ChartPaths:  make([]string, 0, 50),
-		// ChartLevels: make([]float64, 0, 50),
-		// ChartBoxes:  make([]Sprite, 0, 50),
+		ChartInfos:    make([]ChartInfo, 0, 50),
+		IndexToMD5Map: make(map[int][16]byte),
+		MD5ToIndexMap: map[[16]byte]int{},
+		Replays:       make([]*osr.Format, 0, 10),
 	}
 	dirs, err := os.ReadDir("music")
 	if err != nil {
@@ -93,14 +100,6 @@ func NewSceneSelect() *SceneSelect {
 						},
 					}
 					s.ChartInfos = append(s.ChartInfos, info)
-					// s.Charts = append(s.Charts, c)
-					// s.ChartPaths = append(s.ChartPaths, fpath)
-					// s.ChartLevels = append(s.ChartLevels, c.Level())
-					// s.ChartBoxes = append(s.ChartBoxes, Sprite{
-					// 	I: NewBox(c, c.Level()),
-					// 	W: bw,
-					// 	H: bh,
-					// })
 					// box's x value is not fixed.
 					// box's y value is not fixed.
 				}
@@ -113,9 +112,36 @@ func NewSceneSelect() *SceneSelect {
 		}
 		return s.ChartInfos[i].Chart.MusicName < s.ChartInfos[j].Chart.MusicName
 	})
+	for i, ci := range s.ChartInfos {
+		d, err := os.ReadFile(ci.Path)
+		if err != nil {
+			panic(err)
+		}
+		s.MD5ToIndexMap[md5.Sum(d)] = i
+		s.IndexToMD5Map[i] = md5.Sum(d)
+	}
+
+	fs, err := os.ReadDir("replay")
+	if err != nil {
+		panic(err)
+	}
+	for _, f := range fs {
+		if f.IsDir() || filepath.Ext(f.Name()) != ".osr" {
+			continue
+		}
+		rd, err := os.ReadFile(filepath.Join("replay", f.Name()))
+		if err != nil {
+			panic(err)
+		}
+		rf, err := osr.Parse(rd)
+		if err != nil {
+			panic(err)
+		}
+		s.Replays = append(s.Replays, rf)
+	}
+
 	s.UpdateBackground()
 	s.HoldKey = HoldKeyNone
-
 	_, apMove := NewAudioPlayer("skin/default-hover.wav")
 	s.PlaySoundMove = apMove.PlaySoundEffect
 	_, apSelect := NewAudioPlayer("skin/restart.wav")
@@ -166,8 +192,27 @@ const HoldKeyNone = -1
 var (
 	threshold1 = MsecToTick(100)
 	threshold2 = MsecToTick(80)
-	// threshold3 = MsecToTick(250)
 )
+
+// FetchReplay returns first MD5-matching replay format.
+// Todo: need to rewrite
+func (s SceneSelect) FetchReplay(i int) *osr.Format {
+	md5 := s.IndexToMD5Map[i]
+outer:
+	for _, r := range s.Replays {
+		for x := 0; x < 16; x++ {
+			ui, err := strconv.ParseUint(string(r.BeatmapMD5[x*2:(x+1)*2]), 16, 8)
+			if err != nil {
+				panic(err)
+			}
+			if ui != uint64(md5[x]) {
+				continue outer
+			}
+		}
+		return r
+	}
+	return nil
+}
 
 // Default HoldKey value is 0, which is Key0.
 func (s *SceneSelect) Update(g *Game) {
@@ -187,7 +232,11 @@ func (s *SceneSelect) Update(g *Game) {
 	case ebiten.IsKeyPressed(ebiten.KeyEnter), ebiten.IsKeyPressed(ebiten.KeyNumpadEnter):
 		s.PlaySoundSelect()
 		info := s.ChartInfos[s.Cursor]
-		g.Scene = NewScenePlay(info.Chart, info.Path, nil, true)
+		if s.ReplayMode {
+			g.Scene = NewScenePlay(info.Chart, info.Path, s.FetchReplay(s.Cursor), true)
+		} else {
+			g.Scene = NewScenePlay(info.Chart, info.Path, nil, true)
+		}
 	case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
 		s.HoldKey = ebiten.KeyArrowDown
 		if s.Hold < threshold1 {
@@ -266,7 +315,6 @@ func (s *SceneSelect) Update(g *Game) {
 // May add extra effect to box arrangement.
 // x -= y / 5, for example.
 func (s SceneSelect) Draw(screen *ebiten.Image) {
-	const pop = 25
 	s.Background.Draw(screen)
 	for i := range s.ChartInfos {
 		y := (i-s.Cursor)*bh + screenSizeY/2 - bh/2
