@@ -40,9 +40,9 @@ type ChartHeader struct {
 // Chart should avoid redundant data as much as possible
 type Chart struct {
 	ChartHeader
-	TransPoints
-	KeyCount int
-	Notes    []Note
+	TransPoints []*TransPoint
+	KeyCount    int
+	Notes       []Note
 	// Level    float64
 	// ScratchMode int
 }
