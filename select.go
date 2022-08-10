@@ -11,23 +11,35 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hndada/gosu/parse/osr"
 	"github.com/hndada/gosu/parse/osu"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
 )
 
-// Todo: change Boxes type to Sprite
-// Todo: load background of each chart.
-type SceneSelect struct {
-	Charts     []*Chart // Todo: Should be ChartHeader instead of Chart
-	ChartPaths []string
-	Boxes      []Sprite
+// Require holding for a while to move a cursor
+var (
+	threshold1 = MsecToTick(150)
+	threshold2 = MsecToTick(100)
+)
 
-	Cursor     int
-	Hold       int
-	Pressed    bool
-	Background Sprite
+// Todo: should be ChartHeader instead of Chart
+// Todo: might integrate database here
+type SceneSelect struct {
+	Charts      []*Chart
+	ChartPaths  []string
+	ChartLevels []float64
+	ChartBoxes  []Sprite
+	ChartCursor int
+	Background  Sprite
+
+	Replays      []*osr.Format
+	ReplayBoxes  []Sprite
+	ReplayCursor int
+
+	Hold    int
+	HoldKey ebiten.Key
 }
 
 const (
@@ -35,11 +47,13 @@ const (
 	bh = 40  // Box height
 )
 
-// Todo: play sound effect when moving a cursor
 func NewSceneSelect() *SceneSelect {
-	charts := make([]*Chart, 0, 50)
-	paths := make([]string, 0, 50)
-	boxes := make([]Sprite, 0, 50)
+	s := &SceneSelect{
+		Charts:      make([]*Chart, 0, 50),
+		ChartPaths:  make([]string, 0, 50),
+		ChartLevels: make([]float64, 0, 50),
+		ChartBoxes:  make([]Sprite, 0, 50),
+	}
 	dirs, err := os.ReadDir("music")
 	if err != nil {
 		panic(err)
@@ -49,11 +63,11 @@ func NewSceneSelect() *SceneSelect {
 			continue
 		}
 		dpath := filepath.Join("music", dir.Name())
-		files, err := os.ReadDir(dpath)
+		fs, err := os.ReadDir(dpath)
 		if err != nil {
 			panic(err)
 		}
-		for _, f := range files {
+		for _, f := range fs {
 			fpath := filepath.Join(dpath, f.Name())
 			b, err := os.ReadFile(fpath)
 			if err != nil {
@@ -70,10 +84,11 @@ func NewSceneSelect() *SceneSelect {
 					if err != nil {
 						panic(err)
 					}
-					charts = append(charts, c)
-					paths = append(paths, fpath)
-					boxes = append(boxes, Sprite{
-						I: NewBox(c),
+					s.Charts = append(s.Charts, c)
+					s.ChartPaths = append(s.ChartPaths, fpath)
+					s.ChartLevels = append(s.ChartLevels, c.Level())
+					s.ChartBoxes = append(s.ChartBoxes, Sprite{
+						I: NewBox(c, c.Level()),
 						W: bw,
 						H: bh,
 					})
@@ -83,121 +98,141 @@ func NewSceneSelect() *SceneSelect {
 			}
 		}
 	}
-	bg := Sprite{
-		I: NewImage("skin/bg.jpg"),
-		W: screenSizeX,
-		H: screenSizeY,
+	s.UpdateBackground()
+	return s
+}
+func (s *SceneSelect) UpdateBackground() {
+	s.Background = RandomDefaultBackground
+	if len(s.Charts) == 0 {
+		return
 	}
-	return &SceneSelect{
-		Charts:     charts,
-		ChartPaths: paths,
-		Boxes:      boxes,
-		Background: bg,
+	img := NewImage(s.Charts[s.ChartCursor].BackgroundPath(s.ChartPaths[s.ChartCursor]))
+	if img != nil {
+		s.Background.I = img
 	}
 }
 
-func NewBox(c *Chart) *ebiten.Image {
-	const (
-		bx = 20
-		by = 30
-	)
+const (
+	border = 3
+)
+const (
+	dx = 20 // dot x
+	dy = 30 // dot y
+)
+
+var borderColor = color.RGBA{172, 49, 174, 255} // Purple
+
+func NewBox(c *Chart, lv float64) *ebiten.Image {
 	img := image.NewRGBA(image.Rect(0, 0, bw, bh))
-	draw.Draw(img, img.Bounds(), &image.Uniform{color.White}, image.Point{}, draw.Src)
-	t := fmt.Sprintf("(%dKey Lv %.2f) %s [%s]", c.KeyCount, c.Level, c.MusicName, c.ChartName)
+	draw.Draw(img, img.Bounds(), &image.Uniform{borderColor}, image.Point{}, draw.Src)
+	inRect := image.Rect(border, border, bw-border, bh-border)
+	draw.Draw(img, inRect, &image.Uniform{color.White}, image.Point{}, draw.Src)
+	t := fmt.Sprintf("(%dK Lv %.1f) %s [%s]", c.KeyCount, lv, c.MusicName, c.ChartName)
 	d := &font.Drawer{
 		Dst:  img,
 		Src:  image.NewUniform(color.Black),
 		Face: basicfont.Face7x13,
-		Dot:  fixed.Point26_6{X: fixed.Int26_6(bx * 64), Y: fixed.Int26_6(by * 64)},
+		Dot:  fixed.Point26_6{X: fixed.Int26_6(dx * 64), Y: fixed.Int26_6(dy * 64)},
 	}
 	d.DrawString(t)
 	return ebiten.NewImageFromImage(img)
 }
 
-// Todo: should hold goes reset when different key.
-// Todo: enable to pass replay format pointer to NewScenePlay.
-// Todo: map to *Game g
+// Todo: enable to pass replay format pointer to NewScenePlay
+// Default HoldKey value is 0, which is Key0.
 func (s *SceneSelect) Update(g *Game) {
-	const threshold = 80 // Require holding for 80ms to move a cursor
+	if ebiten.IsKeyPressed(s.HoldKey) {
+		s.Hold++
+
+	} else {
+		s.Hold = 0
+	}
 	switch {
 	case ebiten.IsKeyPressed(ebiten.KeyEnter), ebiten.IsKeyPressed(ebiten.KeyNumpadEnter):
-		g.Scene = NewScenePlay(s.Charts[s.Cursor], s.ChartPaths[s.Cursor], nil)
+		g.Scene = NewScenePlay(s.Charts[s.ChartCursor], s.ChartPaths[s.ChartCursor], nil)
 	case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
-		if TickToMsec(s.Hold) > threshold {
-			s.Hold = 0
-			s.Cursor++
-			s.Cursor %= len(s.Charts)
-		} else {
-			s.Hold++
+		s.HoldKey = ebiten.KeyArrowDown
+		if s.Hold < threshold1 {
+			break
 		}
-	case ebiten.IsKeyPressed(ebiten.KeyArrowUp):
-		if TickToMsec(s.Hold) > threshold {
-			s.Hold = 0
-			s.Cursor--
-			if s.Cursor < 0 {
-				s.Cursor += len(s.Charts)
-			}
-		} else {
-			s.Hold++
-		}
-	default:
 		s.Hold = 0
-		if !ebiten.IsKeyPressed(ebiten.KeyO) && !ebiten.IsKeyPressed(ebiten.KeyP) ||
-			!ebiten.IsKeyPressed(ebiten.KeyQ) && !ebiten.IsKeyPressed(ebiten.KeyW) {
-			s.Pressed = false
+		s.ChartCursor++
+		s.ChartCursor %= len(s.Charts)
+		s.UpdateBackground()
+	case ebiten.IsKeyPressed(ebiten.KeyArrowUp):
+		s.HoldKey = ebiten.KeyArrowUp
+		if s.Hold < threshold1 {
 			break
 		}
-		if s.Pressed {
+		s.Hold = 0
+		s.ChartCursor--
+		if s.ChartCursor < 0 {
+			s.ChartCursor += len(s.Charts)
+		}
+		s.UpdateBackground()
+	case ebiten.IsKeyPressed(ebiten.KeyQ):
+		s.HoldKey = ebiten.KeyQ
+		if s.Hold < threshold2 {
 			break
 		}
-		s.Pressed = true
-		switch {
-		case ebiten.IsKeyPressed(ebiten.KeyO):
-			Speed -= 0.01
-			if Speed < 0.01 {
-				Speed = 0.01
-			}
-		case ebiten.IsKeyPressed(ebiten.KeyP):
-			Speed += 0.01
-			if Speed > 0.4 {
-				Speed = 0.4
-			}
-		case ebiten.IsKeyPressed(ebiten.KeyQ):
-			Volume -= 0.05
-			if Volume < 0 {
-				Volume = 0
-			}
-		case ebiten.IsKeyPressed(ebiten.KeyW):
-			Volume += 0.05
-			if Volume > 1 {
-				Volume = 1
-			}
+		s.Hold = 0
+		Speed -= 0.05
+		if Speed < 0.05 {
+			Speed = 0.05
+		}
+	case ebiten.IsKeyPressed(ebiten.KeyW):
+		s.HoldKey = ebiten.KeyW
+		if s.Hold < threshold2 {
+			break
+		}
+		s.Hold = 0
+		Speed += 0.05
+		if Speed > 1.5 {
+			Speed = 1.5
+		}
+	case ebiten.IsKeyPressed(ebiten.KeyA):
+		s.HoldKey = ebiten.KeyA
+		if s.Hold < threshold2 {
+			break
+		}
+		s.Hold = 0
+		Volume -= 0.05
+		if Volume < 0 {
+			Volume = 0
+		}
+	case ebiten.IsKeyPressed(ebiten.KeyS):
+		s.HoldKey = ebiten.KeyS
+		if s.Hold < threshold2 {
+			break
+		}
+		s.Hold = 0
+		Volume += 0.05
+		if Volume > 1 {
+			Volume = 1
 		}
 	}
 }
 
 // Currently topmost and bottommost boxes are not adjoined.
-// May add extra effect to box arrangement,
+// May add extra effect to box arrangement.
 // x -= y / 5, for example.
 func (s SceneSelect) Draw(screen *ebiten.Image) {
 	const pop = 25
 	s.Background.Draw(screen)
 	for i := range s.Charts {
-		y := (i-s.Cursor)*bh + screenSizeY/2 - bh/2
+		y := (i-s.ChartCursor)*bh + screenSizeY/2 - bh/2
 		if y > screenSizeY || y+bh < 0 {
 			continue
 		}
 		x := screenSizeX - bw + pop
-		if i == s.Cursor {
+		if i == s.ChartCursor {
 			x = screenSizeX - bw
 		}
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(float64(x), float64(y))
-		screen.DrawImage(s.Boxes[i].I, op)
+		screen.DrawImage(s.ChartBoxes[i].I, op)
 	}
 	ebitenutil.DebugPrint(screen,
-		fmt.Sprintf("Speed (Press O/P): %.1f\nVolume (Press Q/W): %.0f",
-			Speed*100, Volume*100))
+		fmt.Sprintf("Speed (Press Q/W): %d\nVolume (Press A/S): %d%%\nHold:%d\n", // %.1f
+			int(Speed*20), int(Volume*100), s.Hold))
 }
-
-// func (s *SceneSelect) IsHoldEnough(threshold int64) {}

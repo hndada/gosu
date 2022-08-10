@@ -23,6 +23,10 @@ func (s *Sprite) SetHeight(h float64) {
 	s.W = ratio * float64(s.I.Bounds().Dx())
 	s.H = ratio * h
 }
+func (s *Sprite) SetFullscreen() {
+	s.W = screenSizeX
+	s.H = screenSizeY
+}
 
 // SetCenterXY assumes Sprite's width and height are set.
 func (s *Sprite) SetCenterXY(x, y float64) {

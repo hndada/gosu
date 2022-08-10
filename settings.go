@@ -50,7 +50,7 @@ func ScaleNoteWidthsMap() {
 
 var (
 	BgDimness        float64 = 0.5
-	ComboScale       float64 = 0.77
+	ComboScale       float64 = 0.72
 	ComboPosition    float64 = screenSizeY * 0.45
 	ComboGap         float64 = screenSizeX * -0.001
 	ScoreScale       float64 = 0.67
@@ -61,4 +61,6 @@ var (
 	FieldDark    float64 = 0.8
 	HintPosition float64 = screenSizeY * 0.96 // The middle position of Judge line, not a topmost.
 	HintHeight   float64 = screenSizeY * 0.04
+
+	TimingMeterUnit = 5 // The number of pixels per 1ms
 )

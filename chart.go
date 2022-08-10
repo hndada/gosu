@@ -43,7 +43,7 @@ type Chart struct {
 	TransPoints
 	KeyCount int
 	Notes    []Note
-	Level    float64
+	// Level    float64
 	// ScratchMode int
 }
 
@@ -89,9 +89,10 @@ func NewChartFromOsu(o *osu.Format) (*Chart, error) {
 func (c ChartHeader) MusicPath(cpath string) string {
 	return filepath.Join(filepath.Dir(cpath), c.AudioFilename)
 }
-func (c ChartHeader) BgPath(cpath string) string {
-	if c.ImageFilename == "" {
-		return DefaultBackgroundPath
-	}
+
+//	func (c ChartHeader) HasBackground() bool {
+//		return len(c.ImageFilename) != 0
+//	}
+func (c ChartHeader) BackgroundPath(cpath string) string {
 	return filepath.Join(filepath.Dir(cpath), c.ImageFilename)
 }
