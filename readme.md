@@ -2,6 +2,22 @@
 
 A classic rhythm game written in go
 
+# How to play
+Select the song with `Enter`, and press keys corresponding to falling notes.
+Following is default key settings:
+```
+var KeySettings = map[int][]Key{
+	4:               {KeyD, KeyF, KeyJ, KeyK},
+	5:               {KeyD, KeyF, KeySpace, KeyJ, KeyK},
+	6:               {KeyS, KeyD, KeyF, KeyJ, KeyK, KeyL},
+	7:               {KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL},
+	8 + LeftScratch: {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL},
+	8:               {KeyA, KeyS, KeyD, KeyF, KeyJ, KeyK, KeyL, KeySemicolon},
+	9:               {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL, KeySemicolon},
+	10:              {KeyA, KeyS, KeyD, KeyF, KeyV, KeyN, KeyJ, KeyK, KeyL, KeySemicolon},
+}
+```
+
 # Game play preview
 ## Video
 [Here is the YouTube link of live-playing! (replay)](https://youtu.be/YMRgGQZHpQo)
