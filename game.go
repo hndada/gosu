@@ -12,10 +12,11 @@ type Scene interface {
 	Draw(screen *ebiten.Image)
 }
 
-var selectScene = NewSceneSelect()
+var selectScene *SceneSelect
 
 func NewGame() *Game {
 	LoadSkin()
+	selectScene = NewSceneSelect()
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
 	ebiten.SetMaxTPS(MaxTPS)

@@ -44,10 +44,13 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format) *ScenePlay {
 	s.MusicFile, s.MusicPlayer = NewAudioPlayer(c.MusicPath(cpath))
 	s.MusicPlayer.SetVolume(Volume)
 	s.Skin = SkinMap[c.KeyCount]
-	s.Background = Sprite{
-		I: NewImage(c.BgPath(cpath)),
-		W: screenSizeX,
-		H: screenSizeY,
+	if img := NewImage(s.Chart.BackgroundPath(cpath)); img != nil {
+		s.Background = Sprite{
+			I: NewImage(s.Chart.BackgroundPath(cpath)),
+		}
+		s.Background.SetFullscreen()
+	} else {
+		s.Background = RandomDefaultBackground
 	}
 	s.Speed = Speed                      // From global variable.
 	s.Tick = int(-1.5 * float64(MaxTPS)) // Put some time of waiting

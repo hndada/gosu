@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"math/rand"
 	"os"
+	"path/filepath"
+	"strings"
 
 	_ "image/jpeg"
 	_ "image/png"
@@ -12,12 +15,19 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type Skin struct {
-	DefaultBackground Sprite
-	ComboSprites      []Sprite
-	ScoreSprites      []Sprite
-	JudgmentSprites   []Sprite
+// Sprites that are independent of key count.
+var GeneralSkin *GeneralSkinStruct
 
+type GeneralSkinStruct struct { // Singleton
+	DefaultBackgrounds []Sprite
+	ComboSprites       []Sprite
+	ScoreSprites       []Sprite
+	JudgmentSprites    []Sprite
+}
+
+// Can common sprites be separated as global variable?
+type Skin struct {
+	*GeneralSkinStruct
 	NoteSprites []Sprite
 	BodySprites []Sprite
 	HeadSprites []Sprite
@@ -27,20 +37,33 @@ type Skin struct {
 }
 
 var SkinMap = make(map[int]Skin)
-
-const DefaultBackgroundPath = "skin/bg.jpg"
+var RandomDefaultBackground Sprite
 
 func LoadSkin() {
-	// Following sprites are independent of key count.
-	var (
-		defaultBackground Sprite
-		comboSprites      []Sprite = make([]Sprite, 10)
-		scoreSprites      []Sprite = make([]Sprite, 10)
-		judgmentSprites   []Sprite = make([]Sprite, 5)
-	)
-	defaultBackground.I = NewImage(DefaultBackgroundPath)
-	defaultBackground.W = screenSizeX
-	defaultBackground.H = screenSizeY
+	g := &GeneralSkinStruct{
+		DefaultBackgrounds: make([]Sprite, 0, 10),
+		ComboSprites:       make([]Sprite, 10),
+		ScoreSprites:       make([]Sprite, 10),
+		JudgmentSprites:    make([]Sprite, 5),
+	}
+	{
+		fs, err := os.ReadDir("skin/bg")
+		if err != nil {
+			panic(err)
+		}
+		for _, f := range fs {
+			if f.IsDir() || !strings.HasPrefix(f.Name(), "bg") {
+				continue
+			}
+			sprite := Sprite{
+				I: NewImage(filepath.Join("skin/bg", f.Name())),
+			}
+			sprite.SetFullscreen()
+			g.DefaultBackgrounds = append(g.DefaultBackgrounds, sprite)
+		}
+		r := int(rand.Float64() * float64(len(g.DefaultBackgrounds)))
+		RandomDefaultBackground = g.DefaultBackgrounds[r]
+	}
 	for i := 0; i < 10; i++ {
 		s := Sprite{
 			I: NewImage(fmt.Sprintf("skin/combo/%d.png", i)),
@@ -48,7 +71,7 @@ func LoadSkin() {
 		s.ApplyScale(ComboScale)
 		// ComboSprite's x value is not fixed.
 		s.SetCenterXY(0, ComboPosition)
-		comboSprites[i] = s
+		g.ComboSprites[i] = s
 	}
 	for i := 0; i < 10; i++ {
 		s := Sprite{
@@ -57,7 +80,7 @@ func LoadSkin() {
 		s.ApplyScale(ScoreScale)
 		// ScoreSprite's x value is not fixed.
 		// ScoreSprite's y value is always 0.
-		scoreSprites[i] = s
+		g.ScoreSprites[i] = s
 	}
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
 		s := Sprite{
@@ -65,24 +88,21 @@ func LoadSkin() {
 		}
 		s.ApplyScale(JudgmentScale)
 		s.SetCenterXY(screenSizeX/2, JudgmentPosition)
-		judgmentSprites[i] = s
+		g.JudgmentSprites[i] = s
 	}
+	GeneralSkin = g
 
 	// Following sprites are dependent of key count.
 	// Todo: Key 1 ~ 3, scratch
+	// Todo: 4th note image
 	for keyCount := 4; keyCount <= 10; keyCount++ {
 		s := Skin{
-			DefaultBackground: defaultBackground,
-			ComboSprites:      comboSprites,
-			ScoreSprites:      scoreSprites,
-			JudgmentSprites:   judgmentSprites,
-
-			NoteSprites: make([]Sprite, keyCount&ScratchMask),
-			BodySprites: make([]Sprite, keyCount&ScratchMask),
-			HeadSprites: make([]Sprite, keyCount&ScratchMask),
-			TailSprites: make([]Sprite, keyCount&ScratchMask),
+			GeneralSkinStruct: GeneralSkin,
+			NoteSprites:       make([]Sprite, keyCount&ScratchMask),
+			BodySprites:       make([]Sprite, keyCount&ScratchMask),
+			HeadSprites:       make([]Sprite, keyCount&ScratchMask),
+			TailSprites:       make([]Sprite, keyCount&ScratchMask),
 		}
-		// Todo: 4th note image
 		var wsum int
 		for k, kind := range NoteKindsMap[keyCount] {
 			s.NoteSprites[k] = Sprite{
@@ -159,12 +179,14 @@ var NoteKindsMap = map[int][]NoteKind{
 func NewImage(path string) *ebiten.Image {
 	f, err := os.Open(path)
 	if err != nil {
-		panic(err)
+		return nil
+		// panic(err)
 	}
 	defer f.Close()
 	i, _, err := image.Decode(f)
 	if err != nil {
-		panic(err)
+		return nil
+		// panic(err)
 	}
 	return ebiten.NewImageFromImage(i)
 }
