@@ -2,13 +2,13 @@ package osr
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"testing"
 )
 
 func TestParse(t *testing.T) {
-	dat, err := ioutil.ReadFile("test.osr")
+	dat, err := os.ReadFile("test.osr")
 	if err != nil {
 		log.Fatal(err)
 	}
