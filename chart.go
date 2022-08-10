@@ -47,6 +47,24 @@ type Chart struct {
 	// ScratchMode int
 }
 
+func NewChartFromOsu(o *osu.Format) (*Chart, error) {
+	c := &Chart{
+		ChartHeader: NewChartHeaderFromOsu(o),
+		TransPoints: NewTransPointsFromOsu(o),
+		KeyCount:    int(o.CircleSize),
+		Notes:       make([]Note, 0, len(o.HitObjects)*2),
+	}
+	for _, ho := range o.HitObjects {
+		c.Notes = append(c.Notes, NewNoteFromOsu(ho, c.KeyCount)...)
+	}
+	sort.Slice(c.Notes, func(i, j int) bool {
+		if c.Notes[i].Time == c.Notes[j].Time {
+			return c.Notes[i].Key < c.Notes[j].Key
+		}
+		return c.Notes[i].Time < c.Notes[j].Time
+	})
+	return c, nil
+}
 func NewChartHeaderFromOsu(o *osu.Format) ChartHeader {
 	c := ChartHeader{
 		MusicName:     o.Title,
@@ -68,24 +86,6 @@ func NewChartHeaderFromOsu(o *osu.Format) ChartHeader {
 	return c
 }
 
-func NewChartFromOsu(o *osu.Format) (*Chart, error) {
-	c := &Chart{
-		ChartHeader: NewChartHeaderFromOsu(o),
-		TransPoints: NewTransPointsFromOsu(o),
-		KeyCount:    int(o.CircleSize),
-		Notes:       make([]Note, 0, len(o.HitObjects)*2),
-	}
-	for _, ho := range o.HitObjects {
-		c.Notes = append(c.Notes, NewNoteFromOsu(ho, c.KeyCount)...)
-	}
-	sort.Slice(c.Notes, func(i, j int) bool {
-		if c.Notes[i].Time == c.Notes[j].Time {
-			return c.Notes[i].Key < c.Notes[j].Key
-		}
-		return c.Notes[i].Time < c.Notes[j].Time
-	})
-	return c, nil
-}
 func (c ChartHeader) MusicPath(cpath string) string {
 	return filepath.Join(filepath.Dir(cpath), c.AudioFilename)
 }
