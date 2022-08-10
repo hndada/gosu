@@ -2,12 +2,22 @@
 
 Images, music are from [https://github.com/ppy/osu-resources]
 
-## Todo
-* 800x600(4:3) -> 1024x600(16:9)
-* Improve judgment drawing
-* Long note near Head is jittering 
+## To do
+* select에서 볼륨과 스피드가 안바뀌고 있음
+* 롱노트 꼬리 판정 다시
+    * 롱노트 놓아도 scored로 안바뀌는 듯
 * replay: real-time, score-calc
-* Long note goes scored then not scored
+* 판정 막대 그리기
+
+* 이지 모드 / 스탠다드 모드: 판정
+* net/dl
+
+## To draw
+* custom box at scene select 
+* arrow at the beginning of play
+* note animation
+* key
+* beat line (4/4)
 
 * documentation
 * level

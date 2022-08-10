@@ -1,8 +1,6 @@
 package gosu
 
 import (
-	"image"
-
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -37,54 +35,84 @@ func NewPlayNotes(c *Chart) (playNotes []*PlayNote, stagedNotes []*PlayNote) {
 	return
 }
 
-// Time bound for drawing notes
+// Time bound for drawing notes in milliseconds
 const (
-	up   = 10000
-	down = -2000
+	up   = 10 * 1000
+	down = -2 * 1000
 )
 
-// Todo: top, bottom +H/2? -H/2?
+// DrawLongNote draws long note before drawing Head or Tail.
+func (s *ScenePlay) DrawLongNotes(screen *ebiten.Image) {
+	for _, n := range s.PlayNotes {
+		if n.Type != Tail {
+			continue
+		}
+		// Gives extra 1 pixel for compensating round-down
+		top := int(s.NotePosition(n)+s.TailSprites[n.Key].H/2) - 1
+		bottom := int(s.NotePosition(n.Prev)-s.HeadSprites[n.Key].H/2) + 1
+		if top > screenSizeY || bottom < 0 {
+			continue
+		}
+		if top < 0 {
+			top = 0
+		}
+		if bottom > screenSizeY {
+			bottom = screenSizeY
+		}
+
+		sprite := s.BodySprites[n.Key]
+		op := &ebiten.DrawImageOptions{}
+		op.GeoM.Scale(sprite.ScaleW(), sprite.ScaleH())
+		op.GeoM.Translate(sprite.X, float64(top))
+		if n.Scored {
+			op.ColorM.ChangeHSV(0, 0.3, 0.3)
+		}
+		l, h := bottom-top, int(sprite.H) // Bottom has larger value
+		q, r := l/h, l%h
+		for i := 0; i < q; i++ {
+			screen.DrawImage(sprite.I, op)
+			op.GeoM.Translate(0, float64(h))
+		}
+		// last's bound is not scaled, since it's derived from the source.
+		last := sprite.I.Bounds()
+		last.Max.Y = last.Max.Y*r/h + 1
+		screen.DrawImage(sprite.I.SubImage(last).(*ebiten.Image), op)
+	}
+}
+
 func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 	for _, n := range s.PlayNotes {
 		td := n.Time - s.Time()
 		if td > up || td < down {
 			continue
 		}
-		y := s.CalcNoteY(n)
 		var sprite Sprite
 		switch n.Type {
 		case Head:
-			top := s.CalcNoteY(n.Next) + s.TailSprites[n.Key].H/2
-			bottom := y - s.HeadSprites[n.Key].H/2
-			if top < 0 {
-				top = 0
-			}
-			DrawLongNote(screen, s.BodySprites[n.Key], top, bottom, n.Scored)
 			sprite = s.HeadSprites[n.Key]
-			sprite.Y = y - s.HeadSprites[n.Key].H/2
 		case Tail:
-			if n.Time2-s.Time() < down { // Avoid drawing long note twice.
-				top := y + s.TailSprites[n.Key].H/2
-				bottom := s.CalcNoteY(n.Prev) - s.HeadSprites[n.Key].H/2
-				if bottom > screenSizeY {
-					bottom = screenSizeY
-				}
-				DrawLongNote(screen, s.BodySprites[n.Key], top, bottom, n.Scored)
-			}
 			sprite = s.TailSprites[n.Key]
-			sprite.Y = y - s.TailSprites[n.Key].H/2
 		default:
 			sprite = s.NoteSprites[n.Key]
-			sprite.Y = y - s.NoteSprites[n.Key].H/2
 		}
+		sprite.Y = s.NotePosition(n) - sprite.H/2
 		op := sprite.Op()
-		if n.Scored {
-			op.ColorM.ChangeHSV(0, 0.3, 0.3)
+		if n.Type == Head {
+			if n.Next.Scored {
+				op.ColorM.ChangeHSV(0, 0.3, 0.3)
+			}
+		} else {
+			if n.Scored {
+				op.ColorM.ChangeHSV(0, 0.3, 0.3)
+			}
 		}
 		screen.DrawImage(sprite.I, op)
 	}
 }
-func (s ScenePlay) CalcNoteY(n *PlayNote) float64 {
+
+// NotePosition calculates position, the centered y-axis value.
+// y = position - h/2
+func (s ScenePlay) NotePosition(n *PlayNote) float64 {
 	td := n.Time - s.Time()
 	var d float64
 	var t int64 = s.Time()
@@ -104,31 +132,6 @@ func (s ScenePlay) CalcNoteY(n *PlayNote) float64 {
 	}
 	d += s.Speed * sf.Factor * float64(n.Time-t) // Remained speed factor calc
 	return HintPosition - d                      // A note locates at the center of hint at the time.
-}
-
-// DrawLongNote draws long note before drawing Head or Tail.
-func DrawLongNote(screen *ebiten.Image, sprite Sprite, top, bottom float64, scored bool) {
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(sprite.ScaleW(), sprite.ScaleH())
-	op.GeoM.Translate(sprite.X, top)
-	if scored {
-		op.ColorM.ChangeHSV(0, 0.3, 0.3)
-	}
-	// length := int(bottom - top + sprite.H/2) // Bottom has larger value
-	// for i := 0; i < length/int(sprite.H); i++ {
-	// 	screen.DrawImage(sprite.I, op)
-	// 	op.GeoM.Translate(0, sprite.H)
-	// }
-	// last := sprite.I.Bounds()
-	// last.Max = image.Pt(int(sprite.W), length%int(sprite.H))
-	l := bottom - top
-	for ; l > sprite.H-25; l -= sprite.H { // Todo: resolve -25
-		screen.DrawImage(sprite.I, op)
-		op.GeoM.Translate(0, sprite.H)
-	}
-	last := sprite.I.Bounds()
-	last.Max = image.Pt(int(sprite.W), int(l))
-	screen.DrawImage(sprite.I.SubImage(last).(*ebiten.Image), op)
 }
 
 func (n PlayNote) PlaySE() {}
