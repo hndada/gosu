@@ -10,7 +10,7 @@ import (
 )
 
 // This is for testing parsing replay and simulating playing.
-func main() {
+func _main2() {
 	cpath := "music/doppelganger/LeaF - Doppelganger (Jinjin) [jakads' Extra].osu"
 	b, err := os.ReadFile(cpath)
 	if err != nil {
