@@ -22,7 +22,7 @@ var KeySettings = map[int][]Key{
 	9:               {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL, KeySemicolon},
 	10:              {KeyA, KeyS, KeyD, KeyF, KeyV, KeyN, KeyJ, KeyK, KeyL, KeySemicolon},
 }
-var Speed = 0.80
+var Speed = 1.25
 var NoteWidthsMap = map[int][4]float64{
 	4:  {0.065, 0.065, 0.065, 0.065},
 	5:  {0.065, 0.065, 0.065, 0.065},

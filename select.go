@@ -209,8 +209,8 @@ func (s *SceneSelect) Update(g *Game) {
 		}
 		s.Hold = 0
 		Speed += 0.05
-		if Speed > 1.5 {
-			Speed = 1.5
+		if Speed > 2 {
+			Speed = 2
 		}
 	case ebiten.IsKeyPressed(ebiten.KeyA):
 		s.HoldKey = ebiten.KeyA
@@ -258,5 +258,5 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 	}
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf("Speed (Press Q/W): %d\nVolume (Press A/S): %d%%\nHold:%d\n", // %.1f
-			int(Speed*20), int(Volume*100), s.Hold))
+			int(Speed*100), int(Volume*100), s.Hold))
 }

@@ -26,12 +26,11 @@ func NewTransPointsFromOsu(o *osu.Format) []*TransPoint {
 		return o.TimingPoints[i].Time < o.TimingPoints[j].Time
 	})
 	tps := make([]*TransPoint, 0, len(o.TimingPoints))
-	var lastUninherited TransPoint
+	var lastUninherited TransPoint // Need to deep-copied
 	var prev *TransPoint
 	for _, timingPoint := range o.TimingPoints {
-		var tp TransPoint
 		if timingPoint.Uninherited {
-			tp = TransPoint{
+			tp := &TransPoint{
 				Time:        int64(timingPoint.Time),
 				SpeedFactor: 1,
 				// BPM:,
@@ -41,28 +40,29 @@ func NewTransPointsFromOsu(o *osu.Format) []*TransPoint {
 				Prev:      prev,
 			}
 			tp.BPM, _ = timingPoint.BPM()
+
 			if prev != nil {
-				prev.Next = &tp
+				prev.Next = tp
 			}
-			lastUninherited = tp
-			prev = &tp
+			prev = tp
+			lastUninherited = *tp
+			tps = append(tps, tp)
 		} else {
-			tp = lastUninherited
-			tp.Time = int64(timingPoint.Time)
-			tp.SpeedFactor, _ = timingPoint.SpeedFactor()
-			tp.Meter = uint8(timingPoint.Meter)
-			tp.Volume = uint8(timingPoint.Volume)
-			tp.Meter = uint8(timingPoint.Meter)
-			tp.Highlight = timingPoint.IsKiai()
-			if prev != nil {
-				prev.Next = &tp
+			tp := &TransPoint{
+				Time: int64(timingPoint.Time),
+				// SpeedFactor: 1,
+				BPM:       lastUninherited.BPM,
+				Meter:     uint8(timingPoint.Meter),
+				Volume:    uint8(timingPoint.Volume),
+				Highlight: timingPoint.IsKiai(),
+				Prev:      prev,
 			}
-			prev = &tp
+			tp.SpeedFactor, _ = timingPoint.SpeedFactor()
+
+			prev.Next = tp // Inherited point is never the first.
+			prev = tp
+			tps = append(tps, tp)
 		}
-		tps = append(tps, &tp)
 	}
-	// for _, tp := range tps {
-	// 	fmt.Printf("%+v\n", *tp)
-	// }
 	return tps
 }
