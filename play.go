@@ -34,12 +34,21 @@ type ScenePlay struct {
 	Karma          float64
 	KarmaSum       float64
 	JudgmentCounts []int
+
+	Play bool // Whether the scene is for play or not
 }
 
-func NewScenePlay(c *Chart, cpath string, rf *osr.Format) *ScenePlay {
+// Put some time of waiting
+var (
+	WaitBefore int64 = int64(-1.8 * 1000)
+	WaitAfter  int64 = 3 * 1000
+)
+
+func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay {
 	s := new(ScenePlay)
 	s.Chart = c
 	s.PlayNotes, s.StagedNotes = NewPlayNotes(c) // Todo: add Mods to input param
+
 	s.MusicFile, s.MusicPlayer = NewAudioPlayer(c.MusicPath(cpath))
 	s.MusicPlayer.SetVolume(Volume)
 	s.Skin = SkinMap[c.KeyCount]
@@ -51,10 +60,15 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format) *ScenePlay {
 	} else {
 		s.Background = RandomDefaultBackground
 	}
-	s.Speed = Speed                      // From global variable.
-	s.Tick = int(-1.5 * float64(MaxTPS)) // Put some time of waiting
+
+	s.Speed = Speed // From global variable
+	bufferTime := WaitBefore
+	if rf != nil && rf.BufferTime() < bufferTime {
+		bufferTime = rf.BufferTime()
+	}
+	s.Tick = MsecToTick(bufferTime)
 	if rf != nil {
-		s.FetchPressed = NewReplayListener(rf, s.Chart.KeyCount)
+		s.FetchPressed = NewReplayListener(rf, s.Chart.KeyCount, bufferTime)
 	} else {
 		s.FetchPressed = NewListener(KeySettings[s.Chart.KeyCount])
 	}
@@ -75,7 +89,7 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format) *ScenePlay {
 // Todo: keep playing music when making SceneResult
 func (s *ScenePlay) Update(g *Game) {
 	var maxJudgmentCountdown int = MsecToTick(2250)
-	if ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished() {
+	if g != nil && ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished() {
 		s.MusicPlayer.Close()
 		s.MusicFile.Close()
 		g.Scene = selectScene
@@ -96,6 +110,7 @@ func (s *ScenePlay) Update(g *Game) {
 	for s.Effect.Next != nil && s.Time() < s.Effect.Next.Time {
 		s.Effect = s.Effect.Next
 	}
+	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
 	for k, n := range s.StagedNotes {
 		if n == nil {
@@ -201,8 +216,7 @@ func (s ScenePlay) Time() int64 { // In milliseconds.
 	return int64(float64(s.Tick) / float64(MaxTPS) * 1000)
 }
 func (s ScenePlay) IsFinished() bool {
-	const buffer = 3000
-	return s.Time() > buffer+s.PlayNotes[len(s.PlayNotes)-1].Time
+	return s.Time() > WaitAfter+s.PlayNotes[len(s.PlayNotes)-1].Time
 }
 func TickToMsec(tick int) int64 { return int64(1000 * float64(tick) / float64(MaxTPS)) }
 func MsecToTick(msec int64) int { return int(float64(msec) * float64(MaxTPS) / 1000) }
