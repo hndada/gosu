@@ -10,17 +10,11 @@ import (
 )
 
 // ScenePlay: struct, PlayScene: function
+// I don't like ScenePlay.Play is scattered in the ScenePlay code.
+// There are 5 places that s.Play used in the code.
 type ScenePlay struct {
 	Chart     *Chart
 	PlayNotes []*PlayNote
-
-	MusicFile   io.ReadSeekCloser
-	MusicPlayer AudioPlayer
-
-	Skin
-	Background            Sprite
-	LastJudgment          Judgment
-	LastJudgmentCountdown int
 
 	Speed        float64
 	Tick         int
@@ -35,7 +29,13 @@ type ScenePlay struct {
 	KarmaSum       float64
 	JudgmentCounts []int
 
-	Play bool // Whether the scene is for play or not
+	Play        bool // Whether the scene is for play or not
+	MusicFile   io.ReadSeekCloser
+	MusicPlayer AudioPlayer
+	Skin
+	Background            Sprite
+	LastJudgment          Judgment
+	LastJudgmentCountdown int
 }
 
 // Put some time of waiting
@@ -48,18 +48,6 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	s := new(ScenePlay)
 	s.Chart = c
 	s.PlayNotes, s.StagedNotes = NewPlayNotes(c) // Todo: add Mods to input param
-
-	s.MusicFile, s.MusicPlayer = NewAudioPlayer(c.MusicPath(cpath))
-	s.MusicPlayer.SetVolume(Volume)
-	s.Skin = SkinMap[c.KeyCount]
-	if img := NewImage(s.Chart.BackgroundPath(cpath)); img != nil {
-		s.Background = Sprite{
-			I: NewImage(s.Chart.BackgroundPath(cpath)),
-		}
-		s.Background.SetFullscreen()
-	} else {
-		s.Background = RandomDefaultBackground
-	}
 
 	s.Speed = Speed // From global variable
 	bufferTime := WaitBefore
@@ -82,6 +70,22 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	}
 	s.Karma = 1
 	s.JudgmentCounts = make([]int, 5)
+
+	s.Play = play
+	if !s.Play {
+		return s
+	}
+	s.MusicFile, s.MusicPlayer = NewAudioPlayer(c.MusicPath(cpath))
+	s.MusicPlayer.SetVolume(Volume)
+	s.Skin = SkinMap[c.KeyCount]
+	if img := NewImage(s.Chart.BackgroundPath(cpath)); img != nil {
+		s.Background = Sprite{
+			I: NewImage(s.Chart.BackgroundPath(cpath)),
+		}
+		s.Background.SetFullscreen()
+	} else {
+		s.Background = RandomDefaultBackground
+	}
 	return s
 }
 
@@ -89,13 +93,13 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 // Todo: keep playing music when making SceneResult
 func (s *ScenePlay) Update(g *Game) {
 	var maxJudgmentCountdown int = MsecToTick(2250)
-	if g != nil && ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished() {
+	if s.Play && (ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished()) {
 		s.MusicPlayer.Close()
 		s.MusicFile.Close()
 		g.Scene = selectScene
 		return
 	}
-	if s.Tick == 0 {
+	if s.Play && s.Tick == 0 {
 		s.MusicPlayer.Play()
 	}
 	for s.SpeedFactor.Next != nil && s.Time() < s.SpeedFactor.Next.Time {
@@ -116,7 +120,7 @@ func (s *ScenePlay) Update(g *Game) {
 		if n == nil {
 			continue
 		}
-		if n.Type != Tail && s.KeyAction(k) == Hit {
+		if s.Play && n.Type != Tail && s.KeyAction(k) == Hit {
 			n.PlaySE()
 		}
 		td := n.Time - s.Time() // Time difference; negative values means late hit
@@ -129,8 +133,12 @@ func (s *ScenePlay) Update(g *Game) {
 			}
 			continue
 		}
+		if !s.Play {
+			continue
+		}
 		var worst Judgment
 		if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
+			fmt.Printf("Time difference: %d\n", td)
 			s.Score(n, j)
 			if worst.Window < j.Window {
 				worst = j

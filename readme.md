@@ -4,6 +4,7 @@ Images, music are from [https://github.com/ppy/osu-resources]
 
 ## To do
 * enable replay selection at SceneSelect
+    * map[md5]index
 * timing meter: overlapped color-rects, white base line at the middle, draw white semi-transparent box on it
     * test long note tail's judge is correct 
 
