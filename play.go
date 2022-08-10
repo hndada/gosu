@@ -19,9 +19,9 @@ type ScenePlay struct {
 	MusicPlayer *audio.Player
 
 	Skin
-	Background        Sprite
-	Judgment          Judgment
-	JudgmentCountdown int
+	Background            Sprite
+	LastJudgment          Judgment
+	LastJudgmentCountdown int
 
 	Speed        float64
 	Tick         int
@@ -42,6 +42,7 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format) *ScenePlay {
 	s.Chart = c
 	s.PlayNotes, s.StagedNotes = NewPlayNotes(c) // Todo: add Mods to input param
 	s.MusicFile, s.MusicPlayer = NewAudioPlayer(c.MusicPath(cpath))
+	s.MusicPlayer.SetVolume(Volume)
 	s.Skin = SkinMap[c.KeyCount]
 	s.Background = Sprite{
 		I: NewImage(c.BgPath(cpath)),
@@ -71,7 +72,7 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format) *ScenePlay {
 // TPS affects only on Update(), not on Draw().
 // Todo: keep playing music when making SceneResult
 func (s *ScenePlay) Update(g *Game) {
-	var maxJudgmentCountdown int = MsecToTick(1500)
+	var maxJudgmentCountdown int = MsecToTick(2250)
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished() {
 		s.MusicPlayer.Close()
 		s.MusicFile.Close()
@@ -118,14 +119,14 @@ func (s *ScenePlay) Update(g *Game) {
 				worst = j
 			}
 		}
-		if s.Judgment.Window < worst.Window {
-			s.Judgment = worst
-			s.JudgmentCountdown = maxJudgmentCountdown
-		} else {
-			s.JudgmentCountdown--
+		if worst.Window != 0 {
+			s.LastJudgment = worst
+			s.LastJudgmentCountdown = maxJudgmentCountdown
 		}
-		if s.JudgmentCountdown == 0 {
-			s.Judgment = Judgment{}
+		if s.LastJudgmentCountdown == 0 {
+			s.LastJudgment = Judgment{}
+		} else {
+			s.LastJudgmentCountdown--
 		}
 	}
 	s.Tick++
@@ -137,23 +138,20 @@ func (s *ScenePlay) Draw(screen *ebiten.Image) {
 
 	s.FieldSprite.Draw(screen)
 	s.HintSprite.Draw(screen)
-	if s.IsFinished() {
-		s.ClearSprite.Draw(screen)
-	} else {
-		s.DrawNotes(screen)
-		if s.Combo > 0 {
-			s.DrawCombo(screen)
-		}
-		if s.JudgmentCountdown > 0 { // Draw the same judgment for a while.
-			for i, j := range Judgments {
-				if j.Window == s.Judgment.Window {
-					s.JudgmentSprites[i].Draw(screen)
-					break
-				}
+	s.DrawLongNotes(screen)
+	s.DrawNotes(screen)
+	if s.Combo > 0 {
+		s.DrawCombo(screen)
+	}
+	if s.LastJudgmentCountdown > 0 { // Draw the same judgment for a while.
+		for i, j := range Judgments {
+			if j.Window == s.LastJudgment.Window {
+				s.JudgmentSprites[i].Draw(screen)
+				break
 			}
 		}
-		s.DrawScore(screen)
 	}
+	s.DrawScore(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs\n"+
 			"Score: %.0f\nKarma: %.2f\nCombo: %d\n"+
@@ -162,16 +160,15 @@ func (s *ScenePlay) Draw(screen *ebiten.Image) {
 		s.JudgmentCounts))
 }
 
-// DrawCombo supposes each number image has different size.
-// Wait, we loaded number image with adjusting size.
+// Each number image has different size.
 func (s *ScenePlay) DrawCombo(screen *ebiten.Image) {
 	var wsum int
 	vs := make([]int, 0)
 	for v := s.Combo; v > 0; v /= 10 {
 		vs = append(vs, v%10) // Little endian
-		wsum += int(s.ComboSprites[v%10].W - ComboGap)
+		wsum += int(s.ComboSprites[v%10].W + ComboGap)
 	}
-	wsum += int(ComboGap)
+	wsum -= int(ComboGap)
 	x := (screenSizeX + float64(wsum)) / 2
 	for _, v := range vs {
 		x -= s.ComboSprites[v].W + ComboGap
