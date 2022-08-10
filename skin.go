@@ -17,7 +17,6 @@ type Skin struct {
 	ComboSprites      []Sprite
 	ScoreSprites      []Sprite
 	JudgmentSprites   []Sprite
-	ClearSprite       Sprite
 
 	NoteSprites []Sprite
 	BodySprites []Sprite
@@ -38,7 +37,6 @@ func LoadSkin() {
 		comboSprites      []Sprite = make([]Sprite, 10)
 		scoreSprites      []Sprite = make([]Sprite, 10)
 		judgmentSprites   []Sprite = make([]Sprite, 5)
-		clearSprite       Sprite
 	)
 	defaultBackground.I = NewImage(DefaultBackgroundPath)
 	defaultBackground.W = screenSizeX
@@ -69,9 +67,6 @@ func LoadSkin() {
 		s.SetCenterXY(screenSizeX/2, JudgmentPosition)
 		judgmentSprites[i] = s
 	}
-	clearSprite.I = NewImage("skin/play/clear.png")
-	clearSprite.SetWidth(ClearWidth)
-	clearSprite.SetCenterXY(screenSizeX/2, screenSizeY/2)
 
 	// Following sprites are dependent of key count.
 	// Todo: Key 1 ~ 3, scratch
@@ -81,7 +76,6 @@ func LoadSkin() {
 			ComboSprites:      comboSprites,
 			ScoreSprites:      scoreSprites,
 			JudgmentSprites:   judgmentSprites,
-			ClearSprite:       clearSprite,
 
 			NoteSprites: make([]Sprite, keyCount&ScratchMask),
 			BodySprites: make([]Sprite, keyCount&ScratchMask),
@@ -93,11 +87,11 @@ func LoadSkin() {
 		for k, kind := range NoteKindsMap[keyCount] {
 			s.NoteSprites[k] = Sprite{
 				I: NewImage("skin/note/" + fmt.Sprintf("n%d.png", []int{1, 2, 3, 3}[kind])),
-				W: NoteWidths[keyCount][kind],
+				W: NoteWidthsMap[keyCount][kind],
 				H: NoteHeigth,
 			}
 			// Each w should be integer, since it is actual sprite's width.
-			wsum += int(NoteWidths[keyCount][kind])
+			wsum += int(NoteWidthsMap[keyCount][kind])
 		}
 		// NoteSprite's x value should be integer as well as w.
 		// Todo: Scratch should be excluded to width sum.
@@ -105,22 +99,21 @@ func LoadSkin() {
 		for k, kind := range NoteKindsMap[keyCount] {
 			s.NoteSprites[k].X = float64(x)
 			// NoteSprites's y value is not fixed.
-			x += int(NoteWidths[keyCount][kind])
+			x += int(NoteWidthsMap[keyCount][kind])
 		}
 		x = (screenSizeX - wsum) / 2
 		for k, kind := range NoteKindsMap[keyCount] {
 			s.BodySprites[k] = Sprite{
 				I: NewImage("skin/note/" + fmt.Sprintf("l%d.png", []int{1, 2, 3, 3}[kind])),
-				W: NoteWidths[keyCount][kind],
+				W: NoteWidthsMap[keyCount][kind],
 				H: NoteHeigth, // Fyi, long note body's height doesn't need to be scaled.
 			}
 			s.BodySprites[k].X = float64(x)
 			// BodySprites's y value is not fixed.
-			x += int(NoteWidths[keyCount][kind])
+			x += int(NoteWidthsMap[keyCount][kind])
 		}
 		copy(s.HeadSprites, s.NoteSprites)
 		copy(s.TailSprites, s.NoteSprites)
-
 		field := ebiten.NewImage(wsum, screenSizeY)
 		field.Fill(color.RGBA{0, 0, 0, uint8(255 * FieldDark)})
 		s.FieldSprite = Sprite{
