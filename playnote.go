@@ -114,27 +114,26 @@ func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 // NotePosition calculates position, the centered y-axis value.
 // y = position - h/2
 func (s ScenePlay) NotePosition(n *PlayNote) float64 {
-	td := n.Time - s.Time()
-	var length float64
-	var time int64 = s.Time()
+	var distance float64 // Approaching notes have positive distance, vice versa.
 	tp := s.TransPoint
-	if td > 0 {
+	time := s.Time()
+	if n.Time-s.Time() > 0 {
 		// When there are more than 2 TransPoint in 10 seconds.
-		for ; tp.Next != nil && tp.Next.Time < n.Time+up; tp = tp.Next {
-			duration := tp.Time - time
-			length += s.Speed * tp.SpeedFactor * float64(duration)
+		for ; tp.Next != nil && tp.Next.Time < n.Time; tp = tp.Next {
+			duration := tp.Next.Time - time
+			distance += s.Speed * tp.SpeedFactor * float64(duration)
 			time += duration
 		}
 	} else {
-		for ; tp.Prev != nil && tp.Prev.Time > n.Time+down; tp = tp.Prev {
+		for ; tp.Prev != nil && tp.Time > n.Time; tp = tp.Prev {
 			duration := tp.Time - time // Negative value.
-			length += s.Speed * tp.SpeedFactor * float64(duration)
+			distance += s.Speed * tp.SpeedFactor * float64(duration)
 			time += duration
 		}
 	}
 	// Calculate the remained speed factor (which is farthest from Hint in 10 seconds.)
-	length += s.Speed * tp.SpeedFactor * float64(n.Time-time)
-	return HintPosition - length
+	distance += s.Speed * tp.SpeedFactor * float64(n.Time-time)
+	return HintPosition - distance
 }
 
 func (n PlayNote) PlaySE() {}
