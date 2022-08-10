@@ -167,7 +167,7 @@ func (s *SceneSelect) Update(g *Game) {
 	switch {
 	case ebiten.IsKeyPressed(ebiten.KeyEnter), ebiten.IsKeyPressed(ebiten.KeyNumpadEnter):
 		s.PlaySoundSelect()
-		g.Scene = NewScenePlay(s.Charts[s.ChartCursor], s.ChartPaths[s.ChartCursor], nil)
+		g.Scene = NewScenePlay(s.Charts[s.ChartCursor], s.ChartPaths[s.ChartCursor], nil, true)
 	case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
 		s.HoldKey = ebiten.KeyArrowDown
 		if s.Hold < threshold1 {
