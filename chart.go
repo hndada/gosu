@@ -89,10 +89,6 @@ func NewChartHeaderFromOsu(o *osu.Format) ChartHeader {
 func (c ChartHeader) MusicPath(cpath string) string {
 	return filepath.Join(filepath.Dir(cpath), c.AudioFilename)
 }
-
-//	func (c ChartHeader) HasBackground() bool {
-//		return len(c.ImageFilename) != 0
-//	}
 func (c ChartHeader) BackgroundPath(cpath string) string {
 	return filepath.Join(filepath.Dir(cpath), c.ImageFilename)
 }

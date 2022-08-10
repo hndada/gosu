@@ -3,7 +3,6 @@
 Images, music are from [https://github.com/ppy/osu-resources]
 
 ## To do
-* record replay vid
 * documentation
 
 ## To draw
@@ -14,6 +13,7 @@ Images, music are from [https://github.com/ppy/osu-resources]
 * note animation
 * dynamic sprite at Combo, Judgment, and Score(rolling-effect)
 
+## Might do
 * level
     * Unbalanced chart will be penalized with strict decay factor
 * net/dl
