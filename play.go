@@ -36,7 +36,6 @@ type ScenePlay struct {
 	LastJudgmentCountdown int
 }
 
-// Put some time of waiting
 var (
 	WaitBefore int64 = int64(-1.8 * 1000)
 	WaitAfter  int64 = 3 * 1000

@@ -24,8 +24,6 @@ type GeneralSkinStruct struct { // Singleton
 	ScoreSprites       []Sprite
 	JudgmentSprites    []Sprite
 }
-
-// Can common sprites be separated as global variable?
 type Skin struct {
 	*GeneralSkinStruct
 	NoteSprites []Sprite

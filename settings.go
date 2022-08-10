@@ -56,11 +56,10 @@ var (
 	ScoreScale       float64 = 0.67
 	JudgmentScale    float64 = 0.35
 	JudgmentPosition float64 = screenSizeY * 0.67
-	// ClearWidth       float64 = 225
-	NoteHeigth   float64 = screenSizeY * 0.04 // Applies all notes
-	FieldDark    float64 = 0.8
-	HintPosition float64 = screenSizeY * 0.96 // The middle position of Judge line, not a topmost.
-	HintHeight   float64 = screenSizeY * 0.04
+	NoteHeigth       float64 = screenSizeY * 0.04 // Applies to all notes
+	FieldDark        float64 = 0.8
+	HintPosition     float64 = screenSizeY * 0.96 // The middle position of Judge line, not a topmost.
+	HintHeight       float64 = screenSizeY * 0.04
 
 	TimingMeterUnit = 5 // The number of pixels per 1ms
 )

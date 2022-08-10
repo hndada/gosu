@@ -20,7 +20,6 @@ func NewGame() *Game {
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
 	ebiten.SetMaxTPS(MaxTPS)
-	// ebiten.SetRunnableOnUnfocused(true)
 	g := &Game{
 		Scene: selectScene,
 	}

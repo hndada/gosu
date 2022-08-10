@@ -4,7 +4,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// Todo: should I make the image field unexported?
+// Should I make the image field unexported?
 type Sprite struct {
 	I          *ebiten.Image
 	W, H, X, Y float64
