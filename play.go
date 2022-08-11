@@ -20,6 +20,7 @@ type ScenePlay struct {
 	LastPressed  []bool
 	Pressed      []bool
 	StagedNotes  []*PlayNote
+	LowestTails  []*PlayNote // For drawing long note efficiently
 	*TransPoint
 
 	Combo          int
@@ -31,11 +32,9 @@ type ScenePlay struct {
 	MusicFile   io.ReadSeekCloser
 	MusicPlayer AudioPlayer
 	Skin
-	Background Sprite
-
+	Background            Sprite
 	LastJudgment          Judgment
 	LastJudgmentCountdown int
-	LowestTails           []*PlayNote // For drawing long note efficiently
 }
 
 var (
@@ -80,15 +79,6 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	} else {
 		s.Background = RandomDefaultBackground
 	}
-	// s.LowestTails = make([]*PlayNote, c.KeyCount)
-	// for k := range s.LowestTails {
-	// 	for _, n := range s.PlayNotes {
-	// 		if n.Key == k && n.Type == Tail {
-	// 			s.LowestTails[k] = n
-	// 			break
-	// 		}
-	// 	}
-	// }
 	return s
 }
 
