@@ -13,6 +13,7 @@ import (
 	_ "image/png"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"golang.org/x/image/draw"
 )
 
 // Sprites that are independent of key count.
@@ -94,6 +95,8 @@ func LoadSkin() {
 	// Todo: Key 1 ~ 3, scratch
 	// Todo: 4th note image
 	for keyCount := 4; keyCount <= 10; keyCount++ {
+		noteKinds := NoteKindsMap[keyCount]
+		noteWidths := NoteWidthsMap[keyCount]
 		s := Skin{
 			GeneralSkinStruct: GeneralSkin,
 			NoteSprites:       make([]Sprite, keyCount&ScratchMask),
@@ -102,33 +105,51 @@ func LoadSkin() {
 			TailSprites:       make([]Sprite, keyCount&ScratchMask),
 		}
 		var wsum int
-		for k, kind := range NoteKindsMap[keyCount] {
+		for k, kind := range noteKinds {
 			s.NoteSprites[k] = Sprite{
 				I: NewImage("skin/note/" + fmt.Sprintf("n%d.png", []int{1, 2, 3, 3}[kind])),
-				W: NoteWidthsMap[keyCount][kind],
+				W: noteWidths[kind],
 				H: NoteHeigth,
 			}
 			// Each w should be integer, since it is actual sprite's width.
-			wsum += int(NoteWidthsMap[keyCount][kind])
+			wsum += int(noteWidths[kind])
 		}
 		// NoteSprite's x value should be integer as well as w.
 		// Todo: Scratch should be excluded to width sum.
 		x := (screenSizeX - wsum) / 2
-		for k, kind := range NoteKindsMap[keyCount] {
+		for k, kind := range noteKinds {
 			s.NoteSprites[k].X = float64(x)
 			// NoteSprites's y value is not fixed.
-			x += int(NoteWidthsMap[keyCount][kind])
+			x += int(noteWidths[kind])
 		}
+		// Draw max length of long note body sprite in advance.
+		// Todo: change l%d.png to b%d.png (with animation)
 		x = (screenSizeX - wsum) / 2
-		for k, kind := range NoteKindsMap[keyCount] {
+		for k, kind := range noteKinds {
+			f, err := os.Open("skin/note/" + fmt.Sprintf("l%d.png", []int{1, 2, 3, 3}[kind]))
+			if err != nil {
+				panic(err)
+			}
+			defer f.Close()
+			src, _, err := image.Decode(f)
+			if err != nil {
+				panic(err)
+			}
+			w := int(noteWidths[kind])
+			scale := float64(w) / float64(src.Bounds().Dx())
+			h := int(scale * float64(src.Bounds().Dy()))
+			dst := image.NewRGBA(image.Rect(0, 0, int(w), screenSizeY))
+			for rect := image.Rect(0, 0, w, h); rect.Max.Y < dst.Bounds().Dy(); rect.Max.Y += h {
+				draw.BiLinear.Scale(dst, rect, src, src.Bounds(), draw.Over, nil)
+			}
 			s.BodySprites[k] = Sprite{
-				I: NewImage("skin/note/" + fmt.Sprintf("l%d.png", []int{1, 2, 3, 3}[kind])),
-				W: NoteWidthsMap[keyCount][kind],
-				H: NoteHeigth, // Fyi, long note body's height doesn't need to be scaled.
+				I: ebiten.NewImageFromImage(dst),
+				W: float64(dst.Bounds().Dx()), // noteWidths[kind]
+				H: float64(dst.Bounds().Dy()), // screenSizeY
 			}
 			s.BodySprites[k].X = float64(x)
 			// BodySprites's y value is not fixed.
-			x += int(NoteWidthsMap[keyCount][kind])
+			x += int(noteWidths[kind])
 		}
 		copy(s.HeadSprites, s.NoteSprites)
 		copy(s.TailSprites, s.NoteSprites)

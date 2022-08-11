@@ -31,9 +31,11 @@ type ScenePlay struct {
 	MusicFile   io.ReadSeekCloser
 	MusicPlayer AudioPlayer
 	Skin
-	Background            Sprite
+	Background Sprite
+
 	LastJudgment          Judgment
 	LastJudgmentCountdown int
+	LowestTails           []*PlayNote // For drawing long note efficiently
 }
 
 var (
@@ -45,8 +47,8 @@ var MaxJudgmentCountdown int = MsecToTick(2250)
 func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay {
 	s := new(ScenePlay)
 	s.Chart = c
-	s.PlayNotes, s.StagedNotes = NewPlayNotes(c) // Todo: add Mods to input param
-	s.Speed = Speed                              // From global variable
+	s.PlayNotes, s.StagedNotes, s.LowestTails = NewPlayNotes(c) // Todo: add Mods to input param
+	s.Speed = Speed                                             // From global variable
 	bufferTime := WaitBefore
 	if rf != nil && rf.BufferTime() < bufferTime {
 		bufferTime = rf.BufferTime()
@@ -78,6 +80,15 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	} else {
 		s.Background = RandomDefaultBackground
 	}
+	// s.LowestTails = make([]*PlayNote, c.KeyCount)
+	// for k := range s.LowestTails {
+	// 	for _, n := range s.PlayNotes {
+	// 		if n.Key == k && n.Type == Tail {
+	// 			s.LowestTails[k] = n
+	// 			break
+	// 		}
+	// 	}
+	// }
 	return s
 }
 
