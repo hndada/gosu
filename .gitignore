@@ -23,3 +23,7 @@ go.work
 # local test files
 /*.osu
 /*.osr
+/cmd/gosu/music
+/cmd/gosu/replay
+/cmd/gosu/skin-1
+/cmd/gosu/skin-2
