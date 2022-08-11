@@ -20,7 +20,8 @@ var KeySettings = map[int][]Key{
 
 # Game play preview
 ## Video
-[Here is the YouTube link of live-playing! (replay)](https://youtu.be/YMRgGQZHpQo)
+[Real-time replay of Taishi - bluefieldcreator [Etherealization]](https://www.youtube.com/watch?v=9kMUT8vQI24&list=PLQhd8A8gGbIBm_oJdW5K9Pwv9jZpmJzLW&index=2&ab_channel=MuangMuangE)
+[Here is the YouTube link of another replay.](https://youtu.be/YMRgGQZHpQo)
 
 ## Screenshots
 ![4 Key](https://i.imgur.com/6veaLI6.png)
