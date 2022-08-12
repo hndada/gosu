@@ -9,7 +9,7 @@ type PlayNote struct {
 	Note
 	Prev     *PlayNote
 	Next     *PlayNote
-	Scored   bool
+	Marked   bool
 	NextTail *PlayNote // For performance of DrawLongNotes()
 }
 
@@ -75,7 +75,7 @@ func (s *ScenePlay) DrawLongNotes(screen *ebiten.Image) {
 			sprite := s.BodySprites[k]
 			sprite.Y = float64(top)
 			op := sprite.Op()
-			if n.Scored {
+			if n.Marked {
 				op.ColorM.ChangeHSV(0, 0.3, 0.3)
 			}
 			rect := sprite.I.Bounds()
@@ -110,11 +110,11 @@ func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 		sprite.Y = s.NotePosition(n) - sprite.H/2
 		op := sprite.Op()
 		if n.Type == Head {
-			if n.Next.Scored {
+			if n.Next.Marked {
 				op.ColorM.ChangeHSV(0, 0.3, 0.3)
 			}
 		} else {
-			if n.Scored {
+			if n.Marked {
 				op.ColorM.ChangeHSV(0, 0.3, 0.3)
 			}
 		}
@@ -144,6 +144,9 @@ func (s ScenePlay) NotePosition(n *PlayNote) float64 {
 	}
 	// Calculate the remained speed factor (which is farthest from Hint in 10 seconds.)
 	distance += s.Speed * tp.SpeedFactor * float64(n.Time-time)
+	// if s.Tick%500 == 0 {
+	// 	fmt.Println(s.Time(), n, HintPosition-distance)
+	// }
 	return HintPosition - distance
 }
 
