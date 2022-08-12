@@ -119,7 +119,7 @@ func (s *ScenePlay) Update(g *Game) {
 		}
 		var worst Judgment
 		if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
-			s.Score(n, j)
+			s.MarkNote(n, j)
 			if worst.Window < j.Window {
 				worst = j
 			}
@@ -141,7 +141,7 @@ func (s *ScenePlay) Update(g *Game) {
 		s.Tick++
 		return
 	}
-	s.DelayedScore += DelayedScorePower * (s.CurrentScore() - s.DelayedScore)
+	s.DelayedScore += DelayedScorePower * (s.Score() - s.DelayedScore)
 
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished() {
 		s.MusicPlayer.Close()
@@ -178,7 +178,7 @@ func (s *ScenePlay) Draw(screen *ebiten.Image) {
 		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs\n"+
 			"Score: %.0f\nKarma: %.2f\nCombo: %d\n"+
 			"judge: %v", ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000,
-		s.CurrentScore(), s.Karma, s.Combo,
+		s.Score(), s.Karma, s.Combo,
 		s.JudgmentCounts))
 }
 

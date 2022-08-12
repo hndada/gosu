@@ -35,5 +35,5 @@ func ReplayScore(c *Chart, rf *osr.Format) int {
 	for !s.IsFinished() {
 		s.Update(nil)
 	}
-	return int(s.CurrentScore())
+	return int(s.Score())
 }
