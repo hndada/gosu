@@ -27,3 +27,6 @@ go.work
 /cmd/gosu/replay
 /cmd/gosu/skin-1
 /cmd/gosu/skin-2
+
+/cmd/gosu/*.txt
+!/cmd/gosu/a.txt
