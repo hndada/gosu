@@ -23,7 +23,7 @@ var KeySettings = map[int][]Key{
 	9:               {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL, KeySemicolon},
 	10:              {KeyA, KeyS, KeyD, KeyF, KeyV, KeyN, KeyJ, KeyK, KeyL, KeySemicolon},
 }
-var Speed = 0.7
+var BaseSpeed = 0.7
 var NoteWidthsMap = map[int][4]float64{
 	4:  {0.065, 0.065, 0.065, 0.065},
 	5:  {0.065, 0.065, 0.065, 0.065},
@@ -83,4 +83,4 @@ var (
 var TimingMeterUnit = 5 // The number of pixels per 1ms
 
 // 1 pixel is 1 millisecond.
-func ExposureTime(speed float64) int64 { return int64(HitPosition / speed) }
+func ExposureTime(speed float64) float64 { return HitPosition / speed }

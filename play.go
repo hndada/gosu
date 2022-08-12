@@ -29,7 +29,7 @@ type ScenePlay struct {
 	PlayNotes []*PlayNote
 
 	MainBPM      float64
-	Speed        float64
+	BaseSpeed    float64
 	Tick         int
 	FetchPressed func() []bool
 	LastPressed  []bool
@@ -63,7 +63,7 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	s.Chart = c
 	s.PlayNotes, s.StagedNotes, s.LowestTails = NewPlayNotes(c) // Todo: add Mods to input param
 	s.MainBPM, _, _ = c.BPMs()
-	s.Speed = Speed // From global variable
+	s.BaseSpeed = BaseSpeed // From global variable
 	waitBefore := DefaultWaitBefore
 	if rf != nil && rf.BufferTime() < waitBefore {
 		waitBefore = rf.BufferTime()
@@ -163,7 +163,8 @@ func (s *ScenePlay) Update(g *Game) {
 	}
 	t := s.BarLineTimes[s.LowestBarLineIndex]
 	// Bar line and Hint are anchored at the bottom.
-	for int(s.Position(t)+NoteHeigth/2) >= screenSizeY {
+	for s.LowestBarLineIndex < len(s.BarLineTimes)-1 &&
+		int(s.Position(t)+NoteHeigth/2) >= screenSizeY {
 		s.LowestBarLineIndex++
 		t = s.BarLineTimes[s.LowestBarLineIndex]
 	}
@@ -192,13 +193,14 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 			"Score: %.0f\nKarma: %.2f\nCombo: %d\n"+
 			"Judgment counts: %v\n"+
 			"Accuracy: %.2f%%\nKool ratio: %.2f%%\nKarma sum: %.2f%%\n\n"+
-			"Speed: %.0f\n(Exposure time: %dms)\n",
+			"Speed: %.0f\n(Exposure time: %.fms)\n",
 		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.EndTime())/1000,
 		s.Score(), s.Karma, s.Combo,
 		s.JudgmentCounts,
 		ar*100, rr*100, kr*100,
-		s.Speed*100, ExposureTime(s.Speed)))
+		s.Speed()*100, ExposureTime(s.Speed())))
 }
+
 func (s ScenePlay) DrawBarLine(screen *ebiten.Image) {
 	for _, t := range s.BarLineTimes[s.LowestBarLineIndex:] {
 		sprite := s.BarLineSprite
@@ -290,5 +292,7 @@ func (s ScenePlay) Time() int64 { // In milliseconds.
 func (s ScenePlay) IsFinished() bool {
 	return s.Time() > s.Chart.EndTime()+DefaultWaitAfter
 }
-func TickToMsec(tick int) int64 { return int64(1000 * float64(tick) / float64(MaxTPS)) }
-func MsecToTick(msec int64) int { return int(float64(msec) * float64(MaxTPS) / 1000) }
+func TickToMsec(tick int) int64        { return int64(1000 * float64(tick) / float64(MaxTPS)) }
+func MsecToTick(msec int64) int        { return int(float64(msec) * float64(MaxTPS) / 1000) }
+func (s ScenePlay) BeatRatio() float64 { return s.TransPoint.BPM / s.MainBPM }
+func (s ScenePlay) Speed() float64     { return s.BaseSpeed * s.BeatRatio() * s.BeatScale }
