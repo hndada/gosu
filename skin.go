@@ -33,8 +33,7 @@ type GeneralSkinStruct struct { // Singleton
 // Todo: BarLine color settings
 type Skin struct {
 	*GeneralSkinStruct
-	NoteSprites []Sprite
-	// BodySprites []Sprite
+	NoteSprites   []Sprite
 	BodySprites   [][]Sprite // Binary-building method
 	HeadSprites   []Sprite
 	TailSprites   []Sprite
@@ -176,13 +175,6 @@ func LoadSkin() {
 					// BodySprites's y value is not fixed.
 				})
 			}
-			// s.BodySprites[k] = Sprite{
-			// 	I: ebiten.NewImageFromImage(dst),
-			// 	W: float64(dst.Bounds().Dx()), // noteWidths[kind]
-			// 	H: float64(dst.Bounds().Dy()), // screenSizeY
-			// }
-			// s.BodySprites[k].X = float64(x)
-			// BodySprites's y value is not fixed.
 			x += int(noteWidths[kind])
 		}
 		copy(s.HeadSprites, s.NoteSprites)
