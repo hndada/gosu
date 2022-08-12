@@ -73,6 +73,9 @@ func NewSceneSelect() *SceneSelect {
 			panic(err)
 		}
 		for _, f := range fs {
+			if f.IsDir() { // There may be directory e.g., SB
+				continue
+			}
 			fpath := filepath.Join(dpath, f.Name())
 			b, err := os.ReadFile(fpath)
 			if err != nil {
