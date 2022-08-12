@@ -72,3 +72,10 @@ func (c Chart) Difficulties() []float64 {
 	}
 	return ds
 }
+
+// Todo: Variate factors based on difficulty-skewed charts
+var (
+	KarmaScoreFactor float64 = 0.5 // a
+	AccScoreFactor   float64 = 5   // b
+	RatioScoreFactor float64 = 2   // c
+)
