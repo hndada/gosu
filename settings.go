@@ -53,11 +53,14 @@ var (
 	BgDimness float64 = 0.5
 	FieldDark float64 = 0.8
 )
+
+// Todo: Should NoteHeight be separated into NoteHeight, HeadHeight, TailHeight?
 var (
 	ComboPosition    float64 = screenSizeY * 0.45
 	JudgmentPosition float64 = screenSizeY * 0.67
 	NoteHeigth       float64 = screenSizeY * 0.04 // Applies to all notes
-	HintPosition     float64 = screenSizeY * 0.96 // The middle position of Judge line, not a topmost.
+	HitPosition      float64 = screenSizeY * 0.96 // The bottom y-value of Hint,  not a middle or top.
+	// HintPosition     float64 = screenSizeY * 0.96
 )
 
 const (
@@ -80,4 +83,4 @@ var (
 var TimingMeterUnit = 5 // The number of pixels per 1ms
 
 // 1 pixel is 1 millisecond.
-func ExposureTime(speed float64) int64 { return int64(HintPosition / speed) }
+func ExposureTime(speed float64) int64 { return int64(HitPosition / speed) }

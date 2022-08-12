@@ -76,7 +76,7 @@ func LoadSkin() {
 		}
 		s.ApplyScale(ComboScale)
 		// ComboSprite's x value is not fixed.
-		s.SetCenterXY(0, ComboPosition)
+		s.SetCenterY(ComboPosition)
 		g.ComboSprites[i] = s
 	}
 	for i := 0; i < 10; i++ {
@@ -93,7 +93,8 @@ func LoadSkin() {
 			I: NewImage(fmt.Sprintf("skin/judgment/%s.png", name)),
 		}
 		s.ApplyScale(JudgmentScale)
-		s.SetCenterXY(screenSizeX/2, JudgmentPosition)
+		s.SetCenterX(screenSizeX / 2)
+		s.SetCenterY(JudgmentPosition)
 		g.JudgmentSprites[i] = s
 	}
 	for i, name := range []string{"menu-cursor.png", "menu-cursor-additive.png"} {
@@ -114,10 +115,9 @@ func LoadSkin() {
 		s := Skin{
 			GeneralSkinStruct: GeneralSkin,
 			NoteSprites:       make([]Sprite, keyCount&ScratchMask),
-			// BodySprites:       make([]Sprite, keyCount&ScratchMask),
-			BodySprites: make([][]Sprite, keyCount&ScratchMask),
-			HeadSprites: make([]Sprite, keyCount&ScratchMask),
-			TailSprites: make([]Sprite, keyCount&ScratchMask),
+			BodySprites:       make([][]Sprite, keyCount&ScratchMask),
+			HeadSprites:       make([]Sprite, keyCount&ScratchMask),
+			TailSprites:       make([]Sprite, keyCount&ScratchMask),
 		}
 		var wsum int
 		for k, kind := range noteKinds {
@@ -185,24 +185,26 @@ func LoadSkin() {
 			I: field,
 			W: float64(wsum),
 			H: screenSizeY,
-			X: float64(screenSizeX)/2 - float64(wsum)/2,
-			Y: 0,
 		}
+		s.FieldSprite.SetCenterX(screenSizeX / 2)
+		// BodySprites's y value is always 0.
 		s.HintSprite = Sprite{
 			I: NewImage("skin/play/hint.png"),
 			W: float64(wsum),
 			H: HintHeight,
 		}
+		s.HintSprite.SetCenterX(screenSizeX / 2)
+		s.HintSprite.Y = HitPosition - HintHeight
+
 		barLine := ebiten.NewImage(wsum, 1)
 		barLine.Fill(color.RGBA{255, 255, 255, 255})
 		s.BarLineSprite = Sprite{
 			I: barLine,
 			W: float64(wsum),
 			H: 1,
-			X: float64(screenSizeX)/2 - float64(wsum)/2,
-			Y: 0,
 		}
-		s.HintSprite.SetCenterXY(screenSizeX/2, HintPosition)
+		s.BarLineSprite.SetCenterX(screenSizeX / 2)
+		// BodySprites's y value is not fixed.
 		SkinMap[keyCount] = s
 	}
 }

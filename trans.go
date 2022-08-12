@@ -111,3 +111,25 @@ func (c Chart) BPMs() (main, min, max float64) {
 	}
 	return
 }
+
+// wb, wa stands for buffer times: wait before, wait after.
+// Multiply wa with 2 for preventing indexing a time slice over length.
+func (c Chart) BarLineTimes(wb, wa int64) []int64 {
+	ts := make([]int64, 0)
+	tp0 := c.TransPoints[0]
+	for t := float64(tp0.Time); t >= float64(wb); t -= float64(tp0.Meter) * 60000 / tp0.BPM {
+		ts = append([]int64{int64(t)}, ts...)
+	}
+	ts = ts[:len(ts)-1] // Drop bar line for tp0 for avoiding duplicated
+	for i, tp := range c.TransPoints {
+		next := float64(c.EndTime() + 2*wa)
+		if i < len(c.TransPoints)-1 {
+			next = float64(c.TransPoints[i+1].Time)
+		}
+		unit := float64(tp.Meter) * 60000 / tp.BPM
+		for t := float64(tp.Time); t < next; t += unit {
+			ts = append(ts, int64(t))
+		}
+	}
+	return ts
+}

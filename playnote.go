@@ -155,7 +155,7 @@ func (s ScenePlay) Position(time int64) float64 {
 	}
 	// Calculate the remained speed factor (which is farthest from Hint within bound.)
 	distance += s.Speed * (bpmRatio * tp.SpeedFactor) * float64(time-cursor)
-	return HintPosition - distance
+	return HitPosition - distance
 }
 
 func (n PlayNote) PlaySE() {}

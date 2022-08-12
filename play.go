@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	WaitBefore int64 = int64(-1.8 * 1000)
-	WaitAfter  int64 = 3 * 1000
+	DefaultWaitBefore int64 = int64(-1.8 * 1000)
+	DefaultWaitAfter  int64 = 3 * 1000
 )
 
 // Todo: tick dependent variables should not be global variable.
@@ -53,6 +53,8 @@ type ScenePlay struct {
 	LastJudgmentCountdown int
 	ComboCountdown        int
 	DelayedScore          float64
+	BarLineTimes          []int64
+	LowestBarLineIndex    int
 }
 
 // Todo: May user change speed during playing
@@ -62,13 +64,13 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	s.PlayNotes, s.StagedNotes, s.LowestTails = NewPlayNotes(c) // Todo: add Mods to input param
 	s.MainBPM, _, _ = c.BPMs()
 	s.Speed = Speed // From global variable
-	bufferTime := WaitBefore
-	if rf != nil && rf.BufferTime() < bufferTime {
-		bufferTime = rf.BufferTime()
+	waitBefore := DefaultWaitBefore
+	if rf != nil && rf.BufferTime() < waitBefore {
+		waitBefore = rf.BufferTime()
 	}
-	s.Tick = MsecToTick(bufferTime)
+	s.Tick = MsecToTick(waitBefore)
 	if rf != nil {
-		s.FetchPressed = NewReplayListener(rf, s.Chart.KeyCount, bufferTime)
+		s.FetchPressed = NewReplayListener(rf, s.Chart.KeyCount, waitBefore)
 	} else {
 		s.FetchPressed = NewListener(KeySettings[s.Chart.KeyCount])
 	}
@@ -93,6 +95,7 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	} else {
 		s.Background = RandomDefaultBackground
 	}
+	s.BarLineTimes = s.Chart.BarLineTimes(waitBefore, DefaultWaitAfter)
 	return s
 }
 
@@ -158,6 +161,12 @@ func (s *ScenePlay) Update(g *Game) {
 	if s.Tick == 0 {
 		s.MusicPlayer.Play()
 	}
+	t := s.BarLineTimes[s.LowestBarLineIndex]
+	// Bar line and Hint are anchored at the bottom.
+	for int(s.Position(t)+NoteHeigth/2) >= screenSizeY {
+		s.LowestBarLineIndex++
+		t = s.BarLineTimes[s.LowestBarLineIndex]
+	}
 	s.Tick++
 }
 func (s ScenePlay) Draw(screen *ebiten.Image) {
@@ -191,7 +200,11 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 		s.Speed*100, ExposureTime(s.Speed)))
 }
 func (s ScenePlay) DrawBarLine(screen *ebiten.Image) {
-
+	for _, t := range s.BarLineTimes[s.LowestBarLineIndex:] {
+		sprite := s.BarLineSprite
+		sprite.Y = s.Position(t) + NoteHeigth/2
+		sprite.Draw(screen)
+	}
 }
 
 // DrawJudgment draws the same judgment for a while.
@@ -216,7 +229,8 @@ func (s ScenePlay) DrawJudgment(screen *ebiten.Image) {
 	case age > 0.9:
 		sprite.ApplyScale(sprite.ScaleW() * (1 - 1.15*(age-0.9)))
 	}
-	sprite.SetCenterXY(screenSizeX/2, JudgmentPosition)
+	sprite.SetCenterX(screenSizeX / 2)
+	sprite.SetCenterY(JudgmentPosition)
 	sprite.Draw(screen)
 }
 
@@ -274,7 +288,7 @@ func (s ScenePlay) Time() int64 { // In milliseconds.
 	return int64(float64(s.Tick) / float64(MaxTPS) * 1000)
 }
 func (s ScenePlay) IsFinished() bool {
-	return s.Time() > s.Chart.EndTime()+WaitAfter
+	return s.Time() > s.Chart.EndTime()+DefaultWaitAfter
 }
 func TickToMsec(tick int) int64 { return int64(1000 * float64(tick) / float64(MaxTPS)) }
 func MsecToTick(msec int64) int { return int(float64(msec) * float64(MaxTPS) / 1000) }
