@@ -20,25 +20,6 @@ var (
 
 var Judgments = []Judgment{Kool, Cool, Good, Bad, Miss}
 
-func Judge(td int64) Judgment {
-	if td < 0 { // Absolute value
-		td *= -1
-	}
-	for _, j := range Judgments {
-		if td <= j.Window {
-			return j
-		}
-	}
-	return Judgment{} // Returns None when the input is out of widest range
-}
-
-// Todo: Variate factors based on difficulty-skewed charts
-var (
-	KarmaScoreFactor float64 = 0.5 // a
-	AccScoreFactor   float64 = 5   // b
-	RatioScoreFactor float64 = 2   // c
-)
-
 func Verdict(t NoteType, a KeyAction, td int64) Judgment {
 	if t == Tail { // Either Hold or Release when Tail is not scored
 		switch {
@@ -67,14 +48,27 @@ func Verdict(t NoteType, a KeyAction, td int64) Judgment {
 	}
 	return Judgment{}
 }
+func Judge(td int64) Judgment {
+	if td < 0 { // Absolute value
+		td *= -1
+	}
+	for _, j := range Judgments {
+		if td <= j.Window {
+			return j
+		}
+	}
+	return Judgment{} // Returns None when the input is out of widest range
+}
 
 // Todo: no getting karma when hands off the long note
 func (s *ScenePlay) MarkNote(n *PlayNote, j Judgment) {
 	var a = KarmaScoreFactor
 	if j == Miss {
 		s.Combo = 0
+		s.ComboCountdown = 0
 	} else {
 		s.Combo++
+		s.ComboCountdown = MaxComboCountdown
 	}
 	s.Karma += j.Karma
 	if s.Karma < 0 {
@@ -83,6 +77,7 @@ func (s *ScenePlay) MarkNote(n *PlayNote, j Judgment) {
 		s.Karma = 1
 	}
 	s.KarmaSum += math.Pow(s.Karma, a)
+	s.AccSum += j.Acc
 	for i, jk := range Judgments {
 		if jk.Window == j.Window {
 			s.JudgmentCounts[i]++
@@ -92,7 +87,7 @@ func (s *ScenePlay) MarkNote(n *PlayNote, j Judgment) {
 			panic("no reach")
 		}
 	}
-	n.Scored = true
+	n.Marked = true
 	if n.Type == Head && j == Miss {
 		s.MarkNote(n.Next, Miss)
 	}
@@ -109,27 +104,38 @@ func (s *ScenePlay) MarkNote(n *PlayNote, j Judgment) {
 // Acc and ratio score increase faster as each parameter approaches to max value: math.Pow(x, b); b > 1
 // Karma, Acc, Ratio, Total max score is 700k, 300k, 100k, 1100k each.
 const (
-	KarmaScoreMax = 7 * 1e5
-	AccScoreMax   = 3 * 1e5
-	RatioScoreMax = 1 * 1e5
-	TotalScoreMax = KarmaScoreMax + AccScoreMax + RatioScoreMax
+	ScoreMaxKarma = 7 * 1e5
+	ScoreMaxAcc   = 3 * 1e5
+	ScoreMaxRatio = 1 * 1e5
+	ScoreMaxTotal = ScoreMaxKarma + ScoreMaxAcc + ScoreMaxRatio
 )
 
-func (s ScenePlay) Score() float64 {
+// Karma, acc, ratio score in order.
+func (s ScenePlay) CalcScore() (ks, as, rs float64) {
 	var (
 		b = AccScoreFactor
 		c = RatioScoreFactor
 	)
 	nc := float64(len(s.PlayNotes))    // Total note counts
 	kc := float64(s.JudgmentCounts[0]) // Kool counts
-	var accSum float64
-	for j, c := range s.JudgmentCounts {
-		accSum += Judgments[j].Acc * float64(c)
-	}
-	ks := KarmaScoreMax * (s.KarmaSum / nc)
-	as := AccScoreMax * math.Pow(accSum/nc, b)
-	rs := RatioScoreMax * math.Pow(kc/nc, c)
+
+	ks = ScoreMaxKarma * (s.KarmaSum / nc)
+	as = ScoreMaxAcc * math.Pow(s.AccSum/nc, b)
+	rs = ScoreMaxRatio * math.Pow(kc/nc, c)
+	return
+}
+func (s ScenePlay) Score() float64 {
+	ks, as, rs := s.CalcScore()
 	return math.Ceil(ks + as + rs)
+}
+
+// MarkedNoteCount is for calculating ratio.
+func (s ScenePlay) MarkedNoteCount() int {
+	sum := 0
+	for _, c := range s.JudgmentCounts {
+		sum += c
+	}
+	return sum
 }
 
 // func inRange(td int64, j Judgment) bool { return td < j.Window && td > -j.Window }
