@@ -92,3 +92,4 @@ func (c ChartHeader) MusicPath(cpath string) string {
 func (c ChartHeader) BackgroundPath(cpath string) string {
 	return filepath.Join(filepath.Dir(cpath), c.ImageFilename)
 }
+func (c Chart) EndTime() int64 { return c.Notes[len(c.Notes)-1].Time }

@@ -17,8 +17,8 @@ const (
 
 // Todo: tick dependent variables should not be global variable.
 var (
-	MaxJudgmentCountdown int = MsecToTick(2250)
-	MaxComboCountdown    int = MsecToTick(3500)
+	MaxComboCountdown    int = MsecToTick(2000)
+	MaxJudgmentCountdown int = MsecToTick(600)
 	// The following formula is for make score scroll speed constant regardless of TPS.
 	DelayedScorePower float64 = 1 - math.Exp(-math.Log(ScoreMaxTotal)/(float64(MaxTPS)*0.4))
 )
@@ -28,6 +28,7 @@ type ScenePlay struct {
 	Chart     *Chart
 	PlayNotes []*PlayNote
 
+	MainBPM      float64
 	Speed        float64
 	Tick         int
 	FetchPressed func() []bool
@@ -59,7 +60,8 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	s := new(ScenePlay)
 	s.Chart = c
 	s.PlayNotes, s.StagedNotes, s.LowestTails = NewPlayNotes(c) // Todo: add Mods to input param
-	s.Speed = Speed                                             // From global variable
+	s.MainBPM, _, _ = c.BPMs()
+	s.Speed = Speed // From global variable
 	bufferTime := WaitBefore
 	if rf != nil && rf.BufferTime() < bufferTime {
 		bufferTime = rf.BufferTime()
@@ -103,6 +105,7 @@ func (s *ScenePlay) Update(g *Game) {
 	}
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
+	var worst Judgment
 	for k, n := range s.StagedNotes {
 		if n == nil {
 			continue
@@ -120,29 +123,29 @@ func (s *ScenePlay) Update(g *Game) {
 			}
 			continue
 		}
-		var worst Judgment
+
 		if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
 			s.MarkNote(n, j)
 			if worst.Window < j.Window {
 				worst = j
 			}
 		}
-		if !s.Play {
-			continue
-		}
-		if worst.Window != 0 {
-			s.LastJudgment = worst
-			s.LastJudgmentCountdown = MaxJudgmentCountdown
-		}
-		if s.LastJudgmentCountdown == 0 {
-			s.LastJudgment = Judgment{}
-		} else {
-			s.LastJudgmentCountdown--
-		}
 	}
 	if !s.Play {
 		s.Tick++
 		return
+	}
+	if worst.Window != 0 {
+		s.LastJudgment = worst
+		s.LastJudgmentCountdown = MaxJudgmentCountdown
+	}
+	if s.LastJudgmentCountdown == 0 {
+		s.LastJudgment = Judgment{}
+	} else {
+		s.LastJudgmentCountdown--
+	}
+	if s.ComboCountdown > 0 {
+		s.ComboCountdown--
 	}
 	s.DelayedScore += DelayedScorePower * (s.Score() - s.DelayedScore)
 
@@ -163,6 +166,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	screen.DrawImage(s.Background.I, bgop)
 	s.FieldSprite.Draw(screen)
 	s.HintSprite.Draw(screen)
+	s.DrawBeatMeter(screen)
 	s.DrawLongNotes(screen)
 	s.DrawNotes(screen)
 	s.DrawCombo(screen)
@@ -175,16 +179,19 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 		rr = float64(s.JudgmentCounts[0]) / float64(s.MarkedNoteCount())
 	}
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
-		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs\n"+
+		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs/%.0fs\n"+
 			"Score: %.0f\nKarma: %.2f\nCombo: %d\n"+
 			"Judgment counts: %v\n"+
 			"Accuracy: %.2f%%\nKool ratio: %.2f%%\nKarma sum: %.2f%%\n\n"+
 			"Speed: %.0f\n(Exposure time: %dms)\n",
-		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000,
+		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.EndTime())/1000,
 		s.Score(), s.Karma, s.Combo,
 		s.JudgmentCounts,
 		ar*100, rr*100, kr*100,
 		s.Speed*100, ExposureTime(s.Speed)))
+}
+func (s ScenePlay) DrawBeatMeter(screen *ebiten.Image) {
+
 }
 
 // DrawJudgment draws the same judgment for a while.
@@ -216,6 +223,9 @@ func (s ScenePlay) DrawJudgment(screen *ebiten.Image) {
 // Each number image has different size.
 func (s ScenePlay) DrawCombo(screen *ebiten.Image) {
 	var wsum int
+	if s.ComboCountdown == 0 {
+		return
+	}
 	vs := make([]int, 0)
 	for v := s.Combo; v > 0; v /= 10 {
 		vs = append(vs, v%10) // Little endian
@@ -264,7 +274,7 @@ func (s ScenePlay) Time() int64 { // In milliseconds.
 	return int64(float64(s.Tick) / float64(MaxTPS) * 1000)
 }
 func (s ScenePlay) IsFinished() bool {
-	return s.Time() > WaitAfter+s.PlayNotes[len(s.PlayNotes)-1].Time
+	return s.Time() > s.Chart.EndTime()+WaitAfter
 }
 func TickToMsec(tick int) int64 { return int64(1000 * float64(tick) / float64(MaxTPS)) }
 func MsecToTick(msec int64) int { return int(float64(msec) * float64(MaxTPS) / 1000) }
