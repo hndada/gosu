@@ -69,7 +69,7 @@ func Verdict(t NoteType, a KeyAction, td int64) Judgment {
 }
 
 // Todo: no getting karma when hands off the long note
-func (s *ScenePlay) Score(n *PlayNote, j Judgment) {
+func (s *ScenePlay) MarkNote(n *PlayNote, j Judgment) {
 	var a = KarmaScoreFactor
 	if j == Miss {
 		s.Combo = 0
@@ -94,7 +94,7 @@ func (s *ScenePlay) Score(n *PlayNote, j Judgment) {
 	}
 	n.Scored = true
 	if n.Type == Head && j == Miss {
-		s.Score(n.Next, Miss)
+		s.MarkNote(n.Next, Miss)
 	}
 	if n.Type != Tail {
 		s.StagedNotes[n.Key] = n.Next
@@ -115,7 +115,7 @@ const (
 	TotalScoreMax = KarmaScoreMax + AccScoreMax + RatioScoreMax
 )
 
-func (s ScenePlay) CurrentScore() float64 {
+func (s ScenePlay) Score() float64 {
 	var (
 		b = AccScoreFactor
 		c = RatioScoreFactor
