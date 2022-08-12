@@ -12,6 +12,7 @@ var (
 	MaxTPS      = 1000 // MaxTPS should be 1000 or greater.
 	Volume      = 0.25
 )
+var MusicPath = "music"
 var KeySettings = map[int][]Key{
 	4:               {KeyD, KeyF, KeyJ, KeyK},
 	5:               {KeyD, KeyF, KeySpace, KeyJ, KeyK},
@@ -49,21 +50,27 @@ func ScaleNoteWidthsMap() {
 }
 
 var (
-	BgDimness        float64 = 0.5
-	ComboScale       float64 = 0.72
+	BgDimness float64 = 0.5
+	FieldDark float64 = 0.8
+)
+var (
 	ComboPosition    float64 = screenSizeY * 0.45
-	ComboGap         float64 = screenSizeX * -0.001
-	ScoreScale       float64 = 0.67
-	JudgmentScale    float64 = 0.35
 	JudgmentPosition float64 = screenSizeY * 0.67
 	NoteHeigth       float64 = screenSizeY * 0.04 // Applies to all notes
-	FieldDark        float64 = 0.8
 	HintPosition     float64 = screenSizeY * 0.96 // The middle position of Judge line, not a topmost.
-	HintHeight       float64 = screenSizeY * 0.04
-
-	TimingMeterUnit         = 5 // The number of pixels per 1ms
-	CursorScale     float64 = 0.1
 )
 
+// Skin scale settings
+// Todo: make the struct SkinScaleSettings
+var (
+	ComboScale    float64 = 0.72
+	ComboGap      float64 = screenSizeX * -0.0008
+	ScoreScale    float64 = 0.67
+	JudgmentScale float64 = 0.35
+	HintHeight    float64 = screenSizeY * 0.04
+	CursorScale   float64 = 0.1
+)
+var TimingMeterUnit = 5 // The number of pixels per 1ms
+
 // 1 pixel is 1 millisecond.
-func CalcExposureTime(speed float64) int64 { return int64(HintPosition / speed) }
+func ExposureTime(speed float64) int64 { return int64(HintPosition / speed) }

@@ -59,7 +59,7 @@ func NewSceneSelect() *SceneSelect {
 		MD5ToIndexMap: map[[16]byte]int{},
 		Replays:       make([]*osr.Format, 0, 10),
 	}
-	dirs, err := os.ReadDir("music")
+	dirs, err := os.ReadDir(MusicPath)
 	if err != nil {
 		panic(err)
 	}
@@ -67,7 +67,7 @@ func NewSceneSelect() *SceneSelect {
 		if !dir.IsDir() {
 			continue
 		}
-		dpath := filepath.Join("music", dir.Name())
+		dpath := filepath.Join(MusicPath, dir.Name())
 		fs, err := os.ReadDir(dpath)
 		if err != nil {
 			panic(err)
@@ -338,5 +338,5 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 	}
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf("Speed (Press Q/W): %.0f\n(Exposure time: %dms)\n\nVolume (Press A/S): %d%%\nHold:%d\nReplay mode (Press Z): %v\n", // %.1f
-			Speed*100, CalcExposureTime(Speed), int(Volume*100), s.Hold, s.ReplayMode))
+			Speed*100, ExposureTime(Speed), int(Volume*100), s.Hold, s.ReplayMode))
 }
