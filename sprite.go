@@ -29,10 +29,14 @@ func (s *Sprite) SetFullscreen() {
 }
 
 // SetCenterXY assumes Sprite's width and height are set.
-func (s *Sprite) SetCenterXY(x, y float64) {
-	s.X = x - s.W/2
-	s.Y = y - s.H/2
-}
+// func (s *Sprite) SetCenterXY(x, y float64) {
+// 	s.X = x - s.W/2
+// 	s.Y = y - s.H/2
+// }
+
+// SetCenterX and SetCenterY suppose Sprite's width and height are set.
+func (s *Sprite) SetCenterX(x float64) { s.X = x - s.W/2 }
+func (s *Sprite) SetCenterY(y float64) { s.Y = y - s.H/2 }
 func (s *Sprite) ApplyScale(scale float64) {
 	s.W = float64(s.I.Bounds().Dx()) * scale
 	s.H = float64(s.I.Bounds().Dy()) * scale
