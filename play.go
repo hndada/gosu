@@ -3,6 +3,7 @@ package gosu
 import (
 	"fmt"
 	"io"
+	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -35,13 +36,21 @@ type ScenePlay struct {
 	Background            Sprite
 	LastJudgment          Judgment
 	LastJudgmentCountdown int
+
+	DelayedScore float64
 }
 
 var (
 	WaitBefore int64 = int64(-1.8 * 1000)
 	WaitAfter  int64 = 3 * 1000
 )
-var MaxJudgmentCountdown int = MsecToTick(2250)
+
+// Todo: tick type variables should not be global variable.
+var (
+	MaxJudgmentCountdown int = MsecToTick(2250)
+	// The following formula is for make score scroll speed constant regardless of TPS.
+	DelayedScorePower float64 = 1 - math.Exp(-math.Log(TotalScoreMax)/(float64(MaxTPS)*0.4))
+)
 
 func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay {
 	s := new(ScenePlay)
@@ -132,6 +141,8 @@ func (s *ScenePlay) Update(g *Game) {
 		s.Tick++
 		return
 	}
+	s.DelayedScore += DelayedScorePower * (s.CurrentScore() - s.DelayedScore)
+
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished() {
 		s.MusicPlayer.Close()
 		s.MusicFile.Close()
@@ -193,9 +204,13 @@ func (s *ScenePlay) DrawCombo(screen *ebiten.Image) {
 func (s *ScenePlay) DrawScore(screen *ebiten.Image) {
 	var wsum int
 	vs := make([]int, 0)
-	for v := int(s.CurrentScore()); v > 0; v /= 10 {
+	for v := int(math.Ceil(s.DelayedScore)); v > 0; v /= 10 {
 		vs = append(vs, v%10) // Little endian
 		wsum += int(s.ComboSprites[v%10].W)
+	}
+	if len(vs) == 0 {
+		vs = append(vs, 0) // Little endian
+		wsum += int(s.ComboSprites[0].W)
 	}
 	x := float64(screenSizeX)
 	for _, v := range vs {

@@ -108,6 +108,13 @@ func (s *ScenePlay) Score(n *PlayNote, j Judgment) {
 // Karma recovers fast when its value is low, vice versa: math.Pow(x, a); a < 1
 // Acc and ratio score increase faster as each parameter approaches to max value: math.Pow(x, b); b > 1
 // Karma, Acc, Ratio, Total max score is 700k, 300k, 100k, 1100k each.
+const (
+	KarmaScoreMax = 7 * 1e5
+	AccScoreMax   = 3 * 1e5
+	RatioScoreMax = 1 * 1e5
+	TotalScoreMax = KarmaScoreMax + AccScoreMax + RatioScoreMax
+)
+
 func (s ScenePlay) CurrentScore() float64 {
 	var (
 		b = AccScoreFactor
@@ -119,9 +126,9 @@ func (s ScenePlay) CurrentScore() float64 {
 	for j, c := range s.JudgmentCounts {
 		accSum += Judgments[j].Acc * float64(c)
 	}
-	ks := 7 * 1e5 * (s.KarmaSum / nc)
-	as := 3 * 1e5 * math.Pow(accSum/nc, b)
-	rs := 1 * 1e5 * math.Pow(kc/nc, c)
+	ks := KarmaScoreMax * (s.KarmaSum / nc)
+	as := AccScoreMax * math.Pow(accSum/nc, b)
+	rs := RatioScoreMax * math.Pow(kc/nc, c)
 	return math.Ceil(ks + as + rs)
 }
 
