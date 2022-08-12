@@ -30,15 +30,17 @@ type GeneralSkinStruct struct { // Singleton
 }
 
 // Todo: should each skin has own skin settings?
+// Todo: BarLine color settings
 type Skin struct {
 	*GeneralSkinStruct
 	NoteSprites []Sprite
 	// BodySprites []Sprite
-	BodySprites [][]Sprite // Binary-building method
-	HeadSprites []Sprite
-	TailSprites []Sprite
-	FieldSprite Sprite
-	HintSprite  Sprite
+	BodySprites   [][]Sprite // Binary-building method
+	HeadSprites   []Sprite
+	TailSprites   []Sprite
+	FieldSprite   Sprite
+	HintSprite    Sprite
+	BarLineSprite Sprite // Seperator of each bar (aka measure)
 }
 
 var SkinMap = make(map[int]Skin)
@@ -130,7 +132,7 @@ func LoadSkin() {
 		}
 		// NoteSprite's x value should be integer as well as w.
 		// Todo: Scratch should be excluded to width sum.
-		x := (screenSizeX - wsum) / 2
+		x := screenSizeX/2 - wsum/2
 		for k, kind := range noteKinds {
 			s.NoteSprites[k].X = float64(x)
 			// NoteSprites's y value is not fixed.
@@ -138,7 +140,7 @@ func LoadSkin() {
 		}
 		// Draw max length of long note body sprite in advance.
 		// Todo: change l%d.png to b%d.png (with animation)
-		x = (screenSizeX - wsum) / 2
+		x = screenSizeX/2 - wsum/2
 		for k, kind := range noteKinds {
 			f, err := os.Open("skin/note/" + fmt.Sprintf("l%d.png", []int{1, 2, 3, 3}[kind]))
 			if err != nil {
@@ -191,13 +193,22 @@ func LoadSkin() {
 			I: field,
 			W: float64(wsum),
 			H: screenSizeY,
-			X: float64(screenSizeX-wsum) / 2,
+			X: float64(screenSizeX)/2 - float64(wsum)/2,
 			Y: 0,
 		}
 		s.HintSprite = Sprite{
 			I: NewImage("skin/play/hint.png"),
 			W: float64(wsum),
 			H: HintHeight,
+		}
+		barLine := ebiten.NewImage(wsum, 1)
+		barLine.Fill(color.RGBA{255, 255, 255, 255})
+		s.BarLineSprite = Sprite{
+			I: barLine,
+			W: float64(wsum),
+			H: 1,
+			X: float64(screenSizeX)/2 - float64(wsum)/2,
+			Y: 0,
 		}
 		s.HintSprite.SetCenterXY(screenSizeX/2, HintPosition)
 		SkinMap[keyCount] = s
