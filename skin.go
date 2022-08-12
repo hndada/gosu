@@ -27,6 +27,8 @@ type GeneralSkinStruct struct { // Singleton
 	CursorSprites      [2]Sprite // 0: cursor // 1: additive cursor
 	// CursorTailSprite   Sprite
 }
+
+// Todo: should each skin has own skin settings?
 type Skin struct {
 	*GeneralSkinStruct
 	NoteSprites []Sprite
@@ -148,8 +150,10 @@ func LoadSkin() {
 			scale := float64(w) / float64(src.Bounds().Dx())
 			h := int(scale * float64(src.Bounds().Dy()))
 			dst := image.NewRGBA(image.Rect(0, 0, int(w), screenSizeY))
-			for rect := image.Rect(0, 0, w, h); rect.Max.Y < dst.Bounds().Dy(); rect.Max.Y += h {
+			for rect := image.Rect(0, 0, w, h); rect.Min.Y < dst.Bounds().Dy(); {
 				draw.BiLinear.Scale(dst, rect, src, src.Bounds(), draw.Over, nil)
+				rect.Min.Y += h
+				rect.Max.Y += h
 			}
 			s.BodySprites[k] = Sprite{
 				I: ebiten.NewImageFromImage(dst),
@@ -179,6 +183,7 @@ func LoadSkin() {
 		s.HintSprite.SetCenterXY(screenSizeX/2, HintPosition)
 		SkinMap[keyCount] = s
 	}
+	fmt.Println(SkinMap[7].BodySprites[0])
 }
 
 type NoteKind int

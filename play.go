@@ -10,6 +10,19 @@ import (
 	"github.com/hndada/gosu/parse/osr"
 )
 
+const (
+	WaitBefore int64 = int64(-1.8 * 1000)
+	WaitAfter  int64 = 3 * 1000
+)
+
+// Todo: tick dependent variables should not be global variable.
+var (
+	MaxJudgmentCountdown int = MsecToTick(2250)
+	MaxComboCountdown    int = MsecToTick(3500)
+	// The following formula is for make score scroll speed constant regardless of TPS.
+	DelayedScorePower float64 = 1 - math.Exp(-math.Log(ScoreMaxTotal)/(float64(MaxTPS)*0.4))
+)
+
 // ScenePlay: struct, PlayScene: function
 type ScenePlay struct {
 	Chart     *Chart
@@ -27,6 +40,7 @@ type ScenePlay struct {
 	Combo          int
 	Karma          float64
 	KarmaSum       float64
+	AccSum         float64 // It can be derived from JudgmentCounts
 	JudgmentCounts []int
 
 	Play        bool // Whether the scene is for play or not
@@ -36,21 +50,9 @@ type ScenePlay struct {
 	Background            Sprite
 	LastJudgment          Judgment
 	LastJudgmentCountdown int
-
-	DelayedScore float64
+	ComboCountdown        int
+	DelayedScore          float64
 }
-
-const (
-	WaitBefore int64 = int64(-1.8 * 1000)
-	WaitAfter  int64 = 3 * 1000
-)
-
-// Todo: tick dependent variables should not be global variable.
-var (
-	MaxJudgmentCountdown int = MsecToTick(2250)
-	// The following formula is for make score scroll speed constant regardless of TPS.
-	DelayedScorePower float64 = 1 - math.Exp(-math.Log(TotalScoreMax)/(float64(MaxTPS)*0.4))
-)
 
 // Todo: May user change speed during playing
 func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay {
@@ -109,7 +111,7 @@ func (s *ScenePlay) Update(g *Game) {
 			n.PlaySE()
 		}
 		td := n.Time - s.Time() // Time difference; negative values means late hit
-		if n.Scored {
+		if n.Marked {
 			if n.Type != Tail {
 				panic("non-tail note has not flushed")
 			}
@@ -163,17 +165,26 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.HintSprite.Draw(screen)
 	s.DrawLongNotes(screen)
 	s.DrawNotes(screen)
-	if s.Combo > 0 {
-		s.DrawCombo(screen)
-	}
+	s.DrawCombo(screen)
 	s.DrawJudgment(screen)
 	s.DrawScore(screen)
+	var kr, ar, rr float64 = 1, 1, 1
+	if s.MarkedNoteCount() > 0 {
+		kr = s.KarmaSum / float64(s.MarkedNoteCount())
+		ar = s.AccSum / float64(s.MarkedNoteCount())
+		rr = float64(s.JudgmentCounts[0]) / float64(s.MarkedNoteCount())
+	}
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs\n"+
 			"Score: %.0f\nKarma: %.2f\nCombo: %d\n"+
-			"judge: %v\n\nSpeed: %.0f\n(Exposure time: %dms)\n", ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000,
+			"Judgment counts: %v\n"+
+			"Accuracy: %.2f%%\nKool ratio: %.2f%%\nKarma sum: %.2f%%\n\n"+
+			"Speed: %.0f\n(Exposure time: %dms)\n",
+		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000,
 		s.Score(), s.Karma, s.Combo,
-		s.JudgmentCounts, s.Speed*100, CalcExposureTime(s.Speed)))
+		s.JudgmentCounts,
+		ar*100, rr*100, kr*100,
+		s.Speed*100, ExposureTime(s.Speed)))
 }
 
 // DrawJudgment draws the same judgment for a while.
@@ -210,6 +221,8 @@ func (s ScenePlay) DrawCombo(screen *ebiten.Image) {
 		vs = append(vs, v%10) // Little endian
 		wsum += int(s.ComboSprites[v%10].W + ComboGap)
 	}
+	t := MaxJudgmentCountdown - s.LastJudgmentCountdown
+	age := float64(t) / float64(MaxJudgmentCountdown)
 	wsum -= int(ComboGap)
 	x := (screenSizeX + float64(wsum)) / 2
 	for _, v := range vs {
@@ -217,6 +230,12 @@ func (s ScenePlay) DrawCombo(screen *ebiten.Image) {
 		sprite := s.ComboSprites[v]
 		sprite.X = x
 		sprite.Y = ComboPosition - sprite.H/2
+		switch {
+		case age < 0.1:
+			sprite.Y += 0.6 * age * sprite.H
+		case age >= 0.1 && age < 0.2:
+			sprite.Y += 0.6 * (0.2 - age) * sprite.H
+		}
 		sprite.Draw(screen)
 	}
 }
