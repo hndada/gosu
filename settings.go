@@ -60,6 +60,11 @@ var (
 	HintPosition     float64 = screenSizeY * 0.96 // The middle position of Judge line, not a topmost.
 )
 
+const (
+	BodySpriteStyleStretch = iota
+	BodySpriteStyleAttach
+)
+
 // Skin scale settings
 // Todo: make the struct SkinScaleSettings
 var (
@@ -69,6 +74,8 @@ var (
 	JudgmentScale float64 = 0.35
 	HintHeight    float64 = screenSizeY * 0.04
 	CursorScale   float64 = 0.1
+
+	BodySpriteStyle = BodySpriteStyleStretch
 )
 var TimingMeterUnit = 5 // The number of pixels per 1ms
 

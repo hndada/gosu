@@ -56,6 +56,8 @@ func (s ScenePlay) Bottom(tail *PlayNote) int {
 	return int(s.NotePosition(tail.Prev)-s.HeadSprites[tail.Key].H/2) + 1 // Extra 1 pixel for compensating round-down
 }
 
+// DrawLongNotes draws long sprite with Binary-building method.
+// This is due to performance issue of SubImage.
 // DrawLongNotes draws long note before drawing Head or Tail.
 // DrawLongNotes just draws sub image of long note body.
 func (s *ScenePlay) DrawLongNotes(screen *ebiten.Image) {
@@ -72,15 +74,32 @@ func (s *ScenePlay) DrawLongNotes(screen *ebiten.Image) {
 			if bottom > screenSizeY {
 				bottom = screenSizeY
 			}
-			sprite := s.BodySprites[k]
-			sprite.Y = float64(top)
-			op := sprite.Op()
-			if n.Marked {
-				op.ColorM.ChangeHSV(0, 0.3, 0.3)
+			// sprite := s.BodySprites[k]
+			// sprite.Y = float64(top)
+			// op := sprite.Op()
+			// if n.Marked {
+			// 	op.ColorM.ChangeHSV(0, 0.3, 0.3)
+			// }
+			// rect := sprite.I.Bounds()
+			// rect.Max.Y = bottom - top
+			// screen.DrawImage(sprite.I.SubImage(rect).(*ebiten.Image), op)
+			var pow int
+			y := float64(top)
+			for length := bottom - top; length > 0; length /= 2 {
+				if length%2 == 0 {
+					pow++
+					continue
+				}
+				sprite := s.BodySprites[k][pow]
+				sprite.Y = y
+				op := sprite.Op()
+				if n.Marked {
+					op.ColorM.ChangeHSV(0, 0.3, 0.3)
+				}
+				screen.DrawImage(sprite.I, op)
+				y += sprite.H // 1 << pow
+				pow++
 			}
-			rect := sprite.I.Bounds()
-			rect.Max.Y = bottom - top
-			screen.DrawImage(sprite.I.SubImage(rect).(*ebiten.Image), op)
 		}
 	}
 }
@@ -124,29 +143,28 @@ func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 
 // NotePosition calculates position, the centered y-axis value.
 // y = position - h/2
+// Todo: kinda laggy on intro at Runengon Lenfried's map?
 func (s ScenePlay) NotePosition(n *PlayNote) float64 {
 	var distance float64 // Approaching notes have positive distance, vice versa.
 	tp := s.TransPoint
 	time := s.Time()
+	bpmRatio := tp.BPM / s.MainBPM
 	if n.Time-s.Time() > 0 {
-		// When there are more than 2 TransPoint in 10 seconds.
+		// When there are more than 2 TransPoint in bounded time.
 		for ; tp.Next != nil && tp.Next.Time < n.Time; tp = tp.Next {
 			duration := tp.Next.Time - time
-			distance += s.Speed * tp.SpeedFactor * float64(duration)
+			distance += s.Speed * (bpmRatio * tp.SpeedFactor) * float64(duration)
 			time += duration
 		}
 	} else {
 		for ; tp.Prev != nil && tp.Time > n.Time; tp = tp.Prev {
 			duration := tp.Time - time // Negative value.
-			distance += s.Speed * tp.SpeedFactor * float64(duration)
+			distance += s.Speed * (bpmRatio * tp.SpeedFactor) * float64(duration)
 			time += duration
 		}
 	}
-	// Calculate the remained speed factor (which is farthest from Hint in 10 seconds.)
-	distance += s.Speed * tp.SpeedFactor * float64(n.Time-time)
-	// if s.Tick%500 == 0 {
-	// 	fmt.Println(s.Time(), n, HintPosition-distance)
-	// }
+	// Calculate the remained speed factor (which is farthest from Hint within bound.)
+	distance += s.Speed * (bpmRatio * tp.SpeedFactor) * float64(n.Time-time)
 	return HintPosition - distance
 }
 

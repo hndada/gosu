@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"math"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -32,7 +33,8 @@ type GeneralSkinStruct struct { // Singleton
 type Skin struct {
 	*GeneralSkinStruct
 	NoteSprites []Sprite
-	BodySprites []Sprite
+	// BodySprites []Sprite
+	BodySprites [][]Sprite // Binary-building method
 	HeadSprites []Sprite
 	TailSprites []Sprite
 	FieldSprite Sprite
@@ -111,9 +113,10 @@ func LoadSkin() {
 		s := Skin{
 			GeneralSkinStruct: GeneralSkin,
 			NoteSprites:       make([]Sprite, keyCount&ScratchMask),
-			BodySprites:       make([]Sprite, keyCount&ScratchMask),
-			HeadSprites:       make([]Sprite, keyCount&ScratchMask),
-			TailSprites:       make([]Sprite, keyCount&ScratchMask),
+			// BodySprites:       make([]Sprite, keyCount&ScratchMask),
+			BodySprites: make([][]Sprite, keyCount&ScratchMask),
+			HeadSprites: make([]Sprite, keyCount&ScratchMask),
+			TailSprites: make([]Sprite, keyCount&ScratchMask),
 		}
 		var wsum int
 		for k, kind := range noteKinds {
@@ -149,18 +152,34 @@ func LoadSkin() {
 			w := int(noteWidths[kind])
 			scale := float64(w) / float64(src.Bounds().Dx())
 			h := int(scale * float64(src.Bounds().Dy()))
-			dst := image.NewRGBA(image.Rect(0, 0, int(w), screenSizeY))
-			for rect := image.Rect(0, 0, w, h); rect.Min.Y < dst.Bounds().Dy(); {
-				draw.BiLinear.Scale(dst, rect, src, src.Bounds(), draw.Over, nil)
-				rect.Min.Y += h
-				rect.Max.Y += h
+			dst := image.NewRGBA(image.Rect(0, 0, w, screenSizeY))
+			switch BodySpriteStyle {
+			case BodySpriteStyleStretch:
+				draw.BiLinear.Scale(dst, dst.Bounds(), src, src.Bounds(), draw.Over, nil)
+			case BodySpriteStyleAttach:
+				for rect := image.Rect(0, 0, w, h); rect.Min.Y < dst.Bounds().Dy(); {
+					draw.BiLinear.Scale(dst, rect, src, src.Bounds(), draw.Over, nil)
+					rect.Min.Y += h
+					rect.Max.Y += h
+				}
 			}
-			s.BodySprites[k] = Sprite{
-				I: ebiten.NewImageFromImage(dst),
-				W: float64(dst.Bounds().Dx()), // noteWidths[kind]
-				H: float64(dst.Bounds().Dy()), // screenSizeY
+			for pow := 0; pow < int(math.Log2(screenSizeY))+1; pow++ {
+				h := 1 << pow
+				rect := image.Rect(0, 0, w, h)
+				s.BodySprites[k] = append(s.BodySprites[k], Sprite{
+					I: ebiten.NewImageFromImage(dst.SubImage(rect)),
+					W: float64(w),
+					H: float64(h),
+					X: float64(x),
+					// BodySprites's y value is not fixed.
+				})
 			}
-			s.BodySprites[k].X = float64(x)
+			// s.BodySprites[k] = Sprite{
+			// 	I: ebiten.NewImageFromImage(dst),
+			// 	W: float64(dst.Bounds().Dx()), // noteWidths[kind]
+			// 	H: float64(dst.Bounds().Dy()), // screenSizeY
+			// }
+			// s.BodySprites[k].X = float64(x)
 			// BodySprites's y value is not fixed.
 			x += int(noteWidths[kind])
 		}
@@ -183,7 +202,6 @@ func LoadSkin() {
 		s.HintSprite.SetCenterXY(screenSizeX/2, HintPosition)
 		SkinMap[keyCount] = s
 	}
-	fmt.Println(SkinMap[7].BodySprites[0])
 }
 
 type NoteKind int
