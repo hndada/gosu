@@ -40,12 +40,12 @@ type ScenePlay struct {
 	DelayedScore float64
 }
 
-var (
+const (
 	WaitBefore int64 = int64(-1.8 * 1000)
 	WaitAfter  int64 = 3 * 1000
 )
 
-// Todo: tick type variables should not be global variable.
+// Todo: tick dependent variables should not be global variable.
 var (
 	MaxJudgmentCountdown int = MsecToTick(2250)
 	// The following formula is for make score scroll speed constant regardless of TPS.
@@ -155,7 +155,7 @@ func (s *ScenePlay) Update(g *Game) {
 	}
 	s.Tick++
 }
-func (s *ScenePlay) Draw(screen *ebiten.Image) {
+func (s ScenePlay) Draw(screen *ebiten.Image) {
 	bgop := s.Background.Op()
 	bgop.ColorM.ChangeHSV(0, 1, BgDimness)
 	screen.DrawImage(s.Background.I, bgop)
@@ -166,14 +166,7 @@ func (s *ScenePlay) Draw(screen *ebiten.Image) {
 	if s.Combo > 0 {
 		s.DrawCombo(screen)
 	}
-	if s.LastJudgmentCountdown > 0 { // Draw the same judgment for a while.
-		for i, j := range Judgments {
-			if j.Window == s.LastJudgment.Window {
-				s.JudgmentSprites[i].Draw(screen)
-				break
-			}
-		}
-	}
+	s.DrawJudgment(screen)
 	s.DrawScore(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs\n"+
@@ -183,8 +176,34 @@ func (s *ScenePlay) Draw(screen *ebiten.Image) {
 		s.JudgmentCounts, s.Speed*100, CalcExposureTime(s.Speed)))
 }
 
+// DrawJudgment draws the same judgment for a while.
+func (s ScenePlay) DrawJudgment(screen *ebiten.Image) {
+	if s.LastJudgmentCountdown <= 0 {
+		return
+	}
+	var sprite Sprite
+	for i, j := range Judgments {
+		if j.Window == s.LastJudgment.Window {
+			sprite = s.JudgmentSprites[i]
+			break
+		}
+	}
+	t := MaxJudgmentCountdown - s.LastJudgmentCountdown
+	age := float64(t) / float64(MaxJudgmentCountdown)
+	switch {
+	case age < 0.1:
+		sprite.ApplyScale(sprite.ScaleW() * 1.15 * (1 + age))
+	case age >= 0.1 && age < 0.2:
+		sprite.ApplyScale(sprite.ScaleW() * 1.15 * (1.2 - age))
+	case age > 0.9:
+		sprite.ApplyScale(sprite.ScaleW() * (1 - 1.15*(age-0.9)))
+	}
+	sprite.SetCenterXY(screenSizeX/2, JudgmentPosition)
+	sprite.Draw(screen)
+}
+
 // Each number image has different size.
-func (s *ScenePlay) DrawCombo(screen *ebiten.Image) {
+func (s ScenePlay) DrawCombo(screen *ebiten.Image) {
 	var wsum int
 	vs := make([]int, 0)
 	for v := s.Combo; v > 0; v /= 10 {
@@ -202,7 +221,7 @@ func (s *ScenePlay) DrawCombo(screen *ebiten.Image) {
 	}
 }
 
-func (s *ScenePlay) DrawScore(screen *ebiten.Image) {
+func (s ScenePlay) DrawScore(screen *ebiten.Image) {
 	var wsum int
 	vs := make([]int, 0)
 	for v := int(math.Ceil(s.DelayedScore)); v > 0; v /= 10 {
