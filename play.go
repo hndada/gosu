@@ -52,6 +52,7 @@ var (
 	DelayedScorePower float64 = 1 - math.Exp(-math.Log(TotalScoreMax)/(float64(MaxTPS)*0.4))
 )
 
+// Todo: May user change speed during playing
 func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay {
 	s := new(ScenePlay)
 	s.Chart = c
@@ -177,9 +178,9 @@ func (s *ScenePlay) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs\n"+
 			"Score: %.0f\nKarma: %.2f\nCombo: %d\n"+
-			"judge: %v", ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000,
+			"judge: %v\n\nSpeed: %.0f\n(Exposure time: %dms)\n", ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000,
 		s.Score(), s.Karma, s.Combo,
-		s.JudgmentCounts))
+		s.JudgmentCounts, s.Speed*100, CalcExposureTime(s.Speed)))
 }
 
 // Each number image has different size.

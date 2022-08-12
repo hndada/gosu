@@ -20,6 +20,7 @@ func NewGame() *Game {
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
 	ebiten.SetMaxTPS(MaxTPS)
+	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	g := &Game{
 		Scene: selectScene,
 	}
