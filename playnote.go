@@ -138,23 +138,25 @@ func (s ScenePlay) Position(time int64) float64 {
 	var distance float64 // Approaching notes have positive distance, vice versa.
 	tp := s.TransPoint
 	cursor := s.Time()
-	bpmRatio := tp.BPM / s.MainBPM
 	if time-s.Time() > 0 {
 		// When there are more than 2 TransPoint in bounded time.
 		for ; tp.Next != nil && tp.Next.Time < time; tp = tp.Next {
 			duration := tp.Next.Time - cursor
-			distance += s.Speed * (bpmRatio * tp.SpeedFactor) * float64(duration)
+			bpmRatio := tp.BPM / s.MainBPM
+			distance += s.BaseSpeed * (bpmRatio * tp.BeatScale) * float64(duration)
 			cursor += duration
 		}
 	} else {
 		for ; tp.Prev != nil && tp.Time > time; tp = tp.Prev {
 			duration := tp.Time - cursor // Negative value.
-			distance += s.Speed * (bpmRatio * tp.SpeedFactor) * float64(duration)
+			bpmRatio := tp.BPM / s.MainBPM
+			distance += s.BaseSpeed * (bpmRatio * tp.BeatScale) * float64(duration)
 			cursor += duration
 		}
 	}
-	// Calculate the remained speed factor (which is farthest from Hint within bound.)
-	distance += s.Speed * (bpmRatio * tp.SpeedFactor) * float64(time-cursor)
+	bpmRatio := tp.BPM / s.MainBPM
+	// Calculate the remained (which is farthest from Hint within bound.)
+	distance += s.BaseSpeed * (bpmRatio * tp.BeatScale) * float64(time-cursor)
 	return HitPosition - distance
 }
 
