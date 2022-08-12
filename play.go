@@ -166,7 +166,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	screen.DrawImage(s.Background.I, bgop)
 	s.FieldSprite.Draw(screen)
 	s.HintSprite.Draw(screen)
-	s.DrawBeatMeter(screen)
+	s.DrawBarLine(screen)
 	s.DrawLongNotes(screen)
 	s.DrawNotes(screen)
 	s.DrawCombo(screen)
@@ -190,7 +190,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 		ar*100, rr*100, kr*100,
 		s.Speed*100, ExposureTime(s.Speed)))
 }
-func (s ScenePlay) DrawBeatMeter(screen *ebiten.Image) {
+func (s ScenePlay) DrawBarLine(screen *ebiten.Image) {
 
 }
 
