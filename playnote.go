@@ -56,8 +56,7 @@ func (s ScenePlay) Bottom(tail *PlayNote) int {
 	return int(s.Position(tail.Prev.Time)-s.HeadSprites[tail.Key].H/2) + 1 // Extra 1 pixel for compensating round-down
 }
 
-// DrawLongNotes draws long sprite with Binary-building method.
-// This is due to performance issue of SubImage.
+// DrawLongNotes draws long sprite with Binary-building method, instead of SubImage.
 // DrawLongNotes draws long note before drawing Head or Tail.
 // DrawLongNotes just draws sub image of long note body.
 func (s *ScenePlay) DrawLongNotes(screen *ebiten.Image) {
