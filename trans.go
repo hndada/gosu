@@ -8,20 +8,22 @@ import (
 )
 
 type TransPoint struct {
-	Time        int64
-	BPM         float64
-	SpeedFactor float64
-	Meter       uint8
-	Volume      uint8
-	Highlight   bool
-	Prev        *TransPoint
-	Next        *TransPoint
+	Time         int64
+	BPM          float64
+	BeatScale    float64
+	Meter        uint8
+	Volume       uint8
+	Highlight    bool
+	NewBPM       bool
+	Prev         *TransPoint
+	Next         *TransPoint
+	NextBPMPoint *TransPoint // For performance
 }
 
 // Uninherited point is base point. whereas, Inherited point 'inherits'
 // values from previous Uninherited point first, then after.
 // All osu format have at least one Uninherited timing point.
-// Uninherited: BPM, Inherited: speed factor
+// Uninherited: BPM, Inherited: beat scale
 // Initial BPM is derived from the first timing point's BPM.
 // When there are multiple timing points with same time, the last one will overwrites all precedings.
 func NewTransPointsFromOsu(o *osu.Format) []*TransPoint {
@@ -34,22 +36,28 @@ func NewTransPointsFromOsu(o *osu.Format) []*TransPoint {
 	tps := make([]*TransPoint, 0, len(o.TimingPoints))
 	lastBPM, _ := o.TimingPoints[0].BPM()
 	var prev *TransPoint
+	var prevBPMPoint *TransPoint
 	for _, timingPoint := range o.TimingPoints {
 		if timingPoint.Uninherited {
 			tp := &TransPoint{
 				Time: int64(timingPoint.Time),
 				// BPM:,
-				SpeedFactor: 1,
-				Meter:       uint8(timingPoint.Meter),
-				Volume:      uint8(timingPoint.Volume),
-				Highlight:   timingPoint.IsKiai(),
-				Prev:        prev,
+				BeatScale: 1,
+				Meter:     uint8(timingPoint.Meter),
+				Volume:    uint8(timingPoint.Volume),
+				Highlight: timingPoint.IsKiai(),
+				NewBPM:    true,
+				Prev:      prev,
 			}
 			tp.BPM, _ = timingPoint.BPM()
 
 			if prev != nil {
 				prev.Next = tp
 			}
+			if prevBPMPoint != nil {
+				prevBPMPoint.Next = tp
+			}
+			prevBPMPoint = tp
 			prev = tp
 			lastBPM = tp.BPM
 			if len(tps) > 0 && tps[len(tps)-1].Time == tp.Time {
@@ -60,13 +68,14 @@ func NewTransPointsFromOsu(o *osu.Format) []*TransPoint {
 			tp := &TransPoint{
 				Time: int64(timingPoint.Time),
 				BPM:  lastBPM,
-				// SpeedFactor: ,
+				// BeatScale: ,
 				Meter:     uint8(timingPoint.Meter),
 				Volume:    uint8(timingPoint.Volume),
 				Highlight: timingPoint.IsKiai(),
+				NewBPM:    false,
 				Prev:      prev,
 			}
-			tp.SpeedFactor, _ = timingPoint.SpeedFactor()
+			tp.BeatScale, _ = timingPoint.BeatScale()
 
 			prev.Next = tp // Inherited point is never the first.
 			prev = tp
@@ -121,15 +130,34 @@ func (c Chart) BarLineTimes(wb, wa int64) []int64 {
 		ts = append([]int64{int64(t)}, ts...)
 	}
 	ts = ts[:len(ts)-1] // Drop bar line for tp0 for avoiding duplicated
-	for i, tp := range c.TransPoints {
-		next := float64(c.EndTime() + 2*wa)
-		if i < len(c.TransPoints)-1 {
-			next = float64(c.TransPoints[i+1].Time)
+	for tp := c.TransPoints[0]; tp != nil; tp = tp.NextBPMPoint {
+		next := c.EndTime() + 2*wa
+		if tp.NextBPMPoint != nil {
+			next = tp.NextBPMPoint.Time
 		}
 		unit := float64(tp.Meter) * 60000 / tp.BPM
-		for t := float64(tp.Time); t < next; t += unit {
+		for t := float64(tp.Time); t < float64(next); t += unit {
 			ts = append(ts, int64(t))
 		}
 	}
+	// for i, tp := range c.TransPoints {
+	// 	if !tp.NewBPM {
+	// 		continue
+	// 	}
+	// 	next := c.EndTime() + 2*wa
+	// 	if i < len(c.TransPoints)-1 {
+	// 		for _, tp2 := range c.TransPoints[i:] {
+	// 			if tp2.NewBPM {
+	// 				next = tp2.Time
+	// 				break
+	// 			}
+	// 		}
+	// 		next = c.TransPoints[i+1].Time
+	// 	}
+	// 	unit := float64(tp.Meter) * 60000 / tp.BPM
+	// 	for t := float64(tp.Time); t < float64(next); t += unit {
+	// 		ts = append(ts, int64(t))
+	// 	}
+	// }
 	return ts
 }
