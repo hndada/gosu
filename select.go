@@ -269,9 +269,9 @@ func (s *SceneSelect) Update(g *Game) {
 			break
 		}
 		s.Hold = 0
-		Speed -= 0.05
-		if Speed < 0.05 {
-			Speed = 0.05
+		Speed -= 0.1
+		if Speed < 0.1 {
+			Speed = 0.1
 		}
 	case ebiten.IsKeyPressed(ebiten.KeyW):
 		s.HoldKey = ebiten.KeyW
@@ -279,7 +279,7 @@ func (s *SceneSelect) Update(g *Game) {
 			break
 		}
 		s.Hold = 0
-		Speed += 0.05
+		Speed += 0.1
 		if Speed > 2 {
 			Speed = 2
 		}
