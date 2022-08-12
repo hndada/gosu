@@ -61,5 +61,9 @@ var (
 	HintPosition     float64 = screenSizeY * 0.96 // The middle position of Judge line, not a topmost.
 	HintHeight       float64 = screenSizeY * 0.04
 
-	TimingMeterUnit = 5 // The number of pixels per 1ms
+	TimingMeterUnit         = 5 // The number of pixels per 1ms
+	CursorScale     float64 = 0.1
 )
+
+// 1 pixel is 1 millisecond.
+func CalcExposureTime(speed float64) int64 { return int64(HintPosition / speed) }

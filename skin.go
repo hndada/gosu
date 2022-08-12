@@ -24,6 +24,8 @@ type GeneralSkinStruct struct { // Singleton
 	ComboSprites       []Sprite
 	ScoreSprites       []Sprite
 	JudgmentSprites    []Sprite
+	CursorSprites      [2]Sprite // 0: cursor // 1: additive cursor
+	// CursorTailSprite   Sprite
 }
 type Skin struct {
 	*GeneralSkinStruct
@@ -88,6 +90,13 @@ func LoadSkin() {
 		s.ApplyScale(JudgmentScale)
 		s.SetCenterXY(screenSizeX/2, JudgmentPosition)
 		g.JudgmentSprites[i] = s
+	}
+	for i, name := range []string{"menu-cursor.png", "menu-cursor-additive.png"} {
+		s := Sprite{
+			I: NewImage(fmt.Sprintf("skin/cursor/%s", name)),
+		}
+		s.ApplyScale(CursorScale)
+		g.CursorSprites[i] = s
 	}
 	GeneralSkin = g
 
@@ -195,6 +204,7 @@ var NoteKindsMap = map[int][]NoteKind{
 	10: {Tip, One, Two, One, Mid, Mid, One, Two, One, Tip},
 }
 
+// NewImage returns nil when fails to load image from the path.
 func NewImage(path string) *ebiten.Image {
 	f, err := os.Open(path)
 	if err != nil {
