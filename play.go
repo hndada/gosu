@@ -248,7 +248,8 @@ func (s ScenePlay) DrawJudgment(screen *ebiten.Image) {
 	sprite.Draw(screen)
 }
 
-// Each number image has different size.
+// DrawCombo draws each number at constant x regardless of their widths.
+// Each number image has different size; The standard width is number 0's.
 func (s ScenePlay) DrawCombo(screen *ebiten.Image) {
 	var wsum int
 	if s.ComboCountdown == 0 {
@@ -257,43 +258,51 @@ func (s ScenePlay) DrawCombo(screen *ebiten.Image) {
 	vs := make([]int, 0)
 	for v := s.Combo; v > 0; v /= 10 {
 		vs = append(vs, v%10) // Little endian
-		wsum += int(s.ComboSprites[v%10].W + ComboGap)
+		// wsum += int(s.ComboSprites[v%10].W + ComboGap)
+		wsum += int(s.ComboSprites[0].W) + int(ComboGap)
 	}
+	wsum -= int(ComboGap)
+
 	t := MaxJudgmentCountdown - s.LastJudgmentCountdown
 	age := float64(t) / float64(MaxJudgmentCountdown)
-	wsum -= int(ComboGap)
-	x := (screenSizeX + float64(wsum)) / 2
+	x := screenSizeX/2 + float64(wsum)/2 - s.ComboSprites[0].W/2
 	for _, v := range vs {
-		x -= s.ComboSprites[v].W + ComboGap
+		// x -= s.ComboSprites[v].W + ComboGap
+		x -= s.ComboSprites[0].W + ComboGap
 		sprite := s.ComboSprites[v]
-		sprite.X = x
-		sprite.Y = ComboPosition - sprite.H/2
+		// sprite.X = x
+		sprite.X = x + (s.ComboSprites[0].W - sprite.W/2)
+		sprite.SetCenterY(ComboPosition)
 		switch {
 		case age < 0.1:
-			sprite.Y += 0.6 * age * sprite.H
+			sprite.Y += 0.85 * age * sprite.H
 		case age >= 0.1 && age < 0.2:
-			sprite.Y += 0.6 * (0.2 - age) * sprite.H
+			sprite.Y += 0.85 * (0.2 - age) * sprite.H
 		}
 		sprite.Draw(screen)
 	}
 }
 
+// DrawScore draws each number at constant x regardless of their widths,.
+// same as DrawCombo.
 func (s ScenePlay) DrawScore(screen *ebiten.Image) {
 	var wsum int
 	vs := make([]int, 0)
 	for v := int(math.Ceil(s.DelayedScore)); v > 0; v /= 10 {
 		vs = append(vs, v%10) // Little endian
-		wsum += int(s.ComboSprites[v%10].W)
+		// wsum += int(s.ComboSprites[v%10].W)
+		wsum += int(s.ComboSprites[0].W)
 	}
 	if len(vs) == 0 {
 		vs = append(vs, 0) // Little endian
 		wsum += int(s.ComboSprites[0].W)
 	}
-	x := float64(screenSizeX)
+	x := float64(screenSizeX) - s.ScoreSprites[0].W/2
 	for _, v := range vs {
-		x -= s.ScoreSprites[v].W
+		// x -= s.ScoreSprites[v].W
+		x -= s.ScoreSprites[0].W
 		sprite := s.ScoreSprites[v]
-		sprite.X = x
+		sprite.X = x + (s.ScoreSprites[0].W - sprite.W/2)
 		sprite.Draw(screen)
 	}
 }
