@@ -55,14 +55,11 @@ func NewTransPointsFromOsu(o *osu.Format) []*TransPoint {
 				prev.Next = tp
 			}
 			if prevBPMPoint != nil {
-				prevBPMPoint.Next = tp
+				prevBPMPoint.NextBPMPoint = tp // This was hard to find the bug to me.
 			}
-			prevBPMPoint = tp
 			prev = tp
+			prevBPMPoint = tp
 			lastBPM = tp.BPM
-			if len(tps) > 0 && tps[len(tps)-1].Time == tp.Time {
-				tps = tps[:len(tps)-1]
-			}
 			tps = append(tps, tp)
 		} else {
 			tp := &TransPoint{
@@ -79,9 +76,6 @@ func NewTransPointsFromOsu(o *osu.Format) []*TransPoint {
 
 			prev.Next = tp // Inherited point is never the first.
 			prev = tp
-			if len(tps) > 0 && tps[len(tps)-1].Time == tp.Time {
-				tps = tps[:len(tps)-1]
-			}
 			tps = append(tps, tp)
 		}
 	}
