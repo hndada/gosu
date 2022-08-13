@@ -153,7 +153,7 @@ func NewSceneSelect() *SceneSelect {
 	return s
 }
 func (s *SceneSelect) UpdateBackground() {
-	s.Background = RandomDefaultBackground
+	s.Background = GeneralSkin.DefaultBackground
 	if len(s.ChartInfos) == 0 {
 		return
 	}
@@ -162,6 +162,8 @@ func (s *SceneSelect) UpdateBackground() {
 	if img != nil {
 		s.Background.I = img
 	}
+	s.Background.SetWidth(screenSizeX)
+	s.Background.SetCenterY(screenSizeY / 2)
 }
 
 const (
@@ -319,6 +321,9 @@ func (s *SceneSelect) Update(g *Game) {
 // May add extra effect to box arrangement.
 // x -= y / 5, for example.
 func (s SceneSelect) Draw(screen *ebiten.Image) {
+	// bgop := s.Background.Op()
+	// bgop.Filter = ebiten.FilterLinear
+	// screen.DrawImage(s.Background.I, bgop)
 	s.Background.Draw(screen)
 	for i := range s.ChartInfos {
 		y := (i-s.Cursor)*bh + screenSizeY/2 - bh/2

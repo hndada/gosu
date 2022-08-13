@@ -5,10 +5,7 @@ import (
 	"image"
 	"image/color"
 	"math"
-	"math/rand"
 	"os"
-	"path/filepath"
-	"strings"
 
 	_ "image/jpeg"
 	_ "image/png"
@@ -21,11 +18,12 @@ import (
 var GeneralSkin *GeneralSkinStruct
 
 type GeneralSkinStruct struct { // Singleton
-	DefaultBackgrounds []Sprite
-	ComboSprites       []Sprite
-	ScoreSprites       []Sprite
-	JudgmentSprites    []Sprite
-	CursorSprites      [2]Sprite // 0: cursor // 1: additive cursor
+	// DefaultBackgrounds []Sprite
+	DefaultBackground Sprite
+	ComboSprites      []Sprite
+	ScoreSprites      []Sprite
+	JudgmentSprites   []Sprite
+	CursorSprites     [2]Sprite // 0: cursor // 1: additive cursor
 	// CursorTailSprite   Sprite
 }
 
@@ -43,36 +41,43 @@ type Skin struct {
 }
 
 var SkinMap = make(map[int]Skin)
-var RandomDefaultBackground Sprite
 
 func LoadSkin() {
 	g := &GeneralSkinStruct{
-		DefaultBackgrounds: make([]Sprite, 0, 10),
-		ComboSprites:       make([]Sprite, 10),
-		ScoreSprites:       make([]Sprite, 10),
-		JudgmentSprites:    make([]Sprite, 5),
+		// DefaultBackgrounds: make([]Sprite, 0, 10),
+		ComboSprites:    make([]Sprite, 10),
+		ScoreSprites:    make([]Sprite, 10),
+		JudgmentSprites: make([]Sprite, 5),
 	}
-	{
-		fs, err := os.ReadDir("skin/bg")
-		if err != nil {
-			panic(err)
-		}
-		for _, f := range fs {
-			if f.IsDir() || !strings.HasPrefix(f.Name(), "bg") {
-				continue
-			}
-			sprite := Sprite{
-				I: NewImage(filepath.Join("skin/bg", f.Name())),
-			}
-			sprite.SetFullscreen()
-			g.DefaultBackgrounds = append(g.DefaultBackgrounds, sprite)
-		}
-		r := int(rand.Float64() * float64(len(g.DefaultBackgrounds)))
-		RandomDefaultBackground = g.DefaultBackgrounds[r]
+	// May be useful for animation
+	// {
+	// 	fs, err := os.ReadDir("skin/bg")
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	for _, f := range fs {
+	// 		if f.IsDir() || !strings.HasPrefix(f.Name(), "bg") {
+	// 			continue
+	// 		}
+	// 		sprite := Sprite{
+	// 			I: NewImage(filepath.Join("skin/bg", f.Name())),
+	// 		}
+	// 		sprite.SetFullscreen()
+	// 		g.DefaultBackgrounds = append(g.DefaultBackgrounds, sprite)
+	// 	}
+	// 	r := int(rand.Float64() * float64(len(g.DefaultBackgrounds)))
+	// 	RandomDefaultBackground = g.DefaultBackgrounds[r]
+	// }
+	g.DefaultBackground = Sprite{
+		I:      NewImage("skin/default-bg.jpg"),
+		Filter: ebiten.FilterLinear,
 	}
+	g.DefaultBackground.SetWidth(screenSizeX)
+	g.DefaultBackground.SetCenterY(screenSizeY / 2)
 	for i := 0; i < 10; i++ {
 		s := Sprite{
-			I: NewImage(fmt.Sprintf("skin/combo/%d.png", i)),
+			I:      NewImage(fmt.Sprintf("skin/combo/%d.png", i)),
+			Filter: ebiten.FilterLinear,
 		}
 		s.ApplyScale(ComboScale)
 		// ComboSprite's x value is not fixed.
@@ -81,7 +86,8 @@ func LoadSkin() {
 	}
 	for i := 0; i < 10; i++ {
 		s := Sprite{
-			I: NewImage(fmt.Sprintf("skin/score/%d.png", i)),
+			I:      NewImage(fmt.Sprintf("skin/score/%d.png", i)),
+			Filter: ebiten.FilterLinear,
 		}
 		s.ApplyScale(ScoreScale)
 		// ScoreSprite's x value is not fixed.
@@ -90,7 +96,8 @@ func LoadSkin() {
 	}
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
 		s := Sprite{
-			I: NewImage(fmt.Sprintf("skin/judgment/%s.png", name)),
+			I:      NewImage(fmt.Sprintf("skin/judgment/%s.png", name)),
+			Filter: ebiten.FilterLinear,
 		}
 		s.ApplyScale(JudgmentScale)
 		s.SetCenterX(screenSizeX / 2)
@@ -99,7 +106,8 @@ func LoadSkin() {
 	}
 	for i, name := range []string{"menu-cursor.png", "menu-cursor-additive.png"} {
 		s := Sprite{
-			I: NewImage(fmt.Sprintf("skin/cursor/%s", name)),
+			I:      NewImage(fmt.Sprintf("skin/cursor/%s", name)),
+			Filter: ebiten.FilterLinear,
 		}
 		s.ApplyScale(CursorScale)
 		g.CursorSprites[i] = s

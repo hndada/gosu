@@ -8,6 +8,7 @@ import (
 type Sprite struct {
 	I          *ebiten.Image
 	W, H, X, Y float64
+	Filter     ebiten.Filter
 }
 
 // SetWidth sets sprite's width as well as set height scaled.
@@ -23,16 +24,6 @@ func (s *Sprite) SetHeight(h float64) {
 	s.W = ratio * float64(s.I.Bounds().Dx())
 	s.H = ratio * h
 }
-func (s *Sprite) SetFullscreen() {
-	s.W = screenSizeX
-	s.H = screenSizeY
-}
-
-// SetCenterXY assumes Sprite's width and height are set.
-// func (s *Sprite) SetCenterXY(x, y float64) {
-// 	s.X = x - s.W/2
-// 	s.Y = y - s.H/2
-// }
 
 // SetCenterX and SetCenterY suppose Sprite's width and height are set.
 func (s *Sprite) SetCenterX(x float64) { s.X = x - s.W/2 }
@@ -50,6 +41,7 @@ func (s Sprite) Op() *ebiten.DrawImageOptions {
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(s.ScaleW(), s.ScaleH())
 	op.GeoM.Translate(s.X, s.Y)
+	op.Filter = s.Filter
 	return op
 }
 func (s *Sprite) Draw(screen *ebiten.Image) {
