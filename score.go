@@ -5,17 +5,17 @@ import (
 )
 
 type Judgment struct {
-	Karma  float64
+	Flow   float64
 	Acc    float64
 	Window int64
 }
 
 var (
-	Kool = Judgment{Karma: 0.01, Acc: 1, Window: 20}
-	Cool = Judgment{Karma: 0.01, Acc: 1, Window: 45}
-	Good = Judgment{Karma: 0.01, Acc: 0.25, Window: 75}
-	Bad  = Judgment{Karma: 0.01, Acc: 0, Window: 110} // Todo: Karma 0.01 -> 0?
-	Miss = Judgment{Karma: -1, Acc: 0, Window: 150}
+	Kool = Judgment{Flow: 0.01, Acc: 1, Window: 20}
+	Cool = Judgment{Flow: 0.01, Acc: 1, Window: 45}
+	Good = Judgment{Flow: 0.01, Acc: 0.25, Window: 75}
+	Bad  = Judgment{Flow: 0.01, Acc: 0, Window: 110} // Todo: Flow 0.01 -> 0?
+	Miss = Judgment{Flow: -1, Acc: 0, Window: 150}
 )
 
 var Judgments = []Judgment{Kool, Cool, Good, Bad, Miss}
@@ -60,9 +60,9 @@ func Judge(td int64) Judgment {
 	return Judgment{} // Returns None when the input is out of widest range
 }
 
-// Todo: no getting karma when hands off the long note
+// Todo: no getting Flow when hands off the long note
 func (s *ScenePlay) MarkNote(n *PlayNote, j Judgment) {
-	var a = KarmaScoreFactor
+	var a = FlowScoreFactor
 	if j == Miss {
 		s.Combo = 0
 		s.ComboCountdown = 0
@@ -70,13 +70,13 @@ func (s *ScenePlay) MarkNote(n *PlayNote, j Judgment) {
 		s.Combo++
 		s.ComboCountdown = MaxComboCountdown
 	}
-	s.Karma += j.Karma
-	if s.Karma < 0 {
-		s.Karma = 0
-	} else if s.Karma > 1 {
-		s.Karma = 1
+	s.Flow += j.Flow
+	if s.Flow < 0 {
+		s.Flow = 0
+	} else if s.Flow > 1 {
+		s.Flow = 1
 	}
-	s.KarmaSum += math.Pow(s.Karma, a)
+	s.FlowSum += math.Pow(s.Flow, a)
 	s.AccSum += j.Acc
 	for i, jk := range Judgments {
 		if jk.Window == j.Window {
@@ -96,22 +96,22 @@ func (s *ScenePlay) MarkNote(n *PlayNote, j Judgment) {
 	}
 }
 
-// Total score consists of 3 scores: Karma, Acc, and Ratio score.
-// Karma score is calculated with sum of Karma.
+// Total score consists of 3 scores: Flow, Acc, and Ratio score.
+// Flow score is calculated with sum of Flow. Flow once named as Karma.
 // Acc score is calculated with sum of Acc of judgments.
 // Ratio score is calculated with a ratio of Kool count.
-// Karma recovers fast when its value is low, vice versa: math.Pow(x, a); a < 1
+// Flow recovers fast when its value is low, vice versa: math.Pow(x, a); a < 1
 // Acc and ratio score increase faster as each parameter approaches to max value: math.Pow(x, b); b > 1
-// Karma, Acc, Ratio, Total max score is 700k, 300k, 100k, 1100k each.
+// Flow, Acc, Ratio, Total max score is 700k, 300k, 100k, 1100k each.
 const (
-	ScoreMaxKarma = 7 * 1e5
+	ScoreMaxFlow  = 7 * 1e5
 	ScoreMaxAcc   = 3 * 1e5
 	ScoreMaxRatio = 1 * 1e5
-	ScoreMaxTotal = ScoreMaxKarma + ScoreMaxAcc + ScoreMaxRatio
+	ScoreMaxTotal = ScoreMaxFlow + ScoreMaxAcc + ScoreMaxRatio
 )
 
-// Karma, acc, ratio score in order.
-func (s ScenePlay) CalcScore() (ks, as, rs float64) {
+// Flow, acc, ratio score in order.
+func (s ScenePlay) CalcScore() (fs, as, rs float64) {
 	var (
 		b = AccScoreFactor
 		c = RatioScoreFactor
@@ -119,14 +119,14 @@ func (s ScenePlay) CalcScore() (ks, as, rs float64) {
 	nc := float64(len(s.PlayNotes))    // Total note counts
 	kc := float64(s.JudgmentCounts[0]) // Kool counts
 
-	ks = ScoreMaxKarma * (s.KarmaSum / nc)
+	fs = ScoreMaxFlow * (s.FlowSum / nc)
 	as = ScoreMaxAcc * math.Pow(s.AccSum/nc, b)
 	rs = ScoreMaxRatio * math.Pow(kc/nc, c)
 	return
 }
 func (s ScenePlay) Score() float64 {
-	ks, as, rs := s.CalcScore()
-	return math.Ceil(ks + as + rs)
+	fs, as, rs := s.CalcScore()
+	return math.Ceil(fs + as + rs)
 }
 
 // MarkedNoteCount is for calculating ratio.

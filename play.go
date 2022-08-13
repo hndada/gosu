@@ -39,8 +39,8 @@ type ScenePlay struct {
 	*TransPoint
 
 	Combo          int
-	Karma          float64
-	KarmaSum       float64
+	Flow           float64
+	FlowSum        float64
 	AccSum         float64 // It can be derived from JudgmentCounts
 	JudgmentCounts []int
 
@@ -80,7 +80,7 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	for s.TransPoint.Time == s.TransPoint.Next.Time {
 		s.TransPoint = s.TransPoint.Next
 	}
-	s.Karma = 1
+	s.Flow = 1
 	s.JudgmentCounts = make([]int, 5)
 
 	s.Play = play
@@ -100,7 +100,6 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	} else {
 		s.Background = s.DefaultBackground
 	}
-	fmt.Println(s.Background)
 	s.BarLineTimes = s.Chart.BarLineTimes(waitBefore, DefaultWaitAfter)
 	return s
 }
@@ -189,23 +188,21 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.DrawCombo(screen)
 	s.DrawJudgment(screen)
 	s.DrawScore(screen)
-	var kr, ar, rr float64 = 1, 1, 1
+	var fr, ar, rr float64 = 1, 1, 1
 	if s.MarkedNoteCount() > 0 {
-		kr = s.KarmaSum / float64(s.MarkedNoteCount())
+		fr = s.FlowSum / float64(s.MarkedNoteCount())
 		ar = s.AccSum / float64(s.MarkedNoteCount())
 		rr = float64(s.JudgmentCounts[0]) / float64(s.MarkedNoteCount())
 	}
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
-		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs/%.0fs\n"+
-			"Score: %.0f\nKarma: %.2f\nCombo: %d\n"+
-			"Judgment counts: %v\n"+
-			"Accuracy: %.2f%%\nKool ratio: %.2f%%\nKarma sum: %.2f%%\n\n"+
-			"Speed: %.0f\n(Exposure time: %.fms)\n",
+		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
+			"Score: %.0f\nFlow: %.2f\nCombo: %d\n\n"+
+			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
+			"Speed: %.0f\n(Base speed: %.0f)\n(Exposure time: %.fms)\n\n",
 		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.EndTime())/1000,
-		s.Score(), s.Karma, s.Combo,
-		s.JudgmentCounts,
-		ar*100, rr*100, kr*100,
-		s.Speed()*100, ExposureTime(s.Speed())))
+		s.Score(), s.Flow, s.Combo,
+		fr*100, ar*100, rr*100, s.JudgmentCounts,
+		s.Speed()*100, s.BaseSpeed*100, ExposureTime(s.Speed())))
 }
 
 func (s ScenePlay) DrawBarLine(screen *ebiten.Image) {
