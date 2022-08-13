@@ -25,7 +25,5 @@ go.work
 /*.osr
 
 # custom files
-# /cmd/gosu
-/cmd/gosu/music
-/cmd/gosu/replay
+/cmd/gosu
 !/cmd/gosu/skin
