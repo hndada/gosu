@@ -31,10 +31,13 @@ type GeneralSkinStruct struct { // Singleton
 // Todo: BarLine color settings
 type Skin struct {
 	*GeneralSkinStruct
-	NoteSprites   []Sprite
-	BodySprites   [][]Sprite // Binary-building method
-	HeadSprites   []Sprite
-	TailSprites   []Sprite
+	KeyUpSprites   []Sprite
+	KeyDownSprites []Sprite
+	NoteSprites    []Sprite
+	HeadSprites    []Sprite
+	TailSprites    []Sprite
+	BodySprites    [][]Sprite // Binary-building method
+
 	FieldSprite   Sprite
 	HintSprite    Sprite
 	BarLineSprite Sprite // Seperator of each bar (aka measure)
@@ -49,25 +52,6 @@ func LoadSkin() {
 		ScoreSprites:    make([]Sprite, 10),
 		JudgmentSprites: make([]Sprite, 5),
 	}
-	// May be useful for animation
-	// {
-	// 	fs, err := os.ReadDir("skin/bg")
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-	// 	for _, f := range fs {
-	// 		if f.IsDir() || !strings.HasPrefix(f.Name(), "bg") {
-	// 			continue
-	// 		}
-	// 		sprite := Sprite{
-	// 			I: NewImage(filepath.Join("skin/bg", f.Name())),
-	// 		}
-	// 		sprite.SetFullscreen()
-	// 		g.DefaultBackgrounds = append(g.DefaultBackgrounds, sprite)
-	// 	}
-	// 	r := int(rand.Float64() * float64(len(g.DefaultBackgrounds)))
-	// 	RandomDefaultBackground = g.DefaultBackgrounds[r]
-	// }
 	g.DefaultBackground = Sprite{
 		I:      NewImage("skin/default-bg.jpg"),
 		Filter: ebiten.FilterLinear,
@@ -115,41 +99,24 @@ func LoadSkin() {
 	GeneralSkin = g
 
 	// Following sprites are dependent of key count.
-	// Todo: Key 1 ~ 3, scratch
+	// Todo: animated sprite support. Starting with [4][]*ebiten.Image will help.
+	var (
+		keyUpImage   *ebiten.Image
+		keyDownImage *ebiten.Image
+		noteImages   [4]*ebiten.Image
+		headImages   [4]*ebiten.Image
+		tailImages   [4]*ebiten.Image
+		bodyImages   [4]image.Image // binary-building method
+		// bodyImages   [4]*ebiten.Image
+		hintImage *ebiten.Image
+	)
 	// Todo: 4th note image
-	for keyCount := 4; keyCount <= 10; keyCount++ {
-		noteKinds := NoteKindsMap[keyCount]
-		noteWidths := NoteWidthsMap[keyCount]
-		s := Skin{
-			GeneralSkinStruct: GeneralSkin,
-			NoteSprites:       make([]Sprite, keyCount&ScratchMask),
-			BodySprites:       make([][]Sprite, keyCount&ScratchMask),
-			HeadSprites:       make([]Sprite, keyCount&ScratchMask),
-			TailSprites:       make([]Sprite, keyCount&ScratchMask),
-		}
-		var wsum int
-		for k, kind := range noteKinds {
-			s.NoteSprites[k] = Sprite{
-				I: NewImage("skin/note/" + fmt.Sprintf("n%d.png", []int{1, 2, 3, 3}[kind])),
-				W: noteWidths[kind],
-				H: NoteHeigth,
-			}
-			// Each w should be integer, since it is actual sprite's width.
-			wsum += int(noteWidths[kind])
-		}
-		// NoteSprite's x value should be integer as well as w.
-		// Todo: Scratch should be excluded to width sum.
-		x := screenSizeX/2 - wsum/2
-		for k, kind := range noteKinds {
-			s.NoteSprites[k].X = float64(x)
-			// NoteSprites's y value is not fixed.
-			x += int(noteWidths[kind])
-		}
-		// Draw max length of long note body sprite in advance.
-		// Todo: change l%d.png to b%d.png (with animation)
-		x = screenSizeX/2 - wsum/2
-		for k, kind := range noteKinds {
-			f, err := os.Open("skin/note/" + fmt.Sprintf("l%d.png", []int{1, 2, 3, 3}[kind]))
+	// Currently head and tail use note's image.
+	for i, kind := range []int{1, 2, 3, 3} {
+		noteImages[i] = NewImage(fmt.Sprintf("skin/note/note/%d.png", kind))
+		// bodyImages[i] = NewImage(fmt.Sprintf("skin/note/body/%d.png", kind))
+		{
+			f, err := os.Open(fmt.Sprintf("skin/note/body/%d.png", kind))
 			if err != nil {
 				panic(err)
 			}
@@ -158,6 +125,71 @@ func LoadSkin() {
 			if err != nil {
 				panic(err)
 			}
+			bodyImages[i] = src
+		}
+		headImages[i] = NewImage(fmt.Sprintf("skin/note/head/%d.png", kind))
+		tailImages[i] = NewImage(fmt.Sprintf("skin/note/tail/%d.png", kind))
+	}
+	keyUpImage = NewImage("skin/key/up.png")
+	keyDownImage = NewImage("skin/key/down.png")
+	hintImage = NewImage("skin/hint.png")
+
+	// Todo: Key count 1~3, KeyCount + scratch
+	for keyCount := 4; keyCount <= 10; keyCount++ {
+		noteKinds := NoteKindsMap[keyCount]
+		noteWidths := NoteWidthsMap[keyCount]
+		s := Skin{
+			GeneralSkinStruct: GeneralSkin,
+			KeyUpSprites:      make([]Sprite, keyCount&ScratchMask),
+			KeyDownSprites:    make([]Sprite, keyCount&ScratchMask),
+			NoteSprites:       make([]Sprite, keyCount&ScratchMask),
+			BodySprites:       make([][]Sprite, keyCount&ScratchMask),
+			HeadSprites:       make([]Sprite, keyCount&ScratchMask),
+			TailSprites:       make([]Sprite, keyCount&ScratchMask),
+		}
+
+		var wsum int
+		for _, kind := range noteKinds {
+			// Each w should be integer, since it is actual sprite's width.
+			wsum += int(noteWidths[kind])
+		}
+
+		// Todo: Scratch should be excluded to width sum.
+		// KeyUp and KeyDown are drawn below Hint, which bottom is along with HitPosition.
+		x := screenSizeX/2 - wsum/2
+		for k, kind := range noteKinds {
+			s.KeyUpSprites[k] = Sprite{
+				I: keyUpImage,
+				X: float64(x),
+				Y: HitPosition,
+			}
+			s.KeyUpSprites[k].SetWidth(noteWidths[kind])
+			s.KeyDownSprites[k] = s.KeyUpSprites[k]
+			s.KeyDownSprites[k].I = keyDownImage
+			s.KeyUpSprites[k].SetWidth(noteWidths[kind])
+			x += int(noteWidths[kind])
+		}
+
+		x = screenSizeX/2 - wsum/2 // x should be integer like w as well.
+		for k, kind := range noteKinds {
+			s.NoteSprites[k] = Sprite{
+				I: noteImages[kind],
+				W: noteWidths[kind],
+				H: NoteHeigth,
+				X: float64(x),
+				// NoteSprites's y value is not fixed.
+			}
+			s.HeadSprites[k] = s.NoteSprites[k]
+			s.HeadSprites[k].I = headImages[kind]
+			s.TailSprites[k] = s.NoteSprites[k]
+			s.HeadSprites[k].I = tailImages[kind]
+			x += int(noteWidths[kind])
+		}
+
+		// Draw max length of long note body sprite in advance.
+		x = screenSizeX/2 - wsum/2
+		for k, kind := range noteKinds {
+			src := bodyImages[kind]
 			w := int(noteWidths[kind])
 			scale := float64(w) / float64(src.Bounds().Dx())
 			h := int(scale * float64(src.Bounds().Dy()))
@@ -185,8 +217,7 @@ func LoadSkin() {
 			}
 			x += int(noteWidths[kind])
 		}
-		copy(s.HeadSprites, s.NoteSprites)
-		copy(s.TailSprites, s.NoteSprites)
+
 		field := ebiten.NewImage(wsum, screenSizeY)
 		field.Fill(color.RGBA{0, 0, 0, uint8(255 * FieldDark)})
 		s.FieldSprite = Sprite{
@@ -195,9 +226,10 @@ func LoadSkin() {
 			H: screenSizeY,
 		}
 		s.FieldSprite.SetCenterX(screenSizeX / 2)
-		// BodySprites's y value is always 0.
+		// FieldSprite's y value is always 0.
+
 		s.HintSprite = Sprite{
-			I: NewImage("skin/play/hint.png"),
+			I: hintImage,
 			W: float64(wsum),
 			H: HintHeight,
 		}
@@ -212,7 +244,7 @@ func LoadSkin() {
 			H: 1,
 		}
 		s.BarLineSprite.SetCenterX(screenSizeX / 2)
-		// BodySprites's y value is not fixed.
+		// BarLineSprite's y value is not fixed.
 		SkinMap[keyCount] = s
 	}
 }
@@ -270,3 +302,23 @@ func init() { // I'm proud of the following code.
 		NoteKindsMap[k|RightScratch] = append(NoteKindsMap[k-1], Tip)
 	}
 }
+
+// May be useful for animation
+// {
+// 	fs, err := os.ReadDir("skin/bg")
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	for _, f := range fs {
+// 		if f.IsDir() || !strings.HasPrefix(f.Name(), "bg") {
+// 			continue
+// 		}
+// 		sprite := Sprite{
+// 			I: NewImage(filepath.Join("skin/bg", f.Name())),
+// 		}
+// 		sprite.SetFullscreen()
+// 		g.DefaultBackgrounds = append(g.DefaultBackgrounds, sprite)
+// 	}
+// 	r := int(rand.Float64() * float64(len(g.DefaultBackgrounds)))
+// 	RandomDefaultBackground = g.DefaultBackgrounds[r]
+// }
