@@ -83,4 +83,4 @@ var (
 var TimingMeterUnit = 5 // The number of pixels per 1ms
 
 // 1 pixel is 1 millisecond.
-func ExposureTime(speed float64) float64 { return HitPosition / speed }
+func ExposureTime(speed float64) float64 { return (HitPosition + NoteHeigth/2) / speed }
