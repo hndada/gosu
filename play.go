@@ -92,12 +92,15 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	s.Skin = SkinMap[c.KeyCount]
 	if img := NewImage(s.Chart.BackgroundPath(cpath)); img != nil {
 		s.Background = Sprite{
-			I: NewImage(s.Chart.BackgroundPath(cpath)),
+			I:      NewImage(s.Chart.BackgroundPath(cpath)),
+			Filter: ebiten.FilterLinear,
 		}
-		s.Background.SetFullscreen()
+		s.Background.SetWidth(screenSizeX)
+		s.Background.SetCenterY(screenSizeY / 2)
 	} else {
-		s.Background = RandomDefaultBackground
+		s.Background = s.DefaultBackground
 	}
+	fmt.Println(s.Background)
 	s.BarLineTimes = s.Chart.BarLineTimes(waitBefore, DefaultWaitAfter)
 	return s
 }
@@ -176,6 +179,7 @@ func (s *ScenePlay) Update(g *Game) {
 func (s ScenePlay) Draw(screen *ebiten.Image) {
 	bgop := s.Background.Op()
 	bgop.ColorM.ChangeHSV(0, 1, BgDimness)
+	// bgop.Filter = ebiten.FilterLinear
 	screen.DrawImage(s.Background.I, bgop)
 	s.FieldSprite.Draw(screen)
 	s.HintSprite.Draw(screen)
