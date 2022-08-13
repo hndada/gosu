@@ -20,6 +20,7 @@ var KeySettings = map[int][]Key{
 
 # Game play preview
 ## Video
+[The Flashbulb - The Bridgeport Run [Escapism]](https://youtu.be/5VWaSAs7bbQ)
 [Real-time replay of Taishi - bluefieldcreator [Etherealization]](https://www.youtube.com/watch?v=9kMUT8vQI24&list=PLQhd8A8gGbIBm_oJdW5K9Pwv9jZpmJzLW&index=2&ab_channel=MuangMuangE)
 
 [Here is the YouTube link of another replay.](https://youtu.be/YMRgGQZHpQo)
