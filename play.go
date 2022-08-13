@@ -77,6 +77,9 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	s.LastPressed = make([]bool, c.KeyCount)
 	s.Pressed = make([]bool, c.KeyCount)
 	s.TransPoint = s.Chart.TransPoints[0]
+	for s.TransPoint.Time == s.TransPoint.Next.Time {
+		s.TransPoint = s.TransPoint.Next
+	}
 	s.Karma = 1
 	s.JudgmentCounts = make([]int, 5)
 

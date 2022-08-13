@@ -133,7 +133,6 @@ func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 
 // NotePosition calculates position, the centered y-axis value.
 // y = position - h/2
-// Todo: kinda laggy on intro at Runengon Lenfried's map?
 func (s ScenePlay) Position(time int64) float64 {
 	var distance float64 // Approaching notes have positive distance, vice versa.
 	tp := s.TransPoint
