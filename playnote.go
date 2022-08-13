@@ -13,12 +13,13 @@ type PlayNote struct {
 	NextTail *PlayNote // For performance of DrawLongNotes()
 }
 
-func NewPlayNotes(c *Chart) ([]*PlayNote, []*PlayNote, []*PlayNote) {
+func NewPlayNotes(c *Chart) ([]*PlayNote, []*PlayNote, []*PlayNote, float64) {
 	playNotes := make([]*PlayNote, 0, len(c.Notes))
 	firstStagedNotes := make([]*PlayNote, c.KeyCount)
 	firstLowestTails := make([]*PlayNote, c.KeyCount)
 	prevs := make([]*PlayNote, c.KeyCount)
 	prevTails := make([]*PlayNote, c.KeyCount)
+	var weights float64
 	for _, n := range c.Notes {
 		prev := prevs[n.Key]
 		pn := &PlayNote{
@@ -41,9 +42,10 @@ func NewPlayNotes(c *Chart) ([]*PlayNote, []*PlayNote, []*PlayNote) {
 				firstLowestTails[n.Key] = pn
 			}
 		}
+		weights += pn.Weight()
 		playNotes = append(playNotes, pn)
 	}
-	return playNotes, firstStagedNotes, firstLowestTails
+	return playNotes, firstStagedNotes, firstLowestTails, weights
 }
 
 // top returns top position of long note body.
@@ -157,6 +159,28 @@ func (s ScenePlay) Position(time int64) float64 {
 	// Calculate the remained (which is farthest from Hint within bound.)
 	distance += s.BaseSpeed * (bpmRatio * tp.BeatScale) * float64(time-cursor)
 	return HitPosition - distance
+}
+
+// Weight is for Tail's variadic weight based on its length.
+// For example, short long note does not require much strain to release.
+// Todo: fine-tuning with replay data
+func (n PlayNote) Weight() float64 {
+	switch n.Type {
+	case Tail:
+		d := float64(n.Time - n.Time2)
+		switch {
+		case d < 50:
+			return 0.5 - 0.35*d/50
+		case d >= 50 && d < 200:
+			return 0.15
+		case d >= 200 && d < 800:
+			return 0.15 + 0.85*(d-200)/600
+		default:
+			return 1
+		}
+	default:
+		return 1
+	}
 }
 
 func (n PlayNote) PlaySE() {}
