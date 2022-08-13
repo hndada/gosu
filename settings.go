@@ -56,10 +56,10 @@ var (
 
 // Todo: Should NoteHeight be separated into NoteHeight, HeadHeight, TailHeight?
 var (
-	ComboPosition    float64 = screenSizeY * 0.45
-	JudgmentPosition float64 = screenSizeY * 0.67
-	NoteHeigth       float64 = screenSizeY * 0.04 // Applies to all notes
-	HitPosition      float64 = screenSizeY * 0.96 // The bottom y-value of Hint,  not a middle or top.
+	ComboPosition    float64 = screenSizeY * 0.40
+	JudgmentPosition float64 = screenSizeY * 0.66
+	NoteHeigth       float64 = screenSizeY * 0.05 // Applies to all notes
+	HitPosition      float64 = screenSizeY * 0.90 // The bottom y-value of Hint,  not a middle or top.
 	// HintPosition     float64 = screenSizeY * 0.96
 )
 
@@ -71,10 +71,10 @@ const (
 // Skin scale settings
 // Todo: make the struct SkinScaleSettings
 var (
-	ComboScale    float64 = 0.72
+	ComboScale    float64 = 0.75
 	ComboGap      float64 = screenSizeX * -0.0008
-	ScoreScale    float64 = 0.67
-	JudgmentScale float64 = 0.35
+	ScoreScale    float64 = 0.65
+	JudgmentScale float64 = 0.33
 	HintHeight    float64 = screenSizeY * 0.04
 	CursorScale   float64 = 0.1
 
