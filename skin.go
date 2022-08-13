@@ -177,6 +177,8 @@ func LoadSkin() {
 	// Currently head and tail use note's image.
 	for i, kind := range []int{1, 2, 3, 3} {
 		noteImages[i] = NewImage(fmt.Sprintf("skin/note/note/%d.png", kind))
+		headImages[i] = NewImage(fmt.Sprintf("skin/note/head/%d.png", kind))
+		tailImages[i] = NewImage(fmt.Sprintf("skin/note/tail/%d.png", kind))
 		// bodyImages[i] = NewImage(fmt.Sprintf("skin/note/body/%d.png", kind))
 		{
 			f, err := os.Open(fmt.Sprintf("skin/note/body/%d.png", kind))
@@ -190,8 +192,6 @@ func LoadSkin() {
 			}
 			bodyImages[i] = src
 		}
-		headImages[i] = NewImage(fmt.Sprintf("skin/note/head/%d.png", kind))
-		tailImages[i] = NewImage(fmt.Sprintf("skin/note/tail/%d.png", kind))
 	}
 	keyUpImage = NewImage("skin/key/up.png")
 	keyDownImage = NewImage("skin/key/down.png")
@@ -206,9 +206,9 @@ func LoadSkin() {
 			KeyUpSprites:      make([]Sprite, keyCount&ScratchMask),
 			KeyDownSprites:    make([]Sprite, keyCount&ScratchMask),
 			NoteSprites:       make([]Sprite, keyCount&ScratchMask),
-			BodySprites:       make([][]Sprite, keyCount&ScratchMask),
 			HeadSprites:       make([]Sprite, keyCount&ScratchMask),
 			TailSprites:       make([]Sprite, keyCount&ScratchMask),
+			BodySprites:       make([][]Sprite, keyCount&ScratchMask),
 		}
 
 		var wsum int
@@ -245,7 +245,7 @@ func LoadSkin() {
 			s.HeadSprites[k] = s.NoteSprites[k]
 			s.HeadSprites[k].I = headImages[kind]
 			s.TailSprites[k] = s.NoteSprites[k]
-			s.HeadSprites[k].I = tailImages[kind]
+			s.TailSprites[k].I = tailImages[kind]
 			x += int(noteWidths[kind])
 		}
 
