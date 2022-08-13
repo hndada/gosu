@@ -27,4 +27,5 @@ go.work
 # custom files
 # /cmd/gosu
 /cmd/gosu/music
+/cmd/gosu/replay
 !/cmd/gosu/skin
