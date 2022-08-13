@@ -23,10 +23,8 @@ go.work
 # local test files
 /*.osu
 /*.osr
-/cmd/gosu/music
-/cmd/gosu/replay
-/cmd/gosu/skin-1
-/cmd/gosu/skin-2
 
-/cmd/gosu/*.txt
-!/cmd/gosu/a.txt
+# custom files
+# /cmd/gosu
+/cmd/gosu/music
+!/cmd/gosu/skin
