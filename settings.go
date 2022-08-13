@@ -54,6 +54,11 @@ var (
 	FieldDark float64 = 0.8
 )
 
+var (
+	TimingMeterWidth  float64 = 4 // The number of pixels per 1ms
+	TimingMeterHeight float64 = 75
+)
+
 // Todo: Should NoteHeight be separated into NoteHeight, HeadHeight, TailHeight?
 var (
 	ComboPosition    float64 = screenSizeY * 0.40
@@ -80,7 +85,6 @@ var (
 
 	BodySpriteStyle = BodySpriteStyleStretch
 )
-var TimingMeterUnit = 5 // The number of pixels per 1ms
 
 // 1 pixel is 1 millisecond.
 func ExposureTime(speed float64) float64 { return (HitPosition + NoteHeigth/2) / speed }

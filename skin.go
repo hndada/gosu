@@ -25,7 +25,24 @@ type GeneralSkinStruct struct { // Singleton
 	JudgmentSprites   []Sprite
 	CursorSprites     [2]Sprite // 0: cursor // 1: additive cursor
 	// CursorTailSprite   Sprite
+	TimingMeterSprite       Sprite
+	TimingMeterUnitSprite   Sprite
+	TimingMeterAnchorSprite Sprite
 }
+
+var (
+	dark = color.NRGBA{0, 0, 0, 128}
+
+	white  = color.NRGBA{255, 255, 255, 192}
+	red    = color.NRGBA{255, 0, 0, 128}
+	purple = color.NRGBA{213, 0, 242, 128}
+
+	gray   = color.NRGBA{109, 120, 134, 255}
+	yellow = color.NRGBA{244, 177, 0, 255}
+	lime   = color.NRGBA{51, 255, 40, 255}
+	sky    = color.NRGBA{85, 251, 255, 255}
+	blue   = color.NRGBA{0, 170, 242, 255}
+)
 
 // Todo: should each skin has own skin settings?
 // Todo: BarLine color settings
@@ -96,6 +113,52 @@ func LoadSkin() {
 		s.ApplyScale(CursorScale)
 		g.CursorSprites[i] = s
 	}
+	{ // Timing meter. the height of colored rectangle is 1/4 of meter's.
+		meterW := 1 + 2*int(TimingMeterWidth)*int(Miss.Window)
+		meterH := int(TimingMeterHeight)
+		meter := image.NewRGBA(image.Rect(0, 0, meterW, meterH))
+		draw.Draw(meter, meter.Bounds(), &image.Uniform{dark}, image.Point{}, draw.Src)
+		y1, y2 := int(float64(meterH)*0.375), int(float64(meterH)*0.625)
+		for i, color := range []color.NRGBA{gray, yellow, lime, sky, blue} {
+			j := Judgments[4-i]
+			w := 1 + 2*int(TimingMeterWidth)*int(j.Window)
+			x1 := int(TimingMeterWidth) * (int(Miss.Window - j.Window))
+			x2 := x1 + w
+			rect := image.Rect(x1, y1, x2, y2)
+			draw.Draw(meter, rect, &image.Uniform{color}, image.Point{}, draw.Src)
+		}
+		// rect := image.Rect(meterW/2-int(TimingMeterWidth/2), 0, meterW/2+int(TimingMeterWidth/2), meterH)
+		// draw.Draw(meter, rect, &image.Uniform{color.Black}, image.Point{}, draw.Src) // Todo: need a check draw.Src
+		g.TimingMeterSprite = Sprite{
+			I: ebiten.NewImageFromImage(meter),
+			W: float64(meterW),
+			H: float64(meterH),
+			Y: screenSizeY - TimingMeterHeight,
+		}
+		g.TimingMeterSprite.SetCenterX(screenSizeX / 2)
+
+		// Draw middle anchor of timing meter.
+		anchor := ebiten.NewImage(int(TimingMeterWidth), int(TimingMeterHeight))
+		anchor.Fill(red)
+		g.TimingMeterAnchorSprite = Sprite{
+			I: anchor,
+			W: TimingMeterWidth,
+			H: TimingMeterHeight,
+			Y: screenSizeY - TimingMeterHeight,
+		}
+		g.TimingMeterAnchorSprite.SetCenterX(screenSizeX / 2)
+
+		unit := ebiten.NewImage(int(TimingMeterWidth), int(TimingMeterHeight))
+		unit.Fill(white)
+		g.TimingMeterUnitSprite = Sprite{
+			I: unit,
+			W: TimingMeterWidth,
+			H: TimingMeterHeight,
+			// TimingMeterUnitSprite's x value is not fixed.
+			Y: screenSizeY - TimingMeterHeight,
+		}
+	}
+
 	GeneralSkin = g
 
 	// Following sprites are dependent of key count.

@@ -148,6 +148,12 @@ func (s ScenePlay) ScoreBound() float64 {
 	return math.Ceil(fs + as + rs)
 }
 
+type Mark struct {
+	TimeDiff int64
+	BornTick int
+	IsTail   bool
+}
+
 // // MarkedNoteCount is for calculating ratio.
 // func (s ScenePlay) MarkedNoteCount() int {
 // 	sum := 0
