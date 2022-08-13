@@ -2,6 +2,7 @@ package gosu
 
 import (
 	"fmt"
+	"image/color"
 	"io"
 	"math"
 
@@ -20,8 +21,9 @@ var (
 	MaxComboCountdown    int = MsecToTick(2000)
 	MaxJudgmentCountdown int = MsecToTick(600)
 	// The following formula is for make score scroll speed constant regardless of TPS.
-	DelayedScorePower float64 = 1 - math.Exp(-math.Log(MaxScore)/(float64(MaxTPS)*0.4))
-	MinKeyDownTicks   int     = MsecToTick(30)
+	DelayedScorePower       float64 = 1 - math.Exp(-math.Log(MaxScore)/(float64(MaxTPS)*0.4))
+	MinKeyDownTicks         int     = MsecToTick(30)
+	TimingMeterUnitLifetime int     = MsecToTick(4000)
 )
 
 // ScenePlay: struct, PlayScene: function
@@ -63,6 +65,8 @@ type ScenePlay struct {
 	DelayedScore          float64
 	BarLineTimes          []int64
 	LowestBarLineIndex    int
+
+	Marks []Mark // For drawing timing meter.
 }
 
 // Todo: May user change speed during playing
@@ -148,8 +152,8 @@ func (s *ScenePlay) Update(g *Game) {
 			}
 			continue
 		}
-
 		if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
+			s.Marks = append(s.Marks, Mark{td, s.Tick, n.Type == Tail})
 			s.MarkNote(n, j)
 			if worst.Window < j.Window {
 				worst = j
@@ -195,6 +199,14 @@ func (s *ScenePlay) Update(g *Game) {
 			s.KeyDownCountdowns[k]--
 		}
 	}
+	// Drop old marks.
+	if len(s.Marks) > 0 {
+		var i int
+		for s.Tick-s.Marks[i].BornTick > TimingMeterUnitLifetime {
+			i++
+		}
+		s.Marks = s.Marks[i:]
+	}
 	s.Tick++
 }
 func (s ScenePlay) Draw(screen *ebiten.Image) {
@@ -207,6 +219,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.DrawLongNotes(screen)
 	s.DrawNotes(screen)
 	s.DrawKeys(screen)
+	s.DrawTimingMeter(screen)
 	s.DrawCombo(screen)
 	s.DrawJudgment(screen)
 	s.DrawScore(screen)
@@ -334,7 +347,24 @@ func (s ScenePlay) DrawKeys(screen *ebiten.Image) {
 		}
 	}
 }
-
+func (s ScenePlay) DrawTimingMeter(screen *ebiten.Image) {
+	s.TimingMeterSprite.Draw(screen)
+	for _, mark := range s.Marks {
+		t := s.Tick - mark.BornTick
+		age := float64(t) / float64(TimingMeterUnitLifetime)
+		sprite := s.TimingMeterUnitSprite
+		sprite.X = screenSizeX/2 + float64(mark.TimeDiff)*TimingMeterWidth
+		op := sprite.Op()
+		switch {
+		case age < 0.8:
+			sprite.Draw(screen)
+		case age >= 0.8:
+			op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 255, uint8(192 - 192*(age-0.8)/0.2)})
+			screen.DrawImage(sprite.I, op)
+		}
+	}
+	s.TimingMeterAnchorSprite.Draw(screen)
+}
 func (s ScenePlay) Time() int64 { // In milliseconds.
 	return int64(float64(s.Tick) / float64(MaxTPS) * 1000)
 }
