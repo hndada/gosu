@@ -198,7 +198,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f\nFlow: %.2f\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
-			"Speed: %.0f\n(Base speed: %.0f)\n(Exposure time: %.fms)\n\n",
+			"Speed: %.0f/%.0f\n(Exposure time: %.fms)\n\n",
 		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.EndTime())/1000,
 		s.Score(), s.Flow, s.Combo,
 		fr*100, ar*100, rr*100, s.JudgmentCounts,

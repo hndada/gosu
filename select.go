@@ -30,6 +30,8 @@ type ChartInfo struct {
 	Box   Sprite
 }
 
+func (s *SceneSelect) HandleMove() {}
+
 type SceneSelect struct {
 	ChartInfos []ChartInfo
 	Cursor     int
