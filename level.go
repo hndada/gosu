@@ -75,7 +75,7 @@ func (c Chart) Difficulties() []float64 {
 
 // Todo: Variate factors based on difficulty-skewed charts
 var (
-	FlowScoreFactor  float64 = 0.5 // a
-	AccScoreFactor   float64 = 5   // b
-	RatioScoreFactor float64 = 2   // c
+	FlowScoreFactor     float64 = 0.5 // a
+	AccScoreFactor      float64 = 5   // b
+	KoolRateScoreFactor float64 = 2   // c
 )

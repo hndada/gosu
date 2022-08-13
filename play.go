@@ -20,7 +20,7 @@ var (
 	MaxComboCountdown    int = MsecToTick(2000)
 	MaxJudgmentCountdown int = MsecToTick(600)
 	// The following formula is for make score scroll speed constant regardless of TPS.
-	DelayedScorePower float64 = 1 - math.Exp(-math.Log(ScoreMaxTotal)/(float64(MaxTPS)*0.4))
+	DelayedScorePower float64 = 1 - math.Exp(-math.Log(MaxScore)/(float64(MaxTPS)*0.4))
 )
 
 // ScenePlay: struct, PlayScene: function
@@ -38,12 +38,6 @@ type ScenePlay struct {
 	LowestTails  []*PlayNote // For drawing long note efficiently
 	*TransPoint
 
-	Combo          int
-	Flow           float64
-	FlowSum        float64
-	AccSum         float64 // It can be derived from JudgmentCounts
-	JudgmentCounts []int
-
 	Play        bool // Whether the scene is for play or not
 	MusicFile   io.ReadSeekCloser
 	MusicPlayer AudioPlayer
@@ -55,13 +49,24 @@ type ScenePlay struct {
 	DelayedScore          float64
 	BarLineTimes          []int64
 	LowestBarLineIndex    int
+
+	Combo int
+	// NoteWeights is a sum of weight of marked notes.
+	// This is also max value of each score sum can get at the time.
+	NoteWeights    float64
+	MaxNoteWeights float64 // Upper bound of NoteWeights
+	Flow           float64
+	FlowSum        float64
+	AccSum         float64
+	KoolSum        float64
+	JudgmentCounts []int
 }
 
 // Todo: May user change speed during playing
 func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay {
 	s := new(ScenePlay)
 	s.Chart = c
-	s.PlayNotes, s.StagedNotes, s.LowestTails = NewPlayNotes(c) // Todo: add Mods to input param
+	s.PlayNotes, s.StagedNotes, s.LowestTails, s.MaxNoteWeights = NewPlayNotes(c) // Todo: add Mods to input param
 	s.MainBPM, _, _ = c.BPMs()
 	s.BaseSpeed = BaseSpeed // From global variable
 	waitBefore := DefaultWaitBefore
@@ -178,7 +183,6 @@ func (s *ScenePlay) Update(g *Game) {
 func (s ScenePlay) Draw(screen *ebiten.Image) {
 	bgop := s.Background.Op()
 	bgop.ColorM.ChangeHSV(0, 1, BgDimness)
-	// bgop.Filter = ebiten.FilterLinear
 	screen.DrawImage(s.Background.I, bgop)
 	s.FieldSprite.Draw(screen)
 	s.HintSprite.Draw(screen)
@@ -189,18 +193,19 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.DrawJudgment(screen)
 	s.DrawScore(screen)
 	var fr, ar, rr float64 = 1, 1, 1
-	if s.MarkedNoteCount() > 0 {
-		fr = s.FlowSum / float64(s.MarkedNoteCount())
-		ar = s.AccSum / float64(s.MarkedNoteCount())
-		rr = float64(s.JudgmentCounts[0]) / float64(s.MarkedNoteCount())
+	if s.NoteWeights > 0 {
+		fr = s.FlowSum / s.NoteWeights
+		ar = s.AccSum / s.NoteWeights
+		rr = s.KoolSum / s.NoteWeights
 	}
+
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
-			"Score: %.0f\nFlow: %.2f\nCombo: %d\n\n"+
+			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
-			"Speed: %.0f/%.0f\n(Exposure time: %.fms)\n\n",
+			"Speed: %.0f | %.0f\n(Exposure time: %.fms)\n\n",
 		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.EndTime())/1000,
-		s.Score(), s.Flow, s.Combo,
+		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
 		fr*100, ar*100, rr*100, s.JudgmentCounts,
 		s.Speed()*100, s.BaseSpeed*100, ExposureTime(s.Speed())))
 }
@@ -209,6 +214,9 @@ func (s ScenePlay) DrawBarLine(screen *ebiten.Image) {
 	for _, t := range s.BarLineTimes[s.LowestBarLineIndex:] {
 		sprite := s.BarLineSprite
 		sprite.Y = s.Position(t) + NoteHeigth/2
+		if sprite.Y < 0 {
+			break
+		}
 		sprite.Draw(screen)
 	}
 }
