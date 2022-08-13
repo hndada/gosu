@@ -15,12 +15,13 @@ const (
 	DefaultWaitAfter  int64 = 3 * 1000
 )
 
-// Todo: tick dependent variables should not be global variable.
+// Todo: tick dependent variables should not be global.
 var (
 	MaxComboCountdown    int = MsecToTick(2000)
 	MaxJudgmentCountdown int = MsecToTick(600)
 	// The following formula is for make score scroll speed constant regardless of TPS.
 	DelayedScorePower float64 = 1 - math.Exp(-math.Log(MaxScore)/(float64(MaxTPS)*0.4))
+	MinKeyDownTicks   int     = MsecToTick(30)
 )
 
 // ScenePlay: struct, PlayScene: function
@@ -28,27 +29,20 @@ type ScenePlay struct {
 	Chart     *Chart
 	PlayNotes []*PlayNote
 
-	MainBPM      float64
-	BaseSpeed    float64
-	Tick         int
-	FetchPressed func() []bool
-	LastPressed  []bool
-	Pressed      []bool
-	StagedNotes  []*PlayNote
-	LowestTails  []*PlayNote // For drawing long note efficiently
+	MainBPM           float64
+	BaseSpeed         float64
+	Tick              int
+	FetchPressed      func() []bool
+	LastPressed       []bool
+	Pressed           []bool
+	KeyDownCountdowns []int // For drawing delayed keys. Values are ticks.
+	StagedNotes       []*PlayNote
+	LowestTails       []*PlayNote // For drawing long note efficiently
 	*TransPoint
 
 	Play        bool // Whether the scene is for play or not
 	MusicFile   io.ReadSeekCloser
 	MusicPlayer AudioPlayer
-	Skin
-	Background            Sprite
-	LastJudgment          Judgment
-	LastJudgmentCountdown int
-	ComboCountdown        int
-	DelayedScore          float64
-	BarLineTimes          []int64
-	LowestBarLineIndex    int
 
 	Combo int
 	// NoteWeights is a sum of weight of marked notes.
@@ -60,6 +54,15 @@ type ScenePlay struct {
 	AccSum         float64
 	KoolSum        float64
 	JudgmentCounts []int
+
+	Skin
+	Background            Sprite
+	LastJudgment          Judgment
+	LastJudgmentCountdown int
+	ComboCountdown        int
+	DelayedScore          float64
+	BarLineTimes          []int64
+	LowestBarLineIndex    int
 }
 
 // Todo: May user change speed during playing
@@ -81,6 +84,7 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	}
 	s.LastPressed = make([]bool, c.KeyCount)
 	s.Pressed = make([]bool, c.KeyCount)
+	s.KeyDownCountdowns = make([]int, c.KeyCount)
 	s.TransPoint = s.Chart.TransPoints[0]
 	for s.TransPoint.Time == s.TransPoint.Next.Time {
 		s.TransPoint = s.TransPoint.Next
@@ -116,8 +120,16 @@ func (s *ScenePlay) Update(g *Game) {
 	for s.TransPoint.Next != nil && s.TransPoint.Next.Time <= s.Time() {
 		s.TransPoint = s.TransPoint.Next
 	}
+	pressed := s.FetchPressed()
+	for k, p := range pressed {
+		lp := s.LastPressed[k]
+		if !lp && p {
+			s.KeyDownCountdowns[k] = MinKeyDownTicks
+		}
+	}
 	s.LastPressed = s.Pressed
-	s.Pressed = s.FetchPressed()
+	s.Pressed = pressed
+
 	var worst Judgment
 	for k, n := range s.StagedNotes {
 		if n == nil {
@@ -178,6 +190,11 @@ func (s *ScenePlay) Update(g *Game) {
 		s.LowestBarLineIndex++
 		t = s.BarLineTimes[s.LowestBarLineIndex]
 	}
+	for k, d := range s.KeyDownCountdowns {
+		if d > 0 {
+			s.KeyDownCountdowns[k]--
+		}
+	}
 	s.Tick++
 }
 func (s ScenePlay) Draw(screen *ebiten.Image) {
@@ -189,6 +206,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.DrawBarLine(screen)
 	s.DrawLongNotes(screen)
 	s.DrawNotes(screen)
+	s.DrawKeys(screen)
 	s.DrawCombo(screen)
 	s.DrawJudgment(screen)
 	s.DrawScore(screen)
@@ -304,6 +322,16 @@ func (s ScenePlay) DrawScore(screen *ebiten.Image) {
 		sprite := s.ScoreSprites[v]
 		sprite.X = x + (s.ScoreSprites[0].W - sprite.W/2)
 		sprite.Draw(screen)
+	}
+}
+
+func (s ScenePlay) DrawKeys(screen *ebiten.Image) {
+	for k, p := range s.Pressed {
+		if p || s.KeyDownCountdowns[k] > 0 {
+			s.KeyDownSprites[k].Draw(screen)
+		} else {
+			s.KeyUpSprites[k].Draw(screen)
+		}
 	}
 }
 
