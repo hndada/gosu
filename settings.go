@@ -56,7 +56,7 @@ var (
 
 var (
 	TimingMeterWidth  float64 = 4 // The number of pixels per 1ms
-	TimingMeterHeight float64 = 75
+	TimingMeterHeight float64 = 50
 )
 
 // Todo: Should NoteHeight be separated into NoteHeight, HeadHeight, TailHeight?
@@ -76,10 +76,10 @@ const (
 // Skin scale settings
 // Todo: make the struct SkinScaleSettings
 var (
-	ComboScale    float64 = 0.75
-	ComboGap      float64 = screenSizeX * -0.0008
+	ComboScale    float64 = 1.1                 // 0.75
+	ComboGap      float64 = screenSizeX * -0.01 // -0.0008
 	ScoreScale    float64 = 0.65
-	JudgmentScale float64 = 0.33
+	JudgmentScale float64 = 0.5 // 0.33
 	HintHeight    float64 = screenSizeY * 0.04
 	CursorScale   float64 = 0.1
 
