@@ -30,6 +30,7 @@ type ChartInfo struct {
 	Box   Sprite
 }
 
+// PlaySoundMove
 func (s *SceneSelect) HandleMove() {}
 
 type SceneSelect struct {
@@ -323,9 +324,6 @@ func (s *SceneSelect) Update(g *Game) {
 // May add extra effect to box arrangement.
 // x -= y / 5, for example.
 func (s SceneSelect) Draw(screen *ebiten.Image) {
-	// bgop := s.Background.Op()
-	// bgop.Filter = ebiten.FilterLinear
-	// screen.DrawImage(s.Background.I, bgop)
 	s.Background.Draw(screen)
 	for i := range s.ChartInfos {
 		y := (i-s.Cursor)*bh + screenSizeY/2 - bh/2
@@ -340,12 +338,13 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		op.GeoM.Translate(float64(x), float64(y))
 		screen.DrawImage(s.ChartInfos[i].Box.I, op)
 	}
-	{
-		sprite := GeneralSkin.CursorSprites[0]
-		x, y := ebiten.CursorPosition()
-		sprite.X, sprite.Y = float64(x), float64(y)
-		sprite.Draw(screen)
-	}
+	// Code of drawing cursor
+	// {
+	// 	sprite := GeneralSkin.CursorSprites[0]
+	// 	x, y := ebiten.CursorPosition()
+	// 	sprite.X, sprite.Y = float64(x), float64(y)
+	// 	sprite.Draw(screen)
+	// }
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf("BaseSpeed (Press Q/W): %.0f\n(Exposure time: %.0fms)\n\nVolume (Press A/S): %d%%\nHold:%d\nReplay mode (Press Z): %v\n", // %.1f
 			BaseSpeed*100, ExposureTime(BaseSpeed), int(Volume*100), s.Hold, s.ReplayMode))
