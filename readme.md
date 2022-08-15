@@ -1,4 +1,4 @@
-# gosu
+# gosu (private)
 
 A classic rhythm game written in go
 
