@@ -58,6 +58,8 @@ type Skin struct {
 	FieldSprite   Sprite
 	HintSprite    Sprite
 	BarLineSprite Sprite // Seperator of each bar (aka measure)
+
+	// BodySpritesTest []Sprite
 }
 
 var SkinMap = make(map[int]Skin)
@@ -209,6 +211,7 @@ func LoadSkin() {
 			HeadSprites:       make([]Sprite, keyCount&ScratchMask),
 			TailSprites:       make([]Sprite, keyCount&ScratchMask),
 			BodySprites:       make([][]Sprite, keyCount&ScratchMask),
+			// BodySpritesTest:   make([]Sprite, keyCount&ScratchMask),
 		}
 
 		var wsum int
@@ -253,6 +256,7 @@ func LoadSkin() {
 		x = screenSizeX/2 - wsum/2
 		for k, kind := range noteKinds {
 			src := bodyImages[kind]
+
 			w := int(noteWidths[kind])
 			scale := float64(w) / float64(src.Bounds().Dx())
 			h := int(scale * float64(src.Bounds().Dy()))
@@ -278,6 +282,27 @@ func LoadSkin() {
 					// BodySprites's y value is not fixed.
 				})
 			}
+
+			// This is for test.
+			// {
+			// 	w := int(noteWidths[kind])
+			// 	scale := float64(w) / float64(src.Bounds().Dx())
+			// 	h := int(scale * float64(src.Bounds().Dy()))
+			// 	dst := image.NewRGBA(image.Rect(0, 0, int(w), screenSizeY))
+			// 	for rect := image.Rect(0, 0, w, h); rect.Min.Y < dst.Bounds().Dy(); {
+			// 		draw.BiLinear.Scale(dst, rect, src, src.Bounds(), draw.Over, nil)
+			// 		rect.Min.Y += h
+			// 		rect.Max.Y += h
+			// 	}
+			// 	s.BodySpritesTest[k] = Sprite{
+			// 		I: ebiten.NewImageFromImage(dst),
+			// 		W: float64(dst.Bounds().Dx()), // noteWidths[kind]
+			// 		H: float64(dst.Bounds().Dy()), // screenSizeY
+			// 	}
+			// 	s.BodySpritesTest[k].X = float64(x)
+			// 	// BodySprites's y value is not fixed.
+			// }
+
 			x += int(noteWidths[kind])
 		}
 
