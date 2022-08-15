@@ -75,6 +75,7 @@ func (s *ScenePlay) DrawLongNotes(screen *ebiten.Image) {
 			if bottom > screenSizeY {
 				bottom = screenSizeY
 			}
+
 			var pow int
 			y := float64(top)
 			for length := bottom - top; length > 0; length /= 2 {
@@ -91,6 +92,20 @@ func (s *ScenePlay) DrawLongNotes(screen *ebiten.Image) {
 				screen.DrawImage(sprite.I, op)
 				y += sprite.H // 1 << pow
 				pow++
+			}
+
+			// Test case: draw long note by SubImage.
+			{
+				// sprite := s.BodySpritesTest[k]
+				// sprite.Y = float64(top)
+				// op := sprite.Op()
+				// if n.Marked {
+				// 	op.ColorM.ChangeHSV(0, 0.3, 0.3)
+				// }
+				// rect := sprite.I.Bounds()
+				// rect.Max.Y = bottom - top
+
+				// screen.DrawImage(sprite.I.SubImage(rect).(*ebiten.Image), op)
 			}
 		}
 	}
