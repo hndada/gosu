@@ -216,7 +216,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.FieldSprite.Draw(screen)
 	s.HintSprite.Draw(screen)
 	s.DrawBarLine(screen)
-	s.DrawLongNotes(screen)
+	s.DrawLongNoteBodys(screen)
 	s.DrawNotes(screen)
 	s.DrawKeys(screen)
 	s.DrawTimingMeter(screen)
