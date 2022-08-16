@@ -1,10 +1,9 @@
-package gosu
+package mode
 
 import (
 	"path/filepath"
-	"sort"
 
-	"github.com/hndada/gosu/parse/osu"
+	"github.com/hndada/gosu/format/osu"
 )
 
 const (
@@ -37,34 +36,6 @@ type ChartHeader struct {
 	VideoTimeOffset int64
 }
 
-// Chart should avoid redundant data as much as possible
-type Chart struct {
-	ChartHeader
-	TransPoints []*TransPoint
-	KeyCount    int
-	Notes       []Note
-	// Level    float64
-	// ScratchMode int
-}
-
-func NewChartFromOsu(o *osu.Format) (*Chart, error) {
-	c := &Chart{
-		ChartHeader: NewChartHeaderFromOsu(o),
-		TransPoints: NewTransPointsFromOsu(o),
-		KeyCount:    int(o.CircleSize),
-		Notes:       make([]Note, 0, len(o.HitObjects)*2),
-	}
-	for _, ho := range o.HitObjects {
-		c.Notes = append(c.Notes, NewNoteFromOsu(ho, c.KeyCount)...)
-	}
-	sort.Slice(c.Notes, func(i, j int) bool {
-		if c.Notes[i].Time == c.Notes[j].Time {
-			return c.Notes[i].Key < c.Notes[j].Key
-		}
-		return c.Notes[i].Time < c.Notes[j].Time
-	})
-	return c, nil
-}
 func NewChartHeaderFromOsu(o *osu.Format) ChartHeader {
 	c := ChartHeader{
 		MusicName:     o.Title,
@@ -92,4 +63,19 @@ func (c ChartHeader) MusicPath(cpath string) string {
 func (c ChartHeader) BackgroundPath(cpath string) string {
 	return filepath.Join(filepath.Dir(cpath), c.ImageFilename)
 }
-func (c Chart) EndTime() int64 { return c.Notes[len(c.Notes)-1].Time }
+
+type Chart struct {
+	ChartHeader
+	TransPoints  []*TransPoint
+	Level        float64
+	EndTime      func() int64
+	Difficulties func() []float64
+}
+
+func NewChartFromOsu(o *osu.Format) Chart {
+	c := Chart{
+		ChartHeader: NewChartHeaderFromOsu(o),
+		TransPoints: NewTransPointsFromOsu(o),
+	}
+	return c
+}

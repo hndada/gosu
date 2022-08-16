@@ -1,67 +1,44 @@
-package gosu
+package piano
 
 import (
 	"math"
-)
 
-type Judgment struct {
-	Flow   float64
-	Acc    float64
-	Window int64
-}
+	"github.com/hndada/gosu/input"
+	"github.com/hndada/gosu/mode"
+)
 
 var (
-	Kool = Judgment{Flow: 0.01, Acc: 1, Window: 20}
-	Cool = Judgment{Flow: 0.01, Acc: 1, Window: 45}
-	Good = Judgment{Flow: 0.01, Acc: 0.25, Window: 75}
-	Bad  = Judgment{Flow: 0.01, Acc: 0, Window: 110} // Todo: Flow 0.01 -> 0?
-	Miss = Judgment{Flow: -1, Acc: 0, Window: 150}
+	Kool = mode.Judgment{Flow: 0.01, Acc: 1, Window: 20}
+	Cool = mode.Judgment{Flow: 0.01, Acc: 1, Window: 45}
+	Good = mode.Judgment{Flow: 0.01, Acc: 0.25, Window: 75}
+	Bad  = mode.Judgment{Flow: 0.01, Acc: 0, Window: 110} // Todo: Flow 0.01 -> 0?
+	Miss = mode.Judgment{Flow: -1, Acc: 0, Window: 150}
 )
 
-var Judgments = []Judgment{Kool, Cool, Good, Bad, Miss}
+var Judgments = []mode.Judgment{Kool, Cool, Good, Bad, Miss}
 
-func Verdict(t NoteType, a KeyAction, td int64) Judgment {
+func Verdict(t NoteType, a input.KeyAction, td int64) mode.Judgment {
 	if t == Tail { // Either Hold or Release when Tail is not scored
 		switch {
 		case td > Miss.Window:
-			if a == Release {
+			if a == input.Release {
 				return Miss
 			}
 		case td < -Miss.Window:
 			return Miss
 		default: // In range
-			if a == Release { // a != Hold
-				return Judge(td)
+			if a == input.Release { // a != Hold
+				return mode.Judge(Judgments, td)
 			}
 		}
 	} else { // Head, Normal
-		switch {
-		case td > Miss.Window:
-			// Does nothing
-		case td < -Miss.Window:
-			return Miss
-		default: // In range
-			if a == Hit {
-				return Judge(td)
-			}
-		}
+		mode.Verdict(Judgments, a, td)
 	}
-	return Judgment{}
-}
-func Judge(td int64) Judgment {
-	if td < 0 { // Absolute value
-		td *= -1
-	}
-	for _, j := range Judgments {
-		if td <= j.Window {
-			return j
-		}
-	}
-	return Judgment{} // Returns None when the input is out of widest range
+	return mode.Judgment{}
 }
 
 // Todo: no getting Flow when hands off the long note
-func (s *ScenePlay) MarkNote(n *PlayNote, j Judgment) {
+func (s *ScenePlay) MarkNote(n *PlayNote, j mode.Judgment) {
 	var a = FlowScoreFactor
 	if j == Miss {
 		s.Combo = 0
@@ -76,10 +53,10 @@ func (s *ScenePlay) MarkNote(n *PlayNote, j Judgment) {
 	} else if s.Flow > 1 {
 		s.Flow = 1
 	}
-	s.FlowSum += math.Pow(s.Flow, a) * n.Weight()
-	s.AccSum += j.Acc * n.Weight()
+	s.Flows += math.Pow(s.Flow, a) * n.Weight()
+	s.Accs += j.Acc * n.Weight()
 	if j.Window == Kool.Window {
-		s.KoolSum += n.Weight()
+		s.Extras += n.Weight()
 	}
 	for i, jk := range Judgments {
 		if jk.Window == j.Window {
@@ -124,9 +101,9 @@ func (s ScenePlay) CalcScore() (fs, as, ks float64) {
 		b = AccScoreFactor
 		c = KoolRateScoreFactor
 	)
-	fs = MaxFlowScore * (s.FlowSum / s.MaxNoteWeights)
-	as = MaxAccScore * math.Pow(s.AccSum/s.MaxNoteWeights, b)
-	ks = MaxKoolRateScore * math.Pow(s.KoolSum/s.MaxNoteWeights, c)
+	fs = MaxFlowScore * (s.Flows / s.MaxNoteWeights)
+	as = MaxAccScore * math.Pow(s.Accs/s.MaxNoteWeights, b)
+	ks = MaxKoolRateScore * math.Pow(s.Extras/s.MaxNoteWeights, c)
 	return
 }
 func (s ScenePlay) ScoreBound() float64 {
@@ -138,29 +115,12 @@ func (s ScenePlay) ScoreBound() float64 {
 	// nc := float64(s.MarkedNoteCount())
 	// s.CurrentMaxNoteWeights - s.NoteWeights
 	// kc := float64(s.JudgmentCounts[0]) // Kool counts
-	fr := s.MaxNoteWeights - (s.NoteWeights - s.FlowSum)
-	ar := s.MaxNoteWeights - (s.NoteWeights - s.AccSum)
-	kr := s.MaxNoteWeights - (s.NoteWeights - s.KoolSum)
+	fr := s.MaxNoteWeights - (s.NoteWeights - s.Flows)
+	ar := s.MaxNoteWeights - (s.NoteWeights - s.Accs)
+	kr := s.MaxNoteWeights - (s.NoteWeights - s.Extras)
 
 	fs := MaxFlowScore * (fr / s.MaxNoteWeights)
 	as := MaxAccScore * math.Pow(ar/s.MaxNoteWeights, b)
 	rs := MaxKoolRateScore * math.Pow(kr/s.MaxNoteWeights, c)
 	return math.Ceil(fs + as + rs)
 }
-
-type Mark struct {
-	TimeDiff int64
-	BornTick int
-	IsTail   bool
-}
-
-// // MarkedNoteCount is for calculating ratio.
-// func (s ScenePlay) MarkedNoteCount() int {
-// 	sum := 0
-// 	for _, c := range s.JudgmentCounts {
-// 		sum += c
-// 	}
-// 	return sum
-// }
-
-// func inRange(td int64, j Judgment) bool { return td < j.Window && td > -j.Window }

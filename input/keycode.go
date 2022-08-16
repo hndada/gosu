@@ -1,4 +1,4 @@
-package gosu
+package input
 
 type Key int
 

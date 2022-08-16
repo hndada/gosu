@@ -2,24 +2,26 @@ package gosu
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/mode/piano"
 )
 
 type Game struct {
 	Scene
 }
 type Scene interface {
-	Update(g *Game)
+	Update() *mode.ScoreResult
 	Draw(screen *ebiten.Image)
 }
 
 var selectScene *SceneSelect
 
 func NewGame() *Game {
-	LoadSkin()
+	piano.LoadSkin()
 	selectScene = NewSceneSelect()
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
-	ebiten.SetMaxTPS(MaxTPS)
+	ebiten.SetMaxTPS(mode.MaxTPS)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	g := &Game{
 		Scene: selectScene,
@@ -27,7 +29,10 @@ func NewGame() *Game {
 	return g
 }
 func (g *Game) Update() error {
-	g.Scene.Update(g)
+	result := g.Scene.Update()
+	if result != nil {
+		g.Scene = selectScene // Todo: selectResult
+	}
 	return nil
 }
 func (g *Game) Draw(screen *ebiten.Image) {

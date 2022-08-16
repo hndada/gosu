@@ -1,7 +1,7 @@
-package gosu
+package mode
 
 import (
-	"github.com/hndada/gosu/parse/osr"
+	"github.com/hndada/gosu/format/osr"
 )
 
 // Todo: Make sure to ReplayListener time is independent of Game's update tick
@@ -30,10 +30,11 @@ func NewReplayListener(f *osr.Format, keyCount int, bufferTime int64) func() []b
 	}
 }
 
-func ReplayScore(c *Chart, rf *osr.Format) int {
-	s := NewScenePlay(c, "", rf, false)
-	for !s.IsFinished() {
-		s.Update(nil)
-	}
-	return int(s.Score())
-}
+// Todo: implement it
+// func ReplayScore(c *Chart, rf *osr.Format) int {
+// 	s := NewScenePlay(c, "", rf, false)
+// 	for !s.IsFinished() {
+// 		s.Update(nil)
+// 	}
+// 	return int(s.Score())
+// }

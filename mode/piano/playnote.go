@@ -1,7 +1,8 @@
-package gosu
+package piano
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/render"
 )
 
 // PlayNote is for in-game. Handled by pointers to modify its fields easily.
@@ -124,7 +125,7 @@ func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 		if td > up || td < down {
 			continue
 		}
-		var sprite Sprite
+		var sprite render.Sprite
 		switch n.Type {
 		case Head:
 			sprite = s.HeadSprites[n.Key]

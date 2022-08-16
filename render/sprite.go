@@ -1,4 +1,4 @@
-package gosu
+package render
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"

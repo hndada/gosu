@@ -1,4 +1,4 @@
-package gosu
+package audio
 
 import (
 	"io"
@@ -16,11 +16,11 @@ const SampleRate = 44100
 
 var Context *audio.Context = audio.NewContext(SampleRate)
 
-type AudioPlayer struct {
+type Player struct {
 	*audio.Player
 }
 
-func NewAudioPlayer(path string) (io.ReadSeekCloser, AudioPlayer) {
+func NewPlayer(path string) (io.ReadSeekCloser, Player) {
 	f, err := os.Open(path)
 	if err != nil {
 		panic(err)
@@ -47,9 +47,10 @@ func NewAudioPlayer(path string) (io.ReadSeekCloser, AudioPlayer) {
 	if err != nil {
 		panic(err)
 	}
-	return f, AudioPlayer{ap}
+	return f, Player{ap}
 }
-func (ap AudioPlayer) PlaySoundEffect() {
-	ap.Play()
-	ap.Rewind()
+
+func (p Player) PlaySoundEffect() {
+	p.Play()
+	p.Rewind()
 }

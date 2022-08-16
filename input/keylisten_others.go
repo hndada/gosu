@@ -1,6 +1,6 @@
 //go:build !windows
 
-package gosu
+package input
 
 func NewListener(keySettings []ebiten.Key) func() []bool {
 	return func() []bool {

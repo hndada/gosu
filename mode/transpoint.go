@@ -1,10 +1,10 @@
-package gosu
+package mode
 
 import (
 	"math"
 	"sort"
 
-	"github.com/hndada/gosu/parse/osu"
+	"github.com/hndada/gosu/format/osu"
 )
 
 type TransPoint struct {
@@ -84,16 +84,16 @@ func NewTransPointsFromOsu(o *osu.Format) []*TransPoint {
 
 // BPM with longest duration will be main BPM.
 // Suppose when there are multiple BPMs with same duration, larger one will be main.
-func (c Chart) BPMs() (main, min, max float64) {
+func BPMs(tps []*TransPoint, endTime int64) (main, min, max float64) {
 	bpmDurations := make(map[float64]int64)
-	for i, tp := range c.TransPoints {
+	for i, tp := range tps {
 		if i == 0 {
 			bpmDurations[tp.BPM] += tp.Time
 		}
-		if i < len(c.TransPoints)-1 {
-			bpmDurations[tp.BPM] += c.TransPoints[i+1].Time - tp.Time
+		if i < len(tps)-1 {
+			bpmDurations[tp.BPM] += tps[i+1].Time - tp.Time
 		} else {
-			bpmDurations[tp.BPM] += c.EndTime() - tp.Time // Bounds to final note time; confirmed with test.
+			bpmDurations[tp.BPM] += endTime - tp.Time // Bounds to final note time; confirmed with test.
 		}
 	}
 	var maxDuration int64
@@ -117,15 +117,15 @@ func (c Chart) BPMs() (main, min, max float64) {
 
 // wb, wa stands for buffer times: wait before, wait after.
 // Multiply wa with 2 for preventing indexing a time slice over length.
-func (c Chart) BarLineTimes(wb, wa int64) []int64 {
+func BarLineTimes(tps []*TransPoint, endTime int64, wb, wa int64) []int64 {
 	ts := make([]int64, 0)
-	tp0 := c.TransPoints[0]
+	tp0 := tps[0]
 	for t := float64(tp0.Time); t >= float64(wb); t -= float64(tp0.Meter) * 60000 / tp0.BPM {
 		ts = append([]int64{int64(t)}, ts...)
 	}
 	ts = ts[:len(ts)-1] // Drop bar line for tp0 for avoiding duplicated
-	for tp := c.TransPoints[0]; tp != nil; tp = tp.NextBPMPoint {
-		next := c.EndTime() + 2*wa
+	for tp := tps[0]; tp != nil; tp = tp.NextBPMPoint {
+		next := endTime + 2*wa
 		if tp.NextBPMPoint != nil {
 			next = tp.NextBPMPoint.Time
 		}
