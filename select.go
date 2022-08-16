@@ -13,9 +13,12 @@ import (
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hndada/gosu/parse/osr"
-	"github.com/hndada/gosu/parse/osu"
+	"github.com/hndada/gosu/audio"
+	"github.com/hndada/gosu/format/osr"
+	"github.com/hndada/gosu/format/osu"
+	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/mode/piano"
+	"github.com/hndada/gosu/render"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/basicfont"
 	"golang.org/x/image/math/fixed"
@@ -24,10 +27,10 @@ import (
 // Todo: should be ChartHeader instead of Chart
 // Todo: might integrate database here
 type ChartInfo struct {
-	Chart *Chart
+	Chart *piano.Chart
 	Path  string
 	Level float64
-	Box   Sprite
+	Box   render.Sprite
 }
 
 // PlaySoundMove
@@ -36,7 +39,7 @@ func (s *SceneSelect) HandleMove() {}
 type SceneSelect struct {
 	ChartInfos []ChartInfo
 	Cursor     int
-	Background Sprite
+	Background render.Sprite
 	Hold       int
 	HoldKey    ebiten.Key
 
@@ -90,17 +93,18 @@ func NewSceneSelect() *SceneSelect {
 				if err != nil {
 					panic(err)
 				}
-				if o.Mode == ModeMania {
-					c, err := NewChartFromOsu(o)
+				switch o.Mode {
+				case mode.ModeMania:
+					c, err := piano.NewChartFromOsu(o)
 					if err != nil {
 						panic(err)
 					}
 					info := ChartInfo{
 						Chart: c,
 						Path:  fpath,
-						Level: c.Level(),
-						Box: Sprite{
-							I: NewBox(c, c.Level()),
+						Level: mode.Level(c.Difficulties()),
+						Box: render.Sprite{
+							I: NewBox(c, mode.Level(c.Difficulties())),
 							W: bw,
 							H: bh,
 						},
@@ -108,6 +112,7 @@ func NewSceneSelect() *SceneSelect {
 					s.ChartInfos = append(s.ChartInfos, info)
 					// box's x value is not fixed.
 					// box's y value is not fixed.
+				case mode.ModeTaiko:
 				}
 			}
 		}
@@ -149,19 +154,19 @@ func NewSceneSelect() *SceneSelect {
 	s.UpdateBackground()
 	s.HoldKey = HoldKeyNone
 	s.Hold = threshold1
-	_, apMove := NewAudioPlayer("skin/default-hover.wav")
+	_, apMove := audio.NewPlayer("skin/default-hover.wav")
 	s.PlaySoundMove = apMove.PlaySoundEffect
-	_, apSelect := NewAudioPlayer("skin/restart.wav")
+	_, apSelect := audio.NewPlayer("skin/restart.wav")
 	s.PlaySoundSelect = apSelect.PlaySoundEffect
 	return s
 }
 func (s *SceneSelect) UpdateBackground() {
-	s.Background = GeneralSkin.DefaultBackground
+	s.Background = mode.DefaultBackground
 	if len(s.ChartInfos) == 0 {
 		return
 	}
 	info := s.ChartInfos[s.Cursor]
-	img := NewImage(info.Chart.BackgroundPath(info.Path))
+	img := render.NewImage(info.Chart.BackgroundPath(info.Path))
 	if img != nil {
 		s.Background.I = img
 	}
@@ -179,7 +184,7 @@ const (
 
 var borderColor = color.RGBA{172, 49, 174, 255} // Purple
 
-func NewBox(c *Chart, lv float64) *ebiten.Image {
+func NewBox(c *piano.Chart, lv float64) *ebiten.Image {
 	img := image.NewRGBA(image.Rect(0, 0, bw, bh))
 	draw.Draw(img, img.Bounds(), &image.Uniform{borderColor}, image.Point{}, draw.Src)
 	inRect := image.Rect(border, border, bw-border, bh-border)
@@ -199,8 +204,8 @@ const HoldKeyNone = -1
 
 // Require holding for a while to move a cursor
 var (
-	threshold1 = MsecToTick(100)
-	threshold2 = MsecToTick(80)
+	threshold1 = mode.TimeToTick(100)
+	threshold2 = mode.TimeToTick(80)
 )
 
 // FetchReplay returns first MD5-matching replay format.
@@ -224,7 +229,7 @@ outer:
 }
 
 // Default HoldKey value is 0, which is Key0.
-func (s *SceneSelect) Update(g *Game) {
+func (s *SceneSelect) Update() {
 	if s.HoldKey == HoldKeyNone {
 		s.Hold++
 		if s.Hold > threshold1 {
@@ -268,46 +273,46 @@ func (s *SceneSelect) Update(g *Game) {
 			s.Cursor += len(s.ChartInfos)
 		}
 		s.UpdateBackground()
-	case ebiten.IsKeyPressed(ebiten.KeyQ):
-		s.HoldKey = ebiten.KeyQ
-		if s.Hold < threshold2 {
-			break
-		}
-		s.Hold = 0
-		BaseSpeed -= 0.1
-		if BaseSpeed < 0.1 {
-			BaseSpeed = 0.1
-		}
-	case ebiten.IsKeyPressed(ebiten.KeyW):
-		s.HoldKey = ebiten.KeyW
-		if s.Hold < threshold2 {
-			break
-		}
-		s.Hold = 0
-		BaseSpeed += 0.1
-		if BaseSpeed > 2 {
-			BaseSpeed = 2
-		}
-	case ebiten.IsKeyPressed(ebiten.KeyA):
-		s.HoldKey = ebiten.KeyA
-		if s.Hold < threshold2 {
-			break
-		}
-		s.Hold = 0
-		Volume -= 0.05
-		if Volume < 0 {
-			Volume = 0
-		}
-	case ebiten.IsKeyPressed(ebiten.KeyS):
-		s.HoldKey = ebiten.KeyS
-		if s.Hold < threshold2 {
-			break
-		}
-		s.Hold = 0
-		Volume += 0.05
-		if Volume > 1 {
-			Volume = 1
-		}
+	// case ebiten.IsKeyPressed(ebiten.KeyQ):
+	// 	s.HoldKey = ebiten.KeyQ
+	// 	if s.Hold < threshold2 {
+	// 		break
+	// 	}
+	// 	s.Hold = 0
+	// 	BaseSpeed -= 0.1
+	// 	if BaseSpeed < 0.1 {
+	// 		BaseSpeed = 0.1
+	// 	}
+	// case ebiten.IsKeyPressed(ebiten.KeyW):
+	// 	s.HoldKey = ebiten.KeyW
+	// 	if s.Hold < threshold2 {
+	// 		break
+	// 	}
+	// 	s.Hold = 0
+	// 	BaseSpeed += 0.1
+	// 	if BaseSpeed > 2 {
+	// 		BaseSpeed = 2
+	// 	}
+	// case ebiten.IsKeyPressed(ebiten.KeyA):
+	// 	s.HoldKey = ebiten.KeyA
+	// 	if s.Hold < threshold2 {
+	// 		break
+	// 	}
+	// 	s.Hold = 0
+	// 	Volume -= 0.05
+	// 	if Volume < 0 {
+	// 		Volume = 0
+	// 	}
+	// case ebiten.IsKeyPressed(ebiten.KeyS):
+	// 	s.HoldKey = ebiten.KeyS
+	// 	if s.Hold < threshold2 {
+	// 		break
+	// 	}
+	// 	s.Hold = 0
+	// 	Volume += 0.05
+	// 	if Volume > 1 {
+	// 		Volume = 1
+	// 	}
 	case ebiten.IsKeyPressed(ebiten.KeyZ):
 		s.HoldKey = ebiten.KeyZ
 		if s.Hold < threshold1 {
@@ -345,7 +350,9 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 	// 	sprite.X, sprite.Y = float64(x), float64(y)
 	// 	sprite.Draw(screen)
 	// }
-	ebitenutil.DebugPrint(screen,
-		fmt.Sprintf("BaseSpeed (Press Q/W): %.0f\n(Exposure time: %.0fms)\n\nVolume (Press A/S): %d%%\nHold:%d\nReplay mode (Press Z): %v\n", // %.1f
-			BaseSpeed*100, ExposureTime(BaseSpeed), int(Volume*100), s.Hold, s.ReplayMode))
+
+	// Todo: BaseSpeed
+	// ebitenutil.DebugPrint(screen,
+	// 	fmt.Sprintf("BaseSpeed (Press Q/W): %.0f\n(Exposure time: %.0fms)\n\nVolume (Press A/S): %d%%\nHold:%d\nReplay mode (Press Z): %v\n", // %.1f
+	// 		BaseSpeed*100, ExposureTime(BaseSpeed), int(mode.Volume*100), s.Hold, s.ReplayMode))
 }

@@ -1,6 +1,6 @@
-package gosu
+package piano
 
-import "github.com/hndada/gosu/parse/osu"
+import "github.com/hndada/gosu/format/osu"
 
 type NoteType int
 

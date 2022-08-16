@@ -1,6 +1,6 @@
 //go:build windows
 
-package gosu
+package input
 
 import (
 	"golang.org/x/sys/windows"
