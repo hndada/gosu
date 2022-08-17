@@ -1,6 +1,7 @@
 package mode
 
 import (
+	"crypto/md5"
 	"io"
 	"time"
 
@@ -20,11 +21,12 @@ type ScenePlay struct {
 
 	// MusicFile   io.ReadSeekCloser
 	// MusicStreamer  io.ReadSeeker
-	MusicPlayer    *audio.Player
-	MusicCloser    io.Closer
-	SoundStreamers map[string]io.ReadSeeker
-	SoundClosers   []io.Closer
+	MusicPlayer  *audio.Player
+	MusicCloser  io.Closer
+	SoundBytes   map[string][]byte
+	SoundClosers []io.Closer
 	// A player for Sound is generated at a place.
+	MD5 [md5.Size]byte // MD5 for raw chart file.
 
 	MainBPM   float64
 	BaseSpeed float64 // Todo: BaseSpeed -> SpeedBase
@@ -78,3 +80,15 @@ type PlayToResultArgs struct {
 	// Replay // Todo: implement
 	Result
 }
+
+// func NewPlayToResultArgs(cpath string, result Result) PlayToResultArgs {
+// 	b, err := os.ReadFile(cpath)
+// 	if err != nil {
+// 		fmt.Printf("error occurred at transiting from Play to Result: %s", err)
+// 	}
+// 	return PlayToResultArgs{
+// 		Time:   time.Now(),
+// 		MD5:    md5.Sum(b),
+// 		Result: result,
+// 	}
+// }

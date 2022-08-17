@@ -1,7 +1,10 @@
 package piano
 
 import (
+	"os"
+	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/mode"
@@ -20,15 +23,33 @@ type Chart struct {
 }
 
 // 7 key chart's Mode is 128 + 7 = 135
-func NewChart(f any) *Chart {
+func NewChart(fpath string) (*Chart, error) { // f any
 	var c Chart
+	dat, err := os.ReadFile(fpath)
+	if err != nil {
+		return nil, err
+	}
+	var f any
+	switch strings.ToLower(filepath.Ext(fpath)) {
+	case ".osu":
+		f, err = osu.Parse(dat)
+		if err != nil {
+			return nil, err
+		}
+	}
 	c.ChartHeader = mode.NewChartHeader(f)
 	c.TransPoints = mode.NewTransPoints(f)
-	c.Mode = mode.ModePiano
+
 	switch f := f.(type) {
 	case *osu.Format:
 		c.KeyCount = int(f.CircleSize)
-		c.Mode += c.KeyCount
+		if c.KeyCount <= 4 {
+			c.Mode = mode.ModePiano4
+		} else {
+			c.Mode = mode.ModePiano7
+		}
+		// c.Mode = mode.ModePiano
+		// c.Mode += c.KeyCount
 		c.Notes = make([]Note, 0, len(f.HitObjects)*2)
 		for _, ho := range f.HitObjects {
 			c.Notes = append(c.Notes, NewNote(ho, c.KeyCount)...)
@@ -50,5 +71,5 @@ func NewChart(f any) *Chart {
 			c.NoteCounts[1]++
 		}
 	}
-	return &c
+	return &c, nil
 }

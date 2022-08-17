@@ -1,4 +1,4 @@
-package audio
+package audioutil
 
 import (
 	"io"
@@ -20,33 +20,42 @@ var Context *audio.Context = audio.NewContext(SampleRate)
 // 	audio.Player
 // }
 
-func NewStreamer(path string) (io.ReadSeeker, io.Closer) { // (io.ReadSeekCloser, *audio.Player) {
+// (io.ReadSeeker, io.Closer, error) { // (io.ReadSeekCloser, *audio.Player) {
+func NewBytes(path string) ([]byte, io.Closer, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 	var s io.ReadSeeker
 	switch strings.ToLower(filepath.Ext(path)) {
 	case ".mp3":
 		s, err = mp3.DecodeWithSampleRate(SampleRate, io.ReadSeekCloser(f))
 		if err != nil {
-			panic(err)
+			return nil, nil, err
 		}
 	case ".wav":
 		s, err = wav.DecodeWithSampleRate(SampleRate, io.ReadSeekCloser(f))
 		if err != nil {
-			panic(err)
+			return nil, nil, err
 		}
 	case ".ogg":
 		s, err = vorbis.DecodeWithSampleRate(SampleRate, io.ReadSeekCloser(f))
 		if err != nil {
-			panic(err)
+			return nil, nil, err
 		}
 	}
-	return s, io.Closer(f)
+	b, err := io.ReadAll(s)
+	if err != nil {
+		return nil, nil, err
+	}
+	return b, io.Closer(f), nil
 }
 
-// func (p Player) PlaySoundEffect() {
+//	func (p Player) PlaySoundEffect() {
+//		p.Play()
+//		p.Rewind()
+//	}
+// func PlayAudio(b []byte) {
+// 	p := Context.NewPlayerFromBytes(b)
 // 	p.Play()
-// 	p.Rewind()
 // }
