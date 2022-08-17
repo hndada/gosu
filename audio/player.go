@@ -16,11 +16,11 @@ const SampleRate = 44100
 
 var Context *audio.Context = audio.NewContext(SampleRate)
 
-type Player struct {
-	*audio.Player
-}
+// type Player struct {
+// 	audio.Player
+// }
 
-func NewPlayer(path string) (io.ReadSeekCloser, Player) {
+func NewStreamer(path string) (io.ReadSeeker, io.Closer) { // (io.ReadSeekCloser, *audio.Player) {
 	f, err := os.Open(path)
 	if err != nil {
 		panic(err)
@@ -43,14 +43,10 @@ func NewPlayer(path string) (io.ReadSeekCloser, Player) {
 			panic(err)
 		}
 	}
-	ap, err := Context.NewPlayer(s)
-	if err != nil {
-		panic(err)
-	}
-	return f, Player{ap}
+	return s, io.Closer(f)
 }
 
-func (p Player) PlaySoundEffect() {
-	p.Play()
-	p.Rewind()
-}
+// func (p Player) PlaySoundEffect() {
+// 	p.Play()
+// 	p.Rewind()
+// }

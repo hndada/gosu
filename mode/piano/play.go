@@ -2,10 +2,12 @@ package piano
 
 import (
 	"fmt"
+	"io"
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hndada/gosu/audio"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
@@ -44,17 +46,28 @@ type ScenePlay struct {
 }
 
 // Todo: May user change speed during playing
-func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay {
+func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) (*ScenePlay, error) {
 	s := new(ScenePlay)
-	s.Chart = c // Must be at first
+	s.Chart = c                                            // Must be at first
+	s.MainBPM, _, _ = mode.BPMs(c.TransPoints, c.Duration) // Todo: Need a test
+	s.TransPoint = c.TransPoints[0]
+	for s.TransPoint.Time == s.TransPoint.Next.Time {
+		s.TransPoint = s.TransPoint.Next
+	}
+	s.Flow = 1
 
+	s.Play = play
 	waitBefore := mode.DefaultWaitBefore
 	if rf != nil && rf.BufferTime() < waitBefore {
 		waitBefore = rf.BufferTime()
 	}
 	s.Tick = mode.TimeToTick(waitBefore)
 
-	s.PlayNotes, s.StagedNotes, s.LowestTails, s.MaxNoteWeights = NewPlayNotes(c) // Todo: add Mods to input param
+	// Todo: add Mods to input param
+	s.PlayNotes,
+		s.StagedNotes,
+		s.LowestTails,
+		s.MaxNoteWeights = NewPlayNotes(c)
 
 	s.BaseSpeed = BaseSpeed // From global variable
 
@@ -69,8 +82,9 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	s.JudgmentCounts = make([]int, 5)
 
 	if !s.Play {
-		return s
+		return s, nil
 	}
+
 	s.KeyDownCountdowns = make([]int, c.KeyCount)
 	s.Skin = SkinMap[c.KeyCount]
 	if img := render.NewImage(s.Chart.BackgroundPath(cpath)); img != nil {
@@ -83,8 +97,20 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 	} else {
 		s.Background = mode.DefaultBackground
 	}
-	s.BarLineTimes = mode.BarLineTimes(s.Chart.TransPoints, c.EndTime(), waitBefore, mode.DefaultWaitAfter)
-	return s
+	s.BarLineTimes = mode.BarLineTimes(s.Chart.TransPoints, c.Duration, waitBefore, mode.DefaultWaitAfter)
+
+	var (
+		err           error
+		musicStreamer io.ReadSeeker
+	)
+	musicStreamer, s.MusicCloser = audio.NewStreamer(c.MusicPath(cpath))
+	// s.MusicFile, s.MusicPlayer = audio.NewPlayer(c.MusicPath(cpath))
+	s.MusicPlayer, err = audio.Context.NewPlayer(musicStreamer)
+	s.MusicPlayer.SetVolume(mode.Volume)
+	if err != nil {
+		return s, err
+	}
+	return s, nil
 }
 
 // TPS affects only on Update(), not on Draw().
@@ -154,9 +180,8 @@ func (s *ScenePlay) Update() any {
 
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished() {
 		s.MusicPlayer.Close()
-		s.MusicFile.Close()
-
-		return &s.ScoreResult
+		s.MusicCloser.Close()
+		return &s.Result
 	}
 	if s.Tick == 0 {
 		s.MusicPlayer.Play()
@@ -210,7 +235,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
 			"Speed: %.0f | %.0f\n(Exposure time: %.fms)\n\n",
-		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.EndTime())/1000,
+		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.Duration)/1000,
 		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
 		fr*100, ar*100, rr*100, s.JudgmentCounts,
 		s.Speed()*100, s.BaseSpeed*100, ExposureTime(s.Speed())))
@@ -344,7 +369,7 @@ func (s ScenePlay) DrawKeys(screen *ebiten.Image) {
 // }
 
 func (s ScenePlay) IsFinished() bool {
-	return s.Time() > s.Chart.EndTime()+mode.DefaultWaitAfter
+	return s.Time() > s.Chart.Duration+mode.DefaultWaitAfter
 }
 
 func (s ScenePlay) BeatRatio() float64 { return s.TransPoint.BPM / s.MainBPM }

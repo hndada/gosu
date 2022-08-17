@@ -8,7 +8,7 @@ type Judgment struct {
 	Window int64
 }
 
-type ScoreResult struct {
+type Result struct {
 	FinalScore float64
 	FlowScore  float64
 	AccScore   float64

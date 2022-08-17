@@ -28,28 +28,31 @@ type Note struct {
 }
 
 // A sample sound file should be lazy loaded.
-func NewNoteFromOsu(ho osu.HitObject, keyCount int) []Note {
+func NewNote(f any, keyCount int) []Note {
 	ns := make([]Note, 0, 2)
-	n := Note{
-		Type:           Normal,
-		Time:           int64(ho.Time),
-		Time2:          int64(ho.Time),
-		Key:            ho.Column(keyCount),
-		SampleFilename: ho.HitSample.Filename,
-		SampleVolume:   ho.HitSample.Volume,
-	}
-	if ho.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
-		n.Type = Head
-		n.Time2 = int64(ho.EndTime)
-		n2 := Note{ // Tail has no sample sound.
-			Type:  Tail,
-			Time:  n.Time2,
-			Time2: n.Time,
-			Key:   n.Key,
+	switch f := f.(type) {
+	case osu.HitObject:
+		n := Note{
+			Type:           Normal,
+			Time:           int64(f.Time),
+			Time2:          int64(f.Time),
+			Key:            f.Column(keyCount),
+			SampleFilename: f.HitSample.Filename,
+			SampleVolume:   f.HitSample.Volume,
 		}
-		ns = append(ns, n, n2)
-	} else {
-		ns = append(ns, n)
+		if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
+			n.Type = Head
+			n.Time2 = int64(f.EndTime)
+			n2 := Note{ // Tail has no sample sound.
+				Type:  Tail,
+				Time:  n.Time2,
+				Time2: n.Time,
+				Key:   n.Key,
+			}
+			ns = append(ns, n, n2)
+		} else {
+			ns = append(ns, n)
+		}
 	}
 	return ns
 }
