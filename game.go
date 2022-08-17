@@ -30,10 +30,9 @@ func NewGame() *Game {
 	return g
 }
 
-type PlayChartArgs struct {
-	// mode.ChartHeader
-	Mode   int
+type SelectToPlayArgs struct {
 	Path   string
+	Mode   int
 	Replay *osr.Format
 	Play   bool
 }
@@ -43,18 +42,16 @@ func (g *Game) Update() error {
 	if args == nil {
 		return nil
 	}
-	switch args.(type) {
-	case mode.Result:
-		g.Scene = sceneSelect // Todo: selectResult
-	case PlayChartArgs:
-		// header := args.(PlayArgs).ChartHeader
-		path := args.(PlayChartArgs).Path
-		replay := args.(PlayChartArgs).Replay
-		play := args.(PlayChartArgs).Play
-		switch args.(PlayChartArgs).Mode {
-		case mode.ModePiano:
+	switch args := args.(type) {
+	case mode.PlayToResultArgs:
+		// Todo: selectResult
+		g.Scene = sceneSelect
+	case SelectToPlayArgs:
+		switch args.Mode {
+		// case args.Mode&mode.ModePiano != 0:
+		case mode.ModePiano4, mode.ModePiano7:
 			var err error
-			g.Scene, err = piano.NewScenePlay(nil, path, replay, play)
+			g.Scene, err = piano.NewScenePlay(args.Path, args.Replay, args.Play)
 			if err != nil {
 				return err
 			}

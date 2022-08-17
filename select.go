@@ -1,19 +1,16 @@
 package gosu
 
 import (
-	"crypto/md5"
 	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
 	"io"
-	"os"
-	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hndada/gosu/audioutil"
 	"github.com/hndada/gosu/db"
-	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/render"
@@ -31,24 +28,27 @@ func (s *SceneSelect) HandleMove() {}
 
 type SceneSelect struct {
 	ViewMode int
-	View     []db.ChartInfo
-	// ChartInfos []db.ChartInfo
+	View     []db.ChartBox
+	// ChartBoxs []db.ChartBox
 	Cursor     int
 	Background render.Sprite
 	Hold       int
 	HoldKey    ebiten.Key
 
-	ReplayMode    bool
-	IndexToMD5Map map[int][md5.Size]byte
-	MD5ToIndexMap map[[md5.Size]byte]int
-	Replays       []*osr.Format
+	// ReplayMode    bool
+	// IndexToMD5Map map[int][md5.Size]byte
+	// MD5ToIndexMap map[[md5.Size]byte]int
+	// Replays       []*osr.Format
 
-	MusicPlayer    *audio.Player
-	MusicCloser    io.Closer
-	SoundStreamers map[string]io.ReadSeeker
-	SoundClosers   []io.Closer
+	MusicPlayer *audio.Player // May rewind after preview has finished.
+	MusicCloser io.Closer
+	SoundPad    audioutil.SoundPad
+	// SoundBytes   map[string][]byte
+	// SoundClosers []io.Closer
 	// PlaySoundMove   func()
 	// PlaySoundSelect func()
+
+	Mode int
 }
 
 const (
@@ -58,48 +58,18 @@ const (
 )
 
 func NewSceneSelect() *SceneSelect {
-	s := &SceneSelect{
-		View:          make([]db.ChartInfo, 0, 50),
-		IndexToMD5Map: make(map[int][16]byte),
-		MD5ToIndexMap: map[[16]byte]int{},
-		Replays:       make([]*osr.Format, 0, 10),
-	}
-
-	for i, ci := range s.View {
-		d, err := os.ReadFile(ci.Path)
-		if err != nil {
-			panic(err)
-		}
-		s.MD5ToIndexMap[md5.Sum(d)] = i
-		s.IndexToMD5Map[i] = md5.Sum(d)
-	}
-
-	fs, err := os.ReadDir("replay")
-	if err != nil {
-		panic(err)
-	}
-	for _, f := range fs {
-		if f.IsDir() || filepath.Ext(f.Name()) != ".osr" {
-			continue
-		}
-		rd, err := os.ReadFile(filepath.Join("replay", f.Name()))
-		if err != nil {
-			panic(err)
-		}
-		rf, err := osr.Parse(rd)
-		if err != nil {
-			panic(err)
-		}
-		s.Replays = append(s.Replays, rf)
-	}
-
+	// s := &SceneSelect{
+	// 	View:          make([]db.ChartBox, 0, 50),
+	// 	IndexToMD5Map: make(map[int][16]byte),
+	// 	MD5ToIndexMap: map[[16]byte]int{},
+	// 	Replays:       make([]*osr.Format, 0, 10),
+	// }
+	s := new(SceneSelect)
 	s.UpdateBackground()
 	s.HoldKey = HoldKeyNone
 	s.Hold = threshold1
-	_, apMove := audio.NewPlayer("skin/default-hover.wav")
-	s.PlaySoundMove = apMove.PlaySoundEffect
-	_, apSelect := audio.NewPlayer("skin/restart.wav")
-	s.PlaySoundSelect = apSelect.PlaySoundEffect
+	_ = s.SoundPad.Register("skin/default-hover.wav", "move")
+	_ = s.SoundPad.Register("skin/restart.wav", "select")
 	return s
 }
 func (s *SceneSelect) UpdateBackground() {
@@ -108,7 +78,7 @@ func (s *SceneSelect) UpdateBackground() {
 		return
 	}
 	info := s.View[s.Cursor]
-	img := render.NewImage(info.Chart.BackgroundPath(info.Path))
+	img := render.NewImage(info.Header.BackgroundPath(info.Path))
 	if img != nil {
 		s.Background.I = img
 	}
@@ -147,19 +117,19 @@ const HoldKeyNone = -1
 // Require holding for a while to move a cursor
 var (
 	threshold1 = mode.TimeToTick(100)
-	threshold2 = mode.TimeToTick(80)
+	// threshold2 = mode.TimeToTick(80)
 )
 
-// FetchReplay returns first MD5-matching replay format.
-func (s SceneSelect) FetchReplay(i int) *osr.Format {
-	md5 := s.IndexToMD5Map[i]
-	for _, r := range s.Replays {
-		if md5 == r.MD5() {
-			return r
-		}
-	}
-	return nil
-}
+// // FetchReplay returns first MD5-matching replay format.
+// func (s SceneSelect) FetchReplay(i int) *osr.Format {
+// 	md5 := s.IndexToMD5Map[i]
+// 	for _, r := range s.Replays {
+// 		if md5 == r.MD5() {
+// 			return r
+// 		}
+// 	}
+// 	return nil
+// }
 
 // Default HoldKey value is 0, which is Key0.
 func (s *SceneSelect) Update() any {
@@ -177,31 +147,42 @@ func (s *SceneSelect) Update() any {
 	}
 	switch {
 	case ebiten.IsKeyPressed(ebiten.KeyEnter), ebiten.IsKeyPressed(ebiten.KeyNumpadEnter):
-		s.PlaySoundSelect()
+		s.SoundPad.Play("select")
 		info := s.View[s.Cursor]
-		if s.ReplayMode {
-			return PlayChartArgs{
-				Mode:   mode.ModePiano,
-				Path:   info.Path,
-				Replay: s.FetchReplay(s.Cursor),
-				Play:   true,
-			}
-			// g.Scene = NewScenePlay(info.Chart, info.Path, s.FetchReplay(s.Cursor), true)
-		} else {
-			return PlayChartArgs{
-				Mode:   mode.ModePiano,
-				Path:   info.Path,
-				Replay: nil,
-				Play:   true,
-			}
-			// g.Scene = NewScenePlay(info.Chart, info.Path, nil, true)
+		return SelectToPlayArgs{
+			Path:   info.Path,
+			Mode:   s.Mode,
+			Replay: nil,
+			Play:   true,
 		}
+		// switch s.Mode {
+		// case db.ModePiano4, db.ModePiano7, db.ModePiano8:
+
+		// 	g.Scene = piano.NewScenePlay(info.Path, nil, true)
+		// }
+		// if s.ReplayMode {
+		// 	return PlayChartArgs{
+		// 		Mode:   mode.ModePiano,
+		// 		Path:   info.Path,
+		// 		Replay: s.FetchReplay(s.Cursor),
+		// 		Play:   true,
+		// 	}
+		// 	// g.Scene = NewScenePlay(info.Chart, info.Path, s.FetchReplay(s.Cursor), true)
+		// } else {
+		// 	return PlayChartArgs{
+		// 		Mode:   mode.ModePiano,
+		// 		Path:   info.Path,
+		// 		Replay: nil,
+		// 		Play:   true,
+		// 	}
+		// 	// g.Scene = NewScenePlay(info.Chart, info.Path, nil, true)
+		// }
 	case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
 		s.HoldKey = ebiten.KeyArrowDown
 		if s.Hold < threshold1 {
 			break
 		}
-		s.PlaySoundMove()
+		s.SoundPad.Play("move")
 		s.Hold = 0
 		s.Cursor++
 		s.Cursor %= len(s.View)
@@ -211,7 +192,7 @@ func (s *SceneSelect) Update() any {
 		if s.Hold < threshold1 {
 			break
 		}
-		s.PlaySoundMove()
+		s.SoundPad.Play("move")
 		s.Hold = 0
 		s.Cursor--
 		if s.Cursor < 0 {
@@ -258,16 +239,17 @@ func (s *SceneSelect) Update() any {
 	// 	if Volume > 1 {
 	// 		Volume = 1
 	// 	}
-	case ebiten.IsKeyPressed(ebiten.KeyZ):
-		s.HoldKey = ebiten.KeyZ
-		if s.Hold < threshold1 {
-			break
-		}
-		s.Hold = 0
-		s.ReplayMode = !s.ReplayMode
+	// case ebiten.IsKeyPressed(ebiten.KeyZ):
+	// 	s.HoldKey = ebiten.KeyZ
+	// 	if s.Hold < threshold1 {
+	// 		break
+	// 	}
+	// 	s.Hold = 0
+	// 	s.ReplayMode = !s.ReplayMode
 	default:
 		s.HoldKey = HoldKeyNone
 	}
+	return nil
 }
 
 // Currently topmost and bottommost boxes are not adjoined.
@@ -286,7 +268,7 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		}
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(float64(x), float64(y))
-		screen.DrawImage(s.View[i].Box.I, op)
+		// screen.DrawImage(s.View[i].Box.I, op)
 	}
 	// Code of drawing cursor
 	// {

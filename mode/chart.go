@@ -9,12 +9,21 @@ import (
 
 // Now mode consists of main mode + sub mode.
 // Key count and scratch mode are sub modes of Piano mode.
+// const (
+//
+//	ModePiano = 1 << (iota + 7) // 128
+//	ModeDrum                    // 256
+//	ModeJjava                   // 512
+//
+// )
+// const ModeDefault = ModePiano + 4
 const (
-	ModePiano = 1 << (iota + 7) // 128
-	ModeDrum                    // 256
-	ModeJjava                   // 512
+	ModePiano4 = iota // 1 ~ 4 Key
+	ModePiano7        // 5 ~ Key
+	ModeDrum
+	ModeKaraoke // aka jjava
 )
-const ModeDefault = ModePiano + 4
+const ModeDefault = ModePiano4
 const ModeUnknown = -1
 
 // ChartHeader contains non-play information.
@@ -77,6 +86,7 @@ type Chart struct {
 	ChartHeader
 	TransPoints []*TransPoint
 	Mode        int
+	Mode2       int // KeyCount, for example.
 	Duration    int64
 	NoteCounts  []int
 }
@@ -89,14 +99,17 @@ func Mode(fpath string) int {
 		mode, keyCount := osu.Mode(fpath)
 		switch mode {
 		case osu.ModeMania:
-			return ModePiano + keyCount
+			if keyCount <= 4 {
+				return ModePiano4
+			}
+			return ModePiano7
 		case osu.ModeTaiko:
 			return ModeDrum
 		default:
 			return ModeUnknown
 		}
 	case ".ojn", ".bms":
-		return ModePiano
+		return ModePiano7
 	}
 	return ModeUnknown
 }

@@ -2,16 +2,16 @@ package db
 
 import "github.com/hndada/gosu/mode"
 
-const (
-	ModeAll    = iota // Todo: implement
-	ModePiano4        // 1, 2, 3, 4 Key
-	ModePiano7        // 5, 6, 7 Key
-	ModePiano8        // 8 ~ Key
-	ModeDrum
-	ModeJjava
+// const (
+// 	ModeAll    = iota // Todo: implement
+// 	ModePiano4        // 1, 2, 3, 4 Key
+// 	ModePiano7        // 5, 6, 7 Key
+// 	ModePiano8        // 8 ~ Key
+// 	ModeDrum
+// 	ModeJjava
 
-	LastMode
-)
+// 	LastMode
+// )
 
 // Todo: should SortByName's move unit be a set of Chart?
 const (
@@ -21,8 +21,8 @@ const (
 	LastSortBy
 )
 
-var ChartInfos = make(map[string]ChartInfo) // Key is a file path.
-var ChartViews = make([][]ChartInfo, (LastMode-1)*(LastSortBy-1))
+var ChartBoxs = make(map[string]ChartBox) // Key is a file path.
+var ChartViews = make([][]ChartBox, (LastMode-1)*(LastSortBy-1))
 
 func ViewMode(m, sort int) int {
 	var m2 int

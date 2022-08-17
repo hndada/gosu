@@ -2,11 +2,12 @@ package db
 
 import (
 	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/render"
 )
 
 // https://github.com/vmihailenco/msgpack
 // https://github.com/osuripple/cheesegull
-type ChartInfo struct {
+type ChartBox struct {
 	Path   string
 	Header mode.ChartHeader
 	Mode   int
@@ -18,11 +19,12 @@ type ChartInfo struct {
 	MinBPM     float64
 	MaxBPM     float64
 	// Tags       []string // Auto-generated or User-defined
+	Box render.Sprite
 }
 
-func NewChartInfo(c mode.Chart, fpath string, level float64) ChartInfo {
+func NewChartBox(c mode.Chart, fpath string, level float64) ChartBox {
 	mainBPM, minBPM, maxBPM := mode.BPMs(c.TransPoints, c.Duration)
-	return ChartInfo{
+	return ChartBox{
 		Path:   fpath,
 		Header: c.ChartHeader,
 		Mode:   c.Mode,
