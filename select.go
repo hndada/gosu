@@ -8,14 +8,11 @@ import (
 	"image/draw"
 	"os"
 	"path/filepath"
-	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/audio"
 	"github.com/hndada/gosu/format/osr"
-	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/render"
@@ -24,16 +21,11 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
-// Todo: should be ChartHeader instead of Chart
-// Todo: might integrate database here
-type ChartInfo struct {
-	Chart *piano.Chart
-	Path  string
-	Level float64
-	Box   render.Sprite
-}
-
-// PlaySoundMove
+// 1. Load data from local db (It may be skipped since no local db)
+// 2. Find new music, then add to SceneSelect (and also to local db)
+// 3. NewSelectScene
+// 4. NewPlayScene, based on mode. Args: path, mods, replay, play
+// Todo: PlaySoundMove. map[string]func()
 func (s *SceneSelect) HandleMove() {}
 
 type SceneSelect struct {
@@ -65,64 +57,7 @@ func NewSceneSelect() *SceneSelect {
 		MD5ToIndexMap: map[[16]byte]int{},
 		Replays:       make([]*osr.Format, 0, 10),
 	}
-	dirs, err := os.ReadDir(MusicPath)
-	if err != nil {
-		panic(err)
-	}
-	for _, dir := range dirs {
-		if !dir.IsDir() {
-			continue
-		}
-		dpath := filepath.Join(MusicPath, dir.Name())
-		fs, err := os.ReadDir(dpath)
-		if err != nil {
-			panic(err)
-		}
-		for _, f := range fs {
-			if f.IsDir() { // There may be directory e.g., SB
-				continue
-			}
-			fpath := filepath.Join(dpath, f.Name())
-			b, err := os.ReadFile(fpath)
-			if err != nil {
-				panic(err)
-			}
-			switch strings.ToLower(filepath.Ext(fpath)) {
-			case ".osu":
-				o, err := osu.Parse(b)
-				if err != nil {
-					panic(err)
-				}
-				switch o.Mode {
-				case mode.ModeMania:
-					c, err := piano.NewChartFromOsu(o)
-					if err != nil {
-						panic(err)
-					}
-					info := ChartInfo{
-						Chart: c,
-						Path:  fpath,
-						Level: mode.Level(c.Difficulties()),
-						Box: render.Sprite{
-							I: NewBox(c, mode.Level(c.Difficulties())),
-							W: bw,
-							H: bh,
-						},
-					}
-					s.ChartInfos = append(s.ChartInfos, info)
-					// box's x value is not fixed.
-					// box's y value is not fixed.
-				case mode.ModeTaiko:
-				}
-			}
-		}
-	}
-	sort.Slice(s.ChartInfos, func(i, j int) bool {
-		if s.ChartInfos[i].Chart.MusicName == s.ChartInfos[j].Chart.MusicName {
-			return s.ChartInfos[i].Level < s.ChartInfos[j].Level
-		}
-		return s.ChartInfos[i].Chart.MusicName < s.ChartInfos[j].Chart.MusicName
-	})
+
 	for i, ci := range s.ChartInfos {
 		d, err := os.ReadFile(ci.Path)
 		if err != nil {
@@ -229,7 +164,7 @@ outer:
 }
 
 // Default HoldKey value is 0, which is Key0.
-func (s *SceneSelect) Update() {
+func (s *SceneSelect) Update() any {
 	if s.HoldKey == HoldKeyNone {
 		s.Hold++
 		if s.Hold > threshold1 {
@@ -247,9 +182,21 @@ func (s *SceneSelect) Update() {
 		s.PlaySoundSelect()
 		info := s.ChartInfos[s.Cursor]
 		if s.ReplayMode {
-			g.Scene = NewScenePlay(info.Chart, info.Path, s.FetchReplay(s.Cursor), true)
+			return PlayChartArgs{
+				Mode:   mode.ModeMania,
+				Path:   info.Path,
+				Replay: s.FetchReplay(s.Cursor),
+				Play:   true,
+			}
+			// g.Scene = NewScenePlay(info.Chart, info.Path, s.FetchReplay(s.Cursor), true)
 		} else {
-			g.Scene = NewScenePlay(info.Chart, info.Path, nil, true)
+			return PlayChartArgs{
+				Mode:   mode.ModeMania,
+				Path:   info.Path,
+				Replay: nil,
+				Play:   true,
+			}
+			// g.Scene = NewScenePlay(info.Chart, info.Path, nil, true)
 		}
 	case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
 		s.HoldKey = ebiten.KeyArrowDown

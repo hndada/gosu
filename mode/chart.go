@@ -67,9 +67,10 @@ func (c ChartHeader) BackgroundPath(cpath string) string {
 type Chart struct {
 	ChartHeader
 	TransPoints  []*TransPoint
-	Level        float64
+	Mode         int
 	EndTime      func() int64
 	Difficulties func() []float64
+	Level        float64
 }
 
 func NewChartFromOsu(o *osu.Format) Chart {

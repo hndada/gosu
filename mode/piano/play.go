@@ -90,7 +90,7 @@ func NewScenePlay(c *Chart, cpath string, rf *osr.Format, play bool) *ScenePlay 
 // TPS affects only on Update(), not on Draw().
 // Todo: Apply other values of TransPoint
 // Todo: keep playing music when making SceneResult
-func (s *ScenePlay) Update() *mode.ScoreResult {
+func (s *ScenePlay) Update() any {
 	for s.TransPoint.Next != nil && s.TransPoint.Next.Time <= s.Time() {
 		s.TransPoint = s.TransPoint.Next
 	}
