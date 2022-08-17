@@ -2,6 +2,7 @@ package gosu
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
 )
@@ -10,28 +11,50 @@ type Game struct {
 	Scene
 }
 type Scene interface {
-	Update() *mode.ScoreResult
+	Update() any
 	Draw(screen *ebiten.Image)
 }
 
-var selectScene *SceneSelect
+var sceneSelect *SceneSelect
 
 func NewGame() *Game {
 	piano.LoadSkin()
-	selectScene = NewSceneSelect()
+	sceneSelect = NewSceneSelect()
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
 	ebiten.SetMaxTPS(mode.MaxTPS)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	g := &Game{
-		Scene: selectScene,
+		Scene: sceneSelect,
 	}
 	return g
 }
+
+type PlayChartArgs struct {
+	// mode.ChartHeader
+	Mode   int
+	Path   string
+	Replay *osr.Format
+	Play   bool
+}
+
 func (g *Game) Update() error {
-	result := g.Scene.Update()
-	if result != nil {
-		g.Scene = selectScene // Todo: selectResult
+	args := g.Scene.Update()
+	if args == nil {
+		return nil
+	}
+	switch args.(type) {
+	case mode.ScoreResult:
+		g.Scene = sceneSelect // Todo: selectResult
+	case PlayChartArgs:
+		// header := args.(PlayArgs).ChartHeader
+		path := args.(PlayChartArgs).Path
+		replay := args.(PlayChartArgs).Replay
+		play := args.(PlayChartArgs).Play
+		switch args.(PlayChartArgs).Mode {
+		case mode.ModeMania:
+			g.Scene = piano.NewScenePlay(nil, path, replay, play)
+		}
 	}
 	return nil
 }
@@ -41,3 +64,12 @@ func (g *Game) Draw(screen *ebiten.Image) {
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return screenSizeX, screenSizeY
 }
+
+//	func a(args *Args) {
+//		args2 := reflect.ValueOf(args)
+//
+// from := args2.FieldByName("From").String()
+//
+//		NewSceneResult()
+//		args2.FieldByName("Result")
+//	}
