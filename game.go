@@ -44,7 +44,7 @@ func (g *Game) Update() error {
 		return nil
 	}
 	switch args.(type) {
-	case mode.ScoreResult:
+	case mode.Result:
 		g.Scene = sceneSelect // Todo: selectResult
 	case PlayChartArgs:
 		// header := args.(PlayArgs).ChartHeader
@@ -52,8 +52,12 @@ func (g *Game) Update() error {
 		replay := args.(PlayChartArgs).Replay
 		play := args.(PlayChartArgs).Play
 		switch args.(PlayChartArgs).Mode {
-		case mode.ModeMania:
-			g.Scene = piano.NewScenePlay(nil, path, replay, play)
+		case mode.ModePiano:
+			var err error
+			g.Scene, err = piano.NewScenePlay(nil, path, replay, play)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

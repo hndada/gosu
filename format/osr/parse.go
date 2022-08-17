@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -149,4 +150,17 @@ func parseReplayData(r io.Reader) ([]Action, error) {
 		actions = append(actions, a)
 	}
 	return actions, nil
+}
+
+func (r Format) MD5() [16]byte {
+	var md5 [16]byte
+	for i := range md5 {
+		ui, err := strconv.ParseUint(string(r.BeatmapMD5[i*2:(i+1)*2]), 16, 8)
+		if err != nil {
+			fmt.Println(err) // Todo: better handling?
+			return [16]byte{}
+		}
+		md5[i] = byte(ui)
+	}
+	return md5
 }

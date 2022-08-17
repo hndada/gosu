@@ -13,9 +13,12 @@ const (
 	LevelScale    = 0.02
 )
 
+// type ChartAnalyzer interface{}
+
 // Todo: Mods as input parameter
-// Input is Difficulties.
-func Level(ds []float64) float64 {
+// https://go.dev/play/p/PtgBkwKZFhP
+func Level(c interface{ Difficulties() []float64 }) float64 { // ds []float64
+	ds := c.Difficulties()
 	// Todo: new mods-applied chart here
 	sort.Slice(ds, func(i, j int) bool { return ds[i] > ds[j] })
 	sum, weight := 0.0, 1.0

@@ -26,57 +26,61 @@ type TransPoint struct {
 // Uninherited: BPM, Inherited: beat scale
 // Initial BPM is derived from the first timing point's BPM.
 // When there are multiple timing points with same time, the last one will overwrites all precedings.
-func NewTransPointsFromOsu(o *osu.Format) []*TransPoint {
-	sort.SliceStable(o.TimingPoints, func(i int, j int) bool {
-		if o.TimingPoints[i].Time == o.TimingPoints[j].Time {
-			return o.TimingPoints[i].Uninherited
-		}
-		return o.TimingPoints[i].Time < o.TimingPoints[j].Time
-	})
-	tps := make([]*TransPoint, 0, len(o.TimingPoints))
-	lastBPM, _ := o.TimingPoints[0].BPM()
-	var prev *TransPoint
-	var prevBPMPoint *TransPoint
-	for _, timingPoint := range o.TimingPoints {
-		if timingPoint.Uninherited {
-			tp := &TransPoint{
-				Time: int64(timingPoint.Time),
-				// BPM:,
-				BeatScale: 1,
-				Meter:     uint8(timingPoint.Meter),
-				Volume:    uint8(timingPoint.Volume),
-				Highlight: timingPoint.IsKiai(),
-				NewBPM:    true,
-				Prev:      prev,
+func NewTransPoints(f any) []*TransPoint {
+	var tps []*TransPoint
+	switch f := f.(type) {
+	case *osu.Format:
+		sort.SliceStable(f.TimingPoints, func(i int, j int) bool {
+			if f.TimingPoints[i].Time == f.TimingPoints[j].Time {
+				return f.TimingPoints[i].Uninherited
 			}
-			tp.BPM, _ = timingPoint.BPM()
+			return f.TimingPoints[i].Time < f.TimingPoints[j].Time
+		})
+		tps = make([]*TransPoint, 0, len(f.TimingPoints))
+		lastBPM, _ := f.TimingPoints[0].BPM()
+		var prev *TransPoint
+		var prevBPMPoint *TransPoint
+		for _, timingPoint := range f.TimingPoints {
+			if timingPoint.Uninherited {
+				tp := &TransPoint{
+					Time: int64(timingPoint.Time),
+					// BPM:,
+					BeatScale: 1,
+					Meter:     uint8(timingPoint.Meter),
+					Volume:    uint8(timingPoint.Volume),
+					Highlight: timingPoint.IsKiai(),
+					NewBPM:    true,
+					Prev:      prev,
+				}
+				tp.BPM, _ = timingPoint.BPM()
 
-			if prev != nil {
-				prev.Next = tp
-			}
-			if prevBPMPoint != nil {
-				prevBPMPoint.NextBPMPoint = tp // This was hard to find the bug to me.
-			}
-			prev = tp
-			prevBPMPoint = tp
-			lastBPM = tp.BPM
-			tps = append(tps, tp)
-		} else {
-			tp := &TransPoint{
-				Time: int64(timingPoint.Time),
-				BPM:  lastBPM,
-				// BeatScale: ,
-				Meter:     uint8(timingPoint.Meter),
-				Volume:    uint8(timingPoint.Volume),
-				Highlight: timingPoint.IsKiai(),
-				NewBPM:    false,
-				Prev:      prev,
-			}
-			tp.BeatScale, _ = timingPoint.BeatScale()
+				if prev != nil {
+					prev.Next = tp
+				}
+				if prevBPMPoint != nil {
+					prevBPMPoint.NextBPMPoint = tp // This was hard to find the bug to me.
+				}
+				prev = tp
+				prevBPMPoint = tp
+				lastBPM = tp.BPM
+				tps = append(tps, tp)
+			} else {
+				tp := &TransPoint{
+					Time: int64(timingPoint.Time),
+					BPM:  lastBPM,
+					// BeatScale: ,
+					Meter:     uint8(timingPoint.Meter),
+					Volume:    uint8(timingPoint.Volume),
+					Highlight: timingPoint.IsKiai(),
+					NewBPM:    false,
+					Prev:      prev,
+				}
+				tp.BeatScale, _ = timingPoint.BeatScale()
 
-			prev.Next = tp // Inherited point is never the first.
-			prev = tp
-			tps = append(tps, tp)
+				prev.Next = tp // Inherited point is never the first.
+				prev = tp
+				tps = append(tps, tp)
+			}
 		}
 	}
 	return tps
@@ -84,7 +88,7 @@ func NewTransPointsFromOsu(o *osu.Format) []*TransPoint {
 
 // BPM with longest duration will be main BPM.
 // Suppose when there are multiple BPMs with same duration, larger one will be main.
-func BPMs(tps []*TransPoint, endTime int64) (main, min, max float64) {
+func BPMs(tps []*TransPoint, duration int64) (main, min, max float64) {
 	bpmDurations := make(map[float64]int64)
 	for i, tp := range tps {
 		if i == 0 {
@@ -93,7 +97,7 @@ func BPMs(tps []*TransPoint, endTime int64) (main, min, max float64) {
 		if i < len(tps)-1 {
 			bpmDurations[tp.BPM] += tps[i+1].Time - tp.Time
 		} else {
-			bpmDurations[tp.BPM] += endTime - tp.Time // Bounds to final note time; confirmed with test.
+			bpmDurations[tp.BPM] += duration - tp.Time // Bounds to final note time; confirmed with test.
 		}
 	}
 	var maxDuration int64
@@ -138,7 +142,7 @@ func BarLineTimes(tps []*TransPoint, endTime int64, wb, wa int64) []int64 {
 	// 	if !tp.NewBPM {
 	// 		continue
 	// 	}
-	// 	next := c.EndTime() + 2*wa
+	// 	next := c.Duration + 2*wa
 	// 	if i < len(c.TransPoints)-1 {
 	// 		for _, tp2 := range c.TransPoints[i:] {
 	// 			if tp2.NewBPM {

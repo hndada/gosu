@@ -2,8 +2,9 @@ package mode
 
 import (
 	"io"
+	"time"
 
-	"github.com/hndada/gosu/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hndada/gosu/render"
 )
 
@@ -17,8 +18,13 @@ type ScenePlay struct {
 	Play bool // Whether the scene is for play or not
 	Tick int
 
-	MusicFile   io.ReadSeekCloser // Todo: Music -> Audio
-	MusicPlayer audio.Player      // Todo: Music -> Audio
+	// MusicFile   io.ReadSeekCloser
+	// MusicStreamer  io.ReadSeeker
+	MusicPlayer    *audio.Player
+	MusicCloser    io.Closer
+	SoundStreamers map[string]io.ReadSeeker
+	SoundClosers   []io.Closer
+	// A player for Sound is generated at a place.
 
 	MainBPM   float64
 	BaseSpeed float64 // Todo: BaseSpeed -> SpeedBase
@@ -28,7 +34,7 @@ type ScenePlay struct {
 	LastPressed  []bool
 	Pressed      []bool
 
-	ScoreResult
+	Result
 	Combo int
 	Flow  float64
 
@@ -44,22 +50,31 @@ const (
 )
 
 func (s ScenePlay) Time() int64 { return int64(float64(s.Tick) / float64(MaxTPS) * 1000) }
-func NewScenePlay(c *Chart, cpath string, play bool) ScenePlay {
-	var s ScenePlay
-	s.MainBPM, _, _ = BPMs(c.TransPoints, c.EndTime()) // Todo: Need a test
-	s.TransPoint = c.TransPoints[0]
-	for s.TransPoint.Time == s.TransPoint.Next.Time {
-		s.TransPoint = s.TransPoint.Next
-	}
-	s.Flow = 1
 
-	s.Play = play
-	if !s.Play {
-		return s
-	}
-	s.MusicFile, s.MusicPlayer = audio.NewPlayer(c.MusicPath(cpath))
-	s.MusicPlayer.SetVolume(Volume)
-	return s
-}
+// func NewScenePlay(c *Chart, cpath string, play bool) ScenePlay {
+// 	var s ScenePlay
+// 	s.MainBPM, _, _ = BPMs(c.TransPoints, c.Duration) // Todo: Need a test
+// 	s.TransPoint = c.TransPoints[0]
+// 	for s.TransPoint.Time == s.TransPoint.Next.Time {
+// 		s.TransPoint = s.TransPoint.Next
+// 	}
+// 	s.Flow = 1
+
+// 	s.Play = play
+// 	if !s.Play {
+// 		return s
+// 	}
+// 	s.MusicFile, s.MusicPlayer = audio.NewPlayer(c.MusicPath(cpath))
+// 	s.MusicPlayer.SetVolume(Volume)
+// 	return s
+// }
 
 // Update cannot be generalized; each scene use template fields in timely manner.
+
+// Replay is a entire key stroke timed-log.
+type PlayToResultArgs struct {
+	Time time.Time // Playing finish time
+	MD5  [16]byte
+	// Replay // Todo: implement
+	Result
+}

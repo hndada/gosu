@@ -6,12 +6,13 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"io"
 	"os"
 	"path/filepath"
-	"strconv"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/audio"
+	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hndada/gosu/db"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
@@ -29,7 +30,9 @@ import (
 func (s *SceneSelect) HandleMove() {}
 
 type SceneSelect struct {
-	ChartInfos []ChartInfo
+	ViewMode int
+	View     []db.ChartInfo
+	// ChartInfos []db.ChartInfo
 	Cursor     int
 	Background render.Sprite
 	Hold       int
@@ -40,8 +43,12 @@ type SceneSelect struct {
 	MD5ToIndexMap map[[md5.Size]byte]int
 	Replays       []*osr.Format
 
-	PlaySoundMove   func()
-	PlaySoundSelect func()
+	MusicPlayer    *audio.Player
+	MusicCloser    io.Closer
+	SoundStreamers map[string]io.ReadSeeker
+	SoundClosers   []io.Closer
+	// PlaySoundMove   func()
+	// PlaySoundSelect func()
 }
 
 const (
@@ -52,13 +59,13 @@ const (
 
 func NewSceneSelect() *SceneSelect {
 	s := &SceneSelect{
-		ChartInfos:    make([]ChartInfo, 0, 50),
+		View:          make([]db.ChartInfo, 0, 50),
 		IndexToMD5Map: make(map[int][16]byte),
 		MD5ToIndexMap: map[[16]byte]int{},
 		Replays:       make([]*osr.Format, 0, 10),
 	}
 
-	for i, ci := range s.ChartInfos {
+	for i, ci := range s.View {
 		d, err := os.ReadFile(ci.Path)
 		if err != nil {
 			panic(err)
@@ -97,10 +104,10 @@ func NewSceneSelect() *SceneSelect {
 }
 func (s *SceneSelect) UpdateBackground() {
 	s.Background = mode.DefaultBackground
-	if len(s.ChartInfos) == 0 {
+	if len(s.View) == 0 {
 		return
 	}
-	info := s.ChartInfos[s.Cursor]
+	info := s.View[s.Cursor]
 	img := render.NewImage(info.Chart.BackgroundPath(info.Path))
 	if img != nil {
 		s.Background.I = img
@@ -144,21 +151,12 @@ var (
 )
 
 // FetchReplay returns first MD5-matching replay format.
-// Todo: need to rewrite
 func (s SceneSelect) FetchReplay(i int) *osr.Format {
 	md5 := s.IndexToMD5Map[i]
-outer:
 	for _, r := range s.Replays {
-		for x := 0; x < 16; x++ {
-			ui, err := strconv.ParseUint(string(r.BeatmapMD5[x*2:(x+1)*2]), 16, 8)
-			if err != nil {
-				panic(err)
-			}
-			if ui != uint64(md5[x]) {
-				continue outer
-			}
+		if md5 == r.MD5() {
+			return r
 		}
-		return r
 	}
 	return nil
 }
@@ -180,10 +178,10 @@ func (s *SceneSelect) Update() any {
 	switch {
 	case ebiten.IsKeyPressed(ebiten.KeyEnter), ebiten.IsKeyPressed(ebiten.KeyNumpadEnter):
 		s.PlaySoundSelect()
-		info := s.ChartInfos[s.Cursor]
+		info := s.View[s.Cursor]
 		if s.ReplayMode {
 			return PlayChartArgs{
-				Mode:   mode.ModeMania,
+				Mode:   mode.ModePiano,
 				Path:   info.Path,
 				Replay: s.FetchReplay(s.Cursor),
 				Play:   true,
@@ -191,7 +189,7 @@ func (s *SceneSelect) Update() any {
 			// g.Scene = NewScenePlay(info.Chart, info.Path, s.FetchReplay(s.Cursor), true)
 		} else {
 			return PlayChartArgs{
-				Mode:   mode.ModeMania,
+				Mode:   mode.ModePiano,
 				Path:   info.Path,
 				Replay: nil,
 				Play:   true,
@@ -206,7 +204,7 @@ func (s *SceneSelect) Update() any {
 		s.PlaySoundMove()
 		s.Hold = 0
 		s.Cursor++
-		s.Cursor %= len(s.ChartInfos)
+		s.Cursor %= len(s.View)
 		s.UpdateBackground()
 	case ebiten.IsKeyPressed(ebiten.KeyArrowUp):
 		s.HoldKey = ebiten.KeyArrowUp
@@ -217,7 +215,7 @@ func (s *SceneSelect) Update() any {
 		s.Hold = 0
 		s.Cursor--
 		if s.Cursor < 0 {
-			s.Cursor += len(s.ChartInfos)
+			s.Cursor += len(s.View)
 		}
 		s.UpdateBackground()
 	// case ebiten.IsKeyPressed(ebiten.KeyQ):
@@ -277,7 +275,7 @@ func (s *SceneSelect) Update() any {
 // x -= y / 5, for example.
 func (s SceneSelect) Draw(screen *ebiten.Image) {
 	s.Background.Draw(screen)
-	for i := range s.ChartInfos {
+	for i := range s.View {
 		y := (i-s.Cursor)*bh + screenSizeY/2 - bh/2
 		if y > screenSizeY || y+bh < 0 {
 			continue
@@ -288,7 +286,7 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		}
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(float64(x), float64(y))
-		screen.DrawImage(s.ChartInfos[i].Box.I, op)
+		screen.DrawImage(s.View[i].Box.I, op)
 	}
 	// Code of drawing cursor
 	// {
@@ -303,3 +301,11 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 	// 	fmt.Sprintf("BaseSpeed (Press Q/W): %.0f\n(Exposure time: %.0fms)\n\nVolume (Press A/S): %d%%\nHold:%d\nReplay mode (Press Z): %v\n", // %.1f
 	// 		BaseSpeed*100, ExposureTime(BaseSpeed), int(mode.Volume*100), s.Hold, s.ReplayMode))
 }
+
+// Box: render.Sprite{
+// 	I: NewBox(c, mode.Level(c.Difficulties())),
+// 	W: bw,
+// 	H: bh,
+// },
+// box's x value is not fixed.
+// box's y value is not fixed.
