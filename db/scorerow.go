@@ -11,8 +11,8 @@ import (
 )
 
 type ScoreRow struct {
-	Time time.Time
 	MD5  [md5.Size]byte
+	Time time.Time
 	// Key log (Replay)
 	mode.Result
 }
