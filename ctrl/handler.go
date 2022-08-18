@@ -67,14 +67,15 @@ type F64Handler struct {
 	Target *float64
 }
 
-func (h *F64Handler) Update() {
+// Update returns whether the handler has fired or not.
+func (h *F64Handler) Update() bool {
 	h.Handler.Update()
 	// if h.Hold%h.Threshold != 1 {}
 	if h.Countdown > 0 {
-		return
+		return false
 	}
-	h.PlaySounds[h.KeyType()]()
 	// Countdown is 0: Time to action!
+	h.PlaySounds[h.KeyType()]()
 	switch h.KeyType() {
 	case HandlerKeyIncrease:
 		*h.Target += h.Unit
@@ -97,6 +98,47 @@ func (h *F64Handler) Update() {
 		h.Countdown = longCountdown
 	}
 	h.Active = true
+	return true
+}
+
+type IntHandler struct {
+	Handler
+	Min    int
+	Max    int
+	Unit   int
+	Target *int
+}
+
+// Update returns whether the handler has fired or not.
+func (h *IntHandler) Update() bool {
+	h.Handler.Update()
+	if h.Countdown > 0 {
+		return false
+	}
+	h.PlaySounds[h.KeyType()]()
+	switch h.KeyType() {
+	case HandlerKeyIncrease:
+		*h.Target += h.Unit
+		if *h.Target > h.Max {
+			*h.Target = h.Max
+		}
+	case HandlerKeyDecrease:
+		*h.Target -= h.Unit
+		if *h.Target < h.Min {
+			*h.Target = h.Min
+		}
+	case HandlerKeyNext:
+	case HandlerKeyPrev:
+	case -1:
+		panic("invalid input at handler")
+	}
+	if h.Active {
+		h.Countdown = shortCountdown
+	} else {
+		h.Countdown = longCountdown
+	}
+	h.Active = true
+	return true
 }
 
 type BoolHandler struct {
@@ -104,11 +146,12 @@ type BoolHandler struct {
 	Target *bool
 }
 
-func (h *BoolHandler) Update() {
+// Update returns whether the handler has fired or not.
+func (h *BoolHandler) Update() bool {
 	h.Handler.Update()
 	// Bool value is updated only once regardless of hold duration.
 	if h.Countdown > 0 || h.Active {
-		return
+		return false
 	}
 	switch h.KeyType() {
 	case HandlerKeyIncrease:
@@ -120,4 +163,5 @@ func (h *BoolHandler) Update() {
 		panic("invalid input at handler")
 	}
 	h.Active = true
+	return true
 }
