@@ -2,21 +2,15 @@ package gosu
 
 import (
 	"fmt"
-	"image"
-	"image/color"
-	"image/draw"
 	"io"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hndada/gosu/audioutil"
+	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/db"
 	"github.com/hndada/gosu/mode"
-	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/render"
-	"golang.org/x/image/font"
-	"golang.org/x/image/font/basicfont"
-	"golang.org/x/image/math/fixed"
 )
 
 // 1. Load data from local db (It may be skipped since no local db)
@@ -27,6 +21,9 @@ import (
 func (s *SceneSelect) HandleMove() {}
 
 type SceneSelect struct {
+	SelectHandler ctrl.IntHandler
+	// Todo: Delayed at Cursor
+	Mode     int
 	ViewMode int
 	View     []db.ChartBox
 	// ChartBoxs []db.ChartBox
@@ -47,29 +44,40 @@ type SceneSelect struct {
 	// SoundClosers []io.Closer
 	// PlaySoundMove   func()
 	// PlaySoundSelect func()
-
-	Mode int
 }
 
-const (
-	bw  = 450 // Box width
-	bh  = 50  // Box height
-	pop = bw / 10
-)
-
+// Todo: Score / Replay fetch
 func NewSceneSelect() *SceneSelect {
-	// s := &SceneSelect{
-	// 	View:          make([]db.ChartBox, 0, 50),
-	// 	IndexToMD5Map: make(map[int][16]byte),
-	// 	MD5ToIndexMap: map[[16]byte]int{},
-	// 	Replays:       make([]*osr.Format, 0, 10),
-	// }
 	s := new(SceneSelect)
 	s.UpdateBackground()
-	s.HoldKey = HoldKeyNone
-	s.Hold = threshold1
-	_ = s.SoundMap.Register("skin/default-hover.wav", "move")
-	_ = s.SoundMap.Register("skin/restart.wav", "select")
+	{
+		b, err := audioutil.NewBytes("skin/default-hover.wav")
+		if err != nil {
+			fmt.Println(err)
+		}
+		play := audioutil.Context.NewPlayerFromBytes(b).Play
+		s.SelectHandler = ctrl.IntHandler{
+			Handler: ctrl.Handler{
+				Keys:       []ebiten.Key{ebiten.KeyUp, ebiten.KeyDown},
+				PlaySounds: []func(){play, play},
+				HoldKey:    -1,
+			},
+			Min:    0,
+			Max:    len(s.View),
+			Unit:   1,
+			Target: &s.Cursor,
+		}
+	}
+	// var err error
+	// err = s.SoundMap.Register("skin/default-hover.wav", "move")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	s.SoundMap.Bytes = make(map[string][]byte)
+	err := s.SoundMap.Register("skin/restart.wav", "select")
+	if err != nil {
+		fmt.Println(err)
+	}
 	return s
 }
 func (s *SceneSelect) UpdateBackground() {
@@ -86,39 +94,13 @@ func (s *SceneSelect) UpdateBackground() {
 	s.Background.SetCenterY(screenSizeY / 2)
 }
 
-const (
-	border = 3
-)
-const (
-	dx = 20 // dot x
-	dy = 30 // dot y
-)
-
-var borderColor = color.RGBA{172, 49, 174, 255} // Purple
-
-func NewBox(c *piano.Chart, lv float64) *ebiten.Image {
-	img := image.NewRGBA(image.Rect(0, 0, bw, bh))
-	draw.Draw(img, img.Bounds(), &image.Uniform{borderColor}, image.Point{}, draw.Src)
-	inRect := image.Rect(border, border, bw-border, bh-border)
-	draw.Draw(img, inRect, &image.Uniform{color.White}, image.Point{}, draw.Src)
-	t := fmt.Sprintf("(%dK Lv %.1f) %s [%s]", c.KeyCount, lv, c.MusicName, c.ChartName)
-	d := &font.Drawer{
-		Dst:  img,
-		Src:  image.NewUniform(color.Black),
-		Face: basicfont.Face7x13,
-		Dot:  fixed.Point26_6{X: fixed.Int26_6(dx * 64), Y: fixed.Int26_6(dy * 64)},
-	}
-	d.DrawString(t)
-	return ebiten.NewImageFromImage(img)
-}
-
-const HoldKeyNone = -1
+// const HoldKeyNone = -1
 
 // Require holding for a while to move a cursor
-var (
-	threshold1 = mode.TimeToTick(100)
-	// threshold2 = mode.TimeToTick(80)
-)
+// var (
+// threshold1 = mode.TimeToTick(100)
+// threshold2 = mode.TimeToTick(80)
+// )
 
 // // FetchReplay returns first MD5-matching replay format.
 // func (s SceneSelect) FetchReplay(i int) *osr.Format {
@@ -133,20 +115,22 @@ var (
 
 // Default HoldKey value is 0, which is Key0.
 func (s *SceneSelect) Update() any {
-	if s.HoldKey == HoldKeyNone {
-		s.Hold++
-		if s.Hold > threshold1 {
-			s.Hold = threshold1
-		}
-	} else {
-		if ebiten.IsKeyPressed(s.HoldKey) {
-			s.Hold++
-		} else {
-			s.Hold = 0
-		}
+	if moved := s.SelectHandler.Update(); moved {
+		s.UpdateBackground()
 	}
-	switch {
-	case ebiten.IsKeyPressed(ebiten.KeyEnter), ebiten.IsKeyPressed(ebiten.KeyNumpadEnter):
+	// if s.HoldKey == HoldKeyNone {
+	// 	s.Hold++
+	// 	if s.Hold > threshold1 {
+	// 		s.Hold = threshold1
+	// 	}
+	// } else {
+	// 	if ebiten.IsKeyPressed(s.HoldKey) {
+	// 		s.Hold++
+	// 	} else {
+	// 		s.Hold = 0
+	// 	}
+	// }
+	if ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsKeyPressed(ebiten.KeyNumpadEnter) {
 		s.SoundMap.Play("select")
 		info := s.View[s.Cursor]
 		return SelectToPlayArgs{
@@ -155,50 +139,54 @@ func (s *SceneSelect) Update() any {
 			Replay: nil,
 			Play:   true,
 		}
-		// switch s.Mode {
-		// case db.ModePiano4, db.ModePiano7, db.ModePiano8:
+	}
+	return nil
+	// switch {
+	// case
+	// switch s.Mode {
+	// case db.ModePiano4, db.ModePiano7, db.ModePiano8:
 
-		// 	g.Scene = piano.NewScenePlay(info.Path, nil, true)
-		// }
-		// if s.ReplayMode {
-		// 	return PlayChartArgs{
-		// 		Mode:   mode.ModePiano,
-		// 		Path:   info.Path,
-		// 		Replay: s.FetchReplay(s.Cursor),
-		// 		Play:   true,
-		// 	}
-		// 	// g.Scene = NewScenePlay(info.Chart, info.Path, s.FetchReplay(s.Cursor), true)
-		// } else {
-		// 	return PlayChartArgs{
-		// 		Mode:   mode.ModePiano,
-		// 		Path:   info.Path,
-		// 		Replay: nil,
-		// 		Play:   true,
-		// 	}
-		// 	// g.Scene = NewScenePlay(info.Chart, info.Path, nil, true)
-		// }
-	case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
-		s.HoldKey = ebiten.KeyArrowDown
-		if s.Hold < threshold1 {
-			break
-		}
-		s.SoundMap.Play("move")
-		s.Hold = 0
-		s.Cursor++
-		s.Cursor %= len(s.View)
-		s.UpdateBackground()
-	case ebiten.IsKeyPressed(ebiten.KeyArrowUp):
-		s.HoldKey = ebiten.KeyArrowUp
-		if s.Hold < threshold1 {
-			break
-		}
-		s.SoundMap.Play("move")
-		s.Hold = 0
-		s.Cursor--
-		if s.Cursor < 0 {
-			s.Cursor += len(s.View)
-		}
-		s.UpdateBackground()
+	// 	g.Scene = piano.NewScenePlay(info.Path, nil, true)
+	// }
+	// if s.ReplayMode {
+	// 	return PlayChartArgs{
+	// 		Mode:   mode.ModePiano,
+	// 		Path:   info.Path,
+	// 		Replay: s.FetchReplay(s.Cursor),
+	// 		Play:   true,
+	// 	}
+	// 	// g.Scene = NewScenePlay(info.Chart, info.Path, s.FetchReplay(s.Cursor), true)
+	// } else {
+	// 	return PlayChartArgs{
+	// 		Mode:   mode.ModePiano,
+	// 		Path:   info.Path,
+	// 		Replay: nil,
+	// 		Play:   true,
+	// 	}
+	// 	// g.Scene = NewScenePlay(info.Chart, info.Path, nil, true)
+	// }
+	// case ebiten.IsKeyPressed(ebiten.KeyArrowDown):
+	// 	s.HoldKey = ebiten.KeyArrowDown
+	// 	if s.Hold < threshold1 {
+	// 		break
+	// 	}
+	// 	s.SoundMap.Play("move")
+	// 	s.Hold = 0
+	// 	s.Cursor++
+	// 	s.Cursor %= len(s.View)
+	// 	s.UpdateBackground()
+	// case ebiten.IsKeyPressed(ebiten.KeyArrowUp):
+	// 	s.HoldKey = ebiten.KeyArrowUp
+	// 	if s.Hold < threshold1 {
+	// 		break
+	// 	}
+	// 	s.SoundMap.Play("move")
+	// 	s.Hold = 0
+	// 	s.Cursor--
+	// 	if s.Cursor < 0 {
+	// 		s.Cursor += len(s.View)
+	// 	}
+	// 	s.UpdateBackground()
 	// case ebiten.IsKeyPressed(ebiten.KeyQ):
 	// 	s.HoldKey = ebiten.KeyQ
 	// 	if s.Hold < threshold2 {
@@ -246,10 +234,9 @@ func (s *SceneSelect) Update() any {
 	// 	}
 	// 	s.Hold = 0
 	// 	s.ReplayMode = !s.ReplayMode
-	default:
-		s.HoldKey = HoldKeyNone
-	}
-	return nil
+	// default:
+	// 	s.HoldKey = HoldKeyNone
+	// }
 }
 
 // Currently topmost and bottommost boxes are not adjoined.
@@ -257,17 +244,41 @@ func (s *SceneSelect) Update() any {
 // x -= y / 5, for example.
 func (s SceneSelect) Draw(screen *ebiten.Image) {
 	s.Background.Draw(screen)
-	for i := range s.View {
-		y := (i-s.Cursor)*bh + screenSizeY/2 - bh/2
-		if y > screenSizeY || y+bh < 0 {
-			continue
+
+	const count = 20
+	var viewport []db.ChartBox
+	var cursor int
+	const pop = db.BoxWidth / 10
+	if s.Cursor <= count/2 {
+		viewport = append(viewport, s.View[0:s.Cursor]...)
+		cursor = s.Cursor
+	} else {
+		bound := s.Cursor - count/2
+		viewport = append(viewport, s.View[bound:s.Cursor]...)
+		cursor = count / 2
+	}
+	if s.Cursor >= len(s.View)-count/2 {
+		viewport = append(viewport, s.View[s.Cursor:len(s.View)]...)
+	} else {
+		bound := s.Cursor + count/2
+		viewport = append(viewport, s.View[s.Cursor:bound]...)
+	}
+	for i, box := range viewport {
+		sprite := box.Box
+		if i == cursor {
+			sprite.X -= pop
 		}
-		x := screenSizeX - bw + pop
-		if i == s.Cursor {
-			x = screenSizeX - bw
-		}
-		op := &ebiten.DrawImageOptions{}
-		op.GeoM.Translate(float64(x), float64(y))
+		sprite.Draw(screen)
+		// y := (i-s.Cursor)*bh + screenSizeY/2 - bh/2
+		// if y > screenSizeY || y+bh < 0 {
+		// 	continue
+		// }
+		// x := screenSizeX - bw + pop
+		// if i == s.Cursor {
+		// 	x = screenSizeX - bw
+		// }
+		// op := &ebiten.DrawImageOptions{}
+		// op.GeoM.Translate(float64(x), float64(y))
 		// screen.DrawImage(s.View[i].Box.I, op)
 	}
 	// Code of drawing cursor
