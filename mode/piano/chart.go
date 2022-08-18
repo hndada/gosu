@@ -50,6 +50,7 @@ func NewChart(fpath string) (*Chart, error) { // f any
 		}
 		// c.Mode = mode.ModePiano
 		// c.Mode += c.KeyCount
+		c.Mode2 = c.KeyCount
 		c.Notes = make([]Note, 0, len(f.HitObjects)*2)
 		for _, ho := range f.HitObjects {
 			c.Notes = append(c.Notes, NewNote(ho, c.KeyCount)...)
@@ -61,7 +62,9 @@ func NewChart(fpath string) (*Chart, error) { // f any
 		}
 		return c.Notes[i].Time < c.Notes[j].Time
 	})
-	c.Duration = c.Notes[len(c.Notes)-1].Time
+	if len(c.Notes) > 0 {
+		c.Duration = c.Notes[len(c.Notes)-1].Time
+	}
 	c.NoteCounts = make([]int, 2)
 	for _, n := range c.Notes {
 		switch n.Type {
