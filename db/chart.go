@@ -65,7 +65,7 @@ func LoadNewMusic(musicPath string) {
 					fmt.Println(err)
 					continue
 				}
-				info := NewChartBox(c.Chart, fpath, mode.Level(c))
+				info := NewChartBox(&c.Chart, fpath, mode.Level(c))
 				ChartBoxs[fpath] = info // Append if not existed, update otherwise.
 				// for _, sort := range []int{SortByName, SortByLevel} {
 				// 	Insert(ChartViews[ViewMode(c.Mode, sort)], info, sort)
