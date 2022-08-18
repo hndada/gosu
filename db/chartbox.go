@@ -20,6 +20,7 @@ type ChartBox struct {
 	Path   string
 	Header mode.ChartHeader
 	Mode   int
+	Mode2  int
 	Level  float64
 
 	Duration   int64
@@ -37,6 +38,7 @@ func NewChartBox(c *mode.Chart, fpath string, level float64) ChartBox {
 		Path:   fpath,
 		Header: c.ChartHeader,
 		Mode:   c.Mode,
+		Mode2:  c.Mode2,
 		Level:  level,
 
 		Duration:   c.Duration,
