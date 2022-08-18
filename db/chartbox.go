@@ -17,7 +17,8 @@ import (
 // https://github.com/vmihailenco/msgpack
 // https://github.com/osuripple/cheesegull
 type ChartBox struct {
-	Path   string
+	Path string
+	// Mods mode.Mods
 	Header mode.ChartHeader
 	Mode   int
 	Mode2  int
