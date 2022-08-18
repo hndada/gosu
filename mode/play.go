@@ -11,8 +11,8 @@ import (
 
 // In milliseconds.
 // func Time(tick int) int64       { return int64(float64(tick) / float64(MaxTPS) * 1000) }
-func TimeToTick(msec int64) int { return int(float64(msec) * float64(MaxTPS) / 1000) }
-func TickToTime(tick int) int64 { return int64(1000 * float64(tick) / float64(MaxTPS)) }
+func TimeToTick(time int64) int { return int(float64(time) / 1000 * float64(MaxTPS)) }
+func TickToTime(tick int) int64 { return int64(float64(tick) / float64(MaxTPS) * 1000) }
 
 // This is template struct. Fields can be set at outer function call.
 type ScenePlay struct {

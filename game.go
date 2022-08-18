@@ -6,6 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/audioutil"
 	"github.com/hndada/gosu/ctrl"
+	"github.com/hndada/gosu/db"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
@@ -24,7 +25,9 @@ type Scene interface {
 var sceneSelect *SceneSelect
 
 func NewGame() *Game {
+	mode.LoadSkin()
 	piano.LoadSkin()
+	db.LoadNewMusic(MusicPath)
 	var soundHandler ctrl.F64Handler
 	var speedHandler ctrl.F64Handler
 	{
