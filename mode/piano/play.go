@@ -100,13 +100,14 @@ func NewScenePlay(cpath string, rf *osr.Format, play bool) (*ScenePlay, error) {
 	}
 	s.BarLineTimes = mode.BarLineTimes(s.Chart.TransPoints, c.Duration, waitBefore, mode.DefaultWaitAfter)
 
-	musicBytes, closer, err := audioutil.NewBytes(c.MusicPath(cpath))
+	// musicBytes, closer, err := audioutil.NewBytes(c.MusicPath(cpath))
+	mbytes, err := audioutil.NewBytes(cpath)
 	if err != nil {
 		return nil, err
 	}
-	s.MusicCloser = closer
+	// s.MusicCloser = closer
 	// s.MusicFile, s.MusicPlayer = audio.NewPlayer(c.MusicPath(cpath))
-	s.MusicPlayer = audioutil.Context.NewPlayerFromBytes(musicBytes)
+	s.MusicPlayer = audioutil.Context.NewPlayerFromBytes(mbytes)
 	s.MusicPlayer.SetVolume(mode.Volume)
 	if err != nil {
 		return s, err
