@@ -42,7 +42,7 @@ type SceneSelect struct {
 
 	MusicPlayer *audio.Player // May rewind after preview has finished.
 	MusicCloser io.Closer
-	SoundPad    audioutil.SoundPad
+	SoundMap    audioutil.SoundMap
 	// SoundBytes   map[string][]byte
 	// SoundClosers []io.Closer
 	// PlaySoundMove   func()
@@ -68,8 +68,8 @@ func NewSceneSelect() *SceneSelect {
 	s.UpdateBackground()
 	s.HoldKey = HoldKeyNone
 	s.Hold = threshold1
-	_ = s.SoundPad.Register("skin/default-hover.wav", "move")
-	_ = s.SoundPad.Register("skin/restart.wav", "select")
+	_ = s.SoundMap.Register("skin/default-hover.wav", "move")
+	_ = s.SoundMap.Register("skin/restart.wav", "select")
 	return s
 }
 func (s *SceneSelect) UpdateBackground() {
@@ -147,7 +147,7 @@ func (s *SceneSelect) Update() any {
 	}
 	switch {
 	case ebiten.IsKeyPressed(ebiten.KeyEnter), ebiten.IsKeyPressed(ebiten.KeyNumpadEnter):
-		s.SoundPad.Play("select")
+		s.SoundMap.Play("select")
 		info := s.View[s.Cursor]
 		return SelectToPlayArgs{
 			Path:   info.Path,
@@ -182,7 +182,7 @@ func (s *SceneSelect) Update() any {
 		if s.Hold < threshold1 {
 			break
 		}
-		s.SoundPad.Play("move")
+		s.SoundMap.Play("move")
 		s.Hold = 0
 		s.Cursor++
 		s.Cursor %= len(s.View)
@@ -192,7 +192,7 @@ func (s *SceneSelect) Update() any {
 		if s.Hold < threshold1 {
 			break
 		}
-		s.SoundPad.Play("move")
+		s.SoundMap.Play("move")
 		s.Hold = 0
 		s.Cursor--
 		if s.Cursor < 0 {
