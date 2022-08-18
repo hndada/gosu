@@ -1,7 +1,11 @@
 package gosu
 
 import (
+	"fmt"
+
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/audioutil"
+	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
@@ -9,6 +13,8 @@ import (
 
 type Game struct {
 	Scene
+	SoundHandler ctrl.F64Handler
+	SpeedHandler ctrl.F64Handler // Todo: different handler for each mode
 }
 type Scene interface {
 	Update() any
@@ -19,13 +25,53 @@ var sceneSelect *SceneSelect
 
 func NewGame() *Game {
 	piano.LoadSkin()
+	var soundHandler ctrl.F64Handler
+	var speedHandler ctrl.F64Handler
+	{
+		b, err := audioutil.NewBytes("skin/default-hover.wav")
+		if err != nil {
+			fmt.Println(err)
+		}
+		play := audioutil.Context.NewPlayerFromBytes(b).Play
+		soundHandler = ctrl.F64Handler{
+			Handler: ctrl.Handler{
+				Keys:       []ebiten.Key{ebiten.KeyF1, ebiten.KeyF2},
+				PlaySounds: []func(){play, play},
+				HoldKey:    -1,
+			},
+			Min:    0,
+			Max:    1,
+			Unit:   0.05,
+			Target: &mode.Volume,
+		}
+	}
+	{
+		b, err := audioutil.NewBytes("skin/default-hover.wav")
+		if err != nil {
+			fmt.Println(err)
+		}
+		play := audioutil.Context.NewPlayerFromBytes(b).Play
+		speedHandler = ctrl.F64Handler{
+			Handler: ctrl.Handler{
+				Keys:       []ebiten.Key{ebiten.KeyF3, ebiten.KeyF4},
+				PlaySounds: []func(){play, play},
+				HoldKey:    -1,
+			},
+			Min:    0.1,
+			Max:    2,
+			Unit:   0.1,
+			Target: &mode.SpeedBase,
+		}
+	}
 	sceneSelect = NewSceneSelect()
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
 	ebiten.SetMaxTPS(mode.MaxTPS)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	g := &Game{
-		Scene: sceneSelect,
+		Scene:        sceneSelect,
+		SoundHandler: soundHandler,
+		SpeedHandler: speedHandler,
 	}
 	return g
 }

@@ -13,3 +13,5 @@ var (
 	TimingMeterHeight float64 = 50
 )
 var CursorScale float64 = 0.1
+
+var SpeedBase = 1.1 // Todo: make the variable declared in each mode
