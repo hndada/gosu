@@ -32,7 +32,7 @@ func Verdict(t NoteType, a input.KeyAction, td int64) mode.Judgment {
 			}
 		}
 	} else { // Head, Normal
-		mode.Verdict(Judgments, a, td)
+		return mode.Verdict(Judgments, a, td)
 	}
 	return mode.Judgment{}
 }
