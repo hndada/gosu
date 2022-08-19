@@ -31,6 +31,24 @@ type Handler struct {
 const KeyNone = -1 // ebiten.Key(input.KeyReserved0)
 
 func (h *Handler) Update() {
+	h.Countdown--
+	if h.Countdown < 0 {
+		h.Countdown = 0
+	}
+	if ebiten.IsKeyPressed(h.HoldKey) {
+		return
+	}
+	h.Active = false
+	h.Countdown = 0
+	for _, keyType := range HandlerKeyTypes[:len(h.Keys)] {
+		key := h.Keys[keyType]
+		if ebiten.IsKeyPressed(key) {
+			h.HoldKey = key
+		}
+	}
+}
+
+func (h *Handler) Update2() {
 	if ebiten.IsKeyPressed(h.HoldKey) {
 		h.Countdown--
 		if h.Countdown < 0 {
@@ -51,12 +69,12 @@ func (h *Handler) Update() {
 }
 
 func (h Handler) KeyType() int {
-	for i, t := range HandlerKeyTypes {
+	for i, t := range HandlerKeyTypes[:len(h.Keys)] {
 		if h.HoldKey == h.Keys[i] {
 			return t
 		}
 	}
-	return -1
+	return KeyNone
 }
 
 type F64Handler struct {
@@ -71,7 +89,7 @@ type F64Handler struct {
 func (h *F64Handler) Update() bool {
 	h.Handler.Update()
 	// if h.Hold%h.Threshold != 1 {}
-	if h.Countdown > 0 {
+	if h.Countdown > 0 || h.KeyType() == -1 {
 		return false
 	}
 	// Countdown is 0: Time to action!
@@ -112,7 +130,7 @@ type IntHandler struct {
 // Update returns whether the handler has fired or not.
 func (h *IntHandler) Update() bool {
 	h.Handler.Update()
-	if h.Countdown > 0 {
+	if h.Countdown > 0 || h.KeyType() == -1 {
 		return false
 	}
 	h.PlaySounds[h.KeyType()]()
@@ -150,7 +168,7 @@ type BoolHandler struct {
 func (h *BoolHandler) Update() bool {
 	h.Handler.Update()
 	// Bool value is updated only once regardless of hold duration.
-	if h.Countdown > 0 || h.Active {
+	if h.Countdown > 0 || h.KeyType() == -1 || h.Active {
 		return false
 	}
 	switch h.KeyType() {
