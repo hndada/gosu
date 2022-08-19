@@ -1,7 +1,9 @@
 package mode
 
 import (
+	"fmt"
 	"math"
+	"os"
 	"sort"
 
 	"github.com/hndada/gosu/format/osu"
@@ -36,6 +38,20 @@ func NewTransPoints(f any) []*TransPoint {
 			}
 			return f.TimingPoints[i].Time < f.TimingPoints[j].Time
 		})
+
+		// Drop inherited points preceding to the first uninherited point.
+		// Todo: need actual test
+		for len(f.TimingPoints) > 0 && !f.TimingPoints[0].Uninherited {
+			f.TimingPoints = f.TimingPoints[1:]
+		}
+		if len(f.TimingPoints) == 0 {
+			return tps
+		}
+		// for drop:=0; drop<len(f.TimingPoints) && f.Timin
+		// init := f.TimingPoints[0]
+		// for i := 1; i < len(f.TimingPoints) && !init.Uninherited; i++ {
+		// 	init = f.TimingPoints[i]
+		// }
 		tps = make([]*TransPoint, 0, len(f.TimingPoints))
 		lastBPM, _ := f.TimingPoints[0].BPM()
 		var prev *TransPoint
@@ -76,7 +92,11 @@ func NewTransPoints(f any) []*TransPoint {
 					Prev:      prev,
 				}
 				tp.BeatScale, _ = timingPoint.BeatScale()
-
+				if prev == nil {
+					fmt.Printf("%s - %s: no uninherited point at first.\n", f.Title, f.Version)
+					fmt.Printf("%+v\n", f.TimingPoints)
+					os.Exit(1)
+				}
 				prev.Next = tp // Inherited point is never the first.
 				prev = tp
 				tps = append(tps, tp)
