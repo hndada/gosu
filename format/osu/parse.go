@@ -3,6 +3,7 @@ package osu
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"image/color"
 	"os"
 	"strconv"
@@ -50,7 +51,7 @@ func Parse(dat []byte) (*Format, error) {
 			case "AudioLeadIn":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.AudioLeadIn = int(f)
 			case "AudioHash":
@@ -58,13 +59,13 @@ func Parse(dat []byte) (*Format, error) {
 			case "PreviewTime":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.PreviewTime = int(f)
 			case "Countdown":
 				i, err := strconv.Atoi(kv[1])
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.Countdown = i
 			case "SampleSet":
@@ -72,37 +73,37 @@ func Parse(dat []byte) (*Format, error) {
 			case "StackLeniency":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.StackLeniency = f
 			case "Mode":
 				i, err := strconv.Atoi(kv[1])
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.Mode = i
 			case "LetterboxInBreaks":
 				b, err := strconv.ParseBool(kv[1])
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.LetterboxInBreaks = b
 			case "StoryFireInFront":
 				b, err := strconv.ParseBool(kv[1])
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.StoryFireInFront = b
 			case "UseSkinSprites":
 				b, err := strconv.ParseBool(kv[1])
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.UseSkinSprites = b
 			case "AlwaysShowPlayfield":
 				b, err := strconv.ParseBool(kv[1])
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.AlwaysShowPlayfield = b
 			case "OverlayPosition":
@@ -112,31 +113,31 @@ func Parse(dat []byte) (*Format, error) {
 			case "EpilepsyWarning":
 				b, err := strconv.ParseBool(kv[1])
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.EpilepsyWarning = b
 			case "CountdownOffset":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.CountdownOffset = int(f)
 			case "SpecialStyle":
 				b, err := strconv.ParseBool(kv[1])
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.SpecialStyle = b
 			case "WidescreenStoryboard":
 				b, err := strconv.ParseBool(kv[1])
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.WidescreenStoryboard = b
 			case "SamplesMatchPlaybackRate":
 				b, err := strconv.ParseBool(kv[1])
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.General.SamplesMatchPlaybackRate = b
 			}
@@ -145,14 +146,17 @@ func Parse(dat []byte) (*Format, error) {
 			if len(kv) < 2 {
 				continue
 			}
-			kv[1] = strings.TrimRightFunc(kv[1], unicode.IsSpace)
+			// Number-only sections may be trimmed both space.
+			// kv[1] = strings.TrimRightFunc(kv[1], unicode.IsSpace)
+			kv[1] = strings.TrimSpace(kv[1])
 			switch kv[0] {
 			case "Bookmarks":
 				slice := make([]int, 0)
 				for _, s := range strings.Split(kv[1], ",") {
 					i, err := strconv.Atoi(s)
 					if err != nil {
-						return o, err
+						// return o, fmt.Errorf("error at %s: %s", line, err)
+						continue
 					}
 					slice = append(slice, i)
 				}
@@ -160,25 +164,25 @@ func Parse(dat []byte) (*Format, error) {
 			case "DistanceSpacing":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.Editor.DistanceSpacing = f
 			case "BeatDivisor":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.Editor.BeatDivisor = f
 			case "GridSize":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.Editor.GridSize = int(f)
 			case "TimelineZoom":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.Editor.TimelineZoom = f
 			}
@@ -208,13 +212,13 @@ func Parse(dat []byte) (*Format, error) {
 			case "BeatmapID":
 				i, err := strconv.Atoi(kv[1])
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.Metadata.BeatmapID = i
 			case "BeatmapSetID":
 				i, err := strconv.Atoi(kv[1])
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.Metadata.BeatmapSetID = i
 			}
@@ -223,56 +227,58 @@ func Parse(dat []byte) (*Format, error) {
 			if len(kv) < 2 {
 				continue
 			}
-			kv[1] = strings.TrimRightFunc(kv[1], unicode.IsSpace)
+			// Number-only sections may be trimmed both space.
+			// kv[1] = strings.TrimRightFunc(kv[1], unicode.IsSpace)
+			kv[1] = strings.TrimSpace(kv[1])
 			switch kv[0] {
 			case "HPDrainRate":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.Difficulty.HPDrainRate = f
 			case "CircleSize":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.Difficulty.CircleSize = f
 			case "OverallDifficulty":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.Difficulty.OverallDifficulty = f
 			case "ApproachRate":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.Difficulty.ApproachRate = f
 			case "SliderMultiplier":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.Difficulty.SliderMultiplier = f
 			case "SliderTickRate":
 				f, err := strconv.ParseFloat(kv[1], 64)
 				if err != nil {
-					return o, err
+					return o, fmt.Errorf("error at %s: %s", line, err)
 				}
 				o.Difficulty.SliderTickRate = f
 			}
 		case "Events":
 			e, err := newEvent(line)
 			if err != nil {
-				// return o, err
+				// return o, fmt.Errorf("error at %s: %s", line, err)
 				continue
 			}
 			o.Events = append(o.Events, e)
 		case "TimingPoints":
 			tp, err := newTimingPoint(line)
 			if err != nil {
-				return o, err
+				return o, fmt.Errorf("error at %s: %s", line, err)
 			}
 			o.TimingPoints = append(o.TimingPoints, tp)
 		case "Colours":
@@ -303,7 +309,7 @@ func Parse(dat []byte) (*Format, error) {
 		case "HitObjects":
 			ho, err := newHitObject(line)
 			if err != nil {
-				return o, err
+				return o, fmt.Errorf("error at %s: %s", line, err)
 			}
 			o.HitObjects = append(o.HitObjects, ho)
 		}

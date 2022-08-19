@@ -1,7 +1,6 @@
 package osu
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -36,53 +35,54 @@ type HitSample struct { // delimiter:
 func newHitObject(line string) (HitObject, error) {
 	var ho HitObject
 	vs := strings.SplitN(line, `,`, 6)
-	if len(vs) < 6 {
-		return ho, errors.New("invalid hit object: not enough length")
+	if len(vs) < 5 {
+		return ho, fmt.Errorf("invalid hit object: %v (not enough length; requires 6)", vs)
 	}
-	{
-		f, err := strconv.ParseFloat(vs[0], 64)
-		if err != nil {
-			return ho, err
-		}
-		ho.X = int(f)
+	x, err := strconv.ParseFloat(vs[0], 64)
+	if err != nil {
+		return ho, err
 	}
-	{
-		f, err := strconv.ParseFloat(vs[1], 64)
-		if err != nil {
-			return ho, err
-		}
-		ho.Y = int(f)
-	}
-	{
-		f, err := strconv.ParseFloat(vs[2], 64)
-		if err != nil {
-			return ho, err
-		}
-		ho.Time = int(f)
-	}
-	{
-		i, err := strconv.Atoi(vs[3])
-		if err != nil {
-			return ho, err
-		}
-		ho.NoteType = i
-	}
-	{
-		i, err := strconv.Atoi(vs[4])
-		if err != nil {
-			return ho, err
-		}
-		ho.HitSound = i
-	}
+	ho.X = int(x)
 
+	y, err := strconv.ParseFloat(vs[1], 64)
+	if err != nil {
+		return ho, err
+	}
+	ho.Y = int(y)
+
+	time, err := strconv.ParseFloat(vs[2], 64)
+	if err != nil {
+		return ho, err
+	}
+	ho.Time = int(time)
+
+	noteType, err := strconv.Atoi(vs[3])
+	if err != nil {
+		return ho, err
+	}
+	ho.NoteType = noteType
+
+	hitSound, err := strconv.Atoi(vs[4])
+	if err != nil {
+		return ho, err
+	}
+	ho.HitSound = hitSound
+	if len(vs) == 5 {
+		if ho.NoteType != HitTypeNote {
+			return ho, fmt.Errorf("invalid hit object: %v; not enough length for non-normal note; requires 6)", vs)
+		} else {
+			return ho, nil
+		}
+	}
 	var vs2 []string
 	switch ho.NoteType & ComboMask {
 	case HitTypeNote, HitTypeSlider, HitTypeSpinner:
 		vs2 = strings.Split(vs[5], `,`)
 	case HitTypeHoldNote:
+		vs[5] = strings.Replace(vs[5], `,`, `:`, 1) // osu format v12 backward-compatibility
 		vs2 = strings.SplitN(vs[5], `:`, 2)
 	default:
-		return ho, errors.New("not reach")
+		return ho, fmt.Errorf("error at %s's vs2: %s (not reach)", line, vs2)
 	}
 
 	var hsSkip bool
@@ -115,7 +115,7 @@ func newHitObject(line string) (HitObject, error) {
 		ho.EndTime = int(f)
 
 	default:
-		return ho, errors.New("invalid hit object data")
+		return ho, fmt.Errorf("invalid hit object: error at %s; invalid note type %d", line, ho.NoteType&ComboMask)
 	}
 	if hsSkip {
 		return ho, nil
@@ -132,7 +132,7 @@ func newSliderParams(s string) (SliderParams, error) {
 	var sp SliderParams
 	vs := strings.Split(s, `,`)
 	if len(vs) < 3 {
-		return sp, errors.New("invalid hit object: not enough length at slider parameter")
+		return sp, fmt.Errorf("invalid hit object: error at slider parameter %s; no enough length at %v", s, vs)
 	}
 	{
 		// example: B|200:200|250:200
@@ -169,7 +169,8 @@ func newSliderParams(s string) (SliderParams, error) {
 		return sp, nil
 	}
 	if len(vs) < 5 {
-		return sp, errors.New("invalid hit object: not enough length at edge sound samples in slider parameter ")
+		return sp, fmt.Errorf("invalid hit object: error at slider parameter %s; "+
+			"no enough length at edge sound samples in slider parameter (%v)", s, vs)
 	}
 	{
 		// example: 2|1|2
@@ -202,44 +203,50 @@ func newSliderParams(s string) (SliderParams, error) {
 	return sp, nil
 }
 
+//	if len(vs) < 5 {
+//		return hs, errors.New("invalid hit sample: not enough length at hit sample")
+//	}
 func newHitSample(s string) (HitSample, error) {
 	// normalSet:additionSet:index:volume:filename
 	var hs HitSample
 	vs := strings.Split(s, `:`)
-	if len(vs) < 5 {
-		return hs, errors.New("invalid hit sample: not enough length")
+	normalSet, err := strconv.Atoi(vs[0])
+	if err != nil {
+		return hs, err
 	}
-	{
-		i, err := strconv.Atoi(vs[0])
-		if err != nil {
-			return hs, err
-		}
-		hs.NormalSet = i
+	hs.NormalSet = normalSet
+	if len(vs) == 1 {
+		return hs, nil // Todo: need to test whether this is not an error actually
 	}
-	{
-		i, err := strconv.Atoi(vs[1])
-		if err != nil {
-			return hs, err
-		}
-		hs.AdditionSet = i
+
+	additionSet, err := strconv.Atoi(vs[1])
+	if err != nil {
+		return hs, err
 	}
-	{
-		i, err := strconv.Atoi(vs[2])
-		if err != nil {
-			return hs, err
-		}
-		hs.Index = i
+	hs.AdditionSet = additionSet
+	if len(vs) == 2 {
+		return hs, nil // Todo: need to test whether this is not an error actually
 	}
-	{
-		f, err := strconv.ParseFloat(vs[3], 64)
-		if err != nil {
-			return hs, err
-		}
-		hs.Volume = int(f)
+
+	index, err := strconv.Atoi(vs[2])
+	if err != nil {
+		return hs, err
 	}
-	{
-		hs.Filename = vs[4]
+	hs.Index = index
+	if len(vs) == 3 {
+		return hs, nil // Todo: need to test whether this is not an error actually
 	}
+
+	volume, err := strconv.ParseFloat(vs[3], 64)
+	if err != nil {
+		return hs, err
+	}
+	hs.Volume = int(volume)
+	if len(vs) == 4 {
+		return hs, nil // Todo: need to test whether this is not an error actually
+	}
+
+	hs.Filename = vs[4]
 	return hs, nil
 }
 

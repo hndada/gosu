@@ -2,6 +2,7 @@ package osu
 
 import (
 	"errors"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -32,7 +33,14 @@ func newTimingPoint(line string) (TimingPoint, error) {
 
 	beatLength, err := strconv.ParseFloat(vs[1], 64)
 	if err != nil {
-		return tp, err
+		switch vs[1] {
+		case "∞":
+			beatLength = math.Inf(1)
+		case "-∞":
+			beatLength = math.Inf(-1)
+		default:
+			return tp, err
+		}
 	}
 	tp.BeatLength = beatLength
 
