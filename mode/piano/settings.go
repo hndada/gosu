@@ -8,7 +8,7 @@ const (
 	screenSizeY = 900
 )
 
-var BaseSpeed = 0.7
+var SpeedBase = 0.7
 var KeySettings = map[int][]input.Key{
 	4:               {input.KeyD, input.KeyF, input.KeyJ, input.KeyK},
 	5:               {input.KeyD, input.KeyF, input.KeySpace, input.KeyJ, input.KeyK},
