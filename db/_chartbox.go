@@ -14,53 +14,7 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
-// https://github.com/vmihailenco/msgpack
-// https://github.com/osuripple/cheesegull
-type ChartInfo struct {
-	Path string
-	// Mods mode.Mods
-	Header mode.ChartHeader
-	Mode   int
-	Mode2  int
-	Level  float64
-
-	Duration   int64
-	NoteCounts []int
-	MainBPM    float64
-	MinBPM     float64
-	MaxBPM     float64
-	// Tags       []string // Auto-generated or User-defined
-	// Box render.Sprite
-}
-
-func NewChartInfo(c *mode.Chart, fpath string, level float64) ChartInfo {
-	mainBPM, minBPM, maxBPM := mode.BPMs(c.TransPoints, c.Duration)
-	cb := ChartInfo{
-		Path:   fpath,
-		Header: c.ChartHeader,
-		Mode:   c.Mode,
-		Mode2:  c.Mode2,
-		Level:  level,
-
-		Duration:   c.Duration,
-		NoteCounts: c.NoteCounts,
-		MainBPM:    mainBPM,
-		MinBPM:     minBPM,
-		MaxBPM:     maxBPM,
-	}
-	// cb.Box = NewBoxSprite(c, level)
-	return cb
-}
-
-const (
-	BoxWidth  = 450 // Box width
-	BoxHeight = 50  // Box height
-)
-
-var Purple = color.RGBA{172, 49, 174, 255}
-
 func NewChartInfoSprite(info ChartInfo) render.Sprite { // h mode.ChartHeader, mode2 int, level float64
-	const border = 3
 	const (
 		dx = 20 // dot x
 		dy = 30 // dot y
