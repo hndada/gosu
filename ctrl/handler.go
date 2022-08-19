@@ -22,7 +22,7 @@ type Handler struct {
 	Keys       []ebiten.Key
 	PlaySounds []func() // SoundBytes [][]byte
 	HoldKey    ebiten.Key
-	Countdown  int
+	Countdown  int // Require to hold for a while to move a cursor.
 	Active     bool
 	// Hold       int // Tick count of holding.
 	// Threshold  int

@@ -24,6 +24,10 @@ type Scene interface {
 
 var sceneSelect *SceneSelect
 
+// 1. Load data from local db (It may be skipped since no local db)
+// 2. Find new music, then add to SceneSelect (and also to local db)
+// 3. NewSelectScene
+// 4. NewPlayScene, based on mode. Args: path, mods, replay, play
 func NewGame() *Game {
 	mode.LoadSkin()
 	piano.LoadSkin()

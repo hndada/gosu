@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hndada/gosu/audioutil"
 	"github.com/hndada/gosu/render"
 )
 
@@ -29,7 +30,7 @@ type ScenePlay struct {
 	MD5 [md5.Size]byte // MD5 for raw chart file.
 
 	MainBPM   float64
-	BaseSpeed float64 // Todo: BaseSpeed -> SpeedBase
+	SpeedBase float64
 	*TransPoint
 
 	FetchPressed func() []bool
@@ -62,14 +63,29 @@ func (s ScenePlay) Time() int64 { return int64(float64(s.Tick) / float64(MaxTPS)
 // 	}
 // 	s.Flow = 1
 
-// 	s.Play = play
-// 	if !s.Play {
-// 		return s
-// 	}
-// 	s.MusicFile, s.MusicPlayer = audio.NewPlayer(c.MusicPath(cpath))
-// 	s.MusicPlayer.SetVolume(Volume)
-// 	return s
-// }
+//		s.Play = play
+//		if !s.Play {
+//			return s
+//		}
+//		s.MusicFile, s.MusicPlayer = audio.NewPlayer(c.MusicPath(cpath))
+//		s.MusicPlayer.SetVolume(Volume)
+//		return s
+//	}
+func (s *ScenePlay) SetMusicPlayer(musicPath string) error {
+	// musicBytes, closer, err := audioutil.NewBytes(c.MusicPath(cpath))
+	if musicPath == "virtual" || musicPath == "" {
+		return nil
+	}
+	mbytes, err := audioutil.NewBytes(musicPath)
+	if err != nil {
+		return err
+	}
+	// s.MusicCloser = closer
+	// s.MusicFile, s.MusicPlayer = audio.NewPlayer(c.MusicPath(cpath))
+	s.MusicPlayer = audioutil.Context.NewPlayerFromBytes(mbytes)
+	s.MusicPlayer.SetVolume(Volume)
+	return nil
+}
 
 // Update cannot be generalized; each scene use template fields in timely manner.
 
