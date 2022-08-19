@@ -69,3 +69,14 @@ func SaveScores() {
 // 	}
 // 	s.Replays = append(s.Replays, rf)
 // }
+
+// // FetchReplay returns first MD5-matching replay format.
+// func (s SceneSelect) FetchReplay(i int) *osr.Format {
+// 	md5 := s.IndexToMD5Map[i]
+// 	for _, r := range s.Replays {
+// 		if md5 == r.MD5() {
+// 			return r
+// 		}
+// 	}
+// 	return nil
+// }
