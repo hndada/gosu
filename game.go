@@ -44,7 +44,7 @@ func NewGame() *Game {
 		play := audioutil.Context.NewPlayerFromBytes(b).Play
 		soundHandler = ctrl.F64Handler{
 			Handler: ctrl.Handler{
-				Keys:       []ebiten.Key{ebiten.KeyF1, ebiten.KeyF2},
+				Keys:       []ebiten.Key{ebiten.Key2, ebiten.Key1},
 				PlaySounds: []func(){play, play},
 				HoldKey:    -1,
 			},
@@ -62,7 +62,7 @@ func NewGame() *Game {
 		play := audioutil.Context.NewPlayerFromBytes(b).Play
 		speedHandler = ctrl.F64Handler{
 			Handler: ctrl.Handler{
-				Keys:       []ebiten.Key{ebiten.KeyF3, ebiten.KeyF4},
+				Keys:       []ebiten.Key{ebiten.Key4, ebiten.Key3},
 				PlaySounds: []func(){play, play},
 				HoldKey:    -1,
 			},
@@ -93,6 +93,8 @@ type SelectToPlayArgs struct {
 }
 
 func (g *Game) Update() error {
+	g.SoundHandler.Update()
+	g.SpeedHandler.Update()
 	args := g.Scene.Update()
 	if args == nil {
 		return nil
