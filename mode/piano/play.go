@@ -3,7 +3,6 @@ package piano
 import (
 	"fmt"
 	"math"
-	"path/filepath"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -99,8 +98,8 @@ func NewScenePlay(cpath string, rf *osr.Format, play bool) (*ScenePlay, error) {
 		s.Background = mode.DefaultBackground
 	}
 	s.BarLineTimes = mode.BarLineTimes(s.Chart.TransPoints, c.Duration, waitBefore, mode.DefaultWaitAfter)
-	musicPath := filepath.Join(filepath.Dir(cpath), s.Chart.AudioFilename)
-	s.SetMusicPlayer(musicPath)
+	// musicPath := filepath.Join(filepath.Dir(cpath), s.Chart.AudioFilename)
+	// s.SetMusicPlayer(musicPath)
 	if err != nil {
 		return s, err
 	}
@@ -173,17 +172,17 @@ func (s *ScenePlay) Update() any {
 	s.DelayedScore += DelayedScorePower * (s.Score() - s.DelayedScore)
 
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished() {
-		s.MusicPlayer.Close()
-		// s.MusicCloser.Close()
+		if s.MusicPlayer != nil {
+			s.MusicPlayer.Close()
+		}
 		return mode.PlayToResultArgs{
 			MD5:  s.MD5,
 			Time: time.Now(),
 			// Replay
 			Result: s.Result,
 		}
-		// return mode.NewPlayToResultArgs(fpath, s.Result)
 	}
-	if s.Tick == 0 {
+	if s.Tick == 0 && s.MusicPlayer != nil {
 		s.MusicPlayer.Play()
 	}
 	t := s.BarLineTimes[s.LowestBarLineIndex]
@@ -371,11 +370,8 @@ func (s ScenePlay) DrawKeys(screen *ebiten.Image) {
 func (s ScenePlay) IsFinished() bool {
 	return s.Time() > s.Chart.Duration+mode.DefaultWaitAfter
 }
-
 func (s ScenePlay) BeatRatio() float64 { return s.TransPoint.BPM / s.MainBPM }
 func (s ScenePlay) Speed() float64     { return s.SpeedBase * s.BeatRatio() * s.BeatScale }
-func (s *ScenePlay) KeyAction(k int) input.KeyAction {
+func (s ScenePlay) KeyAction(k int) input.KeyAction {
 	return input.CurrentKeyAction(s.LastPressed[k], s.Pressed[k])
 }
-
-// func (s ScenePlay) Time() int64 { return mode.Time(s.Tick) }
