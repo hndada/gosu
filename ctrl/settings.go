@@ -4,8 +4,8 @@ const defaultTPS = 1000
 
 const (
 	transDuration = 400 // In milliseconds.
-	longDuration  = 800
-	shortDuration = 150
+	longDuration  = 200
+	shortDuration = 80
 )
 
 var (

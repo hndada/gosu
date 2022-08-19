@@ -21,14 +21,14 @@ import (
 )
 
 type SceneSelect struct {
-	SelectHandler ctrl.IntHandler
-	Mode          int
-	// Mods Mods
-	// ReplayMode    bool
-
 	ChartInfoBoxSprite render.Sprite
 	SoundMap           audioutil.SoundMap
-	View               []db.ChartInfo // Todo: should it be []*db.ChartInfo ?
+
+	Mode int
+	// Mods Mods
+	// ReplayMode    bool
+	View          []db.ChartInfo // Todo: should it be []*db.ChartInfo ?
+	SelectHandler ctrl.IntHandler
 	// ViewMode int
 
 	Cursor      int // Todo: Delayed at Cursor
@@ -48,6 +48,7 @@ const (
 // Todo: preview music
 func NewSceneSelect() *SceneSelect {
 	s := new(SceneSelect)
+	s.View = db.ChartInfos // View must be set before SelectHandler is set. // Todo: temp
 	{
 		b, err := audioutil.NewBytes("skin/default-hover.wav")
 		if err != nil {
@@ -56,12 +57,12 @@ func NewSceneSelect() *SceneSelect {
 		play := audioutil.Context.NewPlayerFromBytes(b).Play
 		s.SelectHandler = ctrl.IntHandler{
 			Handler: ctrl.Handler{
-				Keys:       []ebiten.Key{ebiten.KeyUp, ebiten.KeyDown},
+				Keys:       []ebiten.Key{ebiten.KeyDown, ebiten.KeyUp},
 				PlaySounds: []func(){play, play},
 				HoldKey:    -1,
 			},
 			Min:    0,
-			Max:    len(s.View),
+			Max:    len(s.View) - 1,
 			Unit:   1,
 			Target: &s.Cursor,
 		}
@@ -89,13 +90,15 @@ func NewSceneSelect() *SceneSelect {
 	if err != nil {
 		fmt.Println(err)
 	}
-	s.View = db.ChartInfos // Todo: temp
 	s.UpdateBackground()
 	return s
 }
 func (s *SceneSelect) UpdateBackground() {
 	s.Background = mode.DefaultBackground
 	if len(s.View) == 0 {
+		return
+	}
+	if s.Cursor >= len(s.View) {
 		return
 	}
 	info := s.View[s.Cursor]
@@ -176,8 +179,8 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 	// }
 
 	ebitenutil.DebugPrint(screen,
-		fmt.Sprintf("Volume (Press F1/F2): %d%%\n"+
-			"SpeedBase (Press F3/F4): %.0f\n"+
-			"(Exposure time: %.0fms)\n\n:"+"Countdown:%d\n", // %.1f
-			int(mode.Volume*100), mode.SpeedBase*100, piano.ExposureTime(mode.SpeedBase), s.SelectHandler.Handler.Countdown))
+		fmt.Sprintf("Volume (Press 1/2): %.0f%%\n"+
+			"SpeedBase (Press 3/4): %.0f\n"+
+			"(Exposure time: %.0fms)\n\n:"+"Handler:%+v (Target: %d)\n",
+			mode.Volume*100, mode.SpeedBase*100, piano.ExposureTime(mode.SpeedBase), s.SelectHandler, *s.SelectHandler.Target))
 }
