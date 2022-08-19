@@ -122,12 +122,3 @@ func (g *Game) Draw(screen *ebiten.Image) {
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return screenSizeX, screenSizeY
 }
-
-//	func a(args *Args) {
-//		args2 := reflect.ValueOf(args)
-//
-// from := args2.FieldByName("From").String()
-//
-//		NewSceneResult()
-//		args2.FieldByName("Result")
-//	}
