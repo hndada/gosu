@@ -16,7 +16,7 @@ import (
 
 // https://github.com/vmihailenco/msgpack
 // https://github.com/osuripple/cheesegull
-type ChartBox struct {
+type ChartInfo struct {
 	Path string
 	// Mods mode.Mods
 	Header mode.ChartHeader
@@ -30,12 +30,12 @@ type ChartBox struct {
 	MinBPM     float64
 	MaxBPM     float64
 	// Tags       []string // Auto-generated or User-defined
-	Box render.Sprite
+	// Box render.Sprite
 }
 
-func NewChartBox(c *mode.Chart, fpath string, level float64) ChartBox {
+func NewChartInfo(c *mode.Chart, fpath string, level float64) ChartInfo {
 	mainBPM, minBPM, maxBPM := mode.BPMs(c.TransPoints, c.Duration)
-	cb := ChartBox{
+	cb := ChartInfo{
 		Path:   fpath,
 		Header: c.ChartHeader,
 		Mode:   c.Mode,
@@ -48,7 +48,7 @@ func NewChartBox(c *mode.Chart, fpath string, level float64) ChartBox {
 		MinBPM:     minBPM,
 		MaxBPM:     maxBPM,
 	}
-	cb.Box = NewBox(c, level)
+	// cb.Box = NewBoxSprite(c, level)
 	return cb
 }
 
@@ -59,7 +59,7 @@ const (
 
 var Purple = color.RGBA{172, 49, 174, 255}
 
-func NewBox(c *mode.Chart, level float64) render.Sprite {
+func NewChartInfoSprite(info ChartInfo) render.Sprite { // h mode.ChartHeader, mode2 int, level float64
 	const border = 3
 	const (
 		dx = 20 // dot x
@@ -69,7 +69,7 @@ func NewBox(c *mode.Chart, level float64) render.Sprite {
 	draw.Draw(img, img.Bounds(), &image.Uniform{Purple}, image.Point{}, draw.Src)
 	inRect := image.Rect(border, border, BoxWidth-border, BoxHeight-border)
 	draw.Draw(img, inRect, &image.Uniform{color.White}, image.Point{}, draw.Src)
-	t := fmt.Sprintf("(%dK Lv %.1f) %s [%s]", c.Mode2, level, c.MusicName, c.ChartName)
+	t := fmt.Sprintf("(%dK Lv %.1f) %s [%s]", info.Mode2, info.Level, info.Header.MusicName, info.Header.ChartName)
 	d := &font.Drawer{
 		Dst:  img,
 		Src:  image.NewUniform(color.Black),

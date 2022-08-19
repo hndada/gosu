@@ -10,6 +10,7 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 )
 
+// Todo: package db -> data
 type ScoreRow struct {
 	MD5  [md5.Size]byte
 	Time time.Time
@@ -19,7 +20,7 @@ type ScoreRow struct {
 
 var Scores = make(map[[md5.Size]byte][]ScoreRow)
 
-func LoadScoreDB() {
+func LoadScores() {
 	const fname = "score.db"
 	// for i, ci := range s.View {
 	// 	d, err := os.ReadFile(ci.Path)
@@ -37,7 +38,7 @@ func LoadScoreDB() {
 	// r := bytes.NewReader(b)
 	msgpack.Unmarshal(b, &Scores)
 }
-func SaveScoreDB() {
+func SaveScores() {
 	b, err := msgpack.Marshal(&Scores)
 	if err != nil {
 		fmt.Printf("Failed to save error: %s", err)
