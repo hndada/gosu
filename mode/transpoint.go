@@ -47,11 +47,6 @@ func NewTransPoints(f any) []*TransPoint {
 		if len(f.TimingPoints) == 0 {
 			return tps
 		}
-		// for drop:=0; drop<len(f.TimingPoints) && f.Timin
-		// init := f.TimingPoints[0]
-		// for i := 1; i < len(f.TimingPoints) && !init.Uninherited; i++ {
-		// 	init = f.TimingPoints[i]
-		// }
 		tps = make([]*TransPoint, 0, len(f.TimingPoints))
 		lastBPM, _ := f.TimingPoints[0].BPM()
 		var prev *TransPoint

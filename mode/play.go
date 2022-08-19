@@ -2,7 +2,6 @@ package mode
 
 import (
 	"crypto/md5"
-	"io"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2/audio"
@@ -16,18 +15,14 @@ func TimeToTick(time int64) int { return int(float64(time) / 1000 * float64(MaxT
 func TickToTime(tick int) int64 { return int64(float64(tick) / float64(MaxTPS) * 1000) }
 
 // This is template struct. Fields can be set at outer function call.
+// Update cannot be generalized; each scene use template fields in timely manner.
 type ScenePlay struct {
 	Play bool // Whether the scene is for play or not
 	Tick int
+	MD5  [md5.Size]byte // MD5 for raw chart file.
 
-	// MusicFile   io.ReadSeekCloser
-	// MusicStreamer  io.ReadSeeker
 	MusicPlayer *audio.Player
-	// MusicCloser  io.Closer
-	SoundBytes   map[string][]byte
-	SoundClosers []io.Closer
-	// A player for Sound is generated at a place.
-	MD5 [md5.Size]byte // MD5 for raw chart file.
+	SoundBytes  map[string][]byte // A player for Sound is generated at a place.
 
 	MainBPM   float64
 	SpeedBase float64
@@ -54,25 +49,7 @@ const (
 
 func (s ScenePlay) Time() int64 { return int64(float64(s.Tick) / float64(MaxTPS) * 1000) }
 
-// func NewScenePlay(c *Chart, cpath string, play bool) ScenePlay {
-// 	var s ScenePlay
-// 	s.MainBPM, _, _ = BPMs(c.TransPoints, c.Duration) // Todo: Need a test
-// 	s.TransPoint = c.TransPoints[0]
-// 	for s.TransPoint.Time == s.TransPoint.Next.Time {
-// 		s.TransPoint = s.TransPoint.Next
-// 	}
-// 	s.Flow = 1
-
-//		s.Play = play
-//		if !s.Play {
-//			return s
-//		}
-//		s.MusicFile, s.MusicPlayer = audio.NewPlayer(c.MusicPath(cpath))
-//		s.MusicPlayer.SetVolume(Volume)
-//		return s
-//	}
 func (s *ScenePlay) SetMusicPlayer(musicPath string) error {
-	// musicBytes, closer, err := audioutil.NewBytes(c.MusicPath(cpath))
 	if musicPath == "virtual" || musicPath == "" {
 		return nil
 	}
@@ -80,14 +57,10 @@ func (s *ScenePlay) SetMusicPlayer(musicPath string) error {
 	if err != nil {
 		return err
 	}
-	// s.MusicCloser = closer
-	// s.MusicFile, s.MusicPlayer = audio.NewPlayer(c.MusicPath(cpath))
 	s.MusicPlayer = audioutil.Context.NewPlayerFromBytes(mbytes)
 	s.MusicPlayer.SetVolume(Volume)
 	return nil
 }
-
-// Update cannot be generalized; each scene use template fields in timely manner.
 
 // Replay is a entire key stroke timed-log.
 type PlayToResultArgs struct {
@@ -96,15 +69,3 @@ type PlayToResultArgs struct {
 	// Replay // Todo: implement
 	Result
 }
-
-// func NewPlayToResultArgs(cpath string, result Result) PlayToResultArgs {
-// 	b, err := os.ReadFile(cpath)
-// 	if err != nil {
-// 		fmt.Printf("error occurred at transiting from Play to Result: %s", err)
-// 	}
-// 	return PlayToResultArgs{
-// 		Time:   time.Now(),
-// 		MD5:    md5.Sum(b),
-// 		Result: result,
-// 	}
-// }
