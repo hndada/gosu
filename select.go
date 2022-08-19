@@ -13,6 +13,8 @@ import (
 	"github.com/hndada/gosu/render"
 )
 
+var ChartInfoSprites []render.Sprite
+
 // 1. Load data from local db (It may be skipped since no local db)
 // 2. Find new music, then add to SceneSelect (and also to local db)
 // 3. NewSelectScene
@@ -24,8 +26,8 @@ type SceneSelect struct {
 	SelectHandler ctrl.IntHandler
 	// Todo: Delayed at Cursor
 	Mode     int
+	View     []db.ChartInfo // Todo: should it be []*db.ChartInfo ?
 	ViewMode int
-	View     []db.ChartBox
 	// ChartBoxs []db.ChartBox
 	Cursor     int
 	Background render.Sprite
@@ -68,6 +70,7 @@ func NewSceneSelect() *SceneSelect {
 			Target: &s.Cursor,
 		}
 	}
+	s.View = db.ChartInfos // Todo: temp
 	// var err error
 	// err = s.SoundMap.Register("skin/default-hover.wav", "move")
 	// if err != nil {
@@ -246,7 +249,7 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 	s.Background.Draw(screen)
 
 	const count = 20
-	var viewport []db.ChartBox
+	var viewport []db.ChartInfo
 	var cursor int
 	const pop = db.BoxWidth / 10
 	if s.Cursor <= count/2 {
@@ -263,8 +266,14 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		bound := s.Cursor + count/2
 		viewport = append(viewport, s.View[s.Cursor:bound]...)
 	}
-	for i, box := range viewport {
-		sprite := box.Box
+	for i, info := range viewport {
+		// sprite := box.Box
+		offset := i - cursor
+		if ChartInfoSprites[s.Cursor+offset].I == nil {
+			// info := db.ChartInfos[s.Cursor+offset]
+			ChartInfoSprites[s.Cursor+offset] = db.NewChartInfoSprite(info)
+		}
+		sprite := ChartInfoSprites[s.Cursor+offset]
 		if i == cursor {
 			sprite.X -= pop
 		}
