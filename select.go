@@ -2,18 +2,23 @@ package gosu
 
 import (
 	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
 	"io"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hndada/gosu/audioutil"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/db"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/render"
+	"golang.org/x/image/font/basicfont"
 )
 
-var ChartInfoSprites []render.Sprite
+// var ChartInfoSprites []render.Sprite
 
 // 1. Load data from local db (It may be skipped since no local db)
 // 2. Find new music, then add to SceneSelect (and also to local db)
@@ -25,14 +30,15 @@ func (s *SceneSelect) HandleMove() {}
 type SceneSelect struct {
 	SelectHandler ctrl.IntHandler
 	// Todo: Delayed at Cursor
-	Mode     int
-	View     []db.ChartInfo // Todo: should it be []*db.ChartInfo ?
-	ViewMode int
+	Mode int
+	// ViewMode int
+	View []db.ChartInfo // Todo: should it be []*db.ChartInfo ?
+
 	// ChartBoxs []db.ChartBox
 	Cursor     int
 	Background render.Sprite
-	Hold       int
-	HoldKey    ebiten.Key
+	// Hold       int
+	// HoldKey ebiten.Key
 
 	// ReplayMode    bool
 	// IndexToMD5Map map[int][md5.Size]byte
@@ -46,7 +52,15 @@ type SceneSelect struct {
 	// SoundClosers []io.Closer
 	// PlaySoundMove   func()
 	// PlaySoundSelect func()
+	ChartInfoBoxSprite render.Sprite
 }
+
+const (
+	BoxWidth  = 450 // Box width
+	BoxHeight = 50  // Box height
+)
+const count = 20
+const pop = BoxWidth / 10
 
 // Todo: Score / Replay fetch
 func NewSceneSelect() *SceneSelect {
@@ -70,7 +84,8 @@ func NewSceneSelect() *SceneSelect {
 			Target: &s.Cursor,
 		}
 	}
-	s.View = db.ChartInfos // Todo: temp
+	s.Mode = mode.ModePiano7 // Todo: temp
+	s.View = db.ChartInfos   // Todo: temp
 	// var err error
 	// err = s.SoundMap.Register("skin/default-hover.wav", "move")
 	// if err != nil {
@@ -80,6 +95,22 @@ func NewSceneSelect() *SceneSelect {
 	err := s.SoundMap.Register("skin/restart.wav", "select")
 	if err != nil {
 		fmt.Println(err)
+	}
+	purple := color.RGBA{172, 49, 174, 255}
+	white := color.RGBA{255, 255, 255, 128}
+	const border = 3
+	{
+		img := image.NewRGBA(image.Rect(0, 0, BoxWidth, BoxHeight))
+		draw.Draw(img, img.Bounds(), &image.Uniform{purple}, image.Point{}, draw.Src)
+		inRect := image.Rect(border, border, BoxWidth-border, BoxHeight-border)
+		draw.Draw(img, inRect, &image.Uniform{white}, image.Point{}, draw.Src)
+		s.ChartInfoBoxSprite = render.Sprite{
+			I: ebiten.NewImageFromImage(img),
+			W: BoxWidth,
+			H: BoxHeight,
+			X: screenSizeX - BoxWidth + pop,
+			// Y is not fixed.
+		}
 	}
 	return s
 }
@@ -247,11 +278,14 @@ func (s *SceneSelect) Update() any {
 // x -= y / 5, for example.
 func (s SceneSelect) Draw(screen *ebiten.Image) {
 	s.Background.Draw(screen)
+	const (
+		dx = 20
+		dy = 30
+	)
 
-	const count = 20
 	var viewport []db.ChartInfo
 	var cursor int
-	const pop = db.BoxWidth / 10
+
 	if s.Cursor <= count/2 {
 		viewport = append(viewport, s.View[0:s.Cursor]...)
 		cursor = s.Cursor
@@ -266,18 +300,28 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		bound := s.Cursor + count/2
 		viewport = append(viewport, s.View[s.Cursor:bound]...)
 	}
+	// fmt.Println(len(viewport))
 	for i, info := range viewport {
-		// sprite := box.Box
-		offset := i - cursor
-		if ChartInfoSprites[s.Cursor+offset].I == nil {
-			// info := db.ChartInfos[s.Cursor+offset]
-			ChartInfoSprites[s.Cursor+offset] = db.NewChartInfoSprite(info)
-		}
-		sprite := ChartInfoSprites[s.Cursor+offset]
+		sprite := s.ChartInfoBoxSprite
 		if i == cursor {
 			sprite.X -= pop
 		}
+		offset := i - cursor
+		sprite.SetCenterY(screenSizeY/2 + float64(offset)*BoxHeight)
 		sprite.Draw(screen)
+		// sprite := box.Box
+
+		// if ChartInfoSprites[s.Cursor+offset].I == nil {
+		// 	// info := db.ChartInfos[s.Cursor+offset]
+		// 	ChartInfoSprites[s.Cursor+offset] = db.NewChartInfoSprite(info)
+		// }
+		// sprite := ChartInfoSprites[s.Cursor+offset]
+		t := info.Text()
+		// rect := text.BoundString(basicfont.Face7x13, t)
+		x := int(sprite.X) + dx //+ rect.Dx()
+		y := int(sprite.Y) + dy //+ rect.Dy()
+		text.Draw(screen, t, basicfont.Face7x13, x, y, color.Black)
+
 		// y := (i-s.Cursor)*bh + screenSizeY/2 - bh/2
 		// if y > screenSizeY || y+bh < 0 {
 		// 	continue
