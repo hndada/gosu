@@ -174,10 +174,11 @@ func (s *ScenePlay) Update() any {
 
 	if ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished() {
 		s.MusicPlayer.Close()
-		s.MusicCloser.Close()
-		return &mode.PlayToResultArgs{
-			Time:   time.Now(),
-			MD5:    s.MD5,
+		// s.MusicCloser.Close()
+		return mode.PlayToResultArgs{
+			MD5:  s.MD5,
+			Time: time.Now(),
+			// Replay
 			Result: s.Result,
 		}
 		// return mode.NewPlayToResultArgs(fpath, s.Result)

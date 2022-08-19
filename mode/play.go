@@ -22,8 +22,8 @@ type ScenePlay struct {
 
 	// MusicFile   io.ReadSeekCloser
 	// MusicStreamer  io.ReadSeeker
-	MusicPlayer  *audio.Player
-	MusicCloser  io.Closer
+	MusicPlayer *audio.Player
+	// MusicCloser  io.Closer
 	SoundBytes   map[string][]byte
 	SoundClosers []io.Closer
 	// A player for Sound is generated at a place.

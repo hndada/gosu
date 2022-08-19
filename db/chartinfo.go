@@ -133,7 +133,6 @@ func LoadNewCharts(musicPath string) {
 		}
 	}
 	LastUpdateTime = time.Now()
-	fmt.Println(len(ChartInfos))
 	SaveChartInfos()
 	// sort.Slice(s.ChartBoxs, func(i, j int) bool {
 	// 	if s.ChartBoxs[i].Chart.MusicName == s.ChartBoxs[j].Chart.MusicName {
