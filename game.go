@@ -10,7 +10,6 @@ import (
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
-	"github.com/hndada/gosu/render"
 )
 
 type Game struct {
@@ -29,7 +28,7 @@ func NewGame() *Game {
 	mode.LoadSkin()
 	piano.LoadSkin()
 	db.LoadCharts(MusicPath)
-	ChartInfoSprites = make([]render.Sprite, len(db.ChartInfos))
+	// ChartInfoSprites = make([]render.Sprite, len(db.ChartInfos))
 
 	var soundHandler ctrl.F64Handler
 	var speedHandler ctrl.F64Handler
