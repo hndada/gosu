@@ -3,11 +3,11 @@ package piano
 import (
 	"fmt"
 	"math"
+	"path/filepath"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hndada/gosu/audioutil"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
@@ -73,7 +73,7 @@ func NewScenePlay(cpath string, rf *osr.Format, play bool) (*ScenePlay, error) {
 	for s.TransPoint.Time == s.TransPoint.Next.Time {
 		s.TransPoint = s.TransPoint.Next
 	}
-	s.BaseSpeed = BaseSpeed // From global variable
+	s.SpeedBase = SpeedBase // From global variable
 	s.PlayNotes,
 		s.StagedNotes,
 		s.LowestTails,
@@ -99,16 +99,8 @@ func NewScenePlay(cpath string, rf *osr.Format, play bool) (*ScenePlay, error) {
 		s.Background = mode.DefaultBackground
 	}
 	s.BarLineTimes = mode.BarLineTimes(s.Chart.TransPoints, c.Duration, waitBefore, mode.DefaultWaitAfter)
-
-	// musicBytes, closer, err := audioutil.NewBytes(c.MusicPath(cpath))
-	mbytes, err := audioutil.NewBytes(cpath)
-	if err != nil {
-		return nil, err
-	}
-	// s.MusicCloser = closer
-	// s.MusicFile, s.MusicPlayer = audio.NewPlayer(c.MusicPath(cpath))
-	s.MusicPlayer = audioutil.Context.NewPlayerFromBytes(mbytes)
-	s.MusicPlayer.SetVolume(mode.Volume)
+	musicPath := filepath.Join(filepath.Dir(cpath), s.Chart.AudioFilename)
+	s.SetMusicPlayer(musicPath)
 	if err != nil {
 		return s, err
 	}
@@ -245,7 +237,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.Duration)/1000,
 		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
 		fr*100, ar*100, rr*100, s.JudgmentCounts,
-		s.Speed()*100, s.BaseSpeed*100, ExposureTime(s.Speed())))
+		s.Speed()*100, s.SpeedBase*100, ExposureTime(s.Speed())))
 }
 
 func (s ScenePlay) DrawBarLine(screen *ebiten.Image) {
@@ -380,7 +372,7 @@ func (s ScenePlay) IsFinished() bool {
 }
 
 func (s ScenePlay) BeatRatio() float64 { return s.TransPoint.BPM / s.MainBPM }
-func (s ScenePlay) Speed() float64     { return s.BaseSpeed * s.BeatRatio() * s.BeatScale }
+func (s ScenePlay) Speed() float64     { return s.SpeedBase * s.BeatRatio() * s.BeatScale }
 func (s *ScenePlay) KeyAction(k int) input.KeyAction {
 	return input.CurrentKeyAction(s.LastPressed[k], s.Pressed[k])
 }
