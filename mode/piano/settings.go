@@ -8,7 +8,8 @@ const (
 	screenSizeY = 900
 )
 
-var SpeedBase = 0.7
+var SpeedBase = 1.1 // Todo: make the variable declared in each mode
+
 var KeySettings = map[int][]input.Key{
 	4:               {input.KeyD, input.KeyF, input.KeyJ, input.KeyK},
 	5:               {input.KeyD, input.KeyF, input.KeySpace, input.KeyJ, input.KeyK},
