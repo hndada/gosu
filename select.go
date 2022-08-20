@@ -13,7 +13,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hndada/gosu/audioutil"
 	"github.com/hndada/gosu/ctrl"
-	"github.com/hndada/gosu/db"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/render"
@@ -27,7 +26,7 @@ type SceneSelect struct {
 	Mode int
 	// Mods Mods
 	// ReplayMode    bool
-	View          []db.ChartInfo // Todo: should it be []*db.ChartInfo ?
+	View          []data.ChartInfo // Todo: should it be []*data.ChartInfo ?
 	SelectHandler ctrl.IntHandler
 	// ViewMode int
 
@@ -48,7 +47,7 @@ const (
 // Todo: preview music
 func NewSceneSelect() *SceneSelect {
 	s := new(SceneSelect)
-	s.View = db.ChartInfos // View must be set before SelectHandler is set. // Todo: temp
+	s.View = data.ChartInfos // View must be set before SelectHandler is set. // Todo: temp
 	{
 		b, err := audioutil.NewBytes("skin/default-hover.wav")
 		if err != nil {
@@ -139,7 +138,7 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		dx = 20
 		dy = 30
 	)
-	var viewport []db.ChartInfo
+	var viewport []data.ChartInfo
 	var cursor int
 	if s.Cursor <= count/2 {
 		viewport = append(viewport, s.View[0:s.Cursor]...)
@@ -182,5 +181,5 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		fmt.Sprintf("Volume (Press 1/2): %.0f%%\n"+
 			"SpeedBase (Press 3/4): %.0f\n"+
 			"(Exposure time: %.0fms)\n\n:"+"Handler:%+v (Target: %d)\n",
-			mode.Volume*100, mode.SpeedBase*100, piano.ExposureTime(mode.SpeedBase), s.SelectHandler, *s.SelectHandler.Target))
+			mode.Volume*100, piano.SpeedBase*100, piano.ExposureTime(piano.SpeedBase), s.SelectHandler, *s.SelectHandler.Target))
 }

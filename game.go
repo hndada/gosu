@@ -6,7 +6,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/audioutil"
 	"github.com/hndada/gosu/ctrl"
-	"github.com/hndada/gosu/db"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
@@ -31,7 +30,8 @@ var sceneSelect *SceneSelect
 func NewGame() *Game {
 	mode.LoadSkin()
 	piano.LoadSkin()
-	db.LoadCharts(MusicPath)
+	data.LoadData(MusicPath)
+	data.LoadNewCharts(MusicPath)
 	// ChartInfoSprites = make([]render.Sprite, len(db.ChartInfos))
 
 	var soundHandler ctrl.F64Handler
@@ -69,7 +69,7 @@ func NewGame() *Game {
 			Min:    0.1,
 			Max:    2,
 			Unit:   0.1,
-			Target: &mode.SpeedBase,
+			Target: &piano.SpeedBase,
 		}
 	}
 	sceneSelect = NewSceneSelect()
@@ -100,6 +100,8 @@ func (g *Game) Update() error {
 		return nil
 	}
 	switch args := args.(type) {
+	case error:
+		return args
 	case mode.PlayToResultArgs:
 		// Todo: selectResult
 		g.Scene = sceneSelect
