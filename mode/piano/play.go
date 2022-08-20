@@ -174,7 +174,7 @@ func (s *ScenePlay) Update() any {
 				clr = purple
 			}
 			marks = append(marks, mode.TimingMeterMark{
-				Countdown: mode.TimingMeterMarkLifetime,
+				Countdown: mode.TimingMeterMarkDuration,
 				TimeDiff:  td,
 				Color:     clr,
 			})

@@ -10,7 +10,7 @@ import (
 )
 
 const fadeInDuration = 800 // Duration of fade-in of timing meter marks.
-var TimingMeterMarkLifetime int = TimeToTick(4000)
+var TimingMeterMarkDuration int = TimeToTick(4000)
 
 type TimingMeter struct {
 	Meter  render.Sprite
