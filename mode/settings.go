@@ -3,15 +3,12 @@ package mode
 var (
 	MaxTPS = 1000 // MaxTPS should be 1000 or greater.
 	Volume = 0.25
-)
 
-var (
+	TimingMeterWidth  float64 = 4 // The number of pixels per 1ms.
+	TimingMeterHeight float64 = 50
+	CursorScale       float64 = 0.1
+
 	BgDimness float64 = 0.5
 )
-var (
-	TimingMeterWidth  float64 = 4 // The number of pixels per 1ms
-	TimingMeterHeight float64 = 50
-)
-var CursorScale float64 = 0.1
 
-var SpeedBase = 1.1 // Todo: make the variable declared in each mode
+// Todo: BarLine color settings
