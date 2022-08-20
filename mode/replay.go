@@ -30,11 +30,4 @@ func NewReplayListener(f *osr.Format, keyCount int, bufferTime int64) func() []b
 	}
 }
 
-// Todo: implement it
-// func ReplayScore(c *Chart, rf *osr.Format) int {
-// 	s := NewScenePlay(c, "", rf, false)
-// 	for !s.IsFinished() {
-// 		s.Update(nil)
-// 	}
-// 	return int(s.Score())
-// }
+// Todo: Make own ScenePlay for calculating score from input replay file

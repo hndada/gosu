@@ -15,6 +15,7 @@ type Result struct {
 	ExtraScore float64
 
 	JudgmentCounts []int
+	MaxNoteWeights float64 // Total NoteWeights. Works as Upper bound.
 	Flows          float64 // Sum of Flow
 	Accs           float64
 	Extras         float64 // Kool rate, for example.
@@ -28,7 +29,7 @@ func Verdict(js []Judgment, a input.KeyAction, td int64) Judgment {
 	Miss := js[len(js)-1]
 	switch {
 	case td > Miss.Window:
-		// Does nothing
+		// Does nothing.
 	case td < -Miss.Window:
 		return Miss
 	default: // In range
@@ -40,7 +41,7 @@ func Verdict(js []Judgment, a input.KeyAction, td int64) Judgment {
 }
 
 func Judge(js []Judgment, td int64) Judgment {
-	if td < 0 { // Absolute value
+	if td < 0 { // Absolute value.
 		td *= -1
 	}
 	for _, j := range js {
