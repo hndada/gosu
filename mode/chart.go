@@ -2,29 +2,19 @@ package mode
 
 import (
 	"path/filepath"
-	"strings"
 
 	"github.com/hndada/gosu/format/osu"
 )
 
-// Now mode consists of main mode + sub mode.
-// Key count and scratch mode are sub modes of Piano mode.
-// const (
-//
-//	ModePiano = 1 << (iota + 7) // 128
-//	ModeDrum                    // 256
-//	ModeJjava                   // 512
-//
-// )
-// const ModeDefault = ModePiano + 4
-const (
-	ModePiano4 = iota // 1 ~ 4 Key
-	ModePiano7        // 5 ~ Key
-	ModeDrum
-	ModeKaraoke // aka jjava
-)
-const ModeDefault = ModePiano4
-const ModeUnknown = -1
+// mode.Chart is a base chart.
+type Chart struct {
+	ChartHeader
+	TransPoints []*TransPoint
+	Mode        int
+	SubMode     int // e.g., KeyCount.
+	Duration    int64
+	NoteCounts  []int
+}
 
 // ChartHeader contains non-play information.
 // Chaning ChartHeader's data will not affect integrity of the chart.
@@ -32,15 +22,15 @@ const ModeUnknown = -1
 // Music: when treating it as media
 // Audio: when considering as programming aspect
 type ChartHeader struct {
-	ChartID       int64 // 6byte: setID, 2byte: subID
+	ChartID       int64
 	MusicName     string
 	MusicUnicode  string
 	Artist        string
 	ArtistUnicode string
 	MusicSource   string
-	ChartName     string // diff name
-	Producer      string // Name of field may change
-	HolderID      int64  // 0: gosu Chart Management
+	ChartName     string
+	Producer      string // Name of field may change.
+	HolderID      int64
 
 	AudioFilename   string
 	PreviewTime     int64
@@ -79,37 +69,4 @@ func (c ChartHeader) MusicPath(cpath string) string {
 }
 func (c ChartHeader) BackgroundPath(cpath string) string {
 	return filepath.Join(filepath.Dir(cpath), c.ImageFilename)
-}
-
-// mode.Chart is a base chart.
-type Chart struct {
-	ChartHeader
-	TransPoints []*TransPoint
-	Mode        int
-	Mode2       int // KeyCount, for example.
-	Duration    int64
-	NoteCounts  []int
-}
-
-// Mode determines a mode of chart file by its path.
-// Todo: should I make a new type Mode?
-func Mode(fpath string) int {
-	switch strings.ToLower(filepath.Ext(fpath)) {
-	case ".osu":
-		mode, keyCount := osu.Mode(fpath)
-		switch mode {
-		case osu.ModeMania:
-			if keyCount <= 4 {
-				return ModePiano4
-			}
-			return ModePiano7
-		case osu.ModeTaiko:
-			return ModeDrum
-		default:
-			return ModeUnknown
-		}
-	case ".ojn", ".bms":
-		return ModePiano7
-	}
-	return ModeUnknown
 }

@@ -13,17 +13,13 @@ import (
 // Chart should avoid redundant data as much as possible
 type Chart struct {
 	mode.Chart
-	// mode.ChartHeader
-	// TransPoints []*mode.TransPoint
-	// Mode        int
 	KeyCount int
 	Notes    []Note
-	// Duration    int64
-	// NoteCounts  []int
 }
 
-// 7 key chart's Mode is 128 + 7 = 135
-func NewChart(fpath string) (*Chart, error) { // f any
+// NewChart takes file path as input for starting with parsing.
+// Chart data should not rely on the ChartInfo; clients may have compromised it.
+func NewChart(fpath string) (*Chart, error) {
 	var c Chart
 	dat, err := os.ReadFile(fpath)
 	if err != nil {
@@ -37,6 +33,7 @@ func NewChart(fpath string) (*Chart, error) { // f any
 			return nil, err
 		}
 	}
+
 	c.ChartHeader = mode.NewChartHeader(f)
 	c.TransPoints = mode.NewTransPoints(f)
 
@@ -48,9 +45,7 @@ func NewChart(fpath string) (*Chart, error) { // f any
 		} else {
 			c.Mode = mode.ModePiano7
 		}
-		// c.Mode = mode.ModePiano
-		// c.Mode += c.KeyCount
-		c.Mode2 = c.KeyCount
+		c.SubMode = c.KeyCount
 		c.Notes = make([]Note, 0, len(f.HitObjects)*2)
 		for _, ho := range f.HitObjects {
 			c.Notes = append(c.Notes, NewNote(ho, c.KeyCount)...)
@@ -62,6 +57,7 @@ func NewChart(fpath string) (*Chart, error) { // f any
 		}
 		return c.Notes[i].Time < c.Notes[j].Time
 	})
+
 	if len(c.Notes) > 0 {
 		c.Duration = c.Notes[len(c.Notes)-1].Time
 	}
