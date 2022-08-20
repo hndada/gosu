@@ -14,7 +14,7 @@ type TransPoint struct {
 	BPM          float64
 	BeatScale    float64
 	Meter        uint8
-	Volume       uint8
+	Volume       float64 // Range is 0 to 1.
 	Highlight    bool
 	NewBPM       bool
 	Prev         *TransPoint
@@ -58,7 +58,7 @@ func NewTransPoints(f any) []*TransPoint {
 					// BPM:,
 					BeatScale: 1,
 					Meter:     uint8(timingPoint.Meter),
-					Volume:    uint8(timingPoint.Volume),
+					Volume:    float64(timingPoint.Volume) / 100,
 					Highlight: timingPoint.IsKiai(),
 					NewBPM:    true,
 					Prev:      prev,
@@ -81,7 +81,7 @@ func NewTransPoints(f any) []*TransPoint {
 					BPM:  lastBPM,
 					// BeatScale: ,
 					Meter:     uint8(timingPoint.Meter),
-					Volume:    uint8(timingPoint.Volume),
+					Volume:    float64(timingPoint.Volume) / 100,
 					Highlight: timingPoint.IsKiai(),
 					NewBPM:    false,
 					Prev:      prev,
@@ -153,24 +153,5 @@ func BarLineTimes(tps []*TransPoint, endTime int64, wb, wa int64) []int64 {
 			ts = append(ts, int64(t))
 		}
 	}
-	// for i, tp := range c.TransPoints {
-	// 	if !tp.NewBPM {
-	// 		continue
-	// 	}
-	// 	next := c.Duration + 2*wa
-	// 	if i < len(c.TransPoints)-1 {
-	// 		for _, tp2 := range c.TransPoints[i:] {
-	// 			if tp2.NewBPM {
-	// 				next = tp2.Time
-	// 				break
-	// 			}
-	// 		}
-	// 		next = c.TransPoints[i+1].Time
-	// 	}
-	// 	unit := float64(tp.Meter) * 60000 / tp.BPM
-	// 	for t := float64(tp.Time); t < float64(next); t += unit {
-	// 		ts = append(ts, int64(t))
-	// 	}
-	// }
 	return ts
 }
