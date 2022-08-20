@@ -9,28 +9,36 @@ import (
 	"github.com/hndada/gosu/render"
 )
 
-// Todo: BarLine color settings
-var (
-	Dark  = color.NRGBA{0, 0, 0, 128}
-	Gray  = color.NRGBA{109, 120, 134, 255}
-	White = color.NRGBA{255, 255, 255, 192}
+const fadeInDuration = 800 // Duration of fade-in of timing meter marks.
+var TimingMeterMarkLifetime int = TimeToTick(4000)
 
-	Red    = color.NRGBA{255, 0, 0, 128}
-	Yellow = color.NRGBA{244, 177, 0, 255}
-	Lime   = color.NRGBA{51, 255, 40, 255}
-	Sky    = color.NRGBA{85, 251, 255, 255}
-	Blue   = color.NRGBA{0, 170, 242, 255}
-	Purple = color.NRGBA{213, 0, 242, 128}
-)
+type TimingMeter struct {
+	Meter  render.Sprite
+	Anchor render.Sprite
+	Unit   render.Sprite
+	Marks  []TimingMeterMark
+}
+type TimingMeterMark struct {
+	Countdown int
+	TimeDiff  int64
+	Color     color.NRGBA
+}
 
-// Timing meter. the height of colored rectangle is 1/4 of meter's.
+// Height of colored rectangle is 1/4 of Timing meter's.
 // Anchor is a unit sprite constantly drawn at the middle of meter.
-func NewTimingMeter(js []Judgment, colors []color.NRGBA) (render.Sprite, render.Sprite, render.Sprite) {
+func NewTimingMeter(js []Judgment, colors []color.NRGBA) TimingMeter {
+	var (
+		dark  = color.NRGBA{0, 0, 0, 128}
+		white = color.NRGBA{255, 255, 255, 192}
+		red   = color.NRGBA{255, 0, 0, 128}
+	)
+	var tm TimingMeter
 	Miss := js[len(js)-1]
+
 	meterW := 1 + 2*int(TimingMeterWidth)*int(Miss.Window)
 	meterH := int(TimingMeterHeight)
 	meterSrc := image.NewRGBA(image.Rect(0, 0, meterW, meterH))
-	draw.Draw(meterSrc, meterSrc.Bounds(), &image.Uniform{Dark}, image.Point{}, draw.Src)
+	draw.Draw(meterSrc, meterSrc.Bounds(), &image.Uniform{dark}, image.Point{}, draw.Src)
 	y1, y2 := int(float64(meterH)*0.375), int(float64(meterH)*0.625)
 	for i, color := range colors {
 		j := js[len(js)-i]
@@ -40,39 +48,59 @@ func NewTimingMeter(js []Judgment, colors []color.NRGBA) (render.Sprite, render.
 		rect := image.Rect(x1, y1, x2, y2)
 		draw.Draw(meterSrc, rect, &image.Uniform{color}, image.Point{}, draw.Src)
 	}
-
-	meter := render.Sprite{
+	tm.Meter = render.Sprite{
 		I: ebiten.NewImageFromImage(meterSrc),
 		W: float64(meterW),
 		H: float64(meterH),
 		Y: ScreenSizeY - TimingMeterHeight,
 	}
-	meter.SetCenterX(ScreenSizeX / 2)
+	tm.Meter.SetCenterX(ScreenSizeX / 2)
 
 	anchorSrc := ebiten.NewImage(int(TimingMeterWidth), int(TimingMeterHeight))
-	anchorSrc.Fill(Red)
-	anchor := render.Sprite{
+	anchorSrc.Fill(red)
+	tm.Anchor = render.Sprite{
 		I: anchorSrc,
 		W: TimingMeterWidth,
 		H: TimingMeterHeight,
 		Y: ScreenSizeY - TimingMeterHeight,
 	}
-	anchor.SetCenterX(ScreenSizeX / 2)
+	tm.Anchor.SetCenterX(ScreenSizeX / 2)
 
 	unitSrc := ebiten.NewImage(int(TimingMeterWidth), int(TimingMeterHeight))
-	unitSrc.Fill(White)
-	unit := render.Sprite{
+	unitSrc.Fill(white)
+	tm.Unit = render.Sprite{
 		I: unitSrc,
 		W: TimingMeterWidth,
 		H: TimingMeterHeight,
-		// unit's x value is not fixed.
+		// X is not fixed.
 		Y: ScreenSizeY - TimingMeterHeight,
 	}
-	return meter, anchor, unit
+	return tm
 }
-
-type TimingMark struct {
-	TimeDiff int64
-	BornTick int
-	IsTail   bool
+func (tm *TimingMeter) Update(newMarks []TimingMeterMark) {
+	tm.Marks = append(tm.Marks, newMarks...)
+	cursor := 0
+	for i, m := range tm.Marks {
+		if m.Countdown == 0 {
+			i++
+		} else {
+			tm.Marks[i].Countdown--
+		}
+	}
+	tm.Marks = tm.Marks[cursor:] // Drop old marks.
+}
+func (tm TimingMeter) Draw(screen *ebiten.Image) {
+	tm.Meter.Draw(screen)
+	for _, m := range tm.Marks {
+		sprite := tm.Unit
+		sprite.X = screenSizeX/2 + float64(m.TimeDiff)*TimingMeterWidth
+		op := sprite.Op()
+		clr := m.Color
+		if TickToTime(m.Countdown) < fadeInDuration {
+			clr.A = uint8(float64(clr.A) * float64(m.Countdown) / fadeInDuration)
+		}
+		op.ColorM.ScaleWithColor(clr)
+		screen.DrawImage(sprite.I, op)
+	}
+	tm.Anchor.Draw(screen)
 }

@@ -13,3 +13,10 @@ var (
 	WindowSizeX = 1600
 	WindowSizeY = 900
 )
+
+// Todo: reset all tick-dependent variables.
+// They are mostly at drawer.go or play.go, settings.go
+// Keyword: TimeToTick
+func SetTPS() {
+
+}

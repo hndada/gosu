@@ -24,7 +24,7 @@ type Note struct {
 	Time2          int64 // For Head note, it is tail's time; vice versa.
 	Key            int
 	SampleFilename string
-	SampleVolume   int
+	SampleVolume   float64 // Range is 0 to 1.
 }
 
 // A sample sound file should be lazy loaded.
@@ -38,16 +38,17 @@ func NewNote(f any, keyCount int) []Note {
 			Time2:          int64(f.Time),
 			Key:            f.Column(keyCount),
 			SampleFilename: f.HitSample.Filename,
-			SampleVolume:   f.HitSample.Volume,
+			SampleVolume:   float64(f.HitSample.Volume) / 100,
 		}
 		if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
 			n.Type = Head
 			n.Time2 = int64(f.EndTime)
-			n2 := Note{ // Tail has no sample sound.
+			n2 := Note{
 				Type:  Tail,
 				Time:  n.Time2,
 				Time2: n.Time,
 				Key:   n.Key,
+				// Tail has no sample sound.
 			}
 			ns = append(ns, n, n2)
 		} else {

@@ -11,7 +11,7 @@ type PlayNote struct {
 	Prev     *PlayNote
 	Next     *PlayNote
 	Marked   bool
-	NextTail *PlayNote // For performance of DrawLongNoteBodys()
+	NextTail *PlayNote // For performance of DrawLongNoteBodies()
 }
 
 func NewPlayNotes(c *Chart) ([]*PlayNote, []*PlayNote, []*PlayNote, float64) {
@@ -59,10 +59,10 @@ func (s ScenePlay) Bottom(tail *PlayNote) int {
 	return int(s.Position(tail.Prev.Time)-s.HeadSprites[tail.Key].H/2) + 1 // Extra 1 pixel for compensating round-down
 }
 
-// DrawLongNoteBodys draws long sprite with Binary-building method, instead of SubImage.
-// DrawLongNoteBodys draws long note before drawing Head or Tail.
-// DrawLongNoteBodys just draws sub image of long note body.
-func (s *ScenePlay) DrawLongNoteBodys(screen *ebiten.Image) {
+// DrawLongNoteBodies draws long sprite with Binary-building method, instead of SubImage.
+// DrawLongNoteBodies draws long note before drawing Head or Tail.
+// DrawLongNoteBodies just draws sub image of long note body.
+func (s *ScenePlay) DrawLongNoteBodies(screen *ebiten.Image) {
 	for k, n0 := range s.LowestTails {
 		for n := n0; n != nil && s.Top(n) >= screenSizeY; n = n.NextTail {
 			s.LowestTails[k] = n
@@ -172,7 +172,7 @@ func (s ScenePlay) Position(time int64) float64 {
 		}
 	}
 	bpmRatio := tp.BPM / s.MainBPM
-	// Calculate the remained (which is farthest from Hint within bound.)
+	// Calculate the remained (which is farthest from Hint within bound).
 	distance += s.SpeedBase * (bpmRatio * tp.BeatScale) * float64(time-cursor)
 	return HitPosition - distance
 }
@@ -198,5 +198,3 @@ func (n PlayNote) Weight() float64 {
 		return 1
 	}
 }
-
-func (n PlayNote) PlaySE() {}
