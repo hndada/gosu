@@ -1,6 +1,7 @@
 package piano
 
 import (
+	"image/color"
 	"math"
 
 	"github.com/hndada/gosu/input"
@@ -16,6 +17,17 @@ var (
 )
 
 var Judgments = []mode.Judgment{Kool, Cool, Good, Bad, Miss}
+var JudgmentColors = []color.NRGBA{
+	{109, 120, 134, 255}, // Gray
+	{244, 177, 0, 255},   // Yellow
+	{51, 255, 40, 255},   // Lime
+	{85, 251, 255, 255},  // Skyblue
+	{0, 170, 242, 255},   // Blue
+}
+var (
+	white  = color.NRGBA{255, 255, 255, 192}
+	purple = color.NRGBA{213, 0, 242, 192}
+)
 
 func Verdict(t NoteType, a input.KeyAction, td int64) mode.Judgment {
 	if t == Tail { // Either Hold or Release when Tail is not scored
@@ -42,10 +54,8 @@ func (s *ScenePlay) MarkNote(n *PlayNote, j mode.Judgment) {
 	var a = FlowScoreFactor
 	if j == Miss {
 		s.Combo = 0
-		s.ComboCountdown = 0
 	} else {
 		s.Combo++
-		s.ComboCountdown = MaxComboCountdown
 	}
 	s.Flow += j.Flow * n.Weight()
 	if s.Flow < 0 {
@@ -84,26 +94,26 @@ func (s *ScenePlay) MarkNote(n *PlayNote, j mode.Judgment) {
 // Flow recovers fast when its value is low, vice versa: math.Pow(x, a); a < 1
 // Acc and Kool rate score increase faster as each parameter approaches to max value: math.Pow(x, b); b > 1
 const (
-	MaxFlowScore     = 7 * 1e5
-	MaxAccScore      = 3 * 1e5
-	MaxKoolRateScore = 1 * 1e5
-	MaxScore         = MaxFlowScore + MaxAccScore + MaxKoolRateScore // 1.1m
+	MaxFlowScore  = 7 * 1e5
+	MaxAccScore   = 3 * 1e5
+	MaxExtraScore = 1 * 1e5
+	MaxScore      = MaxFlowScore + MaxAccScore + MaxExtraScore // 1.1m
 )
 
 func (s ScenePlay) Score() float64 {
-	fs, as, rs := s.CalcScore()
-	return math.Ceil(fs + as + rs)
+	fs, as, es := s.CalcScore()
+	return math.Ceil(fs + as + es)
 }
 
 // Flow, acc, kool rate score in order.
-func (s ScenePlay) CalcScore() (fs, as, ks float64) {
+func (s ScenePlay) CalcScore() (fs, as, es float64) {
 	var (
 		b = AccScoreFactor
 		c = KoolRateScoreFactor
 	)
 	fs = MaxFlowScore * (s.Flows / s.MaxNoteWeights)
 	as = MaxAccScore * math.Pow(s.Accs/s.MaxNoteWeights, b)
-	ks = MaxKoolRateScore * math.Pow(s.Extras/s.MaxNoteWeights, c)
+	es = MaxExtraScore * math.Pow(s.Extras/s.MaxNoteWeights, c)
 	return
 }
 func (s ScenePlay) ScoreBound() float64 {
@@ -111,16 +121,12 @@ func (s ScenePlay) ScoreBound() float64 {
 		b = AccScoreFactor
 		c = KoolRateScoreFactor
 	)
-	// tnc := float64(len(s.PlayNotes)) // Total note counts
-	// nc := float64(s.MarkedNoteCount())
-	// s.CurrentMaxNoteWeights - s.NoteWeights
-	// kc := float64(s.JudgmentCounts[0]) // Kool counts
 	fr := s.MaxNoteWeights - (s.NoteWeights - s.Flows)
 	ar := s.MaxNoteWeights - (s.NoteWeights - s.Accs)
-	kr := s.MaxNoteWeights - (s.NoteWeights - s.Extras)
+	er := s.MaxNoteWeights - (s.NoteWeights - s.Extras)
 
 	fs := MaxFlowScore * (fr / s.MaxNoteWeights)
 	as := MaxAccScore * math.Pow(ar/s.MaxNoteWeights, b)
-	rs := MaxKoolRateScore * math.Pow(kr/s.MaxNoteWeights, c)
-	return math.Ceil(fs + as + rs)
+	es := MaxExtraScore * math.Pow(er/s.MaxNoteWeights, c)
+	return math.Ceil(fs + as + es)
 }

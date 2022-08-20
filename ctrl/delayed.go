@@ -18,6 +18,7 @@ type Delayed struct {
 	Countdown int
 }
 
+// The formula is to make speed of transition constant regardless of TPS.
 func (d *Delayed) Set(v float64) {
 	d.Source = v
 	diff := d.Source - d.Delayed

@@ -1,15 +1,32 @@
 package audioutil
 
 import (
+	"io"
 	"path/filepath"
 )
 
-type SoundMap struct {
-	Bytes map[string][]byte // Todo: Bytes -> bytes?
-	// Closers []io.Closer
+// type SoundMap struct {
+// 	Bytes map[string][]byte // Todo: Bytes -> bytes?
+// 	// Closers []io.Closer
+// }
+
+type SoundMap map[string][]byte
+
+// NewBytes is for short sounds: long audio file will make the game stutter.
+// No returns closer since NewPlayerFromBytes needs no Closer: no any files are open.
+func NewBytes(path string) ([]byte, error) {
+	s, _, err := decode(path)
+	if err != nil {
+		return nil, err
+	}
+	b, err := io.ReadAll(s)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
-func (s *SoundMap) Register(path, key string) error {
+func (s SoundMap) Register(path, key string) error {
 	b, err := NewBytes(path)
 	if err != nil {
 		return err
@@ -17,13 +34,13 @@ func (s *SoundMap) Register(path, key string) error {
 	if key == "" {
 		key = filepath.Base(path)
 	}
-	s.Bytes[key] = b
+	s[key] = b
 	// s.Closers = append(s.Closers, closer)
 	return nil
 }
-func (s *SoundMap) Play(name string) {
-	b := s.Bytes[name]
-	p := Context.NewPlayerFromBytes(b)
+func (s SoundMap) Play(name string, vol float64) {
+	p := Context.NewPlayerFromBytes(s[name])
+	p.SetVolume(vol)
 	p.Play()
 }
 

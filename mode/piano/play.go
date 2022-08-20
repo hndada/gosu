@@ -2,63 +2,81 @@ package piano
 
 import (
 	"fmt"
-	"math"
+	"path/filepath"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
-	"github.com/hndada/gosu/render"
-)
-
-// Todo: tick dependent variables should not be global.
-var (
-	MaxComboCountdown    int = mode.TimeToTick(2000)
-	MaxJudgmentCountdown int = mode.TimeToTick(600)
-	// The following formula is for make score scroll speed constant regardless of TPS.
-	DelayedScorePower       float64 = 1 - math.Exp(-math.Log(MaxScore)/(float64(mode.MaxTPS)*0.4))
-	MinKeyDownTicks         int     = mode.TimeToTick(30)
-	TimingMeterUnitLifetime int     = mode.TimeToTick(4000)
 )
 
 // ScenePlay: struct, PlayScene: function
 // NoteWeights is a sum of weight of marked notes.
 // This is also max value of each score sum can get at the time.
 type ScenePlay struct {
-	mode.ScenePlay
-	Chart          *Chart
-	PlayNotes      []*PlayNote
-	StagedNotes    []*PlayNote
-	NoteWeights    float64
-	MaxNoteWeights float64 // Upper bound of NoteWeights
-
+	mode.ScenePlay // Template
+	// General
+	Chart *Chart
+	// General: Graphics
 	Skin
-	LastJudgment          mode.Judgment
-	LastJudgmentCountdown int
-	ComboCountdown        int
-	BarLineTimes          []int64
-	LowestBarLineIndex    int
-	KeyDownCountdowns     []int       // For drawing delayed keys. Values are ticks.
-	LowestTails           []*PlayNote // For drawing long note efficiently
+
+	// Speed, BPM, Volume and Highlight
+	// Audio
+	// Input
+	// Notes
+	PlayNotes   []*PlayNote
+	StagedNotes []*PlayNote
+	// Notes: Graphics
+	LowestTails []*PlayNote // For drawing long note efficiently
+
+	// Scores
+	// Scores: Graphics
+	JudgmentDrawer JudgmentDrawer
+	ComboDrawer    ComboDrawer
+	KeyDrawer      KeyDrawer
 }
 
-// Todo: May user change speed during playing
+// Todo: Let users change speed during playing
 // Todo: add Mods to input param
-func NewScenePlay(cpath string, rf *osr.Format, play bool) (*ScenePlay, error) {
+func NewScenePlay(cpath string, rf *osr.Format) (*ScenePlay, error) {
 	s := new(ScenePlay)
+
+	// General
+	waitBefore := s.SetTick(rf)
+	s.MD5 = mode.MD5(cpath)
 	c, err := NewChart(cpath) // NewChart must be at first.
 	if err != nil {
 		return nil, err
 	}
 	s.Chart = c
-	waitBefore := mode.DefaultWaitBefore
-	if rf != nil && rf.BufferTime() < waitBefore {
-		waitBefore = rf.BufferTime()
-	}
-	s.Tick = mode.TimeToTick(waitBefore)
+	s.EndTime = s.Chart.Duration + mode.DefaultWaitAfter
+	// General: Graphics
+	s.Skin = SkinMap[c.KeyCount]
+	s.SetBackground(s.Chart.BackgroundPath(cpath))
 
+	// Speed, BPM, Volume and Highlight
+	s.MainBPM, _, _ = mode.BPMs(c.TransPoints, c.Duration) // Todo: Need a test
+	s.SpeedBase = SpeedBase
+	s.SetInitTransPoint(c.TransPoints[0])
+
+	// Audio
+	apath := filepath.Join(filepath.Dir(cpath), s.Chart.AudioFilename)
+	err = s.SetMusicPlayer(apath)
+	if err != nil {
+		return s, err
+	}
+	seNames := make([]string, 0, len(s.Chart.Notes))
+	for _, n := range s.Chart.Notes {
+		if name := n.SampleFilename; name != "" {
+			seNames = append(seNames, name)
+		}
+	}
+	s.SetSoundMap(cpath, seNames)
+
+	// Input
 	if rf != nil {
 		s.FetchPressed = mode.NewReplayListener(rf, s.Chart.KeyCount, waitBefore)
 	} else {
@@ -67,161 +85,124 @@ func NewScenePlay(cpath string, rf *osr.Format, play bool) (*ScenePlay, error) {
 	s.LastPressed = make([]bool, c.KeyCount)
 	s.Pressed = make([]bool, c.KeyCount)
 
-	s.MainBPM, _, _ = mode.BPMs(c.TransPoints, c.Duration) // Todo: Need a test
-	s.TransPoint = c.TransPoints[0]
-	for s.TransPoint.Time == s.TransPoint.Next.Time {
-		s.TransPoint = s.TransPoint.Next
-	}
-	s.SpeedBase = SpeedBase // From global variable
-	s.PlayNotes,
-		s.StagedNotes,
-		s.LowestTails,
-		s.MaxNoteWeights = NewPlayNotes(c)
+	// Note
+	s.PlayNotes, s.StagedNotes, s.LowestTails, s.MaxNoteWeights = NewPlayNotes(c)
+	// Note: Graphics
+	et, wb, wa := s.EndTime, waitBefore, mode.DefaultWaitAfter
+	s.BarLineDrawer.Times = mode.BarLineTimes(s.Chart.TransPoints, et, wb, wa)
+	s.BarLineDrawer.Offset = NoteHeigth / 2
+	s.BarLineDrawer.Sprite = s.BarLineSprite
+	s.KeyDrawer.Sprites[0] = s.KeyUpSprites
+	s.KeyDrawer.Sprites[1] = s.KeyDownSprites
+	s.KeyDrawer.KeyDownCountdowns = make([]int, c.KeyCount)
 
-	s.Flow = 1
+	// Score
 	s.JudgmentCounts = make([]int, 5)
-
-	s.Play = play
-	if !s.Play {
-		return s, nil
-	}
-	s.KeyDownCountdowns = make([]int, c.KeyCount)
-	s.Skin = SkinMap[c.KeyCount]
-	if img := render.NewImage(s.Chart.BackgroundPath(cpath)); img != nil {
-		s.Background = render.Sprite{
-			I:      render.NewImage(s.Chart.BackgroundPath(cpath)),
-			Filter: ebiten.FilterLinear,
-		}
-		s.Background.SetWidth(screenSizeX)
-		s.Background.SetCenterY(screenSizeY / 2)
-	} else {
-		s.Background = mode.DefaultBackground
-	}
-	s.BarLineTimes = mode.BarLineTimes(s.Chart.TransPoints, c.Duration, waitBefore, mode.DefaultWaitAfter)
-	// musicPath := filepath.Join(filepath.Dir(cpath), s.Chart.AudioFilename)
-	// s.SetMusicPlayer(musicPath)
-	if err != nil {
-		return s, err
-	}
+	s.FlowMarks = make([]float64, 0, s.Chart.Duration)
+	s.Flow = 1
+	// Score: Graphics
+	s.ScoreDrawer.DelayedScore.Mode = ctrl.DelayedModeExp
+	s.ScoreDrawer.Sprites = s.ScoreSprites
+	s.JudgmentDrawer.Sprites = s.JudgmentSprites
+	s.ComboDrawer.Sprites = s.ComboSprites
+	s.TimingMeter = mode.NewTimingMeter(Judgments, JudgmentColors)
 	return s, nil
 }
 
 // TPS affects only on Update(), not on Draw().
-// Todo: Apply other values of TransPoint
-// Todo: keep playing music when making SceneResult
+// Todo: apply other values of TransPoint (Volume has finished so far)
 func (s *ScenePlay) Update() any {
-	for s.TransPoint.Next != nil && s.TransPoint.Next.Time <= s.Time() {
-		s.TransPoint = s.TransPoint.Next
-	}
-	pressed := s.FetchPressed()
-	for k, p := range pressed {
-		lp := s.LastPressed[k]
-		if !lp && p {
-			s.KeyDownCountdowns[k] = MinKeyDownTicks
+	// General
+	s.Tick++
+	done := ebiten.IsKeyPressed(ebiten.KeyEscape) || s.Time() >= s.EndTime
+	if done { // Todo: keep playing music when making SceneResult
+		if s.MusicPlayer != nil {
+			s.MusicPlayer.Close()
+		}
+		return mode.PlayToResultArgs{
+			MD5:        s.MD5,
+			PlayedTime: time.Now(),
+			Result:     s.Result,
+			// Replay
 		}
 	}
-	s.LastPressed = s.Pressed
-	s.Pressed = pressed
 
+	// Speed, BPM, Volume and Highlight
+	s.UpdateTransPoint()
+
+	// Audio
+	if s.Tick == 0 && s.MusicPlayer != nil {
+		s.MusicPlayer.SetVolume(s.Volume)
+		s.MusicPlayer.Play()
+	}
+
+	// Input
+	s.LastPressed = s.Pressed
+	s.Pressed = s.FetchPressed()
+	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
+
+	// Notes and Scores
 	var worst mode.Judgment
+	marks := make([]mode.TimingMeterMark, 0, 7)
 	for k, n := range s.StagedNotes {
 		if n == nil {
 			continue
 		}
-		if s.Play && n.Type != Tail && s.KeyAction(k) == input.Hit {
-			n.PlaySE()
+		if n.Type != Tail && s.KeyAction(k) == input.Hit {
+			if name := n.SampleFilename; name != "" {
+				s.SoundMap.Play(name, s.Volume*n.SampleVolume)
+			}
 		}
-		td := n.Time - s.Time() // Time difference; negative values means late hit
+		td := n.Time - s.Time() // Time difference. A negative value infers late hit
 		if n.Marked {
 			if n.Type != Tail {
-				panic("non-tail note has not flushed")
+				return fmt.Errorf("non-tail note has not flushed")
 			}
-			if td < Miss.Window { // Keep Tail being staged until nearly ends
+			if td < Miss.Window { // Keep Tail staged until near ends.
 				s.StagedNotes[n.Key] = n.Next
 			}
 			continue
 		}
 		if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
-			s.TimingMarks = append(s.TimingMarks, mode.TimingMark{
-				TimeDiff: td,
-				BornTick: s.Tick,
-				IsTail:   n.Type == Tail,
-			})
 			s.MarkNote(n, j)
 			if worst.Window < j.Window {
 				worst = j
 			}
-		}
-	}
-	if !s.Play {
-		s.Tick++
-		return nil
-	}
-	if worst.Window != 0 {
-		s.LastJudgment = worst
-		s.LastJudgmentCountdown = MaxJudgmentCountdown
-	}
-	if s.LastJudgmentCountdown == 0 {
-		s.LastJudgment = mode.Judgment{}
-	} else {
-		s.LastJudgmentCountdown--
-	}
-	if s.ComboCountdown > 0 {
-		s.ComboCountdown--
-	}
-	s.DelayedScore += DelayedScorePower * (s.Score() - s.DelayedScore)
 
-	if ebiten.IsKeyPressed(ebiten.KeyEscape) || s.IsFinished() {
-		if s.MusicPlayer != nil {
-			s.MusicPlayer.Close()
-		}
-		return mode.PlayToResultArgs{
-			MD5:  s.MD5,
-			Time: time.Now(),
-			// Replay
-			Result: s.Result,
-		}
-	}
-	if s.Tick == 0 && s.MusicPlayer != nil {
-		s.MusicPlayer.Play()
-	}
-	t := s.BarLineTimes[s.LowestBarLineIndex]
-	// Bar line and Hint are anchored at the bottom.
-	for s.LowestBarLineIndex < len(s.BarLineTimes)-1 &&
-		int(s.Position(t)+NoteHeigth/2) >= screenSizeY {
-		s.LowestBarLineIndex++
-		t = s.BarLineTimes[s.LowestBarLineIndex]
-	}
-	for k, d := range s.KeyDownCountdowns {
-		if d > 0 {
-			s.KeyDownCountdowns[k]--
+			clr := white
+			if n.Type == Tail {
+				clr = purple
+			}
+			marks = append(marks, mode.TimingMeterMark{
+				Countdown: mode.TimingMeterMarkLifetime,
+				TimeDiff:  td,
+				Color:     clr,
+			})
 		}
 	}
-	// Drop old marks.
-	if len(s.TimingMarks) > 0 {
-		var i int
-		for s.Tick-s.TimingMarks[i].BornTick > TimingMeterUnitLifetime {
-			i++
-		}
-		s.TimingMarks = s.TimingMarks[i:]
-	}
-	s.Tick++
+	// Score: Graphics
+	s.JudgmentDrawer.Update(worst)
+	s.ComboDrawer.Update(s.Combo)
+	s.ScoreDrawer.Update(s.Score())
+	s.TimingMeter.Update(marks)
 	return nil
 }
 func (s ScenePlay) Draw(screen *ebiten.Image) {
-	bgop := s.Background.Op()
-	bgop.ColorM.ChangeHSV(0, 1, mode.BgDimness)
-	screen.DrawImage(s.Background.I, bgop)
+	s.BackgroundDrawer.Draw(screen)
 	s.FieldSprite.Draw(screen)
 	s.HintSprite.Draw(screen)
-	s.DrawBarLine(screen)
-	s.DrawLongNoteBodys(screen)
+	s.BarLineDrawer.Draw(screen, s.Position)
+	s.DrawLongNoteBodies(screen)
 	s.DrawNotes(screen)
-	s.DrawKeys(screen)
-	// s.DrawTimingMeter(screen)
-	s.DrawCombo(screen)
-	s.DrawJudgment(screen)
-	s.DrawScore(screen)
+	s.KeyDrawer.Draw(screen, s.Pressed)
+	s.TimingMeter.Draw(screen)
+	s.ComboDrawer.Draw(screen)
+	s.JudgmentDrawer.Draw(screen)
+	s.ScoreDrawer.Draw(screen)
+	s.DebugPrint(screen)
+}
+
+func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 	var fr, ar, rr float64 = 1, 1, 1
 	if s.NoteWeights > 0 {
 		fr = s.Flows / s.NoteWeights
@@ -238,140 +219,4 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
 		fr*100, ar*100, rr*100, s.JudgmentCounts,
 		s.Speed()*100, s.SpeedBase*100, ExposureTime(s.Speed())))
-}
-
-func (s ScenePlay) DrawBarLine(screen *ebiten.Image) {
-	for _, t := range s.BarLineTimes[s.LowestBarLineIndex:] {
-		sprite := s.BarLineSprite
-		sprite.Y = s.Position(t) + NoteHeigth/2
-		if sprite.Y < 0 {
-			break
-		}
-		sprite.Draw(screen)
-	}
-}
-
-// DrawJudgment draws the same judgment for a while.
-func (s ScenePlay) DrawJudgment(screen *ebiten.Image) {
-	if s.LastJudgmentCountdown <= 0 {
-		return
-	}
-	var sprite render.Sprite
-	for i, j := range Judgments {
-		if j.Window == s.LastJudgment.Window {
-			sprite = s.JudgmentSprites[i]
-			break
-		}
-	}
-	t := MaxJudgmentCountdown - s.LastJudgmentCountdown
-	age := float64(t) / float64(MaxJudgmentCountdown)
-	switch {
-	case age < 0.1:
-		sprite.ApplyScale(sprite.ScaleW() * 1.15 * (1 + age))
-	case age >= 0.1 && age < 0.2:
-		sprite.ApplyScale(sprite.ScaleW() * 1.15 * (1.2 - age))
-	case age > 0.9:
-		sprite.ApplyScale(sprite.ScaleW() * (1 - 1.15*(age-0.9)))
-	}
-	sprite.SetCenterX(screenSizeX / 2)
-	sprite.SetCenterY(JudgmentPosition)
-	sprite.Draw(screen)
-}
-
-// DrawCombo draws each number at constant x regardless of their widths.
-// Each number image has different size; The standard width is number 0's.
-func (s ScenePlay) DrawCombo(screen *ebiten.Image) {
-	var wsum int
-	if s.ComboCountdown == 0 {
-		return
-	}
-	vs := make([]int, 0)
-	for v := s.Combo; v > 0; v /= 10 {
-		vs = append(vs, v%10) // Little endian
-		// wsum += int(s.ComboSprites[v%10].W + ComboGap)
-		wsum += int(s.ComboSprites[0].W) + int(ComboGap)
-	}
-	wsum -= int(ComboGap)
-
-	t := MaxJudgmentCountdown - s.LastJudgmentCountdown
-	age := float64(t) / float64(MaxJudgmentCountdown)
-	x := screenSizeX/2 + float64(wsum)/2 - s.ComboSprites[0].W/2
-	for _, v := range vs {
-		// x -= s.ComboSprites[v].W + ComboGap
-		x -= s.ComboSprites[0].W + ComboGap
-		sprite := s.ComboSprites[v]
-		// sprite.X = x
-		sprite.X = x + (s.ComboSprites[0].W - sprite.W/2)
-		sprite.SetCenterY(ComboPosition)
-		switch {
-		case age < 0.1:
-			sprite.Y += 0.85 * age * sprite.H
-		case age >= 0.1 && age < 0.2:
-			sprite.Y += 0.85 * (0.2 - age) * sprite.H
-		}
-		sprite.Draw(screen)
-	}
-}
-
-// DrawScore draws each number at constant x regardless of their widths,.
-// same as DrawCombo.
-func (s ScenePlay) DrawScore(screen *ebiten.Image) {
-	var wsum int
-	vs := make([]int, 0)
-	for v := int(math.Ceil(s.DelayedScore)); v > 0; v /= 10 {
-		vs = append(vs, v%10) // Little endian
-		// wsum += int(s.ComboSprites[v%10].W)
-		wsum += int(s.ComboSprites[0].W)
-	}
-	if len(vs) == 0 {
-		vs = append(vs, 0) // Little endian
-		wsum += int(s.ComboSprites[0].W)
-	}
-	x := float64(screenSizeX) - s.ScoreSprites[0].W/2
-	for _, v := range vs {
-		// x -= s.ScoreSprites[v].W
-		x -= s.ScoreSprites[0].W
-		sprite := s.ScoreSprites[v]
-		sprite.X = x + (s.ScoreSprites[0].W - sprite.W/2)
-		sprite.Draw(screen)
-	}
-}
-
-func (s ScenePlay) DrawKeys(screen *ebiten.Image) {
-	for k, p := range s.Pressed {
-		if p || s.KeyDownCountdowns[k] > 0 {
-			s.KeyDownSprites[k].Draw(screen)
-		} else {
-			s.KeyUpSprites[k].Draw(screen)
-		}
-	}
-}
-
-// Todo: implement
-// func (s ScenePlay) DrawTimingMeter(screen *ebiten.Image) {
-// 	s.TimingMeterSprite.Draw(screen)
-// 	for _, mark := range s.TimingMarks {
-// 		t := s.Tick - mark.BornTick
-// 		age := float64(t) / float64(TimingMeterUnitLifetime)
-// 		sprite := s.TimingMeterUnitSprite
-// 		sprite.X = screenSizeX/2 + float64(mark.TimeDiff)*TimingMeterWidth
-// 		op := sprite.Op()
-// 		switch {
-// 		case age < 0.8:
-// 			sprite.Draw(screen)
-// 		case age >= 0.8:
-// 			op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 255, uint8(192 - 192*(age-0.8)/0.2)})
-// 			screen.DrawImage(sprite.I, op)
-// 		}
-// 	}
-// 	s.TimingMeterAnchorSprite.Draw(screen)
-// }
-
-func (s ScenePlay) IsFinished() bool {
-	return s.Time() > s.Chart.Duration+mode.DefaultWaitAfter
-}
-func (s ScenePlay) BeatRatio() float64 { return s.TransPoint.BPM / s.MainBPM }
-func (s ScenePlay) Speed() float64     { return s.SpeedBase * s.BeatRatio() * s.BeatScale }
-func (s ScenePlay) KeyAction(k int) input.KeyAction {
-	return input.CurrentKeyAction(s.LastPressed[k], s.Pressed[k])
 }
