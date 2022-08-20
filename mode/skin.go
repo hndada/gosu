@@ -17,7 +17,7 @@ const (
 )
 
 // Skin is a set of Sprites.
-// Skin at "mode" is already general.
+// mode.Skin is a general skin for all modes.
 var (
 	DefaultBackground render.Sprite
 	CursorSprites     [2]render.Sprite // 0: cursor // 1: additive cursor
