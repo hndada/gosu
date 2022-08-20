@@ -1,4 +1,4 @@
-package db
+package data
 
 import (
 	"crypto/md5"
@@ -50,6 +50,15 @@ func SaveScores() {
 		return
 	}
 }
+
+// Todo: implement it
+// func ReplayScore(c *Chart, rf *osr.Format) int {
+// 	s := NewScenePlay(c, "", rf, false)
+// 	for !s.IsFinished() {
+// 		s.Update(nil)
+// 	}
+// 	return int(s.Score())
+// }
 
 // fs, err := os.ReadDir("replay")
 // if err != nil {

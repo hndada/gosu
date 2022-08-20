@@ -1,4 +1,4 @@
-package db
+package data
 
 import (
 	"fmt"
@@ -10,23 +10,21 @@ import (
 
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
-	"github.com/vmihailenco/msgpack/v5"
 )
 
-// var ChartBoxs = make(map[string]ChartBox)
 // ChartInfos are sorted with path, then mods.
 // Todo: can the slice be sorted with Mode first, then MusicName?
 var ChartInfos = make([]ChartInfo, 0)
+var LastUpdateTime time.Time
 
 // https://github.com/vmihailenco/msgpack
-// https://github.com/osuripple/cheesegull
 type ChartInfo struct {
 	Path string
 	// Mods mode.Mods
-	Header mode.ChartHeader
-	Mode   int
-	Mode2  int
-	Level  float64
+	Header  mode.ChartHeader
+	Mode    int
+	SubMode int
+	Level   float64
 
 	Duration   int64
 	NoteCounts []int
@@ -34,17 +32,20 @@ type ChartInfo struct {
 	MinBPM     float64
 	MaxBPM     float64
 	// Tags       []string // Auto-generated or User-defined
-	// Box render.Sprite
 }
 
-func NewChartInfo(c *mode.Chart, fpath string, level float64) ChartInfo {
+func (c ChartInfo) Text() string {
+	return fmt.Sprintf("(%dK Lv %.1f) %s [%s]", c.SubMode, c.Level, c.Header.MusicName, c.Header.ChartName)
+}
+
+func NewChartInfo(c *mode.Chart, cpath string, level float64) ChartInfo {
 	mainBPM, minBPM, maxBPM := mode.BPMs(c.TransPoints, c.Duration)
 	cb := ChartInfo{
-		Path:   fpath,
-		Header: c.ChartHeader,
-		Mode:   c.Mode,
-		Mode2:  c.Mode2,
-		Level:  level,
+		Path:    cpath,
+		Header:  c.ChartHeader,
+		Mode:    c.Mode,
+		SubMode: c.SubMode,
+		Level:   level,
 
 		Duration:   c.Duration,
 		NoteCounts: c.NoteCounts,
@@ -52,26 +53,9 @@ func NewChartInfo(c *mode.Chart, fpath string, level float64) ChartInfo {
 		MinBPM:     minBPM,
 		MaxBPM:     maxBPM,
 	}
-	// cb.Box = NewBoxSprite(c, level)
 	return cb
 }
 
-// Todo: should deleted charts be checked after Unmarshal ChartInfos?
-// Todo: MessagePack when tags=release, JSON when tags=debug
-func LoadCharts(musicPath string) {
-	const fname = "chart.db"
-	b, err := os.ReadFile(fname)
-	if err != nil {
-		fmt.Println(err)
-		os.Rename(fname, fname+".crashed") // Fail if not existed.
-	}
-	msgpack.Unmarshal(b, &ChartInfos)
-	LoadNewCharts(musicPath)
-}
-
-var LastUpdateTime time.Time
-
-// Todo: ChartBoxDB, ScoreDB
 func LoadNewCharts(musicPath string) {
 	isNew := func(e fs.DirEntry) bool {
 		info, err := e.Info()
@@ -104,30 +88,16 @@ func LoadNewCharts(musicPath string) {
 			if f.IsDir() || !isNew(f) { // There may be directory e.g., SB
 				continue
 			}
-			fpath := filepath.Join(dpath, f.Name())
-			// dat, err := os.ReadFile(fpath)
-			// if err != nil {
-			// 	fmt.Println(err)
-			// 	continue
-			// }
-			switch mode.Mode(fpath) {
+			cpath := filepath.Join(dpath, f.Name())
+			switch mode.Mode(cpath) {
 			case mode.ModePiano4, mode.ModePiano7:
-				// o, err := osu.Parse(dat)
-				// if err != nil {
-				// 	fmt.Println(err)
-				// 	continue
-				// }
-				c, err := piano.NewChart(fpath)
+				c, err := piano.NewChart(cpath)
 				if err != nil {
-					fmt.Printf("error at %s: %s\n", filepath.Base(fpath), err)
+					fmt.Printf("error at %s: %s\n", filepath.Base(cpath), err)
 					continue
 				}
-				info := NewChartInfo(&c.Chart, fpath, mode.Level(c))
+				info := NewChartInfo(&c.Chart, cpath, mode.Level(c))
 				ChartInfos = Put(ChartInfos, info)
-				// ChartBoxs[fpath] = info
-				// for _, sort := range []int{SortByName, SortByLevel} {
-				// 	Insert(ChartViews[ViewMode(c.Mode, sort)], info, sort)
-				// }
 			case mode.ModeDrum:
 			}
 		}
@@ -168,21 +138,6 @@ func Put(infos []ChartInfo, info ChartInfo) []ChartInfo {
 	} else {
 		infos[i] = info
 	}
-	SaveChartInfos()
+	SaveData()
 	return infos
-}
-func SaveChartInfos() {
-	b, err := msgpack.Marshal(&ChartInfos)
-	if err != nil {
-		fmt.Printf("Failed to save by an error: %s", err)
-		return
-	}
-	err = os.WriteFile("chart.db", b, 0644)
-	if err != nil {
-		fmt.Printf("Failed to save by an error: %s", err)
-		return
-	}
-}
-func (c ChartInfo) Text() string {
-	return fmt.Sprintf("(%dK Lv %.1f) %s [%s]", c.Mode2, c.Level, c.Header.MusicName, c.Header.ChartName)
 }

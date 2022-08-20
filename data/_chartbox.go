@@ -14,7 +14,7 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
-func NewChartInfoSprite(info ChartInfo) render.Sprite { // h mode.ChartHeader, mode2 int, level float64
+func NewChartInfoSprite(info ChartInfo) render.Sprite { // h mode.ChartHeader, SubMode int, level float64
 	const (
 		dx = 20 // dot x
 		dy = 30 // dot y
@@ -23,7 +23,7 @@ func NewChartInfoSprite(info ChartInfo) render.Sprite { // h mode.ChartHeader, m
 	draw.Draw(img, img.Bounds(), &image.Uniform{Purple}, image.Point{}, draw.Src)
 	inRect := image.Rect(border, border, BoxWidth-border, BoxHeight-border)
 	draw.Draw(img, inRect, &image.Uniform{color.White}, image.Point{}, draw.Src)
-	t := fmt.Sprintf("(%dK Lv %.1f) %s [%s]", info.Mode2, info.Level, info.Header.MusicName, info.Header.ChartName)
+	t := fmt.Sprintf("(%dK Lv %.1f) %s [%s]", info.SubMode, info.Level, info.Header.MusicName, info.Header.ChartName)
 	d := &font.Drawer{
 		Dst:  img,
 		Src:  image.NewUniform(color.Black),
