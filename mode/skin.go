@@ -2,6 +2,9 @@ package mode
 
 import (
 	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/render"
@@ -22,9 +25,10 @@ var (
 	DefaultBackground render.Sprite
 	CursorSprites     [2]render.Sprite // 0: cursor // 1: additive cursor
 	// CursorTailSprite   Sprite
+	ChartInfoBoxSprite render.Sprite // Todo: various box sprite
 )
 
-func LoadSkin() {
+func LoadBaseSkin() {
 	DefaultBackground = render.Sprite{
 		I:      render.NewImage("skin/default-bg.jpg"),
 		Filter: ebiten.FilterLinear,
@@ -39,5 +43,23 @@ func LoadSkin() {
 		}
 		s.ApplyScale(CursorScale)
 		CursorSprites[i] = s
+	}
+
+	purple := color.RGBA{172, 49, 174, 255}
+	white := color.RGBA{255, 255, 255, 128}
+	const border = 3
+	w := int(ChartInfoBoxWidth)
+	h := int(ChartInfoBoxHeight)
+
+	img := image.NewRGBA(image.Rect(0, 0, w, h))
+	draw.Draw(img, img.Bounds(), &image.Uniform{purple}, image.Point{}, draw.Src)
+	inRect := image.Rect(border, border, w-border, h-border)
+	draw.Draw(img, inRect, &image.Uniform{white}, image.Point{}, draw.Src)
+	ChartInfoBoxSprite = render.Sprite{
+		I: ebiten.NewImageFromImage(img),
+		W: float64(w),
+		H: float64(h),
+		X: screenSizeX - float64(w) + chartInfoBoxshrink,
+		// Y is not fixed.
 	}
 }
