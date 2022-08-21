@@ -19,6 +19,7 @@ import (
 type ScenePlay struct {
 	mode.ScenePlay // Template
 	// General
+	Mods  mode.Mods
 	Chart *Chart
 	// General: Graphics
 	Skin
@@ -41,21 +42,22 @@ type ScenePlay struct {
 
 // Todo: Let users change speed during playing
 // Todo: add Mods to input param
-func NewScenePlay(cpath string, rf *osr.Format) (*ScenePlay, error) {
+func NewScenePlay(cpath string, mods mode.Mods, rf *osr.Format) (mode.Scene, error) {
 	s := new(ScenePlay)
 
 	// General
 	waitBefore := s.SetTick(rf)
 	s.MD5 = mode.MD5(cpath)
-	c, err := NewChart(cpath) // NewChart must be at first.
+	c, err := NewChart(cpath, mods) // NewChart must be at first.
 	if err != nil {
 		return nil, err
 	}
 	s.Chart = c
-	s.EndTime = s.Chart.Duration + mode.DefaultWaitAfter
+	s.EndTime = c.Duration + mode.DefaultWaitAfter
 	// General: Graphics
+	s.SetWindowTitle(s.Chart.Chart)
 	s.Skin = SkinMap[c.KeyCount]
-	s.SetBackground(s.Chart.BackgroundPath(cpath))
+	s.SetBackground(c.BackgroundPath(cpath))
 
 	// Speed, BPM, Volume and Highlight
 	s.MainBPM, _, _ = mode.BPMs(c.TransPoints, c.Duration) // Todo: Need a test
@@ -63,13 +65,13 @@ func NewScenePlay(cpath string, rf *osr.Format) (*ScenePlay, error) {
 	s.SetInitTransPoint(c.TransPoints[0])
 
 	// Audio
-	apath := filepath.Join(filepath.Dir(cpath), s.Chart.AudioFilename)
+	apath := filepath.Join(filepath.Dir(cpath), c.AudioFilename)
 	err = s.SetMusicPlayer(apath)
 	if err != nil {
 		return s, err
 	}
-	seNames := make([]string, 0, len(s.Chart.Notes))
-	for _, n := range s.Chart.Notes {
+	seNames := make([]string, 0, len(c.Notes))
+	for _, n := range c.Notes {
 		if name := n.SampleFilename; name != "" {
 			seNames = append(seNames, name)
 		}
@@ -78,9 +80,9 @@ func NewScenePlay(cpath string, rf *osr.Format) (*ScenePlay, error) {
 
 	// Input
 	if rf != nil {
-		s.FetchPressed = mode.NewReplayListener(rf, s.Chart.KeyCount, waitBefore)
+		s.FetchPressed = mode.NewReplayListener(rf, c.KeyCount, waitBefore)
 	} else {
-		s.FetchPressed = input.NewListener(KeySettings[s.Chart.KeyCount])
+		s.FetchPressed = input.NewListener(KeySettings[c.KeyCount])
 	}
 	s.LastPressed = make([]bool, c.KeyCount)
 	s.Pressed = make([]bool, c.KeyCount)
@@ -89,7 +91,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (*ScenePlay, error) {
 	s.PlayNotes, s.StagedNotes, s.LowestTails, s.MaxNoteWeights = NewPlayNotes(c)
 	// Note: Graphics
 	et, wb, wa := s.EndTime, waitBefore, mode.DefaultWaitAfter
-	s.BarLineDrawer.Times = mode.BarLineTimes(s.Chart.TransPoints, et, wb, wa)
+	s.BarLineDrawer.Times = mode.BarLineTimes(c.TransPoints, et, wb, wa)
 	s.BarLineDrawer.Offset = NoteHeigth / 2
 	s.BarLineDrawer.Sprite = s.BarLineSprite
 	s.KeyDrawer.Sprites[0] = s.KeyUpSprites
@@ -98,7 +100,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (*ScenePlay, error) {
 
 	// Score
 	s.JudgmentCounts = make([]int, 5)
-	s.FlowMarks = make([]float64, 0, s.Chart.Duration)
+	s.FlowMarks = make([]float64, 0, c.Duration)
 	s.Flow = 1
 	// Score: Graphics
 	s.ScoreDrawer.DelayedScore.Mode = ctrl.DelayedModeExp
@@ -150,7 +152,7 @@ func (s *ScenePlay) Update() any {
 		}
 		if n.Type != Tail && s.KeyAction(k) == input.Hit {
 			if name := n.SampleFilename; name != "" {
-				s.SoundMap.Play(name, s.Volume*n.SampleVolume)
+				s.Sounds.PlayWithVolume(name, n.SampleVolume)
 			}
 		}
 		td := n.Time - s.Time() // Time difference. A negative value infers late hit
