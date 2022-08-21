@@ -114,9 +114,9 @@ func (h *IntHandler) Update() bool {
 	switch h.KeyType() {
 	case HandlerKeyIncrease:
 		*h.Target += h.Unit
-		if *h.Target > h.Max {
+		if *h.Target >= h.Max {
 			if h.Loop {
-				*h.Target -= h.Max + 1
+				*h.Target -= h.Max
 			} else {
 				*h.Target = h.Max
 			}
@@ -125,7 +125,7 @@ func (h *IntHandler) Update() bool {
 		*h.Target -= h.Unit
 		if *h.Target < h.Min {
 			if h.Loop {
-				*h.Target += h.Max + 1
+				*h.Target += h.Max
 			} else {
 				*h.Target = h.Min
 			}

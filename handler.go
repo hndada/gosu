@@ -35,6 +35,22 @@ func NewSpeedHandler(speedBase *float64) ctrl.F64Handler {
 	}
 }
 
+func NewModeTypeHandler(cursor *int, len int) ctrl.IntHandler {
+	play := func() { Sounds.Play("default-hover") }
+	return ctrl.IntHandler{
+		Handler: ctrl.Handler{
+			Keys:       []ebiten.Key{ebiten.Key5},
+			PlaySounds: []func(){play},
+			HoldKey:    -1,
+		},
+		Min:    0,
+		Max:    len,
+		Unit:   1,
+		Target: cursor,
+		Loop:   true,
+	}
+}
+
 // Todo: should Max be *int?
 func NewSelectHandler(cursor *int, len int) ctrl.IntHandler {
 	play := func() { Sounds.Play("default-hover") }
