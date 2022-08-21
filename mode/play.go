@@ -20,8 +20,7 @@ import (
 type ScenePlay struct {
 	// General
 	Tick    int
-	MD5     [md5.Size]byte // MD5 for raw chart file.
-	EndTime int64          // EndTime = Duration + WaitAfter
+	EndTime int64 // EndTime = Duration + WaitAfter
 	// General: Graphics
 	BackgroundDrawer BackgroundDrawer
 

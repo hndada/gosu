@@ -14,6 +14,7 @@ import (
 type Mode struct {
 	ModeType
 	ChartInfos     []ChartInfo
+	Results        map[[16]byte]Result // md5.Size = 16
 	Mods           Mods
 	LastUpdateTime time.Time
 	SpeedHandler   ctrl.F64Handler
