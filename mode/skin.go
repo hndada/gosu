@@ -20,7 +20,6 @@ const (
 )
 
 // Skin is a set of Sprites.
-// mode.Skin is a general skin for all modes.
 var (
 	DefaultBackground draws.Sprite
 	CursorSprites     [2]draws.Sprite // 0: cursor // 1: additive cursor
@@ -28,7 +27,7 @@ var (
 	ChartInfoBoxSprite draws.Sprite // Todo: various box sprite
 )
 
-func LoadBaseSkin() {
+func LoadGeneralSkin() {
 	DefaultBackground = draws.Sprite{
 		I:      draws.NewImage("skin/default-bg.jpg"),
 		Filter: ebiten.FilterLinear,
