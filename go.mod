@@ -10,6 +10,14 @@ require (
 )
 
 require (
+	github.com/golang/protobuf v1.3.1 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
+	golang.org/x/net v0.0.0-20211015210444-4f30a5c0130f // indirect
+	google.golang.org/appengine v1.6.7 // indirect
+)
+
+require (
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20220806181222-55e207c401ad // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/hajimehoshi/go-mp3 v0.3.3 // indirect
@@ -17,6 +25,8 @@ require (
 	github.com/jezek/xgb v1.0.1 // indirect
 	github.com/jfreymuth/oggvorbis v1.0.3 // indirect
 	github.com/jfreymuth/vorbis v1.0.2 // indirect
+	github.com/json-iterator/go v1.1.12
+	github.com/vmihailenco/msgpack v4.0.4+incompatible
 	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	golang.org/x/exp/shiny v0.0.0-20220722155223-a9213eeb770e // indirect

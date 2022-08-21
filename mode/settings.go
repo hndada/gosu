@@ -1,5 +1,6 @@
 package mode
 
+// Todo: BarLine color settings
 var (
 	MaxTPS = 1000 // MaxTPS should be 1000 or greater.
 	Volume = 0.25
@@ -9,6 +10,23 @@ var (
 	CursorScale       float64 = 0.1
 
 	BgDimness float64 = 0.5
+
+	ChartInfoBoxWidth  float64 = 450
+	ChartInfoBoxHeight float64 = 50
+	ChartInfoBoxShrink float64 = 0.1
+
+	chartInfoBoxshrink float64 = ChartInfoBoxWidth * ChartInfoBoxShrink
 )
 
-// Todo: BarLine color settings
+var (
+	MusicRoot   = "music"
+	WindowSizeX = 1600
+	WindowSizeY = 900
+)
+
+// Todo: reset all tick-dependent variables.
+// They are mostly at drawer.go or play.go, settings.go
+// Keyword: TimeToTick
+func SetTPS() {
+
+}
