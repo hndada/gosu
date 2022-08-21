@@ -2,11 +2,11 @@ package piano
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/mode"
 )
 
-var MaxComboCountdown int = mode.TimeToTick(2000)
+var MaxComboCountdown int = gosu.TimeToTick(2000)
 
 type ComboDrawer struct {
 	Combo     int
@@ -59,21 +59,21 @@ func (d ComboDrawer) Draw(screen *ebiten.Image) {
 	}
 }
 
-var MaxJudgmentCountdown int = mode.TimeToTick(600)
+var MaxJudgmentCountdown int = gosu.TimeToTick(600)
 
 type JudgmentDrawer struct {
-	LastJudgment mode.Judgment
+	LastJudgment gosu.Judgment
 	Countdown    int
 	Sprites      []draws.Sprite
 }
 
-func (d *JudgmentDrawer) Update(worst mode.Judgment) {
+func (d *JudgmentDrawer) Update(worst gosu.Judgment) {
 	if worst.Window != 0 {
 		d.LastJudgment = worst
 		d.Countdown = MaxJudgmentCountdown
 	}
 	if d.Countdown == 0 {
-		d.LastJudgment = mode.Judgment{}
+		d.LastJudgment = gosu.Judgment{}
 	} else {
 		d.Countdown--
 	}
@@ -106,7 +106,7 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	sprite.Draw(screen)
 }
 
-var MinKeyDownTicks int = mode.TimeToTick(30)
+var MinKeyDownTicks int = gosu.TimeToTick(30)
 
 type KeyDrawer struct {
 	KeyDownCountdowns []int

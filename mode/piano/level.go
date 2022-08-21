@@ -1,6 +1,6 @@
 package piano
 
-import "github.com/hndada/gosu/mode"
+import "github.com/hndada/gosu"
 
 // Todo: Variate factors based on difficulty-skewed charts
 var (
@@ -16,14 +16,14 @@ func (c Chart) Difficulties() []float64 {
 		return make([]float64, 0)
 	}
 	endTime := c.Notes[len(c.Notes)-1].Time
-	ds := make([]float64, 0, endTime/mode.SliceDuration+1)
+	ds := make([]float64, 0, endTime/gosu.SliceDuration+1)
 	t := c.Notes[0].Time
 	var d float64
 	for _, n := range c.Notes {
-		for n.Time > t+mode.SliceDuration {
+		for n.Time > t+gosu.SliceDuration {
 			ds = append(ds, d)
 			d = 0
-			t += mode.SliceDuration
+			t += gosu.SliceDuration
 		}
 		switch n.Type {
 		case Tail:

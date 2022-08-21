@@ -1,4 +1,4 @@
-package mode
+package gosu
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"

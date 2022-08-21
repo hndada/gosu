@@ -1,4 +1,4 @@
-package mode
+package gosu
 
 import (
 	"crypto/md5"
@@ -14,7 +14,7 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
-// mode.BaseScenePlay is template struct. Fields can be set at outer function call.
+// gosu.BaseScenePlay is template struct. Fields can be set at outer function call.
 // Update cannot be generalized; each scene use template fields in timely manner.
 // Unit of time is a millisecond (1ms = 0.001s).
 type BaseScenePlay struct {

@@ -4,19 +4,19 @@ import (
 	"image/color"
 	"math"
 
+	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/input"
-	"github.com/hndada/gosu/mode"
 )
 
 var (
-	Kool = mode.Judgment{Flow: 0.01, Acc: 1, Window: 20}
-	Cool = mode.Judgment{Flow: 0.01, Acc: 1, Window: 45}
-	Good = mode.Judgment{Flow: 0.01, Acc: 0.25, Window: 75}
-	Bad  = mode.Judgment{Flow: 0.01, Acc: 0, Window: 110} // Todo: Flow 0.01 -> 0?
-	Miss = mode.Judgment{Flow: -1, Acc: 0, Window: 150}
+	Kool = gosu.Judgment{Flow: 0.01, Acc: 1, Window: 20}
+	Cool = gosu.Judgment{Flow: 0.01, Acc: 1, Window: 45}
+	Good = gosu.Judgment{Flow: 0.01, Acc: 0.25, Window: 75}
+	Bad  = gosu.Judgment{Flow: 0.01, Acc: 0, Window: 110} // Todo: Flow 0.01 -> 0?
+	Miss = gosu.Judgment{Flow: -1, Acc: 0, Window: 150}
 )
 
-var Judgments = []mode.Judgment{Kool, Cool, Good, Bad, Miss}
+var Judgments = []gosu.Judgment{Kool, Cool, Good, Bad, Miss}
 var JudgmentColors = []color.NRGBA{
 	{109, 120, 134, 255}, // Gray
 	{244, 177, 0, 255},   // Yellow
@@ -29,7 +29,7 @@ var (
 	purple = color.NRGBA{213, 0, 242, 192}
 )
 
-func Verdict(t NoteType, a input.KeyAction, td int64) mode.Judgment {
+func Verdict(t NoteType, a input.KeyAction, td int64) gosu.Judgment {
 	if t == Tail { // Either Hold or Release when Tail is not scored
 		switch {
 		case td > Miss.Window:
@@ -40,17 +40,17 @@ func Verdict(t NoteType, a input.KeyAction, td int64) mode.Judgment {
 			return Miss
 		default: // In range
 			if a == input.Release { // a != Hold
-				return mode.Judge(Judgments, td)
+				return gosu.Judge(Judgments, td)
 			}
 		}
 	} else { // Head, Normal
-		return mode.Verdict(Judgments, a, td)
+		return gosu.Verdict(Judgments, a, td)
 	}
-	return mode.Judgment{}
+	return gosu.Judgment{}
 }
 
 // Todo: no getting Flow when hands off the long note
-func (s *ScenePlay) MarkNote(n *PlayNote, j mode.Judgment) {
+func (s *ScenePlay) MarkNote(n *PlayNote, j gosu.Judgment) {
 	var a = FlowScoreFactor
 	if j == Miss {
 		s.Combo = 0

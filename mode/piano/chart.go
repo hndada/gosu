@@ -6,20 +6,20 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/format/osu"
-	"github.com/hndada/gosu/mode"
 )
 
 // Chart should avoid redundant data as much as possible
 type Chart struct {
-	mode.BaseChart
+	gosu.BaseChart
 	KeyCount int
 	Notes    []Note
 }
 
 // NewChart takes file path as input for starting with parsing.
 // Chart data should not rely on the ChartInfo; clients may have compromised it.
-func NewChart(cpath string, mods mode.Mods) (*Chart, error) {
+func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
 	var c Chart
 	dat, err := os.ReadFile(cpath)
 	if err != nil {
@@ -34,16 +34,16 @@ func NewChart(cpath string, mods mode.Mods) (*Chart, error) {
 		}
 	}
 
-	c.ChartHeader = mode.NewChartHeader(f)
-	c.TransPoints = mode.NewTransPoints(f)
+	c.ChartHeader = gosu.NewChartHeader(f)
+	c.TransPoints = gosu.NewTransPoints(f)
 
 	switch f := f.(type) {
 	case *osu.Format:
 		c.KeyCount = int(f.CircleSize)
 		if c.KeyCount <= 4 {
-			c.ModeType = mode.ModeTypePiano4
+			c.ModeType = gosu.ModeTypePiano4
 		} else {
-			c.ModeType = mode.ModeTypePiano7
+			c.ModeType = gosu.ModeTypePiano7
 		}
 		c.SubMode = c.KeyCount
 		c.Notes = make([]Note, 0, len(f.HitObjects)*2)
@@ -73,10 +73,10 @@ func NewChart(cpath string, mods mode.Mods) (*Chart, error) {
 	return &c, nil
 }
 
-func NewChartInfo(cpath string, mods mode.Mods) (mode.ChartInfo, error) {
+func NewChartInfo(cpath string, mods gosu.Mods) (gosu.ChartInfo, error) {
 	c, err := NewChart(cpath, mods)
 	if err != nil {
-		return mode.ChartInfo{}, err
+		return gosu.ChartInfo{}, err
 	}
-	return mode.NewChartInfo(&c.BaseChart, cpath, mode.Level(c)), nil
+	return gosu.NewChartInfo(&c.BaseChart, cpath, gosu.Level(c)), nil
 }

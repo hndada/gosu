@@ -6,19 +6,19 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
-	"github.com/hndada/gosu/mode"
 )
 
 // ScenePlay: struct, PlayScene: function
 // NoteWeights is a sum of weight of marked notes.
 // This is also max value of each score sum can get at the time.
 type ScenePlay struct {
-	mode.BaseScenePlay
+	gosu.BaseScenePlay
 	// General
-	Mods  mode.Mods
+	Mods  gosu.Mods
 	Chart *Chart
 	// General: Graphics
 	Skin
@@ -41,25 +41,25 @@ type ScenePlay struct {
 
 // Todo: Let users change speed during playing
 // Todo: add Mods to input param
-func NewScenePlay(cpath string, mods mode.Mods, rf *osr.Format) (mode.Scene, error) {
+func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, error) {
 	s := new(ScenePlay)
 
 	// General
 	waitBefore := s.SetTick(rf)
-	s.MD5 = mode.MD5(cpath)
+	s.MD5 = gosu.MD5(cpath)
 	c, err := NewChart(cpath, mods) // NewChart must be at first.
 	if err != nil {
 		return nil, err
 	}
 	s.Chart = c
-	s.EndTime = c.Duration + mode.DefaultWaitAfter
+	s.EndTime = c.Duration + gosu.DefaultWaitAfter
 	// General: Graphics
 	s.SetWindowTitle(c.BaseChart)
 	s.Skin = SkinMap[c.KeyCount]
 	s.SetBackground(c.BackgroundPath(cpath))
 
 	// Speed, BPM, Volume and Highlight
-	s.MainBPM, _, _ = mode.BPMs(c.TransPoints, c.Duration) // Todo: Need a test
+	s.MainBPM, _, _ = gosu.BPMs(c.TransPoints, c.Duration) // Todo: Need a test
 	s.SpeedBase = SpeedBase
 	s.SetInitTransPoint(c.TransPoints[0])
 
@@ -79,7 +79,7 @@ func NewScenePlay(cpath string, mods mode.Mods, rf *osr.Format) (mode.Scene, err
 
 	// Input
 	if rf != nil {
-		s.FetchPressed = mode.NewReplayListener(rf, c.KeyCount, waitBefore)
+		s.FetchPressed = gosu.NewReplayListener(rf, c.KeyCount, waitBefore)
 	} else {
 		s.FetchPressed = input.NewListener(KeySettings[c.KeyCount])
 	}
@@ -89,8 +89,8 @@ func NewScenePlay(cpath string, mods mode.Mods, rf *osr.Format) (mode.Scene, err
 	// Note
 	s.PlayNotes, s.StagedNotes, s.LowestTails, s.MaxNoteWeights = NewPlayNotes(c)
 	// Note: Graphics
-	et, wb, wa := s.EndTime, waitBefore, mode.DefaultWaitAfter
-	s.BarLineDrawer.Times = mode.BarLineTimes(c.TransPoints, et, wb, wa)
+	et, wb, wa := s.EndTime, waitBefore, gosu.DefaultWaitAfter
+	s.BarLineDrawer.Times = gosu.BarLineTimes(c.TransPoints, et, wb, wa)
 	s.BarLineDrawer.Offset = NoteHeigth / 2
 	s.BarLineDrawer.Sprite = s.BarLineSprite
 	s.KeyDrawer.Sprites[0] = s.KeyUpSprites
@@ -106,7 +106,7 @@ func NewScenePlay(cpath string, mods mode.Mods, rf *osr.Format) (mode.Scene, err
 	s.ScoreDrawer.Sprites = s.ScoreSprites
 	s.JudgmentDrawer.Sprites = s.JudgmentSprites
 	s.ComboDrawer.Sprites = s.ComboSprites
-	s.TimingMeter = mode.NewTimingMeter(Judgments, JudgmentColors)
+	s.TimingMeter = gosu.NewTimingMeter(Judgments, JudgmentColors)
 	return s, nil
 }
 
@@ -120,7 +120,7 @@ func (s *ScenePlay) Update() any {
 		if s.MusicPlayer != nil {
 			s.MusicPlayer.Close()
 		}
-		return mode.PlayToResultArgs{
+		return gosu.PlayToResultArgs{
 			Result: s.Result,
 		}
 	}
@@ -140,8 +140,8 @@ func (s *ScenePlay) Update() any {
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
 
 	// Notes and Scores
-	var worst mode.Judgment
-	marks := make([]mode.TimingMeterMark, 0, 7)
+	var worst gosu.Judgment
+	marks := make([]gosu.TimingMeterMark, 0, 7)
 	for k, n := range s.StagedNotes {
 		if n == nil {
 			continue
@@ -171,8 +171,8 @@ func (s *ScenePlay) Update() any {
 			if n.Type == Tail {
 				clr = purple
 			}
-			marks = append(marks, mode.TimingMeterMark{
-				Countdown: mode.TimingMeterMarkDuration,
+			marks = append(marks, gosu.TimingMeterMark{
+				Countdown: gosu.TimingMeterMarkDuration,
 				TimeDiff:  td,
 				Color:     clr,
 			})

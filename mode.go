@@ -1,4 +1,4 @@
-package mode
+package gosu
 
 import (
 	"path/filepath"
