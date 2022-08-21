@@ -14,10 +14,10 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
-// mode.ScenePlay is template struct. Fields can be set at outer function call.
+// mode.BaseScenePlay is template struct. Fields can be set at outer function call.
 // Update cannot be generalized; each scene use template fields in timely manner.
 // Unit of time is a millisecond (1ms = 0.001s).
-type ScenePlay struct {
+type BaseScenePlay struct {
 	// General
 	Tick    int
 	EndTime int64 // EndTime = Duration + WaitAfter
@@ -61,8 +61,8 @@ const (
 	DefaultWaitAfter  int64 = 3 * 1000
 )
 
-func (s ScenePlay) BeatRatio() float64 { return s.TransPoint.BPM / s.MainBPM }
-func (s ScenePlay) Speed() float64     { return s.SpeedBase * s.BeatRatio() * s.BeatScale }
+func (s BaseScenePlay) BeatRatio() float64 { return s.TransPoint.BPM / s.MainBPM }
+func (s BaseScenePlay) Speed() float64     { return s.SpeedBase * s.BeatRatio() * s.BeatScale }
 
 func MD5(path string) [md5.Size]byte {
 	b, err := os.ReadFile(path)
@@ -72,12 +72,12 @@ func MD5(path string) [md5.Size]byte {
 	return md5.Sum(b)
 }
 
-func TimeToTick(time int64) int { return int(float64(time) / 1000 * float64(MaxTPS)) }
-func TickToTime(tick int) int64 { return int64(float64(tick) / float64(MaxTPS) * 1000) }
-func (s ScenePlay) Time() int64 { return int64(float64(s.Tick) / float64(MaxTPS) * 1000) }
+func TimeToTick(time int64) int     { return int(float64(time) / 1000 * float64(MaxTPS)) }
+func TickToTime(tick int) int64     { return int64(float64(tick) / float64(MaxTPS) * 1000) }
+func (s BaseScenePlay) Time() int64 { return int64(float64(s.Tick) / float64(MaxTPS) * 1000) }
 
 // SetTick returns the duration of waiting for the music / chart starts.
-func (s *ScenePlay) SetTick(rf *osr.Format) int64 {
+func (s *BaseScenePlay) SetTick(rf *osr.Format) int64 {
 	waitBefore := DefaultWaitBefore
 	if rf != nil && rf.BufferTime() < waitBefore {
 		waitBefore = rf.BufferTime()
@@ -87,11 +87,11 @@ func (s *ScenePlay) SetTick(rf *osr.Format) int64 {
 }
 
 // General: Graphics
-func (s ScenePlay) SetWindowTitle(c Chart) {
+func (s BaseScenePlay) SetWindowTitle(c BaseChart) {
 	title := fmt.Sprintf("gosu - %s - [%s]", c.MusicName, c.ChartName)
 	ebiten.SetWindowTitle(title)
 }
-func (s *ScenePlay) SetBackground(path string) {
+func (s *BaseScenePlay) SetBackground(path string) {
 	if img := draws.NewImage(path); img != nil {
 		sprite := draws.Sprite{
 			I:      img,
@@ -106,14 +106,14 @@ func (s *ScenePlay) SetBackground(path string) {
 }
 
 // Speed, BPM, Volume and Highlight
-func (s *ScenePlay) SetInitTransPoint(first *TransPoint) {
+func (s *BaseScenePlay) SetInitTransPoint(first *TransPoint) {
 	s.TransPoint = first
 	for s.TransPoint.Time == s.TransPoint.Next.Time {
 		s.TransPoint = s.TransPoint.Next
 	}
 	s.Volume = Volume * s.TransPoint.Volume
 }
-func (s *ScenePlay) UpdateTransPoint() {
+func (s *BaseScenePlay) UpdateTransPoint() {
 	for s.TransPoint.Next != nil && s.TransPoint.Next.Time <= s.Time() {
 		s.TransPoint = s.TransPoint.Next
 	}
@@ -125,7 +125,7 @@ func (s *ScenePlay) UpdateTransPoint() {
 }
 
 // Audio
-func (s *ScenePlay) SetMusicPlayer(apath string) error { // apath stands for audio path.
+func (s *BaseScenePlay) SetMusicPlayer(apath string) error { // apath stands for audio path.
 	if apath == "virtual" || apath == "" {
 		return nil
 	}
@@ -137,7 +137,7 @@ func (s *ScenePlay) SetMusicPlayer(apath string) error { // apath stands for aud
 	s.MusicPlayer.SetVolume(s.Volume)
 	return nil
 }
-func (s *ScenePlay) SetSoundMap(cpath string, names []string) error {
+func (s *BaseScenePlay) SetSoundMap(cpath string, names []string) error {
 	s.Sounds = audios.NewSoundMap(&Volume)
 	for _, name := range names {
 		path := filepath.Join(filepath.Dir(cpath), name)
@@ -147,6 +147,6 @@ func (s *ScenePlay) SetSoundMap(cpath string, names []string) error {
 }
 
 // Input
-func (s ScenePlay) KeyAction(k int) input.KeyAction {
+func (s BaseScenePlay) KeyAction(k int) input.KeyAction {
 	return input.CurrentKeyAction(s.LastPressed[k], s.Pressed[k])
 }

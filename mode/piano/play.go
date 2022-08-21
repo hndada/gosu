@@ -16,7 +16,7 @@ import (
 // NoteWeights is a sum of weight of marked notes.
 // This is also max value of each score sum can get at the time.
 type ScenePlay struct {
-	mode.ScenePlay // Template
+	mode.BaseScenePlay
 	// General
 	Mods  mode.Mods
 	Chart *Chart
@@ -54,7 +54,7 @@ func NewScenePlay(cpath string, mods mode.Mods, rf *osr.Format) (mode.Scene, err
 	s.Chart = c
 	s.EndTime = c.Duration + mode.DefaultWaitAfter
 	// General: Graphics
-	s.SetWindowTitle(s.Chart.Chart)
+	s.SetWindowTitle(c.BaseChart)
 	s.Skin = SkinMap[c.KeyCount]
 	s.SetBackground(c.BackgroundPath(cpath))
 

@@ -7,12 +7,11 @@ import (
 	"github.com/hndada/gosu/format/osu"
 )
 
-// mode.Chart is a base chart.
-type Chart struct {
+type BaseChart struct {
 	ChartHeader
 	TransPoints []*TransPoint
 	ModeType
-	SubMode    int // e.g., KeyCount.
+	SubMode    int // e.g., KeyCount. // Todo: int -> float64; CircleSize may be float64
 	Duration   int64
 	NoteCounts []int
 }
@@ -89,7 +88,7 @@ type ChartInfo struct {
 	// Tags       []string // Auto-generated or User-defined
 }
 
-func NewChartInfo(c *Chart, cpath string, level float64) ChartInfo {
+func NewChartInfo(c *BaseChart, cpath string, level float64) ChartInfo {
 	mainBPM, minBPM, maxBPM := BPMs(c.TransPoints, c.Duration)
 	cb := ChartInfo{
 		Path:     cpath,

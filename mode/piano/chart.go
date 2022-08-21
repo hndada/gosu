@@ -12,7 +12,7 @@ import (
 
 // Chart should avoid redundant data as much as possible
 type Chart struct {
-	mode.Chart
+	mode.BaseChart
 	KeyCount int
 	Notes    []Note
 }
@@ -78,5 +78,5 @@ func NewChartInfo(cpath string, mods mode.Mods) (mode.ChartInfo, error) {
 	if err != nil {
 		return mode.ChartInfo{}, err
 	}
-	return mode.NewChartInfo(&c.Chart, cpath, mode.Level(c)), nil
+	return mode.NewChartInfo(&c.BaseChart, cpath, mode.Level(c)), nil
 }
