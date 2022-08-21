@@ -20,7 +20,7 @@ var HandlerKeyTypes = []int{
 
 type Handler struct {
 	Keys       []ebiten.Key
-	PlaySounds []func() // SoundBytes [][]byte
+	PlaySounds []func()
 	HoldKey    ebiten.Key
 	Countdown  int // Require to hold for a while to move a cursor.
 	Active     bool
