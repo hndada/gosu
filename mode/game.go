@@ -29,7 +29,7 @@ func NewGame(modes []Mode) *Game {
 	}
 	g.SaveChartInfosSet() // 4. Save chart infos to local file
 	LoadSounds("skin/sound")
-	LoadBaseSkin()
+	LoadGeneralSkin()
 	for _, mode := range g.Modes {
 		mode.LoadSkin()
 	}
