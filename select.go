@@ -15,13 +15,12 @@ import (
 )
 
 type SceneSelect struct {
-	Modes     []Mode
-	*ModeType // Todo: IntHandler
-
-	View []ChartInfo // Todo: ChartInfo -> *ChartInfo?
+	Modes []Mode
+	View  []ChartInfo // Todo: ChartInfo -> *ChartInfo?
 	// ViewMode int
-	Cursor        int // Todo: Delayed at Cursor
-	SelectHandler ctrl.IntHandler
+	Cursor          int // Todo: Delayed at Cursor
+	SelectHandler   ctrl.IntHandler
+	ModeTypeHandler ctrl.IntHandler
 
 	Background  draws.Sprite  // Todo: BackgroundDrawer with some effects
 	MusicPlayer *audio.Player // Todo: Rewind after preview has finished.
@@ -35,10 +34,9 @@ var count = int(screenSizeY/ChartInfoBoxHeight/2*2) + 2 // Gives count some marg
 func NewSceneSelect(modes []Mode, modeType *ModeType) *SceneSelect {
 	s := new(SceneSelect)
 	s.Modes = modes
-	s.ModeType = modeType
-
 	s.View = modes[*modeType].ChartInfos
-	s.SelectHandler = NewSelectHandler(&s.Cursor, len(s.View)-1)
+	s.SelectHandler = NewSelectHandler(&s.Cursor, len(s.View))
+	s.ModeTypeHandler = NewModeTypeHandler((*int)(modeType), len(modes))
 	s.UpdateBackground()
 	return s
 }
@@ -49,13 +47,16 @@ func (s *SceneSelect) Update() any {
 	if moved {
 		s.UpdateBackground()
 	}
-	s.Modes[*s.ModeType].SpeedHandler.Update()
+	s.Modes[s.ModeType()].SpeedHandler.Update()
+	if fired := s.ModeTypeHandler.Update(); fired {
+		s.View = s.Modes[*s.ModeTypeHandler.Target].ChartInfos
+	}
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsKeyPressed(ebiten.KeyNumpadEnter) {
 		Sounds.Play("restart")
 		info := s.View[s.Cursor]
 		return SelectToPlayArgs{
 			Path:     info.Path,
-			ModeType: *s.ModeType, // Todo: duplicated. Should it be removed?
+			ModeType: s.ModeType(), // Todo: duplicated. Should it be removed?
 			Replay:   nil,
 		}
 	}
@@ -134,13 +135,19 @@ func (s *SceneSelect) UpdateBackground() {
 	ebiten.SetWindowTitle("gosu")
 }
 func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
-	mode := s.Modes[*s.ModeType]
+	mode := s.Modes[s.ModeType()]
 	speedBase := *mode.SpeedHandler.Target
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf("Volume (Press 1/2): %.0f%%\n"+
-			"SpeedBase (Press 3/4): %.0f\n"+"(Exposure time: %.0fms)\n\n:"+
-			"Handler:%+v (Target: %d)\n",
+			"SpeedBase (Press 3/4): %.0f\n"+"(Exposure time: %.0fms)\n\n"+
+			"ModeType (Press 5): %s\n"+
+			"Chart info index: %d\n",
 			Volume*100,
 			speedBase*100, mode.ExposureTime(speedBase),
-			s.SelectHandler, *s.SelectHandler.Target))
+			s.ModeName(),
+			s.Cursor))
+}
+func (s SceneSelect) ModeType() ModeType { return ModeType(*s.ModeTypeHandler.Target) }
+func (s SceneSelect) ModeName() string {
+	return []string{"Piano4", "Piano7", "Drum", "Karaoke (Jjava)"}[s.ModeType()]
 }
