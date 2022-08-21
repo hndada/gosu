@@ -1,4 +1,4 @@
-package audioutil
+package audios
 
 import (
 	"io"

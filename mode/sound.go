@@ -5,13 +5,13 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hndada/gosu/audioutil"
+	"github.com/hndada/gosu/audios"
 )
 
-var Sounds audioutil.SoundMap
+var Sounds audios.SoundMap
 
 func LoadSounds(soundRoot string) error {
-	Sounds = audioutil.NewSoundMap(&Volume)
+	Sounds = audios.NewSoundMap(&Volume)
 	fs, err := os.ReadDir(soundRoot)
 	if err != nil {
 		return err

@@ -8,7 +8,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
-	"github.com/hndada/gosu/audioutil"
+	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/render"
@@ -35,7 +35,7 @@ type ScenePlay struct {
 	Volume      float64
 	MusicPlayer *audio.Player
 	MusicCloser func() error
-	Sounds      audioutil.SoundMap // A player for sample sound is generated at a place.
+	Sounds      audios.SoundMap // A player for sample sound is generated at a place.
 
 	// Input
 	FetchPressed func() []bool
@@ -131,7 +131,7 @@ func (s *ScenePlay) SetMusicPlayer(apath string) error { // apath stands for aud
 		return nil
 	}
 	var err error
-	s.MusicPlayer, s.MusicCloser, err = audioutil.NewPlayer(apath)
+	s.MusicPlayer, s.MusicCloser, err = audios.NewPlayer(apath)
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (s *ScenePlay) SetMusicPlayer(apath string) error { // apath stands for aud
 	return nil
 }
 func (s *ScenePlay) SetSoundMap(cpath string, names []string) error {
-	s.Sounds = audioutil.NewSoundMap(&Volume)
+	s.Sounds = audios.NewSoundMap(&Volume)
 	for _, name := range names {
 		path := filepath.Join(filepath.Dir(cpath), name)
 		s.Sounds.Register(path)
