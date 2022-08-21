@@ -1,6 +1,7 @@
 package mode
 
 import (
+	"fmt"
 	"path/filepath"
 
 	"github.com/hndada/gosu/format/osu"
@@ -10,10 +11,10 @@ import (
 type Chart struct {
 	ChartHeader
 	TransPoints []*TransPoint
-	Mode        int
-	SubMode     int // e.g., KeyCount.
-	Duration    int64
-	NoteCounts  []int
+	ModeType
+	SubMode    int // e.g., KeyCount.
+	Duration   int64
+	NoteCounts []int
 }
 
 // ChartHeader contains non-play information.
@@ -69,4 +70,43 @@ func (c ChartHeader) MusicPath(cpath string) string {
 }
 func (c ChartHeader) BackgroundPath(cpath string) string {
 	return filepath.Join(filepath.Dir(cpath), c.ImageFilename)
+}
+
+// ChartInfo is used at SceneSelect.
+type ChartInfo struct {
+	Path   string
+	Mods   Mods
+	Header ChartHeader
+	ModeType
+	SubMode int
+	Level   float64
+
+	Duration   int64
+	NoteCounts []int
+	MainBPM    float64
+	MinBPM     float64
+	MaxBPM     float64
+	// Tags       []string // Auto-generated or User-defined
+}
+
+func NewChartInfo(c *Chart, cpath string, level float64) ChartInfo {
+	mainBPM, minBPM, maxBPM := BPMs(c.TransPoints, c.Duration)
+	cb := ChartInfo{
+		Path:     cpath,
+		Header:   c.ChartHeader,
+		ModeType: c.ModeType,
+		SubMode:  c.SubMode,
+		Level:    level,
+
+		Duration:   c.Duration,
+		NoteCounts: c.NoteCounts,
+		MainBPM:    mainBPM,
+		MinBPM:     minBPM,
+		MaxBPM:     maxBPM,
+	}
+	return cb
+}
+
+func (c ChartInfo) Text() string {
+	return fmt.Sprintf("(%dK Lv %.1f) %s [%s]", c.SubMode, c.Level, c.Header.MusicName, c.Header.ChartName)
 }

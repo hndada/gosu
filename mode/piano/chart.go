@@ -19,14 +19,14 @@ type Chart struct {
 
 // NewChart takes file path as input for starting with parsing.
 // Chart data should not rely on the ChartInfo; clients may have compromised it.
-func NewChart(fpath string) (*Chart, error) {
+func NewChart(cpath string, mods mode.Mods) (*Chart, error) {
 	var c Chart
-	dat, err := os.ReadFile(fpath)
+	dat, err := os.ReadFile(cpath)
 	if err != nil {
 		return nil, err
 	}
 	var f any
-	switch strings.ToLower(filepath.Ext(fpath)) {
+	switch strings.ToLower(filepath.Ext(cpath)) {
 	case ".osu":
 		f, err = osu.Parse(dat)
 		if err != nil {
@@ -41,9 +41,9 @@ func NewChart(fpath string) (*Chart, error) {
 	case *osu.Format:
 		c.KeyCount = int(f.CircleSize)
 		if c.KeyCount <= 4 {
-			c.Mode = mode.ModePiano4
+			c.ModeType = mode.ModeTypePiano4
 		} else {
-			c.Mode = mode.ModePiano7
+			c.ModeType = mode.ModeTypePiano7
 		}
 		c.SubMode = c.KeyCount
 		c.Notes = make([]Note, 0, len(f.HitObjects)*2)
@@ -71,4 +71,12 @@ func NewChart(fpath string) (*Chart, error) {
 		}
 	}
 	return &c, nil
+}
+
+func NewChartInfo(cpath string, mods mode.Mods) (mode.ChartInfo, error) {
+	c, err := NewChart(cpath, mods)
+	if err != nil {
+		return mode.ChartInfo{}, err
+	}
+	return mode.NewChartInfo(&c.Chart, cpath, mode.Level(c)), nil
 }
