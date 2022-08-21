@@ -4,9 +4,9 @@ import "github.com/hndada/gosu/mode"
 
 // const (
 // 	ModeAll    = iota // Todo: implement
-// 	ModePiano4        // 1, 2, 3, 4 Key
-// 	ModePiano7        // 5, 6, 7 Key
-// 	ModePiano8        // 8 ~ Key
+// 	ModeTypePiano4        // 1, 2, 3, 4 Key
+// 	ModeTypePiano7        // 5, 6, 7 Key
+// 	ModeTypePiano8        // 8 ~ Key
 // 	ModeDrum
 // 	ModeJjava
 
@@ -26,8 +26,8 @@ var ChartViews = make([][]ChartBox, (LastMode-1)*(LastSortBy-1))
 
 func ViewMode(m, sort int) int {
 	var m2 int
-	if m&mode.ModePiano != 0 {
-		switch m - mode.ModePiano {
+	if m&mode.ModeTypePiano != 0 {
+		switch m - mode.ModeTypePiano {
 		case 1, 2, 3, 4:
 			m2 = 1
 		case 5, 6, 7:
