@@ -10,7 +10,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hndada/gosu/ctrl"
-	"github.com/hndada/gosu/render"
+	"github.com/hndada/gosu/draws"
 	"golang.org/x/image/font/basicfont"
 )
 
@@ -23,7 +23,7 @@ type SceneSelect struct {
 	Cursor        int // Todo: Delayed at Cursor
 	SelectHandler ctrl.IntHandler
 
-	Background  render.Sprite // Todo: BackgroundDrawer with some effects
+	Background  draws.Sprite  // Todo: BackgroundDrawer with some effects
 	MusicPlayer *audio.Player // Todo: Rewind after preview has finished.
 	MusicCloser io.Closer
 }
@@ -51,7 +51,7 @@ func (s *SceneSelect) UpdateBackground() {
 		return
 	}
 	info := s.View[s.Cursor]
-	img := render.NewImage(info.Header.BackgroundPath(info.Path))
+	img := draws.NewImage(info.Header.BackgroundPath(info.Path))
 	if img != nil {
 		s.Background.I = img
 	}
