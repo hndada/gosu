@@ -41,7 +41,7 @@ func NewTimingMeter(js []Judgment, colors []color.NRGBA) TimingMeter {
 	draw.Draw(meterSrc, meterSrc.Bounds(), &image.Uniform{dark}, image.Point{}, draw.Src)
 	y1, y2 := int(float64(meterH)*0.375), int(float64(meterH)*0.625)
 	for i, color := range colors {
-		j := js[len(js)-i]
+		j := js[len(js)-1-i]
 		w := 1 + 2*int(TimingMeterWidth)*int(j.Window)
 		x1 := int(TimingMeterWidth) * (int(Miss.Window - j.Window))
 		x2 := x1 + w
