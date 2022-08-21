@@ -5,12 +5,12 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/ctrl"
-	"github.com/hndada/gosu/render"
+	"github.com/hndada/gosu/draws"
 )
 
 type BackgroundDrawer struct {
 	Dimness float64
-	Sprite  render.Sprite
+	Sprite  draws.Sprite
 }
 
 func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
@@ -21,7 +21,7 @@ func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
 
 type ScoreDrawer struct {
 	DelayedScore ctrl.Delayed
-	Sprites      []render.Sprite
+	Sprites      []draws.Sprite
 }
 
 func (d *ScoreDrawer) Update(score float64) {
@@ -55,7 +55,7 @@ type BarLineDrawer struct {
 	Times  []int64
 	Cursor int     // Index of closest bar line.
 	Offset float64 // Bar line is drawn at bottom, not at the center.
-	Sprite render.Sprite
+	Sprite draws.Sprite
 }
 
 func (d *BarLineDrawer) Update(position func(time int64) float64) {

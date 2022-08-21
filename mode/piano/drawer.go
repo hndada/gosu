@@ -2,8 +2,8 @@ package piano
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode"
-	"github.com/hndada/gosu/render"
 )
 
 var MaxComboCountdown int = mode.TimeToTick(2000)
@@ -11,7 +11,7 @@ var MaxComboCountdown int = mode.TimeToTick(2000)
 type ComboDrawer struct {
 	Combo     int
 	Countdown int
-	Sprites   []render.Sprite
+	Sprites   []draws.Sprite
 }
 
 func (d *ComboDrawer) Update(combo int) {
@@ -64,7 +64,7 @@ var MaxJudgmentCountdown int = mode.TimeToTick(600)
 type JudgmentDrawer struct {
 	LastJudgment mode.Judgment
 	Countdown    int
-	Sprites      []render.Sprite
+	Sprites      []draws.Sprite
 }
 
 func (d *JudgmentDrawer) Update(worst mode.Judgment) {
@@ -84,7 +84,7 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	if d.Countdown <= 0 {
 		return
 	}
-	var sprite render.Sprite
+	var sprite draws.Sprite
 	for i, j := range Judgments {
 		if j.Window == d.LastJudgment.Window {
 			sprite = d.Sprites[i]
@@ -110,7 +110,7 @@ var MinKeyDownTicks int = mode.TimeToTick(30)
 
 type KeyDrawer struct {
 	KeyDownCountdowns []int
-	Sprites           [2][]render.Sprite
+	Sprites           [2][]draws.Sprite
 }
 
 func (d *KeyDrawer) Update(lastPressed, pressed []bool) {

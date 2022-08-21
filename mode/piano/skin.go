@@ -11,7 +11,7 @@ import (
 	_ "image/png"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/render"
+	"github.com/hndada/gosu/draws"
 	"golang.org/x/image/draw"
 )
 
@@ -59,41 +59,41 @@ func init() { // I'm proud of the following code.
 var GeneralSkin *GeneralSkinStruct
 
 type GeneralSkinStruct struct { // Singleton
-	ComboSprites    []render.Sprite
-	ScoreSprites    []render.Sprite
-	JudgmentSprites []render.Sprite
+	ComboSprites    []draws.Sprite
+	ScoreSprites    []draws.Sprite
+	JudgmentSprites []draws.Sprite
 }
 
 // Todo: should each skin has own skin settings?
 type Skin struct {
 	*GeneralSkinStruct
-	KeyUpSprites   []render.Sprite
-	KeyDownSprites []render.Sprite
-	NoteSprites    []render.Sprite
-	HeadSprites    []render.Sprite
-	TailSprites    []render.Sprite
-	BodySprites    [][]render.Sprite // Binary-building method
+	KeyUpSprites   []draws.Sprite
+	KeyDownSprites []draws.Sprite
+	NoteSprites    []draws.Sprite
+	HeadSprites    []draws.Sprite
+	TailSprites    []draws.Sprite
+	BodySprites    [][]draws.Sprite // Binary-building method
 
-	FieldSprite   render.Sprite
-	HintSprite    render.Sprite
-	BarLineSprite render.Sprite // Seperator of each bar (aka measure)
+	FieldSprite   draws.Sprite
+	HintSprite    draws.Sprite
+	BarLineSprite draws.Sprite // Seperator of each bar (aka measure)
 
-	// BodySpritesTest []render.Sprite
+	// BodySpritesTest []draws.Sprite
 }
 
 var SkinMap = make(map[int]Skin)
 
 func LoadSkin() {
 	g := &GeneralSkinStruct{
-		// DefaultBackgrounds: make([]render.Sprite, 0, 10),
-		ComboSprites:    make([]render.Sprite, 10),
-		ScoreSprites:    make([]render.Sprite, 10),
-		JudgmentSprites: make([]render.Sprite, 5),
+		// DefaultBackgrounds: make([]draws.Sprite, 0, 10),
+		ComboSprites:    make([]draws.Sprite, 10),
+		ScoreSprites:    make([]draws.Sprite, 10),
+		JudgmentSprites: make([]draws.Sprite, 5),
 	}
 
 	for i := 0; i < 10; i++ {
-		s := render.Sprite{
-			I:      render.NewImage(fmt.Sprintf("skin/combo/%d.png", i)),
+		s := draws.Sprite{
+			I:      draws.NewImage(fmt.Sprintf("skin/combo/%d.png", i)),
 			Filter: ebiten.FilterLinear,
 		}
 		s.ApplyScale(ComboScale)
@@ -102,8 +102,8 @@ func LoadSkin() {
 		g.ComboSprites[i] = s
 	}
 	for i := 0; i < 10; i++ {
-		s := render.Sprite{
-			I:      render.NewImage(fmt.Sprintf("skin/score/%d.png", i)),
+		s := draws.Sprite{
+			I:      draws.NewImage(fmt.Sprintf("skin/score/%d.png", i)),
 			Filter: ebiten.FilterLinear,
 		}
 		s.ApplyScale(ScoreScale)
@@ -112,8 +112,8 @@ func LoadSkin() {
 		g.ScoreSprites[i] = s
 	}
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
-		s := render.Sprite{
-			I:      render.NewImage(fmt.Sprintf("skin/judgment/%s.png", name)),
+		s := draws.Sprite{
+			I:      draws.NewImage(fmt.Sprintf("skin/judgment/%s.png", name)),
 			Filter: ebiten.FilterLinear,
 		}
 		s.ApplyScale(JudgmentScale)
@@ -139,10 +139,10 @@ func LoadSkin() {
 	// Todo: 4th note image
 	// Currently head and tail use note's image.
 	for i, kind := range []int{1, 2, 3, 3} {
-		noteImages[i] = render.NewImage(fmt.Sprintf("skin/note/note/%d.png", kind))
-		headImages[i] = render.NewImage(fmt.Sprintf("skin/note/head/%d.png", kind))
-		tailImages[i] = render.NewImage(fmt.Sprintf("skin/note/tail/%d.png", kind))
-		// bodyImages[i] = render.NewImage(fmt.Sprintf("skin/note/body/%d.png", kind))
+		noteImages[i] = draws.NewImage(fmt.Sprintf("skin/note/note/%d.png", kind))
+		headImages[i] = draws.NewImage(fmt.Sprintf("skin/note/head/%d.png", kind))
+		tailImages[i] = draws.NewImage(fmt.Sprintf("skin/note/tail/%d.png", kind))
+		// bodyImages[i] = draws.NewImage(fmt.Sprintf("skin/note/body/%d.png", kind))
 		{
 			f, err := os.Open(fmt.Sprintf("skin/note/body/%d.png", kind))
 			if err != nil {
@@ -156,9 +156,9 @@ func LoadSkin() {
 			bodyImages[i] = src
 		}
 	}
-	keyUpImage = render.NewImage("skin/key/up.png")
-	keyDownImage = render.NewImage("skin/key/down.png")
-	hintImage = render.NewImage("skin/hint.png")
+	keyUpImage = draws.NewImage("skin/key/up.png")
+	keyDownImage = draws.NewImage("skin/key/down.png")
+	hintImage = draws.NewImage("skin/hint.png")
 
 	// Todo: Key count 1~3, KeyCount + scratch
 	for keyCount := 4; keyCount <= 10; keyCount++ {
@@ -166,13 +166,13 @@ func LoadSkin() {
 		noteWidths := NoteWidthsMap[keyCount]
 		s := Skin{
 			GeneralSkinStruct: GeneralSkin,
-			KeyUpSprites:      make([]render.Sprite, keyCount&ScratchMask),
-			KeyDownSprites:    make([]render.Sprite, keyCount&ScratchMask),
-			NoteSprites:       make([]render.Sprite, keyCount&ScratchMask),
-			HeadSprites:       make([]render.Sprite, keyCount&ScratchMask),
-			TailSprites:       make([]render.Sprite, keyCount&ScratchMask),
-			BodySprites:       make([][]render.Sprite, keyCount&ScratchMask),
-			// BodySpritesTest:   make([]render.Sprite, keyCount&ScratchMask),
+			KeyUpSprites:      make([]draws.Sprite, keyCount&ScratchMask),
+			KeyDownSprites:    make([]draws.Sprite, keyCount&ScratchMask),
+			NoteSprites:       make([]draws.Sprite, keyCount&ScratchMask),
+			HeadSprites:       make([]draws.Sprite, keyCount&ScratchMask),
+			TailSprites:       make([]draws.Sprite, keyCount&ScratchMask),
+			BodySprites:       make([][]draws.Sprite, keyCount&ScratchMask),
+			// BodySpritesTest:   make([]draws.Sprite, keyCount&ScratchMask),
 		}
 
 		var wsum int
@@ -185,7 +185,7 @@ func LoadSkin() {
 		// KeyUp and KeyDown are drawn below Hint, which bottom is along with HitPosition.
 		x := screenSizeX/2 - wsum/2
 		for k, kind := range noteKinds {
-			s.KeyUpSprites[k] = render.Sprite{
+			s.KeyUpSprites[k] = draws.Sprite{
 				I: keyUpImage,
 				X: float64(x),
 				Y: HitPosition,
@@ -199,7 +199,7 @@ func LoadSkin() {
 
 		x = screenSizeX/2 - wsum/2 // x should be integer like w as well.
 		for k, kind := range noteKinds {
-			s.NoteSprites[k] = render.Sprite{
+			s.NoteSprites[k] = draws.Sprite{
 				I: noteImages[kind],
 				W: noteWidths[kind],
 				H: NoteHeigth,
@@ -235,7 +235,7 @@ func LoadSkin() {
 			for pow := 0; pow < int(math.Log2(screenSizeY))+1; pow++ {
 				h := 1 << pow
 				rect := image.Rect(0, 0, w, h)
-				s.BodySprites[k] = append(s.BodySprites[k], render.Sprite{
+				s.BodySprites[k] = append(s.BodySprites[k], draws.Sprite{
 					I: ebiten.NewImageFromImage(dst.SubImage(rect)),
 					W: float64(w),
 					H: float64(h),
@@ -255,7 +255,7 @@ func LoadSkin() {
 			// 		rect.Min.Y += h
 			// 		rect.Max.Y += h
 			// 	}
-			// 	s.BodySpritesTest[k] = render.Sprite{
+			// 	s.BodySpritesTest[k] = draws.Sprite{
 			// 		I: ebiten.NewImageFromImage(dst),
 			// 		W: float64(dst.Bounds().Dx()), // noteWidths[kind]
 			// 		H: float64(dst.Bounds().Dy()), // screenSizeY
@@ -269,7 +269,7 @@ func LoadSkin() {
 
 		field := ebiten.NewImage(wsum, screenSizeY)
 		field.Fill(color.RGBA{0, 0, 0, uint8(255 * FieldDark)})
-		s.FieldSprite = render.Sprite{
+		s.FieldSprite = draws.Sprite{
 			I: field,
 			W: float64(wsum),
 			H: screenSizeY,
@@ -277,7 +277,7 @@ func LoadSkin() {
 		s.FieldSprite.SetCenterX(screenSizeX / 2)
 		// FieldSprite's y value is always 0.
 
-		s.HintSprite = render.Sprite{
+		s.HintSprite = draws.Sprite{
 			I: hintImage,
 			W: float64(wsum),
 			H: HintHeight,
@@ -287,7 +287,7 @@ func LoadSkin() {
 
 		barLine := ebiten.NewImage(wsum, 1)
 		barLine.Fill(color.RGBA{255, 255, 255, 255})
-		s.BarLineSprite = render.Sprite{
+		s.BarLineSprite = draws.Sprite{
 			I: barLine,
 			W: float64(wsum),
 			H: 1,

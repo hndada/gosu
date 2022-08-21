@@ -9,9 +9,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hndada/gosu/audios"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
-	"github.com/hndada/gosu/render"
 )
 
 // mode.ScenePlay is template struct. Fields can be set at outer function call.
@@ -93,8 +93,8 @@ func (s ScenePlay) SetWindowTitle(c Chart) {
 	ebiten.SetWindowTitle(title)
 }
 func (s *ScenePlay) SetBackground(path string) {
-	if img := render.NewImage(path); img != nil {
-		sprite := render.Sprite{
+	if img := draws.NewImage(path); img != nil {
+		sprite := draws.Sprite{
 			I:      img,
 			Filter: ebiten.FilterLinear,
 		}

@@ -6,16 +6,16 @@ import (
 	"image/draw"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/render"
+	"github.com/hndada/gosu/draws"
 )
 
 const fadeInDuration = 800 // Duration of fade-in of timing meter marks.
 var TimingMeterMarkDuration int = TimeToTick(4000)
 
 type TimingMeter struct {
-	Meter  render.Sprite
-	Anchor render.Sprite
-	Unit   render.Sprite
+	Meter  draws.Sprite
+	Anchor draws.Sprite
+	Unit   draws.Sprite
 	Marks  []TimingMeterMark
 }
 type TimingMeterMark struct {
@@ -48,7 +48,7 @@ func NewTimingMeter(js []Judgment, colors []color.NRGBA) TimingMeter {
 		rect := image.Rect(x1, y1, x2, y2)
 		draw.Draw(meterSrc, rect, &image.Uniform{color}, image.Point{}, draw.Src)
 	}
-	tm.Meter = render.Sprite{
+	tm.Meter = draws.Sprite{
 		I: ebiten.NewImageFromImage(meterSrc),
 		W: float64(meterW),
 		H: float64(meterH),
@@ -58,7 +58,7 @@ func NewTimingMeter(js []Judgment, colors []color.NRGBA) TimingMeter {
 
 	anchorSrc := ebiten.NewImage(int(TimingMeterWidth), int(TimingMeterHeight))
 	anchorSrc.Fill(red)
-	tm.Anchor = render.Sprite{
+	tm.Anchor = draws.Sprite{
 		I: anchorSrc,
 		W: TimingMeterWidth,
 		H: TimingMeterHeight,
@@ -68,7 +68,7 @@ func NewTimingMeter(js []Judgment, colors []color.NRGBA) TimingMeter {
 
 	unitSrc := ebiten.NewImage(int(TimingMeterWidth), int(TimingMeterHeight))
 	unitSrc.Fill(white)
-	tm.Unit = render.Sprite{
+	tm.Unit = draws.Sprite{
 		I: unitSrc,
 		W: TimingMeterWidth,
 		H: TimingMeterHeight,

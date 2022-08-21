@@ -1,4 +1,4 @@
-package render
+package draws
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
