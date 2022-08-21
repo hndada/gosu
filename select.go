@@ -38,26 +38,9 @@ func NewSceneSelect(modes []Mode, modeType *ModeType) *SceneSelect {
 	s.ModeType = modeType
 
 	s.View = modes[*modeType].ChartInfos
-	s.SelectHandler = NewSelectHandler(&s.Cursor, len(s.View))
+	s.SelectHandler = NewSelectHandler(&s.Cursor, len(s.View)-1)
 	s.UpdateBackground()
 	return s
-}
-func (s *SceneSelect) UpdateBackground() {
-	s.Background = DefaultBackground
-	if len(s.View) == 0 {
-		return
-	}
-	if s.Cursor >= len(s.View) {
-		return
-	}
-	info := s.View[s.Cursor]
-	img := draws.NewImage(info.Header.BackgroundPath(info.Path))
-	if img != nil {
-		s.Background.I = img
-	}
-	s.Background.SetWidth(screenSizeX)
-	s.Background.SetCenterY(screenSizeY / 2)
-	ebiten.SetWindowTitle("gosu")
 }
 
 // Default HoldKey value is 0, which is Key0.
@@ -66,6 +49,7 @@ func (s *SceneSelect) Update() any {
 	if moved {
 		s.UpdateBackground()
 	}
+	s.Modes[*s.ModeType].SpeedHandler.Update()
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsKeyPressed(ebiten.KeyNumpadEnter) {
 		Sounds.Play("restart")
 		info := s.View[s.Cursor]
@@ -132,15 +116,31 @@ func (s SceneSelect) Viewport() ([]ChartInfo, int) {
 	}
 	return viewport, cursor
 }
-
+func (s *SceneSelect) UpdateBackground() {
+	s.Background = DefaultBackground
+	if len(s.View) == 0 {
+		return
+	}
+	if s.Cursor >= len(s.View) {
+		return
+	}
+	info := s.View[s.Cursor]
+	img := draws.NewImage(info.Header.BackgroundPath(info.Path))
+	if img != nil {
+		s.Background.I = img
+	}
+	s.Background.SetWidth(screenSizeX)
+	s.Background.SetCenterY(screenSizeY / 2)
+	ebiten.SetWindowTitle("gosu")
+}
 func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
 	mode := s.Modes[*s.ModeType]
-	speedBase := *mode.SpeedHandler.Target * 100
+	speedBase := *mode.SpeedHandler.Target
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf("Volume (Press 1/2): %.0f%%\n"+
 			"SpeedBase (Press 3/4): %.0f\n"+"(Exposure time: %.0fms)\n\n:"+
 			"Handler:%+v (Target: %d)\n",
 			Volume*100,
-			speedBase, mode.ExposureTime(speedBase),
+			speedBase*100, mode.ExposureTime(speedBase),
 			s.SelectHandler, *s.SelectHandler.Target))
 }
