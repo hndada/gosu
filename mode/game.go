@@ -1,8 +1,6 @@
 package mode
 
 import (
-	"time"
-
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/format/osr"
@@ -80,10 +78,6 @@ type SelectToPlayArgs struct {
 	Replay *osr.Format
 }
 
-// Todo: implement Replay
 type PlayToResultArgs struct {
-	PlayedTime time.Time // Finish time of playing.
-	MD5        [16]byte
 	Result
-	// Replay  // Entire timed-log key strokes.
 }

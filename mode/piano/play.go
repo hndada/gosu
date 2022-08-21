@@ -3,7 +3,6 @@ package piano
 import (
 	"fmt"
 	"path/filepath"
-	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -122,10 +121,7 @@ func (s *ScenePlay) Update() any {
 			s.MusicPlayer.Close()
 		}
 		return mode.PlayToResultArgs{
-			MD5:        s.MD5,
-			PlayedTime: time.Now(),
-			Result:     s.Result,
-			// Replay
+			Result: s.Result,
 		}
 	}
 
