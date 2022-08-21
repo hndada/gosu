@@ -1,4 +1,4 @@
-package mode
+package gosu
 
 // Todo: BarLine color settings
 var (

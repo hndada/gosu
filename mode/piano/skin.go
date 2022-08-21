@@ -15,7 +15,7 @@ import (
 	"golang.org/x/image/draw"
 )
 
-// var colors = []color.NRGBA{mode.Gray, mode.Yellow, mode.Lime, mode.Sky, mode.Blue}
+// var colors = []color.NRGBA{gosu.Gray, gosu.Yellow, gosu.Lime, gosu.Sky, gosu.Blue}
 
 type NoteKind int
 
