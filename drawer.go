@@ -19,6 +19,33 @@ func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
 	screen.DrawImage(d.Sprite.I, op)
 }
 
+type BarLineDrawer struct {
+	Times  []int64
+	Cursor int     // Index of closest bar line.
+	Offset float64 // Bar line is drawn at bottom, not at the center.
+	Sprite draws.Sprite
+}
+
+func (d *BarLineDrawer) Update(position func(time int64) float64) {
+	t := d.Times[d.Cursor]
+	// Bar line and Hint are anchored at the bottom.
+	for d.Cursor < len(d.Times)-1 &&
+		int(position(t)+d.Offset) >= screenSizeY {
+		d.Cursor++
+		t = d.Times[d.Cursor]
+	}
+}
+func (d BarLineDrawer) Draw(screen *ebiten.Image, position func(time int64) float64) {
+	for _, t := range d.Times[d.Cursor:] {
+		sprite := d.Sprite
+		sprite.Y = position(t) + d.Offset
+		if sprite.Y < 0 {
+			break
+		}
+		sprite.Draw(screen)
+	}
+}
+
 type ScoreDrawer struct {
 	DelayedScore ctrl.Delayed
 	Sprites      []draws.Sprite
@@ -26,6 +53,7 @@ type ScoreDrawer struct {
 
 func (d *ScoreDrawer) Update(score float64) {
 	d.DelayedScore.Set(score)
+	d.DelayedScore.Update()
 }
 
 // ScoreDrawer's Draw draws each number at constant x regardless of their widths.
@@ -47,34 +75,6 @@ func (d ScoreDrawer) Draw(screen *ebiten.Image) {
 		x -= d.Sprites[0].W
 		sprite := d.Sprites[v]
 		sprite.X = x + (d.Sprites[0].W - sprite.W/2)
-		sprite.Draw(screen)
-	}
-}
-
-type BarLineDrawer struct {
-	Times  []int64
-	Cursor int     // Index of closest bar line.
-	Offset float64 // Bar line is drawn at bottom, not at the center.
-	Sprite draws.Sprite
-}
-
-func (d *BarLineDrawer) Update(position func(time int64) float64) {
-	t := d.Times[d.Cursor]
-	// Bar line and Hint are anchored at the bottom.
-	for d.Cursor < len(d.Times)-1 &&
-		int(position(t)+d.Offset) >= screenSizeY {
-		d.Cursor++
-		t = d.Times[d.Cursor]
-	}
-}
-
-func (d BarLineDrawer) Draw(screen *ebiten.Image, position func(time int64) float64) {
-	for _, t := range d.Times[d.Cursor:] {
-		sprite := d.Sprite
-		sprite.Y = position(t) + d.Offset
-		if sprite.Y < 0 {
-			break
-		}
 		sprite.Draw(screen)
 	}
 }

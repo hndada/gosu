@@ -175,7 +175,6 @@ func (s *ScenePlay) Update() any {
 			})
 		}
 	}
-	// Score: Graphics
 	s.JudgmentDrawer.Update(worst)
 	s.ComboDrawer.Update(s.Combo)
 	s.ScoreDrawer.Update(s.Score())
