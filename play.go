@@ -14,14 +14,14 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
-// gosu.BaseScenePlay is template struct. Fields can be set at outer function call.
+// Fields can be set at outer function call.
 // Update cannot be generalized; each scene use template fields in timely manner.
 // Unit of time is a millisecond (1ms = 0.001s).
 type BaseScenePlay struct {
 	// General
-	Tick    int
-	EndTime int64 // EndTime = Duration + WaitAfter
-	// General: Graphics
+	Tick             int
+	EndTime          int64 // EndTime = Duration + WaitAfter
+	Mods             Mods
 	BackgroundDrawer BackgroundDrawer
 
 	// Speed, BPM, Volume and Highlight
@@ -42,7 +42,6 @@ type BaseScenePlay struct {
 	Pressed      []bool
 
 	// Note
-	// Note: Graphics
 	BarLineDrawer BarLineDrawer
 
 	// Score
@@ -50,7 +49,6 @@ type BaseScenePlay struct {
 	NoteWeights float64
 	Combo       int
 	Flow        float64
-	// Score: Graphics
 	ScoreDrawer ScoreDrawer
 	TimingMeter TimingMeter
 }
@@ -63,7 +61,6 @@ const (
 
 func (s BaseScenePlay) BeatRatio() float64 { return s.TransPoint.BPM / s.MainBPM }
 func (s BaseScenePlay) Speed() float64     { return s.SpeedBase * s.BeatRatio() * s.BeatScale }
-
 func MD5(path string) [md5.Size]byte {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -85,8 +82,6 @@ func (s *BaseScenePlay) SetTick(rf *osr.Format) int64 {
 	s.Tick = TimeToTick(waitBefore) - 1 // s.Update() starts with s.Tick++
 	return waitBefore
 }
-
-// General: Graphics
 func (s BaseScenePlay) SetWindowTitle(c BaseChart) {
 	title := fmt.Sprintf("gosu - %s - [%s]", c.MusicName, c.ChartName)
 	ebiten.SetWindowTitle(title)
