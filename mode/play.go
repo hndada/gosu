@@ -2,9 +2,9 @@ package mode
 
 import (
 	"crypto/md5"
+	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
@@ -31,11 +31,11 @@ type ScenePlay struct {
 	*TransPoint
 
 	// Audio
-	LastVolume         float64
-	Volume             float64
-	MusicPlayer        *audio.Player
-	MusicCloser        func() error
-	audioutil.SoundMap // A player for sample sound is generated at a place.
+	LastVolume  float64
+	Volume      float64
+	MusicPlayer *audio.Player
+	MusicCloser func() error
+	Sounds      audioutil.SoundMap // A player for sample sound is generated at a place.
 
 	// Input
 	FetchPressed func() []bool
@@ -88,6 +88,10 @@ func (s *ScenePlay) SetTick(rf *osr.Format) int64 {
 }
 
 // General: Graphics
+func (s ScenePlay) SetWindowTitle(c Chart) {
+	title := fmt.Sprintf("gosu - %s - [%s]", c.MusicName, c.ChartName)
+	ebiten.SetWindowTitle(title)
+}
 func (s *ScenePlay) SetBackground(path string) {
 	if img := render.NewImage(path); img != nil {
 		sprite := render.Sprite{
@@ -135,10 +139,10 @@ func (s *ScenePlay) SetMusicPlayer(apath string) error { // apath stands for aud
 	return nil
 }
 func (s *ScenePlay) SetSoundMap(cpath string, names []string) error {
-	s.SoundMap = make(audioutil.SoundMap)
+	s.Sounds = audioutil.NewSoundMap(&Volume)
 	for _, name := range names {
 		path := filepath.Join(filepath.Dir(cpath), name)
-		s.SoundMap.Register(path, "")
+		s.Sounds.Register(path)
 	}
 	return nil
 }
@@ -146,12 +150,4 @@ func (s *ScenePlay) SetSoundMap(cpath string, names []string) error {
 // Input
 func (s ScenePlay) KeyAction(k int) input.KeyAction {
 	return input.CurrentKeyAction(s.LastPressed[k], s.Pressed[k])
-}
-
-// Replay is a entire key stroke timed-log.
-type PlayToResultArgs struct {
-	PlayedTime time.Time // Finish time of playing
-	MD5        [16]byte
-	Result
-	// Replay // Todo: implement Replay
 }
