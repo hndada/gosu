@@ -1,4 +1,4 @@
-package audioutil
+package audios
 
 import (
 	"github.com/hajimehoshi/ebiten/v2/audio"
