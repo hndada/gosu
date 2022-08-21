@@ -72,9 +72,7 @@ func MD5(path string) [md5.Size]byte {
 func TimeToTick(time int64) int     { return int(float64(time) / 1000 * float64(MaxTPS)) }
 func TickToTime(tick int) int64     { return int64(float64(tick) / float64(MaxTPS) * 1000) }
 func (s BaseScenePlay) Time() int64 { return int64(float64(s.Tick) / float64(MaxTPS) * 1000) }
-
-// SetTick returns the duration of waiting for the music / chart starts.
-func (s *BaseScenePlay) SetTick(rf *osr.Format) int64 {
+func (s *BaseScenePlay) SetTick(rf *osr.Format) int64 { // Returns duration of waiting before starts
 	waitBefore := DefaultWaitBefore
 	if rf != nil && rf.BufferTime() < waitBefore {
 		waitBefore = rf.BufferTime()
