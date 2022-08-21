@@ -10,7 +10,6 @@ import (
 	"github.com/vmihailenco/msgpack/v5"
 )
 
-// Todo: package db -> data
 type ScoreRow struct {
 	MD5  [md5.Size]byte
 	Time time.Time
