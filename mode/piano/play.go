@@ -17,10 +17,9 @@ import (
 // This is also max value of each score sum can get at the time.
 type ScenePlay struct {
 	gosu.BaseScenePlay
+
 	// General
-	Mods  gosu.Mods
 	Chart *Chart
-	// General: Graphics
 	Skin
 
 	// Speed, BPM, Volume and Highlight
@@ -29,11 +28,9 @@ type ScenePlay struct {
 	// Notes
 	PlayNotes   []*PlayNote
 	StagedNotes []*PlayNote
-	// Notes: Graphics
 	LowestTails []*PlayNote // For drawing long note efficiently
 
 	// Scores
-	// Scores: Graphics
 	JudgmentDrawer JudgmentDrawer
 	ComboDrawer    ComboDrawer
 	KeyDrawer      KeyDrawer
