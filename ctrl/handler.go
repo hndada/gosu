@@ -24,11 +24,9 @@ type Handler struct {
 	HoldKey    ebiten.Key
 	Countdown  int // Require to hold for a while to move a cursor.
 	Active     bool
-	// Hold       int // Tick count of holding.
-	// Threshold  int
 }
 
-const KeyNone = -1 // ebiten.Key(input.KeyReserved0)
+const KeyNone = -1
 
 func (h *Handler) Update() {
 	h.Countdown--
@@ -40,30 +38,11 @@ func (h *Handler) Update() {
 	}
 	h.Active = false
 	h.Countdown = 0
+	h.HoldKey = KeyNone
 	for _, keyType := range HandlerKeyTypes[:len(h.Keys)] {
 		key := h.Keys[keyType]
 		if ebiten.IsKeyPressed(key) {
 			h.HoldKey = key
-		}
-	}
-}
-
-func (h *Handler) Update2() {
-	if ebiten.IsKeyPressed(h.HoldKey) {
-		h.Countdown--
-		if h.Countdown < 0 {
-			h.Countdown = 0
-		}
-	} else {
-		h.Active = false
-		h.Countdown = longCountdown
-		h.HoldKey = KeyNone
-		for _, keyType := range HandlerKeyTypes[:len(h.Keys)] {
-			key := h.Keys[keyType]
-			if ebiten.IsKeyPressed(key) {
-				h.HoldKey = key
-				h.Countdown--
-			}
 		}
 	}
 }
@@ -74,7 +53,7 @@ func (h Handler) KeyType() int {
 			return t
 		}
 	}
-	return KeyNone
+	return -1
 }
 
 type F64Handler struct {
@@ -88,11 +67,10 @@ type F64Handler struct {
 // Update returns whether the handler has fired or not.
 func (h *F64Handler) Update() bool {
 	h.Handler.Update()
-	// if h.Hold%h.Threshold != 1 {}
 	if h.Countdown > 0 || h.KeyType() == -1 {
 		return false
 	}
-	// Countdown is 0: Time to action!
+	// Now countdown is 0.
 	h.PlaySounds[h.KeyType()]()
 	switch h.KeyType() {
 	case HandlerKeyIncrease:
@@ -107,8 +85,6 @@ func (h *F64Handler) Update() bool {
 		}
 	case HandlerKeyNext:
 	case HandlerKeyPrev:
-	case -1:
-		panic("invalid input at handler")
 	}
 	if h.Active {
 		h.Countdown = shortCountdown
@@ -125,6 +101,7 @@ type IntHandler struct {
 	Max    int
 	Unit   int
 	Target *int
+	Loop   bool
 }
 
 // Update returns whether the handler has fired or not.
@@ -138,17 +115,23 @@ func (h *IntHandler) Update() bool {
 	case HandlerKeyIncrease:
 		*h.Target += h.Unit
 		if *h.Target > h.Max {
-			*h.Target = h.Max
+			if h.Loop {
+				*h.Target -= h.Max + 1
+			} else {
+				*h.Target = h.Max
+			}
 		}
 	case HandlerKeyDecrease:
 		*h.Target -= h.Unit
 		if *h.Target < h.Min {
-			*h.Target = h.Min
+			if h.Loop {
+				*h.Target += h.Max + 1
+			} else {
+				*h.Target = h.Min
+			}
 		}
 	case HandlerKeyNext:
 	case HandlerKeyPrev:
-	case -1:
-		panic("invalid input at handler")
 	}
 	if h.Active {
 		h.Countdown = shortCountdown
@@ -177,8 +160,6 @@ func (h *BoolHandler) Update() bool {
 	case HandlerKeyDecrease:
 	case HandlerKeyNext:
 	case HandlerKeyPrev:
-	case -1:
-		panic("invalid input at handler")
 	}
 	h.Active = true
 	return true

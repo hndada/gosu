@@ -6,11 +6,6 @@ import (
 )
 
 func NewVolumeHandler(vol *float64) ctrl.F64Handler {
-	// b, err := audios.NewBytes("skin/default-hover.wav")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// play := audios.Context.NewPlayerFromBytes(b).Play
 	play := func() { Sounds.Play("default-hover") }
 	return ctrl.F64Handler{
 		Handler: ctrl.Handler{
@@ -26,11 +21,6 @@ func NewVolumeHandler(vol *float64) ctrl.F64Handler {
 }
 
 func NewSpeedHandler(speedBase *float64) ctrl.F64Handler {
-	// b, err := audios.NewBytes("skin/default-hover.wav")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// play := audios.Context.NewPlayerFromBytes(b).Play
 	play := func() { Sounds.Play("default-hover") }
 	return ctrl.F64Handler{
 		Handler: ctrl.Handler{
@@ -47,11 +37,6 @@ func NewSpeedHandler(speedBase *float64) ctrl.F64Handler {
 
 // Todo: should Max be *int?
 func NewSelectHandler(cursor *int, len int) ctrl.IntHandler {
-	// b, err := audios.NewBytes("skin/default-hover.wav")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// play := audios.Context.NewPlayerFromBytes(b).Play
 	play := func() { Sounds.Play("default-hover") }
 	return ctrl.IntHandler{
 		Handler: ctrl.Handler{
@@ -63,5 +48,6 @@ func NewSelectHandler(cursor *int, len int) ctrl.IntHandler {
 		Max:    len,
 		Unit:   1,
 		Target: cursor,
+		Loop:   true,
 	}
 }
