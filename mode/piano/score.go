@@ -107,6 +107,9 @@ func (s ScenePlay) Score() float64 {
 
 // Flow, acc, kool rate score in order.
 func (s ScenePlay) CalcScore() (fs, as, es float64) {
+	if s.MaxNoteWeights == 0 {
+		return 0, 0, 0 // No score when no notes.
+	}
 	var (
 		b = AccScoreFactor
 		c = KoolRateScoreFactor
@@ -117,6 +120,9 @@ func (s ScenePlay) CalcScore() (fs, as, es float64) {
 	return
 }
 func (s ScenePlay) ScoreBound() float64 {
+	if s.MaxNoteWeights == 0 {
+		return 0 // No score when no notes.
+	}
 	var (
 		b = AccScoreFactor
 		c = KoolRateScoreFactor
