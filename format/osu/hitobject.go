@@ -267,64 +267,45 @@ const ComboMask = ^(NewCombo + ComboColourSkip1 + ComboColourSkip2 + ComboColour
 // var ActualHitType = [...]HitType{HitTypeNote, HitTypeSlider, HitTypeSpinner, HitTypeHoldNote}
 
 const (
-	HitSoundNormal = iota
+	HitSoundNormal = 1 << iota
 	HitSoundWhistle
 	HitSoundFinish
 	HitSoundClap
 )
 
-// Todo: test
-// Assumes whether normal or additional sample set is input in every call
-func (hs HitSample) SampleFilename(sampleSet, hitSound int) string {
-	if hs.Filename != "" {
-		return hs.Filename
-	}
-	var sampleSetName, hitSoundName, index string
-	switch sampleSet {
-	case 1:
-		sampleSetName = "normal"
-	case 2:
-		sampleSetName = "soft"
-	case 3:
-		sampleSetName = "drum"
-	}
-	switch hitSound {
-	case HitSoundNormal:
-		hitSoundName = "normal"
-	case HitSoundWhistle:
-		hitSoundName = "whistle"
-	case HitSoundFinish:
-		hitSoundName = "finish"
-	case HitSoundClap:
-		hitSoundName = "clap"
-	}
-	index = strconv.Itoa(hs.Index)
-	return fmt.Sprintf("%s-hit%s%s.wav", sampleSetName, hitSoundName, index)
-}
+var HitSounds = []string{"normal", "whistle", "finish", "clap"}
+var SampleSets = []string{"x", "normal", "soft", "drum"}
+var YetDetermined = "?"
 
-// Todo: test
-func (ho HitObject) SliderDuration(tps []TimingPoint, multiplier float64) int {
-	if ho.NoteType != HitTypeSlider {
-		return 0
-	}
-	for j := len(tps) - 1; j >= 0; j-- {
-		tp := tps[j]
-		if tp.Time > ho.Time || tp.Uninherited {
-			continue
-		}
-		duration := ho.SliderParams.Length / (multiplier * 100) * (-tp.BeatLength)
-		return int(duration)
-	}
-	return 0
-}
+// Default sound sample would not even used by most users.
+// func (h HitObject) SampleFilename() string {
+// 	hs := h.HitSample
+// 	set := hs.NormalSet
+// 	if h.HitSound >= 2 {
+// 		set = hs.AdditionSet
+// 	}
+// 	return fmt.Sprintf("%s-hit%s%d.wav", SampleSets[set], HitSounds[h.HitSound], hs.Index)
+// }
 
 const (
 	TaikoKatMask = HitSoundWhistle | HitSoundClap
-	TaikoDonMask = ^TaikoKatMask // TODO: need a test
 	TaikoBigMask = HitSoundFinish
 )
 
 // Column returns index of column at mania playfield
 func (ho HitObject) Column(columnCount int) int {
 	return columnCount * ho.X / 512
+}
+func IsKat(ho HitObject) bool { return ho.HitSound&TaikoKatMask != 0 }
+func IsDon(ho HitObject) bool { return ho.HitSound&TaikoKatMask == 0 }
+func IsBig(ho HitObject) bool { return ho.HitSound&TaikoBigMask != 0 }
+
+func (h HitObject) SliderDuration(speed float64) int {
+	if h.NoteType&HitTypeSlider == 0 {
+		return 0
+	}
+	hs := h.SliderParams
+	length := float64(hs.Slides) * hs.Length
+	// speed := (bpm / 60000) * beatScale * (multiplier * 100)
+	return int(length / speed)
 }
