@@ -10,12 +10,12 @@ const (
 )
 const (
 	normal = 4 << iota
-	longNote
+	long
 )
 const (
 	Normal NoteType = normal + press
-	Head            = longNote + press
-	Tail            = longNote + release
+	Head   NoteType = long + press
+	Tail   NoteType = long + release
 )
 
 type Note struct {
@@ -27,7 +27,6 @@ type Note struct {
 	SampleVolume   float64 // Range is 0 to 1.
 }
 
-// A sample sound file should be lazy loaded.
 func NewNote(f any, keyCount int) []Note {
 	ns := make([]Note, 0, 2)
 	switch f := f.(type) {
