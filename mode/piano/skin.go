@@ -81,7 +81,7 @@ type Skin struct {
 	// BodySpritesTest []draws.Sprite
 }
 
-var SkinMap = make(map[int]Skin)
+var Skins = make(map[int]Skin)
 
 func LoadSkin() {
 	g := &GeneralSkinStruct{
@@ -113,7 +113,7 @@ func LoadSkin() {
 	}
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
 		s := draws.Sprite{
-			I:      draws.NewImage(fmt.Sprintf("skin/judgment/%s.png", name)),
+			I:      draws.NewImage(fmt.Sprintf("skin/piano/judgment/%s.png", name)),
 			Filter: ebiten.FilterLinear,
 		}
 		s.ApplyScale(JudgmentScale)
@@ -139,12 +139,12 @@ func LoadSkin() {
 	// Todo: 4th note image
 	// Currently head and tail use note's image.
 	for i, kind := range []int{1, 2, 3, 3} {
-		noteImages[i] = draws.NewImage(fmt.Sprintf("skin/note/note/%d.png", kind))
-		headImages[i] = draws.NewImage(fmt.Sprintf("skin/note/head/%d.png", kind))
-		tailImages[i] = draws.NewImage(fmt.Sprintf("skin/note/tail/%d.png", kind))
-		// bodyImages[i] = draws.NewImage(fmt.Sprintf("skin/note/body/%d.png", kind))
+		noteImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/note/%d.png", kind))
+		headImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/head/%d.png", kind))
+		tailImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/tail/%d.png", kind))
+		// bodyImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/body/%d.png", kind))
 		{
-			f, err := os.Open(fmt.Sprintf("skin/note/body/%d.png", kind))
+			f, err := os.Open(fmt.Sprintf("skin/piano/note/body/%d.png", kind))
 			if err != nil {
 				panic(err)
 			}
@@ -156,9 +156,9 @@ func LoadSkin() {
 			bodyImages[i] = src
 		}
 	}
-	keyUpImage = draws.NewImage("skin/key/up.png")
-	keyDownImage = draws.NewImage("skin/key/down.png")
-	hintImage = draws.NewImage("skin/hint.png")
+	keyUpImage = draws.NewImage("skin/piano/key/up.png")
+	keyDownImage = draws.NewImage("skin/piano/key/down.png")
+	hintImage = draws.NewImage("skin/piano/hint.png")
 
 	// Todo: Key count 1~3, KeyCount + scratch
 	for keyCount := 4; keyCount <= 10; keyCount++ {
@@ -294,6 +294,6 @@ func LoadSkin() {
 		}
 		s.BarLineSprite.SetCenterX(screenSizeX / 2)
 		// BarLineSprite's y value is not fixed.
-		SkinMap[keyCount] = s
+		Skins[keyCount] = s
 	}
 }

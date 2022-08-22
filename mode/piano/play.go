@@ -20,7 +20,7 @@ type ScenePlay struct {
 
 	// General
 	Chart *Chart
-	Skin
+	Skin  // The skin may be applied some custom settings: on/off some sprites
 
 	// Speed, BPM, Volume and Highlight
 	// Audio
@@ -52,7 +52,7 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	s.EndTime = c.Duration + gosu.DefaultWaitAfter
 	// General: Graphics
 	s.SetWindowTitle(c.BaseChart)
-	s.Skin = SkinMap[c.KeyCount]
+	s.Skin = Skins[c.KeyCount]
 	s.SetBackground(c.BackgroundPath(cpath))
 
 	// Speed, BPM, Volume and Highlight
@@ -145,7 +145,11 @@ func (s *ScenePlay) Update() any {
 		}
 		if n.Type != Tail && s.KeyAction(k) == input.Hit {
 			if name := n.SampleFilename; name != "" {
-				s.Sounds.PlayWithVolume(name, n.SampleVolume)
+				vol := n.SampleVolume
+				if vol == 0 {
+					vol = s.TransPoint.Volume
+				}
+				s.Sounds.PlayWithVolume(name, vol)
 			}
 		}
 		td := n.Time - s.Time() // Time difference. A negative value infers late hit
