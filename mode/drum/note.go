@@ -135,6 +135,14 @@ func ScaledBPM(bpm float64) float64 {
 	return bpm
 }
 
+func (n Note) IsBig() bool { return n.Type&big != 0 }
+func (n Note) NoteKind() int { // Todo: NoteKind -> NoteType?
+	if n.IsBig() {
+		return BigNote
+	}
+	return NormalNote
+}
+
 // func RollDuration(hs osu.SliderParams, bpm float64, multiplier float64) int64 {
 // 	length := float64(hs.Slides) * hs.Length
 // 	speed := (bpm / 60000) * (multiplier * 100) // Unit: amount of osu!pixel per 100ms

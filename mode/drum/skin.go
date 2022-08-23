@@ -24,6 +24,7 @@ type Skin struct {
 
 	KeySprites    [4]draws.Sprite
 	FieldSprite   draws.Sprite
+	HintSprite    draws.Sprite
 	BarLineSprite draws.Sprite // Seperator of each bar (aka measure)
 
 	JudgmentSprites [2][3]draws.Sprite
@@ -106,7 +107,7 @@ func LoadSkin() {
 			I:      s.I,
 			Filter: ebiten.FilterLinear,
 		}
-		s2.ApplyScale(TickComboGap)
+		s2.ApplyScale(RollTickComboScale)
 		// x is not fixed.
 		s2.SetCenterY(FieldPosition)
 		skin.TickComboSprites[i] = s2
@@ -130,6 +131,9 @@ func LoadSkin() {
 		skin.KeySprites[[]int{KeyLeftDon, KeyRightKat,
 			KeyLeftKat, KeyRightDon}[i]] = s
 		x += s.W
+		if i == 0 {
+			comboPosition = s.W
+		}
 		if i == 1 { // Each side's Don and Kat are overlapped.
 			x = 0
 		}
@@ -142,6 +146,13 @@ func LoadSkin() {
 		X: x,
 		// Y is centered.
 	}
+	skin.FieldSprite.SetCenterY(FieldPosition)
+
+	skin.HintSprite = draws.Sprite{
+		I: draws.NewImage("skin/drum/hint.png"),
+	}
+	skin.HintSprite.SetHeight(NormalNoteHeight)
+	skin.HintSprite.SetCenterX(HitPosition)
 	skin.FieldSprite.SetCenterY(FieldPosition)
 
 	barLine := ebiten.NewImage(1, int(FieldInnerHeight))
