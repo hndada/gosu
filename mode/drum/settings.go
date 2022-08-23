@@ -30,17 +30,20 @@ var (
 	DancerPositionY float64 = screenSizeY * 0.1
 
 	// BarLineWidth float64 = screenSizeX * 0.005
+
+	comboPosition         float64
+	rollTickComboPosition float64 = HitPosition
 )
 
 var FieldDarkness float64 = 1
 
 var (
-	ScoreScale     float64 = 0.65
-	ComboScale     float64 = 0.75
-	ComboGap       float64 = screenSizeX * -0.001
-	TickComboScale float64 = 0.3
-	TickComboGap   float64 = ComboGap * 0.4
-	KeyScale       float64 = 1
+	ScoreScale         float64 = 0.65
+	ComboScale         float64 = 0.75
+	ComboGap           float64 = screenSizeX * -0.001
+	RollTickComboScale float64 = 0.3
+	RollTickComboGap   float64 = ComboGap * 0.4
+	KeyScale           float64 = 1
 	// JudgmentScale might have scaled by FieldHeight.
 	// Yet, Judgment is not circle image, actually.
 	JudgmentScale float64 = 1
