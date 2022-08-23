@@ -136,8 +136,9 @@ func LoadSkin() {
 		// bodyImages   [4]*ebiten.Image
 		hintImage *ebiten.Image
 	)
-	// Todo: 4th note image
-	// Currently head and tail use note's image.
+	// Todo: 4th note image. 1st note with custom color settings.
+	// Todo: Make Head and Tail use their own images.
+	// Todo: note -> normal?
 	for i, kind := range []int{1, 2, 3, 3} {
 		noteImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/note/%d.png", kind))
 		headImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/head/%d.png", kind))
