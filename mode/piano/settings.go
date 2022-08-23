@@ -1,14 +1,17 @@
 package piano
 
-import "github.com/hndada/gosu/input"
+import (
+	"github.com/hndada/gosu"
+	"github.com/hndada/gosu/input"
+)
 
 // Logical size of in-game screen
 const (
-	screenSizeX = 1600
-	screenSizeY = 900
+	screenSizeX = gosu.ScreenSizeX
+	screenSizeY = gosu.ScreenSizeY
 )
 
-var SpeedBase = 1.1 // Todo: make the variable declared in each mode
+var SpeedBase = 1.1
 
 var KeySettings = map[int][]input.Key{
 	4:               {input.KeyD, input.KeyF, input.KeyJ, input.KeyK},
@@ -38,7 +41,7 @@ var NoteWidthsMap = map[int][4]float64{
 	9:  {0.06, 0.06, 0.06, 0.06},
 	10: {0.06, 0.06, 0.06, 0.06},
 }
-var FieldDark float64 = 0.8
+var FieldDark float64 = 0.8 // Todo: FieldDark -> FieldDarkness
 
 const (
 	BodySpriteStyleStretch = iota
