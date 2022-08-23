@@ -6,6 +6,7 @@ type Judgment struct {
 	Flow   float64
 	Acc    float64
 	Window int64
+	Extra  bool // For distinguishing Big note at Drum mode.
 }
 
 // Verdict for normal notes: Note, Head at long note.

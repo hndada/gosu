@@ -12,7 +12,12 @@ var (
 	Good = gosu.Judgment{Flow: 0.01, Acc: 0.25, Window: 60}
 	Miss = gosu.Judgment{Flow: -1, Acc: 0, Window: 100}
 )
-var Judgments = []gosu.Judgment{Cool, Good, Miss}
+
+// var Judgments = []gosu.Judgment{Cool, Good, Miss}
+var Judgments = [2][3]gosu.Judgment{
+	[3]gosu.Judgment{Cool, Good, Miss},
+	[3]gosu.Judgment{Cool, Good, Miss},
+}
 
 // Todo: match the order betwen colors and judgments
 var JudgmentColors = []color.NRGBA{
