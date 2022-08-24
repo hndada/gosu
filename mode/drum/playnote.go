@@ -53,13 +53,13 @@ func NewPlayNotes(c *Chart) ([]*PlayNote, *PlayNote, *PlayNote, float64) {
 // Right returns right position of Roll body.
 // Extra 1 pixel for compensating round-down
 func (s ScenePlay) Right(tail *PlayNote) int {
-	return int(s.Position(tail.Time)) - 1 // +s.TailSprites[tail.NoteKind()].W/2
+	return int(tail.Position(tail.Time)) - 1 // +s.TailSprites[tail.NoteKind()].W/2
 }
 
 // Left returns left position of Roll body.
 // Extra 1 pixel for compensating round-down
 func (s ScenePlay) Left(tail *PlayNote) int {
-	return int(s.Position(tail.Prev.Time)) + 1 // -s.HeadSprites[tail.NoteKind()].W/2
+	return int(tail.Position(tail.Prev.Time)) + 1 // -s.HeadSprites[tail.NoteKind()].W/2
 }
 
 // DrawRollBodies draws long sprite with Binary-building method, instead of SubImage.
@@ -67,10 +67,10 @@ func (s ScenePlay) Left(tail *PlayNote) int {
 // DrawRollBodies just draws sub image of long note body.
 // Right is Tail, and Left is Head.
 func (s *ScenePlay) DrawRollBodies(screen *ebiten.Image) {
-	for n := s.LowestTail; n != nil && s.Right(n) < 0; n = n.NextTail {
-		s.LowestTail = n
+	for n := s.LeadingTail; n != nil && s.Right(n) < 0; n = n.NextTail {
+		s.LeadingTail = n
 	}
-	for n := s.LowestTail; n != nil && s.Left(n) >= screenSizeX; n = n.NextTail {
+	for n := s.LeadingTail; n != nil && s.Left(n) >= screenSizeX; n = n.NextTail {
 		right := s.Right(n)
 		left := s.Left(n)
 		if right >= screenSizeX {
@@ -126,7 +126,7 @@ func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 		case Shake:
 			sprite = s.ShakeSprites[ShakeNote]
 		}
-		sprite.SetCenterX(s.Position(n.Time))
+		sprite.SetCenterX(n.Position(n.Time))
 		// sprite.X = s.Position(n.Time) - sprite.W/2
 		op := sprite.Op()
 		if n.Marked { // When a note is marked, next note is going to be staged.
@@ -143,50 +143,47 @@ func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 
 // NotePosition calculates position, the centered y-axis value.
 // y = position - h/2
-func (s ScenePlay) Position(time int64) float64 {
-	var distance float64 // Approaching notes have positive distance, vice versa.
-	tp := s.TransPoint
-	cursor := s.Time()
-	if time-s.Time() > 0 {
-		// When there are more than 2 TransPoint in bounded time.
-		for ; tp.Next != nil && tp.Next.Time < time; tp = tp.Next {
-			duration := tp.Next.Time - cursor
-			bpmRatio := tp.BPM / s.MainBPM
-			distance += s.SpeedBase * (bpmRatio * tp.BeatScale) * float64(duration)
-			cursor += duration
-		}
-	} else {
-		for ; tp.Prev != nil && tp.Time > time; tp = tp.Prev {
-			duration := tp.Time - cursor // Negative value.
-			bpmRatio := tp.BPM / s.MainBPM
-			distance += s.SpeedBase * (bpmRatio * tp.BeatScale) * float64(duration)
-			cursor += duration
-		}
-	}
-	bpmRatio := tp.BPM / s.MainBPM
-	// Calculate the remained (which is farthest from Hint within bound).
-	distance += s.SpeedBase * (bpmRatio * tp.BeatScale) * float64(time-cursor)
-	return HitPosition - distance
+// Todo: 2 type on note position. Mania type, Taiko type.
+func (n PlayNote) Position(time int64) float64 {
+	return HitPosition + n.Speed*float64(time)
 }
+
+// func (s ScenePlay) Position(time int64) float64 {
+// 	var distance float64 // Approaching notes have positive distance, vice versa.
+// 	tp := s.TransPoint
+// 	cursor := s.Time()
+// 	if time-s.Time() > 0 {
+// 		// When there are more than 2 TransPoint in bounded time.
+// 		for ; tp.Next != nil && tp.Next.Time < time; tp = tp.Next {
+// 			duration := tp.Next.Time - cursor
+// 			bpmRatio := tp.BPM / s.MainBPM
+// 			distance += s.SpeedBase * (bpmRatio * tp.BeatScale) * float64(duration)
+// 			cursor += duration
+// 		}
+// 	} else {
+// 		for ; tp.Prev != nil && tp.Time > time; tp = tp.Prev {
+// 			duration := tp.Time - cursor // Negative value.
+// 			bpmRatio := tp.BPM / s.MainBPM
+// 			distance += s.SpeedBase * (bpmRatio * tp.BeatScale) * float64(duration)
+// 			cursor += duration
+// 		}
+// 	}
+// 	bpmRatio := tp.BPM / s.MainBPM
+// 	// Calculate the remained (which is farthest from Hint within bound).
+// 	distance += s.SpeedBase * (bpmRatio * tp.BeatScale) * float64(time-cursor)
+// 	return HitPosition - distance
+// }
 
 // Weight is for Tail's variadic weight based on its length.
 // For example, short long note does not require much strain to release.
 // Todo: fine-tuning with replay data
 func (n PlayNote) Weight() float64 {
 	switch n.Type {
-	case Tail:
-		d := float64(n.Time - n.Time2)
-		switch {
-		case d < 50:
-			return 0.5 - 0.35*d/50
-		case d >= 50 && d < 200:
-			return 0.15
-		case d >= 200 && d < 800:
-			return 0.15 + 0.85*(d-200)/600
-		default:
-			return 1
-		}
-	default:
+	case Don, Kat:
 		return 1
+	case BigDon, BigKat:
+		return 1.1
+	default:
+		return 0
 	}
 }

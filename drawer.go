@@ -20,17 +20,22 @@ func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
 }
 
 type BarLineDrawer struct {
-	Times  []int64
-	Cursor int     // Index of closest bar line.
-	Offset float64 // Bar line is drawn at bottom, not at the center.
-	Sprite draws.Sprite
+	Times      []int64
+	Cursor     int     // Index of closest bar line.
+	Offset     float64 // Bar line is drawn at bottom, not at the center.
+	Sprite     draws.Sprite
+	Horizontal bool
 }
 
 func (d *BarLineDrawer) Update(position func(time int64) float64) {
+	bound := screenSizeY
+	if d.Horizontal {
+		bound = screenSizeX
+	}
 	t := d.Times[d.Cursor]
 	// Bar line and Hint are anchored at the bottom.
 	for d.Cursor < len(d.Times)-1 &&
-		int(position(t)+d.Offset) >= screenSizeY {
+		int(position(t)+d.Offset) >= bound {
 		d.Cursor++
 		t = d.Times[d.Cursor]
 	}

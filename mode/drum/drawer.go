@@ -187,3 +187,10 @@ func (d RollTickComboDrawer) Draw(screen *ebiten.Image) {
 		sprite.Draw(screen)
 	}
 }
+
+type NoteOverlayDrawer struct {
+}
+type RollTickDrawer struct {
+}
+type ShakeDrawer struct {
+}

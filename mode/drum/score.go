@@ -15,8 +15,8 @@ var (
 
 // var Judgments = []gosu.Judgment{Cool, Good, Miss}
 var Judgments = [2][3]gosu.Judgment{
-	[3]gosu.Judgment{Cool, Good, Miss},
-	[3]gosu.Judgment{Cool, Good, Miss},
+	{Cool, Good, Miss},
+	{Cool, Good, Miss},
 }
 
 // Todo: match the order betwen colors and judgments
@@ -25,6 +25,10 @@ var JudgmentColors = []color.NRGBA{
 	{51, 255, 40, 255},   // Lime
 	{85, 251, 255, 255},  // Skyblue
 }
+var (
+	white  = color.NRGBA{255, 255, 255, 192}
+	purple = color.NRGBA{213, 0, 242, 192}
+)
 
 // When hit big notes only with one press, the note gives half the score only.
 // For example, when hit a Big note by one press with Good, it will gives 0.25 * 0.5 = 0.125.
