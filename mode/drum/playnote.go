@@ -126,7 +126,7 @@ func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 		case Shake:
 			sprite = s.ShakeSprites[ShakeNote]
 		}
-		sprite.SetCenterX(n.Position(n.Time))
+		sprite.SetCenterX(n.Position(s.Time()))
 		// sprite.X = s.Position(n.Time) - sprite.W/2
 		op := sprite.Op()
 		if n.Marked { // When a note is marked, next note is going to be staged.
@@ -145,7 +145,8 @@ func (s *ScenePlay) DrawNotes(screen *ebiten.Image) {
 // y = position - h/2
 // Todo: 2 type on note position. Mania type, Taiko type.
 func (n PlayNote) Position(time int64) float64 {
-	return HitPosition + n.Speed*float64(time)
+	td := n.Time - time
+	return HitPosition + SpeedBase*n.Speed*float64(td)
 }
 
 // func (s ScenePlay) Position(time int64) float64 {

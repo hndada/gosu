@@ -11,7 +11,7 @@ const (
 	screenSizeY = gosu.ScreenSizeY
 )
 
-var SpeedBase = 1.1
+var SpeedBase = 0.004
 var KeySettings = [4]input.Key{input.KeyD, input.KeyF, input.KeyJ, input.KeyK}
 
 // Todo: Should NoteHeight be separated into NoteHeight, HeadHeight, TailHeight?
@@ -23,8 +23,10 @@ var (
 	HitPosition      float64 = screenSizeX * 0.1875
 
 	// Height of notes are fixed.
-	BigNoteHeight    float64 = FieldInnerHeight * 0.725
+	BigNoteHeight    float64 = FieldHeight * 0.725
 	NormalNoteHeight float64 = BigNoteHeight * 0.65
+	// bigNoteScale float64
+	// normalNoteScale
 
 	DancerPositionX float64 = screenSizeX * 0.05
 	DancerPositionY float64 = screenSizeY * 0.1

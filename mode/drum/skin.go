@@ -19,7 +19,7 @@ var DefaultSkin Skin
 // https://osu.ppy.sh/wiki/en/Skinning/osu%21taiko
 type Skin struct {
 	ScoreSprites     []draws.Sprite // Todo: move to /gosu
-	ComboSprites     []draws.Sprite
+	ComboSprites     []draws.Sprite // Todo: slice to array
 	TickComboSprites []draws.Sprite
 
 	KeySprites    [4]draws.Sprite
@@ -83,6 +83,9 @@ var (
 // Todo: embed default skins to code for preventing panic when files are missing
 func LoadSkin() {
 	var skin Skin
+	skin.ScoreSprites = make([]draws.Sprite, 10)
+	skin.ComboSprites = make([]draws.Sprite, 10)
+	skin.TickComboSprites = make([]draws.Sprite, 10)
 	for i := 0; i < 10; i++ {
 		s := draws.Sprite{
 			I:      draws.NewImage(fmt.Sprintf("skin/score/%d.png", i)),
@@ -150,10 +153,12 @@ func LoadSkin() {
 
 	skin.HintSprite = draws.Sprite{
 		I: draws.NewImage("skin/drum/hint.png"),
+		H: NormalNoteHeight,
 	}
-	skin.HintSprite.SetHeight(NormalNoteHeight)
+	// skin.HintSprite.SetHeight(NormalNoteHeight)
+	skin.HintSprite.ApplyScale(skin.HintSprite.ScaleH())
 	skin.HintSprite.SetCenterX(HitPosition)
-	skin.FieldSprite.SetCenterY(FieldPosition)
+	skin.HintSprite.SetCenterY(FieldPosition)
 
 	barLine := ebiten.NewImage(1, int(FieldInnerHeight))
 	barLine.Fill(color.RGBA{255, 255, 255, 255})
@@ -172,7 +177,7 @@ func LoadSkin() {
 			s := draws.Sprite{
 				I: draws.NewImage(path),
 			}
-			// s.SetHeight(FieldHeight)
+			s.SetHeight(FieldHeight)
 			s.ApplyScale(JudgmentScale)
 			s.SetCenterX(HitPosition)
 			s.SetCenterY(FieldPosition)
@@ -192,9 +197,10 @@ func LoadSkin() {
 
 		for noteType, clr := range []color.NRGBA{ColorDon, ColorKat} {
 			img := draws.NewImage("skin/drum/note/normal/note.png")
-			draws.ApplyColor(img, clr)
-			s := draws.Sprite{I: img}
-			s.SetHeight(height)
+			img = draws.ApplyColor(img, clr)
+			s := draws.Sprite{I: img, H: height}
+			// s.SetHeight(height)
+			s.ApplyScale(s.ScaleH())
 			s.SetCenterY(FieldPosition)
 			if noteType == 0 {
 				skin.DonSprites[size][0] = s
@@ -204,9 +210,10 @@ func LoadSkin() {
 		}
 		for noteType, clr := range []color.NRGBA{ColorDon, ColorKat} {
 			img := draws.NewImage(fmt.Sprintf("skin/drum/note/%s/note.png", sizeWord))
-			draws.ApplyColor(img, clr)
-			s := draws.Sprite{I: img}
-			s.SetHeight(height)
+			img = draws.ApplyColor(img, clr)
+			s := draws.Sprite{I: img, H: height}
+			// s.SetHeight(height)
+			s.ApplyScale(s.ScaleH())
 			s.SetCenterY(FieldPosition)
 			if noteType == 0 {
 				skin.DonSprites[size][0] = s
@@ -217,20 +224,23 @@ func LoadSkin() {
 
 		overlayPath := fmt.Sprintf("skin/drum/note/%s/overlay", sizeWord)
 		if ok, err := IsDir(overlayPath); err != nil {
-			fmt.Printf("loading %s's overlay occurrs an err: %s", sizeWord, err)
+			// fmt.Printf("loading %s's overlay occurrs an err: %s\n", sizeWord, err)
+			fmt.Printf("%s's overlay has one frame.\n", sizeWord)
 			continue
 		} else if ok { // 2 frames.
 			for i := 0; i < 2; i++ {
 				overlayPath += fmt.Sprintf("/%d.png", i)
-				s := draws.Sprite{I: draws.NewImage(overlayPath)}
-				s.SetHeight(height)
+				s := draws.Sprite{I: draws.NewImage(overlayPath), H: height}
+				// s.SetHeight(height)
+				s.ApplyScale(s.ScaleH())
 				s.SetCenterY(FieldPosition)
 				skin.DonSprites[size][i+1] = s
 			}
 		} else { // 1 frame. Copy 1st frame to 2nd frame.
 			overlayPath += ".png"
-			s := draws.Sprite{I: draws.NewImage(overlayPath)}
-			s.SetHeight(height)
+			s := draws.Sprite{I: draws.NewImage(overlayPath), H: height}
+			// s.SetHeight(height)
+			s.ApplyScale(s.ScaleH())
 			s.SetCenterY(FieldPosition)
 			skin.DonSprites[size][1] = s
 			skin.DonSprites[size][2] = s // Copy the same one.

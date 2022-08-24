@@ -39,6 +39,7 @@ func NewGame(modes []Mode) *Game {
 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
 	ebiten.SetMaxTPS(MaxTPS)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
+	ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 	return g
 }
 

@@ -39,6 +39,7 @@ func flip(i *ebiten.Image, isX bool) *ebiten.Image {
 	return i2
 }
 
+// Todo: should pass by input parameter instead of returning?
 func ApplyColor(i *ebiten.Image, clr color.Color) *ebiten.Image {
 	w, h := i.Size()
 	i2 := ebiten.NewImage(w, h)
