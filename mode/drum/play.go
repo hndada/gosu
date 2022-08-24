@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/format/osr"
@@ -24,15 +23,19 @@ type ScenePlay struct {
 	// Audio
 	// Input
 	// Notes
-	PlayNotes  []*PlayNote
-	StagedNote *PlayNote
-	LowestTail *PlayNote // For drawing Roll body efficiently.
+	PlayNotes   []*PlayNote
+	StagedNote  *PlayNote
+	LeadingTail *PlayNote // For drawing Roll body efficiently.
 
 	// Scores
-	JudgmentDrawer      JudgmentDrawer
-	ComboDrawer         ComboDrawer
+	JudgmentDrawer JudgmentDrawer
+	ComboDrawer    ComboDrawer
+	KeyDrawer      KeyDrawer
+
+	NoteOverlayDrawer   NoteOverlayDrawer
+	RollTickDrawer      RollTickDrawer
 	RollTickComboDrawer RollTickComboDrawer
-	KeyDrawer           KeyDrawer
+	ShakeDrawer         ShakeDrawer
 }
 
 func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, error) {
@@ -81,11 +84,12 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	s.Pressed = make([]bool, 4)
 
 	// Note
-	s.PlayNotes, s.StagedNotes, s.LowestTails, s.MaxNoteWeights = NewPlayNotes(c)
+	s.PlayNotes, s.StagedNote, s.LeadingTail, s.MaxNoteWeights = NewPlayNotes(c)
 	et, wb, wa := s.EndTime, waitBefore, gosu.DefaultWaitAfter
 	s.BarLineDrawer.Times = gosu.BarLineTimes(c.TransPoints, et, wb, wa)
-	s.BarLineDrawer.Offset = NoteHeigth / 2
+	// s.BarLineDrawer.Offset = NoteHeigth / 2
 	s.BarLineDrawer.Sprite = s.BarLineSprite
+	s.BarLineDrawer.Horizontal = true
 	s.KeyDrawer.Sprites = s.KeySprites
 
 	// Score
@@ -132,49 +136,46 @@ func (s *ScenePlay) Update() any {
 	// Notes and Scores
 	var worst gosu.Judgment
 	marks := make([]gosu.TimingMeterMark, 0, 7)
-	for k, n := range s.StagedNotes {
-		if n == nil {
-			continue
-		}
-		if n.Type != Tail && s.KeyAction(k) == input.Hit {
-			if name := n.SampleFilename; name != "" {
-				vol := n.SampleVolume
-				if vol == 0 {
-					vol = s.TransPoint.Volume
-				}
-				s.Sounds.PlayWithVolume(name, vol)
-			}
-		}
+	if s.StagedNote != nil {
+		// if n.Type != Tail && s.KeyAction(k) == input.Hit {
+		// 	if name := n.SampleFilename; name != "" {
+		// 		vol := n.SampleVolume
+		// 		if vol == 0 {
+		// 			vol = s.TransPoint.Volume
+		// 		}
+		// 		s.Sounds.PlayWithVolume(name, vol)
+		// 	}
+		// }
+		n := s.StagedNote
 		td := n.Time - s.Time() // Time difference. A negative value infers late hit
 		if n.Marked {
 			if n.Type != Tail {
 				return fmt.Errorf("non-tail note has not flushed")
 			}
 			if td < Miss.Window { // Keep Tail staged until near ends.
-				s.StagedNotes[n.Key] = n.Next
+				s.StagedNote = n.Next
 			}
-			continue
 		}
-		if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
-			s.MarkNote(n, j)
-			if worst.Window < j.Window {
-				worst = j
-			}
+		// } else if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
+		// 	s.MarkNote(n, j)
+		// 	if worst.Window < j.Window {
+		// 		worst = j
+		// 	}
 
-			clr := white
-			if n.Type == Tail {
-				clr = purple
-			}
-			marks = append(marks, gosu.TimingMeterMark{
-				Countdown: gosu.TimingMeterMarkDuration,
-				TimeDiff:  td,
-				Color:     clr,
-			})
-		}
+		// 	clr := white
+		// 	if n.Type == BigDon || n.Type == BigKat {
+		// 		clr = purple
+		// 	}
+		// 	marks = append(marks, gosu.TimingMeterMark{
+		// 		Countdown: gosu.TimingMeterMarkDuration,
+		// 		TimeDiff:  td,
+		// 		Color:     clr,
+		// 	})
+		// }
 	}
 	s.JudgmentDrawer.Update(worst)
 	s.ComboDrawer.Update(s.Combo)
-	s.ScoreDrawer.Update(s.Score())
+	// s.ScoreDrawer.Update(s.Score())
 	s.TimingMeter.Update(marks)
 	return nil
 }
@@ -182,32 +183,32 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
 	s.FieldSprite.Draw(screen)
 	s.HintSprite.Draw(screen)
-	s.BarLineDrawer.Draw(screen, s.Position)
-	s.DrawLongNoteBodies(screen)
+	// s.BarLineDrawer.Draw(screen, n.Position)
+	s.DrawRollBodies(screen)
 	s.DrawNotes(screen)
 	s.KeyDrawer.Draw(screen)
 	s.TimingMeter.Draw(screen)
 	s.ComboDrawer.Draw(screen)
 	s.JudgmentDrawer.Draw(screen)
 	s.ScoreDrawer.Draw(screen)
-	s.DebugPrint(screen)
+	// s.DebugPrint(screen)
 }
 
-func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
-	var fr, ar, rr float64 = 1, 1, 1
-	if s.NoteWeights > 0 {
-		fr = s.Flows / s.NoteWeights
-		ar = s.Accs / s.NoteWeights
-		rr = s.Extras / s.NoteWeights
-	}
+// func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
+// 	var fr, ar, rr float64 = 1, 1, 1
+// 	if s.NoteWeights > 0 {
+// 		fr = s.Flows / s.NoteWeights
+// 		ar = s.Accs / s.NoteWeights
+// 		rr = s.Extras / s.NoteWeights
+// 	}
 
-	ebitenutil.DebugPrint(screen, fmt.Sprintf(
-		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
-			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
-			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
-			"Speed: %.0f | %.0f\n(Exposure time: %.fms)\n\n",
-		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.Duration)/1000,
-		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
-		fr*100, ar*100, rr*100, s.JudgmentCounts,
-		s.Speed()*100, s.SpeedBase*100, ExposureTime(s.Speed())))
-}
+// 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
+// 		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
+// 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
+// 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
+// 			"Speed: %.0f | %.0f\n(Exposure time: %.fms)\n\n",
+// 		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.Duration)/1000,
+// 		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
+// 		fr*100, ar*100, rr*100, s.JudgmentCounts,
+// 		s.Speed()*100, s.SpeedBase*100, ExposureTime(s.Speed())))
+// }
