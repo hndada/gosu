@@ -12,6 +12,7 @@ import (
 )
 
 // Only one note is staged in Drum mode.
+// Todo: make 3 kinds of note can be stages at once
 type ScenePlay struct {
 	gosu.BaseScenePlay
 

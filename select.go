@@ -14,6 +14,7 @@ import (
 	"golang.org/x/image/font/basicfont"
 )
 
+// Todo: each mode should have own cursor: length of info are different.
 type SceneSelect struct {
 	Modes []Mode
 	View  []ChartInfo // Todo: ChartInfo -> *ChartInfo?
