@@ -62,3 +62,8 @@ var Bower = func(op *ebiten.DrawImageOptions, age, w, h float64) {
 	}
 	op.GeoM.Translate(tx, ty)
 }
+var Fader = func(op *ebiten.DrawImageOptions, age float64) {
+	if age >= 0.8 {
+		op.ColorM.Scale(1, 1, 1, age-0.8)
+	}
+}
