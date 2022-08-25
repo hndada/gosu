@@ -25,7 +25,7 @@ type Translater func(op *ebiten.DrawImageOptions, vs ...float64)
 
 // Any general-purpose value can be passed to Effect's Value.
 // Todo: generalize input parameter of Op
-func (e Effecter) Op(sprite Sprite2) *ebiten.DrawImageOptions {
+func (e Effecter) Op(sprite Sprite) *ebiten.DrawImageOptions {
 	age := e.Age()
 	op := &ebiten.DrawImageOptions{}
 	if e.Colorer != nil {

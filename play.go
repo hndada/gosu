@@ -86,12 +86,10 @@ func (s BaseScenePlay) SetWindowTitle(c BaseChart) {
 }
 func (s *BaseScenePlay) SetBackground(path string) {
 	if img := draws.NewImage(path); img != nil {
-		sprite := draws.Sprite{
-			I:      img,
-			Filter: ebiten.FilterLinear,
-		}
-		sprite.SetWidth(screenSizeX)
-		sprite.SetCenterY(screenSizeY / 2)
+		sprite := draws.NewSpriteFromImage(img)
+		scale := screenSizeX / sprite.W()
+		sprite.SetScale(scale, scale, ebiten.FilterLinear)
+		sprite.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginModeCenter)
 		s.BackgroundDrawer.Sprite = sprite
 	} else {
 		s.BackgroundDrawer.Sprite = DefaultBackground

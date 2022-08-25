@@ -2,20 +2,15 @@ package piano
 
 import (
 	"fmt"
-	"image"
 	"image/color"
 	"math"
-	"os"
 
 	_ "image/jpeg"
 	_ "image/png"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
-	"golang.org/x/image/draw"
 )
-
-// var colors = []color.NRGBA{gosu.Gray, gosu.Yellow, gosu.Lime, gosu.Sky, gosu.Blue}
 
 type NoteKind int
 
@@ -55,246 +50,216 @@ func init() { // I'm proud of the following code.
 	}
 }
 
-// Sprites that are independent of key count.
-var GeneralSkin *GeneralSkinStruct
-
-type GeneralSkinStruct struct { // Singleton
-	ComboSprites    []draws.Sprite
-	ScoreSprites    []draws.Sprite
+var GeneralSkin struct { // Singleton
+	ComboSprites    [10]draws.Sprite
 	JudgmentSprites []draws.Sprite
 }
 
 // Todo: should each skin has own skin settings?
 type Skin struct {
-	*GeneralSkinStruct
+	ComboSprites    [10]draws.Sprite
+	JudgmentSprites []draws.Sprite
+
 	KeyUpSprites   []draws.Sprite
 	KeyDownSprites []draws.Sprite
 	NoteSprites    []draws.Sprite
 	HeadSprites    []draws.Sprite
 	TailSprites    []draws.Sprite
-	BodySprites    [][]draws.Sprite // Binary-building method
+	BodySprites    []draws.Sprite
+	// BodySprites    [][]draws.Sprite // Binary-building method
 
 	FieldSprite   draws.Sprite
 	HintSprite    draws.Sprite
 	BarLineSprite draws.Sprite // Seperator of each bar (aka measure)
-
-	// BodySpritesTest []draws.Sprite
 }
 
 var Skins = make(map[int]Skin)
 
 func LoadSkin() {
-	g := &GeneralSkinStruct{
-		// DefaultBackgrounds: make([]draws.Sprite, 0, 10),
-		ComboSprites:    make([]draws.Sprite, 10),
-		ScoreSprites:    make([]draws.Sprite, 10),
-		JudgmentSprites: make([]draws.Sprite, 5),
-	}
-
+	// Sprites that are independent of key count.
 	for i := 0; i < 10; i++ {
-		s := draws.Sprite{
-			I:      draws.NewImage(fmt.Sprintf("skin/combo/%d.png", i)),
-			Filter: ebiten.FilterLinear,
-		}
-		s.ApplyScale(ComboScale)
-		// ComboSprite's x value is not fixed.
-		s.SetCenterY(ComboPosition)
-		g.ComboSprites[i] = s
+		s := draws.NewSprite(fmt.Sprintf("skin/combo/%d.png", i))
+		s.SetScale(ComboScale, ComboScale, ebiten.FilterLinear)
+		s.SetPosition(screenSizeX/2, ComboPosition, draws.OriginModeCenter)
+		GeneralSkin.ComboSprites[i] = s
 	}
-	for i := 0; i < 10; i++ {
-		s := draws.Sprite{
-			I:      draws.NewImage(fmt.Sprintf("skin/score/%d.png", i)),
-			Filter: ebiten.FilterLinear,
-		}
-		s.ApplyScale(ScoreScale)
-		// ScoreSprite's x value is not fixed.
-		// ScoreSprite's y value is always 0.
-		g.ScoreSprites[i] = s
-	}
+	GeneralSkin.JudgmentSprites = make([]draws.Sprite, 5)
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
-		s := draws.Sprite{
-			I:      draws.NewImage(fmt.Sprintf("skin/piano/judgment/%s.png", name)),
-			Filter: ebiten.FilterLinear,
-		}
-		s.ApplyScale(JudgmentScale)
-		s.SetCenterX(screenSizeX / 2)
-		s.SetCenterY(JudgmentPosition)
-		g.JudgmentSprites[i] = s
+		s := draws.NewSprite(fmt.Sprintf("skin/piano/judgment/%s.png", name))
+		s.SetScale(JudgmentScale, JudgmentScale, ebiten.FilterLinear)
+		s.SetPosition(screenSizeX/2, JudgmentPosition, draws.OriginModeCenter)
+		GeneralSkin.JudgmentSprites[i] = s
 	}
-
-	GeneralSkin = g
 
 	// Following sprites are dependent of key count.
 	// Todo: animated sprite support. Starting with [4][]*ebiten.Image will help.
 	var (
 		keyUpImage   *ebiten.Image
 		keyDownImage *ebiten.Image
+		hintImage    *ebiten.Image
 		noteImages   [4]*ebiten.Image
 		headImages   [4]*ebiten.Image
 		tailImages   [4]*ebiten.Image
-		bodyImages   [4]image.Image // binary-building method
-		// bodyImages   [4]*ebiten.Image
-		hintImage *ebiten.Image
+		// bodyImages   [4]image.Image // binary-building method
+		bodyImages [4]*ebiten.Image
 	)
+	keyUpImage = draws.NewImage("skin/piano/key/up.png")
+	keyDownImage = draws.NewImage("skin/piano/key/down.png")
+	hintImage = draws.NewImage("skin/piano/hint.png")
 	// Todo: 4th note image. 1st note with custom color settings.
-	// Todo: Make Head and Tail use their own images.
-	// Todo: note -> normal?
 	for i, kind := range []int{1, 2, 3, 3} {
 		noteImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/note/%d.png", kind))
 		headImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/head/%d.png", kind))
 		tailImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/tail/%d.png", kind))
-		// bodyImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/body/%d.png", kind))
-		{
-			f, err := os.Open(fmt.Sprintf("skin/piano/note/body/%d.png", kind))
-			if err != nil {
-				panic(err)
-			}
-			defer f.Close()
-			src, _, err := image.Decode(f)
-			if err != nil {
-				panic(err)
-			}
-			bodyImages[i] = src
-		}
+		bodyImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/body/%d.png", kind))
+		// bodyImages[i] = draws.NewImageSrc(fmt.Sprintf("skin/piano/note/body/%d.png", kind))
 	}
-	keyUpImage = draws.NewImage("skin/piano/key/up.png")
-	keyDownImage = draws.NewImage("skin/piano/key/down.png")
-	hintImage = draws.NewImage("skin/piano/hint.png")
 
-	// Todo: Key count 1~3, KeyCount + scratch
+	// Todo: Key count 1, 2, 3 and with scratch
 	for keyCount := 4; keyCount <= 10; keyCount++ {
 		noteKinds := NoteKindsMap[keyCount]
 		noteWidths := NoteWidthsMap[keyCount]
-		s := Skin{
-			GeneralSkinStruct: GeneralSkin,
-			KeyUpSprites:      make([]draws.Sprite, keyCount&ScratchMask),
-			KeyDownSprites:    make([]draws.Sprite, keyCount&ScratchMask),
-			NoteSprites:       make([]draws.Sprite, keyCount&ScratchMask),
-			HeadSprites:       make([]draws.Sprite, keyCount&ScratchMask),
-			TailSprites:       make([]draws.Sprite, keyCount&ScratchMask),
-			BodySprites:       make([][]draws.Sprite, keyCount&ScratchMask),
-			// BodySpritesTest:   make([]draws.Sprite, keyCount&ScratchMask),
-		}
+		skin := Skin{
+			ComboSprites:    GeneralSkin.ComboSprites,
+			JudgmentSprites: GeneralSkin.JudgmentSprites[:],
 
-		var wsum int
-		for _, kind := range noteKinds {
-			// Each w should be integer, since it is actual sprite's width.
-			wsum += int(noteWidths[kind])
+			KeyUpSprites:   make([]draws.Sprite, keyCount&ScratchMask),
+			KeyDownSprites: make([]draws.Sprite, keyCount&ScratchMask),
+			NoteSprites:    make([]draws.Sprite, keyCount&ScratchMask),
+			HeadSprites:    make([]draws.Sprite, keyCount&ScratchMask),
+			TailSprites:    make([]draws.Sprite, keyCount&ScratchMask),
+			BodySprites:    make([]draws.Sprite, keyCount&ScratchMask),
+			// BodySprites:    make([][]draws.Sprite, keyCount&ScratchMask),
 		}
-
-		// Todo: Scratch should be excluded to width sum.
 		// KeyUp and KeyDown are drawn below Hint, which bottom is along with HitPosition.
+		// Each w should be integer, since it is a width of independent sprite.
+		// Todo: Scratch should be excluded to width sum.
+		var wsum float64
+		for _, kind := range noteKinds {
+			wsum += math.Ceil(noteWidths[kind])
+		}
 		x := screenSizeX/2 - wsum/2
 		for k, kind := range noteKinds {
-			s.KeyUpSprites[k] = draws.Sprite{
-				I: keyUpImage,
-				X: float64(x),
-				Y: HitPosition,
+			w := math.Ceil(noteWidths[kind])
+			{
+				s := draws.NewSpriteFromImage(keyUpImage)
+				scaleW := w / s.W()
+				scaleH := (screenSizeY - HitPosition) / s.H()
+				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
+				s.SetPosition(x, HitPosition, draws.OriginModeLeftTop)
+				skin.KeyUpSprites[k] = s
 			}
-			s.KeyUpSprites[k].SetWidth(noteWidths[kind])
-			s.KeyDownSprites[k] = s.KeyUpSprites[k]
-			s.KeyDownSprites[k].I = keyDownImage
-			s.KeyUpSprites[k].SetWidth(noteWidths[kind])
-			x += int(noteWidths[kind])
-		}
-
-		x = screenSizeX/2 - wsum/2 // x should be integer like w as well.
-		for k, kind := range noteKinds {
-			s.NoteSprites[k] = draws.Sprite{
-				I: noteImages[kind],
-				W: noteWidths[kind],
-				H: NoteHeigth,
-				X: float64(x),
-				// NoteSprites's y value is not fixed.
+			{
+				s := draws.NewSpriteFromImage(keyDownImage)
+				scaleW := w / s.W()
+				scaleH := (screenSizeY - HitPosition) / s.H()
+				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
+				s.SetPosition(x, HitPosition, draws.OriginModeLeftTop)
+				skin.KeyDownSprites[k] = s
 			}
-			s.HeadSprites[k] = s.NoteSprites[k]
-			s.HeadSprites[k].I = headImages[kind]
-			s.TailSprites[k] = s.NoteSprites[k]
-			s.TailSprites[k].I = tailImages[kind]
-			x += int(noteWidths[kind])
-		}
-
-		// Draw max length of long note body sprite in advance.
-		x = screenSizeX/2 - wsum/2
-		for k, kind := range noteKinds {
-			src := bodyImages[kind]
-
-			w := int(noteWidths[kind])
-			scale := float64(w) / float64(src.Bounds().Dx())
-			h := int(scale * float64(src.Bounds().Dy()))
-			dst := image.NewRGBA(image.Rect(0, 0, w, screenSizeY))
-			switch BodySpriteStyle {
-			case BodySpriteStyleStretch:
-				draw.BiLinear.Scale(dst, dst.Bounds(), src, src.Bounds(), draw.Over, nil)
-			case BodySpriteStyleAttach:
-				for rect := image.Rect(0, 0, w, h); rect.Min.Y < dst.Bounds().Dy(); {
-					draw.BiLinear.Scale(dst, rect, src, src.Bounds(), draw.Over, nil)
-					rect.Min.Y += h
-					rect.Max.Y += h
-				}
+			{
+				s := draws.NewSpriteFromImage(noteImages[kind])
+				scaleW := w / s.W()
+				scaleH := NoteHeigth / s.H()
+				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
+				s.SetPosition(x, HitPosition, draws.OriginModeLeftCenter)
+				skin.NoteSprites[k] = s
 			}
-			for pow := 0; pow < int(math.Log2(screenSizeY))+1; pow++ {
-				h := 1 << pow
-				rect := image.Rect(0, 0, w, h)
-				s.BodySprites[k] = append(s.BodySprites[k], draws.Sprite{
-					I: ebiten.NewImageFromImage(dst.SubImage(rect)),
-					W: float64(w),
-					H: float64(h),
-					X: float64(x),
-					// BodySprites's y value is not fixed.
-				})
+			{
+				s := draws.NewSpriteFromImage(headImages[kind])
+				scaleW := w / s.W()
+				scaleH := NoteHeigth / s.H()
+				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
+				s.SetPosition(x, HitPosition, draws.OriginModeLeftCenter)
+				skin.HeadSprites[k] = s
 			}
-
-			// This is for test.
-			// {
-			// 	w := int(noteWidths[kind])
-			// 	scale := float64(w) / float64(src.Bounds().Dx())
-			// 	h := int(scale * float64(src.Bounds().Dy()))
-			// 	dst := image.NewRGBA(image.Rect(0, 0, int(w), screenSizeY))
-			// 	for rect := image.Rect(0, 0, w, h); rect.Min.Y < dst.Bounds().Dy(); {
-			// 		draw.BiLinear.Scale(dst, rect, src, src.Bounds(), draw.Over, nil)
-			// 		rect.Min.Y += h
-			// 		rect.Max.Y += h
-			// 	}
-			// 	s.BodySpritesTest[k] = draws.Sprite{
-			// 		I: ebiten.NewImageFromImage(dst),
-			// 		W: float64(dst.Bounds().Dx()), // noteWidths[kind]
-			// 		H: float64(dst.Bounds().Dy()), // screenSizeY
-			// 	}
-			// 	s.BodySpritesTest[k].X = float64(x)
-			// 	// BodySprites's y value is not fixed.
-			// }
-
-			x += int(noteWidths[kind])
+			{
+				s := draws.NewSpriteFromImage(tailImages[kind])
+				scaleW := w / s.W()
+				scaleH := NoteHeigth / s.H()
+				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
+				s.SetPosition(x, HitPosition, draws.OriginModeLeftCenter)
+				skin.TailSprites[k] = s
+			}
+			{
+				s := draws.NewSpriteFromImage(bodyImages[kind])
+				scale := w / s.W()
+				s.SetScale(scale, scale, ebiten.FilterLinear)
+				s.SetPosition(x, HitPosition, draws.OriginModeLeftCenter)
+				skin.BodySprites[k] = s
+			}
+			x += w
 		}
-
-		field := ebiten.NewImage(wsum, screenSizeY)
-		field.Fill(color.RGBA{0, 0, 0, uint8(255 * FieldDark)})
-		s.FieldSprite = draws.Sprite{
-			I: field,
-			W: float64(wsum),
-			H: screenSizeY,
+		{
+			src := ebiten.NewImage(int(wsum), screenSizeY)
+			src.Fill(color.RGBA{0, 0, 0, uint8(255 * FieldDark)})
+			s := draws.NewSpriteFromImage(src)
+			s.SetPosition(screenSizeX/2, 0, draws.OriginModeCenterTop)
+			skin.FieldSprite = s
 		}
-		s.FieldSprite.SetCenterX(screenSizeX / 2)
-		// FieldSprite's y value is always 0.
-
-		s.HintSprite = draws.Sprite{
-			I: hintImage,
-			W: float64(wsum),
-			H: HintHeight,
+		{
+			s := draws.NewSpriteFromImage(hintImage)
+			scaleW := wsum / s.W()
+			scaleH := HintHeight / s.H()
+			s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
+			s.SetPosition(screenSizeX/2, HitPosition-HintHeight, draws.OriginModeCenterTop)
+			skin.HintSprite = s
 		}
-		s.HintSprite.SetCenterX(screenSizeX / 2)
-		s.HintSprite.Y = HitPosition - HintHeight
-
-		barLine := ebiten.NewImage(wsum, 1)
-		barLine.Fill(color.RGBA{255, 255, 255, 255})
-		s.BarLineSprite = draws.Sprite{
-			I: barLine,
-			W: float64(wsum),
-			H: 1,
+		{
+			src := ebiten.NewImage(int(wsum), 1)
+			src.Fill(color.NRGBA{255, 255, 255, 255}) // White
+			s := draws.NewSpriteFromImage(src)
+			s.SetPosition(screenSizeX/2, HitPosition, draws.OriginModeCenter)
+			skin.BarLineSprite = s
 		}
-		s.BarLineSprite.SetCenterX(screenSizeX / 2)
-		// BarLineSprite's y value is not fixed.
-		Skins[keyCount] = s
+		Skins[keyCount] = skin
 	}
 }
+
+// // Draw max length of long note body sprite in advance.
+// src := bodyImages[kind]
+// scale := float64(w) / float64(src.Bounds().Dx())
+// h := int(scale * float64(src.Bounds().Dy()))
+// dst := image.NewRGBA(image.Rect(0, 0, w, screenSizeY))
+// switch BodySpriteStyle {
+// case BodySpriteStyleStretch:
+// 	draw.BiLinear.Scale(dst, dst.Bounds(), src, src.Bounds(), draw.Over, nil)
+// case BodySpriteStyleAttach:
+// 	for rect := image.Rect(0, 0, w, h); rect.Min.Y < dst.Bounds().Dy(); {
+// 		draw.BiLinear.Scale(dst, rect, src, src.Bounds(), draw.Over, nil)
+// 		rect.Min.Y += h
+// 		rect.Max.Y += h
+// 	}
+// }
+// for pow := 0; pow < int(math.Log2(screenSizeY))+1; pow++ {
+// 	h := 1 << pow
+// 	rect := image.Rect(0, 0, int(w), h)
+// 	s := draws.NewSpriteFromImage(dst.SubImage(rect))
+// 	skin.BodySprites[k] = append(skin.BodySprites[k], draws.Sprite{
+// 		I: ebiten.NewImageFromImage(dst.SubImage(rect)),
+// 		W: float64(w),
+// 		H: float64(h),
+// 		X: float64(x),
+// 		// BodySprites's y value is not fixed.
+// 	})
+// }
+
+// This is for test.
+// {
+// 	w := int(noteWidths[kind])
+// 	scale := float64(w) / float64(src.Bounds().Dx())
+// 	h := int(scale * float64(src.Bounds().Dy()))
+// 	dst := image.NewRGBA(image.Rect(0, 0, int(w), screenSizeY))
+// 	for rect := image.Rect(0, 0, w, h); rect.Min.Y < dst.Bounds().Dy(); {
+// 		draw.BiLinear.Scale(dst, rect, src, src.Bounds(), draw.Over, nil)
+// 		rect.Min.Y += h
+// 		rect.Max.Y += h
+// 	}
+// 	s.BodySpritesTest[k] = draws.Sprite{
+// 		I: ebiten.NewImageFromImage(dst),
+// 		W: float64(dst.Bounds().Dx()), // noteWidths[kind]
+// 		H: float64(dst.Bounds().Dy()), // screenSizeY
+// 	}
+// 	s.BodySpritesTest[k].X = float64(x)
+// 	// BodySprites's y value is not fixed.
+// }

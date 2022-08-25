@@ -8,7 +8,7 @@ import (
 // Do Translate at final stage: Do Rotate or Scale first.
 // Effecter should belong to Drawer, not to Sprite. There might be an animation.
 type Drawer struct {
-	Sprites []Sprite2
+	Sprites []Sprite
 	Index   int
 	Effecter
 }
@@ -30,8 +30,8 @@ func (d Drawer) Draw(screen *ebiten.Image) {
 // For drawing Combo and Score.
 // Suppose Each Sprite's X and Y indicate Origin's point.
 type NumberDrawer struct {
-	Sprites       [10]Sprite2
-	SignSprites   [3]Sprite2 // Dot, Comma, Percent.
+	Sprites       [10]Sprite
+	SignSprites   [3]Sprite // Dot, Comma, Percent.
 	Integer       int
 	Fraction      int
 	DigitWidth    float64 // Use number 0's width.

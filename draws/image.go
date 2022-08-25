@@ -59,7 +59,6 @@ func NewImageSrc(path string) image.Image {
 	src, _, err := image.Decode(f)
 	if err != nil {
 		return nil
-		// panic(err)
 	}
 	return src
 }
