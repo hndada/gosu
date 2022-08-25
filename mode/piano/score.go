@@ -20,11 +20,6 @@ var Judgments = []gosu.Judgment{Kool, Cool, Good, Bad, Miss}
 var JudgmentColors = []color.NRGBA{
 	gosu.ColorKool, gosu.ColorCool, gosu.ColorGood, gosu.ColorBad, gosu.ColorMiss}
 
-var (
-	white  = color.NRGBA{255, 255, 255, 192}
-	purple = color.NRGBA{213, 0, 242, 192}
-)
-
 func Verdict(t NoteType, a input.KeyAction, td int64) gosu.Judgment {
 	if t == Tail { // Either Hold or Release when Tail is not scored
 		switch {

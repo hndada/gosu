@@ -50,7 +50,7 @@ type BaseScenePlay struct {
 	Combo       int
 	Flow        float64
 	ScoreDrawer ScoreDrawer
-	TimingMeter TimingMeter
+	TimingMeter Meter
 }
 
 // General
