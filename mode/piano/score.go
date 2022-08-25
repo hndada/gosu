@@ -18,12 +18,8 @@ var (
 
 var Judgments = []gosu.Judgment{Kool, Cool, Good, Bad, Miss}
 var JudgmentColors = []color.NRGBA{
-	{109, 120, 134, 255}, // Gray
-	{244, 177, 0, 255},   // Yellow
-	{51, 255, 40, 255},   // Lime
-	{85, 251, 255, 255},  // Skyblue
-	{0, 170, 242, 255},   // Blue
-}
+	gosu.ColorKool, gosu.ColorCool, gosu.ColorGood, gosu.ColorBad, gosu.ColorMiss}
+
 var (
 	white  = color.NRGBA{255, 255, 255, 192}
 	purple = color.NRGBA{213, 0, 242, 192}

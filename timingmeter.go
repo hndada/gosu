@@ -11,6 +11,13 @@ import (
 
 const fadeInDuration = 800 // Duration of fade-in of timing meter marks.
 var TimingMeterMarkDuration int = TimeToTick(4000)
+var (
+	ColorKool = color.NRGBA{0, 170, 242, 255}   // Blue
+	ColorCool = color.NRGBA{85, 251, 255, 255}  // Skyblue
+	ColorGood = color.NRGBA{51, 255, 40, 255}   // Lime
+	ColorBad  = color.NRGBA{244, 177, 0, 255}   // Yellow
+	ColorMiss = color.NRGBA{109, 120, 134, 255} // Gray
+)
 
 type TimingMeter struct {
 	Meter  draws.Sprite
@@ -40,8 +47,9 @@ func NewTimingMeter(js []Judgment, colors []color.NRGBA) TimingMeter {
 	meterSrc := image.NewRGBA(image.Rect(0, 0, meterW, meterH))
 	draw.Draw(meterSrc, meterSrc.Bounds(), &image.Uniform{dark}, image.Point{}, draw.Src)
 	y1, y2 := int(float64(meterH)*0.375), int(float64(meterH)*0.625)
-	for i, color := range colors {
+	for i := 0; i < len(js); i++ {
 		j := js[len(js)-1-i]
+		color := colors[len(js)-1-i]
 		w := 1 + 2*int(TimingMeterWidth)*int(j.Window)
 		x1 := int(TimingMeterWidth) * (int(Miss.Window - j.Window))
 		x2 := x1 + w
