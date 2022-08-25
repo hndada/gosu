@@ -16,6 +16,8 @@ var (
 	ChartInfoBoxShrink float64 = 0.1
 
 	chartInfoBoxshrink float64 = ChartInfoBoxWidth * ChartInfoBoxShrink
+
+	ScoreScale float64 = 0.65
 )
 
 var (

@@ -40,7 +40,6 @@ var (
 var FieldDarkness float64 = 1
 
 var (
-	ScoreScale         float64 = 0.65
 	ComboScale         float64 = 0.75
 	ComboGap           float64 = screenSizeX * -0.001
 	RollTickComboScale float64 = 0.3
