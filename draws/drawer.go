@@ -32,10 +32,10 @@ func (d Drawer) Draw(screen *ebiten.Image) {
 type NumberDrawer struct {
 	Sprites       [10]Sprite
 	SignSprites   [3]Sprite // Dot, Comma, Percent.
+	DigitWidth    float64   // Use number 0's width.
+	DigitGap      float64
 	Integer       int
 	Fraction      int
-	DigitWidth    float64 // Use number 0's width.
-	DigitGap      float64
 	FractionDigit int // Negative or zero value infers no drawing fraction part.
 	Effecter
 }
@@ -51,6 +51,8 @@ func (d *NumberDrawer) Update(i, f int) {
 	}
 }
 func (d NumberDrawer) IsZero() bool { return d.Integer == 0 && d.Fraction == 0 }
+
+// NumberDrawer's Draw draws each number at the center of constant-width bound.
 func (d NumberDrawer) Draw(screen *ebiten.Image) {
 	if d.IsZero() || (!d.Permanent && d.Countdown == 0) {
 		return

@@ -1,10 +1,7 @@
 package gosu
 
 import (
-	"math"
-
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 )
 
@@ -51,35 +48,48 @@ func (d BarLineDrawer) Draw(screen *ebiten.Image, position func(time int64) floa
 	}
 }
 
-type ScoreDrawer struct {
-	DelayedScore ctrl.Delayed
-	Sprites      []draws.Sprite
+//	type ScoreDrawer struct {
+//		DelayedScore ctrl.Delayed
+//		Sprites      []draws.Sprite
+//	}
+//
+// ScoreDrawer.Update(int(math.Ceil(delayedScore)))
+func NewScoreDrawer() draws.NumberDrawer {
+	return draws.NumberDrawer{
+		Sprites:       ScoreSprites,
+		SignSprites:   SignSprites,
+		DigitWidth:    ScoreSprites[0].W(),
+		DigitGap:      0,
+		FractionDigit: 0,
+		Integer:       0,
+		Fraction:      0,
+		Effecter:      draws.Effecter{},
+	}
 }
 
-func (d *ScoreDrawer) Update(score float64) {
-	d.DelayedScore.Set(score)
-	d.DelayedScore.Update()
-}
+// func (d *ScoreDrawer) Update(score float64) {
+// 	d.DelayedScore.Set(score)
+// 	d.DelayedScore.Update()
+// }
 
-// ScoreDrawer's Draw draws each number at constant x regardless of their widths.
-func (d ScoreDrawer) Draw(screen *ebiten.Image) {
-	var wsum int
-	vs := make([]int, 0)
-	for v := int(math.Ceil(d.DelayedScore.Delayed)); v > 0; v /= 10 {
-		vs = append(vs, v%10) // Little endian
-		// wsum += int(d.Sprites[v%10].W)
-		wsum += int(d.Sprites[0].W)
-	}
-	if len(vs) == 0 {
-		vs = append(vs, 0) // Little endian
-		wsum += int(d.Sprites[0].W)
-	}
-	x := float64(screenSizeX) - d.Sprites[0].W/2
-	for _, v := range vs {
-		// x -= d.Sprites[v].W
-		x -= d.Sprites[0].W
-		sprite := d.Sprites[v]
-		sprite.X = x + (d.Sprites[0].W - sprite.W/2)
-		sprite.Draw(screen)
-	}
-}
+// func (d ScoreDrawer) Draw(screen *ebiten.Image) {
+// 	var wsum int
+// 	vs := make([]int, 0)
+// 	for v := int(math.Ceil(d.DelayedScore.Delayed)); v > 0; v /= 10 {
+// 		vs = append(vs, v%10) // Little endian
+// 		// wsum += int(d.Sprites[v%10].W)
+// 		wsum += int(d.Sprites[0].W)
+// 	}
+// 	if len(vs) == 0 {
+// 		vs = append(vs, 0) // Little endian
+// 		wsum += int(d.Sprites[0].W)
+// 	}
+// 	x := float64(screenSizeX) - d.Sprites[0].W/2
+// 	for _, v := range vs {
+// 		// x -= d.Sprites[v].W
+// 		x -= d.Sprites[0].W
+// 		sprite := d.Sprites[v]
+// 		sprite.X = x + (d.Sprites[0].W - sprite.W/2)
+// 		sprite.Draw(screen)
+// 	}
+// }
