@@ -112,6 +112,8 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 
 var MaxKeyDownTicks int = gosu.TimeToTick(30)
 
+// Todo: KeySprites should be [KeyCount][2]Sprite
+// Or, Always draw KeyUp sprite, then KeyDown (optionally Masking between them).
 type KeyDrawer struct {
 	Countdowns [4]int
 	Sprites    [4]draws.Sprite
