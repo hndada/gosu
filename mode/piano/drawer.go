@@ -108,6 +108,7 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 
 var MinKeyDownTicks int = gosu.TimeToTick(30)
 
+// Todo: Draw KeyUp Permanently, occassionally draw KeyDown
 type KeyDrawer struct {
 	KeyDownCountdowns []int
 	Sprites           [2][]draws.Sprite

@@ -198,3 +198,8 @@ func (n PlayNote) Weight() float64 {
 		return 1
 	}
 }
+
+// Body should be drawn as if one big stretched image.
+// How to draw Body:
+// 1. Find the section from start to end.
+// 2. Stretch the equivalent part of Body sprite.
