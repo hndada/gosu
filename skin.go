@@ -36,7 +36,7 @@ func LoadGeneralSkin() {
 		s := draws.NewSprite("skin/default-bg.jpg")
 		scale := screenSizeX / s.W()
 		s.SetScale(scale, scale, ebiten.FilterLinear)
-		s.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginModeCenter)
+		s.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenter)
 		DefaultBackground = s
 	}
 	// Todo: cursor may have outer circle
@@ -44,7 +44,7 @@ func LoadGeneralSkin() {
 	for i, name := range names {
 		s := draws.NewSprite(fmt.Sprintf("skin/cursor/%s.png", name))
 		s.SetScale(CursorScale, CursorScale, ebiten.FilterLinear)
-		s.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginModeCenter)
+		s.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenter)
 		CursorSprites[i] = s
 	}
 	{
@@ -53,7 +53,7 @@ func LoadGeneralSkin() {
 		scaleH := ChartInfoBoxHeight / s.H()
 		s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
 		offset := -(ChartInfoBoxWidth - chartInfoBoxshrink)
-		s.SetPosition(screenSizeX+offset, screenSizeY/2, draws.OriginModeRightCenter)
+		s.SetPosition(screenSizeX+offset, screenSizeY/2, draws.OriginRightCenter)
 		DefaultBackground = s
 	}
 	// purple := color.RGBA{172, 49, 174, 255}
@@ -76,13 +76,13 @@ func LoadGeneralSkin() {
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fmt.Sprintf("skin/score/%d.png", i))
 		s.SetScale(ScoreScale, ScoreScale, ebiten.FilterLinear)
-		s.SetPosition(screenSizeX, 0, draws.OriginModeRightTop)
+		s.SetPosition(screenSizeX, 0, draws.OriginRightTop)
 		ScoreSprites[i] = s
 	}
 	for i, name := range []string{"dot", "comma", "percent"} {
 		s := draws.NewSprite(fmt.Sprintf("skin/score/%s.png", name))
 		s.SetScale(ScoreScale, ScoreScale, ebiten.FilterLinear)
-		s.SetPosition(screenSizeX, 0, draws.OriginModeRightTop)
+		s.SetPosition(screenSizeX, 0, draws.OriginRightTop)
 		SignSprites[i] = s
 	}
 }

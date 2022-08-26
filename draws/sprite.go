@@ -9,21 +9,21 @@ import (
 type Sprite struct {
 	i          *ebiten.Image
 	w, h, x, y float64
-	originMode OriginMode
+	origin     Origin
 	filter     ebiten.Filter
 }
-type OriginMode int
+type Origin int
 
 const (
-	OriginModeLeftTop      OriginMode = iota // Default OriginMode.
-	OriginModeLeftCenter                     // e.g., drawing piano notes.
-	OriginModeLeftBottom                     // e.g., back button.
-	OriginModeCenterTop                      // e.g., drawing field.
-	OriginModeCenter                         // Most of sprite's OriginMode.
-	OriginModeCenterBottom                   // e.g., TimingMeter.
-	OriginModeRightTop                       // e.g., score.
-	OriginModeRightCenter                    // e.g., chart info boxes.
-	OriginModeRightBottom                    // e.g., Play button.
+	OriginLeftTop      Origin = iota // Default Origin.
+	OriginLeftCenter                 // e.g., drawing piano notes.
+	OriginLeftBottom                 // e.g., back button.
+	OriginCenterTop                  // e.g., drawing field.
+	OriginCenter                     // Most of sprite's Origin.
+	OriginCenterBottom               // e.g., TimingMeter.
+	OriginRightTop                   // e.g., score.
+	OriginRightCenter                // e.g., chart info boxes.
+	OriginRightBottom                // e.g., Play button.
 )
 
 func NewSprite(path string) Sprite {
@@ -44,49 +44,52 @@ func (s *Sprite) SetScale(scaleW, scaleH float64, filter ebiten.Filter) {
 	s.h *= scaleH
 	s.filter = filter
 }
-func (s *Sprite) SetPosition(x, y float64, originMode OriginMode) {
+func (s *Sprite) SetPosition(x, y float64, origin Origin) {
 	s.x = x
 	s.y = y
-	s.originMode = originMode
+	s.origin = origin
 }
 func (s Sprite) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
 	if op == nil {
 		op = &ebiten.DrawImageOptions{}
 	}
-	switch s.originMode {
-	case OriginModeLeftTop:
+	x, y := s.LeftTopPosition()
+	op.Filter = s.filter
+	op.GeoM.Translate(x, y)
+	screen.DrawImage(s.i, op)
+}
+func (s Sprite) LeftTopPosition() (float64, float64) {
+	switch s.origin {
+	case OriginLeftTop:
 		// Does nothing.
-	case OriginModeLeftCenter:
+	case OriginLeftCenter:
 		s.y -= s.h / 2
-	case OriginModeLeftBottom:
+	case OriginLeftBottom:
 		s.y -= s.h
-	case OriginModeCenterTop:
+	case OriginCenterTop:
 		s.x -= s.w / 2
-	case OriginModeCenter:
+	case OriginCenter:
 		s.x -= s.w / 2
 		s.y -= s.h / 2
-	case OriginModeCenterBottom:
+	case OriginCenterBottom:
 		s.x -= s.w / 2
 		s.y -= s.h
-	case OriginModeRightTop:
+	case OriginRightTop:
 		s.x -= s.w
-	case OriginModeRightCenter:
+	case OriginRightCenter:
 		s.x -= s.w
 		s.y -= s.h / 2
-	case OriginModeRightBottom:
+	case OriginRightBottom:
 		s.x -= s.w
 		s.y -= s.h
 	}
-	op.Filter = s.filter
-	op.GeoM.Translate(s.x, s.y)
-	screen.DrawImage(s.i, op)
+	return s.x, s.y
 }
-
 func (s Sprite) W() float64               { return s.w }
 func (s Sprite) H() float64               { return s.h }
 func (s Sprite) X() float64               { return s.x }
 func (s Sprite) Y() float64               { return s.y }
-func (s Sprite) OriginMode() OriginMode   { return s.originMode }
+func (s Sprite) Origin() Origin           { return s.origin }
 func (s Sprite) Filter() ebiten.Filter    { return s.filter }
 func (s Sprite) Size() (float64, float64) { return s.w, s.h }
 func (s Sprite) SrcSize() (int, int)      { return s.i.Size() }
