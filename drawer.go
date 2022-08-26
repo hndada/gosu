@@ -23,6 +23,16 @@ type BarLineDrawer struct {
 	Sprite     draws.Sprite
 	Horizontal bool
 }
+type LaneDrawer struct {
+	Sprite draws.Sprite
+	Object *any
+	Bound  func() bool
+}
+type LongBodyDrawer struct {
+	Sprite draws.Sprite
+	Object *any
+	Bound  func() bool
+}
 
 func (d *BarLineDrawer) Update(position func(time int64) float64) {
 	bound := screenSizeY
@@ -56,14 +66,9 @@ func (d BarLineDrawer) Draw(screen *ebiten.Image, position func(time int64) floa
 // ScoreDrawer.Update(int(math.Ceil(delayedScore)))
 func NewScoreDrawer() draws.NumberDrawer {
 	return draws.NumberDrawer{
-		Sprites:       ScoreSprites,
-		SignSprites:   SignSprites,
-		DigitWidth:    ScoreSprites[0].W(),
-		DigitGap:      0,
-		FractionDigit: 0,
-		Integer:       0,
-		Fraction:      0,
-		Effecter:      draws.Effecter{},
+		Sprites:     ScoreSprites,
+		SignSprites: SignSprites,
+		DigitWidth:  ScoreSprites[0].W(),
 	}
 }
 
