@@ -68,7 +68,7 @@ func NewMeter(js []Judgment, colors []color.NRGBA) Meter {
 		}
 		i := ebiten.NewImageFromImage(src)
 		base := draws.NewSpriteFromImage(i)
-		base.SetPosition(screenSizeX/2, screenSizeY, draws.OriginModeCenterBottom)
+		base.SetPosition(screenSizeX/2, screenSizeY, draws.OriginCenterBottom)
 		meter.Base = base
 	}
 	{
@@ -76,7 +76,7 @@ func NewMeter(js []Judgment, colors []color.NRGBA) Meter {
 		src.Fill(colorRed)
 		i := ebiten.NewImageFromImage(src)
 		anchor := draws.NewSpriteFromImage(i)
-		anchor.SetPosition(screenSizeX/2, screenSizeY, draws.OriginModeCenterBottom)
+		anchor.SetPosition(screenSizeX/2, screenSizeY, draws.OriginCenterBottom)
 		meter.Anchor = anchor
 	}
 	{
@@ -84,7 +84,7 @@ func NewMeter(js []Judgment, colors []color.NRGBA) Meter {
 		src.Fill(colorWhite)
 		i := ebiten.NewImageFromImage(src)
 		unit := draws.NewSpriteFromImage(i)
-		unit.SetPosition(screenSizeX/2, screenSizeY, draws.OriginModeCenterBottom)
+		unit.SetPosition(screenSizeX/2, screenSizeY, draws.OriginCenterBottom)
 		meter.Unit = unit
 	}
 	return meter

@@ -89,7 +89,7 @@ func (s *BaseScenePlay) SetBackground(path string) {
 		sprite := draws.NewSpriteFromImage(img)
 		scale := screenSizeX / sprite.W()
 		sprite.SetScale(scale, scale, ebiten.FilterLinear)
-		sprite.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginModeCenter)
+		sprite.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenter)
 		s.BackgroundDrawer.Sprite = sprite
 	} else {
 		s.BackgroundDrawer.Sprite = DefaultBackground

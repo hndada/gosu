@@ -80,14 +80,14 @@ func LoadSkin() {
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fmt.Sprintf("skin/combo/%d.png", i))
 		s.SetScale(ComboScale, ComboScale, ebiten.FilterLinear)
-		s.SetPosition(screenSizeX/2, ComboPosition, draws.OriginModeCenter)
+		s.SetPosition(screenSizeX/2, ComboPosition, draws.OriginCenter)
 		GeneralSkin.ComboSprites[i] = s
 	}
 	GeneralSkin.JudgmentSprites = make([]draws.Sprite, 5)
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
 		s := draws.NewSprite(fmt.Sprintf("skin/piano/judgment/%s.png", name))
 		s.SetScale(JudgmentScale, JudgmentScale, ebiten.FilterLinear)
-		s.SetPosition(screenSizeX/2, JudgmentPosition, draws.OriginModeCenter)
+		s.SetPosition(screenSizeX/2, JudgmentPosition, draws.OriginCenter)
 		GeneralSkin.JudgmentSprites[i] = s
 	}
 
@@ -146,7 +146,7 @@ func LoadSkin() {
 				scaleW := w / s.W()
 				scaleH := (screenSizeY - HitPosition) / s.H()
 				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginModeLeftTop)
+				s.SetPosition(x, HitPosition, draws.OriginLeftTop)
 				skin.KeyUpSprites[k] = s
 			}
 			{
@@ -154,7 +154,7 @@ func LoadSkin() {
 				scaleW := w / s.W()
 				scaleH := (screenSizeY - HitPosition) / s.H()
 				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginModeLeftTop)
+				s.SetPosition(x, HitPosition, draws.OriginLeftTop)
 				skin.KeyDownSprites[k] = s
 			}
 			{
@@ -162,7 +162,7 @@ func LoadSkin() {
 				scaleW := w / s.W()
 				scaleH := NoteHeigth / s.H()
 				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginModeLeftCenter)
+				s.SetPosition(x, HitPosition, draws.OriginLeftCenter)
 				skin.NoteSprites[k] = s
 			}
 			{
@@ -170,7 +170,7 @@ func LoadSkin() {
 				scaleW := w / s.W()
 				scaleH := NoteHeigth / s.H()
 				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginModeLeftCenter)
+				s.SetPosition(x, HitPosition, draws.OriginLeftCenter)
 				skin.HeadSprites[k] = s
 			}
 			{
@@ -178,14 +178,14 @@ func LoadSkin() {
 				scaleW := w / s.W()
 				scaleH := NoteHeigth / s.H()
 				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginModeLeftCenter)
+				s.SetPosition(x, HitPosition, draws.OriginLeftCenter)
 				skin.TailSprites[k] = s
 			}
 			{
 				s := draws.NewSpriteFromImage(bodyImages[kind])
 				scale := w / s.W()
 				s.SetScale(scale, scale, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginModeLeftCenter)
+				s.SetPosition(x, HitPosition, draws.OriginLeftCenter)
 				skin.BodySprites[k] = s
 			}
 			x += w
@@ -194,7 +194,7 @@ func LoadSkin() {
 			src := ebiten.NewImage(int(wsum), screenSizeY)
 			src.Fill(color.RGBA{0, 0, 0, uint8(255 * FieldDark)})
 			s := draws.NewSpriteFromImage(src)
-			s.SetPosition(screenSizeX/2, 0, draws.OriginModeCenterTop)
+			s.SetPosition(screenSizeX/2, 0, draws.OriginCenterTop)
 			skin.FieldSprite = s
 		}
 		{
@@ -202,14 +202,14 @@ func LoadSkin() {
 			scaleW := wsum / s.W()
 			scaleH := HintHeight / s.H()
 			s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
-			s.SetPosition(screenSizeX/2, HitPosition-HintHeight, draws.OriginModeCenterTop)
+			s.SetPosition(screenSizeX/2, HitPosition-HintHeight, draws.OriginCenterTop)
 			skin.HintSprite = s
 		}
 		{
 			src := ebiten.NewImage(int(wsum), 1)
 			src.Fill(color.NRGBA{255, 255, 255, 255}) // White
 			s := draws.NewSpriteFromImage(src)
-			s.SetPosition(screenSizeX/2, HitPosition, draws.OriginModeCenter)
+			s.SetPosition(screenSizeX/2, HitPosition, draws.OriginCenter)
 			skin.BarLineSprite = s
 		}
 		Skins[keyCount] = skin
