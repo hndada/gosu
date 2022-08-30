@@ -33,7 +33,7 @@ func NewGame(modes []Mode) *Game {
 	for _, mode := range g.Modes {
 		mode.LoadSkin()
 	}
-	g.Mode = ModeTypeDrum
+	g.Mode = ModeTypePiano4
 	g.VolumeHandler = NewVolumeHandler(&Volume)
 
 	ebiten.SetWindowTitle("gosu")
