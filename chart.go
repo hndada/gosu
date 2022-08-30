@@ -7,13 +7,24 @@ import (
 	"github.com/hndada/gosu/format/osu"
 )
 
+type Bar struct {
+	Time     int64
+	Position float64
+}
 type BaseChart struct {
 	ChartHeader
 	TransPoints []*TransPoint
-	Mode        int
-	SubMode     int // e.g., KeyCount. // Todo: int -> float64; CircleSize may be float64
+	ModeType    int
+	SubModeType int // e.g., KeyCount. // Todo: int -> float64; CircleSize may be float64
 	Duration    int64
+	Bars        []Bar
 	NoteCounts  []int
+}
+
+func (c *BaseChart) SetBars() {
+	for _, time := range BarTimes(c.TransPoints, c.Duration) {
+		c.Bars = append(c.Bars, Bar{Time: time})
+	}
 }
 
 // ChartHeader contains non-play information.
@@ -93,8 +104,8 @@ func NewChartInfo(c *BaseChart, cpath string, level float64) ChartInfo {
 	cb := ChartInfo{
 		Path:    cpath,
 		Header:  c.ChartHeader,
-		Mode:    c.Mode,
-		SubMode: c.SubMode,
+		Mode:    c.ModeType,
+		SubMode: c.SubModeType,
 		Level:   level,
 
 		Duration:   c.Duration,

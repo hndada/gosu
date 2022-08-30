@@ -87,7 +87,7 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	// Note
 	s.PlayNotes, s.StagedNote, s.LeadingTail, s.MaxNoteWeights = NewPlayNotes(c)
 	et, wb, wa := s.EndTime, waitBefore, gosu.DefaultWaitAfter
-	s.BarLineDrawer.Times = gosu.BarLineTimes(c.TransPoints, et, wb, wa)
+	s.BarLineDrawer.Times = gosu.BarTimes(c.TransPoints, et, wb, wa)
 	// s.BarLineDrawer.Offset = NoteHeigth / 2
 	s.BarLineDrawer.Sprite = s.BarLineSprite
 	s.BarLineDrawer.Horizontal = true
