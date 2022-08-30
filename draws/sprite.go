@@ -13,6 +13,8 @@ type Sprite struct {
 	w, h, x, y float64
 	origin     Origin
 	filter     ebiten.Filter
+
+	scaleW, scaleH float64
 }
 type Origin int
 
@@ -44,6 +46,13 @@ func NewSpriteFromImage(src *ebiten.Image) Sprite {
 func (s *Sprite) SetScale(scaleW, scaleH float64, filter ebiten.Filter) {
 	s.w *= scaleW
 	s.h *= scaleH
+	s.scaleW = scaleW
+	s.scaleH = scaleH
+	// i := ebiten.NewImageFromImage(s.i)
+	// s.i.Clear()
+	// op := &ebiten.DrawImageOptions{}
+	// op.GeoM.Scale(scaleW, scaleH)
+	// s.i.DrawImage(i, op)
 	s.filter = filter
 }
 func (s *Sprite) SetPosition(x, y float64, origin Origin) {
@@ -55,6 +64,7 @@ func (s Sprite) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
 	if op == nil {
 		op = &ebiten.DrawImageOptions{}
 	}
+	op.GeoM.Scale(s.scaleW, s.scaleH)
 	x, y := s.LeftTopPosition()
 	op.Filter = s.filter
 	op.GeoM.Translate(x, y)
@@ -107,6 +117,10 @@ func (s Sprite) SubSprite(rect image.Rectangle) Sprite {
 	s2.w = float64(rect.Dx())
 	s2.h = float64(rect.Dy())
 	return s2
+}
+func (s *Sprite) Move(tx, ty float64) {
+	s.x += tx
+	s.y += ty
 }
 
 // Should I make the image field unexported?
