@@ -13,7 +13,7 @@ var (
 
 	ChartInfoBoxWidth  float64 = 450
 	ChartInfoBoxHeight float64 = 50
-	ChartInfoBoxShrink float64 = 0.1
+	ChartInfoBoxShrink float64 = 0.15
 
 	chartInfoBoxshrink float64 = ChartInfoBoxWidth * ChartInfoBoxShrink
 

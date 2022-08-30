@@ -52,9 +52,11 @@ func LoadGeneralSkin() {
 		scaleW := ChartInfoBoxWidth / s.W()
 		scaleH := ChartInfoBoxHeight / s.H()
 		s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
-		offset := -(ChartInfoBoxWidth - chartInfoBoxshrink)
-		s.SetPosition(screenSizeX+offset, screenSizeY/2, draws.OriginRightCenter)
-		DefaultBackground = s
+		// offset := -(ChartInfoBoxWidth - chartInfoBoxshrink)
+		// s.SetPosition(screenSizeX+offset, screenSizeY/2, draws.OriginRightCenter)
+		// s.SetPosition(screenSizeX, screenSizeY/2, draws.OriginRightCenter)
+		s.SetPosition(screenSizeX+chartInfoBoxshrink, screenSizeY/2, draws.OriginRightCenter)
+		ChartInfoBoxSprite = s
 	}
 	// purple := color.RGBA{172, 49, 174, 255}
 	// white := color.RGBA{255, 255, 255, 128}
