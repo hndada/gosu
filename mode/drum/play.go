@@ -101,7 +101,7 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	s.ScoreDrawer.Sprites = s.ScoreSprites
 	s.JudgmentDrawer.Sprites = s.JudgmentSprites
 	s.ComboDrawer.Sprites = s.ComboSprites
-	s.TimingMeter = gosu.NewTimingMeter(Judgments[0][:], JudgmentColors)
+	s.Meter = gosu.NewMeter(Judgments[0][:], JudgmentColors)
 	return s, nil
 }
 
@@ -136,7 +136,7 @@ func (s *ScenePlay) Update() any {
 
 	// Notes and Scores
 	var worst gosu.Judgment
-	marks := make([]gosu.TimingMeterMark, 0, 7)
+	marks := make([]gosu.MeterMark, 0, 7)
 	if s.StagedNote != nil {
 		// if n.Type != Tail && s.KeyAction(k) == input.Hit {
 		// 	if name := n.SampleFilename; name != "" {
@@ -167,8 +167,8 @@ func (s *ScenePlay) Update() any {
 		// 	if n.Type == BigDon || n.Type == BigKat {
 		// 		clr = purple
 		// 	}
-		// 	marks = append(marks, gosu.TimingMeterMark{
-		// 		Countdown: gosu.TimingMeterMarkDuration,
+		// 	marks = append(marks, gosu.MeterMark{
+		// 		Countdown: gosu.MeterMarkDuration,
 		// 		TimeDiff:  td,
 		// 		Color:     clr,
 		// 	})
@@ -177,7 +177,7 @@ func (s *ScenePlay) Update() any {
 	s.JudgmentDrawer.Update(worst)
 	s.ComboDrawer.Update(s.Combo)
 	// s.ScoreDrawer.Update(s.Score())
-	s.TimingMeter.Update(marks)
+	s.Meter.Update(marks)
 	return nil
 }
 func (s ScenePlay) Draw(screen *ebiten.Image) {
@@ -188,7 +188,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.DrawRollBodies(screen)
 	s.DrawNotes(screen)
 	s.KeyDrawer.Draw(screen)
-	s.TimingMeter.Draw(screen)
+	s.Meter.Draw(screen)
 	s.ComboDrawer.Draw(screen)
 	s.JudgmentDrawer.Draw(screen)
 	s.ScoreDrawer.Draw(screen)

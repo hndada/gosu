@@ -22,7 +22,7 @@ const (
 	OriginLeftBottom                 // e.g., back button.
 	OriginCenterTop                  // e.g., drawing field.
 	OriginCenter                     // Most of sprite's Origin.
-	OriginCenterBottom               // e.g., TimingMeter.
+	OriginCenterBottom               // e.g., Meter.
 	OriginRightTop                   // e.g., score.
 	OriginRightCenter                // e.g., chart info boxes.
 	OriginRightBottom                // e.g., Play button.
