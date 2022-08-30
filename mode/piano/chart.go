@@ -36,15 +36,20 @@ func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
 
 	c.ChartHeader = gosu.NewChartHeader(f)
 	c.TransPoints = gosu.NewTransPoints(f)
+	mainBPM, _, _ := gosu.BPMs(c.TransPoints, c.Duration)
+	// In Piano mode, TransPoint's Position should be divided by main BPM for scaling.
+	for i := range c.TransPoints {
+		c.TransPoints[i].Position /= mainBPM
+	}
 	switch f := f.(type) {
 	case *osu.Format:
 		c.KeyCount = int(f.CircleSize)
 		if c.KeyCount <= 4 {
-			c.Mode = gosu.ModeTypePiano4
+			c.ModeType = gosu.ModeTypePiano4
 		} else {
-			c.Mode = gosu.ModeTypePiano7
+			c.ModeType = gosu.ModeTypePiano7
 		}
-		c.SubMode = c.KeyCount
+		c.SubModeType = c.KeyCount
 		c.Notes = make([]*gosu.Note, 0, len(f.HitObjects)*2)
 		for _, ho := range f.HitObjects {
 			// bns := gosu.NewNote(ho)
@@ -54,7 +59,7 @@ func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
 			// 		Key:  ho.Column(c.SubMode),
 			// 	})
 			// }
-			c.Notes = append(c.Notes, gosu.NewNote(ho, c.Mode, c.SubMode)...)
+			c.Notes = append(c.Notes, gosu.NewNote(ho, c.ModeType, c.SubModeType)...)
 		}
 	}
 	sort.Slice(c.Notes, func(i, j int) bool {
@@ -67,6 +72,7 @@ func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
 	if len(c.Notes) > 0 {
 		c.Duration = c.Notes[len(c.Notes)-1].Time
 	}
+	c.SetBars()
 	c.NoteCounts = make([]int, 2)
 	for _, n := range c.Notes {
 		switch n.Type {

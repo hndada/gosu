@@ -26,8 +26,9 @@ type BaseScenePlay struct {
 	BackgroundDrawer BackgroundDrawer
 
 	// Speed, BPM, Volume and Highlight
-	MainBPM   float64
-	SpeedBase float64
+	MainBPM      float64
+	SpeedBase    float64
+	SpeedHandler ctrl.F64Handler
 	*TransPoint
 
 	// Audio
@@ -43,7 +44,7 @@ type BaseScenePlay struct {
 	Pressed      []bool
 
 	// Note
-	BarLineDrawer NoteLaneDrawer
+	BarDrawer BarDrawer
 
 	// Score
 	Result
@@ -143,3 +144,5 @@ func (s *BaseScenePlay) SetSoundMap(cpath string, names []string) error {
 func (s BaseScenePlay) KeyAction(k int) input.KeyAction {
 	return input.CurrentKeyAction(s.LastPressed[k], s.Pressed[k])
 }
+
+// Note
