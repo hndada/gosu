@@ -12,8 +12,9 @@ import (
 
 // Todo: implement Mode() in each mode.
 type Mode struct {
-	ModeType
+	Type           int
 	ChartInfos     []ChartInfo
+	Cursor         int                 // Todo: custom chart infos - custom cursor
 	Results        map[[16]byte]Result // md5.Size = 16
 	Mods           Mods
 	LastUpdateTime time.Time
@@ -26,21 +27,21 @@ type Mode struct {
 
 // Mode consists of main mode + sub mode.
 // Piano mode's sub mode is Key count (with scratch mode bit adjusted), for example.
-type ModeType int
+// type ModeType int
 
 const (
-	ModeTypePiano4 ModeType = iota // ~ 4 Key
-	ModeTypePiano7                 // 5 ~ Key
+	ModeTypePiano4 = iota // ~ 4 Key
+	ModeTypePiano7        // 5 ~ Key
 	ModeTypeDrum
 	ModeTypeKaraoke // aka jjava
 )
 
 // const DefaultModeType ModeType = ModeTypePiano4
-const ModeTypeUnknown ModeType = -1
+const ModeTypeUnknown = -1
 
 // Mode determines a mode of chart file by its path.
 // Todo: should I make a new type Mode?
-func FileModeType(fpath string) ModeType {
+func FileModeType(fpath string) int {
 	switch strings.ToLower(filepath.Ext(fpath)) {
 	case ".osu":
 		mode, keyCount := osu.Mode(fpath)

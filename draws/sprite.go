@@ -1,6 +1,8 @@
 package draws
 
 import (
+	"image"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -93,6 +95,19 @@ func (s Sprite) Origin() Origin           { return s.origin }
 func (s Sprite) Filter() ebiten.Filter    { return s.filter }
 func (s Sprite) Size() (float64, float64) { return s.w, s.h }
 func (s Sprite) SrcSize() (int, int)      { return s.i.Size() }
+
+//	func (s Sprite) SubImage(rect image.Rectangle) *ebiten.Image {
+//		return s.i.SubImage(rect).(*ebiten.Image)
+//	}
+//
+// SubSprite supposes no x, y and origin are changed.
+func (s Sprite) SubSprite(rect image.Rectangle) Sprite {
+	s2 := s
+	s2.i = s.i.SubImage(rect).(*ebiten.Image)
+	s2.w = float64(rect.Dx())
+	s2.h = float64(rect.Dy())
+	return s2
+}
 
 // Should I make the image field unexported?
 type Sprite0 struct {

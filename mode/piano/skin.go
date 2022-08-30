@@ -185,7 +185,7 @@ func LoadSkin() {
 				s := draws.NewSpriteFromImage(bodyImages[kind])
 				scale := w / s.W()
 				s.SetScale(scale, scale, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginLeftCenter)
+				s.SetPosition(x, HitPosition-skin.HeadSprites[k].H()/2, draws.OriginLeftBottom)
 				skin.BodySprites[k] = s
 			}
 			x += w
@@ -209,7 +209,7 @@ func LoadSkin() {
 			src := ebiten.NewImage(int(wsum), 1)
 			src.Fill(color.NRGBA{255, 255, 255, 255}) // White
 			s := draws.NewSpriteFromImage(src)
-			s.SetPosition(screenSizeX/2, HitPosition, draws.OriginCenter)
+			s.SetPosition(screenSizeX/2, HitPosition, draws.OriginCenterBottom)
 			skin.BarLineSprite = s
 		}
 		Skins[keyCount] = skin

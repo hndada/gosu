@@ -8,8 +8,8 @@ import (
 
 type Game struct {
 	Scene
-	Modes []Mode
-	ModeType
+	Modes         []Mode
+	Mode          int
 	VolumeHandler ctrl.F64Handler
 }
 type Scene interface {
@@ -33,6 +33,7 @@ func NewGame(modes []Mode) *Game {
 	for _, mode := range g.Modes {
 		mode.LoadSkin()
 	}
+	g.Mode = ModeTypeDrum
 	g.VolumeHandler = NewVolumeHandler(&Volume)
 
 	ebiten.SetWindowTitle("gosu")
@@ -46,14 +47,14 @@ func NewGame(modes []Mode) *Game {
 func (g *Game) Update() error {
 	g.VolumeHandler.Update()
 	if g.Scene == nil {
-		g.Scene = NewSceneSelect(g.Modes, &g.ModeType)
+		g.Scene = NewSceneSelect(g.Modes, &g.Mode)
 	}
 	args := g.Scene.Update()
 	switch args := args.(type) {
 	case error:
 		return args
 	case PlayToResultArgs: // Todo: SceneResult
-		g.Scene = NewSceneSelect(g.Modes, &g.ModeType)
+		g.Scene = NewSceneSelect(g.Modes, &g.Mode)
 	case SelectToPlayArgs:
 		var err error
 		g.Scene, err = g.Modes[args.ModeType].NewScenePlay(args.Path, args.Mods, args.Replay)
@@ -73,10 +74,10 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 type SelectToPlayArgs struct {
-	ModeType
-	Path   string
-	Mods   Mods
-	Replay *osr.Format
+	ModeType int
+	Path     string
+	Mods     Mods
+	Replay   *osr.Format
 }
 
 type PlayToResultArgs struct {

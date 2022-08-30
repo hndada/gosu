@@ -7,7 +7,7 @@ import (
 )
 
 var ModePiano4 = gosu.Mode{
-	ModeType:       gosu.ModeTypePiano4,
+	Type:           gosu.ModeTypePiano4,
 	ChartInfos:     make([]gosu.ChartInfo, 0),      // Zero value.
 	Results:        make(map[[16]byte]gosu.Result), // Zero value.
 	Mods:           gosu.Mods{},                    // Zero value.
@@ -20,7 +20,7 @@ var ModePiano4 = gosu.Mode{
 }
 
 var ModePiano7 = gosu.Mode{
-	ModeType:       gosu.ModeTypePiano7,
+	Type:           gosu.ModeTypePiano7,
 	ChartInfos:     make([]gosu.ChartInfo, 0),      // Zero value.
 	Results:        make(map[[16]byte]gosu.Result), // Zero value.
 	Mods:           gosu.Mods{},                    // Zero value.

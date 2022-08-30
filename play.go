@@ -42,14 +42,14 @@ type BaseScenePlay struct {
 	Pressed      []bool
 
 	// Note
-	BarLineDrawer BarLineDrawer
+	BarLineDrawer NoteLaneDrawer
 
 	// Score
 	Result
 	NoteWeights float64
 	Combo       int
 	Flow        float64
-	ScoreDrawer ScoreDrawer
+	ScoreDrawer draws.NumberDrawer
 	TimingMeter Meter
 }
 

@@ -41,9 +41,9 @@ func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
 	case *osu.Format:
 		c.KeyCount = int(f.CircleSize)
 		if c.KeyCount <= 4 {
-			c.ModeType = gosu.ModeTypePiano4
+			c.Mode = gosu.ModeTypePiano4
 		} else {
-			c.ModeType = gosu.ModeTypePiano7
+			c.Mode = gosu.ModeTypePiano7
 		}
 		c.SubMode = c.KeyCount
 		c.Notes = make([]Note, 0, len(f.HitObjects)*2)
