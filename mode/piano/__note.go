@@ -1,9 +1,5 @@
 package piano
 
-import (
-	"github.com/hndada/gosu"
-)
-
 // PlayNote is for in-game. Handled by pointers to modify its fields easily.
 // type Note struct {
 // 	gosu.Note
@@ -14,28 +10,6 @@ import (
 
 // NotePosition calculates position, the centered y-axis value.
 // y = position - h/2
-
-// Weight is for Tail's variadic weight based on its length.
-// For example, short long note does not require much strain to release.
-// Todo: fine-tuning with replay data
-func Weight(n gosu.Note) float64 {
-	switch n.Type {
-	case gosu.Tail:
-		d := float64(n.Time - n.Time2)
-		switch {
-		case d < 50:
-			return 0.5 - 0.35*d/50
-		case d >= 50 && d < 200:
-			return 0.15
-		case d >= 200 && d < 800:
-			return 0.15 + 0.85*(d-200)/600
-		default:
-			return 1
-		}
-	default:
-		return 1
-	}
-}
 
 // func NewPlayNotes(c *Chart) ([]*PlayNote, []*PlayNote, []*PlayNote, float64) {
 // 	playNotes := make([]*PlayNote, 0, len(c.Notes))
