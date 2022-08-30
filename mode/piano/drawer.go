@@ -81,29 +81,29 @@ func (d *JudgmentDrawer) Update(worst gosu.Judgment) {
 
 // JudgmentDrawer's Draw draws the same judgment for a while.
 func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
-	if d.Countdown <= 0 {
-		return
-	}
-	var sprite draws.Sprite
-	for i, j := range Judgments {
-		if j.Window == d.LastJudgment.Window {
-			sprite = d.Sprites[i]
-			break
-		}
-	}
-	t := MaxJudgmentCountdown - d.Countdown
-	age := float64(t) / float64(MaxJudgmentCountdown)
-	switch {
-	case age < 0.1:
-		sprite.ApplyScale(sprite.ScaleW() * 1.15 * (1 + age))
-	case age >= 0.1 && age < 0.2:
-		sprite.ApplyScale(sprite.ScaleW() * 1.15 * (1.2 - age))
-	case age > 0.9:
-		sprite.ApplyScale(sprite.ScaleW() * (1 - 1.15*(age-0.9)))
-	}
-	sprite.SetCenterX(screenSizeX / 2)
-	sprite.SetCenterY(JudgmentPosition)
-	sprite.Draw(screen)
+	// if d.Countdown <= 0 {
+	// 	return
+	// }
+	// var sprite draws.Sprite
+	// for i, j := range Judgments {
+	// 	if j.Window == d.LastJudgment.Window {
+	// 		sprite = d.Sprites[i]
+	// 		break
+	// 	}
+	// }
+	// t := MaxJudgmentCountdown - d.Countdown
+	// age := float64(t) / float64(MaxJudgmentCountdown)
+	// switch {
+	// case age < 0.1:
+	// 	sprite.ApplyScale(sprite.ScaleW() * 1.15 * (1 + age))
+	// case age >= 0.1 && age < 0.2:
+	// 	sprite.ApplyScale(sprite.ScaleW() * 1.15 * (1.2 - age))
+	// case age > 0.9:
+	// 	sprite.ApplyScale(sprite.ScaleW() * (1 - 1.15*(age-0.9)))
+	// }
+	// sprite.SetCenterX(screenSizeX / 2)
+	// sprite.SetCenterY(JudgmentPosition)
+	// sprite.Draw(screen)
 }
 
 var MinKeyDownTicks int = gosu.TimeToTick(30)
@@ -129,11 +129,11 @@ func (d *KeyDrawer) Update(lastPressed, pressed []bool) {
 	}
 }
 func (d KeyDrawer) Draw(screen *ebiten.Image, pressed []bool) {
-	for k, p := range pressed {
-		if p || d.KeyDownCountdowns[k] > 0 {
-			d.Sprites[1][k].Draw(screen) // KeyDown
-		} else {
-			d.Sprites[0][k].Draw(screen) // KeyUp
-		}
-	}
+	// for k, p := range pressed {
+	// 	if p || d.KeyDownCountdowns[k] > 0 {
+	// 		d.Sprites[1][k].Draw(screen) // KeyDown
+	// 	} else {
+	// 		d.Sprites[0][k].Draw(screen) // KeyUp
+	// 	}
+	// }
 }
