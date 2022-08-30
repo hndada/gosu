@@ -98,6 +98,20 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	copy(s.Leadings, s.Staged)
 	// s.PlayNotes, s.Staged, s.LowestTails, s.MaxNoteWeights = NewPlayNotes(c)
 	// Note: Graphics
+	s.NoteLaneDrawers = make([]gosu.NoteLaneDrawer, s.Chart.KeyCount)
+	for k := range s.NoteLaneDrawers {
+		sprites := [4]draws.Sprite{
+			s.NoteSprites[k], s.HeadSprites[k], s.TailSprites[k], s.BodySprites[k],
+		}
+		d := gosu.NewNoteLaneDrawer(sprites)
+		d.Nearest = s.Leadings[k]
+		d.Farthest = d.Nearest
+		d.HitPostion = HitPosition
+		d.Speed = s.SpeedBase
+		d.SetDirection(gosu.Downward)
+		s.NoteLaneDrawers[k] = d
+		// fmt.Printf("%+v\n", d)
+	}
 	s.BarDrawer.Sprite = s.BarLineSprite
 	// et, wb, wa := s.EndTime, waitBefore, gosu.DefaultWaitAfter
 
@@ -138,10 +152,16 @@ func (s *ScenePlay) Update() any {
 			Result: s.Result,
 		}
 	}
-
+	for k := range s.NoteLaneDrawers {
+		s.NoteLaneDrawers[k].Update(s.SpeedBase)
+	}
 	// Speed, BPM, Volume and Highlight
+	s.BarDrawer.Update(s.SpeedBase)
 	s.UpdateTransPoint()
 	if fired := s.SpeedHandler.Update(); fired {
+		for k := range s.NoteLaneDrawers {
+			s.NoteLaneDrawers[k].Speed = s.SpeedBase
+		}
 		go s.Chart.SetPositions(s.SpeedBase)
 	}
 

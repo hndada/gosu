@@ -1,6 +1,7 @@
 package gosu
 
 import (
+	"fmt"
 	"image"
 	"math"
 
@@ -111,11 +112,12 @@ type BarDrawer struct {
 // Update should use existing speed, not the new one.
 func (d *BarDrawer) Update(speed float64) {
 	d.Cursor += speed * TimeStep
+	fmt.Println(d.Cursor)
 	// var boundFarIn, boundNearOut float64 // Bounds for farthest, nearest each.
-	for d.Bars[d.Farthest].Position <= d.maxPosition {
+	for d.Bars[d.Farthest].Position-d.Cursor <= d.maxPosition {
 		d.Farthest++
 	}
-	for d.Bars[d.Nearest].Position <= d.maxPosition {
+	for d.Bars[d.Nearest].Position-d.Cursor <= d.minPosition {
 		d.Nearest++
 	}
 	d.Speed = speed
@@ -179,6 +181,7 @@ func (d *BaseLaneDrawer) SetDirection(direction Direction) {
 		d.maxPosition = d.HitPostion
 		d.minPosition = -screenSizeX + d.HitPostion
 	}
+	// fmt.Printf("%+v\n", d)
 }
 
 // func NewBaseLaneDrawer(sprites []draws.Sprite, direction Direction) (d BaseLaneDrawer) {
@@ -188,8 +191,9 @@ func (d *BaseLaneDrawer) SetDirection(direction Direction) {
 // }
 
 // [4]draws.Sprite{Note, Head, Tail, Body}
-func NewNoteLaneDrawer(sprites [4]draws.Sprite, direction Direction) (d NoteLaneDrawer) {
-	d.BaseLaneDrawer.SetDirection(direction)
+// , direction Direction
+func NewNoteLaneDrawer(sprites [4]draws.Sprite) (d NoteLaneDrawer) {
+	// d.BaseLaneDrawer.SetDirection(direction)
 	d.Sprites = sprites
 	var xMax, yMax float64
 	for _, s := range sprites {
@@ -245,10 +249,10 @@ func NewNoteLaneDrawer(sprites [4]draws.Sprite, direction Direction) (d NoteLane
 func (d *NoteLaneDrawer) Update(speed float64) {
 	d.Cursor += speed * TimeStep
 	// var boundFarIn, boundNearOut float64 // Bounds for farthest, nearest each.
-	for d.Farthest.Position <= d.maxPosition {
+	for d.Farthest.Position-d.Cursor <= d.maxPosition {
 		d.Farthest = d.Farthest.Next
 	}
-	for d.Farthest.Position <= d.minPosition {
+	for d.Nearest.Position-d.Cursor <= d.minPosition {
 		d.Nearest = d.Nearest.Next
 	}
 	// for d.ScreenPosition(d.Farthest) >= d.boundFarIn {
@@ -297,15 +301,17 @@ func (d *NoteLaneDrawer) Update(speed float64) {
 func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
 	n := d.Farthest
 	for ; n != d.Nearest; n = d.Farthest.Prev {
-		op := &ebiten.DrawImageOptions{}
+		sprite := d.Sprites[n.Type]
+		// op := &ebiten.DrawImageOptions{}
 		offset := n.Position - d.Cursor
 		switch d.Direction {
 		case Downward, Upward:
-			op.GeoM.Translate(0, offset)
+			sprite.Move(0, offset)
 		case Leftward, Rightward:
-			op.GeoM.Translate(offset, 0)
+			sprite.Move(offset, 0)
 		}
-		d.Sprites[n.Type].Draw(screen, op)
+		// sprite.Draw(screen, op)
+		sprite.Draw(screen, nil)
 		if n.Type == Head {
 			d.DrawLongBody(screen, n)
 		}

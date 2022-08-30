@@ -55,3 +55,25 @@ func init() {
 		FingerMap[k|RightScratch] = append(FingerMap[k-1], FingerMap[k-1][k-2]+1)
 	}
 }
+
+// Weight is for Tail's variadic weight based on its length.
+// For example, short long note does not require much strain to release.
+// Todo: fine-tuning with replay data
+func Weight(n gosu.Note) float64 {
+	switch n.Type {
+	case gosu.Tail:
+		d := float64(n.Time - n.Time2)
+		switch {
+		case d < 50:
+			return 0.5 - 0.35*d/50
+		case d >= 50 && d < 200:
+			return 0.15
+		case d >= 200 && d < 800:
+			return 0.15 + 0.85*(d-200)/600
+		default:
+			return 1
+		}
+	default:
+		return 1
+	}
+}
