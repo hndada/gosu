@@ -14,7 +14,7 @@ import (
 type Chart struct {
 	gosu.BaseChart
 	KeyCount int
-	Notes    []*gosu.Note
+	// Notes    []*gosu.Note
 }
 
 // NewChart takes file path as input for starting with parsing.

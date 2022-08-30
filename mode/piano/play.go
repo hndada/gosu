@@ -104,6 +104,8 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	// times := gosu.BarTimes(c.TransPoints, s.EndTime, wb, wa)
 	// s.BarDrawer.Times =
 	// s.BarDrawer.Offset = NoteHeigth / 2
+	s.Chart.SetPositions(s.SpeedBase)
+	s.BarDrawer.Bars = s.Chart.Bars
 	s.KeyDrawer.Sprites[0] = s.KeyUpSprites
 	s.KeyDrawer.Sprites[1] = s.KeyDownSprites
 	s.KeyDrawer.KeyDownCountdowns = make([]int, c.KeyCount)
@@ -193,7 +195,7 @@ func (s *ScenePlay) Update() any {
 			if n.Type == gosu.Tail {
 				mark.ColorType = 1
 			}
-			marks = append(marks)
+			marks = append(marks, mark)
 		}
 	}
 	s.JudgmentDrawer.Update(worst)

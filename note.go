@@ -102,20 +102,20 @@ type NoteLaneDrawer struct {
 }
 type BarDrawer struct {
 	BaseLaneDrawer
-	Sprite    draws.Sprite
-	Positions []float64
-	Farthest  int
-	Nearest   int
+	Sprite   draws.Sprite
+	Bars     []Bar
+	Farthest int
+	Nearest  int
 }
 
 // Update should use existing speed, not the new one.
 func (d *BarDrawer) Update(speed float64) {
 	d.Cursor += speed * TimeStep
 	// var boundFarIn, boundNearOut float64 // Bounds for farthest, nearest each.
-	for d.Positions[d.Farthest] <= d.maxPosition {
+	for d.Bars[d.Farthest].Position <= d.maxPosition {
 		d.Farthest++
 	}
-	for d.Positions[d.Nearest] <= d.maxPosition {
+	for d.Bars[d.Nearest].Position <= d.maxPosition {
 		d.Nearest++
 	}
 	d.Speed = speed
@@ -123,7 +123,7 @@ func (d *BarDrawer) Update(speed float64) {
 func (d BarDrawer) Draw(screen *ebiten.Image) {
 	for i := d.Farthest; i >= d.Nearest; i-- {
 		op := &ebiten.DrawImageOptions{}
-		offset := d.Positions[i] - d.Cursor
+		offset := d.Bars[i].Position - d.Cursor
 		switch d.Direction {
 		case Downward, Upward:
 			op.GeoM.Translate(0, offset)

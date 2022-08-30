@@ -18,6 +18,7 @@ type BaseChart struct {
 	SubModeType int // e.g., KeyCount. // Todo: int -> float64; CircleSize may be float64
 	Duration    int64
 	Bars        []Bar
+	Notes       []*Note
 	NoteCounts  []int
 }
 
@@ -119,4 +120,53 @@ func NewChartInfo(c *BaseChart, cpath string, level float64) ChartInfo {
 
 func (c ChartInfo) Text() string {
 	return fmt.Sprintf("(%dK Lv %.1f) %s [%s]", c.SubMode, c.Level, c.Header.MusicName, c.Header.ChartName)
+}
+func (c *BaseChart) SetPositions(speedBase float64) {
+	mainBPM, _, _ := BPMs(c.TransPoints, c.Duration)
+	tp := c.TransPoints[0]
+	// go func() {
+	for i, n := range c.Notes {
+		for tp.Next != nil && (tp.Time < n.Time || tp.Time >= tp.Next.Time) {
+			tp = tp.Next
+		}
+		bpmRatio := tp.BPM / mainBPM
+		beatLength := bpmRatio * tp.BeatScale
+		duration := float64(n.Time - tp.Time)
+		position := tp.Position + duration*beatLength
+		c.Notes[i].Position = speedBase * position
+	}
+	for i, bar := range c.Bars {
+		for tp.Next != nil && (tp.Time < bar.Time || tp.Time >= tp.Next.Time) {
+			tp = tp.Next
+		}
+		bpmRatio := tp.BPM / mainBPM
+		beatLength := bpmRatio * tp.BeatScale
+		duration := float64(bar.Time - tp.Time)
+		position := tp.Position + duration*beatLength
+		c.Bars[i].Position = speedBase * position
+	}
+	// }()
+	// var distance float64 // Approaching notes have positive distance, vice versa.
+	// tp := s.TransPoint
+	// cursor := s.Time()
+	// if time-s.Time() > 0 {
+	// 	// When there are more than 2 TransPoint in bounded time.
+	// 	for ; tp.Next != nil && tp.Next.Time < time; tp = tp.Next {
+	// 		duration := tp.Next.Time - cursor
+	// 		bpmRatio := tp.BPM / s.MainBPM
+	// 		distance += s.SpeedBase * (bpmRatio * tp.BeatScale) * float64(duration)
+	// 		cursor += duration
+	// 	}
+	// } else {
+	// 	for ; tp.Prev != nil && tp.Time > time; tp = tp.Prev {
+	// 		duration := tp.Time - cursor // Negative value.
+	// 		bpmRatio := tp.BPM / s.MainBPM
+	// 		distance += s.SpeedBase * (bpmRatio * tp.BeatScale) * float64(duration)
+	// 		cursor += duration
+	// 	}
+	// }
+	// bpmRatio := tp.BPM / s.MainBPM
+	// // Calculate the remained (which is farthest from Hint within bound).
+	// distance += s.SpeedBase * (bpmRatio * tp.BeatScale) * float64(time-cursor)
+	// return HitPosition - distance
 }
