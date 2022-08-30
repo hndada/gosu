@@ -76,27 +76,36 @@ func (s *SceneSelect) Update() any {
 // May add extra effect to box arrangement.
 // x -= y / 5, for example.
 func (s SceneSelect) Draw(screen *ebiten.Image) {
+	s.Background.Draw(screen, nil)
+	viewport, cursor := s.Viewport()
+	for i := range viewport {
+		sprite := ChartInfoBoxSprite
+		var tx float64
+		if i == cursor {
+			tx -= chartInfoBoxshrink
+		}
+		ty := float64(i-cursor) * ChartInfoBoxHeight
+		sprite.Move(tx, ty)
+		// op := &ebiten.DrawImageOptions{}
+		// op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 255, 255})
+		sprite.Draw(screen, nil)
+	}
+
 	const (
 		dx = 20
 		dy = 30
 	)
-	s.Background.Draw(screen, nil)
-	viewport, cursor := s.Viewport()
 	for i, info := range viewport {
 		sprite := ChartInfoBoxSprite
-		op := &ebiten.DrawImageOptions{}
-		offset := i - cursor
-		op.GeoM.Translate(0, float64(offset)*ChartInfoBoxHeight)
-		if i == cursor {
-			op.GeoM.Translate(-chartInfoBoxshrink, 0)
-		}
-		sprite.Draw(screen, op)
-
 		t := info.Text()
+		offset := float64(i-cursor) * ChartInfoBoxHeight
 		// rect := text.BoundString(basicfont.Face7x13, t)
-		x := int(sprite.X()) + dx //+ rect.Dx()
-		y := int(sprite.Y()) + dy //+ rect.Dy()
-		text.Draw(screen, t, basicfont.Face7x13, x, y, color.Black)
+		x := int(sprite.X()-sprite.W()) + dx   //+ rect.Dx()
+		y := int(sprite.Y()-sprite.H()/2) + dy //+ rect.Dy()
+		if i == cursor {
+			x -= int(chartInfoBoxshrink)
+		}
+		text.Draw(screen, t, basicfont.Face7x13, x, y+int(offset), color.Black)
 	}
 	// Code of drawing cursor
 	// {
@@ -143,6 +152,7 @@ func (s *SceneSelect) UpdateBackground() {
 	s.Background = draws.NewSpriteFromImage(img)
 	scale := screenSizeX / s.Background.W()
 	s.Background.SetScale(scale, scale, ebiten.FilterLinear)
+	// s.Background.SetPosition(0, 0, draws.OriginCenter)
 	s.Background.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenter)
 }
 func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
