@@ -14,7 +14,7 @@ import (
 type Chart struct {
 	gosu.BaseChart
 	KeyCount int
-	Notes    []Note
+	Notes    []*gosu.Note
 }
 
 // NewChart takes file path as input for starting with parsing.
@@ -36,7 +36,6 @@ func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
 
 	c.ChartHeader = gosu.NewChartHeader(f)
 	c.TransPoints = gosu.NewTransPoints(f)
-
 	switch f := f.(type) {
 	case *osu.Format:
 		c.KeyCount = int(f.CircleSize)
@@ -46,9 +45,16 @@ func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
 			c.Mode = gosu.ModeTypePiano7
 		}
 		c.SubMode = c.KeyCount
-		c.Notes = make([]Note, 0, len(f.HitObjects)*2)
+		c.Notes = make([]*gosu.Note, 0, len(f.HitObjects)*2)
 		for _, ho := range f.HitObjects {
-			c.Notes = append(c.Notes, NewNote(ho, c.KeyCount)...)
+			// bns := gosu.NewNote(ho)
+			// for _, bn := range bns {
+			// 	c.Notes = append(c.Notes, Note{
+			// 		Note: bn,
+			// 		Key:  ho.Column(c.SubMode),
+			// 	})
+			// }
+			c.Notes = append(c.Notes, gosu.NewNote(ho, c.Mode, c.SubMode)...)
 		}
 	}
 	sort.Slice(c.Notes, func(i, j int) bool {
@@ -64,9 +70,9 @@ func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
 	c.NoteCounts = make([]int, 2)
 	for _, n := range c.Notes {
 		switch n.Type {
-		case Normal:
+		case gosu.Normal:
 			c.NoteCounts[0]++
-		case Head:
+		case gosu.Head:
 			c.NoteCounts[1]++
 		}
 	}

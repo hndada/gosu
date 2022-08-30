@@ -8,6 +8,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/ctrl"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
 )
@@ -16,24 +17,16 @@ import (
 // NoteWeights is a sum of weight of marked notes.
 // This is also max value of each score sum can get at the time.
 type ScenePlay struct {
+	Skin // The skin may be applied some custom settings: on/off some sprites
 	gosu.BaseScenePlay
-
-	// General
-	Chart *Chart
-	Skin  // The skin may be applied some custom settings: on/off some sprites
-
-	// Speed, BPM, Volume and Highlight
-	// Audio
-	// Input
-	// Notes
-	PlayNotes   []*PlayNote
-	StagedNotes []*PlayNote
-	LowestTails []*PlayNote // For drawing long note efficiently
-
-	// Scores
-	JudgmentDrawer JudgmentDrawer
-	ComboDrawer    ComboDrawer
-	KeyDrawer      KeyDrawer
+	Chart           *Chart
+	Staged          []*gosu.Note
+	Leadings        []*gosu.Note
+	NoteLaneDrawers []gosu.NoteLaneDrawer
+	BarDrawer       gosu.NoteLaneDrawer
+	JudgmentDrawer  JudgmentDrawer
+	ComboDrawer     draws.NumberDrawer
+	KeyDrawer       KeyDrawer
 }
 
 // Todo: Let users change speed during playing
@@ -68,7 +61,7 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	}
 	seNames := make([]string, 0, len(c.Notes))
 	for _, n := range c.Notes {
-		if name := n.SampleFilename; name != "" {
+		if name := n.SampleName; name != "" {
 			seNames = append(seNames, name)
 		}
 	}
@@ -84,12 +77,30 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	s.Pressed = make([]bool, c.KeyCount)
 
 	// Note
-	s.PlayNotes, s.StagedNotes, s.LowestTails, s.MaxNoteWeights = NewPlayNotes(c)
+	prevs := make([]*gosu.Note, c.KeyCount)
+	s.Staged = make([]*gosu.Note, s.Chart.KeyCount)
+
+	for i := range c.Notes {
+		n := c.Notes[i]
+		prev := prevs[n.Key]
+		c.Notes[i].Prev = prev
+		if prev != nil { // Next value is set later.
+			prev.Next = n
+		}
+		prevs[n.Key] = n
+		if s.Staged[n.Key] == nil {
+			s.Staged[n.Key] = n
+		}
+		s.MaxNoteWeights += Weight(*n)
+	}
+	s.Leadings = make([]*gosu.Note, s.Chart.KeyCount)
+	copy(s.Leadings, s.Staged)
+	// s.PlayNotes, s.Staged, s.LowestTails, s.MaxNoteWeights = NewPlayNotes(c)
 	// Note: Graphics
 	et, wb, wa := s.EndTime, waitBefore, gosu.DefaultWaitAfter
-	s.BarLineDrawer.Times = gosu.BarLineTimes(c.TransPoints, et, wb, wa)
-	s.BarLineDrawer.Offset = NoteHeigth / 2
-	s.BarLineDrawer.Sprite = s.BarLineSprite
+	s.BarDrawer.Times = gosu.BarLineTimes(c.TransPoints, et, wb, wa)
+	s.BarDrawer.Offset = NoteHeigth / 2
+	s.BarDrawer.Sprite = s.BarLineSprite
 	s.KeyDrawer.Sprites[0] = s.KeyUpSprites
 	s.KeyDrawer.Sprites[1] = s.KeyDownSprites
 	s.KeyDrawer.KeyDownCountdowns = make([]int, c.KeyCount)
@@ -99,11 +110,12 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	s.FlowMarks = make([]float64, 0, c.Duration)
 	s.Flow = 1
 	// Score: Graphics
-	s.ScoreDrawer.DelayedScore.Mode = ctrl.DelayedModeExp
-	s.ScoreDrawer.Sprites = s.ScoreSprites
+	s.DelayedScore.Mode = ctrl.DelayedModeExp
+	// s.ScoreDrawer.DelayedScore.Mode = ctrl.DelayedModeExp
+	s.ScoreDrawer.Sprites = gosu.ScoreSprites
 	s.JudgmentDrawer.Sprites = s.JudgmentSprites
 	s.ComboDrawer.Sprites = s.ComboSprites
-	s.TimingMeter = gosu.NewTimingMeter(Judgments, JudgmentColors)
+	s.Meter = gosu.NewMeter(Judgments, JudgmentColors)
 	return s, nil
 }
 
@@ -138,13 +150,13 @@ func (s *ScenePlay) Update() any {
 
 	// Notes and Scores
 	var worst gosu.Judgment
-	marks := make([]gosu.TimingMeterMark, 0, 7)
-	for k, n := range s.StagedNotes {
+	marks := make([]gosu.MeterMark, 0, 7)
+	for k, n := range s.Staged {
 		if n == nil {
 			continue
 		}
-		if n.Type != Tail && s.KeyAction(k) == input.Hit {
-			if name := n.SampleFilename; name != "" {
+		if n.Type != gosu.Tail && s.KeyAction(k) == input.Hit {
+			if name := n.SampleName; name != "" {
 				vol := n.SampleVolume
 				if vol == 0 {
 					vol = s.TransPoint.Volume
@@ -154,11 +166,11 @@ func (s *ScenePlay) Update() any {
 		}
 		td := n.Time - s.Time() // Time difference. A negative value infers late hit
 		if n.Marked {
-			if n.Type != Tail {
+			if n.Type != gosu.Tail {
 				return fmt.Errorf("non-tail note has not flushed")
 			}
 			if td < Miss.Window { // Keep Tail staged until near ends.
-				s.StagedNotes[n.Key] = n.Next
+				s.Staged[n.Key] = n.Next
 			}
 			continue
 		}
@@ -167,33 +179,37 @@ func (s *ScenePlay) Update() any {
 			if worst.Window < j.Window {
 				worst = j
 			}
-
-			clr := white
-			if n.Type == Tail {
-				clr = purple
+			mark := gosu.MeterMark{
+				Countdown: s.Meter.MaxCountdown,
+				Offset:    int(td),
+				ColorType: 0,
 			}
-			marks = append(marks, gosu.TimingMeterMark{
-				Countdown: gosu.TimingMeterMarkDuration,
-				TimeDiff:  td,
-				Color:     clr,
-			})
+			if n.Type == gosu.Tail {
+				mark.ColorType = 1
+			}
+			marks = append(marks)
 		}
 	}
 	s.JudgmentDrawer.Update(worst)
-	s.ComboDrawer.Update(s.Combo)
-	s.ScoreDrawer.Update(s.Score())
-	s.TimingMeter.Update(marks)
+	s.ComboDrawer.Update(s.Combo, 0)
+	s.DelayedScore.Set(s.Score())
+	s.DelayedScore.Update()
+	s.ScoreDrawer.Update(int(s.DelayedScore.Delayed), 0)
+	s.Meter.Update(marks)
 	return nil
 }
 func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
-	s.FieldSprite.Draw(screen)
-	s.HintSprite.Draw(screen)
-	s.BarLineDrawer.Draw(screen, s.Position)
-	s.DrawLongNoteBodies(screen)
-	s.DrawNotes(screen)
+	s.FieldSprite.Draw(screen, nil)
+	s.HintSprite.Draw(screen, nil)
+	s.BarDrawer.Draw(screen, s.Position)
+	// s.DrawLongNoteBodies(screen)
+	// s.DrawNotes(screen)
+	for _, d := range s.NoteLaneDrawers {
+		d.Draw(screen)
+	}
 	s.KeyDrawer.Draw(screen, s.Pressed)
-	s.TimingMeter.Draw(screen)
+	s.Meter.Draw(screen)
 	s.ComboDrawer.Draw(screen)
 	s.JudgmentDrawer.Draw(screen)
 	s.ScoreDrawer.Draw(screen)
