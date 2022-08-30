@@ -10,10 +10,10 @@ import (
 type BaseChart struct {
 	ChartHeader
 	TransPoints []*TransPoint
-	ModeType
-	SubMode    int // e.g., KeyCount. // Todo: int -> float64; CircleSize may be float64
-	Duration   int64
-	NoteCounts []int
+	Mode        int
+	SubMode     int // e.g., KeyCount. // Todo: int -> float64; CircleSize may be float64
+	Duration    int64
+	NoteCounts  []int
 }
 
 // ChartHeader contains non-play information.
@@ -73,10 +73,10 @@ func (c ChartHeader) BackgroundPath(cpath string) string {
 
 // ChartInfo is used at SceneSelect.
 type ChartInfo struct {
-	Path   string
-	Mods   Mods
-	Header ChartHeader
-	ModeType
+	Path    string
+	Mods    Mods
+	Header  ChartHeader
+	Mode    int
 	SubMode int
 	Level   float64
 
@@ -91,11 +91,11 @@ type ChartInfo struct {
 func NewChartInfo(c *BaseChart, cpath string, level float64) ChartInfo {
 	mainBPM, minBPM, maxBPM := BPMs(c.TransPoints, c.Duration)
 	cb := ChartInfo{
-		Path:     cpath,
-		Header:   c.ChartHeader,
-		ModeType: c.ModeType,
-		SubMode:  c.SubMode,
-		Level:    level,
+		Path:    cpath,
+		Header:  c.ChartHeader,
+		Mode:    c.Mode,
+		SubMode: c.SubMode,
+		Level:   level,
 
 		Duration:   c.Duration,
 		NoteCounts: c.NoteCounts,

@@ -35,7 +35,7 @@ func NewSpeedHandler(speedBase *float64) ctrl.F64Handler {
 	}
 }
 
-func NewModeTypeHandler(cursor *int, len int) ctrl.IntHandler {
+func NewModeHandler(cursor *int, len int) ctrl.IntHandler {
 	play := func() { Sounds.Play("default-hover") }
 	return ctrl.IntHandler{
 		Handler: ctrl.Handler{
@@ -52,7 +52,7 @@ func NewModeTypeHandler(cursor *int, len int) ctrl.IntHandler {
 }
 
 // Todo: should Max be *int?
-func NewSelectHandler(cursor *int, len int) ctrl.IntHandler {
+func NewCursorHandler(cursor *int, len int) ctrl.IntHandler {
 	play := func() { Sounds.Play("default-hover") }
 	return ctrl.IntHandler{
 		Handler: ctrl.Handler{

@@ -5,59 +5,6 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-type BackgroundDrawer struct {
-	Dimness float64
-	Sprite  draws.Sprite
-}
-
-func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
-	op := d.Sprite.Op()
-	op.ColorM.ChangeHSV(0, 1, BgDimness)
-	screen.DrawImage(d.Sprite.I, op)
-}
-
-type BarLineDrawer struct {
-	Times      []int64
-	Cursor     int     // Index of closest bar line.
-	Offset     float64 // Bar line is drawn at bottom, not at the center.
-	Sprite     draws.Sprite
-	Horizontal bool
-}
-type LaneDrawer struct {
-	Sprite draws.Sprite
-	Object *any
-	Bound  func() bool
-}
-type LongBodyDrawer struct {
-	Sprite draws.Sprite
-	Object *any
-	Bound  func() bool
-}
-
-func (d *BarLineDrawer) Update(position func(time int64) float64) {
-	bound := screenSizeY
-	if d.Horizontal {
-		bound = screenSizeX
-	}
-	t := d.Times[d.Cursor]
-	// Bar line and Hint are anchored at the bottom.
-	for d.Cursor < len(d.Times)-1 &&
-		int(position(t)+d.Offset) >= bound {
-		d.Cursor++
-		t = d.Times[d.Cursor]
-	}
-}
-func (d BarLineDrawer) Draw(screen *ebiten.Image, position func(time int64) float64) {
-	for _, t := range d.Times[d.Cursor:] {
-		sprite := d.Sprite
-		sprite.Y = position(t) + d.Offset
-		if sprite.Y < 0 {
-			break
-		}
-		sprite.Draw(screen)
-	}
-}
-
 //	type ScoreDrawer struct {
 //		DelayedScore ctrl.Delayed
 //		Sprites      []draws.Sprite
@@ -71,6 +18,62 @@ func NewScoreDrawer() draws.NumberDrawer {
 		DigitWidth:  ScoreSprites[0].W(),
 	}
 }
+
+// Todo: use Effecter
+type BackgroundDrawer struct {
+	Dimness float64
+	Sprite  draws.Sprite
+}
+
+func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
+	// op := d.Sprite.Op()
+	op := &ebiten.DrawImageOptions{}
+	op.ColorM.ChangeHSV(0, 1, BgDimness)
+	d.Sprite.Draw(screen, op)
+	// screen.DrawImage(d.Sprite.I, op)
+}
+
+// type BarLineDrawer struct {
+// 	Times      []int64
+// 	Cursor     int     // Index of closest bar line.
+// 	Offset     float64 // Bar line is drawn at bottom, not at the center.
+// 	Sprite     draws.Sprite
+// 	Horizontal bool
+// }
+// type LaneDrawer struct {
+// 	Sprite draws.Sprite
+// 	Object *any
+// 	Bound  func() bool
+// }
+// type LongBodyDrawer struct {
+// 	Sprite draws.Sprite
+// 	Object *any
+// 	Bound  func() bool
+// }
+
+// func (d *BarLineDrawer) Update(position func(time int64) float64) {
+// 	bound := screenSizeY
+// 	if d.Horizontal {
+// 		bound = screenSizeX
+// 	}
+// 	t := d.Times[d.Cursor]
+// 	// Bar line and Hint are anchored at the bottom.
+// 	for d.Cursor < len(d.Times)-1 &&
+// 		int(position(t)+d.Offset) >= bound {
+// 		d.Cursor++
+// 		t = d.Times[d.Cursor]
+// 	}
+// }
+// func (d BarLineDrawer) Draw(screen *ebiten.Image, position func(time int64) float64) {
+// 	for _, t := range d.Times[d.Cursor:] {
+// 		sprite := d.Sprite
+// 		sprite.Y = position(t) + d.Offset
+// 		if sprite.Y < 0 {
+// 			break
+// 		}
+// 		sprite.Draw(screen)
+// 	}
+// }
 
 // func (d *ScoreDrawer) Update(score float64) {
 // 	d.DelayedScore.Set(score)
