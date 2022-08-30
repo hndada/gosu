@@ -80,8 +80,7 @@ func NewNote(f any, mode, subMode int) []*Note {
 var TimeStep float64 = 1000 / float64(ebiten.MaxTPS())
 
 type BaseLaneDrawer struct {
-	Tick    int
-	Sprites []draws.Sprite
+	Tick int
 	// Farthest   *Note
 	// Nearest    *Note
 	Cursor     float64
@@ -95,10 +94,44 @@ type BaseLaneDrawer struct {
 // NoteLaneDrawer's tick should be consistent with ScenePlay.
 type NoteLaneDrawer struct {
 	BaseLaneDrawer
+	Sprites  [4]draws.Sprite
 	Farthest *Note
 	Nearest  *Note
 	margin   float64 // Half of max sizes of sprites.
 	bodyLoss float64 // Head/2 + Tail/2
+}
+type BarDrawer struct {
+	BaseLaneDrawer
+	Sprite    draws.Sprite
+	Positions []float64
+	Farthest  int
+	Nearest   int
+}
+
+// Update should use existing speed, not the new one.
+func (d *BarDrawer) Update(speed float64) {
+	d.Cursor += speed * TimeStep
+	// var boundFarIn, boundNearOut float64 // Bounds for farthest, nearest each.
+	for d.Positions[d.Farthest] <= d.maxPosition {
+		d.Farthest++
+	}
+	for d.Positions[d.Nearest] <= d.maxPosition {
+		d.Nearest++
+	}
+	d.Speed = speed
+}
+func (d BarDrawer) Draw(screen *ebiten.Image) {
+	for i := d.Farthest; i >= d.Nearest; i-- {
+		op := &ebiten.DrawImageOptions{}
+		offset := d.Positions[i] - d.Cursor
+		switch d.Direction {
+		case Downward, Upward:
+			op.GeoM.Translate(0, offset)
+		case Leftward, Rightward:
+			op.GeoM.Translate(offset, 0)
+		}
+		d.Sprite.Draw(screen, op)
+	}
 }
 
 // // NoteLaneDrawer's tick should be consistent with ScenePlay.
@@ -130,17 +163,7 @@ const (
 	Rightward
 )
 
-// [4]draws.Sprite{Note, Head, Tail, Body}
-func NewNoteLaneDrawer(sprites [4]draws.Sprite, direction Direction) (d NoteLaneDrawer) {
-	var xMax, yMax float64
-	for _, s := range sprites {
-		if xMax < s.X() {
-			xMax = s.X()
-		}
-		if yMax < s.Y() {
-			yMax = s.Y()
-		}
-	}
+func (d *BaseLaneDrawer) SetDirection(direction Direction) {
 	d.Direction = direction
 	switch d.Direction {
 	case Upward:
@@ -156,6 +179,42 @@ func NewNoteLaneDrawer(sprites [4]draws.Sprite, direction Direction) (d NoteLane
 		d.maxPosition = d.HitPostion
 		d.minPosition = -screenSizeX + d.HitPostion
 	}
+}
+
+// func NewBaseLaneDrawer(sprites []draws.Sprite, direction Direction) (d BaseLaneDrawer) {
+// 	d.Sprites = sprites
+// 	d.Direction = direction
+
+// }
+
+// [4]draws.Sprite{Note, Head, Tail, Body}
+func NewNoteLaneDrawer(sprites [4]draws.Sprite, direction Direction) (d NoteLaneDrawer) {
+	d.BaseLaneDrawer.SetDirection(direction)
+	d.Sprites = sprites
+	var xMax, yMax float64
+	for _, s := range sprites {
+		if xMax < s.X() {
+			xMax = s.X()
+		}
+		if yMax < s.Y() {
+			yMax = s.Y()
+		}
+	}
+	// d.Direction = direction
+	// switch d.Direction {
+	// case Upward:
+	// 	d.maxPosition = screenSizeY - d.HitPostion
+	// 	d.minPosition = -d.HitPostion
+	// case Downward:
+	// 	d.maxPosition = d.HitPostion
+	// 	d.minPosition = -screenSizeY + d.HitPostion
+	// case Leftward:
+	// 	d.maxPosition = screenSizeX - d.HitPostion
+	// 	d.minPosition = -d.HitPostion
+	// case Rightward:
+	// 	d.maxPosition = d.HitPostion
+	// 	d.minPosition = -screenSizeX + d.HitPostion
+	// }
 	switch d.Direction {
 	case Downward, Upward:
 		d.margin = yMax / 2
@@ -256,16 +315,16 @@ func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (d NoteLaneDrawer) ScreenPosition(n *Note) float64 {
-	pos := n.Position - d.Cursor // Relative position of note.
-	switch d.Direction {
-	case Downward, Rightward:
-		pos *= -1
-	case Upward, Leftward:
-		pos *= 1
-	}
-	return d.HitPostion + pos
-}
+// func (d NoteLaneDrawer) ScreenPosition(n *Note) float64 {
+// 	pos := n.Position - d.Cursor // Relative position of note.
+// 	switch d.Direction {
+// 	case Downward, Rightward:
+// 		pos *= -1
+// 	case Upward, Leftward:
+// 		pos *= 1
+// 	}
+// 	return d.HitPostion + pos
+// }
 
 // DrawLongBody finds sub-image of Body sprite corresponding to current exposed long body
 // and scale the sub-image to (exposed length) / (sub-image length).

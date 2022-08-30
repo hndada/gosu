@@ -23,10 +23,10 @@ type ScenePlay struct {
 	Staged          []*gosu.Note
 	Leadings        []*gosu.Note
 	NoteLaneDrawers []gosu.NoteLaneDrawer
-	BarDrawer       gosu.NoteLaneDrawer
-	JudgmentDrawer  JudgmentDrawer
-	ComboDrawer     draws.NumberDrawer
-	KeyDrawer       KeyDrawer
+	// BarDrawer       gosu.NoteLaneDrawer
+	JudgmentDrawer JudgmentDrawer
+	ComboDrawer    draws.NumberDrawer
+	KeyDrawer      KeyDrawer
 }
 
 // Todo: Let users change speed during playing
@@ -52,6 +52,7 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	s.MainBPM, _, _ = gosu.BPMs(c.TransPoints, c.Duration) // Todo: Need a test
 	s.SpeedBase = SpeedBase
 	s.SetInitTransPoint(c.TransPoints[0])
+	s.SpeedHandler = gosu.NewSpeedHandler(&s.SpeedBase)
 
 	// Audio
 	apath := filepath.Join(filepath.Dir(cpath), c.AudioFilename)
@@ -97,10 +98,12 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	copy(s.Leadings, s.Staged)
 	// s.PlayNotes, s.Staged, s.LowestTails, s.MaxNoteWeights = NewPlayNotes(c)
 	// Note: Graphics
-	et, wb, wa := s.EndTime, waitBefore, gosu.DefaultWaitAfter
-	s.BarDrawer.Times = gosu.BarLineTimes(c.TransPoints, et, wb, wa)
-	s.BarDrawer.Offset = NoteHeigth / 2
 	s.BarDrawer.Sprite = s.BarLineSprite
+	// et, wb, wa := s.EndTime, waitBefore, gosu.DefaultWaitAfter
+
+	// times := gosu.BarTimes(c.TransPoints, s.EndTime, wb, wa)
+	// s.BarDrawer.Times =
+	// s.BarDrawer.Offset = NoteHeigth / 2
 	s.KeyDrawer.Sprites[0] = s.KeyUpSprites
 	s.KeyDrawer.Sprites[1] = s.KeyDownSprites
 	s.KeyDrawer.KeyDownCountdowns = make([]int, c.KeyCount)
@@ -136,6 +139,9 @@ func (s *ScenePlay) Update() any {
 
 	// Speed, BPM, Volume and Highlight
 	s.UpdateTransPoint()
+	if fired := s.SpeedHandler.Update(); fired {
+		go s.Chart.SetPositions(s.SpeedBase)
+	}
 
 	// Audio
 	if s.Tick == 0 && s.MusicPlayer != nil {
@@ -202,7 +208,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
 	s.FieldSprite.Draw(screen, nil)
 	s.HintSprite.Draw(screen, nil)
-	s.BarDrawer.Draw(screen, s.Position)
+	s.BarDrawer.Draw(screen)
 	// s.DrawLongNoteBodies(screen)
 	// s.DrawNotes(screen)
 	for _, d := range s.NoteLaneDrawers {

@@ -20,6 +20,7 @@ type TransPoint struct {
 	Prev         *TransPoint
 	Next         *TransPoint
 	NextBPMPoint *TransPoint // For performance
+	Position     float64
 }
 
 // Uninherited point is base point. whereas, Inherited point 'inherits'
@@ -64,7 +65,15 @@ func NewTransPoints(f any) []*TransPoint {
 					Prev:      prev,
 				}
 				tp.BPM, _ = timingPoint.BPM()
-
+				if prev != nil {
+					beatLength := prev.BPM * prev.BeatScale
+					duration := float64(tp.Time - prev.Time)
+					tp.Position = prev.Position + beatLength*duration
+				} else {
+					beatLength := tp.BPM * tp.BeatScale
+					duration := float64(tp.Time - 0)
+					tp.Position = 0 + beatLength*duration
+				}
 				if prev != nil {
 					prev.Next = tp
 				}
@@ -87,6 +96,15 @@ func NewTransPoints(f any) []*TransPoint {
 					Prev:      prev,
 				}
 				tp.BeatScale, _ = timingPoint.BeatScale()
+				if prev != nil {
+					beatLength := prev.BPM * prev.BeatScale
+					duration := float64(tp.Time - prev.Time)
+					tp.Position = prev.Position + beatLength*duration
+				} else {
+					beatLength := tp.BPM * tp.BeatScale
+					duration := float64(tp.Time - 0)
+					tp.Position = 0 + beatLength*duration
+				}
 				if prev == nil {
 					fmt.Printf("%s - %s: no uninherited point at first.\n", f.Title, f.Version)
 					fmt.Printf("%+v\n", f.TimingPoints)
@@ -136,15 +154,16 @@ func BPMs(tps []*TransPoint, duration int64) (main, min, max float64) {
 
 // wb, wa stands for buffer times: wait before, wait after.
 // Multiply wa with 2 for preventing indexing a time slice over length.
-func BarLineTimes(tps []*TransPoint, endTime int64, wb, wa int64) []int64 {
+func BarTimes(tps []*TransPoint, endTime int64) []int64 {
+	var margin int64 = 5000
 	ts := make([]int64, 0)
 	tp0 := tps[0]
-	for t := float64(tp0.Time); t >= float64(wb); t -= float64(tp0.Meter) * 60000 / tp0.BPM {
+	for t := float64(tp0.Time); t >= float64(-margin); t -= float64(tp0.Meter) * 60000 / tp0.BPM {
 		ts = append([]int64{int64(t)}, ts...)
 	}
 	ts = ts[:len(ts)-1] // Drop bar line for tp0 for avoiding duplicated
 	for tp := tps[0]; tp != nil; tp = tp.NextBPMPoint {
-		next := endTime + 2*wa
+		next := endTime + margin
 		if tp.NextBPMPoint != nil {
 			next = tp.NextBPMPoint.Time
 		}
