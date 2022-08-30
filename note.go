@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/format/osu"
 )
 
 type NoteType int
@@ -22,42 +23,104 @@ const (
 // Parameter: SpeedBase, BPM Ratio, BeatScale
 // Calculate current HitPosition only.
 // For other notes, just calculate the difference between HitPosition.
-type BaseNote struct {
+type Note struct {
 	Type         NoteType
 	Time         int64
 	Time2        int64
 	SampleName   string // SampleFilename
 	SampleVolume float64
 
-	Next *BaseNote
-	Prev *BaseNote // For accessing to Head from Tail.
-	// NextTail *BaseNote // For drawing long body faster.
+	Next *Note
+	Prev *Note // For accessing to Head from Tail.
+	// NextTail *Note // For drawing long body faster.
 	Position float64 // Scaled x or y value.
+	Marked   bool
+
+	Key int // Not used in Drum mode.
+}
+
+func NewNote(f any, mode, subMode int) []*Note {
+	ns := make([]*Note, 0, 2)
+	switch f := f.(type) {
+	case osu.HitObject:
+		n := &Note{
+			Type:  Normal,
+			Time:  int64(f.Time),
+			Time2: int64(f.Time),
+			// Key:          f.Column(keyCount),
+			SampleName:   f.HitSample.Filename,
+			SampleVolume: float64(f.HitSample.Volume) / 100,
+		}
+		if mode == ModeTypePiano4 || mode == ModeTypePiano7 {
+			n.Key = f.Column(subMode)
+		}
+		if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
+			n.Type = Head
+			n.Time2 = int64(f.EndTime)
+			n2 := &Note{
+				Type:  Tail,
+				Time:  n.Time2,
+				Time2: n.Time,
+				// Key:   n.Key,
+				// Tail has no sample sound.
+			}
+			if mode == ModeTypePiano4 || mode == ModeTypePiano7 {
+				n2.Key = f.Column(subMode)
+			}
+			ns = append(ns, n, n2)
+		} else {
+			ns = append(ns, n)
+		}
+	}
+	return ns
 }
 
 // TimeStep is expected to be integer.
 // TPS should be either multiple or divisor of 1000.
 var TimeStep float64 = 1000 / float64(ebiten.MaxTPS())
 
-// NoteLaneDrawer's tick should be consistent with ScenePlay.
-type NoteLaneDrawer struct {
-	Tick       int
-	Sprites    [4]draws.Sprite //  map[NoteType]draws.Sprite // []draws.Sprite
-	Farthest   *BaseNote
-	Nearest    *BaseNote
+type BaseLaneDrawer struct {
+	Tick    int
+	Sprites []draws.Sprite
+	// Farthest   *Note
+	// Nearest    *Note
 	Cursor     float64
 	HitPostion float64
 	Speed      float64 // BPM (or BPM ratio) * BeatScale
 	Direction
-	// Sizes      map[NoteType]float64 // Cache for Sprites' sizes. // Todo: Sizes -> halfSizes
-	// MaxSize    float64              // Either max width / height. // Todo: remove
-	margin   float64 // Half of max sizes of sprites.
-	bodyLoss float64 // Head/2 + Tail/2
-	// boundFarIn   float64 // Bound for Farthest note being fetched.
-	// boundNearOut float64 // Bound for Nearest note being flushed.
 	maxPosition float64
 	minPosition float64
 }
+
+// NoteLaneDrawer's tick should be consistent with ScenePlay.
+type NoteLaneDrawer struct {
+	BaseLaneDrawer
+	Farthest *Note
+	Nearest  *Note
+	margin   float64 // Half of max sizes of sprites.
+	bodyLoss float64 // Head/2 + Tail/2
+}
+
+// // NoteLaneDrawer's tick should be consistent with ScenePlay.
+//
+//	type NoteLaneDrawer struct {
+//		Tick       int
+//		Sprites    [4]draws.Sprite //  map[NoteType]draws.Sprite // []draws.Sprite
+//		Farthest   *Note
+//		Nearest    *Note
+//		Cursor     float64
+//		HitPostion float64
+//		Speed      float64 // BPM (or BPM ratio) * BeatScale
+//		Direction
+//		// Sizes      map[NoteType]float64 // Cache for Sprites' sizes. // Todo: Sizes -> halfSizes
+//		// MaxSize    float64              // Either max width / height. // Todo: remove
+//		margin   float64 // Half of max sizes of sprites.
+//		bodyLoss float64 // Head/2 + Tail/2
+//		// boundFarIn   float64 // Bound for Farthest note being fetched.
+//		// boundNearOut float64 // Bound for Nearest note being flushed.
+//		maxPosition float64
+//		minPosition float64
+//	}
 type Direction int
 
 const (
@@ -171,6 +234,7 @@ func (d *NoteLaneDrawer) Update(speed float64) {
 }
 
 // Draw from farthest to nearest.
+// So that nearer notes are exposed when overlapped with farther notes.
 func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
 	n := d.Farthest
 	for ; n != d.Nearest; n = d.Farthest.Prev {
@@ -192,7 +256,7 @@ func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (d NoteLaneDrawer) ScreenPosition(n *BaseNote) float64 {
+func (d NoteLaneDrawer) ScreenPosition(n *Note) float64 {
 	pos := n.Position - d.Cursor // Relative position of note.
 	switch d.Direction {
 	case Downward, Rightward:
@@ -209,7 +273,7 @@ func (d NoteLaneDrawer) ScreenPosition(n *BaseNote) float64 {
 // Tail's Position is always larger than Head's.
 // In other word, Head is always nearer than Tail.
 // Start is Head's, and End is Tail's.
-func (d NoteLaneDrawer) DrawLongBody(screen *ebiten.Image, head *BaseNote) {
+func (d NoteLaneDrawer) DrawLongBody(screen *ebiten.Image, head *Note) {
 	tail := head.Next
 	length := tail.Position - head.Position
 	length -= -d.bodyLoss

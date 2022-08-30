@@ -9,6 +9,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hndada/gosu/audios"
+	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
@@ -46,11 +47,12 @@ type BaseScenePlay struct {
 
 	// Score
 	Result
-	NoteWeights float64
-	Combo       int
-	Flow        float64
-	ScoreDrawer draws.NumberDrawer
-	TimingMeter Meter
+	NoteWeights  float64
+	Combo        int
+	Flow         float64
+	DelayedScore ctrl.Delayed
+	ScoreDrawer  draws.NumberDrawer
+	Meter        Meter
 }
 
 // General

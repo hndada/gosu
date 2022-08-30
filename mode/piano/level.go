@@ -26,7 +26,7 @@ func (c Chart) Difficulties() []float64 {
 			t += gosu.SliceDuration
 		}
 		switch n.Type {
-		case Tail:
+		case gosu.Tail:
 			d += 0.15
 		default:
 			d += 1
