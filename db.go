@@ -78,7 +78,7 @@ func LoadNewChartInfos(musicRoot string, prop *ModeProp) []ChartInfo {
 				continue
 			}
 			cpath := filepath.Join(dpath, f.Name())
-			if FileMode(cpath) != prop.Mode {
+			if ChartFileMode(cpath) != prop.Mode {
 				continue
 			}
 			info, err := prop.NewChartInfo(cpath, Mods{}) // First load should be done with no mods

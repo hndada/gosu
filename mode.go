@@ -37,7 +37,7 @@ const (
 )
 
 // Mode determines a mode of chart file by its path.
-func FileMode(fpath string) int {
+func ChartFileMode(fpath string) int {
 	switch strings.ToLower(filepath.Ext(fpath)) {
 	case ".osu":
 		mode, keyCount := osu.Mode(fpath)
