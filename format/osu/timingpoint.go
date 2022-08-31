@@ -84,22 +84,28 @@ func newTimingPoint(line string) (TimingPoint, error) {
 
 func (tp TimingPoint) IsInherited() bool { return !tp.Uninherited }
 
-func (tp TimingPoint) BPM() (bpm float64, ok bool) {
-	if !tp.Uninherited {
-		return 0, false
-	}
-	return 1000 * 60 / tp.BeatLength, true
-}
+// func (tp TimingPoint) BPM() (bpm float64, ok bool) {
+// 	if !tp.Uninherited {
+// 		return 0, false
+// 	}
+// 	return 1000 * 60 / tp.BeatLength, true
+// }
 
-// BeatLengthScale returns a beat scale, aka speed factor. The standard value is 1.
-func (tp TimingPoint) BeatLengthScale() (speed float64, ok bool) {
-	if tp.Uninherited {
-		return 0, false
-	}
-	return 100 / (-tp.BeatLength), true
-}
+// // BeatLengthScale returns a beat scale, aka speed factor. The standard value is 1.
+//
+//	func (tp TimingPoint) BeatLengthScale() (speed float64, ok bool) {
+//		if tp.Uninherited {
+//			return 0, false
+//		}
+//		return 100 / (-tp.BeatLength), true
+//	}
 
-func (tp TimingPoint) IsKiai() bool { return tp.Effects&1 != 0 }
+// BPM supposes tp is Uninherited.
+func (tp TimingPoint) BPM() float64 { return 1000 * 60 / tp.BeatLength }
+
+// BeatLengthScale supposes tp is Inherited.
+func (tp TimingPoint) BeatLengthScale() float64 { return 100 / (-tp.BeatLength) }
+func (tp TimingPoint) IsKiai() bool             { return tp.Effects&1 != 0 }
 func (tp TimingPoint) IsFirstBarOmitted() bool {
 	return tp.Effects&(1<<3) != 0
 }
