@@ -16,13 +16,16 @@ func NewScoreDrawer() draws.NumberDrawer {
 		Sprites:     ScoreSprites,
 		SignSprites: SignSprites,
 		DigitWidth:  ScoreSprites[0].W(),
+		ZeroFill:    1,
+		Origin:      ScoreSprites[0].Origin(),
 	}
 }
 
-// Todo: use Effecter
+// Todo: use Effecter in draws.BaseDrawer
 type BackgroundDrawer struct {
 	Dimness float64
-	Sprite  draws.Sprite
+	draws.BaseDrawer
+	Sprite draws.Sprite
 }
 
 func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
