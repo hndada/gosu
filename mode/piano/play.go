@@ -2,12 +2,10 @@ package piano
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu"
-	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
@@ -17,13 +15,13 @@ import (
 // NoteWeights is a sum of weight of marked notes.
 // This is also max value of each score sum can get at the time.
 type ScenePlay struct {
-	Skin // The skin may be applied some custom settings: on/off some sprites
-	gosu.BaseScenePlay
-	Chart           *Chart
-	Staged          []*gosu.Note
-	Leadings        []*gosu.Note
-	NoteLaneDrawers []gosu.FixedLaneDrawer
-	// BarDrawer       gosu.NoteLaneDrawer
+	*gosu.BaseScenePlay
+	// Chart  *Chart
+	// Staged []*gosu.Note
+	// Leadings        []*gosu.Note
+	Skin           // The skin may be applied some custom settings: on/off some sprites
+	NoteDrawers    []gosu.FixedLaneDrawer
+	BarDrawer      gosu.FixedLaneDrawer
 	JudgmentDrawer JudgmentDrawer
 	ComboDrawer    draws.NumberDrawer
 	KeyDrawer      KeyDrawer
@@ -31,111 +29,61 @@ type ScenePlay struct {
 
 // Todo: Let users change speed during playing
 // Todo: add Mods to input param
-func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, error) {
+func NewScenePlay(cpath string,
+	mode, subMode int, mods gosu.Mods,
+	rf *osr.Format,
+	speedScale *float64,
+	keySettings []input.Key,
+	bg draws.Sprite) (gosu.Scene, error) {
 	s := new(ScenePlay)
-
-	// General
-	waitBefore := s.SetTick(rf)
-	s.MD5 = gosu.MD5(cpath)
-	c, err := NewChart(cpath, mods) // NewChart must be at first.
-	if err != nil {
-		return nil, err
-	}
-	s.Chart = c
-	s.EndTime = c.Duration + gosu.DefaultWaitAfter
-	// General: Graphics
-	s.SetWindowTitle(c.Chart)
-	s.Skin = Skins[c.KeyCount]
-	s.SetBackground(c.BackgroundPath(cpath))
-
-	// Speed, BPM, Volume and Highlight
-	s.MainBPM, _, _ = gosu.BPMs(c.TransPoints, c.Duration) // Todo: Need a test
-	s.SpeedScale = SpeedScale
-	s.SetInitTransPoint(c.TransPoints[0])
-	s.SpeedHandler = gosu.NewSpeedHandler(&s.SpeedScale)
-
-	// Audio
-	apath := filepath.Join(filepath.Dir(cpath), c.AudioFilename)
-	err = s.SetMusicPlayer(apath)
+	var err error
+	s.BaseScenePlay, err = gosu.NewBaseScenePlay(
+		cpath,
+		mode, subMode, mods,
+		rf,
+		speedScale,
+		keySettings, bg,
+	)
 	if err != nil {
 		return s, err
 	}
-	seNames := make([]string, 0, len(c.Notes))
-	for _, n := range c.Notes {
-		if name := n.SampleName; name != "" {
-			seNames = append(seNames, name)
-		}
-	}
-	s.SetSoundMap(cpath, seNames)
-
-	// Input
-	if rf != nil {
-		s.FetchPressed = gosu.NewReplayListener(rf, c.KeyCount, waitBefore)
-	} else {
-		s.FetchPressed = input.NewListener(KeySettings[c.KeyCount])
-	}
-	s.LastPressed = make([]bool, c.KeyCount)
-	s.Pressed = make([]bool, c.KeyCount)
-
-	// Note
-	prevs := make([]*gosu.Note, c.KeyCount)
-	s.Staged = make([]*gosu.Note, s.Chart.KeyCount)
-
-	for i := range c.Notes {
-		n := c.Notes[i]
-		prev := prevs[n.Key]
-		c.Notes[i].Prev = prev
-		if prev != nil { // Next value is set later.
-			prev.Next = n
-		}
-		prevs[n.Key] = n
-		if s.Staged[n.Key] == nil {
-			s.Staged[n.Key] = n
-		}
+	s.Skin = Skins[subMode]
+	for _, n := range s.Chart.Notes {
 		s.MaxNoteWeights += Weight(*n)
 	}
-	s.Leadings = make([]*gosu.Note, s.Chart.KeyCount)
-	copy(s.Leadings, s.Staged)
-	// s.PlayNotes, s.Staged, s.LowestTails, s.MaxNoteWeights = NewPlayNotes(c)
-	// Note: Graphics
-	s.NoteLaneDrawers = make([]gosu.NoteLaneDrawer, s.Chart.KeyCount)
-	for k := range s.NoteLaneDrawers {
-		sprites := [4]draws.Sprite{
+	s.NoteDrawers = make([]gosu.FixedLaneDrawer, subMode)
+	for k := range s.NoteDrawers {
+		sprites := []draws.Sprite{
 			s.NoteSprites[k], s.HeadSprites[k],
 			s.TailSprites[k], s.BodySprites[k],
 		}
-		d := gosu.NewNoteLaneDrawer(sprites)
-		d.Nearest = s.Leadings[k]
-		d.Farthest = d.Nearest
-		d.HitPostion = HitPosition
-		d.Speed = s.SpeedScale
-		d.SetDirection(gosu.Downward)
-		s.NoteLaneDrawers[k] = d
-		// fmt.Printf("%+v\n", d)
+		s.NoteDrawers[k] = gosu.NewFixedLaneDrawer(
+			gosu.Downward,
+			sprites,
+			HitPosition,
+			// beatSpeed,  // Speed calculation is each mode's task.
+			*s.SpeedScale,
+			draws.Grayer,
+			gosu.TickToTime(s.Tick),
+			s.TransPoint,
+			s.Staged[k].LaneObject,
+		)
 	}
-	// et, wb, wa := s.EndTime, waitBefore, gosu.DefaultWaitAfter
-	// times := gosu.BarTimes(c.TransPoints, s.EndTime, wb, wa)
-	// s.BarDrawer.Times =
-	// s.BarDrawer.Offset = NoteHeigth / 2
-	s.Chart.SetPositions(s.SpeedScale)
-	s.BarDrawer.Bars = s.Chart.Bars
-	s.BarDrawer.Sprite = s.BarLineSprite
-	s.BarDrawer.HitPostion = HitPosition
-	s.BarDrawer.Cursor = -1000 //float64(waitBefore)*s.TransPoint
-	s.BarDrawer.Speed = s.SpeedScale
-	s.BarDrawer.SetDirection(gosu.Downward)
-	s.KeyDrawer.Sprites[0] = s.KeyUpSprites
-	s.KeyDrawer.Sprites[1] = s.KeyDownSprites
-	s.KeyDrawer.KeyDownCountdowns = make([]int, c.KeyCount)
-
-	// Score
+	s.BarDrawer = gosu.NewFixedLaneDrawer(
+		gosu.Downward,
+		[]draws.Sprite{s.BarLineSprite},
+		HitPosition,
+		// beatSpeed,  // Speed calculation is each mode's task.
+		*s.SpeedScale,
+		nil,
+		gosu.TickToTime(s.Tick),
+		s.TransPoint,
+		s.Chart.Bars[0],
+	)
+	// s.KeyDrawer.Sprites[0] = s.KeyUpSprites
+	// s.KeyDrawer.Sprites[1] = s.KeyDownSprites
+	// s.KeyDrawer.KeyDownCountdowns = make([]int, c.KeyCount)
 	s.JudgmentCounts = make([]int, 5)
-	s.FlowMarks = make([]float64, 0, c.Duration)
-	s.Flow = 1
-	// Score: Graphics
-	s.DelayedScore.Mode = ctrl.DelayedModeExp
-	// s.ScoreDrawer.DelayedScore.Mode = ctrl.DelayedModeExp
-	s.ScoreDrawer.Sprites = gosu.ScoreSprites
 	s.JudgmentDrawer.Sprites = s.JudgmentSprites
 	s.ComboDrawer.Sprites = s.ComboSprites
 	s.Meter = gosu.NewMeter(Judgments, JudgmentColors)
@@ -156,19 +104,19 @@ func (s *ScenePlay) Update() any {
 			Result: s.Result,
 		}
 	}
-	for k := range s.NoteLaneDrawers {
-		s.NoteLaneDrawers[k].Update(s.SpeedScale)
+	for k := range s.NoteDrawers {
+		s.NoteDrawers[k].Update(s.SpeedScale)
 	}
 	// Speed, BPM, Volume and Highlight
 	speed := s.SpeedScale * (s.TransPoint.BPM / s.MainBPM) * s.TransPoint.BeatLengthScale
 	s.BarDrawer.Update(speed)
-	for k := range s.NoteLaneDrawers {
-		s.NoteLaneDrawers[k].Update(speed)
+	for k := range s.NoteDrawers {
+		s.NoteDrawers[k].Update(speed)
 	}
 	s.UpdateTransPoint()
 	if fired := s.SpeedHandler.Update(); fired {
-		for k := range s.NoteLaneDrawers {
-			s.NoteLaneDrawers[k].Speed = s.SpeedScale
+		for k := range s.NoteDrawers {
+			s.NoteDrawers[k].Speed = s.SpeedScale
 		}
 		go s.Chart.SetPositions(s.SpeedScale)
 	}
@@ -242,7 +190,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	// s.BarDrawer.Draw(screen)
 	// s.DrawLongNoteBodies(screen)
 	// s.DrawNotes(screen)
-	for _, d := range s.NoteLaneDrawers {
+	for _, d := range s.NoteDrawers {
 		d.Draw(screen)
 	}
 	// s.KeyDrawer.Draw(screen, s.Pressed)
@@ -269,5 +217,5 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.Duration)/1000,
 		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
 		fr*100, ar*100, rr*100, s.JudgmentCounts,
-		s.Speed()*100, s.SpeedScale*100, ExposureTime(s.Speed())))
+		s.Speed()*100, *s.SpeedScale*100, ExposureTime(s.Speed())))
 }

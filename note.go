@@ -32,7 +32,7 @@ type Note struct {
 	Key          int // Not used in Drum mode.
 
 	Marked bool
-	LaneObject
+	*LaneObject
 
 	// Following Next and Prev are for calculating scores.
 	// Note's Next/Prev and LaneObject's Next/Prev are consistent.
@@ -71,6 +71,7 @@ func NewNotes(f any, transPoints []*TransPoint, mode, subMode int) (ns []*Note) 
 	case ModeDrum:
 		prevs = make([]*Note, 3)
 	}
+	// copy(staged, prevs)
 	for _, n := range ns {
 		switch mode {
 		case ModePiano4, ModePiano7:
@@ -79,6 +80,9 @@ func NewNotes(f any, transPoints []*TransPoint, mode, subMode int) (ns []*Note) 
 			if prev != nil {
 				prev.Next = n
 			}
+			// if staged[n.Key] == nil {
+			// 	staged[n.Key] = n
+			// }
 			prevs[n.Key] = n
 		case ModeDrum:
 			var i int
@@ -95,6 +99,9 @@ func NewNotes(f any, transPoints []*TransPoint, mode, subMode int) (ns []*Note) 
 			if prev != nil {
 				prev.Next = n
 			}
+			// if staged[i] == nil {
+			// 	staged[i] = n
+			// }
 			prevs[i] = n
 		}
 	}
@@ -104,12 +111,12 @@ func NewNotes(f any, transPoints []*TransPoint, mode, subMode int) (ns []*Note) 
 		for tp.Next != nil && (tp.Time < n.Time || tp.Time >= tp.Next.Time) {
 			tp = tp.Next
 		}
-		ns[i].LaneObject = LaneObject{
+		ns[i].LaneObject = &LaneObject{
 			Type:     n.Type,
 			Position: tp.Position + float64(n.Time-tp.Time)*tp.Speed(),
 			Speed:    tp.Speed(),
-			Next:     &ns[i].Next.LaneObject,
-			Prev:     &ns[i].Prev.LaneObject,
+			Next:     ns[i].Next.LaneObject,
+			Prev:     ns[i].Prev.LaneObject,
 			Marked:   &ns[i].Marked,
 		}
 	}

@@ -14,9 +14,9 @@ var ModePiano4 = gosu.ModeProp{
 	LastUpdateTime: time.Time{},                    // Zero value.
 	SpeedHandler:   gosu.NewSpeedHandler(&SpeedScale),
 	LoadSkin:       LoadSkin,
-	NewChartInfo:   NewChartInfo,
-	NewScenePlay:   NewScenePlay,
-	ExposureTime:   ExposureTime,
+	// NewChartInfo:   NewChartInfo,
+	NewScenePlay: NewScenePlay,
+	ExposureTime: ExposureTime,
 }
 
 var ModePiano7 = gosu.ModeProp{
@@ -27,7 +27,7 @@ var ModePiano7 = gosu.ModeProp{
 	LastUpdateTime: time.Time{},                    // Zero value.
 	SpeedHandler:   gosu.NewSpeedHandler(&SpeedScale),
 	LoadSkin:       LoadSkin,
-	NewChartInfo:   NewChartInfo,
-	NewScenePlay:   NewScenePlay,
-	ExposureTime:   ExposureTime,
+	// NewChartInfo:   NewChartInfo,
+	NewScenePlay: NewScenePlay,
+	ExposureTime: ExposureTime,
 }
