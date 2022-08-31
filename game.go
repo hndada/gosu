@@ -38,7 +38,7 @@ func NewGame(modes []Mode) *Game {
 
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
-	ebiten.SetMaxTPS(MaxTPS)
+	ebiten.SetMaxTPS(TPS)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 	return g

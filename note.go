@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"math"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
@@ -78,7 +79,7 @@ func NewNote(f any, mode, subMode int) []*Note {
 
 // TimeStep is expected to be integer.
 // TPS should be either multiple or divisor of 1000.
-var TimeStep float64 = 1000 / float64(ebiten.MaxTPS())
+var TimeStep float64 = 1000 / float64(TPS)
 
 type BaseLaneDrawer struct {
 	Tick int
@@ -107,20 +108,32 @@ type BarDrawer struct {
 	Bars     []Bar
 	Farthest int
 	Nearest  int
+	count    int
 }
 
 // Update should use existing speed, not the new one.
 func (d *BarDrawer) Update(speed float64) {
 	d.Cursor += speed * TimeStep
-	fmt.Println(d.Cursor)
+	var a, b int
 	// var boundFarIn, boundNearOut float64 // Bounds for farthest, nearest each.
 	for d.Bars[d.Farthest].Position-d.Cursor <= d.maxPosition {
 		d.Farthest++
+		a++
 	}
 	for d.Bars[d.Nearest].Position-d.Cursor <= d.minPosition {
 		d.Nearest++
+		b++
 	}
 	d.Speed = speed
+	if d.count%1000 == 0 {
+		fmt.Println(d.maxPosition, d.minPosition, a, b)
+		fmt.Println(d.Farthest, d.Bars[d.Farthest])
+		fmt.Println(d.Nearest, d.Bars[d.Nearest])
+	}
+	d.count++
+	if d.count > 100000 {
+		os.Exit(1)
+	}
 }
 func (d BarDrawer) Draw(screen *ebiten.Image) {
 	for i := d.Farthest; i >= d.Nearest; i-- {
