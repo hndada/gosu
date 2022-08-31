@@ -6,8 +6,8 @@ import (
 	"github.com/hndada/gosu"
 )
 
-var ModePiano4 = gosu.Mode{
-	Type:           gosu.ModeTypePiano4,
+var ModePiano4 = gosu.ModeProp{
+	Mode:           gosu.ModePiano4,
 	ChartInfos:     make([]gosu.ChartInfo, 0),      // Zero value.
 	Results:        make(map[[16]byte]gosu.Result), // Zero value.
 	Mods:           gosu.Mods{},                    // Zero value.
@@ -19,8 +19,8 @@ var ModePiano4 = gosu.Mode{
 	ExposureTime:   ExposureTime,
 }
 
-var ModePiano7 = gosu.Mode{
-	Type:           gosu.ModeTypePiano7,
+var ModePiano7 = gosu.ModeProp{
+	Mode:           gosu.ModePiano7,
 	ChartInfos:     make([]gosu.ChartInfo, 0),      // Zero value.
 	Results:        make(map[[16]byte]gosu.Result), // Zero value.
 	Mods:           gosu.Mods{},                    // Zero value.

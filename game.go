@@ -8,7 +8,7 @@ import (
 
 type Game struct {
 	Scene
-	Modes         []Mode
+	ModeProps     []ModeProp
 	Mode          int
 	VolumeHandler ctrl.F64Handler
 }
@@ -17,23 +17,23 @@ type Scene interface {
 	Draw(screen *ebiten.Image)
 }
 
-func NewGame(modes []Mode) *Game {
+func NewGame(props []ModeProp) *Game {
 	g := new(Game)
 	// Todo: load settings here
-	g.Modes = modes
-	g.LoadChartInfosSet()    // 1. Load chart info and score data
-	g.TidyChartInfosSet()    // 2. Check removed chart
-	for i := range g.Modes { // 3. Check added chart
+	g.ModeProps = props
+	g.LoadChartInfosSet()        // 1. Load chart info and score data
+	g.TidyChartInfosSet()        // 2. Check removed chart
+	for i := range g.ModeProps { // 3. Check added chart
 		// Each mode scans Music root independently.
-		g.Modes[i].ChartInfos = LoadNewChartInfos(MusicRoot, &g.Modes[i])
+		g.ModeProps[i].ChartInfos = LoadNewChartInfos(MusicRoot, &g.ModeProps[i])
 	}
 	g.SaveChartInfosSet() // 4. Save chart infos to local file
 	LoadSounds("skin/sound")
 	LoadGeneralSkin()
-	for _, mode := range g.Modes {
+	for _, mode := range g.ModeProps {
 		mode.LoadSkin()
 	}
-	g.Mode = ModeTypePiano4
+	g.Mode = ModePiano4
 	g.VolumeHandler = NewVolumeHandler(&Volume)
 
 	ebiten.SetWindowTitle("gosu")
@@ -47,17 +47,17 @@ func NewGame(modes []Mode) *Game {
 func (g *Game) Update() error {
 	g.VolumeHandler.Update()
 	if g.Scene == nil {
-		g.Scene = NewSceneSelect(g.Modes, &g.Mode)
+		g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
 	}
 	args := g.Scene.Update()
 	switch args := args.(type) {
 	case error:
 		return args
 	case PlayToResultArgs: // Todo: SceneResult
-		g.Scene = NewSceneSelect(g.Modes, &g.Mode)
+		g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
 	case SelectToPlayArgs:
 		var err error
-		g.Scene, err = g.Modes[args.ModeType].NewScenePlay(args.Path, args.Mods, args.Replay)
+		g.Scene, err = g.ModeProps[args.Mode].NewScenePlay(args.Path, args.Mods, args.Replay)
 		if err != nil {
 			return err
 		}
@@ -74,10 +74,10 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 type SelectToPlayArgs struct {
-	ModeType int
-	Path     string
-	Mods     Mods
-	Replay   *osr.Format
+	Mode   int
+	Path   string
+	Mods   Mods
+	Replay *osr.Format
 }
 
 type PlayToResultArgs struct {

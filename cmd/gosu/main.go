@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	g := gosu.NewGame([]gosu.Mode{piano.ModePiano4, piano.ModePiano7}) //., drum.ModeDrum})
+	g := gosu.NewGame([]gosu.ModeProp{piano.ModePiano4, piano.ModePiano7}) //., drum.ModeDrum})
 	if err := ebiten.RunGame(g); err != nil {
 		panic(err)
 	}

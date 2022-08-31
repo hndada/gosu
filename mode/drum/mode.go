@@ -7,7 +7,7 @@ import (
 )
 
 var ModeDrum = gosu.Mode{
-	ModeType:       gosu.ModeTypeDrum,
+	Mode:           gosu.ModeDrum,
 	ChartInfos:     make([]gosu.ChartInfo, 0),      // Zero value.
 	Results:        make(map[[16]byte]gosu.Result), // Zero value.
 	Mods:           gosu.Mods{},                    // Zero value.

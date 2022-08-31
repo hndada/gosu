@@ -21,30 +21,30 @@ func (g *Game) LoadChartInfosSet() error {
 	if err != nil {
 		return err
 	}
-	if len(g.Modes) != len(set) {
+	if len(g.ModeProps) != len(set) {
 		return fmt.Errorf("mismatch game's modes length and db's modes length")
 	}
 	for mode, infos := range set {
-		g.Modes[mode].ChartInfos = infos
+		g.ModeProps[mode].ChartInfos = infos
 	}
 	return nil
 }
 
 // TidyChartInfosSet drops unavailable chart infos from games.
 func (g *Game) TidyChartInfosSet() {
-	for i, mode := range g.Modes {
-		for j, info := range mode.ChartInfos {
+	for i, prop := range g.ModeProps {
+		for j, info := range prop.ChartInfos {
 			if _, err := os.Stat(info.Path); err != nil {
-				info1 := mode.ChartInfos[:j]
-				info2 := mode.ChartInfos[j+1:]
-				g.Modes[i].ChartInfos = append(info1, info2...)
+				info1 := prop.ChartInfos[:j]
+				info2 := prop.ChartInfos[j+1:]
+				g.ModeProps[i].ChartInfos = append(info1, info2...)
 			}
 		}
 	}
 }
 
 // Todo: multiple music root. Would be not that hard.
-func LoadNewChartInfos(musicRoot string, mode *Mode) []ChartInfo {
+func LoadNewChartInfos(musicRoot string, prop *ModeProp) []ChartInfo {
 	chartInfos := make([]ChartInfo, 0)
 	isNew := func(e fs.DirEntry) bool {
 		info, err := e.Info()
@@ -53,7 +53,7 @@ func LoadNewChartInfos(musicRoot string, mode *Mode) []ChartInfo {
 			return false
 		}
 		// Skip when modified time is equal or former than last update time.
-		if !info.ModTime().After(mode.LastUpdateTime) {
+		if !info.ModTime().After(prop.LastUpdateTime) {
 			return false
 		}
 		return true
@@ -78,10 +78,10 @@ func LoadNewChartInfos(musicRoot string, mode *Mode) []ChartInfo {
 				continue
 			}
 			cpath := filepath.Join(dpath, f.Name())
-			if FileModeType(cpath) != mode.Type {
+			if FileMode(cpath) != prop.Mode {
 				continue
 			}
-			info, err := mode.NewChartInfo(cpath, Mods{}) // First load should be done with no mods
+			info, err := prop.NewChartInfo(cpath, Mods{}) // First load should be done with no mods
 			if err != nil {
 				fmt.Printf("error at %s: %s\n", filepath.Base(cpath), err)
 				continue
@@ -89,14 +89,14 @@ func LoadNewChartInfos(musicRoot string, mode *Mode) []ChartInfo {
 			chartInfos = PutChartInfo(chartInfos, info)
 		}
 	}
-	mode.LastUpdateTime = time.Now()
+	prop.LastUpdateTime = time.Now()
 	return chartInfos
 }
 
 func (g Game) SaveChartInfosSet() {
-	set := make([][]ChartInfo, len(g.Modes))
-	for i, mode := range g.Modes {
-		set[i] = mode.ChartInfos
+	set := make([][]ChartInfo, len(g.ModeProps))
+	for i, prop := range g.ModeProps {
+		set[i] = prop.ChartInfos
 	}
 	var fname string
 	switch db.MarshalType {

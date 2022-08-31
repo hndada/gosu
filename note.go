@@ -53,7 +53,7 @@ func NewNote(f any, mode, subMode int) []*Note {
 			SampleName:   f.HitSample.Filename,
 			SampleVolume: float64(f.HitSample.Volume) / 100,
 		}
-		if mode == ModeTypePiano4 || mode == ModeTypePiano7 {
+		if mode == ModePiano4 || mode == ModePiano7 {
 			n.Key = f.Column(subMode)
 		}
 		if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
@@ -66,7 +66,7 @@ func NewNote(f any, mode, subMode int) []*Note {
 				// Key:   n.Key,
 				// Tail has no sample sound.
 			}
-			if mode == ModeTypePiano4 || mode == ModeTypePiano7 {
+			if mode == ModePiano4 || mode == ModePiano7 {
 				n2.Key = f.Column(subMode)
 			}
 			ns = append(ns, n, n2)
