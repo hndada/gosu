@@ -142,14 +142,14 @@ func (s SceneSelect) Viewport() ([]ChartInfo, int) {
 }
 func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
 	mode := s.ModeProps[*s.Mode]
-	speedBase := *mode.SpeedHandler.Target
+	speedScale := *mode.SpeedHandler.Target
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf("Volume (Press 1/2): %.0f%%\n"+
-			"SpeedBase (Press 3/4): %.0f\n"+"(Exposure time: %.0fms)\n\n"+
+			"SpeedScale (Press 3/4): %.0f\n"+"(Exposure time: %.0fms)\n\n"+
 			"Mode (Press 5): %s\n"+
 			"Chart info index: %d\n",
 			Volume*100,
-			speedBase*100, mode.ExposureTime(speedBase),
+			speedScale*100, mode.ExposureTime(speedScale),
 			ModeNames[*s.Mode],
 			*s.Cursor))
 }

@@ -27,7 +27,7 @@ type BaseScenePlay struct {
 
 	// Speed, BPM, Volume and Highlight
 	MainBPM      float64
-	SpeedBase    float64
+	SpeedScale   float64
 	SpeedHandler ctrl.F64Handler
 	*TransPoint
 
@@ -44,7 +44,7 @@ type BaseScenePlay struct {
 	Pressed      []bool
 
 	// Note
-	BarDrawer BarDrawer
+	// BarDrawer LaneDrawer
 
 	// Score
 	Result
@@ -65,7 +65,7 @@ const (
 func (s BaseScenePlay) BeatRatio() float64 { return s.TransPoint.BPM / s.MainBPM }
 
 // Todo: put mode then switch Speed depends on the mode?
-func (s BaseScenePlay) Speed() float64 { return s.SpeedBase * s.BeatRatio() * s.BeatLengthScale }
+func (s BaseScenePlay) Speed() float64 { return s.SpeedScale * s.BeatRatio() * s.BeatLengthScale }
 func MD5(path string) [md5.Size]byte {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -85,7 +85,7 @@ func (s *BaseScenePlay) SetTick(rf *osr.Format) int64 { // Returns duration of w
 	s.Tick = TimeToTick(waitBefore) - 1 // s.Update() starts with s.Tick++
 	return waitBefore
 }
-func (s BaseScenePlay) SetWindowTitle(c BaseChart) {
+func (s BaseScenePlay) SetWindowTitle(c Chart) {
 	title := fmt.Sprintf("gosu - %s - [%s]", c.MusicName, c.ChartName)
 	ebiten.SetWindowTitle(title)
 }

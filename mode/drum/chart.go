@@ -12,7 +12,7 @@ import (
 )
 
 type Chart struct {
-	gosu.BaseChart
+	gosu.Chart
 	Notes []Note
 }
 
@@ -88,5 +88,5 @@ func NewChartInfo(cpath string, mods gosu.Mods) (gosu.ChartInfo, error) {
 	if err != nil {
 		return gosu.ChartInfo{}, err
 	}
-	return gosu.NewChartInfo(&c.BaseChart, cpath, gosu.Level(c)), nil
+	return gosu.NewChartInfo(&c.Chart, cpath, gosu.Level(c)), nil
 }

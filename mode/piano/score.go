@@ -20,8 +20,8 @@ var Judgments = []gosu.Judgment{Kool, Cool, Good, Bad, Miss}
 var JudgmentColors = []color.NRGBA{
 	gosu.ColorKool, gosu.ColorCool, gosu.ColorGood, gosu.ColorBad, gosu.ColorMiss}
 
-func Verdict(t gosu.NoteType, a input.KeyAction, td int64) gosu.Judgment {
-	if t == gosu.Tail { // Either Hold or Release when Tail is not scored
+func Verdict(noteType int, a input.KeyAction, td int64) gosu.Judgment {
+	if noteType == gosu.Tail { // Either Hold or Release when Tail is not scored
 		switch {
 		case td > Miss.Window:
 			if a == input.Release {
