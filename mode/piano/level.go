@@ -11,7 +11,7 @@ var (
 
 // Mods may change the duration of chart.
 // Todo: implement actual calculating chart difficulties
-func (c Chart) Difficulties() []float64 {
+func Difficulties(c gosu.Chart) []float64 {
 	if len(c.Notes) == 0 {
 		return make([]float64, 0)
 	}

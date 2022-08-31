@@ -50,7 +50,7 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 		return nil, err
 	}
 	s.Chart = c
-	s.EndTime = c.Duration + gosu.DefaultWaitAfter
+	s.EndTime = c.Duration + gosu.WaitAfter
 	// General: Graphics
 	s.SetWindowTitle(c.Chart)
 	s.Skin = DefaultSkin
@@ -86,7 +86,7 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 
 	// Note
 	s.PlayNotes, s.StagedNote, s.LeadingTail, s.MaxNoteWeights = NewPlayNotes(c)
-	et, wb, wa := s.EndTime, waitBefore, gosu.DefaultWaitAfter
+	et, wb, wa := s.EndTime, waitBefore, gosu.WaitAfter
 	s.BarLineDrawer.Times = gosu.BarTimes(c.TransPoints, et, wb, wa)
 	// s.BarLineDrawer.Offset = NoteHeigth / 2
 	s.BarLineDrawer.Sprite = s.BarLineSprite

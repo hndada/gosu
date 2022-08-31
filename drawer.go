@@ -10,14 +10,13 @@ import (
 
 // Todo: use Effecter in draws.BaseDrawer
 type BackgroundDrawer struct {
-	Dimness float64
-	draws.BaseDrawer
-	Sprite draws.Sprite
+	Sprite  draws.Sprite
+	Dimness *float64
 }
 
 func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
-	op.ColorM.ChangeHSV(0, 1, BackgroundDimness)
+	op.ColorM.ChangeHSV(0, 1, *d.Dimness)
 	d.Sprite.Draw(screen, op)
 	// op := d.Sprite.Op()
 	// screen.DrawImage(d.Sprite.I, op)
