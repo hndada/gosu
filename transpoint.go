@@ -1,15 +1,11 @@
 package gosu
 
 import (
-	"fmt"
 	"math"
-	"os"
 	"sort"
 
 	"github.com/hndada/gosu/format/osu"
 )
-
-// In osu!, Mania and Taiko has different way to set speed.
 
 // BPM means Beats Per Minute. Higher BPM means more beats in unit time.
 // Scroll goes faster proportional to BPM (or BPM ratio), since
@@ -22,17 +18,18 @@ type TransPoint struct {
 	Volume          float64 // Range is 0 to 1.
 	Highlight       bool
 	NewBPM          bool
+	Position        float64
 	Prev            *TransPoint
 	Next            *TransPoint
 	NextBPMPoint    *TransPoint // For performance
-	Position        float64
 }
 
-// Uninherited point is base point. whereas, Inherited point 'inherits'
-// values from previous Uninherited point first, then after.
-// All osu format have at least one Uninherited timing point.
-// Uninherited: BPM, Inherited: beat scale
-// Initial BPM is derived from the first timing point's BPM.
+// In osu!, Uninherited point is base point. While Inherited point inherits
+// starting from previous Uninherited point, then possible following Inherited points.
+// BPM and BeatLengthScale are derived only from Uninherited and Inherited each.
+
+// All .osu chart have at least one Uninherited point.
+// Initial BPM is derived from the first Uninherited point.
 // When there are multiple timing points with same time, the last one will overwrites all precedings.
 func NewTransPoints(f any) []*TransPoint {
 	var tps []*TransPoint
@@ -44,83 +41,66 @@ func NewTransPoints(f any) []*TransPoint {
 			}
 			return f.TimingPoints[i].Time < f.TimingPoints[j].Time
 		})
-
-		// Drop inherited points preceding to the first uninherited point.
-		// Todo: need actual test
+		// Inherited points without Uninherited points will go dropped.
 		for len(f.TimingPoints) > 0 && !f.TimingPoints[0].Uninherited {
 			f.TimingPoints = f.TimingPoints[1:]
 		}
 		if len(f.TimingPoints) == 0 {
 			return tps
 		}
+
 		tps = make([]*TransPoint, 0, len(f.TimingPoints))
-		lastBPM, _ := f.TimingPoints[0].BPM()
-		var prev *TransPoint
-		var prevBPMPoint *TransPoint
+		var prev = &TransPoint{BPM: f.TimingPoints[0].BPM()}
+		var prevBPMPoint = prev
 		for _, timingPoint := range f.TimingPoints {
 			if timingPoint.Uninherited {
 				tp := &TransPoint{
-					Time: int64(timingPoint.Time),
-					// BPM
+					Time:            int64(timingPoint.Time),
+					BPM:             timingPoint.BPM(),
 					BeatLengthScale: 1,
 					Meter:           uint8(timingPoint.Meter),
 					Volume:          float64(timingPoint.Volume) / 100,
 					Highlight:       timingPoint.IsKiai(),
 					NewBPM:          true,
+					Position:        prev.Position,
 					Prev:            prev,
+					// Next:            nil,
+					// NextBPMPoint:    nil,
 				}
-				tp.BPM, _ = timingPoint.BPM()
-				if prev != nil {
-					beatLength := prev.BPM * prev.BeatLengthScale
-					duration := float64(tp.Time - prev.Time)
-					tp.Position = prev.Position + beatLength*duration
-				} else {
-					beatLength := tp.BPM * tp.BeatLengthScale
-					duration := float64(tp.Time - 0)
-					tp.Position = 0 + beatLength*duration
-				}
-				if prev != nil {
-					prev.Next = tp
-				}
-				if prevBPMPoint != nil {
-					prevBPMPoint.NextBPMPoint = tp // This was hard to find the bug to me.
-				}
+				unitLength := prev.BPM * prev.BeatLengthScale
+				duration := float64(tp.Time - prev.Time)
+				tp.Position += unitLength * duration
+
+				prev.Next = tp
 				prev = tp
+				prevBPMPoint.NextBPMPoint = tp // This was hard to find the bug to me.
 				prevBPMPoint = tp
-				lastBPM = tp.BPM
 				tps = append(tps, tp)
 			} else {
 				tp := &TransPoint{
-					Time: int64(timingPoint.Time),
-					BPM:  lastBPM,
-					// BeatLengthScale
-					Meter:     uint8(timingPoint.Meter),
-					Volume:    float64(timingPoint.Volume) / 100,
-					Highlight: timingPoint.IsKiai(),
-					NewBPM:    false,
-					Prev:      prev,
+					Time:            int64(timingPoint.Time),
+					BPM:             prevBPMPoint.BPM,
+					BeatLengthScale: timingPoint.BeatLengthScale(),
+					Meter:           uint8(timingPoint.Meter),
+					Volume:          float64(timingPoint.Volume) / 100,
+					Highlight:       timingPoint.IsKiai(),
+					NewBPM:          false,
+					Position:        prev.Position,
+					Prev:            prev,
+					// Next:            nil,
+					// NextBPMPoint:    nil,
 				}
-				tp.BeatLengthScale, _ = timingPoint.BeatLengthScale()
-				if prev != nil {
-					beatLength := prev.BPM * prev.BeatLengthScale
-					duration := float64(tp.Time - prev.Time)
-					tp.Position = prev.Position + beatLength*duration
-				} else {
-					beatLength := tp.BPM * tp.BeatLengthScale
-					duration := float64(tp.Time - 0)
-					tp.Position = 0 + beatLength*duration
-				}
-				if prev == nil {
-					fmt.Printf("%s - %s: no uninherited point at first.\n", f.Title, f.Version)
-					fmt.Printf("%+v\n", f.TimingPoints)
-					os.Exit(1)
-				}
+				unitLength := prev.BPM * prev.BeatLengthScale
+				duration := float64(tp.Time - prev.Time)
+				tp.Position += unitLength * duration
+
 				prev.Next = tp // Inherited point is never the first.
 				prev = tp
 				tps = append(tps, tp)
 			}
 		}
 	}
+	tps[0].Prev = nil // First TransPoint's Prev is just a dummy.
 	return tps
 }
 
