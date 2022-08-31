@@ -32,7 +32,7 @@ type TransPoint struct {
 // Initial BPM is derived from the first Uninherited point.
 // When there are multiple timing points with same time, the last one will overwrites all precedings.
 func NewTransPoints(f any) []*TransPoint {
-	var tps []*TransPoint
+	var transPoints []*TransPoint
 	switch f := f.(type) {
 	case *osu.Format:
 		sort.SliceStable(f.TimingPoints, func(i int, j int) bool {
@@ -46,10 +46,10 @@ func NewTransPoints(f any) []*TransPoint {
 			f.TimingPoints = f.TimingPoints[1:]
 		}
 		if len(f.TimingPoints) == 0 {
-			return tps
+			return transPoints
 		}
 
-		tps = make([]*TransPoint, 0, len(f.TimingPoints))
+		transPoints = make([]*TransPoint, 0, len(f.TimingPoints))
 		var prev = &TransPoint{BPM: f.TimingPoints[0].BPM()}
 		var prevBPMPoint = prev
 		for _, timingPoint := range f.TimingPoints {
@@ -75,7 +75,7 @@ func NewTransPoints(f any) []*TransPoint {
 				prev = tp
 				prevBPMPoint.NextBPMPoint = tp // This was hard to find the bug to me.
 				prevBPMPoint = tp
-				tps = append(tps, tp)
+				transPoints = append(transPoints, tp)
 			} else {
 				tp := &TransPoint{
 					Time:            int64(timingPoint.Time),
@@ -96,24 +96,32 @@ func NewTransPoints(f any) []*TransPoint {
 
 				prev.Next = tp // Inherited point is never the first.
 				prev = tp
-				tps = append(tps, tp)
+				transPoints = append(transPoints, tp)
 			}
 		}
 	}
-	tps[0].Prev = nil // First TransPoint's Prev is just a dummy.
-	return tps
+	transPoints[0].Prev = nil // First TransPoint's Prev is just a dummy.
+	return transPoints
+}
+
+// FetchLatest is useful for NewBPM TransPoint fetching latest TransPoint.
+func (tp *TransPoint) FetchLatest() *TransPoint {
+	for tp.Next != nil && tp.Time >= tp.Next.Time {
+		tp = tp.Next
+	}
+	return tp
 }
 
 // BPM with longest duration will be main BPM.
 // When there are multiple BPMs with same duration, larger one will be main BPM.
-func BPMs(tps []*TransPoint, duration int64) (main, min, max float64) {
+func BPMs(transPoints []*TransPoint, duration int64) (main, min, max float64) {
 	bpmDurations := make(map[float64]int64)
-	for i, tp := range tps {
+	for i, tp := range transPoints {
 		if i == 0 {
 			bpmDurations[tp.BPM] += tp.Time
 		}
-		if i < len(tps)-1 {
-			bpmDurations[tp.BPM] += tps[i+1].Time - tp.Time
+		if i < len(transPoints)-1 {
+			bpmDurations[tp.BPM] += transPoints[i+1].Time - tp.Time
 		} else {
 			bpmDurations[tp.BPM] += duration - tp.Time // Bounds to final note time; confirmed with test.
 		}
@@ -137,23 +145,12 @@ func BPMs(tps []*TransPoint, duration int64) (main, min, max float64) {
 	return
 }
 
-func BarTimes(tps []*TransPoint, endTime int64) []int64 {
-	const margin = 5000
-	ts := make([]int64, 0)
-	tp0 := tps[0]
-	for t := float64(tp0.Time); t >= float64(-margin); t -= float64(tp0.Meter) * 60000 / tp0.BPM {
-		ts = append([]int64{int64(t)}, ts...)
-	}
-	ts = ts[:len(ts)-1] // Drop bar line for tp0 for avoiding duplicated
-	for tp := tps[0]; tp != nil; tp = tp.NextBPMPoint {
-		next := endTime + margin
-		if tp.NextBPMPoint != nil {
-			next = tp.NextBPMPoint.Time
-		}
-		unit := float64(tp.Meter) * 60000 / tp.BPM
-		for t := float64(tp.Time); t < float64(next); t += unit {
-			ts = append(ts, int64(t))
-		}
-	}
-	return ts
+// BeatLength supposes TransPoint tp is latest.
+// func (tp TransPoint) BeatLength() float64 {
+// 	// tp = *tp.FetchLatest()
+// 	return tp.BPM * tp.BeatLengthScale
+// }
+
+func (tp TransPoint) Speed() float64 {
+	return tp.BPM * tp.BeatLengthScale
 }
