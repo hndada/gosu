@@ -33,7 +33,7 @@ type Note struct {
 	Time2     int64   // Time of opposite note's time, if existed.
 	Speed     float64 // Each note has own speed.
 	ScaledBPM float64 // For calculating Roll tick density.
-	// BeatScale      float64
+	// BeatLengthScale      float64
 	SampleFilename string
 	SampleVolume   float64 // Range is 0 to 1.
 }

@@ -55,7 +55,7 @@ func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
 			for tp.Next != nil && tp.Next.Time <= int64(ho.Time) {
 				tp = tp.Next
 			}
-			speed := tp.BPM * tp.BeatScale * f.SliderMultiplier
+			speed := tp.BPM * tp.BeatLengthScale * f.SliderMultiplier
 			scaledBPM := ScaledBPM(tp.BPM)
 			c.Notes = append(c.Notes, NewNote(ho, speed, scaledBPM)...)
 		}

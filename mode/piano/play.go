@@ -160,7 +160,7 @@ func (s *ScenePlay) Update() any {
 		s.NoteLaneDrawers[k].Update(s.SpeedBase)
 	}
 	// Speed, BPM, Volume and Highlight
-	speed := s.SpeedBase * (s.TransPoint.BPM / s.MainBPM) * s.TransPoint.BeatScale
+	speed := s.SpeedBase * (s.TransPoint.BPM / s.MainBPM) * s.TransPoint.BeatLengthScale
 	s.BarDrawer.Update(speed)
 	for k := range s.NoteLaneDrawers {
 		s.NoteLaneDrawers[k].Update(speed)

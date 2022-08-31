@@ -91,8 +91,8 @@ func (tp TimingPoint) BPM() (bpm float64, ok bool) {
 	return 1000 * 60 / tp.BeatLength, true
 }
 
-// BeatScale returns a beat scale, aka speed factor. The standard value is 1.
-func (tp TimingPoint) BeatScale() (speed float64, ok bool) {
+// BeatLengthScale returns a beat scale, aka speed factor. The standard value is 1.
+func (tp TimingPoint) BeatLengthScale() (speed float64, ok bool) {
 	if tp.Uninherited {
 		return 0, false
 	}
