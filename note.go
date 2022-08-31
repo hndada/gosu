@@ -22,7 +22,7 @@ const (
 
 // Strategy of Piano mode
 // Calculate position of each note in advance
-// Parameter: SpeedBase, BPM Ratio, BeatScale
+// Parameter: SpeedBase, BPM Ratio, BeatLengthScale
 // Calculate current HitPosition only.
 // For other notes, just calculate the difference between HitPosition.
 type Note struct {
@@ -87,7 +87,7 @@ type BaseLaneDrawer struct {
 	// Nearest    *Note
 	Cursor     float64
 	HitPostion float64
-	Speed      float64 // BPM (or BPM ratio) * BeatScale
+	Speed      float64 // BPM (or BPM ratio) * BeatLengthScale
 	Direction
 	maxPosition float64
 	minPosition float64
@@ -158,7 +158,7 @@ func (d BarDrawer) Draw(screen *ebiten.Image) {
 //		Nearest    *Note
 //		Cursor     float64
 //		HitPostion float64
-//		Speed      float64 // BPM (or BPM ratio) * BeatScale
+//		Speed      float64 // BPM (or BPM ratio) * BeatLengthScale
 //		Direction
 //		// Sizes      map[NoteType]float64 // Cache for Sprites' sizes. // Todo: Sizes -> halfSizes
 //		// MaxSize    float64              // Either max width / height. // Todo: remove

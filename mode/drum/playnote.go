@@ -158,20 +158,20 @@ func (n PlayNote) Position(time int64) float64 {
 // 		for ; tp.Next != nil && tp.Next.Time < time; tp = tp.Next {
 // 			duration := tp.Next.Time - cursor
 // 			bpmRatio := tp.BPM / s.MainBPM
-// 			distance += s.SpeedBase * (bpmRatio * tp.BeatScale) * float64(duration)
+// 			distance += s.SpeedBase * (bpmRatio * tp.BeatLengthScale) * float64(duration)
 // 			cursor += duration
 // 		}
 // 	} else {
 // 		for ; tp.Prev != nil && tp.Time > time; tp = tp.Prev {
 // 			duration := tp.Time - cursor // Negative value.
 // 			bpmRatio := tp.BPM / s.MainBPM
-// 			distance += s.SpeedBase * (bpmRatio * tp.BeatScale) * float64(duration)
+// 			distance += s.SpeedBase * (bpmRatio * tp.BeatLengthScale) * float64(duration)
 // 			cursor += duration
 // 		}
 // 	}
 // 	bpmRatio := tp.BPM / s.MainBPM
 // 	// Calculate the remained (which is farthest from Hint within bound).
-// 	distance += s.SpeedBase * (bpmRatio * tp.BeatScale) * float64(time-cursor)
+// 	distance += s.SpeedBase * (bpmRatio * tp.BeatLengthScale) * float64(time-cursor)
 // 	return HitPosition - distance
 // }
 

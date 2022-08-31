@@ -9,18 +9,23 @@ import (
 	"github.com/hndada/gosu/format/osu"
 )
 
+// In osu!, Mania and Taiko has different way to set speed.
+
+// BPM means Beats Per Minute. Higher BPM means more beats in unit time.
+// Scroll goes faster proportional to BPM (or BPM ratio), since
+// length of beat is fixed by default, which can be scaled by BeatLengthScale.
 type TransPoint struct {
-	Time         int64
-	BPM          float64
-	BeatScale    float64
-	Meter        uint8
-	Volume       float64 // Range is 0 to 1.
-	Highlight    bool
-	NewBPM       bool
-	Prev         *TransPoint
-	Next         *TransPoint
-	NextBPMPoint *TransPoint // For performance
-	Position     float64
+	Time            int64
+	BPM             float64
+	BeatLengthScale float64
+	Meter           uint8
+	Volume          float64 // Range is 0 to 1.
+	Highlight       bool
+	NewBPM          bool
+	Prev            *TransPoint
+	Next            *TransPoint
+	NextBPMPoint    *TransPoint // For performance
+	Position        float64
 }
 
 // Uninherited point is base point. whereas, Inherited point 'inherits'
@@ -56,21 +61,21 @@ func NewTransPoints(f any) []*TransPoint {
 			if timingPoint.Uninherited {
 				tp := &TransPoint{
 					Time: int64(timingPoint.Time),
-					// BPM:,
-					BeatScale: 1,
-					Meter:     uint8(timingPoint.Meter),
-					Volume:    float64(timingPoint.Volume) / 100,
-					Highlight: timingPoint.IsKiai(),
-					NewBPM:    true,
-					Prev:      prev,
+					// BPM
+					BeatLengthScale: 1,
+					Meter:           uint8(timingPoint.Meter),
+					Volume:          float64(timingPoint.Volume) / 100,
+					Highlight:       timingPoint.IsKiai(),
+					NewBPM:          true,
+					Prev:            prev,
 				}
 				tp.BPM, _ = timingPoint.BPM()
 				if prev != nil {
-					beatLength := prev.BPM * prev.BeatScale
+					beatLength := prev.BPM * prev.BeatLengthScale
 					duration := float64(tp.Time - prev.Time)
 					tp.Position = prev.Position + beatLength*duration
 				} else {
-					beatLength := tp.BPM * tp.BeatScale
+					beatLength := tp.BPM * tp.BeatLengthScale
 					duration := float64(tp.Time - 0)
 					tp.Position = 0 + beatLength*duration
 				}
@@ -88,20 +93,20 @@ func NewTransPoints(f any) []*TransPoint {
 				tp := &TransPoint{
 					Time: int64(timingPoint.Time),
 					BPM:  lastBPM,
-					// BeatScale: ,
+					// BeatLengthScale
 					Meter:     uint8(timingPoint.Meter),
 					Volume:    float64(timingPoint.Volume) / 100,
 					Highlight: timingPoint.IsKiai(),
 					NewBPM:    false,
 					Prev:      prev,
 				}
-				tp.BeatScale, _ = timingPoint.BeatScale()
+				tp.BeatLengthScale, _ = timingPoint.BeatLengthScale()
 				if prev != nil {
-					beatLength := prev.BPM * prev.BeatScale
+					beatLength := prev.BPM * prev.BeatLengthScale
 					duration := float64(tp.Time - prev.Time)
 					tp.Position = prev.Position + beatLength*duration
 				} else {
-					beatLength := tp.BPM * tp.BeatScale
+					beatLength := tp.BPM * tp.BeatLengthScale
 					duration := float64(tp.Time - 0)
 					tp.Position = 0 + beatLength*duration
 				}
@@ -120,7 +125,7 @@ func NewTransPoints(f any) []*TransPoint {
 }
 
 // BPM with longest duration will be main BPM.
-// Suppose when there are multiple BPMs with same duration, larger one will be main.
+// When there are multiple BPMs with same duration, larger one will be main BPM.
 func BPMs(tps []*TransPoint, duration int64) (main, min, max float64) {
 	bpmDurations := make(map[float64]int64)
 	for i, tp := range tps {
@@ -152,10 +157,8 @@ func BPMs(tps []*TransPoint, duration int64) (main, min, max float64) {
 	return
 }
 
-// wb, wa stands for buffer times: wait before, wait after.
-// Multiply wa with 2 for preventing indexing a time slice over length.
 func BarTimes(tps []*TransPoint, endTime int64) []int64 {
-	var margin int64 = 5000
+	const margin = 5000
 	ts := make([]int64, 0)
 	tp0 := tps[0]
 	for t := float64(tp0.Time); t >= float64(-margin); t -= float64(tp0.Meter) * 60000 / tp0.BPM {

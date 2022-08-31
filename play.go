@@ -65,7 +65,7 @@ const (
 func (s BaseScenePlay) BeatRatio() float64 { return s.TransPoint.BPM / s.MainBPM }
 
 // Todo: put mode then switch Speed depends on the mode?
-func (s BaseScenePlay) Speed() float64 { return s.SpeedBase * s.BeatRatio() * s.BeatScale }
+func (s BaseScenePlay) Speed() float64 { return s.SpeedBase * s.BeatRatio() * s.BeatLengthScale }
 func MD5(path string) [md5.Size]byte {
 	b, err := os.ReadFile(path)
 	if err != nil {
