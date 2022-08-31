@@ -14,8 +14,8 @@ type Bar struct {
 type BaseChart struct {
 	ChartHeader
 	TransPoints []*TransPoint
-	ModeType    int
-	SubModeType int // e.g., KeyCount. // Todo: int -> float64; CircleSize may be float64
+	Mode        int
+	SubMode     int // e.g., KeyCount. // Todo: int -> float64; CircleSize may be float64
 	Duration    int64
 	Bars        []Bar
 	Notes       []*Note
@@ -105,8 +105,8 @@ func NewChartInfo(c *BaseChart, cpath string, level float64) ChartInfo {
 	cb := ChartInfo{
 		Path:    cpath,
 		Header:  c.ChartHeader,
-		Mode:    c.ModeType,
-		SubMode: c.SubModeType,
+		Mode:    c.Mode,
+		SubMode: c.SubMode,
 		Level:   level,
 
 		Duration:   c.Duration,

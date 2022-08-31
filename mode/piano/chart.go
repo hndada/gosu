@@ -45,11 +45,11 @@ func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
 	case *osu.Format:
 		c.KeyCount = int(f.CircleSize)
 		if c.KeyCount <= 4 {
-			c.ModeType = gosu.ModeTypePiano4
+			c.Mode = gosu.ModePiano4
 		} else {
-			c.ModeType = gosu.ModeTypePiano7
+			c.Mode = gosu.ModePiano7
 		}
-		c.SubModeType = c.KeyCount
+		c.SubMode = c.KeyCount
 		c.Notes = make([]*gosu.Note, 0, len(f.HitObjects)*2)
 		for _, ho := range f.HitObjects {
 			// bns := gosu.NewNote(ho)
@@ -59,7 +59,7 @@ func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
 			// 		Key:  ho.Column(c.SubMode),
 			// 	})
 			// }
-			c.Notes = append(c.Notes, gosu.NewNote(ho, c.ModeType, c.SubModeType)...)
+			c.Notes = append(c.Notes, gosu.NewNote(ho, c.Mode, c.SubMode)...)
 		}
 	}
 	sort.Slice(c.Notes, func(i, j int) bool {

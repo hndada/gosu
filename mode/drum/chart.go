@@ -42,7 +42,7 @@ func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
 	}
 	c.ChartHeader = gosu.NewChartHeader(f)
 	c.TransPoints = gosu.NewTransPoints(f)
-	c.ModeType = gosu.ModeTypeDrum
+	c.Mode = gosu.ModeDrum
 	// No sub mode for Drum mode.
 	switch f := f.(type) {
 	case *osu.Format:

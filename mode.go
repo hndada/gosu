@@ -10,9 +10,10 @@ import (
 	"github.com/hndada/gosu/format/osu"
 )
 
-// Todo: implement Mode() in each mode.
-type Mode struct {
-	Type           int
+var ModeNames = []string{"Piano4", "Piano7", "Drum", "Karaoke"}
+
+type ModeProp struct { // Stands for Mode properties.
+	Mode           int
 	ChartInfos     []ChartInfo
 	Cursor         int                 // Todo: custom chart infos - custom cursor
 	Results        map[[16]byte]Result // md5.Size = 16
@@ -25,39 +26,34 @@ type Mode struct {
 	ExposureTime   func(float64) float64
 }
 
-// Mode consists of main mode + sub mode.
+// Mode consists of main mode and sub mode.
 // Piano mode's sub mode is Key count (with scratch mode bit adjusted), for example.
-// type ModeType int
-
+const ModeUnknown = -1
 const (
-	ModeTypePiano4 = iota // ~ 4 Key
-	ModeTypePiano7        // 5 ~ Key
-	ModeTypeDrum
-	ModeTypeKaraoke // aka jjava
+	ModePiano4 = iota // ~ 4 Key
+	ModePiano7        // 5 ~ Key
+	ModeDrum
+	ModeKaraoke
 )
 
-// const DefaultModeType ModeType = ModeTypePiano4
-const ModeTypeUnknown = -1
-
 // Mode determines a mode of chart file by its path.
-// Todo: should I make a new type Mode?
-func FileModeType(fpath string) int {
+func FileMode(fpath string) int {
 	switch strings.ToLower(filepath.Ext(fpath)) {
 	case ".osu":
 		mode, keyCount := osu.Mode(fpath)
 		switch mode {
 		case osu.ModeMania:
 			if keyCount <= 4 {
-				return ModeTypePiano4
+				return ModePiano4
 			}
-			return ModeTypePiano7
+			return ModePiano7
 		case osu.ModeTaiko:
-			return ModeTypeDrum
+			return ModeDrum
 		default:
-			return ModeTypeUnknown
+			return ModeUnknown
 		}
 	case ".ojn", ".bms":
-		return ModeTypePiano7
+		return ModePiano7
 	}
-	return ModeTypeUnknown
+	return ModeUnknown
 }
