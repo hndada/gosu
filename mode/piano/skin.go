@@ -9,6 +9,7 @@ import (
 	_ "image/png"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/draws"
 )
 
@@ -57,6 +58,9 @@ var GeneralSkin struct { // Singleton
 
 // Todo: should each skin has own skin settings?
 type Skin struct {
+	ScoreSprites [10]draws.Sprite
+	SignSprites  [3]draws.Sprite
+
 	ComboSprites    [10]draws.Sprite
 	JudgmentSprites []draws.Sprite
 
@@ -120,6 +124,9 @@ func LoadSkin() {
 		noteKinds := NoteKindsMap[keyCount]
 		noteWidths := NoteWidthsMap[keyCount]
 		skin := Skin{
+			ScoreSprites: gosu.ScoreSprites,
+			SignSprites:  gosu.SignSprites,
+
 			ComboSprites:    GeneralSkin.ComboSprites,
 			JudgmentSprites: GeneralSkin.JudgmentSprites[:],
 
@@ -192,7 +199,7 @@ func LoadSkin() {
 		}
 		{
 			src := ebiten.NewImage(int(wsum), screenSizeY)
-			src.Fill(color.RGBA{0, 0, 0, uint8(255 * FieldDark)})
+			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDark)})
 			s := draws.NewSpriteFromImage(src)
 			s.SetPosition(screenSizeX/2, 0, draws.OriginCenterTop)
 			skin.FieldSprite = s

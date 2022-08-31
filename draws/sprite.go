@@ -41,6 +41,8 @@ func NewSpriteFromImage(src *ebiten.Image) Sprite {
 	w, h := src.Size()
 	s.w = float64(w)
 	s.h = float64(h)
+	s.scaleW = 1
+	s.scaleH = 1
 	return s
 }
 func (s *Sprite) SetScale(scaleW, scaleH float64, filter ebiten.Filter) {
