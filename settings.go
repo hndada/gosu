@@ -2,7 +2,7 @@ package gosu
 
 // Todo: BarLine color settings
 var (
-	MaxTPS = 1000 // MaxTPS should be 1000 or greater.
+	TPS    = 1000 // TPS should be 1000 or greater.
 	Volume = 0.25
 
 	MeterWidth  float64 = 4 // The number of pixels per 1ms.

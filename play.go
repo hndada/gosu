@@ -63,7 +63,9 @@ const (
 )
 
 func (s BaseScenePlay) BeatRatio() float64 { return s.TransPoint.BPM / s.MainBPM }
-func (s BaseScenePlay) Speed() float64     { return s.SpeedBase * s.BeatRatio() * s.BeatScale }
+
+// Todo: put mode then switch Speed depends on the mode?
+func (s BaseScenePlay) Speed() float64 { return s.SpeedBase * s.BeatRatio() * s.BeatScale }
 func MD5(path string) [md5.Size]byte {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -72,9 +74,9 @@ func MD5(path string) [md5.Size]byte {
 	return md5.Sum(b)
 }
 
-func TimeToTick(time int64) int     { return int(float64(time) / 1000 * float64(MaxTPS)) }
-func TickToTime(tick int) int64     { return int64(float64(tick) / float64(MaxTPS) * 1000) }
-func (s BaseScenePlay) Time() int64 { return int64(float64(s.Tick) / float64(MaxTPS) * 1000) }
+func TimeToTick(time int64) int     { return int(float64(time) / 1000 * float64(TPS)) }
+func TickToTime(tick int) int64     { return int64(float64(tick) / float64(TPS) * 1000) }
+func (s BaseScenePlay) Time() int64 { return int64(float64(s.Tick) / float64(TPS) * 1000) }
 func (s *BaseScenePlay) SetTick(rf *osr.Format) int64 { // Returns duration of waiting before starts
 	waitBefore := DefaultWaitBefore
 	if rf != nil && rf.BufferTime() < waitBefore {
