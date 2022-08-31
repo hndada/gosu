@@ -22,7 +22,7 @@ type ScenePlay struct {
 	Chart           *Chart
 	Staged          []*gosu.Note
 	Leadings        []*gosu.Note
-	NoteLaneDrawers []gosu.NoteLaneDrawer
+	NoteLaneDrawers []gosu.FixedLaneDrawer
 	// BarDrawer       gosu.NoteLaneDrawer
 	JudgmentDrawer JudgmentDrawer
 	ComboDrawer    draws.NumberDrawer
@@ -44,15 +44,15 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	s.Chart = c
 	s.EndTime = c.Duration + gosu.DefaultWaitAfter
 	// General: Graphics
-	s.SetWindowTitle(c.BaseChart)
+	s.SetWindowTitle(c.Chart)
 	s.Skin = Skins[c.KeyCount]
 	s.SetBackground(c.BackgroundPath(cpath))
 
 	// Speed, BPM, Volume and Highlight
 	s.MainBPM, _, _ = gosu.BPMs(c.TransPoints, c.Duration) // Todo: Need a test
-	s.SpeedBase = SpeedBase
+	s.SpeedScale = SpeedScale
 	s.SetInitTransPoint(c.TransPoints[0])
-	s.SpeedHandler = gosu.NewSpeedHandler(&s.SpeedBase)
+	s.SpeedHandler = gosu.NewSpeedHandler(&s.SpeedScale)
 
 	// Audio
 	apath := filepath.Join(filepath.Dir(cpath), c.AudioFilename)
@@ -108,7 +108,7 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 		d.Nearest = s.Leadings[k]
 		d.Farthest = d.Nearest
 		d.HitPostion = HitPosition
-		d.Speed = s.SpeedBase
+		d.Speed = s.SpeedScale
 		d.SetDirection(gosu.Downward)
 		s.NoteLaneDrawers[k] = d
 		// fmt.Printf("%+v\n", d)
@@ -117,12 +117,12 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	// times := gosu.BarTimes(c.TransPoints, s.EndTime, wb, wa)
 	// s.BarDrawer.Times =
 	// s.BarDrawer.Offset = NoteHeigth / 2
-	s.Chart.SetPositions(s.SpeedBase)
+	s.Chart.SetPositions(s.SpeedScale)
 	s.BarDrawer.Bars = s.Chart.Bars
 	s.BarDrawer.Sprite = s.BarLineSprite
 	s.BarDrawer.HitPostion = HitPosition
 	s.BarDrawer.Cursor = -1000 //float64(waitBefore)*s.TransPoint
-	s.BarDrawer.Speed = s.SpeedBase
+	s.BarDrawer.Speed = s.SpeedScale
 	s.BarDrawer.SetDirection(gosu.Downward)
 	s.KeyDrawer.Sprites[0] = s.KeyUpSprites
 	s.KeyDrawer.Sprites[1] = s.KeyDownSprites
@@ -157,10 +157,10 @@ func (s *ScenePlay) Update() any {
 		}
 	}
 	for k := range s.NoteLaneDrawers {
-		s.NoteLaneDrawers[k].Update(s.SpeedBase)
+		s.NoteLaneDrawers[k].Update(s.SpeedScale)
 	}
 	// Speed, BPM, Volume and Highlight
-	speed := s.SpeedBase * (s.TransPoint.BPM / s.MainBPM) * s.TransPoint.BeatLengthScale
+	speed := s.SpeedScale * (s.TransPoint.BPM / s.MainBPM) * s.TransPoint.BeatLengthScale
 	s.BarDrawer.Update(speed)
 	for k := range s.NoteLaneDrawers {
 		s.NoteLaneDrawers[k].Update(speed)
@@ -168,9 +168,9 @@ func (s *ScenePlay) Update() any {
 	s.UpdateTransPoint()
 	if fired := s.SpeedHandler.Update(); fired {
 		for k := range s.NoteLaneDrawers {
-			s.NoteLaneDrawers[k].Speed = s.SpeedBase
+			s.NoteLaneDrawers[k].Speed = s.SpeedScale
 		}
-		go s.Chart.SetPositions(s.SpeedBase)
+		go s.Chart.SetPositions(s.SpeedScale)
 	}
 
 	// Audio
@@ -269,5 +269,5 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.Duration)/1000,
 		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
 		fr*100, ar*100, rr*100, s.JudgmentCounts,
-		s.Speed()*100, s.SpeedBase*100, ExposureTime(s.Speed())))
+		s.Speed()*100, s.SpeedScale*100, ExposureTime(s.Speed())))
 }

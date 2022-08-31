@@ -2,7 +2,7 @@ package draws
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-type Effecter func(op *ebiten.DrawImageOptions, vs ...float64)
+type Effecter func(op *ebiten.DrawImageOptions, vs ...any)
 
 // type Translater func(op *ebiten.DrawImageOptions, vs ...float64)
 var Bower = func(op *ebiten.DrawImageOptions, age, w, h float64) {
@@ -22,6 +22,16 @@ var Fader = func(op *ebiten.DrawImageOptions, age float64) {
 }
 var Dimmer = func(op *ebiten.DrawImageOptions, dimness float64) {
 	op.ColorM.ChangeHSV(0, 1, dimness)
+}
+var Vanisher = func(op *ebiten.DrawImageOptions, marked *bool) {
+	if *marked {
+		op.ColorM.ChangeHSV(0, 1, 0)
+	}
+}
+var Grayer = func(op *ebiten.DrawImageOptions, marked *bool) {
+	if *marked {
+		op.ColorM.ChangeHSV(0, 0.3, 0.3)
+	}
 }
 
 // type Effecter struct {

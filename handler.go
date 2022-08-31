@@ -20,7 +20,7 @@ func NewVolumeHandler(vol *float64) ctrl.F64Handler {
 	}
 }
 
-func NewSpeedHandler(speedBase *float64) ctrl.F64Handler {
+func NewSpeedHandler(speedScale *float64) ctrl.F64Handler {
 	play := func() { Sounds.Play("default-hover") }
 	return ctrl.F64Handler{
 		Handler: ctrl.Handler{
@@ -31,7 +31,7 @@ func NewSpeedHandler(speedBase *float64) ctrl.F64Handler {
 		Min:    0.1,
 		Max:    2,
 		Unit:   0.1,
-		Target: speedBase,
+		Target: speedScale,
 	}
 }
 

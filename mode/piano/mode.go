@@ -12,7 +12,7 @@ var ModePiano4 = gosu.ModeProp{
 	Results:        make(map[[16]byte]gosu.Result), // Zero value.
 	Mods:           gosu.Mods{},                    // Zero value.
 	LastUpdateTime: time.Time{},                    // Zero value.
-	SpeedHandler:   gosu.NewSpeedHandler(&SpeedBase),
+	SpeedHandler:   gosu.NewSpeedHandler(&SpeedScale),
 	LoadSkin:       LoadSkin,
 	NewChartInfo:   NewChartInfo,
 	NewScenePlay:   NewScenePlay,
@@ -25,7 +25,7 @@ var ModePiano7 = gosu.ModeProp{
 	Results:        make(map[[16]byte]gosu.Result), // Zero value.
 	Mods:           gosu.Mods{},                    // Zero value.
 	LastUpdateTime: time.Time{},                    // Zero value.
-	SpeedHandler:   gosu.NewSpeedHandler(&SpeedBase),
+	SpeedHandler:   gosu.NewSpeedHandler(&SpeedScale),
 	LoadSkin:       LoadSkin,
 	NewChartInfo:   NewChartInfo,
 	NewScenePlay:   NewScenePlay,

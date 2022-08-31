@@ -52,13 +52,13 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	s.Chart = c
 	s.EndTime = c.Duration + gosu.DefaultWaitAfter
 	// General: Graphics
-	s.SetWindowTitle(c.BaseChart)
+	s.SetWindowTitle(c.Chart)
 	s.Skin = DefaultSkin
 	s.SetBackground(c.BackgroundPath(cpath))
 
 	// Speed, BPM, Volume and Highlight
 	s.MainBPM, _, _ = gosu.BPMs(c.TransPoints, c.Duration) // Todo: Need a test
-	s.SpeedBase = SpeedBase
+	s.SpeedScale = SpeedScale
 	s.SetInitTransPoint(c.TransPoints[0])
 
 	// Audio
@@ -211,5 +211,5 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 // 		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.Duration)/1000,
 // 		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
 // 		fr*100, ar*100, rr*100, s.JudgmentCounts,
-// 		s.Speed()*100, s.SpeedBase*100, ExposureTime(s.Speed())))
+// 		s.Speed()*100, s.SpeedScale*100, ExposureTime(s.Speed())))
 // }

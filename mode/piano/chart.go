@@ -12,7 +12,7 @@ import (
 
 // Chart should avoid redundant data as much as possible
 type Chart struct {
-	gosu.BaseChart
+	gosu.Chart
 	KeyCount int
 	// Notes    []*gosu.Note
 }
@@ -72,7 +72,7 @@ func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
 	if len(c.Notes) > 0 {
 		c.Duration = c.Notes[len(c.Notes)-1].Time
 	}
-	c.SetBars()
+	// c.SetBars()
 	c.NoteCounts = make([]int, 2)
 	for _, n := range c.Notes {
 		switch n.Type {
@@ -90,5 +90,5 @@ func NewChartInfo(cpath string, mods gosu.Mods) (gosu.ChartInfo, error) {
 	if err != nil {
 		return gosu.ChartInfo{}, err
 	}
-	return gosu.NewChartInfo(&c.BaseChart, cpath, gosu.Level(c)), nil
+	return gosu.NewChartInfo(&c.Chart, cpath, gosu.Level(c)), nil
 }
