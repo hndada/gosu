@@ -31,7 +31,7 @@ type BackgroundDrawer struct {
 func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
 	// op := d.Sprite.Op()
 	op := &ebiten.DrawImageOptions{}
-	op.ColorM.ChangeHSV(0, 1, BgDimness)
+	op.ColorM.ChangeHSV(0, 1, BackgroundDimness)
 	d.Sprite.Draw(screen, op)
 	// screen.DrawImage(d.Sprite.I, op)
 }
