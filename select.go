@@ -14,10 +14,9 @@ import (
 	"golang.org/x/image/font/basicfont"
 )
 
-// Todo: each mode should have own cursor: length of info are different.
 type SceneSelect struct {
-	Modes    []Mode
-	ModeType *int
+	ModeProps []ModeProp
+	Mode      *int
 	// ViewQuery     string
 	View          []ChartInfo // Todo: ChartInfo -> *ChartInfo?
 	Cursor        *int
@@ -33,48 +32,63 @@ var count = int(screenSizeY/ChartInfoBoxHeight/2*2) + 2 // Gives count some marg
 
 // Todo: Score / Replay fetch
 // Todo: preview music
-func NewSceneSelect(modes []Mode, mode *int) *SceneSelect {
+func NewSceneSelect(modes []ModeProp, mode *int) *SceneSelect {
 	s := new(SceneSelect)
-	s.Modes = modes
-	s.ModeType = mode
-	s.ModeHandler = NewModeHandler(s.ModeType, len(modes))
-	s.SetNewMode()
+	s.ModeProps = modes
+	s.Mode = mode
+	s.ModeHandler = NewModeHandler(s.Mode, len(modes))
+	s.UpdateMode()
 	ebiten.SetWindowTitle("gosu")
 	return s
 }
-func (s *SceneSelect) SetNewMode() {
-	s.View = s.Modes[*s.ModeType].ChartInfos
-	s.Cursor = &s.Modes[*s.ModeType].Cursor
-	s.CursorHandler = NewCursorHandler(&s.Modes[*s.ModeType].Cursor, len(s.View))
-	s.UpdateBackground()
-}
-
-// Default HoldKey value is 0, which is Key0.
 func (s *SceneSelect) Update() any {
-	moved := s.CursorHandler.Update()
-	if moved {
+	if moved := s.CursorHandler.Update(); moved {
 		s.UpdateBackground()
 	}
-	s.Modes[*s.ModeType].SpeedHandler.Update()
+	s.ModeProps[*s.Mode].SpeedHandler.Update()
 	if fired := s.ModeHandler.Update(); fired {
-		s.SetNewMode()
+		s.UpdateMode()
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsKeyPressed(ebiten.KeyNumpadEnter) {
 		Sounds.Play("restart")
-		cursor := s.Modes[*s.ModeType].Cursor
-		info := s.Modes[*s.ModeType].ChartInfos[cursor]
+		cursor := s.ModeProps[*s.Mode].Cursor
+		info := s.ModeProps[*s.Mode].ChartInfos[cursor]
 		return SelectToPlayArgs{
-			Path:     info.Path,
-			ModeType: *s.ModeType, // Todo: duplicated. Should it be removed?
-			Replay:   nil,
+			Path:   info.Path,
+			Mode:   *s.Mode, // Todo: duplicated. Should it be removed?
+			Replay: nil,
 		}
 	}
 	return nil
 }
+func (s *SceneSelect) UpdateMode() {
+	s.View = s.ModeProps[*s.Mode].ChartInfos
+	s.Cursor = &s.ModeProps[*s.Mode].Cursor
+	s.CursorHandler = NewCursorHandler(&s.ModeProps[*s.Mode].Cursor, len(s.View))
+	s.UpdateBackground()
+}
+
+func (s *SceneSelect) UpdateBackground() {
+	s.Background = DefaultBackground
+	if len(s.View) == 0 {
+		return
+	}
+	if *s.Cursor >= len(s.View) {
+		return
+	}
+	info := s.View[*s.Cursor]
+	img := draws.NewImage(info.Header.BackgroundPath(info.Path))
+	if img == nil {
+		return
+	}
+	s.Background = draws.NewSpriteFromImage(img)
+	scale := screenSizeX / s.Background.W()
+	s.Background.SetScale(scale, scale, ebiten.FilterLinear)
+	s.Background.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenter)
+}
 
 // Currently Chart infos are not in loop.
-// May add extra effect to box arrangement.
-// x -= y / 5, for example.
+// May add extra effect to box arrangement. e.g., x -= y / 5
 func (s SceneSelect) Draw(screen *ebiten.Image) {
 	s.Background.Draw(screen, nil)
 	viewport, cursor := s.Viewport()
@@ -86,8 +100,6 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		}
 		ty := float64(i-cursor) * ChartInfoBoxHeight
 		sprite.Move(tx, ty)
-		// op := &ebiten.DrawImageOptions{}
-		// op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 255, 255})
 		sprite.Draw(screen, nil)
 	}
 
@@ -107,16 +119,8 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		}
 		text.Draw(screen, t, basicfont.Face7x13, x, y+int(offset), color.Black)
 	}
-	// Code of drawing cursor
-	// {
-	// 	sprite := GeneralSkin.CursorSprites[0]
-	// 	x, y := ebiten.CursorPosition()
-	// 	sprite.X, sprite.Y = float64(x), float64(y)
-	// 	sprite.Draw(screen)
-	// }
 	s.DebugPrint(screen)
 }
-
 func (s SceneSelect) Viewport() ([]ChartInfo, int) {
 	var viewport []ChartInfo
 	var cursor int
@@ -136,40 +140,16 @@ func (s SceneSelect) Viewport() ([]ChartInfo, int) {
 	}
 	return viewport, cursor
 }
-func (s *SceneSelect) UpdateBackground() {
-	s.Background = DefaultBackground
-	if len(s.View) == 0 {
-		return
-	}
-	if *s.Cursor >= len(s.View) {
-		return
-	}
-	info := s.View[*s.Cursor]
-	img := draws.NewImage(info.Header.BackgroundPath(info.Path))
-	if img == nil {
-		return
-	}
-	s.Background = draws.NewSpriteFromImage(img)
-	scale := screenSizeX / s.Background.W()
-	s.Background.SetScale(scale, scale, ebiten.FilterLinear)
-	// s.Background.SetPosition(0, 0, draws.OriginCenter)
-	s.Background.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenter)
-}
 func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
-	mode := s.Modes[*s.ModeType]
+	mode := s.ModeProps[*s.Mode]
 	speedBase := *mode.SpeedHandler.Target
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf("Volume (Press 1/2): %.0f%%\n"+
 			"SpeedBase (Press 3/4): %.0f\n"+"(Exposure time: %.0fms)\n\n"+
-			"ModeType (Press 5): %s\n"+
+			"Mode (Press 5): %s\n"+
 			"Chart info index: %d\n",
 			Volume*100,
 			speedBase*100, mode.ExposureTime(speedBase),
-			s.ModeName(),
+			ModeNames[*s.Mode],
 			*s.Cursor))
-}
-
-// func (s SceneSelect) ModeType() ModeType { return ModeType(*s.ModeHandler.Target) }
-func (s SceneSelect) ModeName() string {
-	return []string{"Piano4", "Piano7", "Drum", "Karaoke"}[*s.ModeType]
 }
