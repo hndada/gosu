@@ -38,11 +38,8 @@ func NewScenePlay(cpath string,
 	s := new(ScenePlay)
 	var err error
 	s.BaseScenePlay, err = gosu.NewBaseScenePlay(
-		cpath,
-		mode, subMode, mods,
-		rf,
-		speedScale,
-		keySettings, bg,
+		cpath, mode, subMode, mods,
+		rf, speedScale, keySettings, bg,
 	)
 	if err != nil {
 		return s, err
