@@ -101,7 +101,8 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	s.NoteLaneDrawers = make([]gosu.NoteLaneDrawer, s.Chart.KeyCount)
 	for k := range s.NoteLaneDrawers {
 		sprites := [4]draws.Sprite{
-			s.NoteSprites[k], s.HeadSprites[k], s.TailSprites[k], s.BodySprites[k],
+			s.NoteSprites[k], s.HeadSprites[k],
+			s.TailSprites[k], s.BodySprites[k],
 		}
 		d := gosu.NewNoteLaneDrawer(sprites)
 		d.Nearest = s.Leadings[k]
@@ -112,14 +113,17 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 		s.NoteLaneDrawers[k] = d
 		// fmt.Printf("%+v\n", d)
 	}
-	s.BarDrawer.Sprite = s.BarLineSprite
 	// et, wb, wa := s.EndTime, waitBefore, gosu.DefaultWaitAfter
-
 	// times := gosu.BarTimes(c.TransPoints, s.EndTime, wb, wa)
 	// s.BarDrawer.Times =
 	// s.BarDrawer.Offset = NoteHeigth / 2
 	s.Chart.SetPositions(s.SpeedBase)
 	s.BarDrawer.Bars = s.Chart.Bars
+	s.BarDrawer.Sprite = s.BarLineSprite
+	s.BarDrawer.HitPostion = HitPosition
+	s.BarDrawer.Cursor = -1000 //float64(waitBefore)*s.TransPoint
+	s.BarDrawer.Speed = s.SpeedBase
+	s.BarDrawer.SetDirection(gosu.Downward)
 	s.KeyDrawer.Sprites[0] = s.KeyUpSprites
 	s.KeyDrawer.Sprites[1] = s.KeyDownSprites
 	s.KeyDrawer.KeyDownCountdowns = make([]int, c.KeyCount)
@@ -156,7 +160,11 @@ func (s *ScenePlay) Update() any {
 		s.NoteLaneDrawers[k].Update(s.SpeedBase)
 	}
 	// Speed, BPM, Volume and Highlight
-	s.BarDrawer.Update(s.SpeedBase)
+	speed := s.SpeedBase * (s.TransPoint.BPM / s.MainBPM) * s.TransPoint.BeatScale
+	s.BarDrawer.Update(speed)
+	for k := range s.NoteLaneDrawers {
+		s.NoteLaneDrawers[k].Update(speed)
+	}
 	s.UpdateTransPoint()
 	if fired := s.SpeedHandler.Update(); fired {
 		for k := range s.NoteLaneDrawers {
@@ -218,11 +226,12 @@ func (s *ScenePlay) Update() any {
 			marks = append(marks, mark)
 		}
 	}
-	s.JudgmentDrawer.Update(worst)
+	// s.JudgmentDrawer.Update(worst)
 	s.ComboDrawer.Update(s.Combo, 0)
 	s.DelayedScore.Set(s.Score())
 	s.DelayedScore.Update()
 	s.ScoreDrawer.Update(int(s.DelayedScore.Delayed), 0)
+	// fmt.Println(s.Combo, s.DelayedScore.Delayed)
 	s.Meter.Update(marks)
 	return nil
 }
@@ -230,16 +239,16 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
 	s.FieldSprite.Draw(screen, nil)
 	s.HintSprite.Draw(screen, nil)
-	s.BarDrawer.Draw(screen)
+	// s.BarDrawer.Draw(screen)
 	// s.DrawLongNoteBodies(screen)
 	// s.DrawNotes(screen)
 	for _, d := range s.NoteLaneDrawers {
 		d.Draw(screen)
 	}
-	s.KeyDrawer.Draw(screen, s.Pressed)
+	// s.KeyDrawer.Draw(screen, s.Pressed)
 	s.Meter.Draw(screen)
 	s.ComboDrawer.Draw(screen)
-	s.JudgmentDrawer.Draw(screen)
+	// s.JudgmentDrawer.Draw(screen)
 	s.ScoreDrawer.Draw(screen)
 	s.DebugPrint(screen)
 }
