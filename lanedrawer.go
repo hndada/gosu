@@ -8,30 +8,6 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-// Todo: use Effecter in draws.BaseDrawer
-type BackgroundDrawer struct {
-	Sprite  draws.Sprite
-	Dimness *float64
-}
-
-func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
-	op := &ebiten.DrawImageOptions{}
-	op.ColorM.ChangeHSV(0, 1, *d.Dimness)
-	d.Sprite.Draw(screen, op)
-	// op := d.Sprite.Op()
-	// screen.DrawImage(d.Sprite.I, op)
-}
-
-func NewScoreDrawer() draws.NumberDrawer {
-	return draws.NumberDrawer{
-		Sprites:     ScoreSprites,
-		SignSprites: SignSprites,
-		DigitWidth:  ScoreSprites[0].W(),
-		ZeroFill:    1,
-		Origin:      ScoreSprites[0].Origin(),
-	}
-}
-
 type Direction int
 
 const (
@@ -41,86 +17,80 @@ const (
 	Rightward
 )
 
+// var Directions = []Direction{Upward, Downward, Leftward, Rightward}
+
 // TPS should be multiple of 1000, since only one speed value
 // goes passed per Update, while unit of TransPoint's time is 1ms.
 var TimeStep float64 = 1000 / float64(TPS)
 
+// Subject is a thing being drawn.
+type LaneSubject interface {
+	Sprite() draws.Sprite
+	BodySprite() draws.Sprite
+	Position() float64
+	SetPosition(float64)
+	Speed() float64
+	IsHead() bool
+	IsTail() bool
+	Marked() bool
+	Next() LaneSubject
+	Prev() LaneSubject
+}
+type LaneDrawer interface {
+	SetSpeedScale(speedScale float64)
+	Update(beatSpeed, speedScale float64)
+	Draw(screen *ebiten.Image)
+	DrawLongBody(screen *ebiten.Image, head LaneSubject)
+}
+
 // LaneDrawer's cursor position should be consistent with ScenePlay.
 type baseLaneDrawer struct {
-	direction Direction
-
-	sprites  []draws.Sprite
-	margin   float64 // Half of max sizes of sprites.
-	bodyLoss float64 // Head/2 + Tail/2
-
+	direction   Direction
 	hitPosition float64
 	maxPosition float64
 	minPosition float64
-
-	// beatSpeed  float64 // BPM(ratio) * BeatLengthScale
-	speedScale float64
-
-	marker draws.Effecter
+	margin      float64
+	bodyLoss    float64
+	beatSpeed   float64 // BPM(ratio) * BeatLengthScale
+	speedScale  float64
+	marker      func(op *ebiten.DrawImageOptions, marked bool) // draws.Effecter
 }
 
 func newBaseLaneDrawer(
 	direction Direction,
-	sprites []draws.Sprite,
 	hitPosition float64,
+	maxPosition float64,
+	minPosition float64,
+	margin float64,
+	bodyLoss float64,
+
+	beatSpeed float64, // BPM(ratio) * BeatLengthScale
 	speedScale float64,
-	marker draws.Effecter,
+	marker func(op *ebiten.DrawImageOptions, marked bool), // draws.Effecter
 ) (d baseLaneDrawer) {
 	d.direction = direction
-	d.sprites = sprites
 	d.hitPosition = hitPosition
+	d.maxPosition = maxPosition
+	d.minPosition = minPosition
+	d.margin = margin
+	d.bodyLoss = bodyLoss
+
+	d.beatSpeed = beatSpeed
 	d.speedScale = speedScale
 	d.marker = marker
-	var xMax, yMax float64
-	for _, s := range sprites {
-		if xMax < s.X() {
-			xMax = s.X()
-		}
-		if yMax < s.Y() {
-			yMax = s.Y()
-		}
-	}
-	if len(d.sprites) >= 4 { // Long body enabled.
-		switch d.direction {
-		case Downward, Upward:
-			d.margin = yMax / 2
-			d.bodyLoss = sprites[Head].H()/2 + sprites[Tail].H()/2
-		case Leftward, Rightward:
-			d.margin = xMax / 2
-			d.bodyLoss = sprites[Head].W()/2 + sprites[Tail].W()/2
-		}
-	}
-	switch d.direction {
-	case Upward:
-		d.maxPosition = screenSizeY - d.hitPosition
-		d.minPosition = -d.hitPosition
-	case Downward:
-		d.maxPosition = d.hitPosition
-		d.minPosition = -screenSizeY + d.hitPosition
-	case Leftward:
-		d.maxPosition = screenSizeX - d.hitPosition
-		d.minPosition = -d.hitPosition
-	case Rightward:
-		d.maxPosition = d.hitPosition
-		d.minPosition = -screenSizeX + d.hitPosition
-	}
 	return
 }
 
-type LaneObject struct {
-	Type     int
-	Position float64
-	Speed    float64 // Not used in FixedLaneDrawer.
-	Next     *LaneObject
-	Prev     *LaneObject
-	Marked   *bool
-	// draws.Effecter
-	// Effecter draws.Effecter
-}
+// type LaneSubject struct {
+// 	Type     int
+// 	Position float64
+// 	Speed    float64 // Not used in FixedLaneDrawer.
+// 	Next     LaneSubject
+// 	Prev     LaneSubject
+// 	Marked   *bool
+// 	// draws.Effecter
+// 	// Effecter draws.Effecter
+// }
 
 // DrawLongBody finds sub-image of Body sprite corresponding to current exposed long body
 // and scale the sub-image to (exposed length) / (sub-image length).
@@ -128,45 +98,42 @@ type LaneObject struct {
 // Tail's Position is always larger than Head's.
 // In other word, Head is always nearer than Tail.
 // Start is Head's, and End is Tail's.
-func (d baseLaneDrawer) DrawLongBody(screen *ebiten.Image, head *LaneObject) { //headSrc any) {
-	// head := headSrc.(*LaneObject)
-	tail := head.Next //.(*LaneObject)
-	length := tail.Position - head.Position
+func (d baseLaneDrawer) DrawLongBody(screen *ebiten.Image, head LaneSubject) {
+	tail := head.Next()
+	length := tail.Position() - head.Position()
 	length -= -d.bodyLoss
-	startPosition := head.Position
+	startPosition := head.Position()
 	if startPosition < d.minPosition {
 		startPosition = d.minPosition
 	}
-	endPosition := tail.Position
+	endPosition := tail.Position()
 	if endPosition > d.maxPosition {
 		endPosition = d.maxPosition
 	}
-	srcSprite := d.sprites[Body]
-	ratio := length / srcSprite.H()
-	srcStart := math.Floor((startPosition - head.Position) / ratio)
-	srcEnd := math.Ceil((endPosition - head.Position) / ratio)
+	body := head.BodySprite()
+	ratio := length / body.H()
+	srcStart := math.Floor((startPosition - head.Position()) / ratio)
+	srcEnd := math.Ceil((endPosition - head.Position()) / ratio)
 	op := &ebiten.DrawImageOptions{}
 	if d.marker != nil {
-		d.marker(op, *head.Marked)
+		d.marker(op, head.Marked())
 	}
 	switch d.direction {
 	case Upward, Downward:
 		if d.direction == Downward {
 			ratio *= -1
-			srcStart *= -1
 		}
-		srcRect := image.Rect(0, int(srcStart), int(srcSprite.W()), int(srcEnd))
-		sprite := srcSprite.SubSprite(srcRect)
+		srcRect := image.Rect(0, int(srcStart), int(body.W()), int(srcEnd))
+		sprite := body.SubSprite(srcRect)
 		op.GeoM.Scale(1, ratio)
 		op.GeoM.Translate(0, srcStart)
 		sprite.Draw(screen, op)
 	case Leftward, Rightward:
 		if d.direction == Rightward {
 			ratio *= -1
-			srcStart *= -1
 		}
-		srcRect := image.Rect(int(srcStart), 0, int(srcEnd), int(srcSprite.H()))
-		sprite := srcSprite.SubSprite(srcRect)
+		srcRect := image.Rect(int(srcStart), 0, int(srcEnd), int(body.H()))
+		sprite := body.SubSprite(srcRect)
 		op.GeoM.Scale(ratio, 1)
 		op.GeoM.Translate(srcStart, 0)
 		sprite.Draw(screen, op)
@@ -179,24 +146,38 @@ func (d baseLaneDrawer) DrawLongBody(screen *ebiten.Image, head *LaneObject) { /
 type FixedLaneDrawer struct {
 	baseLaneDrawer
 	cursor   float64
-	farthest *LaneObject
-	nearest  *LaneObject
+	farthest LaneSubject
+	nearest  LaneSubject
 }
 
 func NewFixedLaneDrawer(
 	direction Direction,
-	sprites []draws.Sprite,
 	hitPosition float64,
-	// beatSpeed,  // Speed calculation is each mode's task.
-	speedScale float64,
-	marker draws.Effecter,
+	maxPosition float64,
+	minPosition float64,
+	margin float64,
+	bodyLoss float64,
 
-	startTime int64,
+	beatSpeed float64, // BPM(ratio) * BeatLengthScale
+	speedScale float64,
+	marker func(op *ebiten.DrawImageOptions, marked bool), // draws.Effecter
+
 	tp *TransPoint,
-	leading *LaneObject,
+	startTime int64,
+	leading LaneSubject,
 ) (d FixedLaneDrawer) {
 	d.baseLaneDrawer = newBaseLaneDrawer(
-		direction, sprites, hitPosition, speedScale, marker)
+		direction,
+		hitPosition,
+		maxPosition,
+		minPosition,
+		margin,
+		bodyLoss,
+
+		beatSpeed, // BPM(ratio) * BeatLengthScale
+		speedScale,
+		marker,
+	)
 	d.cursor = tp.Position
 	d.cursor -= float64(tp.Time-startTime) * tp.BPM
 	d.SetSpeedScale(speedScale)
@@ -207,33 +188,32 @@ func NewFixedLaneDrawer(
 
 // Need to re-calculate cursor's position when speed scale changes.
 func (d *FixedLaneDrawer) SetSpeedScale(speedScale float64) {
-	d.cursor /= d.speedScale
+	d.cursor *= speedScale / d.speedScale
 	d.speedScale = speedScale
-	d.cursor *= d.speedScale
 }
 
 // Speed: BPM (or BPM ratio) * BeatLengthScale * SpeedScale.
 func (d *FixedLaneDrawer) Update(beatSpeed, speedScale float64) {
-	speed := beatSpeed * d.speedScale
-	d.cursor += speed * TimeStep
-	for d.farthest.Position-d.cursor <= d.maxPosition {
-		d.farthest = d.farthest.Next //.(*LaneObject)
+	for d.farthest.Position()-d.cursor <= d.maxPosition+d.margin {
+		d.farthest = d.farthest.Next()
 	}
-	for d.nearest.Position-d.cursor <= d.minPosition {
-		d.nearest = d.nearest.Next //.(*LaneObject)
+	for d.nearest.Position()-d.cursor <= d.minPosition-d.margin {
+		d.nearest = d.nearest.Next()
 	}
 	if speedScale != d.speedScale {
 		d.SetSpeedScale(speedScale)
 	}
+	speed := beatSpeed * d.speedScale
+	d.cursor += speed * TimeStep
 }
 
-// Draw from farthest to nearest.
-// So that nearer notes are exposed when overlapped with farther notes.
+// Draw from farthest to nearest to make nearer notes exposed
+// when being overlapped with farther notes.
 func (d FixedLaneDrawer) Draw(screen *ebiten.Image) {
 	obj := d.farthest
-	for ; obj != d.nearest; obj = d.farthest.Prev { //.(*LaneObject) {
-		sprite := d.sprites[obj.Type]
-		offset := obj.Position - d.cursor
+	for ; obj != d.nearest; obj = d.farthest.Prev() {
+		sprite := obj.Sprite()
+		offset := obj.Position() - d.cursor
 		switch d.direction {
 		case Downward, Upward:
 			sprite.Move(0, offset)
@@ -242,84 +222,102 @@ func (d FixedLaneDrawer) Draw(screen *ebiten.Image) {
 		}
 		op := &ebiten.DrawImageOptions{}
 		if d.marker != nil {
-			d.marker(op, *obj.Marked)
+			d.marker(op, obj.Marked())
 		}
 		sprite.Draw(screen, op)
-		if obj.Type == Head {
+		if obj.IsHead() {
 			d.DrawLongBody(screen, obj)
 		}
 	}
-	if obj.Type == Tail {
-		d.DrawLongBody(screen, obj.Prev)
+	if obj.IsHead() {
+		d.DrawLongBody(screen, obj.Prev())
 	}
 }
 
 // Todo: set draw order for performance?
 type FloatLaneDrawer struct {
 	baseLaneDrawer
-	Objects []*LaneObject
+	objects []LaneSubject
 }
 
 // Speed calculation is each mode's task.
 func NewFloatLaneDrawer(
 	direction Direction,
-	sprites []draws.Sprite,
 	hitPosition float64,
-	speedScale float64,
-	marker draws.Effecter,
+	maxPosition float64,
+	minPosition float64,
+	margin float64,
+	bodyLoss float64,
 
-	objs []*LaneObject,
+	beatSpeed float64, // BPM(ratio) * BeatLengthScale
+	speedScale float64,
+	marker func(op *ebiten.DrawImageOptions, marked bool), // draws.Effecter
+
+	objs []LaneSubject,
 ) (d FloatLaneDrawer) {
 	d.baseLaneDrawer = newBaseLaneDrawer(
-		direction, sprites, hitPosition, speedScale, marker)
+		direction,
+		hitPosition,
+		maxPosition,
+		minPosition,
+		margin,
+		bodyLoss,
+
+		beatSpeed, // BPM(ratio) * BeatLengthScale
+		speedScale,
+		marker,
+	)
 	// Reverse objects slice.
 	for i, j := 0, len(objs)-1; i < j; i, j = i+1, j-1 {
 		objs[i], objs[j] = objs[j], objs[i]
 	}
-	d.Objects = objs
+	d.objects = objs
 	d.SetSpeedScale(speedScale)
 	return
 }
 
 // Need to re-calculate cursor's position when speed scale changes.
 func (d *FloatLaneDrawer) SetSpeedScale(speedScale float64) {
-	for i := range d.Objects {
-		d.Objects[i].Position /= d.speedScale
-		d.Objects[i].Position *= speedScale
+	for i := range d.objects {
+		pos := d.objects[i].Position()
+		pos *= speedScale / d.speedScale
+		d.objects[i].SetPosition(pos)
 	}
 	d.speedScale = speedScale
 }
 
 // Speed: BPM (or BPM ratio) * BeatLengthScale * SpeedScale.
 func (d *FloatLaneDrawer) Update(beatSpeed, speedScale float64) {
-	for i, obj := range d.Objects {
-		speed := obj.Speed * d.speedScale
-		d.Objects[i].Position -= speed * TimeStep
+	for i, obj := range d.objects {
+		speed := obj.Speed() * d.speedScale
+		pos := d.objects[i].Position()
+		pos -= speed * TimeStep
+		d.objects[i].SetPosition(pos)
 	}
 	if speedScale != d.speedScale {
 		d.SetSpeedScale(speedScale)
 	}
 }
 
-// Draw from farthest to nearest.
-// So that nearer notes are exposed when overlapped with farther notes.
+// Draw from farthest to nearest to make nearer notes exposed
+// when being overlapped with farther notes.
 func (d FloatLaneDrawer) Draw(screen *ebiten.Image) {
-	heads := make([]*LaneObject, 0)
-	for _, obj := range d.Objects {
-		if obj.Type == Head {
+	heads := make([]LaneSubject, 0)
+	for _, obj := range d.objects {
+		if obj.IsHead() {
 			head := obj
-			tail := obj.Next //.(LaneObject)
-			if head.Position <= d.maxPosition &&
-				tail.Position >= d.minPosition {
+			tail := obj.Next()
+			if head.Position() <= d.maxPosition+d.margin &&
+				tail.Position() >= d.minPosition-d.margin {
 				heads = append(heads, obj)
 			}
 		}
-		if obj.Position > d.maxPosition ||
-			obj.Position < d.minPosition {
+		if obj.Position() > d.maxPosition+d.margin ||
+			obj.Position() < d.minPosition-d.margin {
 			continue
 		}
-		sprite := d.sprites[obj.Type]
-		offset := obj.Position
+		sprite := obj.Sprite()
+		offset := obj.Position()
 		switch d.direction {
 		case Downward, Upward:
 			sprite.Move(0, offset)
@@ -328,7 +326,7 @@ func (d FloatLaneDrawer) Draw(screen *ebiten.Image) {
 		}
 		op := &ebiten.DrawImageOptions{}
 		if d.marker != nil {
-			d.marker(op, *obj.Marked)
+			d.marker(op, obj.Marked())
 		}
 		sprite.Draw(screen, op)
 	}

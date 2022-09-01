@@ -16,7 +16,38 @@ import (
 )
 
 type ScenePlay interface {
-	SetTick(rf *osr.Format)
+	ScenePlaySetter
+	ScenePlayUpdater
+	ScenePlayDrawer
+	NoteDrawers() []LaneDrawer
+}
+
+type ScenePlaySetter interface {
+	// SetTick(rf *osr.Format)
+	SetChart(cpath string)
+	// SetMods()
+	SetTick(waitBefore int64) // Including EndTime.
+
+	SetBackgroundDrawer(bg draws.Sprite, dimness *float64)
+	SetSpeedScaleHandler(speedScale *float64)
+	SetTransPoint(tp *TransPoint)
+	SetMusicPlayer(path string)
+	SetMusicVolume(volume *float64)
+	SoundNames() []string
+	SetSounds(names []string)
+	InitInput()
+}
+type ScenePlayUpdater interface {
+}
+type ScenePlayDrawer interface {
+	DrawBackground(screen *ebiten.Image)
+	DrawField(screen *ebiten.Image)
+	DrawNotes(screen *ebiten.Image)
+	DrawBar(screen *ebiten.Image)
+	DrawKey(screen *ebiten.Image)
+	DrawScore(screen *ebiten.Image)
+	DrawCombo(screen *ebiten.Image)
+	DrawJudgment(screen *ebiten.Image)
 }
 
 // Fields can be set at outer function call.
@@ -24,10 +55,10 @@ type ScenePlay interface {
 // Unit of time is a millisecond (1ms = 0.001s).
 type BaseScenePlay struct {
 	// General
-	Tick             int
-	Chart            *Chart
-	EndTime          int64 // EndTime = Duration + WaitAfter
-	Mods             Mods
+	Tick int
+	// Chart            *Chart
+	EndTime int64 // EndTime = Duration + WaitAfter
+	// Mods             Mods
 	BackgroundDrawer BackgroundDrawer
 
 	// Speed, BPM, Volume and Highlight
@@ -36,14 +67,11 @@ type BaseScenePlay struct {
 	SpeedHandler ctrl.F64Handler
 	*TransPoint
 
-	// Audio
-	// LastVolume  float64
 	Volume      *float64
 	MusicPlayer *audio.Player
 	MusicCloser func() error
 	Sounds      audios.SoundMap // A player for sample sound is generated at a place.
 
-	// Input
 	FetchPressed func() []bool
 	LastPressed  []bool
 	Pressed      []bool
@@ -132,31 +160,17 @@ func NewBaseScenePlay(
 			for _, n := range c.Notes {
 				var j int
 				switch n.Type {
-				case Head, Tail:
+				case Head, Tail: // Head/Tail of Roll/BigRoll
 					j = 1
-				case Extra:
+				case Extra: // Shake
 					j = 2
-				default:
+				default: // Don, Kat, BigDon, BigKat
 					j = 0
 				}
 				if i == j {
 					s.Staged[i] = n
 					break
 				}
-			}
-		}
-		for _, n := range c.Notes {
-			var i int
-			switch n.Type {
-			case Head, Tail: // Head/Tail of Roll/BigRoll
-				i = 1
-			case Extra: // Shake
-				i = 2
-			default: // Don, Kat, BigDon, BigKat
-				i = 0
-			}
-			if s.Staged[i] == nil {
-				s.Staged[i] = n
 			}
 		}
 	}
@@ -178,16 +192,17 @@ func NewBaseScenePlay(
 
 // General
 const (
-	MinWaitBefore int64 = int64(-1.8 * 1000)
-	WaitAfter     int64 = 3 * 1000
+	MinWaitBefore int64 = -1800
+	WaitAfter     int64 = 3000
 )
 
 // Todo: put mode then switch Speed depends on the mode?
 // func (s BaseScenePlay) Speed() float64 { return s.SpeedScale * s.BeatRatio() * s.BeatLengthScale }
-func TimeToTick(time int64) int           { return int(float64(time) / 1000 * float64(TPS)) }
-func TickToTime(tick int) int64           { return int64(float64(tick) / float64(TPS) * 1000) }
-func (s BaseScenePlay) Time() int64       { return int64(float64(s.Tick) / float64(TPS) * 1000) }
-func (s BaseScenePlay) BPMRatio() float64 { return s.TransPoint.BPM / s.MainBPM }
+func TimeToTick(time int64) int     { return int(float64(time) / 1000 * float64(TPS)) }
+func TickToTime(tick int) int64     { return int64(float64(tick) / float64(TPS) * 1000) }
+func (s BaseScenePlay) Time() int64 { return TickToTime(s.Tick) }
+
+// func (s BaseScenePlay) BPMRatio() float64 { return s.TransPoint.BPM / s.MainBPM }
 func (s BaseScenePlay) KeyAction(k int) input.KeyAction {
 	return input.CurrentKeyAction(s.LastPressed[k], s.Pressed[k])
 }
@@ -277,3 +292,27 @@ func (s *BaseScenePlay) UpdateTransPoint() {
 // 	}
 // 	return nil
 // }
+
+// Todo: use Effecter in draws.BaseDrawer
+type BackgroundDrawer struct {
+	Sprite  draws.Sprite
+	Dimness *float64
+}
+
+func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
+	op := &ebiten.DrawImageOptions{}
+	op.ColorM.ChangeHSV(0, 1, *d.Dimness)
+	d.Sprite.Draw(screen, op)
+	// op := d.Sprite.Op()
+	// screen.DrawImage(d.Sprite.I, op)
+}
+
+func NewScoreDrawer() draws.NumberDrawer {
+	return draws.NumberDrawer{
+		Sprites:     ScoreSprites,
+		SignSprites: SignSprites,
+		DigitWidth:  ScoreSprites[0].W(),
+		ZeroFill:    1,
+		Origin:      ScoreSprites[0].Origin(),
+	}
+}

@@ -31,6 +31,11 @@ var (
 	NoteHeigth       float64 = screenSizeY * 0.05 // Applies to all notes
 	HitPosition      float64 = screenSizeY * 0.90 // The bottom y-value of Hint,  not a middle or top.
 	// HintPosition     float64 = screenSizeY * 0.96
+	maxPosition float64 = HitPosition
+	minPosition float64 = maxPosition - screenSizeY
+	// margin should be larger than MaxSize/2 of all note sprites' width or height.
+	margin   float64 = 100
+	bodyLoss float64 = NoteHeigth // Head/2 + Tail/2.
 )
 var NoteWidthsMap = map[int][4]float64{
 	4:  {0.065, 0.065, 0.065, 0.065},
@@ -60,6 +65,12 @@ var (
 	BodySpriteStyle = BodySpriteStyleStretch
 )
 
+// Todo: ratio *= -1 when switching?
+func SwitchDirection() {
+	max, min := maxPosition, minPosition
+	maxPosition = -min
+	minPosition = -max
+}
 func init() {
 	ScaleNoteWidthsMap()
 }
