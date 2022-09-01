@@ -32,7 +32,8 @@ func NewChart(cpath string) (c *Chart, err error) {
 		}
 	}
 	c.ChartHeader = gosu.NewChartHeader(f)
-	c.TransPoints = gosu.NewTransPoints(f)
+	fixed := true
+	c.TransPoints = gosu.NewTransPoints(f, fixed)
 	switch f := f.(type) {
 	case *osu.Format:
 		c.KeyCount = int(f.CircleSize)
