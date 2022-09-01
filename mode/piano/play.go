@@ -90,39 +90,11 @@ func NewScenePlay(cpath string,
 // TPS affects only on Update(), not on Draw().
 // Todo: apply other values of TransPoint (Volume has finished so far)
 func (s *ScenePlay) Update() any {
-	// General
-	s.Tick++
-	done := ebiten.IsKeyPressed(ebiten.KeyEscape) || s.Time() >= s.EndTime
-	if done { // Todo: keep playing music when making SceneResult
-		if s.MusicPlayer != nil {
-			s.MusicPlayer.Close()
-		}
-		return gosu.PlayToResultArgs{
-			Result: s.Result,
-		}
+	defer s.Ticker()
+	if args := s.CheckFinished(); args != nil {
+		return args
 	}
-	for k := range s.NoteDrawers {
-		s.NoteDrawers[k].Update(s.SpeedScale)
-	}
-	// Speed, BPM, Volume and Highlight
-	speed := s.SpeedScale * (s.TransPoint.BPM / s.MainBPM) * s.TransPoint.BeatLengthScale
-	s.BarDrawer.Update(speed)
-	for k := range s.NoteDrawers {
-		s.NoteDrawers[k].Update(speed)
-	}
-	s.UpdateTransPoint()
-	if fired := s.SpeedHandler.Update(); fired {
-		for k := range s.NoteDrawers {
-			s.NoteDrawers[k].Speed = s.SpeedScale
-		}
-		go s.Chart.SetPositions(s.SpeedScale)
-	}
-
-	// Audio
-	if s.Tick == 0 && s.MusicPlayer != nil {
-		s.MusicPlayer.SetVolume(s.Volume)
-		s.MusicPlayer.Play()
-	}
+	s.PlayMusicIfStarted()
 
 	// Input
 	s.LastPressed = s.Pressed
@@ -171,6 +143,16 @@ func (s *ScenePlay) Update() any {
 			marks = append(marks, mark)
 		}
 	}
+	// Speed, BPM, Volume and Highlight
+	s.UpdateTransPoint()
+	if fired := s.SpeedHandler.Update(); fired {
+		for k := range s.NoteDrawers {
+			s.NoteDrawers[k].SetSpeedScale(*s.SpeedScale)
+		}
+		go s.Chart.SetSpeedScale(*s.SpeedScale)
+	}
+	s.BarDrawer.Update(s.TransPoint.Speed()/s.MainBPM, *s.SpeedScale)
+
 	// s.JudgmentDrawer.Update(worst)
 	s.ComboDrawer.Update(s.Combo, 0)
 	s.DelayedScore.Set(s.Score())
@@ -184,9 +166,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
 	s.FieldSprite.Draw(screen, nil)
 	s.HintSprite.Draw(screen, nil)
-	// s.BarDrawer.Draw(screen)
-	// s.DrawLongNoteBodies(screen)
-	// s.DrawNotes(screen)
+	s.BarDrawer.Draw(screen)
 	for _, d := range s.NoteDrawers {
 		d.Draw(screen)
 	}
