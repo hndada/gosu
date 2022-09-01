@@ -191,6 +191,25 @@ func (s BaseScenePlay) BPMRatio() float64 { return s.TransPoint.BPM / s.MainBPM 
 func (s BaseScenePlay) KeyAction(k int) input.KeyAction {
 	return input.CurrentKeyAction(s.LastPressed[k], s.Pressed[k])
 }
+func (s *BaseScenePlay) Ticker() { s.Tick++ }
+func (s *BaseScenePlay) CheckFinished() any {
+	if !ebiten.IsKeyPressed(ebiten.KeyEscape) || s.Time() >= s.EndTime {
+		return nil
+	}
+	// Todo: keep playing music when making SceneResult
+	if s.MusicPlayer != nil {
+		s.MusicPlayer.Close()
+	}
+	return PlayToResultArgs{
+		Result: s.Result,
+	}
+}
+func (s *BaseScenePlay) PlayMusicIfStarted() {
+	if s.Tick == 0 && s.MusicPlayer != nil {
+		s.MusicPlayer.SetVolume(*s.Volume)
+		s.MusicPlayer.Play()
+	}
+}
 
 // func (s *BaseScenePlay) SetTick(rf *osr.Format) int64 { // Returns duration of waiting before starts
 //
@@ -223,10 +242,12 @@ func (s BaseScenePlay) KeyAction(k int) input.KeyAction {
 //		}
 //		// s.Volume = Volume * s.TransPoint.Volume
 //	}
-// func (s *BaseScenePlay) UpdateTransPoint() {
-// 	for s.TransPoint.Next != nil && s.TransPoint.Next.Time <= s.Time() {
-// 		s.TransPoint = s.TransPoint.Next
-// 	}
+func (s *BaseScenePlay) UpdateTransPoint() {
+	for s.TransPoint.Next != nil && s.Time() >= s.TransPoint.Next.Time {
+		s.TransPoint = s.TransPoint.Next
+	}
+}
+
 // 	if s.LastVolume != s.TransPoint.Volume {
 // 		s.LastVolume = s.Volume
 // 		s.Volume = Volume * s.TransPoint.Volume
