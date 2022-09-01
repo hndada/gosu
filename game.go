@@ -44,7 +44,7 @@ func NewGame(props []ModeProp) *Game {
 	return g
 }
 
-func (g *Game) Update() error {
+func (g *Game) Update() (err error) {
 	g.VolumeHandler.Update()
 	if g.Scene == nil {
 		g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
@@ -56,15 +56,15 @@ func (g *Game) Update() error {
 	case PlayToResultArgs: // Todo: SceneResult
 		g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
 	case SelectToPlayArgs:
-		var err error
-		g.Scene, err = g.ModeProps[args.Mode].NewScenePlay(args.Path, args.Mods, args.Replay)
+		g.Scene, err = g.ModeProps[args.Mode].NewScenePlay(
+			args.Path, args.Replay, g.VolumeHandler, args.SpeedHandler)
 		if err != nil {
-			return err
+			return
 		}
 	case nil:
-		return nil
+		return
 	}
-	return nil
+	return
 }
 func (g *Game) Draw(screen *ebiten.Image) {
 	g.Scene.Draw(screen)
@@ -74,10 +74,11 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 type SelectToPlayArgs struct {
-	Mode   int
-	Path   string
-	Mods   Mods
-	Replay *osr.Format
+	Mode int
+	Path string
+	// Mods   Mods
+	Replay       *osr.Format
+	SpeedHandler ctrl.F64Handler
 }
 
 type PlayToResultArgs struct {

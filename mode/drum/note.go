@@ -158,3 +158,35 @@ func (n Note) NoteKind() int { // Todo: NoteKind -> NoteType?
 // 	// speed := (bpm / 60000) * beatScale * (multiplier * 100)
 // 	return int(length / speed)
 // }
+
+// func NewNotes(f any, transPoints []*TransPoint, mode, subMode int) (ns []*Note) {
+// 	var prevs []*Note
+// 	switch mode {
+// 	case ModeDrum:
+// 		prevs = make([]*Note, 3)
+// 	}
+// 	for _, n := range ns {
+// 		switch mode {
+// 		case ModeDrum:
+// 			var i int
+// 			switch n.Type {
+// 			case Head, Tail: // Head/Tail of Roll/BigRoll
+// 				i = 1
+// 			case Extra: // Shake
+// 				i = 2
+// 			default: // Don, Kat, BigDon, BigKat
+// 				i = 0
+// 			}
+// 			prev := prevs[i]
+// 			n.Prev = prev
+// 			if prev != nil {
+// 				prev.Next = n
+// 			}
+// 			// if staged[i] == nil {
+// 			// 	staged[i] = n
+// 			// }
+// 			prevs[i] = n
+// 		}
+// 	}
+// 	return
+// }

@@ -17,12 +17,11 @@ type ModeProp struct { // Stands for Mode properties.
 	ChartInfos     []ChartInfo
 	Cursor         int                 // Todo: custom chart infos - custom cursor
 	Results        map[[16]byte]Result // md5.Size = 16
-	Mods           Mods
 	LastUpdateTime time.Time
 	SpeedHandler   ctrl.F64Handler
 	LoadSkin       func()
-	NewChartInfo   func(string, Mods) (ChartInfo, error)
-	NewScenePlay   func(string, Mods, *osr.Format) (Scene, error)
+	NewChartInfo   func(string) (ChartInfo, error)
+	NewScenePlay   func(cpath string, rf *osr.Format, vh, sh ctrl.F64Handler) (Scene, error)
 	ExposureTime   func(float64) float64
 }
 

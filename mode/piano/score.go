@@ -21,7 +21,7 @@ var JudgmentColors = []color.NRGBA{
 	gosu.ColorKool, gosu.ColorCool, gosu.ColorGood, gosu.ColorBad, gosu.ColorMiss}
 
 func Verdict(noteType int, a input.KeyAction, td int64) gosu.Judgment {
-	if noteType == gosu.Tail { // Either Hold or Release when Tail is not scored
+	if noteType == Tail { // Either Hold or Release when Tail is not scored
 		switch {
 		case td > Miss.Window:
 			if a == input.Release {
@@ -41,23 +41,23 @@ func Verdict(noteType int, a input.KeyAction, td int64) gosu.Judgment {
 }
 
 // Todo: no getting Flow when hands off the long note
-func (s *ScenePlay) MarkNote(n *gosu.Note, j gosu.Judgment) {
+func (s *ScenePlay) MarkNote(n *Note, j gosu.Judgment) {
 	var a = FlowScoreFactor
 	if j == Miss {
 		s.Combo = 0
 	} else {
 		s.Combo++
 	}
-	s.Flow += j.Flow * Weight(*n)
+	s.Flow += j.Flow * n.Weight()
 	if s.Flow < 0 {
 		s.Flow = 0
 	} else if s.Flow > 1 {
 		s.Flow = 1
 	}
-	s.Flows += math.Pow(s.Flow, a) * Weight(*n)
-	s.Accs += j.Acc * Weight(*n)
+	s.Flows += math.Pow(s.Flow, a) * n.Weight()
+	s.Accs += j.Acc * n.Weight()
 	if j.Window == Kool.Window {
-		s.Extras += Weight(*n)
+		s.Extras += n.Weight()
 	}
 	for i, jk := range Judgments {
 		if jk.Window == j.Window {
@@ -68,12 +68,12 @@ func (s *ScenePlay) MarkNote(n *gosu.Note, j gosu.Judgment) {
 			panic("no reach")
 		}
 	}
-	s.NoteWeights += Weight(*n)
+	s.NoteWeights += n.Weight()
 	n.Marked = true
-	if n.Type == gosu.Head && j == Miss {
+	if n.Type == Head && j == Miss {
 		s.MarkNote(n.Next, Miss)
 	}
-	if n.Type != gosu.Tail {
+	if n.Type != Tail {
 		s.Staged[n.Key] = n.Next
 	}
 }

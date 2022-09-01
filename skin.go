@@ -32,13 +32,7 @@ const (
 )
 
 func LoadGeneralSkin() {
-	{
-		s := draws.NewSprite("skin/default-bg.jpg")
-		scale := screenSizeX / s.W()
-		s.SetScale(scale, scale, ebiten.FilterLinear)
-		s.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenter)
-		DefaultBackground = s
-	}
+	DefaultBackground = NewBackground("skin/default-bg.jpg")
 	// Todo: cursor may have outer circle
 	names := []string{"menu-cursor", "menu-cursor-additive", "cursortrail"}
 	for i, name := range names {
@@ -67,4 +61,11 @@ func LoadGeneralSkin() {
 		s.SetPosition(screenSizeX, 0, draws.OriginRightTop)
 		SignSprites[i] = s
 	}
+}
+func NewBackground(path string) draws.Sprite {
+	s := draws.NewSprite(path)
+	scale := screenSizeX / s.W()
+	s.SetScale(scale, scale, ebiten.FilterLinear)
+	s.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenter)
+	return s
 }

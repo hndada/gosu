@@ -107,6 +107,7 @@ func (s Sprite) Origin() Origin           { return s.origin }
 func (s Sprite) Filter() ebiten.Filter    { return s.filter }
 func (s Sprite) Size() (float64, float64) { return s.w, s.h }
 func (s Sprite) SrcSize() (int, int)      { return s.i.Size() }
+func (s Sprite) IsValid() bool            { return s.i != nil }
 
 //	func (s Sprite) SubImage(rect image.Rectangle) *ebiten.Image {
 //		return s.i.SubImage(rect).(*ebiten.Image)

@@ -26,9 +26,9 @@ var MeterMarkColors = []color.NRGBA{
 }
 
 // Meter is also known as TimingMeter.
-type Meter struct {
+type MeterDrawer struct {
 	MaxCountdown int
-	Base         draws.Sprite
+	Meter        draws.Sprite
 	Anchor       draws.Sprite
 	Unit         draws.Sprite
 	Marks        []MeterMark
@@ -40,20 +40,19 @@ type MeterMark struct {
 }
 
 // Anchor is a unit sprite constantly drawn at the middle of meter.
-func NewMeter(js []Judgment, colors []color.NRGBA) Meter {
+func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 	var (
-		meter      Meter
-		colorBase  = color.NRGBA{0, 0, 0, 128}       // Dark
+		colorMeter = color.NRGBA{0, 0, 0, 128}       // Dark
 		colorWhite = color.NRGBA{255, 255, 255, 192} // White
 		colorRed   = color.NRGBA{255, 0, 0, 192}     // Red
 	)
-	meter.MaxCountdown = TimeToTick(4000)
+	d.MaxCountdown = TimeToTick(4000)
 	{
 		miss := js[len(js)-1]
 		w := 1 + 2*math.Ceil(MeterWidth*float64(miss.Window))
 		h := MeterHeight
 		src := image.NewRGBA(image.Rect(0, 0, int(w), int(h)))
-		draw.Draw(src, src.Bounds(), &image.Uniform{colorBase}, image.Point{}, draw.Src)
+		draw.Draw(src, src.Bounds(), &image.Uniform{colorMeter}, image.Point{}, draw.Src)
 
 		// Height of colored range is 1/4 of meter's.
 		y1, y2 := math.Ceil(h*0.375), math.Ceil(h*0.625)
@@ -69,7 +68,7 @@ func NewMeter(js []Judgment, colors []color.NRGBA) Meter {
 		i := ebiten.NewImageFromImage(src)
 		base := draws.NewSpriteFromImage(i)
 		base.SetPosition(screenSizeX/2, screenSizeY, draws.OriginCenterBottom)
-		meter.Base = base
+		d.Meter = base
 	}
 	{
 		src := ebiten.NewImage(int(MeterWidth), int(MeterHeight))
@@ -77,7 +76,7 @@ func NewMeter(js []Judgment, colors []color.NRGBA) Meter {
 		i := ebiten.NewImageFromImage(src)
 		anchor := draws.NewSpriteFromImage(i)
 		anchor.SetPosition(screenSizeX/2, screenSizeY, draws.OriginCenterBottom)
-		meter.Anchor = anchor
+		d.Anchor = anchor
 	}
 	{
 		src := ebiten.NewImage(int(MeterWidth), int(MeterHeight))
@@ -85,33 +84,33 @@ func NewMeter(js []Judgment, colors []color.NRGBA) Meter {
 		i := ebiten.NewImageFromImage(src)
 		unit := draws.NewSpriteFromImage(i)
 		unit.SetPosition(screenSizeX/2, screenSizeY, draws.OriginCenterBottom)
-		meter.Unit = unit
+		d.Unit = unit
 	}
-	return meter
+	return
 }
-func (meter *Meter) Update(newMarks []MeterMark) {
-	meter.Marks = append(meter.Marks, newMarks...)
+func (d *MeterDrawer) Update(newMarks []MeterMark) {
+	d.Marks = append(d.Marks, newMarks...)
 	cursor := 0
-	for i, m := range meter.Marks {
+	for i, m := range d.Marks {
 		if m.Countdown == 0 {
 			cursor++
 		} else {
-			meter.Marks[i].Countdown--
+			d.Marks[i].Countdown--
 		}
 	}
-	meter.Marks = meter.Marks[cursor:] // Drop old marks.
+	d.Marks = d.Marks[cursor:] // Drop old marks.
 }
-func (meter Meter) Draw(screen *ebiten.Image) {
-	meter.Base.Draw(screen, nil)
-	for _, m := range meter.Marks {
-		sprite := meter.Unit
+func (d MeterDrawer) Draw(screen *ebiten.Image) {
+	d.Meter.Draw(screen, nil)
+	for _, m := range d.Marks {
+		sprite := d.Unit
 		op := &ebiten.DrawImageOptions{}
 		clr := MeterMarkColors[m.ColorType]
 		op.ColorM.ScaleWithColor(clr)
-		age := float64(m.Countdown) / float64(meter.MaxCountdown)
+		age := float64(m.Countdown) / float64(d.MaxCountdown)
 		draws.Fader(op, age)
 		op.GeoM.Translate(float64(m.Offset)*MeterWidth, 0)
 		sprite.Draw(screen, op)
 	}
-	meter.Anchor.Draw(screen, nil)
+	d.Anchor.Draw(screen, nil)
 }

@@ -154,3 +154,6 @@ func BPMs(transPoints []*TransPoint, duration int64) (main, min, max float64) {
 func (tp TransPoint) Speed() float64 {
 	return tp.BPM * tp.BeatLengthScale
 }
+func (tp TransPoint) BeatDuration() float64 {
+	return float64(tp.Meter) * (60000 / tp.BPM)
+}
