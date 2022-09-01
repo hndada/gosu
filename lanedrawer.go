@@ -5,7 +5,6 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/draws"
 )
 
 type Direction int
@@ -24,24 +23,24 @@ const (
 var TimeStep float64 = 1000 / float64(TPS)
 
 // Subject is a thing being drawn.
-type LaneObject interface {
-	Sprite() draws.Sprite
-	BodySprite() draws.Sprite
-	Position() float64
-	SetPosition(float64)
-	Speed() float64
-	IsHead() bool
-	IsTail() bool
-	Marked() bool
-	Next() LaneObject
-	Prev() LaneObject
-}
-type LaneDrawer interface {
-	SetSpeedScale(speedScale float64)
-	Update(beatSpeed, speedScale float64)
-	Draw(screen *ebiten.Image)
-	DrawLongBody(screen *ebiten.Image, head LaneObject)
-}
+// type LaneObject interface {
+// 	Sprite() draws.Sprite
+// 	BodySprite() draws.Sprite
+// 	Position() float64
+// 	SetPosition(float64)
+// 	Speed() float64
+// 	IsHead() bool
+// 	IsTail() bool
+// 	Marked() bool
+// 	Next() LaneObject
+// 	Prev() LaneObject
+// }
+// type LaneDrawer interface {
+// 	SetSpeedScale(speedScale float64)
+// 	Update(beatSpeed, speedScale float64)
+// 	Draw(screen *ebiten.Image)
+// 	DrawLongBody(screen *ebiten.Image, head LaneObject)
+// }
 
 // LaneDrawer's cursor position should be consistent with ScenePlay.
 type baseLaneDrawer struct {
