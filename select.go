@@ -77,14 +77,10 @@ func (s *SceneSelect) UpdateBackground() {
 		return
 	}
 	info := s.View[*s.Cursor]
-	img := draws.NewImage(info.Header.BackgroundPath(info.Path))
-	if img == nil {
-		return
+	sprite := NewBackground(info.BackgroundPath())
+	if sprite.IsValid() {
+		s.Background = sprite
 	}
-	s.Background = draws.NewSpriteFromImage(img)
-	scale := screenSizeX / s.Background.W()
-	s.Background.SetScale(scale, scale, ebiten.FilterLinear)
-	s.Background.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenter)
 }
 
 // Currently Chart infos are not in loop.

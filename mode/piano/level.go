@@ -11,7 +11,7 @@ var (
 
 // Mods may change the duration of chart.
 // Todo: implement actual calculating chart difficulties
-func Difficulties(c gosu.Chart) []float64 {
+func (c Chart) Difficulties() []float64 {
 	if len(c.Notes) == 0 {
 		return make([]float64, 0)
 	}
@@ -26,7 +26,7 @@ func Difficulties(c gosu.Chart) []float64 {
 			t += gosu.SliceDuration
 		}
 		switch n.Type {
-		case gosu.Tail:
+		case Tail:
 			d += 0.15
 		default:
 			d += 1
@@ -59,9 +59,9 @@ func init() {
 // Weight is for Tail's variadic weight based on its length.
 // For example, short long note does not require much strain to release.
 // Todo: fine-tuning with replay data
-func Weight(n gosu.Note) float64 {
+func (n Note) Weight() float64 {
 	switch n.Type {
-	case gosu.Tail:
+	case Tail:
 		d := float64(n.Time - n.Time2)
 		switch {
 		case d < 50:

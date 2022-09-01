@@ -24,7 +24,7 @@ const (
 var TimeStep float64 = 1000 / float64(TPS)
 
 // Subject is a thing being drawn.
-type LaneSubject interface {
+type LaneObject interface {
 	Sprite() draws.Sprite
 	BodySprite() draws.Sprite
 	Position() float64
@@ -33,14 +33,14 @@ type LaneSubject interface {
 	IsHead() bool
 	IsTail() bool
 	Marked() bool
-	Next() LaneSubject
-	Prev() LaneSubject
+	Next() LaneObject
+	Prev() LaneObject
 }
 type LaneDrawer interface {
 	SetSpeedScale(speedScale float64)
 	Update(beatSpeed, speedScale float64)
 	Draw(screen *ebiten.Image)
-	DrawLongBody(screen *ebiten.Image, head LaneSubject)
+	DrawLongBody(screen *ebiten.Image, head LaneObject)
 }
 
 // LaneDrawer's cursor position should be consistent with ScenePlay.
@@ -81,12 +81,12 @@ func newBaseLaneDrawer(
 	return
 }
 
-// type LaneSubject struct {
+// type LaneObject struct {
 // 	Type     int
 // 	Position float64
 // 	Speed    float64 // Not used in FixedLaneDrawer.
-// 	Next     LaneSubject
-// 	Prev     LaneSubject
+// 	Next     LaneObject
+// 	Prev     LaneObject
 // 	Marked   *bool
 // 	// draws.Effecter
 // 	// Effecter draws.Effecter
@@ -98,7 +98,7 @@ func newBaseLaneDrawer(
 // Tail's Position is always larger than Head's.
 // In other word, Head is always nearer than Tail.
 // Start is Head's, and End is Tail's.
-func (d baseLaneDrawer) DrawLongBody(screen *ebiten.Image, head LaneSubject) {
+func (d baseLaneDrawer) DrawLongBody(screen *ebiten.Image, head LaneObject) {
 	tail := head.Next()
 	length := tail.Position() - head.Position()
 	length -= -d.bodyLoss
@@ -146,8 +146,8 @@ func (d baseLaneDrawer) DrawLongBody(screen *ebiten.Image, head LaneSubject) {
 type FixedLaneDrawer struct {
 	baseLaneDrawer
 	cursor   float64
-	farthest LaneSubject
-	nearest  LaneSubject
+	farthest LaneObject
+	nearest  LaneObject
 }
 
 func NewFixedLaneDrawer(
@@ -164,7 +164,7 @@ func NewFixedLaneDrawer(
 
 	tp *TransPoint,
 	startTime int64,
-	leading LaneSubject,
+	leading LaneObject,
 ) (d FixedLaneDrawer) {
 	d.baseLaneDrawer = newBaseLaneDrawer(
 		direction,
@@ -237,7 +237,7 @@ func (d FixedLaneDrawer) Draw(screen *ebiten.Image) {
 // Todo: set draw order for performance?
 type FloatLaneDrawer struct {
 	baseLaneDrawer
-	objects []LaneSubject
+	objects []LaneObject
 }
 
 // Speed calculation is each mode's task.
@@ -253,7 +253,7 @@ func NewFloatLaneDrawer(
 	speedScale float64,
 	marker func(op *ebiten.DrawImageOptions, marked bool), // draws.Effecter
 
-	objs []LaneSubject,
+	objs []LaneObject,
 ) (d FloatLaneDrawer) {
 	d.baseLaneDrawer = newBaseLaneDrawer(
 		direction,
@@ -302,7 +302,7 @@ func (d *FloatLaneDrawer) Update(beatSpeed, speedScale float64) {
 // Draw from farthest to nearest to make nearer notes exposed
 // when being overlapped with farther notes.
 func (d FloatLaneDrawer) Draw(screen *ebiten.Image) {
-	heads := make([]LaneSubject, 0)
+	heads := make([]LaneObject, 0)
 	for _, obj := range d.objects {
 		if obj.IsHead() {
 			head := obj

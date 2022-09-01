@@ -83,7 +83,23 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	}
 	s.LastPressed = make([]bool, 4)
 	s.Pressed = make([]bool, 4)
-
+	for i := range s.Staged {
+		for _, n := range c.Notes {
+			var j int
+			switch n.Type {
+			case Head, Tail: // Head/Tail of Roll/BigRoll
+				j = 1
+			case Extra: // Shake
+				j = 2
+			default: // Don, Kat, BigDon, BigKat
+				j = 0
+			}
+			if i == j {
+				s.Staged[i] = n
+				break
+			}
+		}
+	}
 	// Note
 	s.PlayNotes, s.StagedNote, s.LeadingTail, s.MaxNoteWeights = NewPlayNotes(c)
 	et, wb, wa := s.EndTime, waitBefore, gosu.WaitAfter
@@ -102,6 +118,7 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	s.JudgmentDrawer.Sprites = s.JudgmentSprites
 	s.ComboDrawer.Sprites = s.ComboSprites
 	s.Meter = gosu.NewMeter(Judgments[0][:], JudgmentColors)
+
 	return s, nil
 }
 
