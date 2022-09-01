@@ -63,7 +63,7 @@ func NewScenePlay(cpath string,
 			draws.Grayer,
 			gosu.TickToTime(s.Tick),
 			s.TransPoint,
-			s.Staged[k].LaneObject,
+			s.Staged[k].LaneSubject,
 		)
 	}
 	s.BarDrawer = gosu.NewFixedLaneDrawer(

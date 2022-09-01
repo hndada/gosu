@@ -1,7 +1,31 @@
 package gosu
 
-func NewBars(transPoints []*TransPoint, endTime int64) []*LaneObject {
-	bars := make([]*LaneObject, 0)
+import (
+	"github.com/hndada/gosu/draws"
+)
+
+type Bar struct {
+	sprite   draws.Sprite
+	time     int64
+	position float64
+	speed    float64
+	next     *Bar
+	prev     *Bar
+}
+
+func (b *Bar) Sprite() draws.Sprite     { return b.sprite }
+func (b *Bar) BodySprite() draws.Sprite { return draws.Sprite{} }
+func (b *Bar) Position() float64        { return b.position }
+func (b *Bar) SetPosition(pos float64)  { b.position = pos }
+func (b *Bar) Speed() float64           { return b.speed }
+func (b *Bar) IsHead() bool             { return false }
+func (b *Bar) IsTail() bool             { return false }
+func (b *Bar) Marked() bool             { return false }
+func (b *Bar) Next() LaneSubject        { return b.next }
+func (b *Bar) Prev() LaneSubject        { return b.prev }
+
+func NewBars(transPoints []*TransPoint, endTime int64, sprite draws.Sprite) []LaneSubject {
+	bars := make([]Bar, 0)
 	first := transPoints[0]
 	first = first.FetchLatest()
 	var margin int64 = 5000
@@ -11,12 +35,13 @@ func NewBars(transPoints []*TransPoint, endTime int64) []*LaneObject {
 
 	speed := first.BPM * first.BeatLengthScale
 	for t := float64(first.Time); t >= float64(-margin); t -= float64(first.Meter) * 60000 / first.BPM {
-		bar := &LaneObject{
-			Type:     Normal,
-			Position: speed * (t - 0),
-			Speed:    speed,
+		bar := Bar{
+			sprite:   sprite,
+			time:     int64(t),
+			position: speed * (t - 0),
+			speed:    speed,
 		}
-		bars = append([]*LaneObject{bar}, bars...)
+		bars = append([]Bar{bar}, bars...)
 	}
 
 	bars = bars[:len(bars)-1] // Drop for avoiding duplicated
@@ -32,10 +57,11 @@ func NewBars(transPoints []*TransPoint, endTime int64) []*LaneObject {
 		for t := float64(tp.Time); t < float64(nextTime); t += unit {
 			// pos := prevPos + speed*unit
 			pos := nextPos
-			bar := &LaneObject{
-				Type:     Normal,
-				Position: pos,
-				Speed:    speed,
+			bar := Bar{
+				sprite:   sprite,
+				time:     int64(t),
+				position: pos,
+				speed:    speed,
 			}
 			bars = append(bars, bar)
 			// prevPos = pos
@@ -45,15 +71,19 @@ func NewBars(transPoints []*TransPoint, endTime int64) []*LaneObject {
 	for i := range bars {
 		switch i {
 		case 0:
-			bars[i].Next = bars[i+1]
+			bars[i].next = &bars[i+1]
 		case len(bars) - 1:
-			bars[i].Prev = bars[i-1]
+			bars[i].prev = &bars[i-1]
 		default:
-			bars[i].Next = bars[i+1]
-			bars[i].Prev = bars[i-1]
+			bars[i].next = &bars[i+1]
+			bars[i].prev = &bars[i-1]
 		}
 	}
-	return bars
+	bars2 := make([]LaneSubject, len(bars))
+	for i := range bars2 {
+		bars2[i] = &bars[i]
+	}
+	return bars2
 }
 
 // func BarPositions(transPoints []*TransPoint, endTime int64) []float64 {

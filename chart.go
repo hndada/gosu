@@ -14,11 +14,13 @@ type Chart struct {
 	TransPoints []*TransPoint
 	Mode        int
 	SubMode     int // e.g., KeyCount. // Todo: int -> float64; CircleSize may be float64
-	SpeedScale  float64
-	Notes       []*Note
 	Duration    int64
-	Bars        []*LaneObject
 	NoteCounts  []int
+
+	Notes []*Note
+	Bars  []LaneSubject
+
+	// SpeedScale float64
 }
 
 func NewChart(cpath string, mode, subMode int) (*Chart, error) {

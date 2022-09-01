@@ -3,6 +3,7 @@ package gosu
 import (
 	"sort"
 
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osu"
 )
 
@@ -32,16 +33,26 @@ type Note struct {
 	Key          int // Not used in Drum mode.
 
 	Marked bool
-	*LaneObject
+	*LaneSubject
 
 	// Following Next and Prev are for calculating scores.
-	// Note's Next/Prev and LaneObject's Next/Prev are consistent.
+	// Note's Next/Prev and LaneSubject's Next/Prev are consistent.
 	Next *Note
 	Prev *Note // For accessing to Head from Tail.
 	// Position float64 // Scaled x or y value.
 	// NextTail *Note // For drawing long body faster.
 }
 
+func (n *Note) Sprite() draws.Sprite     { return n.sprite }
+func (n *Note) BodySprite() draws.Sprite { return draws.Sprite{} }
+func (n *Note) Position() float64        { return n.position }
+func (n *Note) SetPosition(pos float64)  { n.position = pos }
+func (n *Note) Speed() float64           { return n.speed }
+func (n *Note) IsHead() bool             { return false }
+func (n *Note) IsTail() bool             { return false }
+func (n *Note) Marked() bool             { return n.Marked }
+func (n *Note) Next() LaneSubject        { return n.next }
+func (n *Note) Prev() LaneSubject        { return n.prev }
 func NewNotes(f any, transPoints []*TransPoint, mode, subMode int) (ns []*Note) {
 	switch f := f.(type) {
 	case *osu.Format:
@@ -111,12 +122,12 @@ func NewNotes(f any, transPoints []*TransPoint, mode, subMode int) (ns []*Note) 
 		for tp.Next != nil && (tp.Time < n.Time || tp.Time >= tp.Next.Time) {
 			tp = tp.Next
 		}
-		ns[i].LaneObject = &LaneObject{
+		ns[i].LaneSubject = &LaneSubject{
 			Type:     n.Type,
 			Position: tp.Position + float64(n.Time-tp.Time)*tp.Speed(),
 			Speed:    tp.Speed(),
-			Next:     ns[i].Next.LaneObject,
-			Prev:     ns[i].Prev.LaneObject,
+			Next:     ns[i].Next.LaneSubject,
+			Prev:     ns[i].Prev.LaneSubject,
 			Marked:   &ns[i].Marked,
 		}
 	}
