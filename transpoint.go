@@ -31,7 +31,7 @@ type TransPoint struct {
 // All .osu chart have at least one Uninherited point.
 // Initial BPM is derived from the first Uninherited point.
 // When there are multiple timing points with same time, the last one will overwrites all precedings.
-func NewTransPoints(f any) []*TransPoint {
+func NewTransPoints(f any, fixed bool) []*TransPoint {
 	var transPoints []*TransPoint
 	switch f := f.(type) {
 	case *osu.Format:
@@ -62,15 +62,16 @@ func NewTransPoints(f any) []*TransPoint {
 					Volume:          float64(timingPoint.Volume) / 100,
 					Highlight:       timingPoint.IsKiai(),
 					NewBPM:          true,
-					Position:        prev.Position,
-					Prev:            prev,
+					// Position:        prev.Position,
+					Prev: prev,
 					// Next:            nil,
 					// NextBPMPoint:    nil,
 				}
-				unitLength := prev.BPM * prev.BeatLengthScale
-				duration := float64(tp.Time - prev.Time)
-				tp.Position += unitLength * duration
-
+				if fixed {
+					tp.Position = prev.Position + prev.Speed()*float64(tp.Time-prev.Time)
+				} else {
+					tp.Position = tp.Speed() * float64(tp.Time)
+				}
 				prev.Next = tp
 				prev = tp
 				prevBPMPoint.NextBPMPoint = tp // This was hard to find the bug to me.
@@ -85,15 +86,16 @@ func NewTransPoints(f any) []*TransPoint {
 					Volume:          float64(timingPoint.Volume) / 100,
 					Highlight:       timingPoint.IsKiai(),
 					NewBPM:          false,
-					Position:        prev.Position,
-					Prev:            prev,
+					// Position:        prev.Position,
+					Prev: prev,
 					// Next:            nil,
 					// NextBPMPoint:    nil,
 				}
-				unitLength := prev.BPM * prev.BeatLengthScale
-				duration := float64(tp.Time - prev.Time)
-				tp.Position += unitLength * duration
-
+				if fixed {
+					tp.Position = prev.Position + prev.Speed()*float64(tp.Time-prev.Time)
+				} else {
+					tp.Position = tp.Speed() * float64(tp.Time)
+				}
 				prev.Next = tp // Inherited point is never the first.
 				prev = tp
 				transPoints = append(transPoints, tp)
