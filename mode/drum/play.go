@@ -105,7 +105,7 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	et, wb, wa := s.EndTime, waitBefore, gosu.WaitAfter
 	s.BarLineDrawer.Times = gosu.BarTimes(c.TransPoints, et, wb, wa)
 	// s.BarLineDrawer.Offset = NoteHeigth / 2
-	s.BarLineDrawer.Sprite = s.BarLineSprite
+	s.BarLineDrawer.Sprite = s.BarSprite
 	s.BarLineDrawer.Horizontal = true
 	s.KeyDrawer.Sprites = s.KeySprites
 

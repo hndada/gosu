@@ -34,8 +34,9 @@ var (
 	maxPosition float64 = HitPosition
 	minPosition float64 = maxPosition - screenSizeY
 	// margin should be larger than MaxSize/2 of all note sprites' width or height.
-	margin   float64 = 100
-	bodyLoss float64 = NoteHeigth // Head/2 + Tail/2.
+	margin      float64 = 100
+	bodyLoss    float64 = NoteHeigth // Head/2 + Tail/2.
+	ReverseBody bool    = false
 )
 var NoteWidthsMap = map[int][4]float64{
 	4:  {0.065, 0.065, 0.065, 0.065},
@@ -70,6 +71,7 @@ func SwitchDirection() {
 	max, min := maxPosition, minPosition
 	maxPosition = -min
 	minPosition = -max
+	ReverseBody = !ReverseBody
 }
 func init() {
 	ScaleNoteWidthsMap()

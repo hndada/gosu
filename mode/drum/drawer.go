@@ -196,3 +196,13 @@ type RollTickDrawer struct {
 }
 type ShakeDrawer struct {
 }
+
+// case Leftward, Rightward:
+// 	if d.direction == Rightward {
+// 		ratio *= -1
+// 	}
+// 	srcRect := image.Rect(int(srcStart), 0, int(srcEnd), int(body.H()))
+// 	sprite := body.SubSprite(srcRect)
+// 	op.GeoM.Scale(ratio, 1)
+// 	op.GeoM.Translate(srcStart, 0)
+// 	sprite.Draw(screen, op)

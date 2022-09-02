@@ -11,6 +11,7 @@ const (
 	Normal = iota
 	Head
 	Tail
+	Body
 )
 
 type Note struct {

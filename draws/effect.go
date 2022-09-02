@@ -23,16 +23,17 @@ var Fader = func(op *ebiten.DrawImageOptions, age float64) {
 var Dimmer = func(op *ebiten.DrawImageOptions, dimness float64) {
 	op.ColorM.ChangeHSV(0, 1, dimness)
 }
-var Vanisher = func(op *ebiten.DrawImageOptions, marked *bool) {
-	if *marked {
-		op.ColorM.ChangeHSV(0, 1, 0)
-	}
-}
-var Grayer = func(op *ebiten.DrawImageOptions, marked *bool) {
-	if *marked {
-		op.ColorM.ChangeHSV(0, 0.3, 0.3)
-	}
-}
+
+// var Vanisher = func(op *ebiten.DrawImageOptions, marked *bool) {
+// 	if *marked {
+// 		op.ColorM.ChangeHSV(0, 1, 0)
+// 	}
+// }
+// var Grayer = func(op *ebiten.DrawImageOptions, marked *bool) {
+// 	if *marked {
+// 		op.ColorM.ChangeHSV(0, 0.3, 0.3)
+// 	}
+// }
 
 // type Effecter struct {
 // 	Countdown    int

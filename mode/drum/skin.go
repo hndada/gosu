@@ -22,10 +22,10 @@ type Skin struct {
 	ComboSprites     []draws.Sprite // Todo: slice to array
 	TickComboSprites []draws.Sprite
 
-	KeySprites    [4]draws.Sprite
-	FieldSprite   draws.Sprite
-	HintSprite    draws.Sprite
-	BarLineSprite draws.Sprite // Seperator of each bar (aka measure)
+	KeySprites  [4]draws.Sprite
+	FieldSprite draws.Sprite
+	HintSprite  draws.Sprite
+	BarSprite   draws.Sprite // Seperator of each bar (aka measure)
 
 	JudgmentSprites [2][3]draws.Sprite
 	DonSprites      [2][3]draws.Sprite
@@ -162,13 +162,13 @@ func LoadSkin() {
 
 	barLine := ebiten.NewImage(1, int(FieldInnerHeight))
 	barLine.Fill(color.RGBA{255, 255, 255, 255})
-	skin.BarLineSprite = draws.Sprite{
+	skin.BarSprite = draws.Sprite{
 		I: barLine,
 		W: 1,
 		H: FieldInnerHeight,
 	}
 	// X is not fixed.
-	skin.BarLineSprite.SetCenterY(FieldPosition)
+	skin.BarSprite.SetCenterY(FieldPosition)
 
 	for size, sizeWord := range []string{"normal", "big"} {
 		height := []float64{NormalNoteHeight, BigNoteHeight}[size]
