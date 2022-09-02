@@ -20,83 +20,29 @@ func (d StageDrawer) Draw(screen *ebiten.Image) {
 	d.Hint.Draw(screen, nil)
 }
 
-var MaxJudgmentCountdown int = gosu.TimeToTick(600)
-
-type JudgmentDrawer struct {
-	Countdown int
-	Sprites   []draws.Sprite
-	Judgment  gosu.Judgment
+// Bars are fixed: lane itself moves, all bars move same amount.
+type BarDrawer struct {
+	Sprite   draws.Sprite
+	Cursor   *float64
+	Farthest *Bar
+	Nearest  *Bar
 }
 
-func (d *JudgmentDrawer) Update(worst gosu.Judgment) {
-	if worst.Window != 0 {
-		d.Judgment = worst
-		d.Countdown = MaxJudgmentCountdown
+func (d *BarDrawer) Update(beatSpeed, speedScale float64) {
+	for d.Farthest.Position-*d.Cursor <= maxPosition+margin {
+		d.Farthest = d.Farthest.Next
 	}
-	if d.Countdown == 0 {
-		d.Judgment = gosu.Judgment{}
-	} else {
-		d.Countdown--
+	for d.Nearest.Position-*d.Cursor <= minPosition-margin {
+		d.Nearest = d.Nearest.Next
 	}
 }
 
-// JudgmentDrawer's Draw draws the same judgment for a while.
-func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
-	// if d.Countdown <= 0 {
-	// 	return
-	// }
-	// var sprite draws.Sprite
-	// for i, j := range Judgments {
-	// 	if j.Window == d.Judgment.Window {
-	// 		sprite = d.Sprites[i]
-	// 		break
-	// 	}
-	// }
-	// t := MaxJudgmentCountdown - d.Countdown
-	// age := float64(t) / float64(MaxJudgmentCountdown)
-	// switch {
-	// case age < 0.1:
-	// 	sprite.ApplyScale(sprite.ScaleW() * 1.15 * (1 + age))
-	// case age >= 0.1 && age < 0.2:
-	// 	sprite.ApplyScale(sprite.ScaleW() * 1.15 * (1.2 - age))
-	// case age > 0.9:
-	// 	sprite.ApplyScale(sprite.ScaleW() * (1 - 1.15*(age-0.9)))
-	// }
-	// sprite.SetCenterX(screenSizeX / 2)
-	// sprite.SetCenterY(JudgmentPosition)
-	// sprite.Draw(screen)
-}
-
-var MinKeyDownTicks int = gosu.TimeToTick(30)
-
-// Todo: Draw KeyUp Permanently, occassionally draw KeyDown
-type KeyDrawer struct {
-	KeyDownCountdowns []int
-	Sprites           [2][]draws.Sprite
-}
-
-func (d *KeyDrawer) Update(lastPressed, pressed []bool) {
-	for k, cd := range d.KeyDownCountdowns {
-		if cd > 0 {
-			d.KeyDownCountdowns[k]--
-		}
+func (d BarDrawer) Draw(screen *ebiten.Image) {
+	for b := d.Farthest; b != d.Nearest; b = d.Farthest.Prev {
+		sprite := d.Sprite
+		sprite.Move(0, b.Position-*d.Cursor)
+		sprite.Draw(screen, nil)
 	}
-
-	for k, p := range pressed {
-		lp := lastPressed[k]
-		if !lp && p {
-			d.KeyDownCountdowns[k] = MinKeyDownTicks
-		}
-	}
-}
-func (d KeyDrawer) Draw(screen *ebiten.Image, pressed []bool) {
-	// for k, p := range pressed {
-	// 	if p || d.KeyDownCountdowns[k] > 0 {
-	// 		d.Sprites[1][k].Draw(screen) // KeyDown
-	// 	} else {
-	// 		d.Sprites[0][k].Draw(screen) // KeyUp
-	// 	}
-	// }
 }
 
 // Notes are fixed: lane itself moves, all notes move same amount.
@@ -170,29 +116,100 @@ func (d NoteLaneDrawer) DrawLongBody(screen *ebiten.Image, head *Note) {
 	subBody.Draw(screen, op)
 }
 
-// Bars are also fixed.
-type BarDrawer struct {
-	Sprite   draws.Sprite
-	Cursor   *float64
-	Farthest *Bar
-	Nearest  *Bar
+// KeyDrawer draws KeyDownSprite at least for 30ms, KeyUpSprite otherwise.
+// KeyDrawer uses MinCountdown instead of MaxCountdown.
+type KeyDrawer struct {
+	MinCountdown   int
+	Countdowns     []int
+	KeyUpSprites   []draws.Sprite
+	KeyDownSprites []draws.Sprite
+	lastPressed    []bool
+	pressed        []bool
 }
 
-func (d *BarDrawer) Update(beatSpeed, speedScale float64) {
-	for d.Farthest.Position-*d.Cursor <= maxPosition+margin {
-		d.Farthest = d.Farthest.Next
+func NewKeyDrawer(ups, downs []draws.Sprite) KeyDrawer {
+	return KeyDrawer{
+		MinCountdown:   gosu.TimeToTick(30),
+		Countdowns:     make([]int, len(ups)),
+		KeyUpSprites:   ups,
+		KeyDownSprites: downs,
 	}
-	for d.Nearest.Position-*d.Cursor <= minPosition-margin {
-		d.Nearest = d.Nearest.Next
+}
+func (d *KeyDrawer) Update(lastPressed, pressed []bool) {
+	d.lastPressed = lastPressed
+	d.pressed = pressed
+	for k, countdown := range d.Countdowns {
+		if countdown > 0 {
+			d.Countdowns[k]--
+		}
+	}
+	for k, now := range d.pressed {
+		last := d.lastPressed[k]
+		if !last && now {
+			d.Countdowns[k] = d.MinCountdown
+		}
+	}
+}
+func (d KeyDrawer) Draw(screen *ebiten.Image) {
+	for k, p := range d.pressed {
+		if p || d.Countdowns[k] > 0 {
+			d.KeyDownSprites[k].Draw(screen, nil)
+		} else {
+			d.KeyUpSprites[k].Draw(screen, nil)
+		}
 	}
 }
 
-func (d BarDrawer) Draw(screen *ebiten.Image) {
-	for b := d.Farthest; b != d.Nearest; b = d.Farthest.Prev {
-		sprite := d.Sprite
-		sprite.Move(0, b.Position-*d.Cursor)
-		sprite.Draw(screen, nil)
+type JudgmentDrawer struct {
+	draws.BaseDrawer
+	Sprites  []draws.Sprite
+	Judgment gosu.Judgment
+}
+
+func NewJudgmentDrawer() (d JudgmentDrawer) {
+	return JudgmentDrawer{
+		BaseDrawer: draws.BaseDrawer{
+			MaxCountdown: gosu.TimeToTick(600),
+		},
+		Sprites: GeneralSkin.JudgmentSprites,
 	}
+}
+func (d *JudgmentDrawer) Update(worst gosu.Judgment) {
+	if d.Countdown <= 0 {
+		d.Judgment = gosu.Judgment{}
+	} else {
+		d.Countdown--
+	}
+	if worst.Window != 0 {
+		d.Judgment = worst
+		d.Countdown = d.MaxCountdown
+	}
+}
+
+func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
+	if d.Countdown <= 0 {
+		return
+	}
+	var sprite draws.Sprite
+	for i, j := range Judgments {
+		if j.Window == d.Judgment.Window {
+			sprite = d.Sprites[i]
+			break
+		}
+	}
+	age := d.Age()
+	ratio := 1.0
+	switch {
+	case age < 0.1:
+		ratio = 1.15 * (1 + age)
+	case age >= 0.1 && age < 0.2:
+		ratio = 1.15 * (1.2 - age)
+	case age > 0.9:
+		ratio = 1 - 1.15*(age-0.9)
+	}
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(ratio, ratio)
+	sprite.Draw(screen, op)
 }
 
 // var MaxComboCountdown int = gosu.TimeToTick(2000)

@@ -10,11 +10,11 @@ import (
 
 // Todo: Make sure to ReplayListener time is independent of Game's update tick
 // ReplayListener supposes closure function is called every 1 ms.
-func NewReplayListener(f *osr.Format, keyCount int, bufferTime int64) func() []bool {
+func NewReplayListener(f *osr.Format, keyCount int, waitBefore int64) func() []bool {
 	actions := f.TrimmedActions()
 	actions = append(actions, osr.Action{W: 2e9})
 	var i int // Index of current replay action
-	var t = bufferTime
+	var t = waitBefore
 	var next = 0 + 1 + actions[0].W + actions[1].W
 	return func() []bool {
 		if t >= next {

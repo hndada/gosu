@@ -3,7 +3,7 @@ package gosu
 // func BarPositions(transPoints []*TransPoint, endTime int64) []float64 {
 // 	ps := make([]float64, 0)
 // 	first := transPoints[0]
-// 	first = first.FetchLatest()
+// 	first = first.FetchPresent()
 // 	var margin int64 = 5000
 // 	if margin > first.Time {
 // 		margin = first.Time
@@ -15,7 +15,7 @@ package gosu
 // 	}
 
 // 	ps = ps[:len(ps)-1] // Drop for avoiding duplicated
-// 	for tp := first; tp != nil; tp = tp.NextBPMPoint.FetchLatest() {
+// 	for tp := first; tp != nil; tp = tp.NextBPMPoint.FetchPresent() {
 // 		nextTime := endTime + margin
 // 		if tp.NextBPMPoint != nil {
 // 			nextTime = tp.NextBPMPoint.Time
@@ -33,7 +33,7 @@ package gosu
 // func BarTimes(transPoints []*TransPoint, endTime int64) []int64 {
 // 	ts := make([]int64, 0)
 // 	first := transPoints[0]
-// 	first.FetchLatest()
+// 	first.FetchPresent()
 // 	var margin int64 = 5000
 // 	if margin > first.Time {
 // 		margin = first.Time

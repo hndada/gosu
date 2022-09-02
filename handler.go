@@ -5,11 +5,11 @@ import (
 	"github.com/hndada/gosu/ctrl"
 )
 
-func NewVolumeHandler(vol *float64) ctrl.F64Handler {
+func NewVolumeHandler(vol *float64, keys []ebiten.Key) ctrl.F64Handler {
 	play := func() { Sounds.Play("default-hover") }
 	return ctrl.F64Handler{
 		Handler: ctrl.Handler{
-			Keys:       []ebiten.Key{ebiten.Key2, ebiten.Key1},
+			Keys:       keys,
 			PlaySounds: []func(){play, play},
 			HoldKey:    -1,
 		},
@@ -24,7 +24,7 @@ func NewSpeedHandler(speedScale *float64) ctrl.F64Handler {
 	play := func() { Sounds.Play("default-hover") }
 	return ctrl.F64Handler{
 		Handler: ctrl.Handler{
-			Keys:       []ebiten.Key{ebiten.Key4, ebiten.Key3},
+			Keys:       []ebiten.Key{ebiten.Key9, ebiten.Key8},
 			PlaySounds: []func(){play, play},
 			HoldKey:    -1,
 		},
@@ -39,7 +39,7 @@ func NewModeHandler(cursor *int, len int) ctrl.IntHandler {
 	play := func() { Sounds.Play("default-hover") }
 	return ctrl.IntHandler{
 		Handler: ctrl.Handler{
-			Keys:       []ebiten.Key{ebiten.Key5},
+			Keys:       []ebiten.Key{ebiten.Key0},
 			PlaySounds: []func(){play},
 			HoldKey:    -1,
 		},

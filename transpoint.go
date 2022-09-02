@@ -106,13 +106,15 @@ func NewTransPoints(f any, fixed bool) []*TransPoint {
 	return transPoints
 }
 
-// FetchLatest is useful for NewBPM TransPoint fetching latest TransPoint.
-func (tp *TransPoint) FetchLatest() *TransPoint {
-	for tp.Next != nil && tp.Time >= tp.Next.Time {
+func (tp *TransPoint) FetchByTime(time int64) *TransPoint {
+	for tp.Next != nil && time >= tp.Next.Time {
 		tp = tp.Next
 	}
 	return tp
 }
+
+// FetchPresent is useful for NewBPM TransPoint fetching latest TransPoint.
+func (tp *TransPoint) FetchPresent() *TransPoint { return tp.FetchByTime(tp.Time) }
 
 // BPM with longest duration will be main BPM.
 // When there are multiple BPMs with same duration, larger one will be main BPM.
@@ -146,12 +148,6 @@ func BPMs(transPoints []*TransPoint, duration int64) (main, min, max float64) {
 	}
 	return
 }
-
-// BeatLength supposes TransPoint tp is latest.
-// func (tp TransPoint) BeatLength() float64 {
-// 	// tp = *tp.FetchLatest()
-// 	return tp.BPM * tp.BeatLengthScale
-// }
 
 func (tp TransPoint) Speed() float64 {
 	return tp.BPM * tp.BeatLengthScale

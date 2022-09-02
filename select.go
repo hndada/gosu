@@ -140,11 +140,11 @@ func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
 	mode := s.ModeProps[*s.Mode]
 	speedScale := *mode.SpeedHandler.Target
 	ebitenutil.DebugPrint(screen,
-		fmt.Sprintf("Volume (Press 1/2): %.0f%%\n"+
-			"SpeedScale (Press 3/4): %.0f\n"+"(Exposure time: %.0fms)\n\n"+
-			"Mode (Press 5): %s\n"+
+		fmt.Sprintf("Music volume (Press 1/2): %.0f%%\n"+"Effect volume (Press 3/4): %.0f%%\n"+
+			"SpeedScale (Press 8/9): %.0f\n"+"(Exposure time: %.0fms)\n\n"+
+			"Mode (Press 0): %s\n"+
 			"Chart info index: %d\n",
-			Volume*100,
+			MusicVolume*100, EffectVolume*100,
 			speedScale*100, mode.ExposureTime(speedScale),
 			ModeNames[*s.Mode],
 			*s.Cursor))

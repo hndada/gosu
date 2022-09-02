@@ -8,9 +8,10 @@ import (
 
 type Game struct {
 	Scene
-	ModeProps     []ModeProp
-	Mode          int
-	VolumeHandler ctrl.F64Handler
+	ModeProps           []ModeProp
+	Mode                int
+	MusicVolumeHandler  ctrl.F64Handler
+	EffectVolumeHandler ctrl.F64Handler
 }
 type Scene interface {
 	Update() any
@@ -34,7 +35,10 @@ func NewGame(props []ModeProp) *Game {
 		mode.LoadSkin()
 	}
 	g.Mode = ModePiano4
-	g.VolumeHandler = NewVolumeHandler(&Volume)
+	g.MusicVolumeHandler = NewVolumeHandler(
+		&MusicVolume, []ebiten.Key{ebiten.Key2, ebiten.Key1})
+	g.EffectVolumeHandler = NewVolumeHandler(
+		&MusicVolume, []ebiten.Key{ebiten.Key4, ebiten.Key3})
 
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
@@ -45,7 +49,8 @@ func NewGame(props []ModeProp) *Game {
 }
 
 func (g *Game) Update() (err error) {
-	g.VolumeHandler.Update()
+	g.MusicVolumeHandler.Update()
+	g.EffectVolumeHandler.Update()
 	if g.Scene == nil {
 		g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
 	}
@@ -57,7 +62,8 @@ func (g *Game) Update() (err error) {
 		g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
 	case SelectToPlayArgs:
 		g.Scene, err = g.ModeProps[args.Mode].NewScenePlay(
-			args.Path, args.Replay, g.VolumeHandler, args.SpeedHandler)
+			args.Path, args.Replay,
+			g.MusicVolumeHandler, g.EffectVolumeHandler, args.SpeedHandler)
 		if err != nil {
 			return
 		}

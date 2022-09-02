@@ -11,7 +11,7 @@ import (
 var Sounds audios.SoundMap
 
 func LoadSounds(soundRoot string) error {
-	Sounds = audios.NewSoundMap(&Volume)
+	Sounds = audios.NewSoundMap(&EffectVolume)
 	fs, err := os.ReadDir(soundRoot)
 	if err != nil {
 		return err
