@@ -7,8 +7,56 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 )
+
+// type Direction int
+
+// const (
+// 	Upward   Direction = iota // e.g., Rhythm games using feet.
+// 	Downward                  // e.g., Piano mode.
+// 	Leftward                  // e.g., Drum mode.
+// 	Rightward
+// )
+
+// Todo: use Effecter in draws.BaseDrawer
+type BackgroundDrawer struct {
+	Sprite  draws.Sprite
+	Dimness *float64
+}
+
+func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
+	op := &ebiten.DrawImageOptions{}
+	op.ColorM.ChangeHSV(0, 1, *d.Dimness)
+	d.Sprite.Draw(screen, op)
+}
+
+type ScoreDrawer struct {
+	draws.NumberDrawer
+	Score ctrl.Delayed
+}
+
+func NewScoreDrawer() (d ScoreDrawer) {
+	d = ScoreDrawer{
+		NumberDrawer: draws.NumberDrawer{
+			Sprites:       ScoreSprites,
+			SignSprites:   SignSprites,
+			Origin:        ScoreSprites[0].Origin(),
+			DigitWidth:    ScoreSprites[0].W(),
+			DigitGap:      0,
+			FractionDigit: 0,
+			ZeroFill:      1,
+		},
+		Score: ctrl.Delayed{Mode: ctrl.DelayedModeExp},
+	}
+	return
+}
+func (d *ScoreDrawer) Update(score float64) {
+	d.Score.Update(score)
+	i := int(math.Ceil(score))
+	d.NumberDrawer.Update(i, 0)
+}
 
 // Todo: merge with drawer.go
 var (

@@ -6,10 +6,14 @@ var (
 	WindowSizeY = 900
 )
 
+// TPS supposed to be multiple of 1000, since only one speed value
+// goes passed per Update, while unit of TransPoint's time is 1ms.
+// TPS affects only on Update(), not on Draw().
 // Todo: BarLine color settings
 var (
-	TPS    = 1000 // TPS should be 1000 or greater.
-	Volume = 0.25
+	TPS              = 1000                    // TPS should be 1000 or greater.
+	TimeStep float64 = 1 / float64(TPS) * 1000 // Unit of time is a millisecond (1ms = 0.001s).
+	Volume           = 0.25
 
 	ChartInfoBoxWidth  float64 = 450
 	ChartInfoBoxHeight float64 = 50

@@ -1,6 +1,8 @@
 package gosu
 
 import (
+	"path/filepath"
+
 	"github.com/hndada/gosu/format/osu"
 )
 
@@ -43,4 +45,11 @@ func NewBaseNote(f any) (n BaseNote) {
 		}
 	}
 	return n
+}
+
+func (n BaseNote) SamplePath(cpath string) (string, bool) {
+	if n.SampleName == "" {
+		return "", false
+	}
+	return filepath.Join(filepath.Dir(cpath), n.SampleName), true
 }

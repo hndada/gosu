@@ -72,9 +72,9 @@ type Skin struct {
 	BodySprites    []draws.Sprite
 	// BodySprites    [][]draws.Sprite // Binary-building method
 
-	FieldSprite   draws.Sprite
-	HintSprite    draws.Sprite
-	BarLineSprite draws.Sprite // Seperator of each bar (aka measure)
+	FieldSprite draws.Sprite
+	HintSprite  draws.Sprite
+	BarSprite   draws.Sprite // Seperator of each bar (aka measure)
 }
 
 var Skins = make(map[int]Skin)
@@ -217,7 +217,7 @@ func LoadSkin() {
 			src.Fill(color.NRGBA{255, 255, 255, 255}) // White
 			s := draws.NewSpriteFromImage(src)
 			s.SetPosition(screenSizeX/2, HitPosition, draws.OriginCenterBottom)
-			skin.BarLineSprite = s
+			skin.BarSprite = s
 		}
 		Skins[keyCount] = skin
 	}

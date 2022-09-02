@@ -8,8 +8,8 @@ import (
 type BaseDrawer struct {
 	Countdown    int
 	MaxCountdown int // Draw permanently when value is zero.
-	Effecter     Effecter
-	Translater   Effecter
+	// Effecter     Effecter
+	// Translater   Effecter
 }
 
 func (d *BaseDrawer) Update(reloaded bool) {

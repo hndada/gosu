@@ -11,11 +11,12 @@ import (
 
 type Chart struct {
 	gosu.ChartHeader
-	TransPoints  []*gosu.TransPoint
-	KeyCount     int
-	SpeedScale   float64 // Affects Note and Bar's position.
-	Notes        []*Note
-	BarPositions []float64
+	KeyCount    int
+	TransPoints []*gosu.TransPoint
+	Notes       []*Note
+	Bars        []*Bar
+	// SpeedScale  float64 // Affects Note and Bar's position.
+	// MainBPM     float64
 }
 
 func NewChart(cpath string) (c *Chart, err error) {
@@ -38,17 +39,23 @@ func NewChart(cpath string) (c *Chart, err error) {
 	case *osu.Format:
 		c.KeyCount = int(f.CircleSize)
 	}
-	c.SpeedScale = 1
 	c.Notes = NewNotes(f, c.KeyCount, c.TransPoints[0])
-	c.BarPositions = make([]float64, 0)
+	c.Bars = NewBars(c.TransPoints, c.Duration())
+	// c.SpeedScale = 1
+	// c.MainBPM, _, _ = c.BPMs()
+	// mainBPM, _, _ := c.BPMs()
+	// for _, tp := range c.TransPoints {
+	// 	tp.Position /= mainBPM
+	// }
+	// for _, n := range c.Notes {
+	// 	n.Position /= mainBPM
+	// }
+	// for _, b := range c.Bars {
+	// 	b.Position /= mainBPM
+	// }
 	return
 }
-func (c *Chart) SetSpeedScale(speedScale float64) {
-	for _, n := range c.Notes {
-		n.Position *= speedScale / c.SpeedScale
-	}
-	c.SpeedScale = speedScale
-}
+
 func (c Chart) Duration() int64 {
 	if len(c.Notes) == 0 {
 		return 0
@@ -67,6 +74,9 @@ func (c Chart) NoteCounts() (vs []int) {
 	}
 	return
 }
+func (c Chart) BPMs() (main, min, max float64) {
+	return gosu.BPMs(c.TransPoints, c.Duration())
+}
 func NewChartInfo(cpath string) (info gosu.ChartInfo, err error) {
 	c, err := NewChart(cpath)
 	if err != nil {
@@ -77,7 +87,7 @@ func NewChartInfo(cpath string) (info gosu.ChartInfo, err error) {
 	if c.KeyCount > 4 {
 		mode = gosu.ModePiano7
 	}
-	main, min, max := gosu.BPMs(c.TransPoints, c.Duration())
+	main, min, max := c.BPMs()
 	info = gosu.ChartInfo{
 		Path: cpath,
 		// Mods:       mods,

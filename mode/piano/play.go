@@ -2,7 +2,6 @@ package piano
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -15,23 +14,25 @@ import (
 )
 
 // ScenePlay: struct, PlayScene: function
-// NoteWeights is a sum of weight of marked notes.
-// This is also max value of each score sum can get at the time.
 type ScenePlay struct {
 	*gosu.BaseScenePlay
 	Chart  *Chart
 	Staged []*Note
-	// Leadings       []*gosu.Note
-	Skin           // The skin may be applied some custom settings: on/off some sprites
-	NoteDrawers    []gosu.FixedLaneDrawer
-	BarDrawer      gosu.FixedLaneDrawer
+
+	Skin                 // The skin may be applied some custom settings: on/off some sprites
+	MainBPM              float64
+	NormalizedSpeedScale float64
+	Cursor               float64
+	NoteLaneDrawers      []NoteLaneDrawer
+	BarDrawer            BarDrawer
+
+	StageDrawer
 	JudgmentDrawer JudgmentDrawer
 	ComboDrawer    draws.NumberDrawer
 	KeyDrawer      KeyDrawer
 }
 
-// Todo: Let users change speed during playing
-// Todo: add Mods to input param
+// Todo: add Mods
 func NewScenePlay(cpath string, rf *osr.Format, vh, sh ctrl.F64Handler) (scene gosu.Scene, err error) {
 	s := new(ScenePlay)
 	s.Chart, err = NewChart(cpath)
@@ -40,13 +41,13 @@ func NewScenePlay(cpath string, rf *osr.Format, vh, sh ctrl.F64Handler) (scene g
 	}
 	c := s.Chart
 	keyCount := c.KeyCount & ScratchMask
+
 	s.Tick = gosu.TimeToTick(gosu.WaitBefore)
 	s.MaxTick = gosu.TimeToTick(c.Duration() + gosu.WaitAfter)
 
-	s.Skin = Skins[keyCount]
 	s.VolumeHandler = vh
-	if gosu.IsAudioExisted(c.AudioFilename) {
-		s.MusicPlayer, s.MusicCloser, err = audios.NewPlayer(c.AudioFilename)
+	if path, ok := c.MusicPath(cpath); ok {
+		s.MusicPlayer, s.MusicCloser, err = audios.NewPlayer(path)
 		if err != nil {
 			return
 		}
@@ -54,15 +55,10 @@ func NewScenePlay(cpath string, rf *osr.Format, vh, sh ctrl.F64Handler) (scene g
 	}
 	s.Sounds = audios.NewSoundMap(vh.Target)
 	for _, n := range c.Notes {
-		if n.SampleName == "" {
-			continue
+		if path, ok := n.SamplePath(cpath); ok {
+			_ = s.Sounds.Register(path)
 		}
-		path := filepath.Join(filepath.Dir(cpath), n.SampleName)
-		s.Sounds.Register(path)
 	}
-
-	s.SpeedHandler = sh
-	s.TransPoint = c.TransPoints[0].FetchLatest()
 
 	if rf != nil {
 		bufferTime := rf.BufferTime()
@@ -71,7 +67,7 @@ func NewScenePlay(cpath string, rf *osr.Format, vh, sh ctrl.F64Handler) (scene g
 		}
 		s.FetchPressed = gosu.NewReplayListener(rf, keyCount, bufferTime)
 	} else {
-		s.FetchPressed = input.NewListener(KeySettings[c.KeyCount])
+		s.FetchPressed = input.NewListener(KeySettings[keyCount])
 	}
 	s.LastPressed = make([]bool, keyCount)
 	s.Pressed = make([]bool, keyCount)
@@ -84,67 +80,93 @@ func NewScenePlay(cpath string, rf *osr.Format, vh, sh ctrl.F64Handler) (scene g
 		}
 	}
 
-	s.MD5, err = gosu.MD5(cpath)
+	s.SpeedHandler = sh
+	s.TransPoint = c.TransPoints[0].FetchLatest()
+	s.MainBPM, _, _ = c.BPMs()
+	s.Cursor = float64(gosu.TickToTime(s.Tick)) * s.TransPoint.Speed()
+	s.NormalizedSpeedScale = 1
+	s.SetSpeedScale()
+
+	s.Result.MD5, err = gosu.MD5(cpath)
 	if err != nil {
 		return
 	}
-	s.Flow = 1
-	s.FlowMarks = make([]float64, 0, c.Duration()/1000)
+	s.Result.JudgmentCounts = make([]int, 5)
+	s.Result.FlowMarks = make([]float64, 0, c.Duration()/1000)
 	for _, n := range c.Notes {
 		s.MaxNoteWeights += n.Weight()
 	}
-	s.NoteDrawers = make([]gosu.FixedLaneDrawer, keyCount)
-	for k := range s.NoteDrawers {
-		sprites := []draws.Sprite{
-			s.NoteSprites[k], s.HeadSprites[k],
-			s.TailSprites[k], s.BodySprites[k],
-		}
-		s.NoteDrawers[k] = gosu.NewFixedLaneDrawer(
-			gosu.Downward,
-			sprites,
-			HitPosition,
-			// beatSpeed,  // Speed calculation is each mode's task.
-			*s.SpeedScale,
-			draws.Grayer,
-			gosu.TickToTime(s.Tick),
-			s.TransPoint,
-			s.Staged[k].LaneObject,
-		)
+	s.Flow = 1
+
+	s.Skin = Skins[keyCount]
+	s.StageDrawer = StageDrawer{
+		Field: s.FieldSprite,
+		Hint:  s.HintSprite,
 	}
-	s.BarDrawer = gosu.NewFixedLaneDrawer(
-		gosu.Downward,
-		[]draws.Sprite{s.BarLineSprite},
-		HitPosition,
-		// beatSpeed,  // Speed calculation is each mode's task.
-		*s.SpeedScale,
-		nil,
-		gosu.TickToTime(s.Tick),
-		s.TransPoint,
-		s.Chart.Bars[0],
-	)
-	s.BackgroundDrawer = gosu.NewBackgroundDrawer(
-		c.BackgroundPath(cpath), &gosu.BackgroundDimness,
-	)
-	s.DelayedScore.Mode = ctrl.DelayedModeExp
-	s.ScoreDrawer = gosu.NewScoreDrawer()
+	s.NoteLaneDrawers = make([]NoteLaneDrawer, keyCount)
+	for k := range s.NoteLaneDrawers {
+		s.NoteLaneDrawers[k] = NoteLaneDrawer{
+			Sprites: [4]draws.Sprite{
+				s.NoteSprites[k], s.HeadSprites[k],
+				s.TailSprites[k], s.BodySprites[k],
+			},
+			Cursor:   &s.Cursor,
+			Farthest: s.Staged[k],
+			Nearest:  s.Staged[k],
+		}
+	}
+	s.BarDrawer = BarDrawer{
+		Sprite:   s.BarSprite,
+		Cursor:   &s.Cursor,
+		Farthest: s.Chart.Bars[0],
+		Nearest:  s.Chart.Bars[0],
+	}
+	s.BackgroundDrawer = gosu.BackgroundDrawer{
+		Sprite:  gosu.DefaultBackground,
+		Dimness: &gosu.BackgroundDimness,
+	}
+	if bg := gosu.NewBackground(c.BackgroundPath(cpath)); bg.IsValid() {
+		s.BackgroundDrawer.Sprite = bg
+	}
+
 	// s.KeyDrawer.Sprites[0] = s.KeyUpSprites
 	// s.KeyDrawer.Sprites[1] = s.KeyDownSprites
 	// s.KeyDrawer.KeyDownCountdowns = make([]int, c.KeyCount)
-	s.JudgmentCounts = make([]int, 5)
-	s.JudgmentDrawer.Sprites = s.JudgmentSprites
+
+	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer.Sprites = s.ComboSprites
+	s.JudgmentDrawer.Sprites = s.JudgmentSprites
 	s.MeterDrawer = gosu.NewMeterDrawer(Judgments, JudgmentColors)
+
 	title := fmt.Sprintf("gosu - %s - [%s]", c.MusicName, c.ChartName)
 	ebiten.SetWindowTitle(title)
 	return s, nil
 }
 
-// TPS affects only on Update(), not on Draw().
+// Farther note has larger position. Tail's Position is always larger than Head's.
+// Need to re-calculate positions when SpeedScale has changed.
+func (s *ScenePlay) SetSpeedScale() {
+	normalized := *s.SpeedHandler.Target / s.MainBPM
+
+	s.Cursor *= normalized / s.NormalizedSpeedScale
+	for _, tp := range s.Chart.TransPoints {
+		tp.Position *= normalized / s.NormalizedSpeedScale
+	}
+	for _, n := range s.Chart.Notes {
+		n.Position *= normalized / s.NormalizedSpeedScale
+	}
+	for _, b := range s.Chart.Bars {
+		b.Position *= normalized / s.NormalizedSpeedScale
+	}
+
+	s.NormalizedSpeedScale = normalized
+}
+
 // Todo: apply other values of TransPoint (Volume has finished so far)
+// Todo: keep playing music when making SceneResult
 func (s *ScenePlay) Update() any {
 	defer s.Ticker()
 	if s.IsDone() {
-		// Todo: keep playing music when making SceneResult
 		if s.MusicPlayer != nil {
 			s.MusicPlayer.Close()
 		}
@@ -201,39 +223,32 @@ func (s *ScenePlay) Update() any {
 			marks = append(marks, mark)
 		}
 	}
-	// Speed, BPM, Volume and Highlight
+	s.ScoreDrawer.Update(s.Score())
+	s.ComboDrawer.Update(s.Combo, 0)
+	// s.JudgmentDrawer.Update(worst)
+	s.MeterDrawer.Update(marks)
+
+	// Changed speed should be applied after positions are calculated.
+	// Supposes one current TransPoint can increment cursor precisely.
+	s.Cursor += s.TransPoint.Speed() * gosu.TimeStep
 	s.UpdateTransPoint()
 	if fired := s.SpeedHandler.Update(); fired {
-		speedScale := *s.SpeedHandler.Target
-		for k := range s.NoteDrawers {
-			s.NoteDrawers[k].SetSpeedScale(speedScale)
-		}
-		go s.Chart.SetSpeedScale(speedScale)
-		s.BarDrawer.SetSpeedScale(speedScale)
+		s.SetSpeedScale()
 	}
-	s.BarDrawer.Update(s.TransPoint.Speed(), speedScale)
-
-	// s.JudgmentDrawer.Update(worst)
-	s.ComboDrawer.Update(s.Combo, 0)
-	s.DelayedScore.Set(s.Score())
-	s.DelayedScore.Update()
-	s.ScoreDrawer.Update(int(s.DelayedScore.Delayed), 0)
-	s.MeterDrawer.Update(marks)
 	return nil
 }
 func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
-	s.FieldSprite.Draw(screen, nil)
-	s.HintSprite.Draw(screen, nil)
+	s.StageDrawer.Draw(screen)
 	s.BarDrawer.Draw(screen)
-	for _, d := range s.NoteDrawers {
+	for _, d := range s.NoteLaneDrawers {
 		d.Draw(screen)
 	}
 	// s.KeyDrawer.Draw(screen, s.Pressed)
-	s.MeterDrawer.Draw(screen)
+	s.ScoreDrawer.Draw(screen)
 	s.ComboDrawer.Draw(screen)
 	// s.JudgmentDrawer.Draw(screen)
-	s.ScoreDrawer.Draw(screen)
+	s.MeterDrawer.Draw(screen)
 	s.DebugPrint(screen)
 }
 
@@ -244,7 +259,6 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		ar = s.Accs / s.NoteWeights
 		rr = s.Extras / s.NoteWeights
 	}
-
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
