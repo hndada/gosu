@@ -10,7 +10,7 @@ type Bar struct {
 
 func NewBars(transPoints []*gosu.TransPoint, duration int64) (bs []*Bar) {
 	tp := transPoints[0]
-	tp.FetchLatest()
+	tp.FetchPresent()
 	var margin int64 = 5000
 	if margin > tp.Time {
 		margin = tp.Time
@@ -23,7 +23,7 @@ func NewBars(transPoints []*gosu.TransPoint, duration int64) (bs []*Bar) {
 		bs = append([]*Bar{&b}, bs...)
 	}
 	// Bar positions for first TransPoint and after it.
-	for ; tp != nil; tp = tp.NextBPMPoint.FetchLatest() {
+	for ; tp != nil; tp = tp.NextBPMPoint.FetchPresent() {
 		nextTime := duration + margin
 		if tp.NextBPMPoint != nil {
 			nextTime = tp.NextBPMPoint.Time

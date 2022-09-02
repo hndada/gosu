@@ -6,7 +6,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu"
-	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
@@ -15,25 +14,41 @@ import (
 
 // ScenePlay: struct, PlayScene: function
 type ScenePlay struct {
-	*gosu.BaseScenePlay
-	Chart  *Chart
-	Staged []*Note
+	gosu.Timer
+	Chart *Chart
 
-	Skin                 // The skin may be applied some custom settings: on/off some sprites
+	gosu.MusicPlayer
+	gosu.EffectPlayer
+	gosu.KeyLogger
+
+	*gosu.TransPoint
+	SpeedHandler         ctrl.F64Handler
 	MainBPM              float64
 	NormalizedSpeedScale float64
 	Cursor               float64
-	NoteLaneDrawers      []NoteLaneDrawer
-	BarDrawer            BarDrawer
 
-	StageDrawer
-	JudgmentDrawer JudgmentDrawer
-	ComboDrawer    draws.NumberDrawer
-	KeyDrawer      KeyDrawer
+	gosu.Result
+	Staged []*Note
+	Flow   float64
+	Combo  int
+	// NoteWeights is a sum of weight of marked notes.
+	// This is also max value of each score sum can get at the time.
+	NoteWeights float64
+
+	Skin             // The skin may be applied some custom settings: on/off some sprites
+	BackgroundDrawer gosu.BackgroundDrawer
+	StageDrawer      StageDrawer
+	BarDrawer        BarDrawer
+	NoteLaneDrawers  []NoteLaneDrawer
+	KeyDrawer        KeyDrawer
+	ScoreDrawer      gosu.ScoreDrawer
+	ComboDrawer      draws.NumberDrawer
+	JudgmentDrawer   JudgmentDrawer
+	MeterDrawer      gosu.MeterDrawer
 }
 
 // Todo: add Mods
-func NewScenePlay(cpath string, rf *osr.Format, vh, sh ctrl.F64Handler) (scene gosu.Scene, err error) {
+func NewScenePlay(cpath string, rf *osr.Format, mvh, evh, sh ctrl.F64Handler) (scene gosu.Scene, err error) {
 	s := new(ScenePlay)
 	s.Chart, err = NewChart(cpath)
 	if err != nil {
@@ -42,35 +57,44 @@ func NewScenePlay(cpath string, rf *osr.Format, vh, sh ctrl.F64Handler) (scene g
 	c := s.Chart
 	keyCount := c.KeyCount & ScratchMask
 
-	s.Tick = gosu.TimeToTick(gosu.WaitBefore)
-	s.MaxTick = gosu.TimeToTick(c.Duration() + gosu.WaitAfter)
-
-	s.VolumeHandler = vh
+	if rf != nil {
+		s.SetTicks(rf.BufferTime(), c.Duration())
+	} else {
+		s.SetTicks(-1800, c.Duration())
+	}
 	if path, ok := c.MusicPath(cpath); ok {
-		s.MusicPlayer, s.MusicCloser, err = audios.NewPlayer(path)
+		s.MusicPlayer, err = gosu.NewMusicPlayer(mvh, path)
 		if err != nil {
 			return
 		}
-		s.MusicPlayer.SetVolume(*vh.Target)
 	}
-	s.Sounds = audios.NewSoundMap(vh.Target)
+	s.EffectPlayer = gosu.NewEffectPlayer(evh)
 	for _, n := range c.Notes {
 		if path, ok := n.SamplePath(cpath); ok {
-			_ = s.Sounds.Register(path)
+			_ = s.Effects.Register(path)
 		}
+	}
+	s.KeyLogger = gosu.NewKeyLogger(KeySettings[keyCount])
+	if rf != nil {
+		s.KeyLogger.FetchPressed = gosu.NewReplayListener(rf, keyCount, s.Time())
 	}
 
-	if rf != nil {
-		bufferTime := rf.BufferTime()
-		if bufferTime > gosu.WaitBefore {
-			s.Tick = gosu.TimeToTick(bufferTime)
-		}
-		s.FetchPressed = gosu.NewReplayListener(rf, keyCount, bufferTime)
-	} else {
-		s.FetchPressed = input.NewListener(KeySettings[keyCount])
+	s.TransPoint = c.TransPoints[0].FetchPresent()
+	s.SpeedHandler = sh
+	s.MainBPM, _, _ = c.BPMs()
+	s.NormalizedSpeedScale = 1
+	s.Cursor = float64(s.Time()) * s.TransPoint.Speed()
+	s.SetSpeedScale()
+
+	s.Result.MD5, err = gosu.MD5(cpath)
+	if err != nil {
+		return
 	}
-	s.LastPressed = make([]bool, keyCount)
-	s.Pressed = make([]bool, keyCount)
+	s.Result.JudgmentCounts = make([]int, len(Judgments))
+	s.Result.FlowMarks = make([]float64, 0, c.Duration()/1000)
+	for _, n := range c.Notes {
+		s.MaxNoteWeights += n.Weight()
+	}
 	for k := range s.Staged {
 		for _, n := range c.Notes {
 			if k == n.Key {
@@ -79,26 +103,16 @@ func NewScenePlay(cpath string, rf *osr.Format, vh, sh ctrl.F64Handler) (scene g
 			}
 		}
 	}
-
-	s.SpeedHandler = sh
-	s.TransPoint = c.TransPoints[0].FetchLatest()
-	s.MainBPM, _, _ = c.BPMs()
-	s.Cursor = float64(gosu.TickToTime(s.Tick)) * s.TransPoint.Speed()
-	s.NormalizedSpeedScale = 1
-	s.SetSpeedScale()
-
-	s.Result.MD5, err = gosu.MD5(cpath)
-	if err != nil {
-		return
-	}
-	s.Result.JudgmentCounts = make([]int, 5)
-	s.Result.FlowMarks = make([]float64, 0, c.Duration()/1000)
-	for _, n := range c.Notes {
-		s.MaxNoteWeights += n.Weight()
-	}
 	s.Flow = 1
 
 	s.Skin = Skins[keyCount]
+	s.BackgroundDrawer = gosu.BackgroundDrawer{
+		Sprite:  gosu.DefaultBackground,
+		Dimness: &gosu.BackgroundDimness,
+	}
+	if bg := gosu.NewBackground(c.BackgroundPath(cpath)); bg.IsValid() {
+		s.BackgroundDrawer.Sprite = bg
+	}
 	s.StageDrawer = StageDrawer{
 		Field: s.FieldSprite,
 		Hint:  s.HintSprite,
@@ -121,21 +135,10 @@ func NewScenePlay(cpath string, rf *osr.Format, vh, sh ctrl.F64Handler) (scene g
 		Farthest: s.Chart.Bars[0],
 		Nearest:  s.Chart.Bars[0],
 	}
-	s.BackgroundDrawer = gosu.BackgroundDrawer{
-		Sprite:  gosu.DefaultBackground,
-		Dimness: &gosu.BackgroundDimness,
-	}
-	if bg := gosu.NewBackground(c.BackgroundPath(cpath)); bg.IsValid() {
-		s.BackgroundDrawer.Sprite = bg
-	}
-
-	// s.KeyDrawer.Sprites[0] = s.KeyUpSprites
-	// s.KeyDrawer.Sprites[1] = s.KeyDownSprites
-	// s.KeyDrawer.KeyDownCountdowns = make([]int, c.KeyCount)
-
+	s.KeyDrawer = NewKeyDrawer(s.KeyUpSprites, s.KeyDownSprites)
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer.Sprites = s.ComboSprites
-	s.JudgmentDrawer.Sprites = s.JudgmentSprites
+	s.JudgmentDrawer = NewJudgmentDrawer()
 	s.MeterDrawer = gosu.NewMeterDrawer(Judgments, JudgmentColors)
 
 	title := fmt.Sprintf("gosu - %s - [%s]", c.MusicName, c.ChartName)
@@ -167,23 +170,19 @@ func (s *ScenePlay) SetSpeedScale() {
 func (s *ScenePlay) Update() any {
 	defer s.Ticker()
 	if s.IsDone() {
-		if s.MusicPlayer != nil {
-			s.MusicPlayer.Close()
-		}
+		s.MusicPlayer.Close()
 		return gosu.PlayToResultArgs{
 			Result: s.Result,
 		}
 	}
-	if s.Tick == 0 && s.MusicPlayer != nil {
+	if s.Tick == 0 {
 		s.MusicPlayer.Play()
 	}
 
+	var worst gosu.Judgment
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
-
-	var worst gosu.Judgment
-	marks := make([]gosu.MeterMark, 0, 7)
 	for k, n := range s.Staged {
 		if n == nil {
 			continue
@@ -194,13 +193,13 @@ func (s *ScenePlay) Update() any {
 				if vol == 0 {
 					vol = s.TransPoint.Volume
 				}
-				s.Sounds.PlayWithVolume(name, vol)
+				s.Effects.PlayWithVolume(name, vol)
 			}
 		}
 		td := n.Time - s.Time() // Time difference. A negative value infers late hit
 		if n.Marked {
 			if n.Type != Tail {
-				return fmt.Errorf("non-tail note has not flushed")
+				return fmt.Errorf("non-Tail note has not flushed")
 			}
 			if td < Miss.Window { // Keep Tail staged until near ends.
 				s.Staged[n.Key] = n.Next
@@ -212,26 +211,22 @@ func (s *ScenePlay) Update() any {
 			if worst.Window < j.Window {
 				worst = j
 			}
-			mark := gosu.MeterMark{
-				Countdown: s.MeterDrawer.MaxCountdown,
-				Offset:    int(td),
-				ColorType: 0,
-			}
+			var colorType int = 0
 			if n.Type == Tail {
-				mark.ColorType = 1
+				colorType = 1
 			}
-			marks = append(marks, mark)
+			s.MeterDrawer.AddMark(int(td), colorType)
 		}
 	}
 	s.ScoreDrawer.Update(s.Score())
 	s.ComboDrawer.Update(s.Combo, 0)
-	// s.JudgmentDrawer.Update(worst)
-	s.MeterDrawer.Update(marks)
+	s.JudgmentDrawer.Update(worst)
+	s.MeterDrawer.Update()
 
 	// Changed speed should be applied after positions are calculated.
 	// Supposes one current TransPoint can increment cursor precisely.
 	s.Cursor += s.TransPoint.Speed() * gosu.TimeStep
-	s.UpdateTransPoint()
+	s.TransPoint.FetchByTime(s.Time())
 	if fired := s.SpeedHandler.Update(); fired {
 		s.SetSpeedScale()
 	}
@@ -244,10 +239,10 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	for _, d := range s.NoteLaneDrawers {
 		d.Draw(screen)
 	}
-	// s.KeyDrawer.Draw(screen, s.Pressed)
+	s.KeyDrawer.Draw(screen)
 	s.ScoreDrawer.Draw(screen)
 	s.ComboDrawer.Draw(screen)
-	// s.JudgmentDrawer.Draw(screen)
+	s.JudgmentDrawer.Draw(screen)
 	s.MeterDrawer.Draw(screen)
 	s.DebugPrint(screen)
 }
@@ -269,3 +264,4 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		fr*100, ar*100, rr*100, s.JudgmentCounts,
 		s.Speed()*100, *s.SpeedHandler.Target*100, ExposureTime(s.Speed())))
 }
+func (s ScenePlay) Time() int64 { return s.Timer.Time() }

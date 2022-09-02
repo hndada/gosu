@@ -4,6 +4,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// Countdown is for drawing a sprite for a while.
 // DrawImageOptions is not commutative. Do translate at final stage.
 type BaseDrawer struct {
 	Countdown    int

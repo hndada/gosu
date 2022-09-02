@@ -136,8 +136,16 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 	}
 	return
 }
-func (d *MeterDrawer) Update(newMarks []MeterMark) {
-	d.Marks = append(d.Marks, newMarks...)
+
+func (d *MeterDrawer) AddMark(offset int, colorType int) {
+	mark := MeterMark{
+		Countdown: d.MaxCountdown,
+		Offset:    offset,
+		ColorType: colorType,
+	}
+	d.Marks = append(d.Marks, mark)
+}
+func (d *MeterDrawer) Update() {
 	cursor := 0
 	for i, m := range d.Marks {
 		if m.Countdown == 0 {
