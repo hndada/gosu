@@ -1,28 +1,28 @@
 package draws
 
-import "github.com/hajimehoshi/ebiten/v2"
-
-type Effecter func(op *ebiten.DrawImageOptions, vs ...any)
+// type Effecter func(op *ebiten.DrawImageOptions, vs ...any)
 
 // type Translater func(op *ebiten.DrawImageOptions, vs ...float64)
-var Bower = func(op *ebiten.DrawImageOptions, age, w, h float64) {
-	var tx, ty float64
-	switch {
-	case age < 0.1:
-		ty = 0.85 * age * h
-	case age >= 0.1 && age < 0.2:
-		ty = 0.85 * (0.2 - age) * h
-	}
-	op.GeoM.Translate(tx, ty)
-}
-var Fader = func(op *ebiten.DrawImageOptions, age float64) {
-	if age >= 0.8 {
-		op.ColorM.Scale(1, 1, 1, age-0.8)
-	}
-}
-var Dimmer = func(op *ebiten.DrawImageOptions, dimness float64) {
-	op.ColorM.ChangeHSV(0, 1, dimness)
-}
+// var Bower = func(op *ebiten.DrawImageOptions, age, w, h float64) {
+// 	var tx, ty float64
+// 	switch {
+// 	case age < 0.1:
+// 		ty = 0.85 * age * h
+// 	case age >= 0.1 && age < 0.2:
+// 		ty = 0.85 * (0.2 - age) * h
+// 	}
+// 	op.GeoM.Translate(tx, ty)
+// }
+
+// var Fader = func(op *ebiten.DrawImageOptions, age float64) {
+// 	if age >= 0.8 {
+// 		op.ColorM.Scale(1, 1, 1, age-0.8)
+// 	}
+// }
+
+// var Dimmer = func(op *ebiten.DrawImageOptions, dimness float64) {
+// 	op.ColorM.ChangeHSV(0, 1, dimness)
+// }
 
 // var Vanisher = func(op *ebiten.DrawImageOptions, marked *bool) {
 // 	if *marked {

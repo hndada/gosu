@@ -58,7 +58,7 @@ const (
 // Todo: make the struct SkinScaleSettings
 var (
 	ComboScale    float64 = 1.1                 // 0.75
-	ComboGap      float64 = screenSizeX * -0.01 // -0.0008
+	ComboDigitGap float64 = screenSizeX * -0.01 // -0.0008
 	ScoreScale    float64 = 0.65
 	JudgmentScale float64 = 0.5 // 0.33
 	HintHeight    float64 = screenSizeY * 0.04

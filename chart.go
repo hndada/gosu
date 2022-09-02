@@ -55,7 +55,7 @@ func NewChartHeader(f any) (c ChartHeader) {
 }
 
 func (c ChartHeader) MusicPath(cpath string) (string, bool) {
-	if name := c.AudioFilename; name != "virtual" && name != "" {
+	if name := c.AudioFilename; name == "virtual" || name == "" {
 		return "", false
 	}
 	return filepath.Join(filepath.Dir(cpath), c.AudioFilename), true

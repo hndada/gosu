@@ -42,7 +42,7 @@ type ScenePlay struct {
 	NoteLaneDrawers  []NoteLaneDrawer
 	KeyDrawer        KeyDrawer
 	ScoreDrawer      gosu.ScoreDrawer
-	ComboDrawer      draws.NumberDrawer
+	ComboDrawer      ComboDrawer
 	JudgmentDrawer   JudgmentDrawer
 	MeterDrawer      gosu.MeterDrawer
 }
@@ -95,6 +95,7 @@ func NewScenePlay(cpath string, rf *osr.Format, mvh, evh, sh ctrl.F64Handler) (s
 	for _, n := range c.Notes {
 		s.MaxNoteWeights += n.Weight()
 	}
+	s.Staged = make([]*Note, keyCount)
 	for k := range s.Staged {
 		for _, n := range c.Notes {
 			if k == n.Key {
@@ -137,6 +138,7 @@ func NewScenePlay(cpath string, rf *osr.Format, mvh, evh, sh ctrl.F64Handler) (s
 	}
 	s.KeyDrawer = NewKeyDrawer(s.KeyUpSprites, s.KeyDownSprites)
 	s.ScoreDrawer = gosu.NewScoreDrawer()
+	s.ComboDrawer = NewComboDrawer(s.ComboSprites)
 	s.ComboDrawer.Sprites = s.ComboSprites
 	s.JudgmentDrawer = NewJudgmentDrawer()
 	s.MeterDrawer = gosu.NewMeterDrawer(Judgments, JudgmentColors)
@@ -219,7 +221,7 @@ func (s *ScenePlay) Update() any {
 		}
 	}
 	s.ScoreDrawer.Update(s.Score())
-	s.ComboDrawer.Update(s.Combo, 0)
+	s.ComboDrawer.Update(s.Combo)
 	s.JudgmentDrawer.Update(worst)
 	s.MeterDrawer.Update()
 
