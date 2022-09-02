@@ -20,7 +20,7 @@ type Origin int
 
 const (
 	OriginLeftTop      Origin = iota // Default Origin.
-	OriginLeftCenter                 // e.g., drawing piano notes.
+	OriginLeftCenter                 // e.g., Notes in Piano mode.
 	OriginLeftBottom                 // e.g., back button.
 	OriginCenterTop                  // e.g., drawing field.
 	OriginCenter                     // Most of sprite's Origin.

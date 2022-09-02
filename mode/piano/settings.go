@@ -11,7 +11,7 @@ const (
 	screenSizeY = gosu.ScreenSizeY
 )
 
-var SpeedScale = 1.1
+var SpeedScale float64 = 5
 
 var KeySettings = map[int][]input.Key{
 	4:               {input.KeyD, input.KeyF, input.KeyJ, input.KeyK},

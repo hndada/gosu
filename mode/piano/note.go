@@ -24,7 +24,7 @@ type Note struct {
 func NewNote(f any, keyCount int) (ns []*Note) {
 	switch f := f.(type) {
 	case osu.HitObject:
-		n := &Note{
+		n := Note{
 			BaseNote: gosu.NewBaseNote(f),
 		}
 		n.Key = f.Column(keyCount)
@@ -32,15 +32,18 @@ func NewNote(f any, keyCount int) (ns []*Note) {
 		if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
 			n.Type = Head
 			n.Time2 = int64(f.EndTime)
-
-			n2 := &Note{}
-			n2.Type = Tail
-			n2.Time = n.Time2
-			n2.Time2 = n.Time
-			// Tail has no sample sound.
-			ns = append(ns, n, n2)
+			n2 := Note{
+				BaseNote: gosu.BaseNote{
+					Type:       Tail,
+					Time:       n.Time2,
+					Time2:      n.Time,
+					SampleName: "", // Tail has no sample sound.
+				},
+				Key: n.Key,
+			}
+			ns = append(ns, &n, &n2)
 		} else {
-			ns = append(ns, n)
+			ns = append(ns, &n)
 		}
 	}
 	return ns
