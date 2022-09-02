@@ -32,6 +32,7 @@ func NewChart(cpath string) (c *Chart, err error) {
 			return
 		}
 	}
+	c = new(Chart)
 	c.ChartHeader = gosu.NewChartHeader(f)
 	fixed := true
 	c.TransPoints = gosu.NewTransPoints(f, fixed)

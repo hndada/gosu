@@ -54,9 +54,10 @@ func (s *SceneSelect) Update() any {
 		cursor := s.ModeProps[*s.Mode].Cursor
 		info := s.ModeProps[*s.Mode].ChartInfos[cursor]
 		return SelectToPlayArgs{
-			Path:   info.Path,
-			Mode:   *s.Mode, // Todo: duplicated. Should it be removed?
-			Replay: nil,
+			Path:         info.Path,
+			Mode:         *s.Mode, // Todo: duplicated. Should it be removed?
+			Replay:       nil,
+			SpeedHandler: s.ModeProps[*s.Mode].SpeedHandler,
 		}
 	}
 	return nil

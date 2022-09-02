@@ -33,32 +33,56 @@ func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
 }
 
 type ScoreDrawer struct {
-	draws.NumberDrawer
-	Score ctrl.Delayed
+	draws.BaseDrawer
+	Sprites    [10]draws.Sprite
+	DigitWidth float64 // Use number 0's width.
+	DigitGap   float64
+	ZeroFill   int
+	Score      ctrl.Delayed
 }
 
-func NewScoreDrawer() (d ScoreDrawer) {
-	d = ScoreDrawer{
-		NumberDrawer: draws.NumberDrawer{
-			Sprites:       ScoreSprites,
-			SignSprites:   SignSprites,
-			Origin:        ScoreSprites[0].Origin(),
-			DigitWidth:    ScoreSprites[0].W(),
-			DigitGap:      0,
-			FractionDigit: 0,
-			ZeroFill:      1,
-		},
-		Score: ctrl.Delayed{Mode: ctrl.DelayedModeExp},
+func NewScoreDrawer() ScoreDrawer {
+	return ScoreDrawer{
+		Sprites:    ScoreSprites,
+		DigitWidth: ScoreSprites[0].W(),
+		DigitGap:   ScoreDigitGap,
+		ZeroFill:   1,
+		Score:      ctrl.Delayed{Mode: ctrl.DelayedModeExp},
 	}
-	return
 }
 func (d *ScoreDrawer) Update(score float64) {
 	d.Score.Update(score)
-	i := int(math.Ceil(score))
-	d.NumberDrawer.Update(i, 0)
 }
 
-// Todo: merge with drawer.go
+// NumberDrawer's Draw draws each number at the center of constant-width bound.
+func (d ScoreDrawer) Draw(screen *ebiten.Image) {
+	if d.MaxCountdown != 0 && d.Countdown == 0 {
+		return
+	}
+	vs := make([]int, 0)
+	score := int(math.Ceil(d.Score.Value()))
+	for v := score; v > 0; v /= 10 {
+		vs = append(vs, v%10) // Little endian.
+	}
+	for i := len(vs); i < d.ZeroFill; i++ {
+		vs = append(vs, 0)
+	}
+	w := d.DigitWidth + d.DigitGap
+	var tx float64
+	for _, v := range vs {
+		sprite := d.Sprites[v]
+		sprite.Move(tx, 0)
+		sprite.Draw(screen, nil)
+		tx -= w
+	}
+}
+
+const (
+	SignDot = iota
+	SignComma
+	SignPercent
+)
+
 var (
 	ColorKool = color.NRGBA{0, 170, 242, 255}   // Blue
 	ColorCool = color.NRGBA{85, 251, 255, 255}  // Skyblue
@@ -161,12 +185,17 @@ func (d MeterDrawer) Draw(screen *ebiten.Image) {
 	for _, m := range d.Marks {
 		sprite := d.Unit
 		op := &ebiten.DrawImageOptions{}
-		clr := MeterMarkColors[m.ColorType]
-		op.ColorM.ScaleWithColor(clr)
-		age := float64(m.Countdown) / float64(d.MaxCountdown)
-		draws.Fader(op, age)
+		color := MeterMarkColors[m.ColorType]
+		op.ColorM.ScaleWithColor(color)
+		if age := d.MarkAge(m); age >= 0.8 {
+			op.ColorM.Scale(1, 1, 1, 1-(age-0.8)/0.2)
+		}
 		op.GeoM.Translate(float64(m.Offset)*MeterWidth, 0)
 		sprite.Draw(screen, op)
 	}
 	d.Anchor.Draw(screen, nil)
+}
+
+func (d MeterDrawer) MarkAge(m MeterMark) float64 {
+	return 1 - float64(m.Countdown)/float64(d.MaxCountdown)
 }

@@ -26,6 +26,7 @@ var (
 	MeterHeight       float64 = 50
 	CursorScale       float64 = 0.1
 	ScoreScale        float64 = 0.65
+	ScoreDigitGap     float64 = 0
 )
 
 // Todo: reset all tick-dependent variables.

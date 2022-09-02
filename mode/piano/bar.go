@@ -23,7 +23,8 @@ func NewBars(transPoints []*gosu.TransPoint, duration int64) (bs []*Bar) {
 		bs = append([]*Bar{&b}, bs...)
 	}
 	// Bar positions for first TransPoint and after it.
-	for ; tp != nil; tp = tp.NextBPMPoint.FetchPresent() {
+	for ; tp != nil; tp = tp.NextBPMPoint {
+		tp = tp.FetchPresent()
 		nextTime := duration + margin
 		if tp.NextBPMPoint != nil {
 			nextTime = tp.NextBPMPoint.Time

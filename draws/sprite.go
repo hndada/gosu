@@ -46,10 +46,10 @@ func NewSpriteFromImage(src *ebiten.Image) Sprite {
 	return s
 }
 func (s *Sprite) SetScale(scaleW, scaleH float64, filter ebiten.Filter) {
-	s.w *= scaleW
-	s.h *= scaleH
-	s.scaleW = scaleW
-	s.scaleH = scaleH
+	s.w *= scaleW // / s.scaleW
+	s.h *= scaleH // / s.scaleH
+	s.scaleW *= scaleW
+	s.scaleH *= scaleH
 	// i := ebiten.NewImageFromImage(s.i)
 	// s.i.Clear()
 	// op := &ebiten.DrawImageOptions{}
@@ -126,30 +126,30 @@ func (s *Sprite) Move(tx, ty float64) {
 	s.y += ty
 }
 
-// Should I make the image field unexported?
-type Sprite0 struct {
-	I          *ebiten.Image
-	W, H, X, Y float64
-	Filter     ebiten.Filter
-}
+// // Should I make the image field unexported?
+// type Sprite0 struct {
+// 	I          *ebiten.Image
+// 	W, H, X, Y float64
+// 	Filter     ebiten.Filter
+// }
 
-// SetWidth sets sprite's width as well as set height scaled.
-func (s *Sprite0) SetWidth(w float64) {
-	ratio := w / float64(s.I.Bounds().Dx())
-	s.W = w
-	s.H = ratio * float64(s.I.Bounds().Dy())
-}
+// // SetWidth sets sprite's width as well as set height scaled.
+// func (s *Sprite0) SetWidth(w float64) {
+// 	ratio := w / float64(s.I.Bounds().Dx())
+// 	s.W = w
+// 	s.H = ratio * float64(s.I.Bounds().Dy())
+// }
 
-// SetWidth sets sprite's width as well as set height scaled.
-func (s *Sprite0) SetHeight(h float64) {
-	ratio := h / float64(s.I.Bounds().Dy())
-	s.W = ratio * float64(s.I.Bounds().Dx())
-	s.H = ratio * h
-}
+// // SetWidth sets sprite's width as well as set height scaled.
+// func (s *Sprite0) SetHeight(h float64) {
+// 	ratio := h / float64(s.I.Bounds().Dy())
+// 	s.W = ratio * float64(s.I.Bounds().Dx())
+// 	s.H = ratio * h
+// }
 
-func (s *Sprite0) ApplyScale(scale float64) {
-	s.W = float64(s.I.Bounds().Dx()) * scale
-	s.H = float64(s.I.Bounds().Dy()) * scale
-}
-func (s Sprite0) ScaleW() float64 { return s.W / float64(s.I.Bounds().Dx()) }
-func (s Sprite0) ScaleH() float64 { return s.H / float64(s.I.Bounds().Dy()) }
+// func (s *Sprite0) ApplyScale(scale float64) {
+// 	s.W = float64(s.I.Bounds().Dx()) * scale
+// 	s.H = float64(s.I.Bounds().Dy()) * scale
+// }
+// func (s Sprite0) ScaleW() float64 { return s.W / float64(s.I.Bounds().Dx()) }
+// func (s Sprite0) ScaleH() float64 { return s.H / float64(s.I.Bounds().Dy()) }

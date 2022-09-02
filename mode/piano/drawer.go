@@ -160,6 +160,69 @@ func (d KeyDrawer) Draw(screen *ebiten.Image) {
 	}
 }
 
+type ComboDrawer struct {
+	draws.BaseDrawer
+	Sprites    [10]draws.Sprite
+	DigitWidth float64
+	DigitGap   float64
+	Combo      int
+}
+
+// Each number has different width. Number 0's width is used as standard.
+func NewComboDrawer(sprites [10]draws.Sprite) ComboDrawer {
+	return ComboDrawer{
+		BaseDrawer: draws.BaseDrawer{
+			MaxCountdown: gosu.TimeToTick(2000),
+		},
+		Sprites:    sprites,
+		DigitWidth: sprites[0].W(),
+		DigitGap:   ComboDigitGap,
+	}
+}
+func (d *ComboDrawer) Update(combo int) {
+	if d.Countdown > 0 {
+		d.Countdown--
+	}
+	if d.Combo != combo {
+		d.Combo = combo
+		d.Countdown = d.MaxCountdown
+	}
+}
+
+// ComboDrawer's Draw draws each number at constant x regardless of their widths.
+func (d ComboDrawer) Draw(screen *ebiten.Image) {
+	if d.MaxCountdown != 0 && d.Countdown == 0 {
+		return
+	}
+	if d.Combo == 0 {
+		return
+	}
+	vs := make([]int, 0)
+	for v := d.Combo; v > 0; v /= 10 {
+		vs = append(vs, v%10) // Little endian.
+	}
+
+	// Size of the whole image is 0.5w + (n-1)(w+gap) + 0.5w.
+	// Since sprites are already at origin, no need to care of two 0.5w.
+	w := d.DigitWidth + d.DigitGap
+	// tx := (float64((len(vs)-1))*w + d.DigitWidth) / 2
+	tx := float64(len(vs)-1) * w / 2
+	for _, v := range vs {
+		sprite := d.Sprites[v]
+		sprite.Move(tx, 0)
+		age := d.Age()
+		h := sprite.H()
+		switch {
+		case age < 0.05:
+			sprite.Move(0, 0.85*age*h)
+		case age >= 0.05 && age < 0.1:
+			sprite.Move(0, 0.85*(0.1-age)*h)
+		}
+		sprite.Draw(screen, nil)
+		tx -= w
+	}
+}
+
 type JudgmentDrawer struct {
 	draws.BaseDrawer
 	Sprites  []draws.Sprite
@@ -207,9 +270,8 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	case age > 0.9:
 		ratio = 1 - 1.15*(age-0.9)
 	}
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(ratio, ratio)
-	sprite.Draw(screen, op)
+	sprite.SetScale(ratio, ratio, ebiten.FilterLinear)
+	sprite.Draw(screen, nil)
 }
 
 // var MaxComboCountdown int = gosu.TimeToTick(2000)
@@ -230,8 +292,6 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 // 	}
 // }
 
-// // ComboDrawer's Draw draws each number at constant x regardless of their widths.
-// // Each number image has different size; The standard width is number 0's.
 // func (d ComboDrawer) Draw(screen *ebiten.Image) {
 // 	var wsum int
 // 	if d.Combo == 0 || d.Countdown == 0 {
@@ -240,17 +300,17 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 // 	vs := make([]int, 0)
 // 	for v := d.Combo; v > 0; v /= 10 {
 // 		vs = append(vs, v%10) // Little endian
-// 		// wsum += int(d.Sprites[v%10].W + ComboGap)
-// 		wsum += int(d.Sprites[0].W) + int(ComboGap)
+// 		// wsum += int(d.Sprites[v%10].W + ComboDigitGap)
+// 		wsum += int(d.Sprites[0].W) + int(ComboDigitGap)
 // 	}
-// 	wsum -= int(ComboGap)
+// 	wsum -= int(ComboDigitGap)
 
 // 	t := MaxComboCountdown - d.Countdown
 // 	age := float64(t) / float64(MaxJudgmentCountdown)
 // 	x := screenSizeX/2 + float64(wsum)/2 - d.Sprites[0].W/2
 // 	for _, v := range vs {
-// 		// x -= d.Sprites[v].W + ComboGap
-// 		x -= d.Sprites[0].W + ComboGap
+// 		// x -= d.Sprites[v].W + ComboDigitGap
+// 		x -= d.Sprites[0].W + ComboDigitGap
 // 		sprite := d.Sprites[v]
 // 		// sprite.X = x
 // 		sprite.X = x + (d.Sprites[0].W - sprite.W/2)
