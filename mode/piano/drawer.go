@@ -23,24 +23,32 @@ func (d StageDrawer) Draw(screen *ebiten.Image) {
 // Bars are fixed: lane itself moves, all bars move same amount.
 type BarDrawer struct {
 	Sprite   draws.Sprite
-	Cursor   *float64
+	Cursor   float64
 	Farthest *Bar
 	Nearest  *Bar
 }
 
-func (d *BarDrawer) Update(beatSpeed, speedScale float64) {
-	for d.Farthest.Position-*d.Cursor <= maxPosition+margin {
+func (d *BarDrawer) Update(cursor float64) {
+	d.Cursor = cursor
+	for d.Farthest.Position-d.Cursor <= maxPosition+margin {
+		if d.Farthest.Next == nil {
+			break
+		}
 		d.Farthest = d.Farthest.Next
 	}
-	for d.Nearest.Position-*d.Cursor <= minPosition-margin {
+	for d.Nearest.Position-d.Cursor <= minPosition-margin {
+		if d.Nearest.Next == nil {
+			break
+		}
 		d.Nearest = d.Nearest.Next
 	}
 }
 
 func (d BarDrawer) Draw(screen *ebiten.Image) {
-	for b := d.Farthest; b != d.Nearest; b = d.Farthest.Prev {
+	for b := d.Farthest; b != d.Nearest.Prev; b = b.Prev {
 		sprite := d.Sprite
-		sprite.Move(0, b.Position-*d.Cursor)
+		pos := b.Position - d.Cursor
+		sprite.Move(0, -pos)
 		sprite.Draw(screen, nil)
 	}
 }
@@ -48,16 +56,19 @@ func (d BarDrawer) Draw(screen *ebiten.Image) {
 // Notes are fixed: lane itself moves, all notes move same amount.
 type NoteLaneDrawer struct {
 	Sprites  [4]draws.Sprite
-	Cursor   *float64
+	Cursor   float64
 	Farthest *Note
 	Nearest  *Note
 }
 
-func (d *NoteLaneDrawer) Update() {
-	for d.Farthest.Position-*d.Cursor <= maxPosition+margin {
+func (d *NoteLaneDrawer) Update(cursor float64) {
+	d.Cursor = cursor
+	for d.Farthest != nil &&
+		d.Farthest.Position-d.Cursor <= maxPosition+margin {
 		d.Farthest = d.Farthest.Next
 	}
-	for d.Nearest.Position-*d.Cursor <= minPosition-margin {
+	for d.Nearest != nil &&
+		d.Nearest.Position-d.Cursor <= minPosition-margin {
 		d.Nearest = d.Nearest.Next
 	}
 }
@@ -65,9 +76,10 @@ func (d *NoteLaneDrawer) Update() {
 // Draw from farthest to nearest to make nearer notes priorly exposed.
 func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
 	n := d.Farthest
-	for ; n != d.Nearest; n = d.Farthest.Prev {
+	for ; n != d.Nearest.Prev; n = n.Prev {
 		sprite := d.Sprites[n.Type]
-		sprite.Move(0, n.Position-*d.Cursor)
+		pos := n.Position - d.Cursor
+		sprite.Move(0, -pos)
 		op := &ebiten.DrawImageOptions{}
 		if n.Marked {
 			op.ColorM.ChangeHSV(0, 0.3, 0.3)
@@ -77,7 +89,7 @@ func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
 			d.DrawLongBody(screen, n)
 		}
 	}
-	if n.Type == Tail {
+	if n != nil && n.Type == Tail {
 		d.DrawLongBody(screen, n.Prev)
 	}
 }

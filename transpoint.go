@@ -149,9 +149,16 @@ func BPMs(transPoints []*TransPoint, duration int64) (main, min, max float64) {
 	return
 }
 
+// A beat has fixed length. Unit of length is pixel.
+const BeatLength = 15000
+
 func (tp TransPoint) Speed() float64 {
-	return tp.BPM * tp.BeatLengthScale
+	return BeatLength * tp.BeatLengthScale * (tp.BPM / 60000)
 }
+
+//	func (tp TransPoint) Speed0() float64 {
+//		return tp.BPM * tp.BeatLengthScale
+//	}
 func (tp TransPoint) BeatDuration() float64 {
 	return float64(tp.Meter) * (60000 / tp.BPM)
 }
