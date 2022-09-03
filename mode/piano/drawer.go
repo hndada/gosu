@@ -30,18 +30,38 @@ type BarDrawer struct {
 
 func (d *BarDrawer) Update(cursor float64) {
 	d.Cursor = cursor
-	for d.Farthest.Position-d.Cursor <= maxPosition+margin {
-		if d.Farthest.Next == nil {
-			break
-		}
+	// When Farthest's prevs are still out of screen due to speed change.
+	for d.Farthest.Prev != nil &&
+		d.Farthest.Prev.Position-d.Cursor > maxPosition+posMargin {
+		d.Farthest = d.Farthest.Prev
+	}
+	// When Farthest is in screen, next note goes fetched if possible.
+	for d.Farthest.Next != nil &&
+		d.Farthest.Position-d.Cursor <= maxPosition+posMargin {
 		d.Farthest = d.Farthest.Next
 	}
-	for d.Nearest.Position-d.Cursor <= minPosition-margin {
-		if d.Nearest.Next == nil {
-			break
-		}
+	// When Nearest is still in screen due to speed change.
+	for d.Nearest.Prev != nil &&
+		d.Nearest.Position-d.Cursor > minPosition-posMargin {
+		d.Nearest = d.Nearest.Prev
+	}
+	// When Nearest's next is still out of screen, next note goes fetched.
+	for d.Nearest.Next != nil &&
+		d.Nearest.Next.Position-d.Cursor <= minPosition-posMargin {
 		d.Nearest = d.Nearest.Next
 	}
+	// for d.Farthest.Position-d.Cursor <= maxPosition+posMargin {
+	// 	if d.Farthest.Next == nil {
+	// 		break
+	// 	}
+	// 	d.Farthest = d.Farthest.Next
+	// }
+	// for d.Nearest.Position-d.Cursor <= minPosition-posMargin {
+	// 	if d.Nearest.Next == nil {
+	// 		break
+	// 	}
+	// 	d.Nearest = d.Nearest.Next
+	// }
 }
 
 func (d BarDrawer) Draw(screen *ebiten.Image) {
@@ -61,22 +81,41 @@ type NoteLaneDrawer struct {
 	Nearest  *Note
 }
 
+// Farthest and Nearest are borders of displaying notes.
+// All notes are certainly drawn when drawing from Farthest to Nearest.
 func (d *NoteLaneDrawer) Update(cursor float64) {
 	d.Cursor = cursor
-	for d.Farthest != nil &&
-		d.Farthest.Position-d.Cursor <= maxPosition+margin {
+	if d.Farthest == nil || d.Nearest == nil {
+		return
+	}
+	// When Farthest's prevs are still out of screen due to speed change.
+	for d.Farthest.Prev != nil &&
+		d.Farthest.Prev.Position-d.Cursor > maxPosition+posMargin {
+		d.Farthest = d.Farthest.Prev
+	}
+	// When Farthest is in screen, next note goes fetched if possible.
+	for d.Farthest.Next != nil &&
+		d.Farthest.Position-d.Cursor <= maxPosition+posMargin {
 		d.Farthest = d.Farthest.Next
 	}
-	for d.Nearest != nil &&
-		d.Nearest.Position-d.Cursor <= minPosition-margin {
+	// When Nearest is still in screen due to speed change.
+	for d.Nearest.Prev != nil &&
+		d.Nearest.Position-d.Cursor > minPosition-posMargin {
+		d.Nearest = d.Nearest.Prev
+	}
+	// When Nearest's next is still out of screen, next note goes fetched.
+	for d.Nearest.Next != nil &&
+		d.Nearest.Next.Position-d.Cursor <= minPosition-posMargin {
 		d.Nearest = d.Nearest.Next
 	}
 }
 
 // Draw from farthest to nearest to make nearer notes priorly exposed.
 func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
-	n := d.Farthest
-	for ; n != d.Nearest.Prev; n = n.Prev {
+	if d.Farthest == nil || d.Nearest == nil {
+		return
+	}
+	for n := d.Farthest; n != d.Nearest.Prev; n = n.Prev {
 		sprite := d.Sprites[n.Type]
 		pos := n.Position - d.Cursor
 		sprite.Move(0, -pos)
@@ -88,10 +127,13 @@ func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
 		if n.Type == Head {
 			d.DrawLongBody(screen, n)
 		}
+		// if n.Type == Head && n.Position-d.Cursor <= maxPosition+posMargin {
+		// 	d.DrawLongBody(screen, n)
+		// }
 	}
-	if n != nil && n.Type == Tail {
-		d.DrawLongBody(screen, n.Prev)
-	}
+	// if n != nil && n.Type == Tail {
+	// 	d.DrawLongBody(screen, n.Prev)
+	// }
 }
 
 // DrawLongBody draws scaled, corresponding sub-image of Body sprite.

@@ -14,6 +14,8 @@ import (
 type Chart struct {
 	gosu.Chart
 	Notes []Note
+
+	// tp.Position = tp.Speed() * float64(tp.Time) // Drum style
 }
 
 // NewChart takes file path as input for starting with parsing.

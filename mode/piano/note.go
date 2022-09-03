@@ -50,7 +50,7 @@ func NewNote(f any, keyCount int) (ns []*Note) {
 }
 
 // Brilliant idea: Make SpeedScale scaled by MainBPM.
-func NewNotes(f any, keyCount int, tp *gosu.TransPoint) (ns []*Note) {
+func NewNotes(f any, keyCount int) (ns []*Note) {
 	switch f := f.(type) {
 	case *osu.Format:
 		ns = make([]*Note, 0, len(f.HitObjects)*2)
@@ -72,12 +72,6 @@ func NewNotes(f any, keyCount int, tp *gosu.TransPoint) (ns []*Note) {
 			prev.Next = n
 		}
 		prevs[n.Key] = n
-	}
-	for _, n := range ns {
-		for tp.Next != nil && (tp.Time < n.Time || tp.Time >= tp.Next.Time) {
-			tp = tp.Next
-		}
-		n.Position = tp.Position + float64(n.Time-tp.Time)*tp.Speed()
 	}
 	return
 }

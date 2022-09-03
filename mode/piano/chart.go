@@ -15,7 +15,7 @@ type Chart struct {
 	TransPoints []*gosu.TransPoint
 	Notes       []*Note
 	Bars        []*Bar
-	// SpeedScale  float64 // Affects Note and Bar's position.
+	// Speed  float64 // Affects Note and Bar's position.
 	// MainBPM     float64
 }
 
@@ -34,15 +34,34 @@ func NewChart(cpath string) (c *Chart, err error) {
 	}
 	c = new(Chart)
 	c.ChartHeader = gosu.NewChartHeader(f)
-	fixed := true
-	c.TransPoints = gosu.NewTransPoints(f, fixed)
+	c.TransPoints = gosu.NewTransPoints(f)
 	switch f := f.(type) {
 	case *osu.Format:
 		c.KeyCount = int(f.CircleSize)
 	}
-	c.Notes = NewNotes(f, c.KeyCount, c.TransPoints[0])
+	c.Notes = NewNotes(f, c.KeyCount)
+
+	// Calculate positions
+	mainBPM, _, _ := c.BPMs()
+	bpmScale := mainBPM / c.TransPoints[0].BPM
+	for _, tp := range c.TransPoints {
+		prev := tp.Prev // First TransPoint still has dummy TransPoint as Prev.
+		tp.Speed *= bpmScale
+		tp.Position = prev.Position + float64(tp.Time-prev.Time)*prev.Speed
+	}
+	tp := c.TransPoints[0]
+	for _, n := range c.Notes {
+		for tp.Next != nil && tp.Time <= n.Time {
+			tp = tp.Next
+		}
+		n.Position = tp.Position + float64(n.Time-tp.Time)*tp.Speed
+	}
 	c.Bars = NewBars(c.TransPoints, c.Duration())
-	// c.SpeedScale = 1
+	// fmt.Println(c.MusicName, c.ChartName)
+	// if len(c.Notes) > 0 {
+	// 	fmt.Println(c.TransPoints[0].Position, c.Notes[0].Position, c.Bars[0].Position)
+	// }
+	// c.Speed = 1
 	// c.MainBPM, _, _ = c.BPMs()
 	// mainBPM, _, _ := c.BPMs()
 	// for _, tp := range c.TransPoints {
