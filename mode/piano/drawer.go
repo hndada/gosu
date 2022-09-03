@@ -1,9 +1,6 @@
 package piano
 
 import (
-	"image"
-	"math"
-
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/draws"
@@ -115,7 +112,10 @@ func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
 	if d.Farthest == nil || d.Nearest == nil {
 		return
 	}
-	for n := d.Farthest; n != d.Nearest.Prev; n = n.Prev {
+	for n := d.Farthest; n != nil && n != d.Nearest.Prev; n = n.Prev {
+		if n.Type == Tail {
+			d.DrawLongBody(screen, n)
+		}
 		sprite := d.Sprites[n.Type]
 		pos := n.Position - d.Cursor
 		sprite.Move(0, -pos)
@@ -124,9 +124,6 @@ func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
 			op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		}
 		sprite.Draw(screen, op)
-		if n.Type == Head {
-			d.DrawLongBody(screen, n)
-		}
 		// if n.Type == Head && n.Position-d.Cursor <= maxPosition+posMargin {
 		// 	d.DrawLongBody(screen, n)
 		// }
@@ -137,38 +134,66 @@ func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
 }
 
 // DrawLongBody draws scaled, corresponding sub-image of Body sprite.
-func (d NoteLaneDrawer) DrawLongBody(screen *ebiten.Image, head *Note) {
-	tail := head.Next
+func (d NoteLaneDrawer) DrawLongBody(screen *ebiten.Image, tail *Note) {
+	head := tail.Prev
 	body := d.Sprites[Body]
 	length := tail.Position - head.Position
 	length -= -bodyLoss
 	ratio := length / body.H()
-
-	top := tail.Position
-	if top > maxPosition {
-		top = maxPosition
-	}
-	bottom := head.Position
-	if bottom < minPosition {
-		bottom = minPosition
-	}
-	subTop := math.Ceil((top - head.Position) / ratio)
-	subBottom := math.Floor((bottom - head.Position) / ratio)
-	subRect := image.Rect(0, int(subBottom), int(body.W()), int(subTop))
-	subBody := body.SubSprite(subRect)
-
 	op := &ebiten.DrawImageOptions{}
-	if head.Marked {
+	if ReverseBody {
+		body.SetScale(1, -ratio, ebiten.FilterLinear)
+	} else {
+		body.SetScale(1, ratio, ebiten.FilterLinear)
+	}
+	if tail.Marked {
 		op.ColorM.ChangeHSV(0, 0.3, 0.3)
 	}
-	if ReverseBody {
-		op.GeoM.Scale(1, -ratio)
-	} else {
-		op.GeoM.Scale(1, ratio)
-	}
-	subBody.Move(0, -subBottom)
-	subBody.Draw(screen, op)
+	ty := head.Position - d.Cursor
+	body.Move(0, -ty)
+	body.Draw(screen, op)
 }
+
+// // DrawLongBody draws scaled, corresponding sub-image of Body sprite.
+// func (d NoteLaneDrawer) DrawLongBody(screen *ebiten.Image, tail *Note) {
+// 	head := tail.Prev
+// 	body := d.Sprites[Body]
+// 	length := tail.Position - head.Position
+// 	length -= -bodyLoss
+// 	ratio := length / body.H()
+// 	trimTail := tail.Position - d.Cursor
+// 	if trimTail > maxPosition+posMargin {
+// 		trimTail = maxPosition + posMargin
+// 	}
+// 	trimHead := head.Position - d.Cursor
+// 	if trimHead < minPosition-posMargin {
+// 		trimHead = minPosition - posMargin
+// 	}
+// 	fmt.Printf("%.f %.f\n", trimTail, trimHead)
+// 	// ground := head.Position - d.Cursor
+// 	// propMin := 1 - (trimTail-ground)/length
+// 	// propMax := 1 - (trimHead-ground)/length
+// 	// propMin := 1 - (tail.Position-head.Position)/length
+// 	// propMax := 1 - (head.Position-head.Position)/length
+// 	// propMin := 1 - (tail.Position-ground)/length
+// 	// propMax := 1 - (head.Position-ground)/length
+// 	propMin := (tail.Position - d.Cursor - trimTail) / length
+// 	propMax := 1 - (trimHead-head.Position-d.Cursor)/length
+// 	subBody := body.SubSprite(0, propMin, 1, propMax)
+// 	subBody.SetScale(1, ratio, ebiten.FilterLinear)
+// 	op := &ebiten.DrawImageOptions{}
+// 	if head.Marked {
+// 		op.ColorM.ChangeHSV(0, 0.3, 0.3)
+// 	}
+// 	if ReverseBody {
+// 		subBody.SetScale(1, -ratio, ebiten.FilterLinear)
+// 	} else {
+// 		subBody.SetScale(1, ratio, ebiten.FilterLinear)
+// 	}
+// 	ty := (trimHead - head.Position) // trimHead
+// 	subBody.Move(0, -ty)
+// 	subBody.Draw(screen, op)
+// }
 
 // KeyDrawer draws KeyDownSprite at least for 30ms, KeyUpSprite otherwise.
 // KeyDrawer uses MinCountdown instead of MaxCountdown.

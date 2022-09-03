@@ -72,6 +72,7 @@ func (d ScoreDrawer) Draw(screen *ebiten.Image) {
 	for _, v := range vs {
 		sprite := d.Sprites[v]
 		sprite.Move(tx, 0)
+		sprite.Move(-w/2+sprite.W()/2, 0) // Need to set at center since origin is RightTop.
 		sprite.Draw(screen, nil)
 		tx -= w
 	}

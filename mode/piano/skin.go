@@ -169,7 +169,7 @@ func LoadSkin() {
 				scaleW := w / s.W()
 				scaleH := NoteHeigth / s.H()
 				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginLeftCenter)
+				s.SetPosition(x, HitPosition, draws.OriginLeftBottom)
 				skin.NoteSprites[k] = s
 			}
 			{
@@ -177,7 +177,7 @@ func LoadSkin() {
 				scaleW := w / s.W()
 				scaleH := NoteHeigth / s.H()
 				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginLeftCenter)
+				s.SetPosition(x, HitPosition, draws.OriginLeftBottom)
 				skin.HeadSprites[k] = s
 			}
 			{
@@ -185,14 +185,14 @@ func LoadSkin() {
 				scaleW := w / s.W()
 				scaleH := NoteHeigth / s.H()
 				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginLeftCenter)
+				s.SetPosition(x, HitPosition, draws.OriginLeftBottom)
 				skin.TailSprites[k] = s
 			}
 			{
 				s := draws.NewSpriteFromImage(bodyImages[kind])
 				scale := w / s.W()
 				s.SetScale(scale, scale, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition-skin.HeadSprites[k].H()/2, draws.OriginLeftBottom)
+				s.SetPosition(x, HitPosition, draws.OriginLeftBottom) // Todo: need a test // -NoteHeigth
 				skin.BodySprites[k] = s
 			}
 			x += w
