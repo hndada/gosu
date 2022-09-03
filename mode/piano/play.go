@@ -2,6 +2,7 @@ package piano
 
 import (
 	"fmt"
+	"runtime/debug"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -145,6 +146,7 @@ func NewScenePlay(cpath string, rf *osr.Format, mvh, evh, sh ctrl.F64Handler) (s
 
 	title := fmt.Sprintf("gosu - %s - [%s]", c.MusicName, c.ChartName)
 	ebiten.SetWindowTitle(title)
+	// debug.SetGCPercent(0)
 	return s, nil
 }
 
@@ -171,6 +173,7 @@ func (s *ScenePlay) SetSpeed() {
 func (s *ScenePlay) Update() any {
 	defer s.Ticker()
 	if s.IsDone() {
+		debug.SetGCPercent(100)
 		s.MusicPlayer.Close()
 		return gosu.PlayToResultArgs{
 			Result: s.Result,
@@ -219,13 +222,13 @@ func (s *ScenePlay) Update() any {
 		}
 	}
 	s.SetCursor()
-	s.BarDrawer.Update(s.Cursor)
-	for _, d := range s.NoteLaneDrawers {
-		d.Update(s.Cursor)
-		// if k == 0 {
-		// 	fmt.Printf("Key %d: %.2f %.2f (cursor: %.2f)\n", k, d.Nearest.Position, d.Farthest.Position, d.Cursor)
-		// }
-	}
+	// s.BarDrawer.Update(s.Cursor)
+	// for _, d := range s.NoteLaneDrawers {
+	// 	d.Update(s.Cursor)
+	// 	// if k == 0 {
+	// 	// 	fmt.Printf("Key %d: %.2f %.2f (cursor: %.2f)\n", k, d.Nearest.Position, d.Farthest.Position, d.Cursor)
+	// 	// }
+	// }
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
 	s.ScoreDrawer.Update(s.Score())
 	s.ComboDrawer.Update(s.Combo)
@@ -242,10 +245,10 @@ func (s *ScenePlay) Update() any {
 func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
 	s.StageDrawer.Draw(screen)
-	s.BarDrawer.Draw(screen)
-	for _, d := range s.NoteLaneDrawers {
-		d.Draw(screen)
-	}
+	// s.BarDrawer.Draw(screen)
+	// for _, d := range s.NoteLaneDrawers {
+	// 	d.Draw(screen)
+	// }
 	s.KeyDrawer.Draw(screen)
 	s.ScoreDrawer.Draw(screen)
 	s.ComboDrawer.Draw(screen)
@@ -254,7 +257,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.DebugPrint(screen)
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"CurrentFPS: %.2f\nCurrentTPS: %.2f\n",
-		ebiten.CurrentFPS(), ebiten.CurrentTPS(),
+		ebiten.ActualFPS(), ebiten.ActualTPS(),
 	))
 }
 
@@ -270,10 +273,10 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
 			"Speed: %.0f | %.0f\n(Exposure time: %.fms)\n\n",
-		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.Duration())/1000,
+		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Time())/1000, float64(s.Chart.Duration())/1000,
 		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
 		fr*100, ar*100, rr*100, s.JudgmentCounts,
-		s.Speed*100, *s.SpeedHandler.Target*100, ExposureTime(s.Speed)))
+		s.Speed*100, *s.SpeedHandler.Target*100, ExposureTime(s.CurrentSpeed())))
 }
 func (s ScenePlay) Time() int64 { return s.Timer.Time() }
 
@@ -283,6 +286,6 @@ func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.Speed 
 
 // Supposes one current TransPoint can increment cursor precisely.
 func (s *ScenePlay) SetCursor() {
-	tp := s.TransPoint
-	s.Cursor = tp.Position + float64(s.Time()-tp.Time)*s.CurrentSpeed()
+	duration := float64(s.Time() - s.TransPoint.Time)
+	s.Cursor = s.TransPoint.Position + duration*s.CurrentSpeed()
 }

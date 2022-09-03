@@ -191,7 +191,7 @@ func (d MeterDrawer) Draw(screen *ebiten.Image) {
 		if age := d.MarkAge(m); age >= 0.8 {
 			op.ColorM.Scale(1, 1, 1, 1-(age-0.8)/0.2)
 		}
-		op.GeoM.Translate(float64(m.Offset)*MeterWidth, 0)
+		op.GeoM.Translate(-float64(m.Offset)*MeterWidth, 0)
 		sprite.Draw(screen, op)
 	}
 	d.Anchor.Draw(screen, nil)
