@@ -22,10 +22,11 @@ type ScenePlay struct {
 	gosu.KeyLogger
 
 	*gosu.TransPoint
-	SpeedScaleHandler    ctrl.F64Handler
-	MainBPM              float64
-	NormalizedSpeedScale float64
-	Cursor               float64
+	SpeedHandler ctrl.F64Handler
+	// MainBPM              float64
+	// NormalizedSpeed float64
+	Speed  float64
+	Cursor float64
 
 	gosu.Result
 	Staged []*Note
@@ -79,12 +80,11 @@ func NewScenePlay(cpath string, rf *osr.Format, mvh, evh, sh ctrl.F64Handler) (s
 		s.KeyLogger.FetchPressed = gosu.NewReplayListener(rf, keyCount, s.Time())
 	}
 
-	s.TransPoint = c.TransPoints[0].FetchPresent()
-	s.SpeedScaleHandler = sh
-	s.MainBPM, _, _ = c.BPMs()
-	s.NormalizedSpeedScale = 1
-	s.Cursor = float64(s.Time()) * s.Speed()
-	s.SetSpeedScale()
+	s.TransPoint = c.TransPoints[0]
+	s.SpeedHandler = sh
+	s.Speed = 1
+	s.Cursor = float64(s.Time()) * s.Speed
+	s.SetSpeed()
 
 	s.Result.MD5, err = gosu.MD5(cpath)
 	if err != nil {
@@ -149,22 +149,21 @@ func NewScenePlay(cpath string, rf *osr.Format, mvh, evh, sh ctrl.F64Handler) (s
 }
 
 // Farther note has larger position. Tail's Position is always larger than Head's.
-// Need to re-calculate positions when SpeedScale has changed.
-func (s *ScenePlay) SetSpeedScale() {
-	normalized := *s.SpeedScaleHandler.Target / s.MainBPM
-
-	s.Cursor *= normalized / s.NormalizedSpeedScale
+// Need to re-calculate positions when Speed has changed.
+func (s *ScenePlay) SetSpeed() {
+	old := s.Speed
+	new := *s.SpeedHandler.Target
+	s.Cursor *= new / old
 	for _, tp := range s.Chart.TransPoints {
-		tp.Position *= normalized / s.NormalizedSpeedScale
+		tp.Position *= new / old
 	}
 	for _, n := range s.Chart.Notes {
-		n.Position *= normalized / s.NormalizedSpeedScale
+		n.Position *= new / old
 	}
 	for _, b := range s.Chart.Bars {
-		b.Position *= normalized / s.NormalizedSpeedScale
+		b.Position *= new / old
 	}
-
-	s.NormalizedSpeedScale = normalized
+	s.Speed = new
 }
 
 // Todo: apply other values of TransPoint (Volume has finished so far)
@@ -220,11 +219,12 @@ func (s *ScenePlay) Update() any {
 			s.MeterDrawer.AddMark(int(td), colorType)
 		}
 	}
+	s.SetCursor()
 	s.BarDrawer.Update(s.Cursor)
 	for k, d := range s.NoteLaneDrawers {
 		d.Update(s.Cursor)
 		if k == 0 {
-			fmt.Printf("Key %d: %.0f %.0f (cursor: %.2f)\n", k, d.Nearest.Position, d.Farthest.Position, d.Cursor)
+			fmt.Printf("Key %d: %.2f %.2f (cursor: %.2f)\n", k, d.Nearest.Position, d.Farthest.Position, d.Cursor)
 		}
 	}
 	s.ScoreDrawer.Update(s.Score())
@@ -233,11 +233,9 @@ func (s *ScenePlay) Update() any {
 	s.MeterDrawer.Update()
 
 	// Changed speed should be applied after positions are calculated.
-	// Supposes one current TransPoint can increment cursor precisely.
-	s.Cursor += s.Speed() * gosu.TimeStep
 	s.TransPoint.FetchByTime(s.Time())
-	if fired := s.SpeedScaleHandler.Update(); fired {
-		s.SetSpeedScale()
+	if fired := s.SpeedHandler.Update(); fired {
+		s.SetSpeed()
 	}
 	return nil
 }
@@ -271,10 +269,16 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.Duration())/1000,
 		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
 		fr*100, ar*100, rr*100, s.JudgmentCounts,
-		s.Speed()*100, *s.SpeedScaleHandler.Target*100, ExposureTime(s.Speed())))
+		s.Speed*100, *s.SpeedHandler.Target*100, ExposureTime(s.Speed)))
 }
 func (s ScenePlay) Time() int64 { return s.Timer.Time() }
 
-// func (s ScenePlay) Speed() float64 { return *s.SpeedScaleHandler.Target * s.TransPoint.Speed() }
+// func (s ScenePlay) Speed() float64 { return *s.SpeedHandler.Target * s.TransPoint.Speed() }
 
-func (s ScenePlay) Speed() float64 { return s.NormalizedSpeedScale * s.TransPoint.Speed() }
+func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.Speed }
+
+// Supposes one current TransPoint can increment cursor precisely.
+func (s *ScenePlay) SetCursor() {
+	tp := s.TransPoint
+	s.Cursor = tp.Position + float64(s.Time()-tp.Time)*s.CurrentSpeed()
+}

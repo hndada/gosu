@@ -11,7 +11,7 @@ const (
 	screenSizeY = gosu.ScreenSizeY
 )
 
-var SpeedScale float64 = 5
+var SpeedScale float64 = 2.1
 
 var KeySettings = map[int][]input.Key{
 	4:               {input.KeyD, input.KeyF, input.KeyJ, input.KeyK},
@@ -33,8 +33,8 @@ var (
 	// HintPosition     float64 = screenSizeY * 0.96
 	maxPosition float64 = HitPosition
 	minPosition float64 = maxPosition - screenSizeY
-	// margin should be larger than MaxSize/2 of all note sprites' width or height.
-	margin      float64 = 100
+	// posMargin should be larger than MaxSize/2 of all note sprites' width or height.
+	posMargin   float64 = 100
 	bodyLoss    float64 = NoteHeigth // Head/2 + Tail/2.
 	ReverseBody bool    = false
 )

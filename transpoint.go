@@ -7,31 +7,23 @@ import (
 	"github.com/hndada/gosu/format/osu"
 )
 
-// BPM means Beats Per Minute. Higher BPM means more beats in unit time.
-// Scroll goes faster proportional to BPM (or BPM ratio), since
-// length of beat is fixed by default, which can be scaled by BeatLengthScale.
 type TransPoint struct {
-	Time            int64
-	BPM             float64
-	BeatLengthScale float64
-	Meter           uint8
-	Volume          float64 // Range is 0 to 1.
-	Highlight       bool
-	NewBPM          bool
-	Position        float64
-	Prev            *TransPoint
-	Next            *TransPoint
-	NextBPMPoint    *TransPoint // For performance
+	Time      int64
+	BPM       float64
+	Speed     float64
+	Meter     int
+	NewBeat   bool    // NewBeat draws a bar.
+	Volume    float64 // Range is [0, 1].
+	Highlight bool
+
+	Position float64
+	Next     *TransPoint
+	Prev     *TransPoint
 }
 
-// In osu!, Uninherited point is base point. While Inherited point inherits
-// starting from previous Uninherited point, then possible following Inherited points.
-// BPM and BeatLengthScale are derived only from Uninherited and Inherited each.
-
-// All .osu chart have at least one Uninherited point.
-// Initial BPM is derived from the first Uninherited point.
-// When there are multiple timing points with same time, the last one will overwrites all precedings.
-func NewTransPoints(f any, fixed bool) []*TransPoint {
+// In new TransPoint, first BPM is used as temporary main BPM.
+// No two TransPoints have same Time.
+func NewTransPoints(f any) []*TransPoint {
 	var transPoints []*TransPoint
 	switch f := f.(type) {
 	case *osu.Format:
@@ -48,73 +40,53 @@ func NewTransPoints(f any, fixed bool) []*TransPoint {
 		if len(f.TimingPoints) == 0 {
 			return transPoints
 		}
-
+		tempMainBPM := f.TimingPoints[0].BPM()
 		transPoints = make([]*TransPoint, 0, len(f.TimingPoints))
-		var prev = &TransPoint{BPM: f.TimingPoints[0].BPM()}
-		var prevBPMPoint = prev
+		var prev = &TransPoint{
+			Time:  0,
+			BPM:   tempMainBPM,
+			Speed: 1,
+			Meter: 4,
+		}
 		for _, timingPoint := range f.TimingPoints {
-			if timingPoint.Uninherited {
-				tp := &TransPoint{
-					Time:            int64(timingPoint.Time),
-					BPM:             timingPoint.BPM(),
-					BeatLengthScale: 1,
-					Meter:           uint8(timingPoint.Meter),
-					Volume:          float64(timingPoint.Volume) / 100,
-					Highlight:       timingPoint.IsKiai(),
-					NewBPM:          true,
-					// Position:        prev.Position,
-					Prev: prev,
-					// Next:            nil,
-					// NextBPMPoint:    nil,
-				}
-				if fixed {
-					tp.Position = prev.Position + prev.Speed()*float64(tp.Time-prev.Time)
-				} else {
-					tp.Position = tp.Speed() * float64(tp.Time)
-				}
-				prev.Next = tp
-				prev = tp
-				prevBPMPoint.NextBPMPoint = tp // This was hard to find the bug to me.
-				prevBPMPoint = tp
-				transPoints = append(transPoints, tp)
-			} else {
-				tp := &TransPoint{
-					Time:            int64(timingPoint.Time),
-					BPM:             prevBPMPoint.BPM,
-					BeatLengthScale: timingPoint.BeatLengthScale(),
-					Meter:           uint8(timingPoint.Meter),
-					Volume:          float64(timingPoint.Volume) / 100,
-					Highlight:       timingPoint.IsKiai(),
-					NewBPM:          false,
-					// Position:        prev.Position,
-					Prev: prev,
-					// Next:            nil,
-					// NextBPMPoint:    nil,
-				}
-				if fixed {
-					tp.Position = prev.Position + prev.Speed()*float64(tp.Time-prev.Time)
-				} else {
-					tp.Position = tp.Speed() * float64(tp.Time)
-				}
-				prev.Next = tp // Inherited point is never the first.
-				prev = tp
-				transPoints = append(transPoints, tp)
+			tp := &TransPoint{
+				Time:      int64(timingPoint.Time),
+				BPM:       prev.BPM,
+				Speed:     1,
+				Meter:     timingPoint.Meter,
+				NewBeat:   timingPoint.Uninherited,
+				Volume:    float64(timingPoint.Volume) / 100,
+				Highlight: timingPoint.IsKiai(),
+				Prev:      prev,
 			}
+			if timingPoint.Uninherited {
+				tp.BPM = timingPoint.BPM()
+				tp.Speed = (tp.BPM / tempMainBPM)
+			} else {
+				tp.Speed *= timingPoint.BeatLengthScale()
+			}
+			if tp.Prev.Time == tp.Time && len(transPoints) != 0 { // Drop a TransPoint with a same time
+				tp.NewBeat = tp.NewBeat || tp.Prev.NewBeat
+				transPoints = transPoints[:len(transPoints)-1]
+			}
+			prev.Next = tp
+			prev = tp
+			transPoints = append(transPoints, tp)
 		}
 	}
-	transPoints[0].Prev = nil // First TransPoint's Prev is just a dummy.
+	// transPoints[0].Prev = nil // Prev of the first TransPoint is just a dummy.
 	return transPoints
 }
 
+func (tp TransPoint) BeatDuration() float64 {
+	return float64(tp.Meter) * (60000 / tp.BPM)
+}
 func (tp *TransPoint) FetchByTime(time int64) *TransPoint {
 	for tp.Next != nil && time >= tp.Next.Time {
 		tp = tp.Next
 	}
 	return tp
 }
-
-// FetchPresent is useful for NewBPM TransPoint fetching latest TransPoint.
-func (tp *TransPoint) FetchPresent() *TransPoint { return tp.FetchByTime(tp.Time) }
 
 // BPM with longest duration will be main BPM.
 // When there are multiple BPMs with same duration, larger one will be main BPM.
@@ -147,18 +119,4 @@ func BPMs(transPoints []*TransPoint, duration int64) (main, min, max float64) {
 		}
 	}
 	return
-}
-
-// A beat has fixed length. Unit of length is pixel.
-const BeatLength = 15000
-
-func (tp TransPoint) Speed() float64 {
-	return BeatLength * tp.BeatLengthScale * (tp.BPM / 60000)
-}
-
-//	func (tp TransPoint) Speed0() float64 {
-//		return tp.BPM * tp.BeatLengthScale
-//	}
-func (tp TransPoint) BeatDuration() float64 {
-	return float64(tp.Meter) * (60000 / tp.BPM)
 }
