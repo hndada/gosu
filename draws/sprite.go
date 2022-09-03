@@ -1,8 +1,6 @@
 package draws
 
 import (
-	"image"
-
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -114,13 +112,21 @@ func (s Sprite) IsValid() bool            { return s.i != nil }
 //	}
 //
 // SubSprite supposes no x, y and origin are changed.
-func (s Sprite) SubSprite(rect image.Rectangle) Sprite {
-	s2 := s
-	s2.i = s.i.SubImage(rect).(*ebiten.Image)
-	s2.w = float64(rect.Dx())
-	s2.h = float64(rect.Dy())
-	return s2
-}
+// func (s Sprite) SubSprite(rect image.Rectangle) Sprite {
+//
+//	func (s Sprite) SubSprite(propMinX, propMinY, propMaxX, propMaxY float64) Sprite {
+//		w, h := s.SrcSize()
+//		minX := math.Floor(propMinX * float64(w))
+//		minY := math.Floor(propMinY * float64(h))
+//		maxX := math.Ceil(propMaxX * float64(w))
+//		maxY := math.Ceil(propMaxY * float64(h))
+//		rect := image.Rect(int(minX), int(minY), int(maxX), int(maxY))
+//		s2 := s
+//		s2.i = s.i.SubImage(rect).(*ebiten.Image)
+//		s2.w = float64(rect.Dx()) * s2.scaleW
+//		s2.h = float64(rect.Dy()) * s2.scaleH
+//		return s2
+//	}
 func (s *Sprite) Move(tx, ty float64) {
 	s.x += tx
 	s.y += ty

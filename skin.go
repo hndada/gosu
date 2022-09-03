@@ -52,7 +52,11 @@ func LoadGeneralSkin() {
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fmt.Sprintf("skin/score/%d.png", i))
 		s.SetScale(ScoreScale, ScoreScale, ebiten.FilterLinear)
-		s.SetPosition(screenSizeX, 0, draws.OriginRightTop)
+		if i == 0 {
+			s.SetPosition(screenSizeX, 0, draws.OriginRightTop)
+		} else { // Need to set same base line, since each number has different height.
+			s.SetPosition(screenSizeX, ScoreSprites[0].H()-s.H(), draws.OriginRightTop)
+		}
 		ScoreSprites[i] = s
 	}
 	for i, name := range []string{"dot", "comma", "percent"} {

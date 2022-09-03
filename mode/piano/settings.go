@@ -11,7 +11,7 @@ const (
 	screenSizeY = gosu.ScreenSizeY
 )
 
-var SpeedScale float64 = 2.1
+var SpeedScale float64 = 1.35
 
 var KeySettings = map[int][]input.Key{
 	4:               {input.KeyD, input.KeyF, input.KeyJ, input.KeyK},
@@ -57,10 +57,10 @@ const (
 // Skin scale settings
 // Todo: make the struct SkinScaleSettings
 var (
-	ComboScale    float64 = 1.1                 // 0.75
-	ComboDigitGap float64 = screenSizeX * -0.01 // -0.0008
+	ComboScale    float64 = 0.75
+	ComboDigitGap float64 = screenSizeX * -0.0008
 	ScoreScale    float64 = 0.65
-	JudgmentScale float64 = 0.5 // 0.33
+	JudgmentScale float64 = 0.33
 	HintHeight    float64 = screenSizeY * 0.04
 
 	BodySpriteStyle = BodySpriteStyleStretch

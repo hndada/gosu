@@ -40,7 +40,7 @@ type ScenePlay struct {
 	BackgroundDrawer gosu.BackgroundDrawer
 	StageDrawer      StageDrawer
 	BarDrawer        BarDrawer
-	NoteLaneDrawers  []NoteLaneDrawer
+	NoteLaneDrawers  []*NoteLaneDrawer
 	KeyDrawer        KeyDrawer
 	ScoreDrawer      gosu.ScoreDrawer
 	ComboDrawer      ComboDrawer
@@ -118,9 +118,9 @@ func NewScenePlay(cpath string, rf *osr.Format, mvh, evh, sh ctrl.F64Handler) (s
 		Field: s.FieldSprite,
 		Hint:  s.HintSprite,
 	}
-	s.NoteLaneDrawers = make([]NoteLaneDrawer, keyCount)
+	s.NoteLaneDrawers = make([]*NoteLaneDrawer, keyCount)
 	for k := range s.NoteLaneDrawers {
-		s.NoteLaneDrawers[k] = NoteLaneDrawer{
+		s.NoteLaneDrawers[k] = &NoteLaneDrawer{
 			Sprites: [4]draws.Sprite{
 				s.NoteSprites[k], s.HeadSprites[k],
 				s.TailSprites[k], s.BodySprites[k],
@@ -180,10 +180,9 @@ func (s *ScenePlay) Update() any {
 		s.MusicPlayer.Play()
 	}
 
-	var worst gosu.Judgment
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
-	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
+	var worst gosu.Judgment
 	for k, n := range s.Staged {
 		if n == nil {
 			continue
@@ -221,12 +220,13 @@ func (s *ScenePlay) Update() any {
 	}
 	s.SetCursor()
 	s.BarDrawer.Update(s.Cursor)
-	for k, d := range s.NoteLaneDrawers {
+	for _, d := range s.NoteLaneDrawers {
 		d.Update(s.Cursor)
-		if k == 0 {
-			fmt.Printf("Key %d: %.2f %.2f (cursor: %.2f)\n", k, d.Nearest.Position, d.Farthest.Position, d.Cursor)
-		}
+		// if k == 0 {
+		// 	fmt.Printf("Key %d: %.2f %.2f (cursor: %.2f)\n", k, d.Nearest.Position, d.Farthest.Position, d.Cursor)
+		// }
 	}
+	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
 	s.ScoreDrawer.Update(s.Score())
 	s.ComboDrawer.Update(s.Combo)
 	s.JudgmentDrawer.Update(worst)
@@ -252,6 +252,10 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.JudgmentDrawer.Draw(screen)
 	s.MeterDrawer.Draw(screen)
 	s.DebugPrint(screen)
+	ebitenutil.DebugPrint(screen, fmt.Sprintf(
+		"CurrentFPS: %.2f\nCurrentTPS: %.2f\n",
+		ebiten.CurrentFPS(), ebiten.CurrentTPS(),
+	))
 }
 
 func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
