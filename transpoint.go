@@ -42,22 +42,16 @@ func NewTransPoints(f any) []*TransPoint {
 		}
 		tempMainBPM := f.TimingPoints[0].BPM()
 		transPoints = make([]*TransPoint, 0, len(f.TimingPoints))
-		var prev = &TransPoint{
-			Time:  0,
-			BPM:   tempMainBPM,
-			Speed: 1,
-			Meter: 4,
-		}
+		prevBPM := tempMainBPM
 		for _, timingPoint := range f.TimingPoints {
 			tp := &TransPoint{
 				Time:      int64(timingPoint.Time),
-				BPM:       prev.BPM,
+				BPM:       prevBPM,
 				Speed:     1,
 				Meter:     timingPoint.Meter,
 				NewBeat:   timingPoint.Uninherited,
 				Volume:    float64(timingPoint.Volume) / 100,
 				Highlight: timingPoint.IsKiai(),
-				Prev:      prev,
 			}
 			if timingPoint.Uninherited {
 				tp.BPM = timingPoint.BPM()
@@ -65,16 +59,22 @@ func NewTransPoints(f any) []*TransPoint {
 			} else {
 				tp.Speed *= timingPoint.BeatLengthScale()
 			}
-			if tp.Prev.Time == tp.Time && len(transPoints) != 0 { // Drop a TransPoint with a same time
-				tp.NewBeat = tp.NewBeat || tp.Prev.NewBeat
+			if len(transPoints) > 0 && transPoints[len(transPoints)-1].Time == tp.Time { // Drop a TransPoint with a same time
+				tp.NewBeat = transPoints[len(transPoints)-1].NewBeat || tp.NewBeat
 				transPoints = transPoints[:len(transPoints)-1]
 			}
-			prev.Next = tp
-			prev = tp
 			transPoints = append(transPoints, tp)
+			prevBPM = tp.BPM
 		}
 	}
-	// transPoints[0].Prev = nil // Prev of the first TransPoint is just a dummy.
+	var prev *TransPoint
+	for _, tp := range transPoints {
+		tp.Prev = prev
+		if prev != nil {
+			prev.Next = tp
+		}
+		prev = tp
+	}
 	return transPoints
 }
 

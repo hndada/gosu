@@ -1,6 +1,10 @@
 package gosu
 
 import (
+	"fmt"
+	"os"
+	"runtime"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/format/osr"
@@ -18,6 +22,12 @@ type Scene interface {
 	Draw(screen *ebiten.Image)
 }
 
+func init() {
+	if runtime.GOOS == "windows" {
+		fmt.Println("OpenGL mode has enabled.")
+		os.Setenv("EBITEN_GRAPHICS_LIBRARY", "opengl")
+	}
+}
 func NewGame(props []ModeProp) *Game {
 	g := new(Game)
 	// Todo: load settings here
@@ -42,8 +52,9 @@ func NewGame(props []ModeProp) *Game {
 
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
-	ebiten.SetMaxTPS(TPS)
+	ebiten.SetTPS(TPS)
 	ebiten.SetCursorMode(ebiten.CursorModeHidden)
+	// ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 	return g
 }

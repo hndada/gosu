@@ -1,6 +1,7 @@
 package piano
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,8 +16,6 @@ type Chart struct {
 	TransPoints []*gosu.TransPoint
 	Notes       []*Note
 	Bars        []*Bar
-	// Speed  float64 // Affects Note and Bar's position.
-	// MainBPM     float64
 }
 
 func NewChart(cpath string) (c *Chart, err error) {
@@ -43,11 +42,14 @@ func NewChart(cpath string) (c *Chart, err error) {
 
 	// Calculate positions
 	mainBPM, _, _ := c.BPMs()
-	bpmScale := mainBPM / c.TransPoints[0].BPM
+	bpmScale := c.TransPoints[0].BPM / mainBPM
 	for _, tp := range c.TransPoints {
-		prev := tp.Prev // First TransPoint still has dummy TransPoint as Prev.
 		tp.Speed *= bpmScale
-		tp.Position = prev.Position + float64(tp.Time-prev.Time)*prev.Speed
+		if prev := tp.Prev; prev != nil {
+			tp.Position = prev.Position + float64(tp.Time-prev.Time)*prev.Speed
+		} else {
+			tp.Position = float64(tp.Time) * tp.Speed
+		}
 	}
 	tp := c.TransPoints[0]
 	for _, n := range c.Notes {
@@ -58,21 +60,10 @@ func NewChart(cpath string) (c *Chart, err error) {
 	}
 	c.Bars = NewBars(c.TransPoints, c.Duration())
 	// fmt.Println(c.MusicName, c.ChartName)
-	// if len(c.Notes) > 0 {
-	// 	fmt.Println(c.TransPoints[0].Position, c.Notes[0].Position, c.Bars[0].Position)
-	// }
-	// c.Speed = 1
-	// c.MainBPM, _, _ = c.BPMs()
-	// mainBPM, _, _ := c.BPMs()
-	// for _, tp := range c.TransPoints {
-	// 	tp.Position /= mainBPM
-	// }
-	// for _, n := range c.Notes {
-	// 	n.Position /= mainBPM
-	// }
-	// for _, b := range c.Bars {
-	// 	b.Position /= mainBPM
-	// }
+	if len(c.Notes) > 0 {
+		fmt.Println(c.TransPoints[0].Position, c.Notes[0].Position, c.Bars[0].Position)
+		fmt.Printf("%+v\n", c.TransPoints[0])
+	}
 	return
 }
 
