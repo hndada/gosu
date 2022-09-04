@@ -220,13 +220,19 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 // 		rr = s.Extras / s.NoteWeights
 // 	}
 
-// 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
-// 		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
-// 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
-// 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
-// 			"Speed: %.0f | %.0f\n(Exposure time: %.fms)\n\n",
-// 		ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.Duration)/1000,
-// 		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
-// 		fr*100, ar*100, rr*100, s.JudgmentCounts,
-// 		s.Speed()*100, s.SpeedScale*100, ExposureTime(s.Speed())))
-// }
+//		ebitenutil.DebugPrint(screen, fmt.Sprintf(
+//			"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
+//				"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
+//				"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
+//				"Speed: %.0f | %.0f\n(Exposure time: %.fms)\n\n",
+//			ebiten.CurrentFPS(), ebiten.CurrentTPS(), float64(s.Time())/1000, float64(s.Chart.Duration)/1000,
+//			s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
+//			fr*100, ar*100, rr*100, s.JudgmentCounts,
+//			s.Speed()*100, s.SpeedScale*100, ExposureTime(s.Speed())))
+//	}
+//
+// 1 pixel is 1 millisecond.
+// Todo: Separate NoteHeight / 2 at piano mode
+func ExposureTime(speedScale float64) float64 {
+	return (screenSizeX - HitPosition) / speedScale
+}

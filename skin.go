@@ -21,8 +21,9 @@ var (
 	DefaultBackground  draws.Sprite
 	CursorSprites      [3]draws.Sprite
 	ChartInfoBoxSprite draws.Sprite // Todo: various box sprite
-	ScoreSprites       [10]draws.Sprite
-	SignSprites        [3]draws.Sprite
+
+	ScoreSprites [10]draws.Sprite
+	SignSprites  [3]draws.Sprite
 )
 
 const (

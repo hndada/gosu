@@ -11,11 +11,13 @@ var (
 // TPS affects only on Update(), not on Draw().
 // Todo: BarLine color settings
 var (
-	TPS int = 1000 // TPS should be 1000 or greater.
-	// TimeStep     float64 = 1 / float64(TPS) * 1000 // Unit of time is a millisecond (1ms = 0.001s).
+	TPS         int  = 1000 // TPS should be 1000 or greater.
+	VsyncSwitch bool = false
+
 	MusicVolume  float64 = 0.25
 	EffectVolume float64 = 0.25
-	VsyncSwitch  bool    = false
+
+	CursorScale float64 = 0.1
 
 	ChartInfoBoxWidth  float64 = 450
 	ChartInfoBoxHeight float64 = 50
@@ -23,11 +25,10 @@ var (
 	chartInfoBoxshrink float64 = ChartInfoBoxWidth * ChartInfoBoxShrink
 
 	BackgroundDimness float64 = 0.5
-	MeterWidth        float64 = 4 // The number of pixels per 1ms.
-	MeterHeight       float64 = 50
-	CursorScale       float64 = 0.1
 	ScoreScale        float64 = 0.65
 	ScoreDigitGap     float64 = 0
+	MeterWidth        float64 = 4 // The number of pixels per 1ms.
+	MeterHeight       float64 = 50
 )
 
 // Todo: reset all tick-dependent variables.
