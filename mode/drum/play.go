@@ -62,7 +62,7 @@ func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, err
 	s.SetInitTransPoint(c.TransPoints[0])
 
 	// Audio
-	apath := filepath.Join(filepath.Dir(cpath), c.AudioFilename)
+	apath := filepath.Join(filepath.Dir(cpath), c.MusicFilename)
 	err = s.SetMusicPlayer(apath)
 	if err != nil {
 		return s, err

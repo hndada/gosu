@@ -9,8 +9,6 @@ import (
 // ChartHeader contains non-play information.
 // Chaning ChartHeader's data will not affect integrity of the chart.
 // Mode-specific fields are located to each Chart struct.
-// Music: when treating it as media
-// Audio: when considering as programming aspect
 type ChartHeader struct {
 	ChartID       int64
 	MusicName     string
@@ -22,8 +20,8 @@ type ChartHeader struct {
 	Producer      string // Name of field may change.
 	HolderID      int64
 
-	AudioFilename   string
 	PreviewTime     int64
+	MusicFilename   string
 	ImageFilename   string
 	VideoFilename   string
 	VideoTimeOffset int64
@@ -41,8 +39,8 @@ func NewChartHeader(f any) (c ChartHeader) {
 			ChartName:     f.Version,
 			Producer:      f.Creator,
 
-			AudioFilename: f.AudioFilename,
 			PreviewTime:   int64(f.PreviewTime),
+			MusicFilename: f.AudioFilename,
 		}
 		var e osu.Event
 		e, _ = f.Background()
@@ -54,10 +52,10 @@ func NewChartHeader(f any) (c ChartHeader) {
 }
 
 func (c ChartHeader) MusicPath(cpath string) (string, bool) {
-	if name := c.AudioFilename; name == "virtual" || name == "" {
+	if name := c.MusicFilename; name == "virtual" || name == "" {
 		return "", false
 	}
-	return filepath.Join(filepath.Dir(cpath), c.AudioFilename), true
+	return filepath.Join(filepath.Dir(cpath), c.MusicFilename), true
 }
 func (c ChartHeader) BackgroundPath(cpath string) string {
 	return filepath.Join(filepath.Dir(cpath), c.ImageFilename)
