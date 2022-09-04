@@ -1,7 +1,6 @@
 package piano
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -39,31 +38,48 @@ func NewChart(cpath string) (c *Chart, err error) {
 		c.KeyCount = int(f.CircleSize)
 	}
 	c.Notes = NewNotes(f, c.KeyCount)
+	c.Bars = NewBars(c.TransPoints, c.Duration())
 
 	// Calculate positions
 	mainBPM, _, _ := c.BPMs()
 	bpmScale := c.TransPoints[0].BPM / mainBPM
+	// fmt.Println(mainBPM, bpmScale)
 	for _, tp := range c.TransPoints {
+		// fmt.Printf("before speed: %.2f\n", tp.Speed)
 		tp.Speed *= bpmScale
 		if prev := tp.Prev; prev != nil {
 			tp.Position = prev.Position + float64(tp.Time-prev.Time)*prev.Speed
 		} else {
 			tp.Position = float64(tp.Time) * tp.Speed
 		}
+		// fmt.Printf("i: %d tp: %+v\n", i, tp)
+		// fmt.Printf("after speed: %.2f\n", tp.Speed)
 	}
 	tp := c.TransPoints[0]
 	for _, n := range c.Notes {
-		for tp.Next != nil && tp.Time <= n.Time {
+		for tp.Next != nil && n.Time >= tp.Next.Time {
 			tp = tp.Next
 		}
 		n.Position = tp.Position + float64(n.Time-tp.Time)*tp.Speed
 	}
-	c.Bars = NewBars(c.TransPoints, c.Duration())
-	// fmt.Println(c.MusicName, c.ChartName)
-	if len(c.Notes) > 0 {
-		fmt.Println(c.TransPoints[0].Position, c.Notes[0].Position, c.Bars[0].Position)
-		fmt.Printf("%+v\n", c.TransPoints[0])
+	tp = c.TransPoints[0]
+	for _, b := range c.Bars {
+		for tp.Next != nil && b.Time >= tp.Next.Time {
+			tp = tp.Next
+		}
+		b.Position = tp.Position + float64(b.Time-tp.Time)*tp.Speed
 	}
+	// for _, tp := range c.TransPoints[:20] {
+	// 	fmt.Printf("Time: %d BPM: %.2f Speed: %.3f Position: %.2f Bar: %v \n",
+	// 		tp.Time, tp.BPM, tp.Speed, tp.Position, tp.NewBeat)
+	// }
+	// for _, n := range c.Notes {
+	// 	fmt.Printf("Time:%d Pos: %.2f\n", n.Time, n.Position)
+	// }
+	// for _, b := range c.Bars[:20] {
+	// 	fmt.Printf("Time:%d Pos: %.2f\n", b.Time, b.Position)
+	// }
+	// fmt.Println(c.MusicName, c.ChartName)
 	return
 }
 

@@ -47,7 +47,7 @@ func NewTransPoints(f any) []*TransPoint {
 			tp := &TransPoint{
 				Time:      int64(timingPoint.Time),
 				BPM:       prevBPM,
-				Speed:     1,
+				Speed:     prevBPM / tempMainBPM,
 				Meter:     timingPoint.Meter,
 				NewBeat:   timingPoint.Uninherited,
 				Volume:    float64(timingPoint.Volume) / 100,
@@ -55,7 +55,8 @@ func NewTransPoints(f any) []*TransPoint {
 			}
 			if timingPoint.Uninherited {
 				tp.BPM = timingPoint.BPM()
-				tp.Speed = (tp.BPM / tempMainBPM)
+				tp.Speed = tp.BPM / tempMainBPM
+				// fmt.Printf("i: %d BPM: %.2f temp: %.2f Speed: %.2f\n", i, tp.BPM, tempMainBPM, tp.Speed)
 			} else {
 				tp.Speed *= timingPoint.BeatLengthScale()
 			}
