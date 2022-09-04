@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
 	"strings"
 
 	"github.com/hndada/gosu"
@@ -12,83 +11,117 @@ import (
 )
 
 type Chart struct {
-	gosu.Chart
-	Notes []Note
-
-	// tp.Position = tp.Speed() * float64(tp.Time) // Drum style
+	gosu.ChartHeader
+	TransPoints []*gosu.TransPoint
+	Notes       []*Note
+	Bars        []*Bar
 }
 
 // NewChart takes file path as input for starting with parsing.
 // Chart data should not rely on the ChartInfo; clients may have modified it.
-func NewChart(cpath string, mods gosu.Mods) (*Chart, error) {
-	var c Chart
+
+// Position is for calculating note and bar's sprite positions efficiently.
+// Positions of notes and bars at time = 0 are calculated in advance.
+// In every Update(), only current cursor's Position is calculated.
+// Notes and bars are drawn based on the difference between their positions and cursor's.
+func NewChart(cpath string) (c *Chart, err error) {
+	var f any
 	dat, err := os.ReadFile(cpath)
 	if err != nil {
-		return nil, err
+		return
 	}
-	var f any
 	switch strings.ToLower(filepath.Ext(cpath)) {
 	case ".osu":
 		f, err = osu.Parse(dat)
 		if err != nil {
-			return nil, err
+			return
 		}
-		// osu.Parse doesn't sort Hit objects, not to manipulate unprompted tasks.
-		// Following tasks (adding notes to Chart) assume timing points and
-		// hit objects are sorted well, otherwise unexpected result would return.
-		// Glad to know that gosu.NewTransPoints() does sort in the task.
-
-		// The Verifier (check whether next hit object's time is equal or later
-		// than previous one) might be possible to be added, but it still requires
-		// some computation time (which is O(n)).
 	}
+	c = new(Chart)
 	c.ChartHeader = gosu.NewChartHeader(f)
 	c.TransPoints = gosu.NewTransPoints(f)
-	c.Mode = gosu.ModeDrum
-	// No sub mode for Drum mode.
-	switch f := f.(type) {
-	case *osu.Format:
-		c.Notes = make([]Note, 0, len(f.HitObjects)*2)
-		if len(c.TransPoints) == 0 {
-			return nil, fmt.Errorf("no TransPoints in the chart")
-		}
-		tp := c.TransPoints[0]
-		for _, ho := range f.HitObjects {
-			for tp.Next != nil && tp.Next.Time <= int64(ho.Time) {
-				tp = tp.Next
-			}
-			speed := tp.BPM * tp.BeatLengthScale * f.SliderMultiplier
-			scaledBPM := ScaledBPM(tp.BPM)
-			c.Notes = append(c.Notes, NewNote(ho, speed, scaledBPM)...)
-		}
+	if len(c.TransPoints) == 0 {
+		err = fmt.Errorf("no TransPoints in the chart")
+		return
 	}
-	sort.Slice(c.Notes, func(i, j int) bool {
-		if c.Notes[i].Time == c.Notes[j].Time {
-			return c.Notes[i].Type < c.Notes[j].Type
-		}
-		return c.Notes[i].Time < c.Notes[j].Time
-	})
-	if len(c.Notes) > 0 {
-		c.Duration = c.Notes[len(c.Notes)-1].Time
+	c.Notes = NewNotes(f, c.TransPoints)
+	c.Bars = NewBars(c.TransPoints, c.Duration())
+
+	// Calculate positions and speed.
+	// Position calculation is based on TransPoints.
+	mainBPM, _, _ := c.BPMs()
+	bpmScale := c.TransPoints[0].BPM / mainBPM
+	for _, tp := range c.TransPoints {
+		tp.Speed *= bpmScale
+		tp.Position = float64(tp.Time) * tp.Speed
 	}
-	c.NoteCounts = make([]int, 3)
+	tp := c.TransPoints[0]
 	for _, n := range c.Notes {
-		switch n.Type {
-		case Don, Kat, BigDon, BigKat:
-			c.NoteCounts[0]++
-		case Head, BigHead:
-			c.NoteCounts[1]++
-		case Shake:
-			c.NoteCounts[2]++
+		for tp.Next != nil && n.Time >= tp.Next.Time {
+			tp = tp.Next
 		}
+		n.Speed = tp.Speed
+		n.Position = float64(n.Time) * n.Speed
 	}
-	return &c, nil
+	tp = c.TransPoints[0]
+	for _, b := range c.Bars {
+		for tp.Next != nil && b.Time >= tp.Next.Time {
+			tp = tp.Next
+		}
+		b.Speed = tp.Speed
+		b.Position = float64(b.Time) * b.Speed
+	}
+	return
 }
 
-func NewChartInfo(cpath string, mods gosu.Mods) (gosu.ChartInfo, error) {
-	c, err := NewChart(cpath, mods)
-	if err != nil {
-		return gosu.ChartInfo{}, err
+const (
+	MaxScaledBPM = 280 // 256
+	MinScaledBPM = 60  // 128
+)
+
+func (c Chart) Duration() int64 {
+	if len(c.Notes) == 0 {
+		return 0
 	}
-	return gosu.NewChartInfo(&c.Chart, cpath, gosu.Level(c)), nil
+	return c.Notes[len(c.Notes)-1].Time
+}
+func (c Chart) NoteCounts() (vs []int) {
+	vs = make([]int, 3)
+	for _, n := range c.Notes {
+		switch n.Type {
+		case Normal:
+			vs[0]++
+		case Head:
+			vs[1]++
+		case Shake:
+			vs[2]++
+		}
+	}
+	return
+}
+func (c Chart) BPMs() (main, min, max float64) {
+	return gosu.BPMs(c.TransPoints, c.Duration())
+}
+func NewChartInfo(cpath string) (info gosu.ChartInfo, err error) {
+	c, err := NewChart(cpath)
+	if err != nil {
+		return
+	}
+	// Todo: put mods implementation here
+	mode := gosu.ModeDrum
+	main, min, max := c.BPMs()
+	info = gosu.ChartInfo{
+		Path: cpath,
+		// Mods:       mods,
+		Header:     c.ChartHeader,
+		Mode:       mode,
+		SubMode:    0,
+		Level:      gosu.Level(c),
+		Duration:   c.Duration(),
+		NoteCounts: c.NoteCounts(),
+		MainBPM:    main,
+		MinBPM:     min,
+		MaxBPM:     max,
+	}
+	return
 }

@@ -1,192 +1,168 @@
 package drum
 
-import "github.com/hndada/gosu/format/osu"
+import (
+	"sort"
 
-type NoteType int
+	"github.com/hndada/gosu"
+	"github.com/hndada/gosu/format/osu"
+)
 
+// Drum note has 3 components: Color, Size, Type(Note/Head/Tail/Shake).
+// cf. Piano note has 2 components: Key, Type(Note/Head/Tail)
 const (
-	don = 1 << iota
-	kat
-	head // Head of roll note, aka slider.
-	tail // Tail of roll note, aka slider.
-)
-const (
-	normal = 8 << iota
-	big
-	shake // Also known as spinner.
-)
-const (
-	Don     NoteType = normal + don
-	Kat     NoteType = normal + kat
-	Head    NoteType = normal + head
-	Tail    NoteType = normal + tail
-	BigDon  NoteType = big + don
-	BigKat  NoteType = big + kat
-	BigHead NoteType = big + head
-	BigTail NoteType = big + tail
-	Shake   NoteType = shake
+	Normal = iota
+	Head   // Roll head.
+	Tail   // Roll tail.
+	Shake
+
+	RollBody
+	ShakeBody
 )
 
 type Note struct {
-	Type      NoteType
-	Time      int64
-	Time2     int64   // Time of opposite note's time, if existed.
-	Speed     float64 // Each note has own speed.
-	ScaledBPM float64 // For calculating Roll tick density.
-	// BeatLengthScale      float64
-	SampleFilename string
-	SampleVolume   float64 // Range is 0 to 1.
+	gosu.BaseNote
+	Type         int
+	Color        int
+	Big          bool
+	Speed        float64 // Each note has own speed.
+	TickDuration float64 // For calculating Roll tick density.
+	Next         *Note
+	Prev         *Note // For accessing to Head from Tail.
 }
 
-// EndTime does not work in Roll.
-func NewNote(f any, speed, scaledBPM float64) []Note {
-	ns := make([]Note, 0, 2)
+const (
+	Red  = iota // Don
+	Blue        // Kat
+	// Yellow   // Roll
+)
+
+// const (
+// 	Regular = iota
+// 	Big
+// )
+
+// Length is for calculating Durations of Roll and its tick.
+// NewNote temporarily set length to TickDuration.
+func NewNote(f any) (ns []*Note) {
 	switch f := f.(type) {
 	case osu.HitObject:
 		n := Note{
-			Type:           DrumNoteTypeFromOsu(f),
-			Time:           int64(f.Time),
-			Time2:          int64(f.Time), // Should not rely on f.EndTime
-			Speed:          speed,
-			ScaledBPM:      scaledBPM,
-			SampleFilename: f.HitSample.Filename,
-			SampleVolume:   float64(f.HitSample.Volume) / 100,
+			BaseNote: gosu.NewBaseNote(f),
 		}
-		if IsRoll(f) {
-			sp := f.SliderParams
-			length := float64(sp.Slides) * sp.Length
-			n.Time2 = n.Time + int64(length/speed)
-			n2 := n
-			if n.Type == Head {
-				n2.Type = Tail
-			} else {
-				n2.Type = BigTail
-			}
-			n2.Time = n.Time2
-			n2.Time2 = n.Time
-			n2.SampleFilename = "" // Tail has no sample sound.
-			if n.Type == BigHead {
-				n2.Type = BigTail
-			}
-			ns = append(ns, n, n2)
-			// n2 := Note{
-			// 	Type:  Tail,
-			// 	Time:  n.Time2,
-			// 	Time2: n.Time,
-			// }
+		switch {
+		case f.NoteType&osu.HitTypeSlider != 0:
+			n.Type = Head
+			// Roll's Time2 should not rely on f.EndTime.
+		case f.NoteType&osu.HitTypeSpinner != 0:
+			n.Type = Shake
+			n.Time2 = int64(f.EndTime)
+		default:
+			n.Type = Normal
+		}
+		if osu.IsDon(f) {
+			n.Color = Red
 		} else {
-			ns = append(ns, n)
+			n.Color = Blue
+		}
+		n.Big = osu.IsBig(f)
+		if n.Type == Head {
+			length := float64(f.SliderParams.Slides) * f.SliderParams.Length
+			n.TickDuration = length // Temporarily set to TickDuration.
+
+			n2 := n
+			n.Type = Tail
+			// n2.Time = n.Time2 // It will be set later.
+			n2.Time2 = n.Time
+			n2.SampleName = "" // Tail has no sample sound.
+			ns = append(ns, &n, &n2)
+		} else {
+			ns = append(ns, &n)
 		}
 	}
 	return ns
 }
 
-func DrumNoteTypeFromOsu(h osu.HitObject) NoteType {
-	if h.NoteType&osu.HitTypeSpinner != 0 {
-		return Shake
-	}
-	if osu.IsBig(h) {
-		switch {
-		case IsRoll(h):
-			return BigHead
-		case osu.IsDon(h):
-			return BigDon
-		case osu.IsKat(h):
-			return BigKat
+func NewNotes(f any, transPoints []*gosu.TransPoint) (ns []*Note) {
+	switch f := f.(type) {
+	case *osu.Format:
+		ns = make([]*Note, 0, len(f.HitObjects)*2)
+		for _, ho := range f.HitObjects {
+			ns = append(ns, NewNote(ho)...)
 		}
 	}
-	switch {
-	case IsRoll(h):
-		return Head
-	case osu.IsDon(h):
-		return Don
-	case osu.IsKat(h):
-		return Kat
-	default:
-		return Don
+	sort.Slice(ns, func(i, j int) bool {
+		// Todo: additional sort for notes with same time?
+		// if ns[i].Time == ns[j].Time {
+		// 	return ns[i].Type < ns[j].Type
+		// }
+		return ns[i].Time < ns[j].Time
+	})
+	prevs := make([]*Note, 3)
+	for _, n := range ns {
+		var index int
+		switch n.Type {
+		case Normal:
+			index = 0
+		case Head, Tail:
+			index = 1
+		case Shake:
+			index = 2
+		}
+		prev := prevs[index]
+		n.Prev = prev
+		if prev != nil {
+			prev.Next = n
+		}
+		prevs[index] = n
 	}
+
+	// Unit of speed is osupixel / 100ms.
+	switch f := f.(type) {
+	case *osu.Format:
+		tp := transPoints[0]
+		tempMainBPM := tp.BPM
+		for _, n := range ns {
+			if n.Type == Normal || n.Type == Tail {
+				continue
+			}
+			for tp.Next != nil && n.Time >= tp.Next.Time {
+				tp = tp.Next
+			}
+			length := n.TickDuration
+			speed := (tempMainBPM / 60000) * tp.Speed * (f.SliderMultiplier * 100)
+			duration := length / speed
+			n.Time2 = n.Time + int64(duration)
+			n.TickDuration = duration / ScaledBPM(tp.BPM)
+			switch n.Type {
+			case Head:
+				n.TickDuration /= 4
+				n.Next.Time = n.Time2
+				n.Next.TickDuration = n.TickDuration
+			case Shake:
+				n.TickDuration /= 3
+			}
+		}
+	}
+	return
 }
-func IsRoll(h osu.HitObject) bool { return h.NoteType&osu.HitTypeSlider != 0 }
 
-// func IsRoll2(h osu.HitObject) bool { return h.NoteType&osu.ComboMask == osu.HitTypeSlider }
-
-const (
-	MaxScaledBPM = 256
-	MinScaledBPM = 128
-)
-
-// It is proved that all BPMs are set into [128, 256) by v*2 or v/2.
+// It is proved that all BPMs are set into [MinScaledBPM, MaxScaledBPM) by v*2 or v/2
+// if MinScaledBPM *2 >= MaxScaleBPM.
 func ScaledBPM(bpm float64) float64 {
 	if bpm < 0 {
 		bpm = -bpm
 	}
 	switch {
-	case bpm >= 256:
-		for bpm >= 256 {
+	case bpm > MaxScaledBPM:
+		for bpm > MaxScaledBPM {
 			bpm /= 2
 		}
-	case bpm >= 128:
+	case bpm >= MinScaledBPM:
 		return bpm
-	case bpm < 128:
-		for bpm < 128 {
+	case bpm < MinScaledBPM:
+		for bpm < MinScaledBPM {
 			bpm *= 2
 		}
 	}
 	return bpm
 }
-
-func (n Note) IsBig() bool { return n.Type&big != 0 }
-func (n Note) NoteKind() int { // Todo: NoteKind -> NoteType?
-	if n.IsBig() {
-		return BigNote
-	}
-	return NormalNote
-}
-
-// func RollDuration(hs osu.SliderParams, bpm float64, multiplier float64) int64 {
-// 	length := float64(hs.Slides) * hs.Length
-// 	speed := (bpm / 60000) * (multiplier * 100) // Unit: amount of osu!pixel per 100ms
-// 	return int64(length / speed)
-// }
-
-// func RollDuration(h osu.HitObject, speed float64) int {
-// 	if h.NoteType&osu.HitTypeSlider == 0 {
-// 		return 0
-// 	}
-// 	hs := h.SliderParams
-// 	length := float64(hs.Slides) * hs.Length
-// 	// speed := (bpm / 60000) * beatScale * (multiplier * 100)
-// 	return int(length / speed)
-// }
-
-// func NewNotes(f any, transPoints []*TransPoint, mode, subMode int) (ns []*Note) {
-// 	var prevs []*Note
-// 	switch mode {
-// 	case ModeDrum:
-// 		prevs = make([]*Note, 3)
-// 	}
-// 	for _, n := range ns {
-// 		switch mode {
-// 		case ModeDrum:
-// 			var i int
-// 			switch n.Type {
-// 			case Head, Tail: // Head/Tail of Roll/BigRoll
-// 				i = 1
-// 			case Extra: // Shake
-// 				i = 2
-// 			default: // Don, Kat, BigDon, BigKat
-// 				i = 0
-// 			}
-// 			prev := prevs[i]
-// 			n.Prev = prev
-// 			if prev != nil {
-// 				prev.Next = n
-// 			}
-// 			// if staged[i] == nil {
-// 			// 	staged[i] = n
-// 			// }
-// 			prevs[i] = n
-// 		}
-// 	}
-// 	return
-// }

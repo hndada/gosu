@@ -6,6 +6,7 @@ import (
 	"github.com/hndada/gosu"
 )
 
+// Todo: Tick judgment should be bound to MaxScaledBPM: 280
 // Todo: let them put custom window
 var (
 	Cool = gosu.Judgment{Flow: 0.01, Acc: 1, Window: 25}

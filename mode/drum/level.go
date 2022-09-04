@@ -30,40 +30,50 @@ func (c Chart) Difficulties() []float64 {
 			d = 0
 			t += gosu.SliceDuration
 		}
+		d += n.Weight()
+		if n.Type != Head && n.Type != Shake {
+			continue
+		}
+		// Gives uniform difficulty per time.
+		// start and end is to give difficulty bound to current section.
+		start := n.Time
+		if start < t {
+			start = t
+		}
+		end := n.Time2
+		if end > t+gosu.SliceDuration {
+			end = t + gosu.SliceDuration
+		}
+		// Tick is proportional to BPM.
+		beats := float64(end-start) * n.ScaledBPM / 60000
 		switch n.Type {
-		case Don, Kat:
-			d += 1
-		case BigDon, BigKat:
-			d += 1.1
-		case Head, BigHead, Shake:
-			// Gives uniform difficulty per time.
-			// start and end is to give difficulty bound to current section.
-			start := n.Time
-			if start < t {
-				start = t
-			}
-			end := n.Time2
-			if end > t+gosu.SliceDuration {
-				end = t + gosu.SliceDuration
-			}
-			// Tick is proportional to BPM.
-			beats := float64(end-start) * n.ScaledBPM / 60000
-			switch n.Type {
-			case Head, BigHead:
-				// One beat has 4 Roll ticks.
-				ticks := beats * 4
-				// RollTickWeight = 0.125
-				// Assumes 8 ticks worth one normal note.
-				d += ticks * RollTickWeight
-			case Shake:
-				// One beat has 3 Shake ticks.
-				ticks := beats * 3
-				// ShakeTickWeight = 0.03125 << RollTickWeight
-				// Shake is apparently easier than Roll,
-				// since Shake doesn't follow the beat to hit.
-				d += ticks * ShakeTickWeight
-			}
+		case Head:
+			// One beat has 4 Roll ticks.
+			// RollTickWeight = 0.125
+			// Assumes 8 ticks worth one normal note.
+			ticks := beats * 4
+			d += ticks * RollTickWeight
+		case Shake:
+			// One beat has 3 Shake ticks.
+			// ShakeTickWeight = 0.03125, which is way smaller than RollTickWeight.
+			// Shake is apparently easier than Roll,
+			// since Shake doesn't follow the beat to hit.
+			ticks := beats * 3
+			d += ticks * ShakeTickWeight
 		}
 	}
 	return ds
+}
+
+func (n Note) Weight() float64 {
+	switch n.Type {
+	case Normal:
+		if n.Big {
+			return 1.1
+		} else {
+			return 1.0
+		}
+	default:
+		return 0
+	}
 }

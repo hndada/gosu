@@ -11,11 +11,13 @@ const (
 	Normal = iota
 	Head
 	Tail
+
 	Body
 )
 
 type Note struct {
 	gosu.BaseNote
+	Type int
 	Key  int
 	Next *Note
 	Prev *Note // For accessing to Head from Tail.
@@ -27,19 +29,19 @@ func NewNote(f any, keyCount int) (ns []*Note) {
 		n := Note{
 			BaseNote: gosu.NewBaseNote(f),
 		}
-		n.Key = f.Column(keyCount)
 		n.Type = Normal
+		n.Key = f.Column(keyCount)
 		if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
 			n.Type = Head
 			n.Time2 = int64(f.EndTime)
 			n2 := Note{
 				BaseNote: gosu.BaseNote{
-					Type:       Tail,
 					Time:       n.Time2,
 					Time2:      n.Time,
 					SampleName: "", // Tail has no sample sound.
 				},
-				Key: n.Key,
+				Type: Tail,
+				Key:  n.Key,
 			}
 			ns = append(ns, &n, &n2)
 		} else {

@@ -3,42 +3,55 @@ package drum
 import "github.com/hndada/gosu"
 
 type Bar struct {
+	Time     int64 // For easier debugging.
 	Position float64
 	Speed    float64
+	Next     *Bar
+	Prev     *Bar
 }
 
-func NewBars(tp0 *gosu.TransPoint, duration int64) (bs []Bar) {
-	tp0.FetchPresent()
-	var margin int64 = 5000
-	if margin > tp0.Time {
-		margin = tp0.Time
-	}
+func NewBars(transPoints []*gosu.TransPoint, duration int64) (bs []*Bar) {
+	var start, end, step float64 // Next time.
 	// Bar positions before first TransPoint.
-	// Start with one step before for avoiding duplication.
-	speed := tp0.Speed()
-	step := tp0.BeatDuration()
-	for t := float64(tp0.Time) - step; t >= float64(-margin); t -= step {
-		b := Bar{
-			Position: speed * t,
-			Speed:    speed,
-		}
-		bs = append([]Bar{b}, bs...)
+	start = float64(transPoints[0].Time)
+	end = start
+	if end > -5000 {
+		end = -5000
 	}
-	// Bar positions for first TransPoint and after it.
-	for tp := tp0; tp != nil; tp = tp.NextBPMPoint.FetchPresent() {
-		nextTime := duration + margin
-		if tp.NextBPMPoint != nil {
-			nextTime = tp.NextBPMPoint.Time
+	step = transPoints[0].BeatDuration()
+	for t := start; t >= end; t -= step {
+		b := Bar{Time: int64(t)}
+		bs = append([]*Bar{&b}, bs...)
+	}
+
+	// Bar positions after first TransPoint.
+	bs = bs[:len(bs)-1] // Drop for avoiding duplicattion
+	newBeatPoints := make([]*gosu.TransPoint, 0)
+	for _, tp := range transPoints {
+		if tp.NewBeat {
+			newBeatPoints = append(newBeatPoints, tp)
 		}
-		speed := tp.Speed()
+	}
+	for i, tp := range newBeatPoints {
+		start = float64(tp.Time)
+		if i == len(newBeatPoints)-1 {
+			end = float64(duration + 5000)
+		} else {
+			end = float64(newBeatPoints[i+1].Time)
+		}
 		step = tp.BeatDuration()
-		for t := float64(tp.Time); t < float64(nextTime); t += step {
-			b := Bar{
-				Position: speed * t,
-				Speed:    speed,
-			}
-			bs = append(bs, b)
+		for t := start; t < end; t += step {
+			b := Bar{Time: int64(t)}
+			bs = append(bs, &b)
 		}
+	}
+	var prev *Bar
+	for _, b := range bs {
+		b.Prev = prev
+		if prev != nil {
+			prev.Next = b
+		}
+		prev = b
 	}
 	return
 }
