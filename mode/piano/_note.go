@@ -3,41 +3,6 @@ package piano
 // NotePosition calculates position, the centered y-axis value.
 // y = position - h/2
 
-// func NewPlayNotes(c *Chart) ([]*PlayNote, []*PlayNote, []*PlayNote, float64) {
-// 	playNotes := make([]*PlayNote, 0, len(c.Notes))
-// 	firstStagedNotes := make([]*PlayNote, c.KeyCount)
-// 	firstLowestTails := make([]*PlayNote, c.KeyCount)
-// 	prevs := make([]*PlayNote, c.KeyCount)
-// 	prevTails := make([]*PlayNote, c.KeyCount)
-// 	var weights float64
-// 	for _, n := range c.Notes {
-// 		prev := prevs[n.Key]
-// 		pn := &PlayNote{
-// 			Note: n,
-// 			Prev: prev,
-// 		}
-// 		if prev != nil { // Next value is set later.
-// 			prev.Next = pn
-// 		}
-// 		prevs[n.Key] = pn
-// 		if firstStagedNotes[n.Key] == nil {
-// 			firstStagedNotes[n.Key] = pn
-// 		}
-// 		if n.Type == Tail {
-// 			if prevTails[n.Key] != nil {
-// 				prevTails[n.Key].NextTail = pn
-// 			}
-// 			prevTails[n.Key] = pn
-// 			if firstLowestTails[n.Key] == nil {
-// 				firstLowestTails[n.Key] = pn
-// 			}
-// 		}
-// 		weights += pn.Weight()
-// 		playNotes = append(playNotes, pn)
-// 	}
-// 	return playNotes, firstStagedNotes, firstLowestTails, weights
-// }
-
 // top returns top position of long note body.
 // func (s ScenePlay) Top(tail *PlayNote) int {
 // 	return int(s.Position(tail.Time)+s.TailSprites[tail.Key].H/2) - 1 // Extra 1 pixel for compensating round-down
