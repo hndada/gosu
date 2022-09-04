@@ -206,3 +206,9 @@ type ShakeDrawer struct {
 // 	op.GeoM.Scale(ratio, 1)
 // 	op.GeoM.Translate(srcStart, 0)
 // 	sprite.Draw(screen, op)
+
+// var Vanisher = func(op *ebiten.DrawImageOptions, marked *bool) {
+// 	if *marked {
+// 		op.ColorM.ChangeHSV(0, 1, 0)
+// 	}
+// }
