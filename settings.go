@@ -15,6 +15,7 @@ var (
 	// TimeStep     float64 = 1 / float64(TPS) * 1000 // Unit of time is a millisecond (1ms = 0.001s).
 	MusicVolume  float64 = 0.25
 	EffectVolume float64 = 0.25
+	VsyncSwitch  bool    = false
 
 	ChartInfoBoxWidth  float64 = 450
 	ChartInfoBoxHeight float64 = 50

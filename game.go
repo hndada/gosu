@@ -10,12 +10,16 @@ import (
 	"github.com/hndada/gosu/format/osr"
 )
 
-type Game struct {
-	Scene
-	ModeProps           []ModeProp
-	Mode                int
+var (
 	MusicVolumeHandler  ctrl.F64Handler
 	EffectVolumeHandler ctrl.F64Handler
+	VsyncSwitchHandler  ctrl.BoolHandler
+)
+
+type Game struct {
+	Scene
+	ModeProps []ModeProp
+	Mode      int
 }
 type Scene interface {
 	Update() any
@@ -45,23 +49,21 @@ func NewGame(props []ModeProp) *Game {
 		mode.LoadSkin()
 	}
 	g.Mode = ModePiano4
-	g.MusicVolumeHandler = NewVolumeHandler(
+	MusicVolumeHandler = NewVolumeHandler(
 		&MusicVolume, []ebiten.Key{ebiten.Key2, ebiten.Key1})
-	g.EffectVolumeHandler = NewVolumeHandler(
-		&MusicVolume, []ebiten.Key{ebiten.Key4, ebiten.Key3})
-
+	EffectVolumeHandler = NewVolumeHandler(
+		&EffectVolume, []ebiten.Key{ebiten.Key4, ebiten.Key3})
+	VsyncSwitchHandler = NewVsyncSwitchHandler(&VsyncSwitch)
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
 	ebiten.SetTPS(TPS)
-	ebiten.SetCursorMode(ebiten.CursorModeHidden)
-	// ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
-	ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
+	// ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	return g
 }
 
 func (g *Game) Update() (err error) {
-	g.MusicVolumeHandler.Update()
-	g.EffectVolumeHandler.Update()
+	// g.MusicVolumeHandler.Update()
+	// g.EffectVolumeHandler.Update()
 	if g.Scene == nil {
 		g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
 	}
@@ -73,8 +75,7 @@ func (g *Game) Update() (err error) {
 		g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
 	case SelectToPlayArgs:
 		g.Scene, err = g.ModeProps[args.Mode].NewScenePlay(
-			args.Path, args.Replay,
-			g.MusicVolumeHandler, g.EffectVolumeHandler, args.SpeedHandler)
+			args.Path, args.Replay, args.SpeedHandler)
 		if err != nil {
 			return
 		}

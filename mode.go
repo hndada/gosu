@@ -21,7 +21,7 @@ type ModeProp struct { // Stands for Mode properties.
 	SpeedHandler   ctrl.F64Handler
 	LoadSkin       func()
 	NewChartInfo   func(string) (ChartInfo, error)
-	NewScenePlay   func(cpath string, rf *osr.Format, mvh, evh, sh ctrl.F64Handler) (Scene, error)
+	NewScenePlay   func(cpath string, rf *osr.Format, sh ctrl.F64Handler) (Scene, error)
 	ExposureTime   func(float64) float64
 }
 
