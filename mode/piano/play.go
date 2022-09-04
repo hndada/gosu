@@ -288,3 +288,6 @@ func (s *ScenePlay) UpdateTransPoint() {
 
 func (s ScenePlay) Time() int64           { return s.Timer.Time() }
 func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.Speed }
+
+// 1 pixel is 1 millisecond.
+func ExposureTime(speed float64) float64 { return HitPosition / speed }

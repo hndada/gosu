@@ -199,7 +199,7 @@ func LoadSkin() {
 		}
 		{
 			src := ebiten.NewImage(int(wsum), screenSizeY)
-			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDark)})
+			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
 			s := draws.NewSpriteFromImage(src)
 			s.SetPosition(screenSizeX/2, 0, draws.OriginCenterTop)
 			skin.FieldSprite = s
@@ -228,10 +228,10 @@ func LoadSkin() {
 // scale := float64(w) / float64(src.Bounds().Dx())
 // h := int(scale * float64(src.Bounds().Dy()))
 // dst := image.NewRGBA(image.Rect(0, 0, w, screenSizeY))
-// switch BodySpriteStyle {
-// case BodySpriteStyleStretch:
+// switch BodyStyle {
+// case BodyStyleStretch:
 // 	draw.BiLinear.Scale(dst, dst.Bounds(), src, src.Bounds(), draw.Over, nil)
-// case BodySpriteStyleAttach:
+// case BodyStyleAttach:
 // 	for rect := image.Rect(0, 0, w, h); rect.Min.Y < dst.Bounds().Dy(); {
 // 		draw.BiLinear.Scale(dst, rect, src, src.Bounds(), draw.Over, nil)
 // 		rect.Min.Y += h
