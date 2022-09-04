@@ -11,7 +11,7 @@ const (
 	screenSizeY = gosu.ScreenSizeY
 )
 
-var SpeedScale = 0.004
+var SpeedScale float64 = 1.1
 var KeySettings = [4]input.Key{input.KeyD, input.KeyF, input.KeyJ, input.KeyK}
 
 // Todo: Should NoteHeight be separated into NoteHeight, HeadHeight, TailHeight?
@@ -70,6 +70,7 @@ var (
 func ExposureTime(speedScale float64) float64 {
 	return (screenSizeX - HitPosition) / speedScale
 }
-func ExposureDegree(speedScale float64) (float64, float64) {
-	return ExposureTime(speedScale), BigNoteHeight
-}
+
+// func ExposureDegree(speedScale float64) (float64, float64) {
+// 	return ExposureTime(speedScale), BigNoteHeight
+// }

@@ -1,6 +1,7 @@
 package piano
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -37,6 +38,10 @@ func NewChart(cpath string) (c *Chart, err error) {
 	c = new(Chart)
 	c.ChartHeader = gosu.NewChartHeader(f)
 	c.TransPoints = gosu.NewTransPoints(f)
+	if len(c.TransPoints) == 0 {
+		err = fmt.Errorf("no TransPoints in the chart")
+		return
+	}
 	switch f := f.(type) {
 	case *osu.Format:
 		c.KeyCount = int(f.CircleSize)

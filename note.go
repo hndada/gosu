@@ -7,7 +7,6 @@ import (
 )
 
 type BaseNote struct {
-	Type         int
 	Time         int64
 	Time2        int64  // Time of opposite note. Time2 is Time when no opposite note.
 	SampleName   string // aka SampleFilename.
