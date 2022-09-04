@@ -57,12 +57,13 @@ var GeneralSkin struct { // Singleton
 }
 
 // Todo: should each skin has own skin settings?
+// Order of fields in Skin is focused on readability.
 type Skin struct {
 	ScoreSprites [10]draws.Sprite
 	SignSprites  [3]draws.Sprite
 
 	ComboSprites    [10]draws.Sprite
-	JudgmentSprites []draws.Sprite
+	JudgmentSprites []draws.Sprite // Todo: slice -> array?
 
 	KeyUpSprites   []draws.Sprite
 	KeyDownSprites []draws.Sprite
