@@ -14,32 +14,6 @@ import (
 	"golang.org/x/image/draw"
 )
 
-var DefaultSkin Skin
-
-// https://osu.ppy.sh/wiki/en/Skinning/osu%21taiko
-type Skin struct {
-	ScoreSprites     []draws.Sprite // Todo: move to /gosu
-	ComboSprites     []draws.Sprite // Todo: slice to array
-	TickComboSprites []draws.Sprite
-
-	KeySprites  [4]draws.Sprite
-	FieldSprite draws.Sprite
-	HintSprite  draws.Sprite
-	BarSprite   draws.Sprite // Seperator of each bar (aka measure)
-
-	JudgmentSprites [2][3]draws.Sprite
-	DonSprites      [2][3]draws.Sprite
-	KatSprites      [2][3]draws.Sprite
-	HeadSprites     [2]draws.Sprite
-	TailSprites     [2]draws.Sprite
-	BodySprites     [2][]draws.Sprite // Binary-building method
-
-	RollDotSprite draws.Sprite
-	ShakeSprites  [3]draws.Sprite
-
-	// DancerSprites [4][]draws.Sprite
-}
-
 // [2] that most sprites have.
 const (
 	NormalNote = iota
@@ -54,9 +28,9 @@ const (
 	KeyRightKat
 )
 const (
-	NoteLayerGround = iota
-	NoteLayerOverlay1
-	NoteLayerOverlay2
+	Ground = iota
+	Overlay1
+	Overlay2
 )
 const (
 	ShakeNote = iota
@@ -69,6 +43,37 @@ const (
 	DancerNo
 	DancerHigh
 )
+
+var DefaultSkin Skin
+
+// https://osu.ppy.sh/wiki/en/Skinning/osu%21taiko
+type Skin struct {
+	FieldSprite draws.Sprite
+	HintSprite  draws.Sprite
+
+	// First [2] are for big notes.
+	JudgmentSprites    [2][3]draws.Sprite
+	RedSprites         [2]draws.Sprite
+	BlueSprites        [2]draws.Sprite
+	NoteOverlaySprites [2][2]draws.Sprite
+	HeadSprites        [2]draws.Sprite
+	TailSprites        [2]draws.Sprite
+	BodySprites        [2]draws.Sprite
+
+	RollTickSprites draws.Sprite
+	ShakeSprites    [3]draws.Sprite
+	RollDotSprite   draws.Sprite
+	BarSprite       draws.Sprite
+
+	KeyFieldSprite draws.Sprite
+	KeySprites     [4]draws.Sprite
+	DancerSprites  [4][]draws.Sprite
+
+	ScoreSprites          [10]draws.Sprite
+	ComboSprites          [10]draws.Sprite
+	RollTickComboSprites  [10]draws.Sprite
+	ShakeCountdownSprites [10]draws.Sprite
+}
 
 var (
 	ColorDon  = color.NRGBA{235, 69, 44, 255}
