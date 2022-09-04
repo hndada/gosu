@@ -24,10 +24,8 @@ type ScenePlay struct {
 
 	*gosu.TransPoint
 	SpeedHandler ctrl.F64Handler
-	// MainBPM              float64
-	// NormalizedSpeed float64
-	Speed  float64
-	Cursor float64
+	Speed        float64
+	Cursor       float64
 
 	gosu.Result
 	Staged []*Note
@@ -50,7 +48,7 @@ type ScenePlay struct {
 }
 
 // Todo: add Mods
-func NewScenePlay(cpath string, rf *osr.Format, mvh, evh, sh ctrl.F64Handler) (scene gosu.Scene, err error) {
+func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.Scene, err error) {
 	s := new(ScenePlay)
 	s.Chart, err = NewChart(cpath)
 	if err != nil {
@@ -65,12 +63,12 @@ func NewScenePlay(cpath string, rf *osr.Format, mvh, evh, sh ctrl.F64Handler) (s
 		s.SetTicks(-1800, c.Duration())
 	}
 	if path, ok := c.MusicPath(cpath); ok {
-		s.MusicPlayer, err = gosu.NewMusicPlayer(mvh, path)
+		s.MusicPlayer, err = gosu.NewMusicPlayer(gosu.MusicVolumeHandler, path)
 		if err != nil {
 			return
 		}
 	}
-	s.EffectPlayer = gosu.NewEffectPlayer(evh)
+	s.EffectPlayer = gosu.NewEffectPlayer(gosu.EffectVolumeHandler)
 	for _, n := range c.Notes {
 		if path, ok := n.SamplePath(cpath); ok {
 			_ = s.Effects.Register(path)
@@ -146,7 +144,7 @@ func NewScenePlay(cpath string, rf *osr.Format, mvh, evh, sh ctrl.F64Handler) (s
 
 	title := fmt.Sprintf("gosu - %s - [%s]", c.MusicName, c.ChartName)
 	ebiten.SetWindowTitle(title)
-	// debug.SetGCPercent(0)
+	debug.SetGCPercent(0)
 	return s, nil
 }
 
@@ -182,6 +180,7 @@ func (s *ScenePlay) Update() any {
 	if s.Tick == 0 {
 		s.MusicPlayer.Play()
 	}
+	s.MusicPlayer.Update()
 
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
@@ -196,6 +195,7 @@ func (s *ScenePlay) Update() any {
 				if vol == 0 {
 					vol = s.TransPoint.Volume
 				}
+				// Todo: apply effect volume change
 				s.Effects.PlayWithVolume(name, vol)
 			}
 		}
@@ -225,9 +225,6 @@ func (s *ScenePlay) Update() any {
 	s.BarDrawer.Update(s.Cursor)
 	for _, d := range s.NoteLaneDrawers {
 		d.Update(s.Cursor)
-		// if k == 0 {
-		// 	fmt.Printf("Key %d: %.2f %.2f (cursor: %.2f)\n", k, d.Nearest.Position, d.Farthest.Position, d.Cursor)
-		// }
 	}
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
 	s.ScoreDrawer.Update(s.Score())
@@ -269,11 +266,15 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
-			"Speed: %.0f | %.0f\n(Exposure time: %.fms)\n\n",
+			"Speed (Press 8/9): %.0f | %.0f\n(Exposure time: %.fms)\n\n"+
+			// "Music volume (Press 1/2): %.0f%%\nEffect volume (Press 3/4): %.0f%%\n\n"+
+			"Vsync: %v\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Time())/1000, float64(s.Chart.Duration())/1000,
 		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
 		fr*100, ar*100, rr*100, s.JudgmentCounts,
-		s.Speed*100, *s.SpeedHandler.Target*100, ExposureTime(s.CurrentSpeed())))
+		s.Speed*100, *s.SpeedHandler.Target*100, ExposureTime(s.CurrentSpeed()),
+		// gosu.MusicVolume*100, gosu.EffectVolume*100,
+		gosu.VsyncSwitch))
 }
 
 // Supposes one current TransPoint can increment cursor precisely.

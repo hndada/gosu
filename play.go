@@ -71,6 +71,14 @@ func (mp MusicPlayer) Play() {
 	}
 	mp.Player.Play()
 }
+
+// Todo: volume does not increment gradually.
+func (mp MusicPlayer) Update() {
+	if fired := mp.VolumeHandler.Update(); fired {
+		vol := *mp.VolumeHandler.Target
+		mp.Player.SetVolume(vol)
+	}
+}
 func (mp MusicPlayer) Close() {
 	if mp.Player == nil {
 		return
@@ -107,9 +115,3 @@ func NewKeyLogger(keySettings []input.Key) (k KeyLogger) {
 func (l KeyLogger) KeyAction(k int) input.KeyAction {
 	return input.CurrentKeyAction(l.LastPressed[k], l.Pressed[k])
 }
-
-//	func (s *BaseScenePlay) UpdateTransPoint() {
-//		for s.TransPoint.Next != nil && s.Time() >= s.TransPoint.Next.Time {
-//			s.TransPoint = s.TransPoint.Next
-//		}
-//	}

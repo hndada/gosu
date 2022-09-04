@@ -89,4 +89,4 @@ func ScaleNoteWidthsMap() {
 }
 
 // 1 pixel is 1 millisecond.
-func ExposureTime(speed float64) float64 { return (HitPosition + NoteHeigth/2) / speed }
+func ExposureTime(speed float64) float64 { return HitPosition / speed }

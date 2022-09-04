@@ -67,3 +67,14 @@ func NewCursorHandler(cursor *int, len int) ctrl.IntHandler {
 		Loop:   true,
 	}
 }
+func NewVsyncSwitchHandler(b *bool) ctrl.BoolHandler {
+	play := func() { Sounds.Play("default-hover") }
+	return ctrl.BoolHandler{
+		Handler: ctrl.Handler{
+			Keys:       []ebiten.Key{ebiten.Key5},
+			PlaySounds: []func(){play},
+			HoldKey:    -1,
+		},
+		Target: b,
+	}
+}
