@@ -139,47 +139,6 @@ func (d NoteLaneDrawer) DrawLongBody(screen *ebiten.Image, tail *Note) {
 	body.Draw(screen, op)
 }
 
-// // DrawLongBody draws scaled, corresponding sub-image of Body sprite.
-// func (d NoteLaneDrawer) DrawLongBody(screen *ebiten.Image, tail *Note) {
-// 	head := tail.Prev
-// 	body := d.Sprites[Body]
-// 	length := tail.Position - head.Position
-// 	length -= -bodyLoss
-// 	ratio := length / body.H()
-// 	trimTail := tail.Position - d.Cursor
-// 	if trimTail > maxPosition+posMargin {
-// 		trimTail = maxPosition + posMargin
-// 	}
-// 	trimHead := head.Position - d.Cursor
-// 	if trimHead < minPosition-posMargin {
-// 		trimHead = minPosition - posMargin
-// 	}
-// 	fmt.Printf("%.f %.f\n", trimTail, trimHead)
-// 	// ground := head.Position - d.Cursor
-// 	// propMin := 1 - (trimTail-ground)/length
-// 	// propMax := 1 - (trimHead-ground)/length
-// 	// propMin := 1 - (tail.Position-head.Position)/length
-// 	// propMax := 1 - (head.Position-head.Position)/length
-// 	// propMin := 1 - (tail.Position-ground)/length
-// 	// propMax := 1 - (head.Position-ground)/length
-// 	propMin := (tail.Position - d.Cursor - trimTail) / length
-// 	propMax := 1 - (trimHead-head.Position-d.Cursor)/length
-// 	subBody := body.SubSprite(0, propMin, 1, propMax)
-// 	subBody.SetScale(1, ratio, ebiten.FilterLinear)
-// 	op := &ebiten.DrawImageOptions{}
-// 	if head.Marked {
-// 		op.ColorM.ChangeHSV(0, 0.3, 0.3)
-// 	}
-// 	if ReverseBody {
-// 		subBody.SetScale(1, -ratio, ebiten.FilterLinear)
-// 	} else {
-// 		subBody.SetScale(1, ratio, ebiten.FilterLinear)
-// 	}
-// 	ty := (trimHead - head.Position) // trimHead
-// 	subBody.Move(0, -ty)
-// 	subBody.Draw(screen, op)
-// }
-
 // KeyDrawer draws KeyDownSprite at least for 30ms, KeyUpSprite otherwise.
 // KeyDrawer uses MinCountdown instead of MaxCountdown.
 type KeyDrawer struct {
