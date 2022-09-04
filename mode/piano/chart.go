@@ -17,6 +17,10 @@ type Chart struct {
 	Bars        []*Bar
 }
 
+// Position is for calculating note and bar's sprite positions efficiently.
+// Positions of notes and bars at time = 0 are calculated in advance.
+// In every Update(), only current cursor's Position is calculated.
+// Notes and bars are drawn based on the difference between their positions and cursor's.
 func NewChart(cpath string) (c *Chart, err error) {
 	var f any
 	dat, err := os.ReadFile(cpath)
@@ -40,6 +44,7 @@ func NewChart(cpath string) (c *Chart, err error) {
 	c.Notes = NewNotes(f, c.KeyCount)
 	c.Bars = NewBars(c.TransPoints, c.Duration())
 
+	// Calculate positions.
 	// Position calculation is based on TransPoints.
 	mainBPM, _, _ := c.BPMs()
 	bpmScale := c.TransPoints[0].BPM / mainBPM
