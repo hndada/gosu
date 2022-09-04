@@ -37,13 +37,4 @@ func Judge(js []Judgment, td int64) Judgment {
 	return Judgment{} // Returns None when the input is out of widest range
 }
 
-// // MarkedNoteCount is for calculating ratio.
-// func (s ScenePlay) MarkedNoteCount() int {
-// 	sum := 0
-// 	for _, c := range s.JudgmentCounts {
-// 		sum += c
-// 	}
-// 	return sum
-// }
-
 // func inRange(td int64, j Judgment) bool { return td < j.Window && td > -j.Window }

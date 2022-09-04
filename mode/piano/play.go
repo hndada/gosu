@@ -256,10 +256,6 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.JudgmentDrawer.Draw(screen)
 	s.MeterDrawer.Draw(screen)
 	s.DebugPrint(screen)
-	ebitenutil.DebugPrint(screen, fmt.Sprintf(
-		"CurrentFPS: %.2f\nCurrentTPS: %.2f\n",
-		ebiten.ActualFPS(), ebiten.ActualTPS(),
-	))
 }
 
 func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
@@ -270,7 +266,7 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		rr = s.Extras / s.NoteWeights
 	}
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
-		"CurrentFPS: %.2f\nCurrentTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
+		"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
 			"Speed: %.0f | %.0f\n(Exposure time: %.fms)\n\n",
@@ -279,11 +275,6 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		fr*100, ar*100, rr*100, s.JudgmentCounts,
 		s.Speed*100, *s.SpeedHandler.Target*100, ExposureTime(s.CurrentSpeed())))
 }
-func (s ScenePlay) Time() int64 { return s.Timer.Time() }
-
-// func (s ScenePlay) Speed() float64 { return *s.SpeedHandler.Target * s.TransPoint.Speed() }
-
-func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.Speed }
 
 // Supposes one current TransPoint can increment cursor precisely.
 func (s *ScenePlay) UpdateCursor() {
@@ -293,3 +284,6 @@ func (s *ScenePlay) UpdateCursor() {
 func (s *ScenePlay) UpdateTransPoint() {
 	s.TransPoint = s.TransPoint.FetchByTime(s.Time())
 }
+
+func (s ScenePlay) Time() int64           { return s.Timer.Time() }
+func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.Speed }

@@ -21,7 +21,7 @@ type TransPoint struct {
 	Prev     *TransPoint
 }
 
-// In new TransPoint, first BPM is used as temporary main BPM.
+// First BPM is used as temporary main BPM.
 // No two TransPoints have same Time.
 func NewTransPoints(f any) []*TransPoint {
 	var transPoints []*TransPoint
@@ -56,7 +56,6 @@ func NewTransPoints(f any) []*TransPoint {
 			if timingPoint.Uninherited {
 				tp.BPM = timingPoint.BPM()
 				tp.Speed = tp.BPM / tempMainBPM
-				// fmt.Printf("i: %d BPM: %.2f temp: %.2f Speed: %.2f\n", i, tp.BPM, tempMainBPM, tp.Speed)
 			} else {
 				tp.Speed *= timingPoint.BeatLengthScale()
 			}
