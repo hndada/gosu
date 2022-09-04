@@ -3,6 +3,7 @@ package piano
 import "github.com/hndada/gosu"
 
 type Bar struct {
+	Time     int64 // For easier debugging.
 	Position float64
 	Next     *Bar
 	Prev     *Bar
@@ -18,12 +19,12 @@ func NewBars(transPoints []*gosu.TransPoint, duration int64) (bs []*Bar) {
 	}
 	step = transPoints[0].BeatDuration()
 	for t := start; t >= end; t -= step {
-		b := Bar{Position: t * transPoints[0].Speed}
+		b := Bar{Time: int64(t)}
 		bs = append([]*Bar{&b}, bs...)
 	}
-	bs = bs[:len(bs)-1] // Drop for avoiding duplicattion
 
 	// Bar positions after first TransPoint.
+	bs = bs[:len(bs)-1] // Drop for avoiding duplicattion
 	newBeatPoints := make([]*gosu.TransPoint, 0)
 	for _, tp := range transPoints {
 		if tp.NewBeat {
@@ -39,7 +40,7 @@ func NewBars(transPoints []*gosu.TransPoint, duration int64) (bs []*Bar) {
 		}
 		step = tp.BeatDuration()
 		for t := start; t < end; t += step {
-			b := Bar{Position: tp.Position + (t-start)*tp.Speed}
+			b := Bar{Time: int64(t)}
 			bs = append(bs, &b)
 		}
 	}

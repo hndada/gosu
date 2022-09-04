@@ -221,14 +221,14 @@ func (s *ScenePlay) Update() any {
 			s.MeterDrawer.AddMark(int(td), colorType)
 		}
 	}
-	s.SetCursor()
-	// s.BarDrawer.Update(s.Cursor)
-	// for _, d := range s.NoteLaneDrawers {
-	// 	d.Update(s.Cursor)
-	// 	// if k == 0 {
-	// 	// 	fmt.Printf("Key %d: %.2f %.2f (cursor: %.2f)\n", k, d.Nearest.Position, d.Farthest.Position, d.Cursor)
-	// 	// }
-	// }
+
+	s.BarDrawer.Update(s.Cursor)
+	for _, d := range s.NoteLaneDrawers {
+		d.Update(s.Cursor)
+		// if k == 0 {
+		// 	fmt.Printf("Key %d: %.2f %.2f (cursor: %.2f)\n", k, d.Nearest.Position, d.Farthest.Position, d.Cursor)
+		// }
+	}
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
 	s.ScoreDrawer.Update(s.Score())
 	s.ComboDrawer.Update(s.Combo)
@@ -236,7 +236,8 @@ func (s *ScenePlay) Update() any {
 	s.MeterDrawer.Update()
 
 	// Changed speed should be applied after positions are calculated.
-	s.TransPoint.FetchByTime(s.Time())
+	s.UpdateTransPoint()
+	s.UpdateCursor()
 	if fired := s.SpeedHandler.Update(); fired {
 		s.SetSpeed()
 	}
@@ -245,10 +246,10 @@ func (s *ScenePlay) Update() any {
 func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
 	s.StageDrawer.Draw(screen)
-	// s.BarDrawer.Draw(screen)
-	// for _, d := range s.NoteLaneDrawers {
-	// 	d.Draw(screen)
-	// }
+	s.BarDrawer.Draw(screen)
+	for _, d := range s.NoteLaneDrawers {
+		d.Draw(screen)
+	}
 	s.KeyDrawer.Draw(screen)
 	s.ScoreDrawer.Draw(screen)
 	s.ComboDrawer.Draw(screen)
@@ -285,7 +286,10 @@ func (s ScenePlay) Time() int64 { return s.Timer.Time() }
 func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.Speed }
 
 // Supposes one current TransPoint can increment cursor precisely.
-func (s *ScenePlay) SetCursor() {
+func (s *ScenePlay) UpdateCursor() {
 	duration := float64(s.Time() - s.TransPoint.Time)
 	s.Cursor = s.TransPoint.Position + duration*s.CurrentSpeed()
+}
+func (s *ScenePlay) UpdateTransPoint() {
+	s.TransPoint = s.TransPoint.FetchByTime(s.Time())
 }

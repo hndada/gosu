@@ -62,6 +62,9 @@ func (d *BarDrawer) Update(cursor float64) {
 }
 
 func (d BarDrawer) Draw(screen *ebiten.Image) {
+	if d.Farthest == nil || d.Nearest == nil {
+		return
+	}
 	for b := d.Farthest; b != d.Nearest.Prev; b = b.Prev {
 		sprite := d.Sprite
 		pos := b.Position - d.Cursor
