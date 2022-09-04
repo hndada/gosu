@@ -11,16 +11,6 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-// type Direction int
-
-// const (
-// 	Upward   Direction = iota // e.g., Rhythm games using feet.
-// 	Downward                  // e.g., Piano mode.
-// 	Leftward                  // e.g., Drum mode.
-// 	Rightward
-// )
-
-// Todo: use Effecter in draws.BaseDrawer
 type BackgroundDrawer struct {
 	Sprite  draws.Sprite
 	Dimness *float64
@@ -200,3 +190,12 @@ func (d MeterDrawer) Draw(screen *ebiten.Image) {
 func (d MeterDrawer) MarkAge(m MeterMark) float64 {
 	return 1 - float64(m.Countdown)/float64(d.MaxCountdown)
 }
+
+// type Direction int
+
+// const (
+// 	Upward   Direction = iota // e.g., Rhythm games using feet.
+// 	Downward                  // e.g., Piano mode.
+// 	Leftward                  // e.g., Drum mode.
+// 	Rightward
+// )

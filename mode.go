@@ -26,7 +26,7 @@ type ModeProp struct { // Stands for Mode properties.
 }
 
 // Mode consists of main mode and sub mode.
-// Piano mode's sub mode is Key count (with scratch mode bit adjusted), for example.
+// For example, sub mode of Piano is Key count (with scratch mode bit adjusted).
 const ModeUnknown = -1
 const (
 	ModePiano4 = iota // ~ 4 Key

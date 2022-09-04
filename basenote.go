@@ -6,23 +6,6 @@ import (
 	"github.com/hndada/gosu/format/osu"
 )
 
-// type NoteType int
-
-// const (
-// 	Normal = iota
-// 	Head
-// 	Tail
-// 	Body
-// 	BodyTick // e.g., Roll tick in Drum mode.
-// 	Extra    // e.g., Shake in Drum mode.
-// 	ExtraTick
-// )
-
-// Strategy of Piano mode
-// Calculate position of each note in advance
-// Parameter: SpeedScale, BPM Ratio, BeatLengthScale
-// Calculate current HitPosition only.
-// For other notes, just calculate the difference between HitPosition.
 type BaseNote struct {
 	Type         int
 	Time         int64

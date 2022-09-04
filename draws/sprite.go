@@ -5,7 +5,7 @@ import (
 )
 
 // Sprite is for storing image and translate value.
-// Rotate / Scale -> Translate.
+// DrawImageOptions is not commutative. Do translate at final stage.
 type Sprite struct {
 	i          *ebiten.Image
 	w, h, x, y float64
@@ -48,11 +48,6 @@ func (s *Sprite) SetScale(scaleW, scaleH float64, filter ebiten.Filter) {
 	s.h *= scaleH // / s.scaleH
 	s.scaleW *= scaleW
 	s.scaleH *= scaleH
-	// i := ebiten.NewImageFromImage(s.i)
-	// s.i.Clear()
-	// op := &ebiten.DrawImageOptions{}
-	// op.GeoM.Scale(scaleW, scaleH)
-	// s.i.DrawImage(i, op)
 	s.filter = filter
 }
 func (s *Sprite) SetPosition(x, y float64, origin Origin) {
@@ -106,14 +101,11 @@ func (s Sprite) Filter() ebiten.Filter    { return s.filter }
 func (s Sprite) Size() (float64, float64) { return s.w, s.h }
 func (s Sprite) SrcSize() (int, int)      { return s.i.Size() }
 func (s Sprite) IsValid() bool            { return s.i != nil }
+func (s *Sprite) Move(tx, ty float64) {
+	s.x += tx
+	s.y += ty
+}
 
-//	func (s Sprite) SubImage(rect image.Rectangle) *ebiten.Image {
-//		return s.i.SubImage(rect).(*ebiten.Image)
-//	}
-//
-// SubSprite supposes no x, y and origin are changed.
-// func (s Sprite) SubSprite(rect image.Rectangle) Sprite {
-//
 //	func (s Sprite) SubSprite(propMinX, propMinY, propMaxX, propMaxY float64) Sprite {
 //		w, h := s.SrcSize()
 //		minX := math.Floor(propMinX * float64(w))
@@ -127,35 +119,3 @@ func (s Sprite) IsValid() bool            { return s.i != nil }
 //		s2.h = float64(rect.Dy()) * s2.scaleH
 //		return s2
 //	}
-func (s *Sprite) Move(tx, ty float64) {
-	s.x += tx
-	s.y += ty
-}
-
-// // Should I make the image field unexported?
-// type Sprite0 struct {
-// 	I          *ebiten.Image
-// 	W, H, X, Y float64
-// 	Filter     ebiten.Filter
-// }
-
-// // SetWidth sets sprite's width as well as set height scaled.
-// func (s *Sprite0) SetWidth(w float64) {
-// 	ratio := w / float64(s.I.Bounds().Dx())
-// 	s.W = w
-// 	s.H = ratio * float64(s.I.Bounds().Dy())
-// }
-
-// // SetWidth sets sprite's width as well as set height scaled.
-// func (s *Sprite0) SetHeight(h float64) {
-// 	ratio := h / float64(s.I.Bounds().Dy())
-// 	s.W = ratio * float64(s.I.Bounds().Dx())
-// 	s.H = ratio * h
-// }
-
-// func (s *Sprite0) ApplyScale(scale float64) {
-// 	s.W = float64(s.I.Bounds().Dx()) * scale
-// 	s.H = float64(s.I.Bounds().Dy()) * scale
-// }
-// func (s Sprite0) ScaleW() float64 { return s.W / float64(s.I.Bounds().Dx()) }
-// func (s Sprite0) ScaleH() float64 { return s.H / float64(s.I.Bounds().Dy()) }

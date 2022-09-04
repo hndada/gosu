@@ -40,20 +40,16 @@ func NewChart(cpath string) (c *Chart, err error) {
 	c.Notes = NewNotes(f, c.KeyCount)
 	c.Bars = NewBars(c.TransPoints, c.Duration())
 
-	// Calculate positions
+	// Position calculation is based on TransPoints.
 	mainBPM, _, _ := c.BPMs()
 	bpmScale := c.TransPoints[0].BPM / mainBPM
-	// fmt.Println(mainBPM, bpmScale)
 	for _, tp := range c.TransPoints {
-		// fmt.Printf("before speed: %.2f\n", tp.Speed)
 		tp.Speed *= bpmScale
 		if prev := tp.Prev; prev != nil {
 			tp.Position = prev.Position + float64(tp.Time-prev.Time)*prev.Speed
 		} else {
 			tp.Position = float64(tp.Time) * tp.Speed
 		}
-		// fmt.Printf("i: %d tp: %+v\n", i, tp)
-		// fmt.Printf("after speed: %.2f\n", tp.Speed)
 	}
 	tp := c.TransPoints[0]
 	for _, n := range c.Notes {
@@ -69,17 +65,6 @@ func NewChart(cpath string) (c *Chart, err error) {
 		}
 		b.Position = tp.Position + float64(b.Time-tp.Time)*tp.Speed
 	}
-	// for _, tp := range c.TransPoints[:20] {
-	// 	fmt.Printf("Time: %d BPM: %.2f Speed: %.3f Position: %.2f Bar: %v \n",
-	// 		tp.Time, tp.BPM, tp.Speed, tp.Position, tp.NewBeat)
-	// }
-	// for _, n := range c.Notes {
-	// 	fmt.Printf("Time:%d Pos: %.2f\n", n.Time, n.Position)
-	// }
-	// for _, b := range c.Bars[:20] {
-	// 	fmt.Printf("Time:%d Pos: %.2f\n", b.Time, b.Position)
-	// }
-	// fmt.Println(c.MusicName, c.ChartName)
 	return
 }
 

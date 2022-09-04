@@ -47,18 +47,6 @@ func (d *BarDrawer) Update(cursor float64) {
 		d.Nearest.Next.Position-d.Cursor <= minPosition-posMargin {
 		d.Nearest = d.Nearest.Next
 	}
-	// for d.Farthest.Position-d.Cursor <= maxPosition+posMargin {
-	// 	if d.Farthest.Next == nil {
-	// 		break
-	// 	}
-	// 	d.Farthest = d.Farthest.Next
-	// }
-	// for d.Nearest.Position-d.Cursor <= minPosition-posMargin {
-	// 	if d.Nearest.Next == nil {
-	// 		break
-	// 	}
-	// 	d.Nearest = d.Nearest.Next
-	// }
 }
 
 func (d BarDrawer) Draw(screen *ebiten.Image) {
@@ -127,13 +115,7 @@ func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
 			op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		}
 		sprite.Draw(screen, op)
-		// if n.Type == Head && n.Position-d.Cursor <= maxPosition+posMargin {
-		// 	d.DrawLongBody(screen, n)
-		// }
 	}
-	// if n != nil && n.Type == Tail {
-	// 	d.DrawLongBody(screen, n.Prev)
-	// }
 }
 
 // DrawLongBody draws scaled, corresponding sub-image of Body sprite.
@@ -287,7 +269,6 @@ func (d ComboDrawer) Draw(screen *ebiten.Image) {
 	// Size of the whole image is 0.5w + (n-1)(w+gap) + 0.5w.
 	// Since sprites are already at origin, no need to care of two 0.5w.
 	w := d.DigitWidth + d.DigitGap
-	// tx := (float64((len(vs)-1))*w + d.DigitWidth) / 2
 	tx := float64(len(vs)-1) * w / 2
 	for _, v := range vs {
 		sprite := d.Sprites[v]
@@ -355,54 +336,3 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	sprite.SetScale(ratio, ratio, ebiten.FilterLinear)
 	sprite.Draw(screen, nil)
 }
-
-// var MaxComboCountdown int = gosu.TimeToTick(2000)
-
-// type ComboDrawer struct {
-// 	Combo     int
-// 	Countdown int
-// 	Sprites   []draws.Sprite
-// }
-
-// func (d *ComboDrawer) Update(combo int) {
-// 	if d.Combo != combo {
-// 		d.Countdown = MaxComboCountdown // + 1
-// 	}
-// 	d.Combo = combo
-// 	if d.Countdown > 0 {
-// 		d.Countdown--
-// 	}
-// }
-
-// func (d ComboDrawer) Draw(screen *ebiten.Image) {
-// 	var wsum int
-// 	if d.Combo == 0 || d.Countdown == 0 {
-// 		return
-// 	}
-// 	vs := make([]int, 0)
-// 	for v := d.Combo; v > 0; v /= 10 {
-// 		vs = append(vs, v%10) // Little endian
-// 		// wsum += int(d.Sprites[v%10].W + ComboDigitGap)
-// 		wsum += int(d.Sprites[0].W) + int(ComboDigitGap)
-// 	}
-// 	wsum -= int(ComboDigitGap)
-
-// 	t := MaxComboCountdown - d.Countdown
-// 	age := float64(t) / float64(MaxJudgmentCountdown)
-// 	x := screenSizeX/2 + float64(wsum)/2 - d.Sprites[0].W/2
-// 	for _, v := range vs {
-// 		// x -= d.Sprites[v].W + ComboDigitGap
-// 		x -= d.Sprites[0].W + ComboDigitGap
-// 		sprite := d.Sprites[v]
-// 		// sprite.X = x
-// 		sprite.X = x + (d.Sprites[0].W - sprite.W/2)
-// 		sprite.SetCenterY(ComboPosition)
-// 		switch {
-// 		case age < 0.1:
-// 			sprite.Y += 0.85 * age * sprite.H
-// 		case age >= 0.1 && age < 0.2:
-// 			sprite.Y += 0.85 * (0.2 - age) * sprite.H
-// 		}
-// 		sprite.Draw(screen)
-// 	}
-// }
