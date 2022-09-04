@@ -140,62 +140,10 @@ func (d KeyDrawer) Draw(screen *ebiten.Image) {
 	}
 }
 
-type RollTickComboDrawer struct {
-	Combo     int
-	Countdown int
-	Sprites   []draws.Sprite
-}
-
-func (d *RollTickComboDrawer) Update(combo int) {
-	if d.Combo != combo {
-		d.Countdown = MaxComboCountdown // + 1
-	}
-	d.Combo = combo
-	if d.Countdown > 0 {
-		d.Countdown--
-	}
-}
-
-// ComboDrawer's Draw draws each number at constant x regardless of their widths.
-// Each number image has different size; The standard width is number 0's.
-func (d RollTickComboDrawer) Draw(screen *ebiten.Image) {
-	var wsum int
-	if d.Combo == 0 || d.Countdown == 0 {
-		return
-	}
-	vs := make([]int, 0)
-	for v := d.Combo; v > 0; v /= 10 {
-		vs = append(vs, v%10) // Little endian
-		// wsum += int(d.Sprites[v%10].W + ComboGap)
-		wsum += int(d.Sprites[0].W) + int(RollTickComboGap)
-	}
-	wsum -= int(RollTickComboGap)
-
-	t := MaxComboCountdown - d.Countdown
-	age := float64(t) / float64(MaxJudgmentCountdown)
-	x := rollTickComboPosition + float64(wsum)/2 - d.Sprites[0].W/2
-	for _, v := range vs {
-		// x -= d.Sprites[v].W + ComboGap
-		x -= d.Sprites[0].W + ComboGap
-		sprite := d.Sprites[v]
-		// sprite.X = x
-		sprite.X = x + (d.Sprites[0].W - sprite.W/2)
-		switch {
-		case age < 0.1:
-			sprite.Y -= 0.85 * age * sprite.H
-		case age >= 0.1 && age < 0.2:
-			sprite.Y -= 0.85 * (0.2 - age) * sprite.H
-		}
-		sprite.Draw(screen)
-	}
-}
-
-type NoteOverlayDrawer struct {
-}
-type RollTickDrawer struct {
-}
-type ShakeDrawer struct {
-}
+type RollTickComboDrawer struct{}
+type NoteOverlayDrawer struct{}
+type RollTickDrawer struct{}
+type ShakeDrawer struct{}
 
 // case Leftward, Rightward:
 // 	if d.direction == Rightward {

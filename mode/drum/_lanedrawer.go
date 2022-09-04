@@ -285,37 +285,3 @@ func (d FloatLaneDrawer) Draw(screen *ebiten.Image) {
 // 		sprite.Draw(screen)
 // 	}
 // }
-
-// func (d *ScoreDrawer) Update(score float64) {
-// 	d.DelayedScore.Set(score)
-// 	d.DelayedScore.Update()
-// }
-
-// func (d ScoreDrawer) Draw(screen *ebiten.Image) {
-// 	var wsum int
-// 	vs := make([]int, 0)
-// 	for v := int(math.Ceil(d.DelayedScore.Delayed)); v > 0; v /= 10 {
-// 		vs = append(vs, v%10) // Little endian
-// 		// wsum += int(d.Sprites[v%10].W)
-// 		wsum += int(d.Sprites[0].W)
-// 	}
-// 	if len(vs) == 0 {
-// 		vs = append(vs, 0) // Little endian
-// 		wsum += int(d.Sprites[0].W)
-// 	}
-// 	x := float64(screenSizeX) - d.Sprites[0].W/2
-// 	for _, v := range vs {
-// 		// x -= d.Sprites[v].W
-// 		x -= d.Sprites[0].W
-// 		sprite := d.Sprites[v]
-// 		sprite.X = x + (d.Sprites[0].W - sprite.W/2)
-// 		sprite.Draw(screen)
-// 	}
-// }
-
-//	type ScoreDrawer struct {
-//		DelayedScore ctrl.Delayed
-//		Sprites      []draws.Sprite
-//	}
-//
-// ScoreDrawer.Update(int(math.Ceil(delayedScore)))

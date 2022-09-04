@@ -5,51 +5,6 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-// PlayNote is for in-game. Handled by pointers to modify its fields easily.
-type PlayNote struct {
-	Note
-	Prev     *PlayNote
-	Next     *PlayNote
-	Marked   bool
-	NextTail *PlayNote // For performance of DrawLongNoteBodies()
-}
-
-func NewPlayNotes(c *Chart) ([]*PlayNote, *PlayNote, *PlayNote, float64) {
-	playNotes := make([]*PlayNote, 0, len(c.Notes))
-	var (
-		prev            *PlayNote
-		prevTail        *PlayNote
-		firstStagedNote *PlayNote
-		firstTail       *PlayNote
-		weights         float64
-	)
-	for _, n := range c.Notes {
-		pn := &PlayNote{
-			Note: n,
-			Prev: prev,
-		}
-		if prev != nil { // Next value is set later.
-			prev.Next = pn
-		}
-		prev = pn
-		if firstStagedNote == nil {
-			firstStagedNote = pn
-		}
-		if n.Type == Tail {
-			if prevTail != nil {
-				prevTail.NextTail = pn
-			}
-			prevTail = pn
-			if firstTail == nil {
-				firstTail = pn
-			}
-		}
-		weights += pn.Weight()
-		playNotes = append(playNotes, pn)
-	}
-	return playNotes, firstStagedNote, firstTail, weights
-}
-
 // Right returns right position of Roll body.
 // Extra 1 pixel for compensating round-down
 func (s ScenePlay) Right(tail *PlayNote) int {
@@ -174,17 +129,3 @@ func (n PlayNote) Position(time int64) float64 {
 // 	distance += s.SpeedScale * (bpmRatio * tp.BeatLengthScale) * float64(time-cursor)
 // 	return HitPosition - distance
 // }
-
-// Weight is for Tail's variadic weight based on its length.
-// For example, short long note does not require much strain to release.
-// Todo: fine-tuning with replay data
-func (n PlayNote) Weight() float64 {
-	switch n.Type {
-	case Don, Kat:
-		return 1
-	case BigDon, BigKat:
-		return 1.1
-	default:
-		return 0
-	}
-}
