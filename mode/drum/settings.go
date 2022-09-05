@@ -29,7 +29,6 @@ var (
 	HitPosition float64 = screenSizeX * 0.1875
 	minPosition float64 = -HitPosition
 	maxPosition float64 = minPosition + screenSizeX
-	posMargin   float64 = 100 // It should be larger than MaxSize/2 of all note sprites' width or height.
 	ShakePosX   float64 = screenSizeX * 0.375
 	ShakePosY   float64 = screenSizeY * 0.55
 
