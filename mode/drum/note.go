@@ -16,21 +16,21 @@ const (
 	Shake
 )
 
-type Tick struct {
+type Dot struct {
 	Time   int64
 	Speed  float64
 	Marked bool
 }
 type Note struct {
 	gosu.BaseNote
-	Type         int
-	Color        int
-	Size         int
-	Speed        float64 // Each note has own speed.
-	TickDuration float64 // For calculating Roll tick density.
-	Ticks        []*Tick // For shake note, it tells when to hit at auto mods.
-	Next         *Note
-	Prev         *Note // For accessing to Head from Tail.
+	Type        int
+	Color       int
+	Size        int
+	Speed       float64 // Each note has own speed.
+	DotDuration float64 // For calculating Roll tick density.
+	Dots        []*Dot  // For shake note, it tells when to hit at auto mods.
+	Next        *Note
+	Prev        *Note // For accessing to Head from Tail.
 }
 
 const (
@@ -44,7 +44,7 @@ const (
 )
 
 // Length is for calculating Durations of Roll and its tick.
-// NewNote temporarily set length to TickDuration.
+// NewNote temporarily set length to DotDuration.
 func NewNote(f any) (ns []*Note) {
 	switch f := f.(type) {
 	case osu.HitObject:
@@ -72,7 +72,7 @@ func NewNote(f any) (ns []*Note) {
 		// n.Big = osu.IsBig(f)
 		if n.Type == Head {
 			length := float64(f.SliderParams.Slides) * f.SliderParams.Length
-			n.TickDuration = length // Temporarily set to TickDuration.
+			n.DotDuration = length // Temporarily set to DotDuration.
 
 			n2 := n
 			n.Type = Tail
@@ -133,18 +133,18 @@ func NewNotes(f any, transPoints []*gosu.TransPoint) (ns []*Note) {
 			for tp.Next != nil && n.Time >= tp.Next.Time {
 				tp = tp.Next
 			}
-			length := n.TickDuration
+			length := n.DotDuration
 			speed := (tempMainBPM / 60000) * tp.Speed * (f.SliderMultiplier * 100)
 			duration := length / speed
 			n.Time2 = n.Time + int64(duration)
-			n.TickDuration = duration / ScaledBPM(tp.BPM)
+			n.DotDuration = duration / ScaledBPM(tp.BPM)
 			switch n.Type {
 			case Head:
-				n.TickDuration /= 4
+				n.DotDuration /= 4
 				n.Next.Time = n.Time2
-				n.Next.TickDuration = n.TickDuration
+				n.Next.DotDuration = n.DotDuration
 			case Shake:
-				n.TickDuration /= 3
+				n.DotDuration /= 3
 			}
 		}
 	}

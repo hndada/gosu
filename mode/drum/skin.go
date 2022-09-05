@@ -55,7 +55,7 @@ var Skin struct {
 	TailSprites    [2]draws.Sprite
 	OverlaySprites [2][2]draws.Sprite // 2 Overlays.
 	BodySprites    [2]draws.Sprite
-	TickSprite     draws.Sprite
+	DotSprite      draws.Sprite
 	ShakeSprites   [3]draws.Sprite
 
 	KeySprites     [4]draws.Sprite // 4 Keys.
@@ -64,7 +64,7 @@ var Skin struct {
 
 	ScoreSprites     [10]draws.Sprite
 	ComboSprites     [10]draws.Sprite
-	TickComboSprites [10]draws.Sprite // For rolls.
+	DotCountSprites  [10]draws.Sprite // For rolls.
 	CountdownSprites [10]draws.Sprite // For shakes.
 }
 
@@ -168,11 +168,11 @@ func LoadSkin() {
 		}
 	}
 	{
-		s := draws.NewSprite("skin/drum/note/roll/tick.png")
-		s.SetScale(TickScale)
+		s := draws.NewSprite("skin/drum/note/roll/dot.png")
+		s.SetScale(DotScale)
 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
 		s.SetColor(ColorYellow)
-		Skin.TickSprite = s
+		Skin.DotSprite = s
 	}
 	for i, name := range []string{"note", "spin", "limit"} {
 		path := fmt.Sprintf("skin/drum/note/shake/%s.png", name)
@@ -242,14 +242,14 @@ func LoadSkin() {
 	}
 	for i := 0; i < 10; i++ {
 		s := draws.NewSpriteFromImage(comboImages[i])
-		s.SetScale(TickComboScale)
+		s.SetScale(DotCountScale)
 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
-		Skin.TickComboSprites[i] = s
+		Skin.DotCountSprites[i] = s
 	}
 	for i := 0; i < 10; i++ {
 		s := draws.NewSpriteFromImage(comboImages[i])
-		s.SetScale(CountdownScale)
-		pos := ShakePosY + s.H()*CountdownPosition
+		s.SetScale(ShakeCountScale)
+		pos := ShakePosY + s.H()*ShakeCountPosition
 		s.SetPosition(ShakePosX, pos, draws.OriginCenterTop)
 		Skin.CountdownSprites[i] = s
 	}

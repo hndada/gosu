@@ -42,18 +42,18 @@ func (d BarDrawer) Draw(screen *ebiten.Image) {
 }
 
 var (
-	TickColorReady = color.NRGBA{255, 255, 255, 255} // White.
-	TickColorHit   = color.NRGBA{255, 255, 0, 255}   // Yellow.
-	TickColorMiss  = color.NRGBA{0, 32, 96, 255}     // Navy.
+	DotColorReady = color.NRGBA{255, 255, 255, 255} // White.
+	DotColorHit   = color.NRGBA{255, 255, 0, 255}   // Yellow.
+	DotColorMiss  = color.NRGBA{0, 32, 96, 255}     // Navy.
 )
 
 // Let's draw as same as possible of osu! does.
 type BodyDrawer struct {
 	BodySprites [2]draws.Sprite
-	TickSprite  draws.Sprite
+	DotSprite   draws.Sprite
 	Time        int64
 	Notes       []*Note
-	StagedTick  *Tick
+	CurrentDot  *Dot
 }
 
 func (d *BodyDrawer) Update(time int64) {
@@ -87,14 +87,14 @@ func (d BodyDrawer) Draw(screen *ebiten.Image) {
 		// body.Draw(screen, op)
 		body.Draw(screen, nil)
 
-		for _, tickNote := range tail.Ticks {
-			tick := d.TickSprite
+		for _, tickNote := range tail.Dots {
+			tick := d.DotSprite
 			if tickNote.Marked {
-				tick.SetColor(TickColorHit)
-			} else if d.StagedTick.Time > tickNote.Time {
-				tick.SetColor(TickColorMiss)
+				tick.SetColor(DotColorHit)
+			} else if d.CurrentDot.Time > tickNote.Time {
+				tick.SetColor(DotColorMiss)
 			} else {
-				tick.SetColor(TickColorReady)
+				tick.SetColor(DotColorReady)
 			}
 			pos := tickNote.Speed * float64(tickNote.Time-d.Time)
 			tick.Move(pos, 0)
@@ -247,8 +247,6 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 }
 
 type TickComboDrawer struct{}
-type NoteOverlayDrawer struct{}
-type TickDrawer struct{}
 type ShakeDrawer struct{}
 
 // case Leftward, Rightward:
