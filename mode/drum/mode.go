@@ -17,5 +17,3 @@ var ModeDrum = gosu.ModeProp{
 	NewScenePlay:   NewScenePlay,
 	ExposureTime:   ExposureTime,
 }
-
-func LoadSkin()
