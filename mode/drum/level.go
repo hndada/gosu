@@ -10,7 +10,7 @@ var (
 )
 
 const (
-	RollTickWeight  float64 = 0.125
+	TickWeight      float64 = 0.125
 	ShakeTickWeight float64 = 0.03125 // 0.125 * 0.25
 )
 
@@ -49,13 +49,13 @@ func (c Chart) Difficulties() []float64 {
 		switch n.Type {
 		case Head:
 			// One beat has 4 Roll ticks.
-			// RollTickWeight = 0.125
+			// TickWeight = 0.125
 			// Assumes 8 ticks worth one normal note.
 			ticks := beats * 4
-			d += ticks * RollTickWeight
+			d += ticks * TickWeight
 		case Shake:
 			// One beat has 3 Shake ticks.
-			// ShakeTickWeight = 0.03125, which is way smaller than RollTickWeight.
+			// ShakeTickWeight = 0.03125, which is way smaller than TickWeight.
 			// Shake is apparently easier than Roll,
 			// since Shake doesn't follow the beat to hit.
 			ticks := beats * 3

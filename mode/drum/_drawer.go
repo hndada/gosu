@@ -140,9 +140,9 @@ func (d KeyDrawer) Draw(screen *ebiten.Image) {
 	}
 }
 
-type RollTickComboDrawer struct{}
+type TickComboDrawer struct{}
 type NoteOverlayDrawer struct{}
-type RollTickDrawer struct{}
+type TickDrawer struct{}
 type ShakeDrawer struct{}
 
 // case Leftward, Rightward:

@@ -33,10 +33,10 @@ type ScenePlay struct {
 	ComboDrawer    ComboDrawer
 	KeyDrawer      KeyDrawer
 
-	NoteOverlayDrawer   NoteOverlayDrawer
-	RollTickDrawer      RollTickDrawer
-	RollTickComboDrawer RollTickComboDrawer
-	ShakeDrawer         ShakeDrawer
+	NoteOverlayDrawer NoteOverlayDrawer
+	TickDrawer        TickDrawer
+	TickComboDrawer   TickComboDrawer
+	ShakeDrawer       ShakeDrawer
 }
 
 func NewScenePlay(cpath string, mods gosu.Mods, rf *osr.Format) (gosu.Scene, error) {
