@@ -2,16 +2,14 @@ package drum
 
 import (
 	"fmt"
-	"image"
 	"image/color"
 	_ "image/jpeg"
 	_ "image/png"
-	"math"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/draws"
-	"golang.org/x/image/draw"
 )
 
 // [2] that most sprites have.
@@ -24,12 +22,13 @@ var (
 	ColorRed    = color.NRGBA{235, 69, 44, 255}
 	ColorBlue   = color.NRGBA{68, 141, 171, 255}
 	ColorYellow = color.NRGBA{252, 83, 6, 255}
+	ColorGray   = color.NRGBA{67, 67, 67, 255}
 )
 
 const (
 	ShakeNote = iota
-	ShakeBottom
-	ShakeTop
+	ShakeSpin
+	ShakeLimit
 )
 const (
 	LeftBlue = iota
@@ -56,15 +55,16 @@ var Skin struct {
 	// First [2] are for big notes.
 	JudgmentSprites [2][3]draws.Sprite // 3 Judgments.
 	RedSprites      [2]draws.Sprite
-	NoteSprites     [2]draws.Sprite    // Tinting are applied during game play.
+	BlueSprites     [2]draws.Sprite
 	OverlaySprites  [2][2]draws.Sprite // 2 Overlays.
+	HeadSprites     [2]draws.Sprite    // Overlay will be drawn during game play.
 	TailSprites     [2]draws.Sprite
 	BodySprites     [2]draws.Sprite
-	TickSprites     draws.Sprite
+	TickSprite      draws.Sprite
 	ShakeSprites    [3]draws.Sprite
 
+	KeySprites     [4]draws.Sprite // 4 Keys.
 	KeyFieldSprite draws.Sprite
-	KeySprites     [4]draws.Sprite   // 4 Keys.
 	DancerSprites  [4][]draws.Sprite // Dancer has 4 behaviors.
 
 	ScoreSprites     [10]draws.Sprite
@@ -73,234 +73,222 @@ var Skin struct {
 	CountdownSprites [10]draws.Sprite // For shakes.
 }
 
-// func IsKeyImageFlipped(keyType int) bool {
-// 	return keyType == KeyLeftKat || keyType == KeyRightDon
-// }
-
 // Todo: embed default skins to code for preventing panic when files are missing
 func LoadSkin() {
+	var noteImage = draws.NewImage("skin/drum/note/note.png")
 	{
 		s := draws.NewSprite("skin/drum/field.png")
-		ratio := FieldHeight / s.H()
-		s.SetScale(ratio, ratio, ebiten.FilterLinear)
+		s.SetScale(FieldHeight / s.H())
 		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
 		Skin.FieldSprite = s
 	}
-	skin.ScoreSprites = make([]draws.Sprite, 10)
-	skin.ComboSprites = make([]draws.Sprite, 10)
-	skin.TickComboSprites = make([]draws.Sprite, 10)
-	for i := 0; i < 10; i++ {
-		s := draws.Sprite{
-			I:      draws.NewImage(fmt.Sprintf("skin/combo/%d.png", i)),
-			Filter: ebiten.FilterLinear,
-		}
-		s.ApplyScale(ComboScale)
-		// x is not fixed.
-		s.SetCenterY(FieldPosition)
-		skin.ComboSprites[i] = s
-
-		s2 := draws.Sprite{
-			I:      s.I,
-			Filter: ebiten.FilterLinear,
-		}
-		s2.ApplyScale(RollTickComboScale)
-		// x is not fixed.
-		s2.SetCenterY(FieldPosition)
-		skin.TickComboSprites[i] = s2
+	{
+		s := draws.NewSpriteFromImage(noteImage)
+		s.SetScale(regularNoteHeight / s.H())
+		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+		Skin.HintSprite = s
 	}
-
-	// Key sprites should be calculated first.
-	// Sum of widths of Key sprites is essential to most of other sprites' X position.
-	// Or, maybe not.
-	leftDon := draws.NewImage("skin/drum/key/in.png")
-	rightDon := draws.FlipX(leftDon)
-	rightKat := draws.NewImage("skin/drum/key/out.png")
-	leftKat := draws.FlipX(rightKat)
-	x := 0.0
-	for i, img := range []*ebiten.Image{leftDon, rightKat, leftKat, rightDon} {
-		s := draws.Sprite{
-			I: img,
-			X: x,
+	{
+		src := ebiten.NewImage(1, int(FieldInnerHeight))
+		src.Fill(color.NRGBA{255, 255, 255, 255}) // White
+		s := draws.NewSpriteFromImage(src)
+		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+		Skin.BarSprite = s
+	}
+	var (
+		rollEndImage = draws.NewImage("skin/drum/note/roll/end.png")
+		rollMidImage = draws.NewImage("skin/drum/note/roll/mid.png")
+	)
+	for i, sname := range []string{"regular", "big"} {
+		noteHeight := regularNoteHeight
+		if sname == "big" {
+			noteHeight = bigNoteHeight
 		}
-		s.SetHeight(FieldHeight)
-		s.SetCenterY(FieldPosition)
-		skin.KeySprites[[]int{KeyLeftDon, KeyRightKat,
-			KeyLeftKat, KeyRightDon}[i]] = s
-		x += s.W
-		if i == 0 {
-			comboPosition = s.W
-		}
-		if i == 1 { // Each side's Don and Kat are overlapped.
-			x = 0
-		}
-	}
-
-	skin.FieldSprite = draws.Sprite{
-		I: draws.NewImage("skin/drum/field.png"),
-		W: screenSizeX - x,
-		H: FieldHeight,
-		X: x,
-		// Y is centered.
-	}
-	skin.FieldSprite.SetCenterY(FieldPosition)
-
-	skin.HintSprite = draws.Sprite{
-		I: draws.NewImage("skin/drum/hint.png"),
-		H: NormalNoteHeight,
-	}
-	// skin.HintSprite.SetHeight(NormalNoteHeight)
-	skin.HintSprite.ApplyScale(skin.HintSprite.ScaleH())
-	skin.HintSprite.SetCenterX(HitPosition)
-	skin.HintSprite.SetCenterY(FieldPosition)
-
-	barLine := ebiten.NewImage(1, int(FieldInnerHeight))
-	barLine.Fill(color.RGBA{255, 255, 255, 255})
-	skin.BarSprite = draws.Sprite{
-		I: barLine,
-		W: 1,
-		H: FieldInnerHeight,
-	}
-	// X is not fixed.
-	skin.BarSprite.SetCenterY(FieldPosition)
-
-	for size, sizeWord := range []string{"normal", "big"} {
-		height := []float64{NormalNoteHeight, BigNoteHeight}[size]
-		for judge, judgeWord := range []string{"cool", "good"} {
-			path := fmt.Sprintf("skin/drum/judgment/%s/%s.png", sizeWord, judgeWord)
-			s := draws.Sprite{
-				I: draws.NewImage(path),
+		for j, jname := range []string{"cool", "good", "miss"} {
+			var path string
+			if jname == "miss" {
+				path = "skin/drum/judgment/miss.png"
+			} else {
+				path = fmt.Sprintf("skin/drum/judgment/%s/%s.png", sname, jname)
 			}
-			s.SetHeight(FieldHeight)
-			s.ApplyScale(JudgmentScale)
-			s.SetCenterX(HitPosition)
-			s.SetCenterY(FieldPosition)
-			skin.JudgmentSprites[size][judge] = s
+			s := draws.NewSprite(path)
+			s.SetScale(JudgmentScale)
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+			Skin.JudgmentSprites[i][j] = s
 		}
 		{
-			const miss = 2
-			s := draws.Sprite{
-				I: draws.NewImage("skin/drum/judgment/miss.png"),
-			}
-			// s.SetHeight(FieldHeight)
-			s.ApplyScale(JudgmentScale)
-			s.SetCenterX(HitPosition)
-			s.SetCenterY(FieldPosition)
-			skin.JudgmentSprites[size][miss] = s
+			s := draws.NewSpriteFromImage(noteImage)
+			s.SetScale(noteHeight / s.H())
+			s.SetColor(ColorRed)
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+			Skin.RedSprites[i] = s
 		}
-
-		for noteType, clr := range []color.NRGBA{ColorDon, ColorKat} {
-			img := draws.NewImage("skin/drum/note/normal/note.png")
-			img = draws.ApplyColor(img, clr)
-			s := draws.Sprite{I: img, H: height}
-			// s.SetHeight(height)
-			s.ApplyScale(s.ScaleH())
-			s.SetCenterY(FieldPosition)
-			if noteType == 0 {
-				skin.DonSprites[size][0] = s
-			} else {
-				skin.KatSprites[size][0] = s
-			}
-		}
-		for noteType, clr := range []color.NRGBA{ColorDon, ColorKat} {
-			img := draws.NewImage(fmt.Sprintf("skin/drum/note/%s/note.png", sizeWord))
-			img = draws.ApplyColor(img, clr)
-			s := draws.Sprite{I: img, H: height}
-			// s.SetHeight(height)
-			s.ApplyScale(s.ScaleH())
-			s.SetCenterY(FieldPosition)
-			if noteType == 0 {
-				skin.DonSprites[size][0] = s
-			} else {
-				skin.KatSprites[size][0] = s
-			}
-		}
-
-		overlayPath := fmt.Sprintf("skin/drum/note/%s/overlay", sizeWord)
-		if ok, err := IsDir(overlayPath); err != nil {
-			// fmt.Printf("loading %s's overlay occurrs an err: %s\n", sizeWord, err)
-			fmt.Printf("%s's overlay has one frame.\n", sizeWord)
-			continue
-		} else if ok { // 2 frames.
-			for i := 0; i < 2; i++ {
-				overlayPath += fmt.Sprintf("/%d.png", i)
-				s := draws.Sprite{I: draws.NewImage(overlayPath), H: height}
-				// s.SetHeight(height)
-				s.ApplyScale(s.ScaleH())
-				s.SetCenterY(FieldPosition)
-				skin.DonSprites[size][i+1] = s
-			}
-		} else { // 1 frame. Copy 1st frame to 2nd frame.
-			overlayPath += ".png"
-			s := draws.Sprite{I: draws.NewImage(overlayPath), H: height}
-			// s.SetHeight(height)
-			s.ApplyScale(s.ScaleH())
-			s.SetCenterY(FieldPosition)
-			skin.DonSprites[size][1] = s
-			skin.DonSprites[size][2] = s // Copy the same one.
-		}
-
-		end := draws.NewImage("skin/drum/note/roll/end.png")
-		tailSrc := draws.ApplyColor(end, ColorRoll)
-		headSrc := draws.FlipX(tailSrc)
-
-		head := draws.Sprite{I: headSrc}
-		head.SetHeight(height)
-		head.SetCenterY(FieldPosition)
-		skin.HeadSprites[size] = head
-
-		tail := draws.Sprite{I: tailSrc}
-		tail.SetHeight(height)
-		tail.SetCenterY(FieldPosition)
-		skin.TailSprites[size] = tail
 		{
-			src := draws.NewImageSrc("skin/drum/note/roll/mid.png")
-			dst := image.NewRGBA(image.Rect(0, 0, screenSizeX, int(height)))
-			draw.BiLinear.Scale(dst, dst.Bounds(), src, src.Bounds(), draw.Over, nil)
-			for pow := 0; pow < int(math.Log2(screenSizeX))+1; pow++ {
-				w := 1 << pow
-				rect := image.Rect(0, 0, w, int(height))
-				s := draws.Sprite{
-					I: ebiten.NewImageFromImage(dst.SubImage(rect)),
-					W: float64(w),
-					H: float64(height),
-					// X is not fixed.
+			s := Skin.RedSprites[i]
+			s.SetColor(ColorBlue)
+			Skin.BlueSprites[i] = s
+		}
+		{
+			var path string
+			for j := 0; j < 2; j++ {
+				if _, err := os.Stat(path); !os.IsNotExist(err) { // Two overlays.
+					path = fmt.Sprintf("skin/drum/overlay/%s/%d.png", sname, j)
+				} else {
+					path = fmt.Sprintf("/skin/drum/overlay/%s", sname)
 				}
-				s.SetCenterY(FieldPosition)
-				skin.BodySprites[size] = append(skin.BodySprites[size], s)
+				s := draws.NewSprite(path)
+				s.SetScale(noteHeight / s.H())
+				s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+				Skin.OverlaySprites[i][j] = s
 			}
 		}
-	}
-	dot := draws.Sprite{
-		I: draws.NewImage("skin/drum/note/roll/dot.png"),
-	}
-	dot.ApplyScale(RollDotScale)
-	dot.SetCenterY(FieldPosition)
-	skin.RollDotSprite = dot
-
-	for i, name := range []string{"note", "bottom", "top"} {
-		s := draws.Sprite{
-			I: draws.NewImage(fmt.Sprintf("skin/drum/note/shake/%s.png", name)),
+		{
+			s := draws.NewSpriteFromImage(rollEndImage)
+			s.SetScale(noteHeight / s.H())
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginLeftCenter)
+			s.SetColor(ColorYellow)
+			Skin.TailSprites[i] = s
 		}
-		if i == ShakeNote {
-			s.SetHeight(BigNoteHeight)
+		{
+			s := draws.NewSpriteFromImage(rollEndImage)
+			ratio := noteHeight / s.H()
+			s.SetScaleXY(-ratio, ratio, ebiten.FilterLinear) // Goes flipped.
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginRightCenter)
+			s.SetColor(ColorYellow)
+			Skin.HeadSprites[i] = s
+		}
+		{
+			s := draws.NewSpriteFromImage(rollMidImage)
+			s.SetScale(noteHeight / s.H())
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginLeftCenter)
+			s.SetColor(ColorYellow)
+			Skin.BodySprites[i] = s
+		}
+	}
+	{
+		s := draws.NewSprite("skin/drum/note/roll/tick.png")
+		s.SetScale(TickScale)
+		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+		s.SetColor(ColorYellow)
+		Skin.TickSprite = s
+	}
+	for i, name := range []string{"note", "spin", "limit"} {
+		path := fmt.Sprintf("skin/drum/note/shake/%s.png", name)
+		s := draws.NewSprite(path)
+		if name == "note" {
+			s.SetScale(regularNoteHeight / s.H())
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
 		} else {
-			s.ApplyScale(ShakeScale)
+			s.SetScale(ShakeScale)
+			s.SetPosition(ShakePosX, ShakePosY, draws.OriginCenter)
 		}
-		s.SetCenterY(FieldPosition)
-		skin.ShakeSprites[i] = s
+		Skin.ShakeSprites[i] = s
 	}
 
-	DefaultSkin = skin
-}
-func IsDir(path string) (bool, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return false, err
+	// Position of combo is dependent on widths of key sprite.
+	// Key sprites are overlapped at each side.
+	{
+		s := draws.NewSprite("skin/drum/key/in.png")
+		s.SetScale(KeyScale)
+		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
+		Skin.KeySprites[LeftRed] = s
+		keyCenter = s.W()
 	}
-	defer f.Close()
-	info, err := f.Stat()
-	if err != nil {
-		return false, err
+	{
+		s := draws.NewSprite("skin/drum/key/out.png")
+		s.SetScale(KeyScale)
+		s.SetPosition(keyCenter, FieldPosition, draws.OriginLeftCenter)
+		Skin.KeySprites[RightBlue] = s
 	}
-	return info.IsDir(), nil
+	{
+		s := Skin.KeySprites[RightBlue]
+		s.Flip(true, false)
+		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
+		Skin.KeySprites[LeftBlue] = s
+	}
+	{
+		s := Skin.KeySprites[LeftRed]
+		s.Flip(true, false)
+		s.SetPosition(keyCenter, FieldPosition, draws.OriginLeftCenter)
+		Skin.KeySprites[RightRed] = s
+	}
+	for i, name := range []string{"idle", "yes", "no", "high"} {
+		fs, err := os.ReadDir(fmt.Sprintf("skin/drum/dancer/%s", name))
+		if err != nil {
+			continue
+		}
+		Skin.DancerSprites[i] = make([]draws.Sprite, len(fs))
+		for j := range fs {
+			path := fmt.Sprintf("skin/drum/dancer/%s/%d.png", name, j)
+			s := draws.NewSprite(path)
+			s.SetScale(DancerScale)
+			s.SetPosition(DancerPosX, DancerPosY, draws.OriginCenter)
+			Skin.DancerSprites[i][j] = s
+		}
+	}
+
+	Skin.ScoreSprites = gosu.ScoreSprites
+	var comboImages [10]*ebiten.Image
+	for i := 0; i < 10; i++ {
+		comboImages[i] = draws.NewImage(fmt.Sprintf("skin/combo/%d.png", i))
+	}
+	for i := 0; i < 10; i++ {
+		s := draws.NewSpriteFromImage(comboImages[i])
+		s.SetScale(ComboScale)
+		s.SetPosition(keyCenter, FieldPosition, draws.OriginCenter)
+		Skin.ComboSprites[i] = s
+	}
+	for i := 0; i < 10; i++ {
+		s := draws.NewSpriteFromImage(comboImages[i])
+		s.SetScale(TickComboScale)
+		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+		Skin.TickComboSprites[i] = s
+	}
+	for i := 0; i < 10; i++ {
+		s := draws.NewSpriteFromImage(comboImages[i])
+		s.SetScale(CountdownScale)
+		pos := ShakePosY + s.H()*CountdownPosition
+		s.SetPosition(ShakePosX, pos, draws.OriginCenterTop)
+		Skin.CountdownSprites[i] = s
+	}
 }
+
+// func IsKeyImageFlipped(keyType int) bool {
+// 	return keyType == KeyLeftKat || keyType == KeyRightDon
+// }
+// func() {
+// 	fs, err := os.ReadDir("skin/drum/overlay")
+// 	if err != nil {
+// 		return
+// 	}
+// 	for _, f := range fs {
+// 		for i, name := range []string{"regular", "big"} {
+// 			if name != f.Name() {
+// 				continue
+// 			}
+// 			if f.IsDir() {
+// 				for j := 0; j < 2; j++ {
+// 					path := fmt.Sprintf("skin/drum/overlay/%s/%d.png", name, j)
+// 					noteOverlays[i][j] = draws.NewImage(path)
+// 				}
+// 			} else {
+// 				path := fmt.Sprintf("skin/drum/overlay/%s.png", name)
+// 				noteOverlays[i][0] = draws.NewImage(path)
+// 				noteOverlays[i][1] = noteOverlays[i][0]
+// 			}
+// 		}
+// 	}
+// }()
+
+// func IsDir(path string) (bool, error) {
+// 	f, err := os.Open(path)
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	defer f.Close()
+// 	info, err := f.Stat()
+// 	if err != nil {
+// 		return false, err
+// 	}
+// 	return info.IsDir(), nil
+// }
