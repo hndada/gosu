@@ -127,9 +127,9 @@ func (d NoteLaneDrawer) DrawLongBody(screen *ebiten.Image, tail *Note) {
 	ratio := length / body.H()
 	op := &ebiten.DrawImageOptions{}
 	if ReverseBody {
-		body.SetScale(1, -ratio, ebiten.FilterLinear)
+		body.SetScaleXY(1, -ratio, ebiten.FilterLinear)
 	} else {
-		body.SetScale(1, ratio, ebiten.FilterLinear)
+		body.SetScaleXY(1, ratio, ebiten.FilterLinear)
 	}
 	if tail.Marked {
 		op.ColorM.ChangeHSV(0, 0.3, 0.3)
@@ -292,6 +292,6 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	case age > 0.9:
 		ratio = 1 - 1.15*(age-0.9)
 	}
-	sprite.SetScale(ratio, ratio, ebiten.FilterLinear)
+	sprite.SetScale(ratio)
 	sprite.Draw(screen, nil)
 }

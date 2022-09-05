@@ -84,14 +84,14 @@ func LoadSkin() {
 	// Sprites that are independent of key count.
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fmt.Sprintf("skin/combo/%d.png", i))
-		s.SetScale(ComboScale, ComboScale, ebiten.FilterLinear)
+		s.SetScale(ComboScale)
 		s.SetPosition(screenSizeX/2, ComboPosition, draws.OriginCenter)
 		GeneralSkin.ComboSprites[i] = s
 	}
 	GeneralSkin.JudgmentSprites = make([]draws.Sprite, 5)
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
 		s := draws.NewSprite(fmt.Sprintf("skin/piano/judgment/%s.png", name))
-		s.SetScale(JudgmentScale, JudgmentScale, ebiten.FilterLinear)
+		s.SetScale(JudgmentScale)
 		s.SetPosition(screenSizeX/2, JudgmentPosition, draws.OriginCenter)
 		GeneralSkin.JudgmentSprites[i] = s
 	}
@@ -108,7 +108,7 @@ func LoadSkin() {
 		// bodyImages   [4]image.Image // binary-building method
 		bodyImages [4]*ebiten.Image
 	)
-	keyUpImage = draws.NewImage("skin/piano/key/up.png")
+	keyUpImage = draws.NewImage("skin/piano/key/up.png") // Todo: combine with declaration?
 	keyDownImage = draws.NewImage("skin/piano/key/down.png")
 	hintImage = draws.NewImage("skin/piano/hint.png")
 	// Todo: 4th note image. 1st note with custom color settings.
@@ -153,7 +153,7 @@ func LoadSkin() {
 				s := draws.NewSpriteFromImage(keyUpImage)
 				scaleW := w / s.W()
 				scaleH := (screenSizeY - HitPosition) / s.H()
-				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
+				s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
 				s.SetPosition(x, HitPosition, draws.OriginLeftTop)
 				skin.KeyUpSprites[k] = s
 			}
@@ -161,7 +161,7 @@ func LoadSkin() {
 				s := draws.NewSpriteFromImage(keyDownImage)
 				scaleW := w / s.W()
 				scaleH := (screenSizeY - HitPosition) / s.H()
-				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
+				s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
 				s.SetPosition(x, HitPosition, draws.OriginLeftTop)
 				skin.KeyDownSprites[k] = s
 			}
@@ -169,7 +169,7 @@ func LoadSkin() {
 				s := draws.NewSpriteFromImage(noteImages[kind])
 				scaleW := w / s.W()
 				scaleH := NoteHeigth / s.H()
-				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
+				s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
 				s.SetPosition(x, HitPosition, draws.OriginLeftBottom)
 				skin.NoteSprites[k] = s
 			}
@@ -177,7 +177,7 @@ func LoadSkin() {
 				s := draws.NewSpriteFromImage(headImages[kind])
 				scaleW := w / s.W()
 				scaleH := NoteHeigth / s.H()
-				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
+				s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
 				s.SetPosition(x, HitPosition, draws.OriginLeftBottom)
 				skin.HeadSprites[k] = s
 			}
@@ -185,14 +185,13 @@ func LoadSkin() {
 				s := draws.NewSpriteFromImage(tailImages[kind])
 				scaleW := w / s.W()
 				scaleH := NoteHeigth / s.H()
-				s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
+				s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
 				s.SetPosition(x, HitPosition, draws.OriginLeftBottom)
 				skin.TailSprites[k] = s
 			}
 			{
 				s := draws.NewSpriteFromImage(bodyImages[kind])
-				scale := w / s.W()
-				s.SetScale(scale, scale, ebiten.FilterLinear)
+				s.SetScale(w / s.W())
 				s.SetPosition(x, HitPosition, draws.OriginLeftBottom) // Todo: need a test // -NoteHeigth
 				skin.BodySprites[k] = s
 			}
@@ -209,7 +208,7 @@ func LoadSkin() {
 			s := draws.NewSpriteFromImage(hintImage)
 			scaleW := wsum / s.W()
 			scaleH := HintHeight / s.H()
-			s.SetScale(scaleW, scaleH, ebiten.FilterLinear)
+			s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
 			s.SetPosition(screenSizeX/2, HitPosition-HintHeight, draws.OriginCenterTop)
 			skin.HintSprite = s
 		}
