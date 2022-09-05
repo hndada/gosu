@@ -36,10 +36,10 @@ var (
 	DancerPosY float64 = screenSizeY * 0.1
 
 	keyCenter float64 // Used in key sprites and combo position.
-	// Range of CountdownPosition is [0, 1].
+	// Range of ShakeCountPosition is [0, 1].
 	// Min: Right bottom of the middle of Shake spin.
 	// Max: Right bottom of the border of Shake spin.
-	CountdownPosition float64 = 0.5
+	ShakeCountPosition float64 = 0.5
 )
 
 // Skin-dependent settings.
@@ -47,17 +47,17 @@ var (
 // Yet, Judgment is not circle image, actually.
 var (
 	JudgmentScale float64 = 1
-	TickScale     float64 = 1
+	DotScale      float64 = 1
 	ShakeScale    float64 = 1
 	KeyScale      float64 = 1
 	DancerScale   float64 = 1
 	ComboScale    float64 = 0.75
 	ComboGap      float64 = screenSizeX * -0.001
 	// Used at roll tick combo.
-	TickComboScale    float64 = 0.3
-	TickComboDigitGap float64 = ComboGap * 0.4
+	DotCountScale    float64 = 0.3
+	DotCountDigitGap float64 = ComboGap * 0.4
 	// Used at shake countdown.
-	CountdownScale float64 = 0.75
+	ShakeCountScale float64 = 0.75
 )
 
 func SwitchDirection() {
