@@ -62,6 +62,7 @@ func (d BarDrawer) Draw(screen *ebiten.Image) {
 }
 
 // Notes are fixed: lane itself moves, all notes move same amount.
+// Todo: NoteLaneDrawer -> NoteDrawer
 type NoteLaneDrawer struct {
 	Sprites  [4]draws.Sprite
 	Cursor   float64
@@ -183,68 +184,6 @@ func (d KeyDrawer) Draw(screen *ebiten.Image) {
 	}
 }
 
-type ComboDrawer struct {
-	draws.BaseDrawer
-	Sprites    [10]draws.Sprite
-	DigitWidth float64
-	DigitGap   float64
-	Combo      int
-}
-
-// Each number has different width. Number 0's width is used as standard.
-func NewComboDrawer(sprites [10]draws.Sprite) ComboDrawer {
-	return ComboDrawer{
-		BaseDrawer: draws.BaseDrawer{
-			MaxCountdown: gosu.TimeToTick(2000),
-		},
-		Sprites:    sprites,
-		DigitWidth: sprites[0].W(),
-		DigitGap:   ComboDigitGap,
-	}
-}
-func (d *ComboDrawer) Update(combo int) {
-	if d.Countdown > 0 {
-		d.Countdown--
-	}
-	if d.Combo != combo {
-		d.Combo = combo
-		d.Countdown = d.MaxCountdown
-	}
-}
-
-// ComboDrawer's Draw draws each number at constant x regardless of their widths.
-func (d ComboDrawer) Draw(screen *ebiten.Image) {
-	if d.MaxCountdown != 0 && d.Countdown == 0 {
-		return
-	}
-	if d.Combo == 0 {
-		return
-	}
-	vs := make([]int, 0)
-	for v := d.Combo; v > 0; v /= 10 {
-		vs = append(vs, v%10) // Little endian.
-	}
-
-	// Size of the whole image is 0.5w + (n-1)(w+gap) + 0.5w.
-	// Since sprites are already at origin, no need to care of two 0.5w.
-	w := d.DigitWidth + d.DigitGap
-	tx := float64(len(vs)-1) * w / 2
-	for _, v := range vs {
-		sprite := d.Sprites[v]
-		sprite.Move(tx, 0)
-		age := d.Age()
-		h := sprite.H()
-		switch {
-		case age < 0.05:
-			sprite.Move(0, 0.85*age*h)
-		case age >= 0.05 && age < 0.1:
-			sprite.Move(0, 0.85*(0.1-age)*h)
-		}
-		sprite.Draw(screen, nil)
-		tx -= w
-	}
-}
-
 type JudgmentDrawer struct {
 	draws.BaseDrawer
 	Sprites  []draws.Sprite
@@ -272,7 +211,7 @@ func (d *JudgmentDrawer) Update(worst gosu.Judgment) {
 }
 
 func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
-	if d.Countdown <= 0 {
+	if d.Countdown <= 0 || d.Judgment.Window == 0 {
 		return
 	}
 	var sprite draws.Sprite

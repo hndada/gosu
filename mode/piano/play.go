@@ -42,7 +42,7 @@ type ScenePlay struct {
 	NoteLaneDrawers  []*NoteLaneDrawer
 	KeyDrawer        KeyDrawer
 	ScoreDrawer      gosu.ScoreDrawer
-	ComboDrawer      ComboDrawer
+	ComboDrawer      gosu.NumberDrawer
 	JudgmentDrawer   JudgmentDrawer
 	MeterDrawer      gosu.MeterDrawer
 }
@@ -137,7 +137,15 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	}
 	s.KeyDrawer = NewKeyDrawer(s.KeyUpSprites, s.KeyDownSprites)
 	s.ScoreDrawer = gosu.NewScoreDrawer()
-	s.ComboDrawer = NewComboDrawer(s.ComboSprites)
+	s.ComboDrawer = gosu.NumberDrawer{
+		BaseDrawer: draws.BaseDrawer{
+			MaxCountdown: gosu.TimeToTick(2000),
+		},
+		Sprites:    s.ComboSprites,
+		DigitWidth: s.ComboSprites[0].W(),
+		DigitGap:   ComboDigitGap,
+		Bounce:     true,
+	}
 	s.ComboDrawer.Sprites = s.ComboSprites
 	s.JudgmentDrawer = NewJudgmentDrawer()
 	s.MeterDrawer = gosu.NewMeterDrawer(Judgments, JudgmentColors)
