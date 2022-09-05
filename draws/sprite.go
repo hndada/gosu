@@ -1,18 +1,21 @@
 package draws
 
 import (
+	"image/color"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
 // Sprite is for storing image and translate value.
 // DrawImageOptions is not commutative. Do translate at final stage.
+// Now Sprite has ColorM.
 type Sprite struct {
-	i          *ebiten.Image
-	w, h, x, y float64
-	origin     Origin
-	filter     ebiten.Filter
-
+	i              *ebiten.Image
+	w, h, x, y     float64
+	origin         Origin
+	filter         ebiten.Filter
 	scaleW, scaleH float64
+	colorM         ebiten.ColorM
 }
 type Origin int
 
@@ -43,7 +46,10 @@ func NewSpriteFromImage(src *ebiten.Image) Sprite {
 	s.scaleH = 1
 	return s
 }
-func (s *Sprite) SetScale(scaleW, scaleH float64, filter ebiten.Filter) {
+func (s *Sprite) SetScale(scale float64) {
+	s.SetScaleXY(scale, scale, ebiten.FilterLinear)
+}
+func (s *Sprite) SetScaleXY(scaleW, scaleH float64, filter ebiten.Filter) {
 	s.w *= scaleW // / s.scaleW
 	s.h *= scaleH // / s.scaleH
 	s.scaleW *= scaleW
@@ -55,10 +61,15 @@ func (s *Sprite) SetPosition(x, y float64, origin Origin) {
 	s.y = y
 	s.origin = origin
 }
+func (s *Sprite) SetColor(clr color.Color) {
+	s.colorM.Reset()
+	s.colorM.ScaleWithColor(clr)
+}
 func (s Sprite) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
 	if op == nil {
 		op = &ebiten.DrawImageOptions{}
 	}
+	op.ColorM = s.colorM
 	op.GeoM.Scale(s.scaleW, s.scaleH)
 	x, y := s.LeftTopPosition()
 	op.Filter = s.filter
@@ -104,6 +115,14 @@ func (s Sprite) IsValid() bool            { return s.i != nil }
 func (s *Sprite) Move(tx, ty float64) {
 	s.x += tx
 	s.y += ty
+}
+func (s *Sprite) Flip(flipX, flipY bool) {
+	if flipX {
+		s.scaleW *= -1
+	}
+	if flipY {
+		s.scaleH *= -1
+	}
 }
 
 //	func (s Sprite) SubSprite(propMinX, propMinY, propMaxX, propMaxY float64) Sprite {
