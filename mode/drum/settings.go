@@ -17,7 +17,7 @@ var KeySettings = [4]input.Key{input.KeyD, input.KeyF, input.KeyJ, input.KeyK}
 // Default values are derived from osu! taiko.
 // Todo: Should NoteHeight be separated into NoteHeight, HeadHeight, TailHeight?
 var (
-	FieldDarkness float64 = 1
+	// FieldDarkness float64 = 1
 
 	FieldPosition    float64 = screenSizeY * 0.4115
 	FieldHeight      float64 = screenSizeY * 0.26

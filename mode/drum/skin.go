@@ -16,27 +16,28 @@ import (
 
 // [2] that most sprites have.
 const (
-	NormalNote = iota
-	BigNote
+	Regular = iota
+	Big
 )
 
-// Significant keyword goes ahead, just as number is written: Left
-const (
-	KeyLeftKat = iota
-	KeyLeftDon
-	KeyRightDon
-	KeyRightKat
+var (
+	ColorRed    = color.NRGBA{235, 69, 44, 255}
+	ColorBlue   = color.NRGBA{68, 141, 171, 255}
+	ColorYellow = color.NRGBA{252, 83, 6, 255}
 )
-const (
-	Ground = iota
-	Overlay1
-	Overlay2
-)
+
 const (
 	ShakeNote = iota
 	ShakeBottom
 	ShakeTop
 )
+const (
+	LeftBlue = iota
+	LeftRed
+	RightRed
+	RightBlue
+)
+
 const (
 	DancerIdle = iota
 	DancerYes
@@ -44,42 +45,33 @@ const (
 	DancerHigh
 )
 
-var DefaultSkin Skin
+// var DefaultSkin Skin
 
 // https://osu.ppy.sh/wiki/en/Skinning/osu%21taiko
-type Skin struct {
+var Skin struct {
 	FieldSprite draws.Sprite
 	HintSprite  draws.Sprite
+	BarSprite   draws.Sprite
 
 	// First [2] are for big notes.
-	JudgmentSprites    [2][3]draws.Sprite
-	RedSprites         [2]draws.Sprite
-	BlueSprites        [2]draws.Sprite
-	NoteOverlaySprites [2][2]draws.Sprite
-	HeadSprites        [2]draws.Sprite
-	TailSprites        [2]draws.Sprite
-	BodySprites        [2]draws.Sprite
-
-	RollTickSprites draws.Sprite
+	JudgmentSprites [2][3]draws.Sprite // 3 Judgments.
+	RedSprites      [2]draws.Sprite
+	NoteSprites     [2]draws.Sprite    // Tinting are applied during game play.
+	OverlaySprites  [2][2]draws.Sprite // 2 Overlays.
+	TailSprites     [2]draws.Sprite
+	BodySprites     [2]draws.Sprite
+	TickSprites     draws.Sprite
 	ShakeSprites    [3]draws.Sprite
-	RollDotSprite   draws.Sprite
-	BarSprite       draws.Sprite
 
 	KeyFieldSprite draws.Sprite
-	KeySprites     [4]draws.Sprite
-	DancerSprites  [4][]draws.Sprite
+	KeySprites     [4]draws.Sprite   // 4 Keys.
+	DancerSprites  [4][]draws.Sprite // Dancer has 4 behaviors.
 
-	ScoreSprites          [10]draws.Sprite
-	ComboSprites          [10]draws.Sprite
-	RollTickComboSprites  [10]draws.Sprite
-	ShakeCountdownSprites [10]draws.Sprite
+	ScoreSprites     [10]draws.Sprite
+	ComboSprites     [10]draws.Sprite
+	TickComboSprites [10]draws.Sprite // For rolls.
+	CountdownSprites [10]draws.Sprite // For shakes.
 }
-
-var (
-	ColorDon  = color.NRGBA{235, 69, 44, 255}
-	ColorKat  = color.NRGBA{68, 141, 171, 255}
-	ColorRoll = color.NRGBA{252, 83, 6, 255}
-)
 
 // func IsKeyImageFlipped(keyType int) bool {
 // 	return keyType == KeyLeftKat || keyType == KeyRightDon
@@ -87,20 +79,16 @@ var (
 
 // Todo: embed default skins to code for preventing panic when files are missing
 func LoadSkin() {
-	var skin Skin
+	{
+		s := draws.NewSprite("skin/drum/field.png")
+		ratio := FieldHeight / s.H()
+		s.SetScale(ratio, ratio, ebiten.FilterLinear)
+		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
+		Skin.FieldSprite = s
+	}
 	skin.ScoreSprites = make([]draws.Sprite, 10)
 	skin.ComboSprites = make([]draws.Sprite, 10)
 	skin.TickComboSprites = make([]draws.Sprite, 10)
-	for i := 0; i < 10; i++ {
-		s := draws.Sprite{
-			I:      draws.NewImage(fmt.Sprintf("skin/score/%d.png", i)),
-			Filter: ebiten.FilterLinear,
-		}
-		s.ApplyScale(ScoreScale)
-		// x is not fixed.
-		// y is always 0.
-		skin.ScoreSprites[i] = s
-	}
 	for i := 0; i < 10; i++ {
 		s := draws.Sprite{
 			I:      draws.NewImage(fmt.Sprintf("skin/combo/%d.png", i)),
