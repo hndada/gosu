@@ -68,10 +68,11 @@ func (c Chart) Difficulties() []float64 {
 func (n Note) Weight() float64 {
 	switch n.Type {
 	case Normal:
-		if n.Big {
-			return 1.1
-		} else {
+		switch n.Size {
+		case Regular:
 			return 1.0
+		case Big:
+			return 1.1
 		}
 	default:
 		return 0

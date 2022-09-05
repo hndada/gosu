@@ -61,7 +61,7 @@ func NewChart(cpath string) (c *Chart, err error) {
 			tp = tp.Next
 		}
 		n.Speed = tp.Speed
-		n.Position = float64(n.Time) * n.Speed
+		// n.Position = float64(n.Time) * n.Speed
 	}
 	tp = c.TransPoints[0]
 	for _, b := range c.Bars {
@@ -69,7 +69,7 @@ func NewChart(cpath string) (c *Chart, err error) {
 			tp = tp.Next
 		}
 		b.Speed = tp.Speed
-		b.Position = float64(b.Time) * b.Speed
+		// b.Position = float64(b.Time) * b.Speed
 	}
 	return
 }

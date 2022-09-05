@@ -14,18 +14,21 @@ const (
 	Head   // Roll head.
 	Tail   // Roll tail.
 	Shake
-
-	RollBody
-	ShakeBody
 )
 
+type Tick struct {
+	Time   int64
+	Speed  float64
+	Marked bool
+}
 type Note struct {
 	gosu.BaseNote
 	Type         int
 	Color        int
-	Big          bool
+	Size         int
 	Speed        float64 // Each note has own speed.
 	TickDuration float64 // For calculating Roll tick density.
+	Ticks        []*Tick // For shake note, it tells when to hit at auto mods.
 	Next         *Note
 	Prev         *Note // For accessing to Head from Tail.
 }
@@ -35,11 +38,10 @@ const (
 	Blue        // Kat
 	// Yellow   // Roll
 )
-
-// const (
-// 	Regular = iota
-// 	Big
-// )
+const (
+	Regular = iota
+	Big
+)
 
 // Length is for calculating Durations of Roll and its tick.
 // NewNote temporarily set length to TickDuration.
@@ -64,7 +66,10 @@ func NewNote(f any) (ns []*Note) {
 		} else {
 			n.Color = Blue
 		}
-		n.Big = osu.IsBig(f)
+		if osu.IsBig(f) {
+			n.Size = Big
+		}
+		// n.Big = osu.IsBig(f)
 		if n.Type == Head {
 			length := float64(f.SliderParams.Slides) * f.SliderParams.Length
 			n.TickDuration = length // Temporarily set to TickDuration.

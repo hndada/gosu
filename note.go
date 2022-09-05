@@ -11,9 +11,7 @@ type BaseNote struct {
 	Time2        int64  // Time of opposite note. Time2 is Time when no opposite note.
 	SampleName   string // aka SampleFilename.
 	SampleVolume float64
-
-	Position float64 // Scaled x or y value.
-	Marked   bool
+	Marked       bool
 }
 
 func NewBaseNote(f any) (n BaseNote) {
