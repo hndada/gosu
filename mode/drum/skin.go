@@ -38,10 +38,10 @@ const (
 	DancerHigh
 )
 
-// var DefaultSkin Skin
+var DefaultSkin Skin
 
 // https://osu.ppy.sh/wiki/en/Skinning/osu%21taiko
-var Skin struct {
+type Skin struct {
 	FieldSprite draws.Sprite
 	HintSprite  draws.Sprite
 	BarSprite   draws.Sprite
@@ -70,25 +70,26 @@ var Skin struct {
 
 // Todo: embed default skins to code for preventing panic when files are missing
 func LoadSkin() {
+	var skin Skin
 	var noteImage = draws.NewImage("skin/drum/note/note.png")
 	{
 		s := draws.NewSprite("skin/drum/field.png")
 		s.SetScale(FieldHeight / s.H())
 		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
-		Skin.FieldSprite = s
+		skin.FieldSprite = s
 	}
 	{
 		s := draws.NewSpriteFromImage(noteImage)
 		s.SetScale(regularNoteHeight / s.H())
 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
-		Skin.HintSprite = s
+		skin.HintSprite = s
 	}
 	{
 		src := ebiten.NewImage(1, int(FieldInnerHeight))
 		src.Fill(color.NRGBA{255, 255, 255, 255}) // White
 		s := draws.NewSpriteFromImage(src)
 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
-		Skin.BarSprite = s
+		skin.BarSprite = s
 	}
 	var (
 		rollEndImage = draws.NewImage("skin/drum/note/roll/end.png")
@@ -109,33 +110,33 @@ func LoadSkin() {
 			s := draws.NewSprite(path)
 			s.SetScale(JudgmentScale)
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
-			Skin.JudgmentSprites[i][j] = s
+			skin.JudgmentSprites[i][j] = s
 		}
 		for j, clr := range []color.NRGBA{ColorRed, ColorBlue} {
 			s := draws.NewSpriteFromImage(noteImage)
 			s.SetScale(noteHeight / s.H())
 			s.SetColor(clr)
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
-			Skin.NoteSprites[i][j] = s
+			skin.NoteSprites[i][j] = s
 		}
 		// {
 		// 	s := draws.NewSpriteFromImage(noteImage)
 		// 	s.SetScale(noteHeight / s.H())
 		// 	s.SetColor(ColorRed)
 		// 	s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
-		// 	Skin.RedSprites[i] = s
+		// 	skin.RedSprites[i] = s
 		// }
 		// {
-		// 	s := Skin.RedSprites[i]
+		// 	s := skin.RedSprites[i]
 		// 	s.SetColor(ColorBlue)
-		// 	Skin.BlueSprites[i] = s
+		// 	skin.BlueSprites[i] = s
 		// }
 		{
 			s := draws.NewSpriteFromImage(rollEndImage)
 			s.SetScale(noteHeight / s.H())
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginLeftCenter)
 			s.SetColor(ColorYellow)
-			Skin.TailSprites[i] = s
+			skin.TailSprites[i] = s
 		}
 		{
 			s := draws.NewSpriteFromImage(rollEndImage)
@@ -143,7 +144,7 @@ func LoadSkin() {
 			s.SetScaleXY(-ratio, ratio, ebiten.FilterLinear) // Goes flipped.
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginRightCenter)
 			s.SetColor(ColorYellow)
-			Skin.HeadSprites[i] = s
+			skin.HeadSprites[i] = s
 		}
 		{
 			var path string
@@ -156,7 +157,7 @@ func LoadSkin() {
 				s := draws.NewSprite(path)
 				s.SetScale(noteHeight / s.H())
 				s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
-				Skin.OverlaySprites[i][j] = s
+				skin.OverlaySprites[i][j] = s
 			}
 		}
 		{
@@ -164,7 +165,7 @@ func LoadSkin() {
 			s.SetScale(noteHeight / s.H())
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginLeftCenter)
 			s.SetColor(ColorYellow)
-			Skin.BodySprites[i] = s
+			skin.BodySprites[i] = s
 		}
 	}
 	{
@@ -172,7 +173,7 @@ func LoadSkin() {
 		s.SetScale(DotScale)
 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
 		s.SetColor(ColorYellow)
-		Skin.DotSprite = s
+		skin.DotSprite = s
 	}
 	for i, name := range []string{"note", "spin", "limit"} {
 		path := fmt.Sprintf("skin/drum/note/shake/%s.png", name)
@@ -184,7 +185,7 @@ func LoadSkin() {
 			s.SetScale(ShakeScale)
 			s.SetPosition(ShakePosX, ShakePosY, draws.OriginCenter)
 		}
-		Skin.ShakeSprites[i] = s
+		skin.ShakeSprites[i] = s
 	}
 
 	// Position of combo is dependent on widths of key sprite.
@@ -193,43 +194,43 @@ func LoadSkin() {
 		s := draws.NewSprite("skin/drum/key/in.png")
 		s.SetScale(KeyScale)
 		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
-		Skin.KeySprites[LeftRed] = s
+		skin.KeySprites[LeftRed] = s
 		keyCenter = s.W()
 	}
 	{
 		s := draws.NewSprite("skin/drum/key/out.png")
 		s.SetScale(KeyScale)
 		s.SetPosition(keyCenter, FieldPosition, draws.OriginLeftCenter)
-		Skin.KeySprites[RightBlue] = s
+		skin.KeySprites[RightBlue] = s
 	}
 	{
-		s := Skin.KeySprites[RightBlue]
+		s := skin.KeySprites[RightBlue]
 		s.Flip(true, false)
 		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
-		Skin.KeySprites[LeftBlue] = s
+		skin.KeySprites[LeftBlue] = s
 	}
 	{
-		s := Skin.KeySprites[LeftRed]
+		s := skin.KeySprites[LeftRed]
 		s.Flip(true, false)
 		s.SetPosition(keyCenter, FieldPosition, draws.OriginLeftCenter)
-		Skin.KeySprites[RightRed] = s
+		skin.KeySprites[RightRed] = s
 	}
 	for i, name := range []string{"idle", "yes", "no", "high"} {
 		fs, err := os.ReadDir(fmt.Sprintf("skin/drum/dancer/%s", name))
 		if err != nil {
 			continue
 		}
-		Skin.DancerSprites[i] = make([]draws.Sprite, len(fs))
+		skin.DancerSprites[i] = make([]draws.Sprite, len(fs))
 		for j := range fs {
 			path := fmt.Sprintf("skin/drum/dancer/%s/%d.png", name, j)
 			s := draws.NewSprite(path)
 			s.SetScale(DancerScale)
 			s.SetPosition(DancerPosX, DancerPosY, draws.OriginCenter)
-			Skin.DancerSprites[i][j] = s
+			skin.DancerSprites[i][j] = s
 		}
 	}
 
-	Skin.ScoreSprites = gosu.ScoreSprites
+	skin.ScoreSprites = gosu.ScoreSprites
 	var comboImages [10]*ebiten.Image
 	for i := 0; i < 10; i++ {
 		comboImages[i] = draws.NewImage(fmt.Sprintf("skin/combo/%d.png", i))
@@ -238,20 +239,20 @@ func LoadSkin() {
 		s := draws.NewSpriteFromImage(comboImages[i])
 		s.SetScale(ComboScale)
 		s.SetPosition(keyCenter, FieldPosition, draws.OriginCenter)
-		Skin.ComboSprites[i] = s
+		skin.ComboSprites[i] = s
 	}
 	for i := 0; i < 10; i++ {
 		s := draws.NewSpriteFromImage(comboImages[i])
 		s.SetScale(DotCountScale)
 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
-		Skin.DotCountSprites[i] = s
+		skin.DotCountSprites[i] = s
 	}
 	for i := 0; i < 10; i++ {
 		s := draws.NewSpriteFromImage(comboImages[i])
 		s.SetScale(ShakeCountScale)
 		pos := ShakePosY + s.H()*ShakeCountPosition
 		s.SetPosition(ShakePosX, pos, draws.OriginCenterTop)
-		Skin.CountdownSprites[i] = s
+		skin.CountdownSprites[i] = s
 	}
 }
 
