@@ -16,21 +16,20 @@ const (
 	Shake
 )
 
-type Dot struct {
-	Time   int64
-	Speed  float64
-	Marked bool
-}
 type Note struct {
-	gosu.BaseNote
-	Type        int
-	Color       int
-	Size        int
-	Speed       float64 // Each note has own speed.
-	DotDuration float64 // For calculating Roll tick density.
-	Dots        []*Dot  // For shake note, it tells when to hit at auto mods.
-	Next        *Note
-	Prev        *Note // For accessing to Head from Tail.
+	Floater
+	Duration float64
+	// DotDuration float64 // For calculating Roll tick density.
+	Type  int
+	Color int
+	Size  int
+	Dots  []*Dot // For shake note, it tells when to hit at auto mods.
+	gosu.Sample
+	Marked bool
+	Next   *Note
+	Prev   *Note
+
+	length float64 // For compatibility with osu!.
 }
 
 const (
@@ -49,15 +48,16 @@ func NewNote(f any) (ns []*Note) {
 	switch f := f.(type) {
 	case osu.HitObject:
 		n := Note{
-			BaseNote: gosu.NewBaseNote(f),
+			Sample: gosu.NewSample(f),
 		}
+		n.Time = int64(f.Time)
 		switch {
 		case f.NoteType&osu.HitTypeSlider != 0:
 			n.Type = Head
-			// Roll's Time2 should not rely on f.EndTime.
+			// Roll's duration should not rely on f.EndTime.
 		case f.NoteType&osu.HitTypeSpinner != 0:
 			n.Type = Shake
-			n.Time2 = int64(f.EndTime)
+			n.Duration = int64(f.EndTime)
 		default:
 			n.Type = Normal
 		}
@@ -68,17 +68,17 @@ func NewNote(f any) (ns []*Note) {
 		}
 		if osu.IsBig(f) {
 			n.Size = Big
+		} else {
+			n.Size = Regular
 		}
-		// n.Big = osu.IsBig(f)
 		if n.Type == Head {
-			length := float64(f.SliderParams.Slides) * f.SliderParams.Length
-			n.DotDuration = length // Temporarily set to DotDuration.
-
-			n2 := n
-			n.Type = Tail
-			// n2.Time = n.Time2 // It will be set later.
-			n2.Time2 = n.Time
-			n2.SampleName = "" // Tail has no sample sound.
+			n.length = f.SliderLength()
+			n2 := Note{
+				// Time has not yet determined.
+				Type:  Tail,
+				Color: n.Color,
+				Size:  n.Size,
+			}
 			ns = append(ns, &n, &n2)
 		} else {
 			ns = append(ns, &n)
@@ -133,22 +133,30 @@ func NewNotes(f any, transPoints []*gosu.TransPoint) (ns []*Note) {
 			for tp.Next != nil && n.Time >= tp.Next.Time {
 				tp = tp.Next
 			}
-			length := n.DotDuration
 			speed := (tempMainBPM / 60000) * tp.Speed * (f.SliderMultiplier * 100)
-			duration := length / speed
-			n.Time2 = n.Time + int64(duration)
-			n.DotDuration = duration / ScaledBPM(tp.BPM)
+			n.Duration = n.length / speed
+			n.DotDuration = n.Duration / ScaledBPM(tp.BPM)
 			switch n.Type {
 			case Head:
 				n.DotDuration /= 4
-				n.Next.Time = n.Time2
-				n.Next.DotDuration = n.DotDuration
 			case Shake:
 				n.DotDuration /= 3
 			}
 		}
 	}
 	return
+}
+
+type Dot struct {
+	Time   int64
+	Speed  float64
+	Marked bool
+	Next   *Dot
+	Prev   *Dot
+}
+
+func (d Dot) Position(time int64) float64 {
+	return d.Speed * float64(d.Time-time)
 }
 
 // It is proved that all BPMs are set into [MinScaledBPM, MaxScaledBPM) by v*2 or v/2
@@ -170,4 +178,10 @@ func ScaledBPM(bpm float64) float64 {
 		}
 	}
 	return bpm
+}
+func (n *Note) SetDots(tp *gosu.TransPoint) {
+	if n.Type != Head {
+		return
+	}
+
 }
