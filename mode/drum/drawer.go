@@ -49,11 +49,9 @@ var (
 
 // Let's draw as same as possible of osu! does.
 type BodyDrawer struct {
-	BodySprites [2]draws.Sprite
-	DotSprite   draws.Sprite
-	Time        int64
-	Notes       []*Note
-	CurrentDot  *Dot
+	Sprites [2]draws.Sprite
+	Time    int64
+	Notes   []*Note
 }
 
 func (d *BodyDrawer) Update(time int64) {
@@ -72,31 +70,52 @@ func (d BodyDrawer) Draw(screen *ebiten.Image) {
 		if head.Position(d.Time) > maxPosition+bigNoteHeight {
 			continue
 		}
-		bodySprite := d.BodySprites[tail.Size]
+		body := d.Sprites[tail.Size]
 		length := tail.Position(d.Time) - head.Position(d.Time)
-		ratio := length / bodySprite.W()
-		bodySprite.SetScaleXY(ratio, 1, ebiten.FilterLinear)
-		bodySprite.Move(head.Position(d.Time), 0)
+		ratio := length / body.W()
+		body.SetScaleXY(ratio, 1, ebiten.FilterLinear)
+		body.Move(head.Position(d.Time), 0)
 
 		// op := &ebiten.DrawImageOptions{}
 		// if tail.Marked {
 		// 	op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		// }
-		// bodySprite.Draw(screen, op)
-		bodySprite.Draw(screen, nil)
+		// body.Draw(screen, op)
+		body.Draw(screen, nil)
+	}
+}
 
-		for _, dot := range head.Dots {
-			dotSprite := d.DotSprite
-			if dot.Marked {
-				dotSprite.SetColor(DotColorHit)
-			} else if d.CurrentDot.Time > dot.Time {
-				dotSprite.SetColor(DotColorMiss)
-			} else {
-				dotSprite.SetColor(DotColorReady)
-			}
-			dotSprite.Move(dot.Position(d.Time), 0)
-			dotSprite.Draw(screen, nil)
+type DotDrawer struct {
+	Sprite draws.Sprite
+	Time   int64
+	Dots   []*Dot
+	Staged *Dot
+}
+
+func (d *DotDrawer) Update(time int64, staged *Dot) {
+	d.Time = time
+	d.Staged = staged
+}
+func (d DotDrawer) Draw(screen *ebiten.Image) {
+	for _, dot := range d.Dots {
+		if dot.Time-Showtime > d.Time {
+			continue
 		}
+		pos := dot.Position(d.Time)
+		if pos > maxPosition+100 ||
+			pos < minPosition-100 {
+			continue
+		}
+		sprite := d.Sprite
+		if dot.Marked {
+			sprite.SetColor(DotColorHit)
+		} else if d.Staged.Time > dot.Time {
+			sprite.SetColor(DotColorMiss)
+		} else {
+			sprite.SetColor(DotColorReady)
+		}
+		sprite.Move(dot.Position(d.Time), 0)
+		sprite.Draw(screen, nil)
 	}
 }
 

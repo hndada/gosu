@@ -82,7 +82,8 @@ func (c Chart) Duration() int64 {
 	if len(c.Notes) == 0 {
 		return 0
 	}
-	return c.Notes[len(c.Notes)-1].Time
+	last := c.Notes[len(c.Notes)-1]
+	return last.Time + last.Duration
 }
 func (c Chart) NoteCounts() (vs []int) {
 	vs = make([]int, 2)

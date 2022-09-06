@@ -1,9 +1,8 @@
 package piano
 
-import "github.com/hndada/gosu"
-
 // Todo: Variate factors based on difficulty-skewed charts
 var (
+	DifficultyDuration  int64   = 800
 	FlowScoreFactor     float64 = 0.5 // a
 	AccScoreFactor      float64 = 5   // b
 	KoolRateScoreFactor float64 = 2   // c
@@ -15,15 +14,14 @@ func (c Chart) Difficulties() []float64 {
 	if len(c.Notes) == 0 {
 		return make([]float64, 0)
 	}
-	endTime := c.Notes[len(c.Notes)-1].Time
-	ds := make([]float64, 0, endTime/gosu.SliceDuration+1)
+	ds := make([]float64, 0, 1+c.Duration()/DifficultyDuration)
 	t := c.Notes[0].Time
 	var d float64
 	for _, n := range c.Notes {
-		for n.Time > t+gosu.SliceDuration {
+		for n.Time > t+DifficultyDuration {
 			ds = append(ds, d)
 			d = 0
-			t += gosu.SliceDuration
+			t += DifficultyDuration
 		}
 		switch n.Type {
 		case Tail:

@@ -6,11 +6,11 @@ import (
 )
 
 // Todo: find the best SliceDuration value
+// Todo: separate SliceDuration per mode.
 const (
-	SliceDuration = 800
-	DecayFactor   = 0.95
-	LevelPower    = 1.15
-	LevelScale    = 0.02
+	DecayFactor = 0.95
+	LevelPower  = 1.15
+	LevelScale  = 0.02
 )
 
 // No need to define interface{} called ChartAnalyzer:
