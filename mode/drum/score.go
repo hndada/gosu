@@ -16,11 +16,6 @@ var (
 
 var Judgments = []gosu.Judgment{Cool, Good, Miss}
 
-// var Judgments = [2][3]gosu.Judgment{
-// 	{Cool, Good, Miss},
-// 	{Cool, Good, Miss},
-// }
-
 var JudgmentColors = []color.NRGBA{
 	gosu.ColorCool,
 	gosu.ColorGood,

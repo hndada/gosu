@@ -52,12 +52,13 @@ var (
 	KeyScale      float64 = 1
 	DancerScale   float64 = 1
 	ComboScale    float64 = 0.75
-	ComboGap      float64 = screenSizeX * -0.001
+	ComboDigitGap float64 = screenSizeX * -0.001
 	// Used at roll tick combo.
-	DotCountScale    float64 = 0.3
-	DotCountDigitGap float64 = ComboGap * 0.4
+	DotCountScale    float64 = ComboScale * 0.4
+	DotCountDigitGap float64 = ComboDigitGap * 0.4
 	// Used at shake countdown.
-	ShakeCountScale float64 = 0.75
+	ShakeCountScale    float64 = ComboScale * 1
+	ShakeCountDigitGap float64 = ComboDigitGap * 1
 )
 
 func SwitchDirection() {

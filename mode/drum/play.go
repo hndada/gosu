@@ -10,11 +10,11 @@ import (
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
-	"github.com/hndada/gosu/input"
 )
 
 type ScenePlay struct {
 	gosu.Timer
+	time  int64 // Just a cache.
 	Chart *Chart
 
 	gosu.MusicPlayer
@@ -31,6 +31,8 @@ type ScenePlay struct {
 	StagedShake *Note
 	Flow        float64
 	Combo       int
+	DotCount    int
+	ShakeCount  int
 	// NoteWeights is a sum of weight of marked notes.
 	// This is also max value of each score sum can get at the time.
 	NoteWeights float64
@@ -38,12 +40,14 @@ type ScenePlay struct {
 	Skin             // The skin may be applied some custom settings: on/off some sprites
 	BackgroundDrawer gosu.BackgroundDrawer
 	StageDrawer      StageDrawer
-	BarDrawer        BarDrawer
-	BodyDrawer       BodyDrawer
-	DotDrawer        DotDrawer
-	NoteDrawer       NoteDarwer
-	KeyDrawer        KeyDrawer
-	ShakeDrawer      ShakeDrawer
+
+	BarDrawer   BarDrawer
+	ShakeDrawer ShakeDrawer
+	BodyDrawer  BodyDrawer
+	DotDrawer   DotDrawer
+	NoteDrawer  NoteDarwer
+	KeyDrawer   KeyDrawer
+
 	ScoreDrawer      gosu.ScoreDrawer
 	ComboDrawer      gosu.NumberDrawer
 	DotCountDrawer   gosu.NumberDrawer
@@ -69,6 +73,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	} else {
 		s.SetTicks(-1800, c.Duration())
 	}
+	s.time = s.Time()
 	if path, ok := c.MusicPath(cpath); ok {
 		s.MusicPlayer, err = gosu.NewMusicPlayer(gosu.MusicVolumeHandler, path)
 		if err != nil {
@@ -83,7 +88,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	}
 	s.KeyLogger = gosu.NewKeyLogger(KeySettings[:])
 	if rf != nil {
-		s.KeyLogger.FetchPressed = gosu.NewReplayListener(rf, 4, s.Time())
+		s.KeyLogger.FetchPressed = gosu.NewReplayListener(rf, 4, s.time)
 	}
 
 	s.TransPoint = c.TransPoints[0]
@@ -100,14 +105,11 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	for _, n := range c.Notes {
 		s.MaxNoteWeights += n.Weight()
 	}
-	s.Staged = make([]*Note, keyCount)
-	for k := range s.Staged {
-		for _, n := range c.Notes {
-			if k == n.Key {
-				s.Staged[n.Key] = n
-				break
-			}
-		}
+	if len(s.Chart.Notes) > 0 {
+		s.StagedNote = s.Chart.Notes[0]
+	}
+	if len(s.Chart.Dots) > 0 {
+		s.StagedDot = s.Chart.Dots[0]
 	}
 	s.Flow = 1
 
@@ -123,25 +125,40 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 		Field: s.FieldSprite,
 		Hint:  s.HintSprite,
 	}
-	s.NoteLaneDrawers = make([]*NoteLaneDrawer, keyCount)
-	for k := range s.NoteLaneDrawers {
-		s.NoteLaneDrawers[k] = &NoteLaneDrawer{
-			Sprites: [4]draws.Sprite{
-				s.NoteSprites[k], s.HeadSprites[k],
-				s.TailSprites[k], s.BodySprites[k],
-			},
-			Cursor:   s.Cursor,
-			Farthest: s.Staged[k],
-			Nearest:  s.Staged[k],
-		}
-	}
 	s.BarDrawer = BarDrawer{
-		Sprite:   s.BarSprite,
-		Cursor:   s.Cursor,
-		Farthest: s.Chart.Bars[0],
-		Nearest:  s.Chart.Bars[0],
+		Sprite: s.BarSprite,
+		Time:   s.time,
+		Bars:   s.Chart.Bars,
 	}
-	s.KeyDrawer = NewKeyDrawer(s.KeyUpSprites, s.KeyDownSprites)
+	// ShakeDrawer
+	s.BodyDrawer = BodyDrawer{
+		Sprites: s.BodySprites,
+		Time:    s.time,
+		Notes:   s.Chart.Notes,
+	}
+	s.DotDrawer = DotDrawer{
+		Sprite: s.DotSprite,
+		Time:   s.time,
+		Dots:   s.Chart.Dots,
+		Staged: s.StagedDot,
+	}
+	s.NoteDrawer = NoteDarwer{
+		NoteSprites:     s.NoteSprites,
+		HeadSprites:     s.HeadSprites,
+		TailSprites:     s.TailSprites,
+		OverlaySprites:  s.OverlaySprites,
+		ShakeNoteSprite: s.ShakeSprites[ShakeNote],
+		Overlay:         0,
+		Time:            s.time,
+		Notes:           s.Chart.Notes,
+	}
+	// Todo: make KeyField sprite
+	s.KeyDrawer = KeyDrawer{
+		MaxCountdown: gosu.TimeToTick(30),
+		Field:        s.KeyFieldSprite,
+		Keys:         s.KeySprites,
+	}
+
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer = gosu.NumberDrawer{
 		BaseDrawer: draws.BaseDrawer{
@@ -152,8 +169,24 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 		DigitGap:   ComboDigitGap,
 		Bounce:     true,
 	}
-	s.ComboDrawer.Sprites = s.ComboSprites
-	s.JudgmentDrawer = NewJudgmentDrawer()
+	s.DotCountDrawer = gosu.NumberDrawer{
+		Sprites:    s.DotCountSprites,
+		DigitWidth: s.DotCountSprites[0].W(),
+		DigitGap:   DotCountDigitGap,
+		Bounce:     false,
+	}
+	s.ShakeCountDrawer = gosu.NumberDrawer{
+		Sprites:    s.ShakeCountSprites,
+		DigitWidth: s.ShakeCountSprites[0].W(),
+		DigitGap:   ShakeCountDigitGap,
+		Bounce:     false,
+	}
+	s.JudgmentDrawer = JudgmentDrawer{
+		BaseDrawer: draws.BaseDrawer{
+			MaxCountdown: gosu.TimeToTick(600),
+		},
+		Sprites: s.JudgmentSprites,
+	}
 	s.MeterDrawer = gosu.NewMeterDrawer(Judgments, JudgmentColors)
 
 	title := fmt.Sprintf("gosu - %s - [%s]", c.MusicName, c.ChartName)
@@ -162,10 +195,12 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	return s, nil
 }
 
+// Todo: flush Head and Tail immediately
 // Todo: apply other values of TransPoint (Volume has finished so far)
 // Todo: keep playing music when making SceneResult
 func (s *ScenePlay) Update() any {
 	defer s.Ticker()
+	s.time = s.Time()
 	if s.IsDone() {
 		debug.SetGCPercent(100)
 		s.MusicPlayer.Close()
@@ -180,52 +215,56 @@ func (s *ScenePlay) Update() any {
 
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
-	var worst gosu.Judgment
-	for k, n := range s.Staged {
-		if n == nil {
-			continue
-		}
-		if n.Type != Tail && s.KeyAction(k) == input.Hit {
-			if name := n.Sample.Name; name != "" {
-				vol := n.Sample.Volume
-				if vol == 0 {
-					vol = s.TransPoint.Volume
-				}
-				// Todo: apply effect volume change
-				s.Effects.PlayWithVolume(name, vol)
-			}
-		}
-		td := n.Time - s.Time() // Time difference. A negative value infers late hit
-		if n.Marked {
-			if n.Type != Tail {
-				return fmt.Errorf("non-Tail note has not flushed")
-			}
-			if td < Miss.Window { // Keep Tail staged until near ends.
-				s.Staged[n.Key] = n.Next
-			}
-			continue
-		}
-		if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
-			s.MarkNote(n, j)
-			if worst.Window < j.Window {
-				worst = j
-			}
-			var colorType int = 0
-			if n.Type == Tail {
-				colorType = 1
-			}
-			s.MeterDrawer.AddMark(int(td), colorType)
-		}
-	}
 
-	s.BarDrawer.Update(s.Cursor)
-	for _, d := range s.NoteLaneDrawers {
-		d.Update(s.Cursor)
-	}
+	var judgment gosu.Judgment
+	var big bool
+	// for k, n := range s.Staged {
+	// 	if n == nil {
+	// 		continue
+	// 	}
+	// 	if n.Type != Tail && s.KeyAction(k) == input.Hit {
+	// 		if name := n.Sample.Name; name != "" {
+	// 			vol := n.Sample.Volume
+	// 			if vol == 0 {
+	// 				vol = s.TransPoint.Volume
+	// 			}
+	// 			// Todo: apply effect volume change
+	// 			s.Effects.PlayWithVolume(name, vol)
+	// 		}
+	// 	}
+	// 	td := n.Time - s.time // Time difference. A negative value infers late hit
+	// 	if n.Marked {
+	// 		if n.Type != Tail {
+	// 			return fmt.Errorf("non-Tail note has not flushed")
+	// 		}
+	// 		if td < Miss.Window { // Keep Tail staged until near ends.
+	// 			s.Staged[n.Key] = n.Next
+	// 		}
+	// 		continue
+	// 	}
+	// 	if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
+	// 		s.MarkNote(n, j)
+	// 		judgment = j
+	// 		var colorType int = 0
+	// 		if n.Type == Tail {
+	// 			colorType = 1
+	// 		}
+	// 		s.MeterDrawer.AddMark(int(td), colorType)
+	// 	}
+	// }
+
+	s.BarDrawer.Update(s.time)
+	// s.ShakeDrawer.Update()
+	s.BodyDrawer.Update(s.time)
+	s.DotDrawer.Update(s.time, s.StagedDot)
+	s.NoteDrawer.Update(s.time)
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
-	s.ScoreDrawer.Update(s.Score())
+
+	// s.ScoreDrawer.Update(s.Score())
 	s.ComboDrawer.Update(s.Combo)
-	s.JudgmentDrawer.Update(worst)
+	s.DotCountDrawer.Update(s.DotCount)
+	s.ShakeCountDrawer.Update(s.ShakeCount)
+	s.JudgmentDrawer.Update(judgment, big)
 	s.MeterDrawer.Update()
 
 	// Changed speed should be applied after positions are calculated.
@@ -238,15 +277,21 @@ func (s *ScenePlay) Update() any {
 func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
 	s.StageDrawer.Draw(screen)
+
 	s.BarDrawer.Draw(screen)
-	for _, d := range s.NoteLaneDrawers {
-		d.Draw(screen)
-	}
+	// s.ShakeDrawer.Draw(screen)
+	s.BodyDrawer.Draw(screen)
+	s.DotDrawer.Draw(screen)
+	s.NoteDrawer.Draw(screen)
 	s.KeyDrawer.Draw(screen)
+
 	s.ScoreDrawer.Draw(screen)
 	s.ComboDrawer.Draw(screen)
+	s.DotCountDrawer.Draw(screen)
+	s.ShakeCountDrawer.Draw(screen)
 	s.JudgmentDrawer.Draw(screen)
 	s.MeterDrawer.Draw(screen)
+
 	s.DebugPrint(screen)
 }
 
@@ -260,16 +305,36 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
-			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
+			// "Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
 			"Speed (Press 8/9): %.0f | %.0f\n(Exposure time: %.fms)\n\n"+
 			// "Music volume (Press 1/2): %.0f%%\nEffect volume (Press 3/4): %.0f%%\n\n"+
 			"Vsync: %v\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Time())/1000, float64(s.Chart.Duration())/1000,
-		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
+		// s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
 		fr*100, ar*100, rr*100, s.JudgmentCounts,
 		s.Speed*100, *s.SpeedHandler.Target*100, ExposureTime(s.CurrentSpeed()),
 		// gosu.MusicVolume*100, gosu.EffectVolume*100,
 		gosu.VsyncSwitch))
+}
+
+// Farther note has larger position. Tail's Position is always larger than Head's.
+// Need to re-calculate positions when Speed has changed.
+func (s *ScenePlay) SetSpeed() {
+	old := s.Speed
+	new := *s.SpeedHandler.Target
+	for _, tp := range s.Chart.TransPoints {
+		tp.Speed *= new / old
+	}
+	for _, n := range s.Chart.Notes {
+		n.Speed *= new / old
+	}
+	for _, b := range s.Chart.Bars {
+		b.Speed *= new / old
+	}
+	for _, d := range s.Chart.Dots {
+		d.Speed *= new / old
+	}
+	s.Speed = new
 }
 
 // 1 pixel is 1 millisecond.
