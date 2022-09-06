@@ -3,10 +3,9 @@ package drum
 import "github.com/hndada/gosu"
 
 type Bar struct {
-	Time  int64 // For easier debugging.
-	Speed float64
-	Next  *Bar
-	Prev  *Bar
+	Floater
+	Next *Bar
+	Prev *Bar
 }
 
 func NewBars(transPoints []*gosu.TransPoint, duration int64) (bs []*Bar) {
@@ -19,7 +18,11 @@ func NewBars(transPoints []*gosu.TransPoint, duration int64) (bs []*Bar) {
 	}
 	step = transPoints[0].BeatDuration()
 	for t := start; t >= end; t -= step {
-		b := Bar{Time: int64(t)}
+		b := Bar{
+			Floater: Floater{
+				Time: int64(t),
+			},
+		}
 		bs = append([]*Bar{&b}, bs...)
 	}
 
@@ -40,7 +43,11 @@ func NewBars(transPoints []*gosu.TransPoint, duration int64) (bs []*Bar) {
 		}
 		step = tp.BeatDuration()
 		for t := start; t < end; t += step {
-			b := Bar{Time: int64(t)}
+			b := Bar{
+				Floater: Floater{
+					Time: int64(t),
+				},
+			}
 			bs = append(bs, &b)
 		}
 	}

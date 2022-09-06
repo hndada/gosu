@@ -13,6 +13,7 @@ import (
 
 // Todo: reverse notes and bars.
 // Todo: make 3 kinds of note can be stages at once
+// Todo: actual auto replay generator for gimmick charts
 type ScenePlay struct {
 	gosu.BaseScenePlay
 

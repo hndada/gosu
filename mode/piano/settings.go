@@ -51,7 +51,8 @@ var (
 	HitPosition float64 = screenSizeY * 0.90 // The bottom y-value of Hint,  not a middle or top.
 	maxPosition float64 = HitPosition
 	minPosition float64 = maxPosition - screenSizeY
-	posMargin   float64 = 100 // It should be larger than MaxSize/2 of all note sprites' width or height.
+	// Todo: just use some arbitrary, but big enough value instead of precise value at posMargin
+	posMargin float64 = 100 // It should be larger than MaxSize/2 of all note sprites' width or height.
 
 	NoteHeigth float64 = screenSizeY * 0.05 // Applies to all notes
 	bodyLoss   float64 = NoteHeigth         // Head/2 + Tail/2.

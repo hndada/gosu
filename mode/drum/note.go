@@ -15,23 +15,6 @@ const (
 	Tail   // Roll tail.
 	Shake
 )
-
-type Note struct {
-	Floater
-	Duration float64
-	// DotDuration float64 // For calculating Roll tick density.
-	Type  int
-	Color int
-	Size  int
-	Dots  []*Dot // For shake note, it tells when to hit at auto mods.
-	gosu.Sample
-	Marked bool
-	Next   *Note
-	Prev   *Note
-
-	length float64 // For compatibility with osu!.
-}
-
 const (
 	Red  = iota // Don
 	Blue        // Kat
@@ -41,6 +24,24 @@ const (
 	Regular = iota
 	Big
 )
+
+// Todo: make Dots tell when to hit shake tick at auto mods?
+type Note struct {
+	Floater
+	Duration int64
+	// DotDuration float64 // For calculating Roll tick density.
+	Type  int
+	Color int
+	Size  int
+	// Dots  []*Dot
+	Tick int // The number of ticks left to hit in Roll or Shake.
+
+	gosu.Sample
+	Marked bool
+	Next   *Note
+	Prev   *Note
+	length float64 // For compatibility with osu!.
+}
 
 // Length is for calculating Durations of Roll and its tick.
 // NewNote temporarily set length to DotDuration.
@@ -57,7 +58,7 @@ func NewNote(f any) (ns []*Note) {
 			// Roll's duration should not rely on f.EndTime.
 		case f.NoteType&osu.HitTypeSpinner != 0:
 			n.Type = Shake
-			n.Duration = int64(f.EndTime)
+			n.Duration = int64(f.EndTime) - n.Time
 		default:
 			n.Type = Normal
 		}
@@ -87,7 +88,7 @@ func NewNote(f any) (ns []*Note) {
 	return ns
 }
 
-func NewNotes(f any, transPoints []*gosu.TransPoint) (ns []*Note) {
+func NewNotes(f any) (ns []*Note) {
 	switch f := f.(type) {
 	case *osu.Format:
 		ns = make([]*Note, 0, len(f.HitObjects)*2)
@@ -120,68 +121,5 @@ func NewNotes(f any, transPoints []*gosu.TransPoint) (ns []*Note) {
 		}
 		prevs[index] = n
 	}
-
-	// Unit of speed is osupixel / 100ms.
-	switch f := f.(type) {
-	case *osu.Format:
-		tp := transPoints[0]
-		tempMainBPM := tp.BPM
-		for _, n := range ns {
-			if n.Type == Normal || n.Type == Tail {
-				continue
-			}
-			for tp.Next != nil && n.Time >= tp.Next.Time {
-				tp = tp.Next
-			}
-			speed := (tempMainBPM / 60000) * tp.Speed * (f.SliderMultiplier * 100)
-			n.Duration = n.length / speed
-			n.DotDuration = n.Duration / ScaledBPM(tp.BPM)
-			switch n.Type {
-			case Head:
-				n.DotDuration /= 4
-			case Shake:
-				n.DotDuration /= 3
-			}
-		}
-	}
 	return
-}
-
-type Dot struct {
-	Time   int64
-	Speed  float64
-	Marked bool
-	Next   *Dot
-	Prev   *Dot
-}
-
-func (d Dot) Position(time int64) float64 {
-	return d.Speed * float64(d.Time-time)
-}
-
-// It is proved that all BPMs are set into [MinScaledBPM, MaxScaledBPM) by v*2 or v/2
-// if MinScaledBPM *2 >= MaxScaleBPM.
-func ScaledBPM(bpm float64) float64 {
-	if bpm < 0 {
-		bpm = -bpm
-	}
-	switch {
-	case bpm > MaxScaledBPM:
-		for bpm > MaxScaledBPM {
-			bpm /= 2
-		}
-	case bpm >= MinScaledBPM:
-		return bpm
-	case bpm < MinScaledBPM:
-		for bpm < MinScaledBPM {
-			bpm *= 2
-		}
-	}
-	return bpm
-}
-func (n *Note) SetDots(tp *gosu.TransPoint) {
-	if n.Type != Head {
-		return
-	}
-
 }
