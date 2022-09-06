@@ -309,3 +309,10 @@ func (h HitObject) SliderDuration(speed float64) int {
 	// speed := (bpm / 60000) * beatScale * (multiplier * 100)
 	return int(length / speed)
 }
+func (h HitObject) SliderLength() float64 {
+	if h.NoteType&HitTypeSlider == 0 {
+		return 0
+	}
+	hs := h.SliderParams
+	return float64(hs.Slides) * hs.Length
+}

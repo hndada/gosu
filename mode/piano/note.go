@@ -16,33 +16,34 @@ const (
 )
 
 type Note struct {
-	gosu.BaseNote
+	Time     int64
+	Duration int64
 	Type     int
 	Key      int
 	Position float64 // Scaled x or y value.
-	Next     *Note
-	Prev     *Note // For accessing to Head from Tail.
+	gosu.Sample
+	Marked bool
+	Next   *Note
+	Prev   *Note // For accessing to Head from Tail.
 }
 
 func NewNote(f any, keyCount int) (ns []*Note) {
 	switch f := f.(type) {
 	case osu.HitObject:
 		n := Note{
-			BaseNote: gosu.NewBaseNote(f),
+			Time:   int64(f.Time),
+			Type:   Normal,
+			Key:    f.Column(keyCount),
+			Sample: gosu.NewSample(f),
 		}
-		n.Type = Normal
-		n.Key = f.Column(keyCount)
 		if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
 			n.Type = Head
-			n.Time2 = int64(f.EndTime)
+			n.Duration = int64(f.EndTime) - n.Time
 			n2 := Note{
-				BaseNote: gosu.BaseNote{
-					Time:       n.Time2,
-					Time2:      n.Time,
-					SampleName: "", // Tail has no sample sound.
-				},
+				Time: n.Time + n.Duration,
 				Type: Tail,
 				Key:  n.Key,
+				// Tail has no sample sound.
 			}
 			ns = append(ns, &n, &n2)
 		} else {

@@ -62,7 +62,8 @@ func init() {
 func (n Note) Weight() float64 {
 	switch n.Type {
 	case Tail:
-		d := float64(n.Time - n.Time2)
+		head := n.Prev
+		d := float64(head.Time + head.Duration)
 		switch {
 		case d < 50:
 			return 0.5 - 0.35*d/50

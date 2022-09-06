@@ -70,7 +70,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	}
 	s.EffectPlayer = gosu.NewEffectPlayer(gosu.EffectVolumeHandler)
 	for _, n := range c.Notes {
-		if path, ok := n.SamplePath(cpath); ok {
+		if path, ok := n.Sample.Path(cpath); ok {
 			_ = s.Effects.Register(path)
 		}
 	}
@@ -198,8 +198,8 @@ func (s *ScenePlay) Update() any {
 			continue
 		}
 		if n.Type != Tail && s.KeyAction(k) == input.Hit {
-			if name := n.SampleName; name != "" {
-				vol := n.SampleVolume
+			if name := n.Sample.Name; name != "" {
+				vol := n.Sample.Volume
 				if vol == 0 {
 					vol = s.TransPoint.Volume
 				}

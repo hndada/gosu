@@ -65,40 +65,37 @@ func (d BodyDrawer) Draw(screen *ebiten.Image) {
 		if tail.Type != Tail {
 			continue
 		}
-		tailPos := tail.Speed * float64(tail.Time-d.Time)
-		if tailPos < minPosition-bigNoteHeight {
+		if tail.Position(d.Time) < minPosition-bigNoteHeight {
 			continue
 		}
 		head := tail.Prev
-		headPos := head.Speed * float64(head.Time-d.Time)
-		if headPos > maxPosition+bigNoteHeight {
+		if head.Position(d.Time) > maxPosition+bigNoteHeight {
 			continue
 		}
-		body := d.BodySprites[tail.Size]
-		length := tailPos - headPos
-		ratio := length / body.W()
-		body.SetScaleXY(ratio, 1, ebiten.FilterLinear)
-		body.Move(headPos, 0)
+		bodySprite := d.BodySprites[tail.Size]
+		length := tail.Position(d.Time) - head.Position(d.Time)
+		ratio := length / bodySprite.W()
+		bodySprite.SetScaleXY(ratio, 1, ebiten.FilterLinear)
+		bodySprite.Move(head.Position(d.Time), 0)
 
 		// op := &ebiten.DrawImageOptions{}
 		// if tail.Marked {
 		// 	op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		// }
-		// body.Draw(screen, op)
-		body.Draw(screen, nil)
+		// bodySprite.Draw(screen, op)
+		bodySprite.Draw(screen, nil)
 
-		for _, tickNote := range tail.Dots {
-			tick := d.DotSprite
-			if tickNote.Marked {
-				tick.SetColor(DotColorHit)
-			} else if d.CurrentDot.Time > tickNote.Time {
-				tick.SetColor(DotColorMiss)
+		for _, dot := range head.Dots {
+			dotSprite := d.DotSprite
+			if dot.Marked {
+				dotSprite.SetColor(DotColorHit)
+			} else if d.CurrentDot.Time > dot.Time {
+				dotSprite.SetColor(DotColorMiss)
 			} else {
-				tick.SetColor(DotColorReady)
+				dotSprite.SetColor(DotColorReady)
 			}
-			pos := tickNote.Speed * float64(tickNote.Time-d.Time)
-			tick.Move(pos, 0)
-			body.Draw(screen, nil)
+			dotSprite.Move(dot.Position(d.Time), 0)
+			dotSprite.Draw(screen, nil)
 		}
 	}
 }

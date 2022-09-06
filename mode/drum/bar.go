@@ -3,11 +3,10 @@ package drum
 import "github.com/hndada/gosu"
 
 type Bar struct {
-	Time     int64 // For easier debugging.
-	Position float64
-	Speed    float64
-	Next     *Bar
-	Prev     *Bar
+	Time  int64 // For easier debugging.
+	Speed float64
+	Next  *Bar
+	Prev  *Bar
 }
 
 func NewBars(transPoints []*gosu.TransPoint, duration int64) (bs []*Bar) {
