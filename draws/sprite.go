@@ -65,6 +65,8 @@ func (s *Sprite) SetColor(clr color.Color) {
 	s.colorM.Reset()
 	s.colorM.ScaleWithColor(clr)
 }
+
+// Todo: ColorM affects Translate.
 func (s Sprite) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
 	if op == nil {
 		op = &ebiten.DrawImageOptions{}
@@ -116,12 +118,16 @@ func (s *Sprite) Move(tx, ty float64) {
 	s.x += tx
 	s.y += ty
 }
+
+// Todo: need to fix
 func (s *Sprite) Flip(flipX, flipY bool) {
 	if flipX {
 		s.scaleW *= -1
+		s.x += 2 * s.w
 	}
 	if flipY {
 		s.scaleH *= -1
+		s.y += 2 * s.y
 	}
 }
 

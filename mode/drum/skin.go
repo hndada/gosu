@@ -75,7 +75,9 @@ func LoadSkin() {
 	var noteImage = draws.NewImage("skin/drum/note/note.png")
 	{
 		s := draws.NewSprite("skin/drum/field.png")
-		s.SetScale(FieldHeight / s.H())
+		ratioW := screenSizeX / s.W()
+		ratioH := FieldHeight / s.H()
+		s.SetScaleXY(ratioW, ratioH, ebiten.FilterLinear)
 		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
 		skin.FieldSprite = s
 	}
@@ -98,7 +100,7 @@ func LoadSkin() {
 	)
 	for i, sname := range []string{"regular", "big"} {
 		noteHeight := regularNoteHeight
-		if sname == "big" {
+		if i == Big {
 			noteHeight = bigNoteHeight
 		}
 		for j, jname := range []string{"cool", "good", "miss"} {
@@ -147,19 +149,15 @@ func LoadSkin() {
 			s.SetColor(ColorYellow)
 			skin.HeadSprites[i] = s
 		}
-		{
-			var path string
-			for j := 0; j < 2; j++ {
-				if _, err := os.Stat(path); !os.IsNotExist(err) { // Two overlays.
-					path = fmt.Sprintf("skin/drum/overlay/%s/%d.png", sname, j)
-				} else {
-					path = fmt.Sprintf("/skin/drum/overlay/%s", sname)
-				}
-				s := draws.NewSprite(path)
-				s.SetScale(noteHeight / s.H())
-				s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
-				skin.OverlaySprites[i][j] = s
+		for j := 0; j < 2; j++ {
+			path := fmt.Sprintf("skin/drum/note/overlay/%s/%d.png", sname, j)
+			if _, err := os.Stat(path); os.IsNotExist(err) { // One overlay.
+				path = fmt.Sprintf("skin/drum/note/overlay/%s.png", sname)
 			}
+			s := draws.NewSprite(path)
+			s.SetScale(noteHeight / s.W())
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+			skin.OverlaySprites[i][j] = s
 		}
 		{
 			s := draws.NewSpriteFromImage(rollMidImage)
@@ -193,14 +191,14 @@ func LoadSkin() {
 	// Key sprites are overlapped at each side.
 	{
 		s := draws.NewSprite("skin/drum/key/in.png")
-		s.SetScale(KeyScale)
+		s.SetScale(FieldInnerHeight / s.H())
 		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
-		skin.KeySprites[LeftRed] = s
 		keyCenter = s.W()
+		skin.KeySprites[LeftRed] = s
 	}
 	{
 		s := draws.NewSprite("skin/drum/key/out.png")
-		s.SetScale(KeyScale)
+		s.SetScale(FieldInnerHeight / s.H())
 		s.SetPosition(keyCenter, FieldPosition, draws.OriginLeftCenter)
 		skin.KeySprites[RightBlue] = s
 	}
@@ -215,6 +213,15 @@ func LoadSkin() {
 		s.Flip(true, false)
 		s.SetPosition(keyCenter, FieldPosition, draws.OriginLeftCenter)
 		skin.KeySprites[RightRed] = s
+	}
+	{
+		w := keyCenter + skin.KeySprites[RightBlue].W()
+		h := skin.KeySprites[RightBlue].H()
+		src := ebiten.NewImage(int(w), int(h))
+		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
+		s := draws.NewSpriteFromImage(src)
+		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
+		skin.KeyFieldSprite = s
 	}
 	for i, name := range []string{"idle", "yes", "no", "high"} {
 		fs, err := os.ReadDir(fmt.Sprintf("skin/drum/dancer/%s", name))

@@ -152,6 +152,15 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 		Time:            s.time,
 		Notes:           s.Chart.Notes,
 	}
+	// for i, n := range s.NoteDrawer.Notes[:10] {
+	// 	fmt.Printf("%d: %v\n", i, n)
+	// }
+	// for i, j := 0, len(s.NoteDrawer.Notes)-1; i < j; i, j = i+1, j-1 {
+	// 	s.NoteDrawer.Notes[i], s.NoteDrawer.Notes[j] = s.NoteDrawer.Notes[j], s.NoteDrawer.Notes[i]
+	// }
+	// for i, n := range s.NoteDrawer.Notes[:10] {
+	// 	fmt.Printf("%d: %v\n", i, n)
+	// }
 	// Todo: make KeyField sprite
 	s.KeyDrawer = KeyDrawer{
 		MaxCountdown: gosu.TimeToTick(30),
