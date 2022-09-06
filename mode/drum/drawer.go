@@ -217,7 +217,7 @@ func NewJudgmentDrawer() (d JudgmentDrawer) {
 		BaseDrawer: draws.BaseDrawer{
 			MaxCountdown: gosu.TimeToTick(600),
 		},
-		Sprites: Skin.JudgmentSprites,
+		Sprites: DefaultSkin.JudgmentSprites,
 	}
 }
 func (d *JudgmentDrawer) Update(j gosu.Judgment, big bool) {
@@ -262,7 +262,6 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	sprite.Draw(screen, nil)
 }
 
-type TickComboDrawer struct{}
 type ShakeDrawer struct{}
 
 // case Leftward, Rightward:
