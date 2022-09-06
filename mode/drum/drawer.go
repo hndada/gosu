@@ -48,6 +48,7 @@ var (
 )
 
 // Let's draw as same as possible of osu! does.
+// Todo: should BodyDrawer's Notes also be reversed at Draw()?
 type BodyDrawer struct {
 	Sprites [2]draws.Sprite
 	Time    int64
@@ -140,35 +141,39 @@ func (d *NoteDarwer) Update(time int64) {
 
 // Todo: should Shake note be fade-in in specific time?
 func (d NoteDarwer) Draw(screen *ebiten.Image) {
-	for _, n := range d.Notes {
-		pos := n.Speed * float64(n.Time-d.Time)
+	max := len(d.Notes) - 1
+	for i := range d.Notes {
+		n := d.Notes[max-i]
+		pos := n.Position(d.Time)
 		if pos > maxPosition+bigNoteHeight ||
 			pos < minPosition-bigNoteHeight {
 			continue
 		}
-		var sprite draws.Sprite
+		var note draws.Sprite
 		switch n.Type {
 		case Normal:
-			sprite = d.NoteSprites[n.Size][n.Color]
+			note = d.NoteSprites[n.Size][n.Color]
 		case Head:
-			sprite = d.HeadSprites[n.Size]
+			note = d.HeadSprites[n.Size]
 		case Tail:
-			sprite = d.TailSprites[n.Size]
+			note = d.TailSprites[n.Size]
 		case Shake:
-			sprite = d.ShakeNoteSprite
+			note = d.ShakeNoteSprite
 		}
 		op := &ebiten.DrawImageOptions{}
 		if n.Type == Normal && n.Marked {
 			op.ColorM.ChangeHSV(0, 1, 0)
 		}
-		sprite.Move(pos, 0)
-		sprite.Draw(screen, op)
+		note.Move(pos, 0)
+		note.Draw(screen, nil)
 		if n.Type == Tail || n.Type == Shake {
 			continue
 		}
 		overlay := d.OverlaySprites[n.Size][d.Overlay]
 		overlay.Move(pos, 0)
-		overlay.Draw(screen, op)
+		// fmt.Printf("note x, y: %.f %.f\noverlay x, y: %.f %.f\n", note.X(), note.Y(),
+		// 	overlay.X(), overlay.Y())
+		overlay.Draw(screen, nil)
 	}
 }
 

@@ -24,7 +24,7 @@ var (
 	// Height of notes are dependent of FieldHeight.
 	bigNoteHeight     float64 = FieldHeight * 0.725
 	regularNoteHeight float64 = bigNoteHeight * 0.65
-	FieldInnerHeight  float64 = FieldHeight * 0.875 // For drawing bars. // screenSizeY * 0.23
+	FieldInnerHeight  float64 = FieldHeight * 0.9 // For drawing bars. // screenSizeY * 0.23
 
 	HitPosition float64 = screenSizeX * 0.1875
 	minPosition float64 = -HitPosition
@@ -49,7 +49,7 @@ var (
 	JudgmentScale float64 = 1
 	DotScale      float64 = 1
 	ShakeScale    float64 = 1
-	KeyScale      float64 = 1
+	// KeyScale      float64 = 1
 	DancerScale   float64 = 1
 	ComboScale    float64 = 0.75
 	ComboDigitGap float64 = screenSizeX * -0.001
