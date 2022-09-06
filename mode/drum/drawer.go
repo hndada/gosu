@@ -212,14 +212,6 @@ type JudgmentDrawer struct {
 	big      bool
 }
 
-func NewJudgmentDrawer() (d JudgmentDrawer) {
-	return JudgmentDrawer{
-		BaseDrawer: draws.BaseDrawer{
-			MaxCountdown: gosu.TimeToTick(600),
-		},
-		Sprites: DefaultSkin.JudgmentSprites,
-	}
-}
 func (d *JudgmentDrawer) Update(j gosu.Judgment, big bool) {
 	if d.Countdown <= 0 {
 		d.judgment = gosu.Judgment{}

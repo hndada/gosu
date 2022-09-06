@@ -62,15 +62,16 @@ type Skin struct {
 	KeyFieldSprite draws.Sprite
 	DancerSprites  [4][]draws.Sprite // Dancer has 4 behaviors.
 
-	ScoreSprites     [10]draws.Sprite
-	ComboSprites     [10]draws.Sprite
-	DotCountSprites  [10]draws.Sprite // For rolls.
-	CountdownSprites [10]draws.Sprite // For shakes.
+	ScoreSprites      [10]draws.Sprite
+	ComboSprites      [10]draws.Sprite
+	DotCountSprites   [10]draws.Sprite // For rolls.
+	ShakeCountSprites [10]draws.Sprite // For shakes.
 }
 
 // Todo: embed default skins to code for preventing panic when files are missing
 func LoadSkin() {
 	var skin Skin
+	defer func() { DefaultSkin = skin }()
 	var noteImage = draws.NewImage("skin/drum/note/note.png")
 	{
 		s := draws.NewSprite("skin/drum/field.png")
@@ -252,7 +253,7 @@ func LoadSkin() {
 		s.SetScale(ShakeCountScale)
 		pos := ShakePosY + s.H()*ShakeCountPosition
 		s.SetPosition(ShakePosX, pos, draws.OriginCenterTop)
-		skin.CountdownSprites[i] = s
+		skin.ShakeCountSprites[i] = s
 	}
 }
 
