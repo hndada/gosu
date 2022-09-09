@@ -5,26 +5,33 @@ package drum
 type Dot struct {
 	Floater
 	// Showtime int64 // Dot will appear at Showtime.
-	Marked bool
-	Next   *Dot
-	Prev   *Dot
+	RevealTime int64
+	First      bool // Whether the dot is the first dot of a Roll note.
+	Marked     bool
+	Next       *Dot
+	Prev       *Dot
 }
 
 // Unit of speed is osupixel / 100ms.
 // n.SetDots(tp.Speed*speedFactor, bpm)
 func NewDots(notes []*Note) (ds []*Dot) {
 	for _, n := range notes {
-		if n.Type != Head {
+		if n.Type != Roll {
 			continue
 		}
-		step := float64(n.Duration) / float64(n.Tick)
-		for t := 0.0; t < float64(n.Duration); t += step {
+		var step float64
+		if n.Tick >= 2 {
+			step = float64(n.Duration) / float64(n.Tick-1)
+		}
+		for tick := 0; tick < n.Tick; tick++ {
+			time := step * float64(tick)
 			d := Dot{
 				Floater: Floater{
-					Time:  n.Time + int64(t),
+					Time:  n.Time + int64(time),
 					Speed: n.Speed,
 				},
-				// Showtime: Showtime,
+				First:      tick == 0,
+				RevealTime: n.Time - RevealDuration,
 			}
 			ds = append(ds, &d)
 		}

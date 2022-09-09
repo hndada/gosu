@@ -132,9 +132,10 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	}
 	// ShakeDrawer
 	s.BodyDrawer = BodyDrawer{
-		Sprites: s.BodySprites,
-		Time:    s.time,
-		Notes:   s.Chart.Notes,
+		BodySprites: s.BodySprites,
+		TailSprite:  s.TailSprites,
+		Time:        s.time,
+		Notes:       s.Chart.Notes,
 	}
 	s.DotDrawer = DotDrawer{
 		Sprite: s.DotSprite,
@@ -144,24 +145,12 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	}
 	s.NoteDrawer = NoteDarwer{
 		NoteSprites:     s.NoteSprites,
-		HeadSprites:     s.HeadSprites,
-		TailSprites:     s.TailSprites,
 		OverlaySprites:  s.OverlaySprites,
 		ShakeNoteSprite: s.ShakeSprites[ShakeNote],
-		Overlay:         0,
 		Time:            s.time,
 		Notes:           s.Chart.Notes,
+		Shakes:          s.Chart.Shakes,
 	}
-	// for i, n := range s.NoteDrawer.Notes[:10] {
-	// 	fmt.Printf("%d: %v\n", i, n)
-	// }
-	// for i, j := 0, len(s.NoteDrawer.Notes)-1; i < j; i, j = i+1, j-1 {
-	// 	s.NoteDrawer.Notes[i], s.NoteDrawer.Notes[j] = s.NoteDrawer.Notes[j], s.NoteDrawer.Notes[i]
-	// }
-	// for i, n := range s.NoteDrawer.Notes[:10] {
-	// 	fmt.Printf("%d: %v\n", i, n)
-	// }
-	// Todo: make KeyField sprite
 	s.KeyDrawer = KeyDrawer{
 		MaxCountdown: gosu.TimeToTick(30),
 		Field:        s.KeyFieldSprite,
@@ -204,8 +193,8 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	return s, nil
 }
 
-// Todo: flush Head and Tail immediately
-// Todo: apply other values of TransPoint (Volume has finished so far)
+// Todo: flush Roll immediately
+// Todo: apply Highlight
 // Todo: keep playing music when making SceneResult
 func (s *ScenePlay) Update() any {
 	defer s.Ticker()
@@ -266,7 +255,7 @@ func (s *ScenePlay) Update() any {
 	// s.ShakeDrawer.Update()
 	s.BodyDrawer.Update(s.time)
 	s.DotDrawer.Update(s.time, s.StagedDot)
-	s.NoteDrawer.Update(s.time)
+	s.NoteDrawer.Update(s.time, 0) // Temporary value at overlay
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
 
 	// s.ScoreDrawer.Update(s.Score())

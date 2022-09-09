@@ -50,9 +50,10 @@ var (
 // Let's draw as same as possible of osu! does.
 // Todo: should BodyDrawer's Notes also be reversed at Draw()?
 type BodyDrawer struct {
-	Sprites [2]draws.Sprite
-	Time    int64
-	Notes   []*Note
+	BodySprites [2]draws.Sprite
+	TailSprite  [2]draws.Sprite
+	Time        int64
+	Notes       []*Note
 }
 
 func (d *BodyDrawer) Update(time int64) {
@@ -60,29 +61,33 @@ func (d *BodyDrawer) Update(time int64) {
 }
 
 func (d BodyDrawer) Draw(screen *ebiten.Image) {
-	for _, tail := range d.Notes {
-		if tail.Type != Tail {
+	for _, roll := range d.Notes {
+		if roll.Type != Roll {
 			continue
 		}
-		if tail.Position(d.Time) < minPosition-bigNoteHeight {
-			continue
-		}
-		head := tail.Prev
+		head := roll
 		if head.Position(d.Time) > maxPosition+bigNoteHeight {
 			continue
 		}
-		body := d.Sprites[tail.Size]
+		tail := *roll
+		tail.Time += roll.Duration
+		if tail.Position(d.Time) < minPosition-bigNoteHeight {
+			continue
+		}
+		body := d.BodySprites[roll.Size]
 		length := tail.Position(d.Time) - head.Position(d.Time)
 		ratio := length / body.W()
 		body.SetScaleXY(ratio, 1, ebiten.FilterLinear)
 		body.Move(head.Position(d.Time), 0)
-
 		// op := &ebiten.DrawImageOptions{}
 		// if tail.Marked {
 		// 	op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		// }
 		// body.Draw(screen, op)
 		body.Draw(screen, nil)
+		end := d.TailSprite[tail.Size]
+		end.Move(tail.Position(d.Time), 0)
+		end.Draw(screen, nil)
 	}
 }
 
@@ -99,7 +104,7 @@ func (d *DotDrawer) Update(time int64, staged *Dot) {
 }
 func (d DotDrawer) Draw(screen *ebiten.Image) {
 	for _, dot := range d.Dots {
-		if dot.Time-Showtime > d.Time {
+		if dot.RevealTime > d.Time {
 			continue
 		}
 		pos := dot.Position(d.Time)
@@ -121,59 +126,59 @@ func (d DotDrawer) Draw(screen *ebiten.Image) {
 }
 
 type NoteDarwer struct {
-	// RedSprites     [2]draws.Sprite
-	// BlueSprites    [2]draws.Sprite
-	NoteSprites     [2][2]draws.Sprite
-	HeadSprites     [2]draws.Sprite
-	TailSprites     [2]draws.Sprite
+	NoteSprites     [2][3]draws.Sprite
 	OverlaySprites  [2][2]draws.Sprite // 2 Overlays.
 	ShakeNoteSprite draws.Sprite
 	// Overlay indicates which overlay goes drawn.
 	// Draw first overlay at even beat, second at odd beat.
-	Overlay int
 	Time    int64
+	Overlay int
 	Notes   []*Note
+	Shakes  []*Note
 }
 
-func (d *NoteDarwer) Update(time int64) {
+func (d *NoteDarwer) Update(time int64, overlay int) {
 	d.Time = time
+	d.Overlay = overlay
 }
 
 // Todo: should Shake note be fade-in in specific time?
 func (d NoteDarwer) Draw(screen *ebiten.Image) {
-	max := len(d.Notes) - 1
-	for i := range d.Notes {
-		n := d.Notes[max-i]
-		pos := n.Position(d.Time)
-		if pos > maxPosition+bigNoteHeight ||
-			pos < minPosition-bigNoteHeight {
-			continue
+	const (
+		modeShakes = iota
+		modeNotes
+	)
+	for mode, notes := range [][]*Note{d.Shakes, d.Notes} {
+		max := len(notes) - 1
+		for i := range notes {
+			n := notes[max-i]
+			pos := n.Position(d.Time)
+			if pos > maxPosition+bigNoteHeight ||
+				pos < minPosition-bigNoteHeight {
+				continue
+			}
+			var note draws.Sprite
+			switch mode {
+			case modeShakes:
+				note = d.ShakeNoteSprite
+			case modeNotes:
+				note = d.NoteSprites[n.Size][n.Color]
+			}
+			op := &ebiten.DrawImageOptions{}
+			if n.Type == Normal && n.Marked {
+				op.ColorM.ChangeHSV(0, 1, 0)
+			}
+			note.Move(pos, 0)
+			note.Draw(screen, nil)
+			if mode == modeShakes {
+				continue
+			}
+			overlay := d.OverlaySprites[n.Size][d.Overlay]
+			overlay.Move(pos, 0)
+			// fmt.Printf("note x, y: %.f %.f\noverlay x, y: %.f %.f\n", note.X(), note.Y(),
+			// 	overlay.X(), overlay.Y())
+			overlay.Draw(screen, nil)
 		}
-		var note draws.Sprite
-		switch n.Type {
-		case Normal:
-			note = d.NoteSprites[n.Size][n.Color]
-		case Head:
-			note = d.HeadSprites[n.Size]
-		case Tail:
-			note = d.TailSprites[n.Size]
-		case Shake:
-			note = d.ShakeNoteSprite
-		}
-		op := &ebiten.DrawImageOptions{}
-		if n.Type == Normal && n.Marked {
-			op.ColorM.ChangeHSV(0, 1, 0)
-		}
-		note.Move(pos, 0)
-		note.Draw(screen, nil)
-		if n.Type == Tail || n.Type == Shake {
-			continue
-		}
-		overlay := d.OverlaySprites[n.Size][d.Overlay]
-		overlay.Move(pos, 0)
-		// fmt.Printf("note x, y: %.f %.f\noverlay x, y: %.f %.f\n", note.X(), note.Y(),
-		// 	overlay.X(), overlay.Y())
-		overlay.Draw(screen, nil)
 	}
 }
 
