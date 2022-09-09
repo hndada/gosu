@@ -13,14 +13,17 @@ var (
 
 func NewListener(keySettings []Key) func() []bool {
 	const (
-		wasPressed = 0x0001 // deprecated: whether the key was pressed after the previous call to GetAsyncKeyState
+		wasPressed = 0x0001 // Deprecated: whether the key was pressed after the previous call to GetAsyncKeyState
 		isPressed  = 0x8000
 	)
+	vkcodes := make([]uint32, len(keySettings))
+	for k, ek := range keySettings {
+		vkcodes[k] = ToVirtualKey(ek)
+	}
 	return func() []bool {
-		pressed := make([]bool, len(keySettings))
-		for k, ek := range keySettings {
-			vkcode := ToVirtualKey(ek)
-			v, _, _ := procGetAsyncKeyState.Call(uintptr(vkcode))
+		pressed := make([]bool, len(vkcodes))
+		for k, vk := range vkcodes {
+			v, _, _ := procGetAsyncKeyState.Call(uintptr(vk))
 			pressed[k] = v&isPressed != 0
 		}
 		return pressed
