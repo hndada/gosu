@@ -50,8 +50,8 @@ type Skin struct {
 	JudgmentSprites [2][3]draws.Sprite // 3 Judgments.
 	// RedSprites      [2]draws.Sprite
 	// BlueSprites     [2]draws.Sprite
-	NoteSprites    [2][2]draws.Sprite // Second [2] are for Red / Blue.
-	HeadSprites    [2]draws.Sprite    // Overlay will be drawn during game play.
+	NoteSprites [2][3]draws.Sprite // [3] are for Red, Blue, Yellow each.
+	// HeadSprites    [2]draws.Sprite    // Overlay will be drawn during game play.
 	TailSprites    [2]draws.Sprite
 	OverlaySprites [2][2]draws.Sprite // 2 Overlays.
 	BodySprites    [2]draws.Sprite
@@ -115,25 +115,13 @@ func LoadSkin() {
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
 			skin.JudgmentSprites[i][j] = s
 		}
-		for j, clr := range []color.NRGBA{ColorRed, ColorBlue} {
+		for j, clr := range []color.NRGBA{ColorRed, ColorBlue, ColorYellow} {
 			s := draws.NewSpriteFromImage(noteImage)
 			s.SetScale(noteHeight / s.H())
 			s.SetColor(clr)
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
 			skin.NoteSprites[i][j] = s
 		}
-		// {
-		// 	s := draws.NewSpriteFromImage(noteImage)
-		// 	s.SetScale(noteHeight / s.H())
-		// 	s.SetColor(ColorRed)
-		// 	s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
-		// 	skin.RedSprites[i] = s
-		// }
-		// {
-		// 	s := skin.RedSprites[i]
-		// 	s.SetColor(ColorBlue)
-		// 	skin.BlueSprites[i] = s
-		// }
 		{
 			s := draws.NewSpriteFromImage(rollEndImage)
 			s.SetScale(noteHeight / s.H())
@@ -141,14 +129,14 @@ func LoadSkin() {
 			s.SetColor(ColorYellow)
 			skin.TailSprites[i] = s
 		}
-		{
-			s := draws.NewSpriteFromImage(rollEndImage)
-			ratio := noteHeight / s.H()
-			s.SetScaleXY(-ratio, ratio, ebiten.FilterLinear) // Goes flipped.
-			s.SetPosition(HitPosition, FieldPosition, draws.OriginRightCenter)
-			s.SetColor(ColorYellow)
-			skin.HeadSprites[i] = s
-		}
+		// {
+		// 	s := draws.NewSpriteFromImage(rollEndImage)
+		// 	ratio := noteHeight / s.H()
+		// 	s.SetScaleXY(-ratio, ratio, ebiten.FilterLinear) // Goes flipped.
+		// 	s.SetPosition(HitPosition, FieldPosition, draws.OriginRightCenter)
+		// 	s.SetColor(ColorYellow)
+		// 	skin.HeadSprites[i] = s
+		// }
 		for j := 0; j < 2; j++ {
 			path := fmt.Sprintf("skin/drum/note/overlay/%s/%d.png", sname, j)
 			if _, err := os.Stat(path); os.IsNotExist(err) { // One overlay.
@@ -203,14 +191,16 @@ func LoadSkin() {
 		skin.KeySprites[RightBlue] = s
 	}
 	{
-		s := skin.KeySprites[RightBlue]
-		s.Flip(true, false)
+		src := draws.NewImage("skin/drum/key/out.png")
+		s := draws.NewSpriteFromImage(draws.FlipX(src))
+		s.SetScale(FieldInnerHeight / s.H())
 		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
 		skin.KeySprites[LeftBlue] = s
 	}
 	{
-		s := skin.KeySprites[LeftRed]
-		s.Flip(true, false)
+		src := draws.NewImage("skin/drum/key/in.png")
+		s := draws.NewSpriteFromImage(draws.FlipX(src))
+		s.SetScale(FieldInnerHeight / s.H())
 		s.SetPosition(keyCenter, FieldPosition, draws.OriginLeftCenter)
 		skin.KeySprites[RightRed] = s
 	}

@@ -7,18 +7,17 @@ import (
 	"github.com/hndada/gosu/format/osu"
 )
 
-// Drum note has 3 components: Color, Size, Type(Note/Head/Tail/Shake).
-// cf. Piano note has 2 components: Key, Type(Note/Head/Tail)
+// Drum note has 3 components: Color, Size, Type(Note, Roll, Shake).
+// cf. Piano note has 2 components: Key, Type(Note, Head, Tail)
 const (
 	Normal = iota
-	Head   // Roll head.
-	Tail   // Roll tail.
+	Roll   // Roll with head and tail.
 	Shake
 )
 const (
-	Red  = iota // Don
-	Blue        // Kat
-	// Yellow   // Roll
+	Red    = iota // aka Don.
+	Blue          // aka Kat.
+	Yellow        // Roll
 )
 const (
 	Regular = iota
@@ -28,7 +27,8 @@ const (
 // Todo: make Dots tell when to hit shake tick at auto mods?
 type Note struct {
 	Floater
-	Duration int64
+	Duration   int64
+	RevealTime int64 // The time when Roll body or Shake reveals.
 	// DotDuration float64 // For calculating Roll tick density.
 	Type  int
 	Color int
@@ -45,81 +45,70 @@ type Note struct {
 
 // Length is for calculating Durations of Roll and its tick.
 // NewNote temporarily set length to DotDuration.
-func NewNote(f any) (ns []*Note) {
+func NewNote(f any) (n *Note) {
 	switch f := f.(type) {
 	case osu.HitObject:
-		n := Note{
+		n = &Note{
 			Sample: gosu.NewSample(f),
 		}
 		n.Time = int64(f.Time)
 		switch {
 		case f.NoteType&osu.HitTypeSlider != 0:
-			n.Type = Head
+			n.Type = Roll
+			n.length = f.SliderLength()
 			// Roll's duration should not rely on f.EndTime.
+			n.Color = Yellow
 		case f.NoteType&osu.HitTypeSpinner != 0:
 			n.Type = Shake
 			n.Duration = int64(f.EndTime) - n.Time
 		default:
 			n.Type = Normal
-		}
-		if osu.IsDon(f) {
-			n.Color = Red
-		} else {
-			n.Color = Blue
+			if osu.IsDon(f) {
+				n.Color = Red
+			} else {
+				n.Color = Blue
+			}
 		}
 		if osu.IsBig(f) {
 			n.Size = Big
 		} else {
 			n.Size = Regular
 		}
-		if n.Type == Head {
-			n.length = f.SliderLength()
-			n2 := Note{
-				// Time has not yet determined.
-				Type:  Tail,
-				Color: n.Color,
-				Size:  n.Size,
-			}
-			ns = append(ns, &n, &n2)
-		} else {
-			ns = append(ns, &n)
-		}
 	}
-	return ns
+	return
 }
 
-func NewNotes(f any) (ns []*Note) {
+func NewNotes(f any) (notes, shakes []*Note) {
 	switch f := f.(type) {
 	case *osu.Format:
-		ns = make([]*Note, 0, len(f.HitObjects)*2)
+		notes = make([]*Note, 0, len(f.HitObjects)*2)
 		for _, ho := range f.HitObjects {
-			ns = append(ns, NewNote(ho)...)
+			n := NewNote(ho)
+			if n.Type == Shake {
+				shakes = append(shakes, n)
+			} else {
+				notes = append(notes, n)
+			}
 		}
 	}
-	sort.Slice(ns, func(i, j int) bool {
-		// Todo: additional sort for notes with same time?
-		// if ns[i].Time == ns[j].Time {
-		// 	return ns[i].Type < ns[j].Type
-		// }
-		return ns[i].Time < ns[j].Time
+	// Sort notes only with their time.
+	// Order of notes at the same time might be intentional for gimmicks.
+	sort.SliceStable(notes, func(i, j int) bool {
+		return notes[i].Time < notes[j].Time
+	})
+	sort.SliceStable(shakes, func(i, j int) bool {
+		return shakes[i].Time < shakes[j].Time
 	})
 	prevs := make([]*Note, 3)
-	for _, n := range ns {
-		var index int
-		switch n.Type {
-		case Normal:
-			index = 0
-		case Head, Tail:
-			index = 1
-		case Shake:
-			index = 2
+	for _, ns := range [][]*Note{notes, shakes} {
+		for _, n := range ns {
+			prev := prevs[n.Type]
+			n.Prev = prev
+			if prev != nil {
+				prev.Next = n
+			}
+			prevs[n.Type] = n
 		}
-		prev := prevs[index]
-		n.Prev = prev
-		if prev != nil {
-			prev.Next = n
-		}
-		prevs[index] = n
 	}
 	return
 }

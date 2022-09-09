@@ -23,13 +23,14 @@ type Chart struct {
 	gosu.ChartHeader
 	TransPoints []*gosu.TransPoint
 	Notes       []*Note
+	Shakes      []*Note
 	Dots        []*Dot
 	Bars        []*Bar
 }
 
 var (
-	Showtime    int64   = 500
-	TickDensity float64 = 4.0
+	RevealDuration int64   = 1500
+	TickDensity    float64 = 4.0
 	// ShakeDensity = 4.0 // One beat has 4 Shakes.
 )
 
@@ -61,21 +62,29 @@ func NewChart(cpath string) (c *Chart, err error) {
 		tp.Speed *= bpmScale
 	}
 
-	c.Notes = NewNotes(f)
+	c.Notes, c.Shakes = NewNotes(f)
 	tp := c.TransPoints[0]
-	for _, n := range c.Notes {
-		for tp.Next != nil && n.Time >= tp.Next.Time {
-			tp = tp.Next
+	for _, ns := range [][]*Note{c.Notes, c.Shakes} {
+		for _, n := range ns {
+			for tp.Next != nil && n.Time >= tp.Next.Time {
+				tp = tp.Next
+			}
+			n.Speed = tp.Speed
+			bpm := ScaledBPM(tp.BPM)
+			switch f := f.(type) {
+			case *osu.Format:
+				// speedFactor := c.TransPoints[0].BPM / 60000 * (f.SliderMultiplier * 100)
+				speed := tp.BPM * (tp.Speed / bpmScale) / 60000 * f.SliderMultiplier * 100
+				n.Duration = int64(n.length / speed)
+				if n.Type == Shake {
+					n.RevealTime = n.Time - RevealDuration
+				}
+			}
+			if n.Duration > 0 {
+				n.Tick = int(float64(n.Duration)*bpm/60000*TickDensity+0.1) + 1
+				fmt.Println(c.ChartName, float64(n.Duration)*bpm/60000*TickDensity, n.Tick)
+			}
 		}
-		n.Speed = tp.Speed
-		bpm := ScaledBPM(tp.BPM)
-		switch f := f.(type) {
-		case *osu.Format:
-			// speedFactor := c.TransPoints[0].BPM / 60000 * (f.SliderMultiplier * 100)
-			speed := tp.BPM * (tp.Speed / bpmScale) * f.SliderMultiplier * 100
-			n.Duration = int64(n.length / speed)
-		}
-		n.Tick = int(float64(n.Duration) / bpm * TickDensity)
 	}
 	c.Dots = NewDots(c.Notes)
 	// switch f := f.(type) {
@@ -115,14 +124,7 @@ func (c Chart) Duration() int64 {
 func (c Chart) NoteCounts() (vs []int) {
 	vs = make([]int, 3)
 	for _, n := range c.Notes {
-		switch n.Type {
-		case Normal:
-			vs[0]++
-		case Head:
-			vs[1]++
-		case Shake:
-			vs[2]++
-		}
+		vs[n.Type]++
 	}
 	return
 }
