@@ -119,18 +119,6 @@ func (s *Sprite) Move(tx, ty float64) {
 	s.y += ty
 }
 
-// Todo: need to fix
-func (s *Sprite) Flip(flipX, flipY bool) {
-	if flipX {
-		s.scaleW *= -1
-		s.x += 2 * s.w
-	}
-	if flipY {
-		s.scaleH *= -1
-		s.y += 2 * s.y
-	}
-}
-
 //	func (s Sprite) SubSprite(propMinX, propMinY, propMaxX, propMaxY float64) Sprite {
 //		w, h := s.SrcSize()
 //		minX := math.Floor(propMinX * float64(w))

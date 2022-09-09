@@ -35,20 +35,22 @@ func NewImageSrc(path string) image.Image {
 	return src
 }
 
-// func FlipX(i *ebiten.Image) *ebiten.Image { return flip(i, true) }
-// func FlipY(i *ebiten.Image) *ebiten.Image { return flip(i, false) }
-// func flip(i *ebiten.Image, isX bool) *ebiten.Image {
-// 	w, h := i.Size()
-// 	i2 := ebiten.NewImage(w, h)
-// 	op := &ebiten.DrawImageOptions{}
-// 	if isX {
-// 		op.GeoM.Scale(-1, 1)
-// 	} else {
-// 		op.GeoM.Scale(1, -1)
-// 	}
-// 	i2.DrawImage(i, op)
-// 	return i2
-// }
+func FlipX(i *ebiten.Image) *ebiten.Image { return flip(i, true) }
+func FlipY(i *ebiten.Image) *ebiten.Image { return flip(i, false) }
+func flip(i *ebiten.Image, isX bool) *ebiten.Image {
+	w, h := i.Size()
+	i2 := ebiten.NewImage(w, h)
+	op := &ebiten.DrawImageOptions{}
+	if isX {
+		op.GeoM.Scale(-1, 1)
+		op.GeoM.Translate(float64(w), 0)
+	} else {
+		op.GeoM.Scale(1, -1)
+		op.GeoM.Translate(0, float64(h))
+	}
+	i2.DrawImage(i, op)
+	return i2
+}
 
 // // Todo: should pass by input parameter instead of returning?
 // func ApplyColor(i *ebiten.Image, clr color.Color) *ebiten.Image {
