@@ -3,6 +3,7 @@ package gosu
 import (
 	"crypto/md5"
 	"os"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
@@ -59,6 +60,7 @@ func NewMusicPlayer(mvh ctrl.F64Handler, path string) (MusicPlayer, error) {
 		return MusicPlayer{}, err
 	}
 	player.SetVolume(*mvh.Target)
+	player.SetBufferSize(100 * time.Millisecond)
 	return MusicPlayer{
 		VolumeHandler: mvh,
 		Player:        player,
