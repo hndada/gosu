@@ -11,7 +11,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
-	"golang.org/x/image/font/basicfont"
 )
 
 type SceneSelect struct {
@@ -109,20 +108,21 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 	}
 
 	const (
-		dx = 20
-		dy = 30
+		dx = 20 // Padding left.
+		dy = 30 // Padding bottom.
 	)
 	for i, info := range viewport {
 		sprite := ChartInfoBoxSprite
 		t := info.Text()
 		offset := float64(i-cursor) * ChartInfoBoxHeight
-		// rect := text.BoundString(basicfont.Face7x13, t)
+		// rect := text.BoundString(draws.Face24, t)
 		x := int(sprite.X()-sprite.W()) + dx   //+ rect.Dx()
 		y := int(sprite.Y()-sprite.H()/2) + dy //+ rect.Dy()
 		if i == cursor {
 			x -= int(chartInfoBoxshrink)
 		}
-		text.Draw(screen, t, basicfont.Face7x13, x, y+int(offset), color.Black)
+		text.Draw(screen, t, draws.Face20, x, y+int(offset), color.Black)
+		// text.Draw(screen, t, basicfont.Face7x13, x, y+int(offset), color.Black)
 	}
 	s.DebugPrint(screen)
 }
