@@ -82,7 +82,7 @@ func NewChart(cpath string) (c *Chart, err error) {
 			}
 			if n.Duration > 0 {
 				n.Tick = int(float64(n.Duration)*bpm/60000*TickDensity+0.1) + 1
-				fmt.Println(c.ChartName, float64(n.Duration)*bpm/60000*TickDensity, n.Tick)
+				// fmt.Println(c.ChartName, float64(n.Duration)*bpm/60000*TickDensity, n.Tick)
 			}
 		}
 	}
