@@ -11,11 +11,12 @@ var (
 	procGetAsyncKeyState = moduser32.NewProc("GetAsyncKeyState")
 )
 
+const (
+	wasPressed = 0x0001 // Deprecated: whether the key was pressed after the previous call to GetAsyncKeyState
+	isPressed  = 0x8000
+)
+
 func NewListener(keySettings []Key) func() []bool {
-	const (
-		wasPressed = 0x0001 // Deprecated: whether the key was pressed after the previous call to GetAsyncKeyState
-		isPressed  = 0x8000
-	)
 	vkcodes := make([]uint32, len(keySettings))
 	for k, ek := range keySettings {
 		vkcodes[k] = ToVirtualKey(ek)
