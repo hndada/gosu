@@ -85,14 +85,14 @@ func LoadSkin() {
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fmt.Sprintf("skin/combo/%d.png", i))
 		s.SetScale(ComboScale)
-		s.SetPosition(screenSizeX/2, ComboPosition, draws.OriginCenter)
+		s.SetPosition(screenSizeX/2, ComboPosition, draws.OriginCenterMiddle)
 		GeneralSkin.ComboSprites[i] = s
 	}
 	GeneralSkin.JudgmentSprites = make([]draws.Sprite, 5)
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
 		s := draws.NewSprite(fmt.Sprintf("skin/piano/judgment/%s.png", name))
 		s.SetScale(JudgmentScale)
-		s.SetPosition(screenSizeX/2, JudgmentPosition, draws.OriginCenter)
+		s.SetPosition(screenSizeX/2, JudgmentPosition, draws.OriginCenterMiddle)
 		GeneralSkin.JudgmentSprites[i] = s
 	}
 

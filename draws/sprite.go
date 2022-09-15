@@ -20,17 +20,31 @@ type Sprite struct {
 type Origin int
 
 const (
+	OriginLeft = iota
+	OriginCenter
+	OriginRight
+)
+const (
+	OriginTop = iota
+	OriginMiddle
+	OriginBottom
+)
+const (
 	OriginLeftTop      Origin = iota // Default Origin.
-	OriginLeftCenter                 // e.g., Notes in Piano mode.
+	OriginLeftMiddle                 // e.g., Notes in Piano mode.
 	OriginLeftBottom                 // e.g., back button.
 	OriginCenterTop                  // e.g., drawing field.
-	OriginCenter                     // Most of sprite's Origin.
+	OriginCenterMiddle               // Most of sprite's Origin.
 	OriginCenterBottom               // e.g., Meter.
 	OriginRightTop                   // e.g., score.
-	OriginRightCenter                // e.g., chart info boxes.
+	OriginRightMiddle                // e.g., chart info boxes.
 	OriginRightBottom                // e.g., Play button.
 )
 
+// Position returns x-axis and y-axis position each.
+func (origin Origin) Position() (int, int) {
+	return int(origin) / 3, int(origin) % 3
+}
 func NewSprite(path string) Sprite {
 	return NewSpriteFromImage(NewImage(path))
 }
@@ -82,13 +96,13 @@ func (s Sprite) LeftTopPosition() (float64, float64) {
 	switch s.origin {
 	case OriginLeftTop:
 		// Does nothing.
-	case OriginLeftCenter:
+	case OriginLeftMiddle:
 		s.y -= s.h / 2
 	case OriginLeftBottom:
 		s.y -= s.h
 	case OriginCenterTop:
 		s.x -= s.w / 2
-	case OriginCenter:
+	case OriginCenterMiddle:
 		s.x -= s.w / 2
 		s.y -= s.h / 2
 	case OriginCenterBottom:
@@ -96,7 +110,7 @@ func (s Sprite) LeftTopPosition() (float64, float64) {
 		s.y -= s.h
 	case OriginRightTop:
 		s.x -= s.w
-	case OriginRightCenter:
+	case OriginRightMiddle:
 		s.x -= s.w
 		s.y -= s.h / 2
 	case OriginRightBottom:
