@@ -16,6 +16,7 @@ type Text struct {
 	Align  int
 }
 
+// type Align int
 const (
 	AlignLeft = iota
 	AlignCenter
@@ -35,30 +36,31 @@ func NewBox(i *ebiten.Image, padW, padH float64) Box {
 		PadH:   padH,
 	}
 }
-func NewBoxImage(w, h, border int, outerColor, innerColor color.NRGBA) *ebiten.Image {
-	// w = math.Ceil(w)
-	// h = math.Ceil(h)
-	// outer := ebiten.NewImage(int(w), int(h))
-	// inner := ebiten.NewImage(w - 2*border)
-	outer := ebiten.NewImage(w, h)
-	outer.Fill(outerColor)
-	inner := ebiten.NewImage(w-2*border, h-2*border)
-	inner.Fill(innerColor)
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(float64(border), float64(border))
-	outer.DrawImage(inner, op)
-	return outer
-}
-
 func (b Box) Draw(screen *ebiten.Image) {
 	b.Sprite.Draw(screen, nil)
 	for _, txt := range b.Texts {
-		var x, y int
+		var x, y int // Todo: need to implement
 		text.Draw(screen, txt.Text, txt.Face, x, y, txt.Color)
 	}
 }
-func DesiredBoxHeight(f font.Face, padH float64) float64 {
-	const standard = "0"
-	rect := text.BoundString(f, standard)
-	return padH*2 - float64(rect.Min.Y)
-}
+
+// func NewRectImage(w, h, border int, outerColor, innerColor color.NRGBA) *ebiten.Image {
+// 	// w = math.Ceil(w)
+// 	// h = math.Ceil(h)
+// 	// outer := ebiten.NewImage(int(w), int(h))
+// 	// inner := ebiten.NewImage(w - 2*border)
+// 	outer := ebiten.NewImage(w, h)
+// 	outer.Fill(outerColor)
+// 	inner := ebiten.NewImage(w-2*border, h-2*border)
+// 	inner.Fill(innerColor)
+// 	op := &ebiten.DrawImageOptions{}
+// 	op.GeoM.Translate(float64(border), float64(border))
+// 	outer.DrawImage(inner, op)
+// 	return outer
+// }
+
+// func DesiredBoxHeight(f font.Face, padH float64) float64 {
+// 	const standard = "0"
+// 	rect := text.BoundString(f, standard)
+// 	return padH*2 - float64(rect.Min.Y)
+// }
