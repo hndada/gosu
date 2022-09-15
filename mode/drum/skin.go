@@ -78,20 +78,20 @@ func LoadSkin() {
 		ratioW := screenSizeX / s.W()
 		ratioH := FieldHeight / s.H()
 		s.SetScaleXY(ratioW, ratioH, ebiten.FilterLinear)
-		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
+		s.SetPosition(0, FieldPosition, draws.OriginLeftMiddle)
 		skin.FieldSprite = s
 	}
 	{
 		s := draws.NewSpriteFromImage(noteImage)
 		s.SetScale(regularNoteHeight / s.H())
-		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 		skin.HintSprite = s
 	}
 	{
 		src := ebiten.NewImage(1, int(FieldInnerHeight))
 		src.Fill(color.NRGBA{255, 255, 255, 255}) // White
 		s := draws.NewSpriteFromImage(src)
-		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 		skin.BarSprite = s
 	}
 	var (
@@ -112,20 +112,20 @@ func LoadSkin() {
 			}
 			s := draws.NewSprite(path)
 			s.SetScale(JudgmentScale)
-			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 			skin.JudgmentSprites[i][j] = s
 		}
 		for j, clr := range []color.NRGBA{ColorRed, ColorBlue, ColorYellow} {
 			s := draws.NewSpriteFromImage(noteImage)
 			s.SetScale(noteHeight / s.H())
 			s.SetColor(clr)
-			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 			skin.NoteSprites[i][j] = s
 		}
 		{
 			s := draws.NewSpriteFromImage(rollEndImage)
 			s.SetScale(noteHeight / s.H())
-			s.SetPosition(HitPosition, FieldPosition, draws.OriginLeftCenter)
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginLeftMiddle)
 			s.SetColor(ColorYellow)
 			skin.TailSprites[i] = s
 		}
@@ -133,7 +133,7 @@ func LoadSkin() {
 		// 	s := draws.NewSpriteFromImage(rollEndImage)
 		// 	ratio := noteHeight / s.H()
 		// 	s.SetScaleXY(-ratio, ratio, ebiten.FilterLinear) // Goes flipped.
-		// 	s.SetPosition(HitPosition, FieldPosition, draws.OriginRightCenter)
+		// 	s.SetPosition(HitPosition, FieldPosition, draws.OriginRightMiddle)
 		// 	s.SetColor(ColorYellow)
 		// 	skin.HeadSprites[i] = s
 		// }
@@ -144,13 +144,13 @@ func LoadSkin() {
 			}
 			s := draws.NewSprite(path)
 			s.SetScale(noteHeight / s.W())
-			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 			skin.OverlaySprites[i][j] = s
 		}
 		{
 			s := draws.NewSpriteFromImage(rollMidImage)
 			s.SetScale(noteHeight / s.H())
-			s.SetPosition(HitPosition, FieldPosition, draws.OriginLeftCenter)
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginLeftMiddle)
 			s.SetColor(ColorYellow)
 			skin.BodySprites[i] = s
 		}
@@ -158,7 +158,7 @@ func LoadSkin() {
 	{
 		s := draws.NewSprite("skin/drum/note/roll/dot.png")
 		s.SetScale(DotScale)
-		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 		s.SetColor(ColorYellow)
 		skin.DotSprite = s
 	}
@@ -167,10 +167,10 @@ func LoadSkin() {
 		s := draws.NewSprite(path)
 		if name == "note" {
 			s.SetScale(regularNoteHeight / s.H())
-			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 		} else {
 			s.SetScale(ShakeScale)
-			s.SetPosition(ShakePosX, ShakePosY, draws.OriginCenter)
+			s.SetPosition(ShakePosX, ShakePosY, draws.OriginCenterMiddle)
 		}
 		skin.ShakeSprites[i] = s
 	}
@@ -180,28 +180,28 @@ func LoadSkin() {
 	{
 		s := draws.NewSprite("skin/drum/key/in.png")
 		s.SetScale(FieldInnerHeight / s.H())
-		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
+		s.SetPosition(0, FieldPosition, draws.OriginLeftMiddle)
 		keyCenter = s.W()
 		skin.KeySprites[LeftRed] = s
 	}
 	{
 		s := draws.NewSprite("skin/drum/key/out.png")
 		s.SetScale(FieldInnerHeight / s.H())
-		s.SetPosition(keyCenter, FieldPosition, draws.OriginLeftCenter)
+		s.SetPosition(keyCenter, FieldPosition, draws.OriginLeftMiddle)
 		skin.KeySprites[RightBlue] = s
 	}
 	{
 		src := draws.NewImage("skin/drum/key/out.png")
 		s := draws.NewSpriteFromImage(draws.FlipX(src))
 		s.SetScale(FieldInnerHeight / s.H())
-		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
+		s.SetPosition(0, FieldPosition, draws.OriginLeftMiddle)
 		skin.KeySprites[LeftBlue] = s
 	}
 	{
 		src := draws.NewImage("skin/drum/key/in.png")
 		s := draws.NewSpriteFromImage(draws.FlipX(src))
 		s.SetScale(FieldInnerHeight / s.H())
-		s.SetPosition(keyCenter, FieldPosition, draws.OriginLeftCenter)
+		s.SetPosition(keyCenter, FieldPosition, draws.OriginLeftMiddle)
 		skin.KeySprites[RightRed] = s
 	}
 	{
@@ -210,7 +210,7 @@ func LoadSkin() {
 		src := ebiten.NewImage(int(w), int(h))
 		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
 		s := draws.NewSpriteFromImage(src)
-		s.SetPosition(0, FieldPosition, draws.OriginLeftCenter)
+		s.SetPosition(0, FieldPosition, draws.OriginLeftMiddle)
 		skin.KeyFieldSprite = s
 	}
 	for i, name := range []string{"idle", "yes", "no", "high"} {
@@ -223,7 +223,7 @@ func LoadSkin() {
 			path := fmt.Sprintf("skin/drum/dancer/%s/%d.png", name, j)
 			s := draws.NewSprite(path)
 			s.SetScale(DancerScale)
-			s.SetPosition(DancerPosX, DancerPosY, draws.OriginCenter)
+			s.SetPosition(DancerPosX, DancerPosY, draws.OriginCenterMiddle)
 			skin.DancerSprites[i][j] = s
 		}
 	}
@@ -236,13 +236,13 @@ func LoadSkin() {
 	for i := 0; i < 10; i++ {
 		s := draws.NewSpriteFromImage(comboImages[i])
 		s.SetScale(ComboScale)
-		s.SetPosition(keyCenter, FieldPosition, draws.OriginCenter)
+		s.SetPosition(keyCenter, FieldPosition, draws.OriginCenterMiddle)
 		skin.ComboSprites[i] = s
 	}
 	for i := 0; i < 10; i++ {
 		s := draws.NewSpriteFromImage(comboImages[i])
 		s.SetScale(DotCountScale)
-		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenter)
+		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 		skin.DotCountSprites[i] = s
 	}
 	for i := 0; i < 10; i++ {

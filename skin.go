@@ -40,7 +40,7 @@ func LoadGeneralSkin() {
 	for i, name := range names {
 		s := draws.NewSprite(fmt.Sprintf("skin/cursor/%s.png", name))
 		s.SetScale(CursorScale)
-		s.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenter)
+		s.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenterMiddle)
 		CursorSprites[i] = s
 	}
 	{
@@ -48,7 +48,7 @@ func LoadGeneralSkin() {
 		scaleW := ChartInfoBoxWidth / s.W()
 		scaleH := ChartInfoBoxHeight / s.H()
 		s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
-		s.SetPosition(screenSizeX+chartInfoBoxshrink, screenSizeY/2, draws.OriginRightCenter)
+		s.SetPosition(screenSizeX+chartInfoBoxshrink, screenSizeY/2, draws.OriginRightMiddle)
 		ChartInfoBoxSprite = s
 	}
 	for i := 0; i < 10; i++ {
@@ -71,6 +71,6 @@ func LoadGeneralSkin() {
 func NewBackground(path string) draws.Sprite {
 	s := draws.NewSprite(path)
 	s.SetScale(screenSizeX / s.W())
-	s.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenter)
+	s.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenterMiddle)
 	return s
 }
