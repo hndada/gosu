@@ -168,7 +168,7 @@ func (d NoteDarwer) Draw(screen *ebiten.Image) {
 			case modeShakes:
 				note = d.ShakeNoteSprite
 			case modeNotes:
-				note = d.NoteSprites[n.Size][n.Color]
+				note = d.NoteSprites[n.Size][n.Color-1]
 			}
 			op := &ebiten.DrawImageOptions{}
 			if n.Type == Normal && n.Marked {
