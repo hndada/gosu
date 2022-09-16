@@ -1,8 +1,6 @@
 package draws
 
 import (
-	"image/color"
-
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -15,7 +13,8 @@ type Sprite struct {
 	origin         Origin
 	filter         ebiten.Filter
 	scaleW, scaleH float64
-	colorM         ebiten.ColorM
+	// color          color.Color
+	// colorM         ebiten.ColorM
 }
 type Origin int
 
@@ -42,9 +41,12 @@ const (
 )
 
 // Position returns x-axis and y-axis position each.
-func (origin Origin) Position() (int, int) {
-	return int(origin) / 3, int(origin) % 3
-}
+//
+//	func (origin Origin) Position() (int, int) {
+//		return origin.PositionX(), origin.PositionY()
+//	}
+func (origin Origin) PositionX() int { return int(origin) / 3 }
+func (origin Origin) PositionY() int { return int(origin) % 3 }
 func NewSprite(path string) Sprite {
 	return NewSpriteFromImage(NewImage(path))
 }
@@ -75,50 +77,75 @@ func (s *Sprite) SetPosition(x, y float64, origin Origin) {
 	s.y = y
 	s.origin = origin
 }
-func (s *Sprite) SetColor(clr color.Color) {
-	s.colorM.Reset()
-	s.colorM.ScaleWithColor(clr)
-}
+
+// func (s *Sprite) SetColor(clr color.Color) {
+// 	// s.colorM.Reset()
+// 	// s.colorM.ScaleWithColor(clr)
+// 	s.color = clr
+// }
 
 // Todo: ColorM affects Translate.
 func (s Sprite) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
 	if op == nil {
 		op = &ebiten.DrawImageOptions{}
 	}
-	op.ColorM = s.colorM
+	// op.ColorM = s.colorM
 	op.GeoM.Scale(s.scaleW, s.scaleH)
-	x, y := s.LeftTopPosition()
 	op.Filter = s.filter
-	op.GeoM.Translate(x, y)
+	// x, y := s.LeftTopPosition()
+	op.GeoM.Translate(s.LeftTopX(), s.LeftTopY())
 	screen.DrawImage(s.i, op)
 }
-func (s Sprite) LeftTopPosition() (float64, float64) {
-	switch s.origin {
-	case OriginLeftTop:
-		// Does nothing.
-	case OriginLeftMiddle:
-		s.y -= s.h / 2
-	case OriginLeftBottom:
-		s.y -= s.h
-	case OriginCenterTop:
+func (s Sprite) LeftTopX() float64 {
+	switch s.origin.PositionX() {
+	case OriginLeft:
+		s.x -= 0
+	case OriginCenter:
 		s.x -= s.w / 2
-	case OriginCenterMiddle:
-		s.x -= s.w / 2
+	case OriginRight:
+		s.x -= s.w
+	}
+	return s.x
+}
+func (s Sprite) LeftTopY() float64 {
+	switch s.origin.PositionY() {
+	case OriginTop:
+		s.y -= 0
+	case OriginMiddle:
 		s.y -= s.h / 2
-	case OriginCenterBottom:
-		s.x -= s.w / 2
-		s.y -= s.h
-	case OriginRightTop:
-		s.x -= s.w
-	case OriginRightMiddle:
-		s.x -= s.w
-		s.y -= s.h / 2
-	case OriginRightBottom:
-		s.x -= s.w
+	case OriginBottom:
 		s.y -= s.h
 	}
-	return s.x, s.y
+	return s.y
 }
+
+//	func (s Sprite) LeftTopPosition() (float64, float64) {
+//		switch s.origin {
+//		case OriginLeftTop:
+//			// Does nothing.
+//		case OriginLeftMiddle:
+//			s.y -= s.h / 2
+//		case OriginLeftBottom:
+//			s.y -= s.h
+//		case OriginCenterTop:
+//			s.x -= s.w / 2
+//		case OriginCenterMiddle:
+//			s.x -= s.w / 2
+//			s.y -= s.h / 2
+//		case OriginCenterBottom:
+//			s.x -= s.w / 2
+//			s.y -= s.h
+//		case OriginRightTop:
+//			s.x -= s.w
+//		case OriginRightMiddle:
+//			s.x -= s.w
+//			s.y -= s.h / 2
+//		case OriginRightBottom:
+//			s.x -= s.w
+//			s.y -= s.h
+//		}
+//		return s.x, s.y
+//	}
 func (s Sprite) W() float64               { return s.w }
 func (s Sprite) H() float64               { return s.h }
 func (s Sprite) X() float64               { return s.x }
