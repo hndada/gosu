@@ -2,9 +2,9 @@ package drum
 
 import (
 	"image/color"
+	"math"
 
 	"github.com/hndada/gosu"
-	"github.com/hndada/gosu/input"
 )
 
 // Todo: Tick judgment should be bound to MaxScaledBPM (->280)
@@ -32,27 +32,76 @@ var JudgmentColors = []color.NRGBA{
 // Roll / Shake note does not affect on Flow / Acc scores.
 // For example, a Roll / Shake only chart has extra score only: max score is 100k.
 
-func (s ScenePlay) IsColorHit(color int) bool {
-	var keys []int
-	switch color {
-	case Red:
-		keys = []int{1, 2}
-	case Blue:
-		keys = []int{0, 3}
+func IsColorHit(color int, hits []bool) bool {
+	if color == Red && (hits[1] || hits[2]) {
+		return true
 	}
-	for _, k := range keys {
-		if s.KeyAction(k) == input.Hit {
-			return true
-		}
+	if color == Blue && (hits[0] || hits[3]) {
+		return true
 	}
 	return false
 }
-func (s ScenePlay) IsOtherColorHit(color int) bool {
-	switch color {
-	case Red:
-		return s.IsColorHit(Blue)
-	case Blue:
-		return s.IsColorHit(Red)
+func IsOtherColorHit(color int, hits []bool) bool {
+	if color == Red && (hits[0] || hits[3]) {
+		return true
+	}
+	if color == Blue && (hits[1] || hits[2]) {
+		return true
 	}
 	return false
+}
+
+func Verdict(n *Note, hits []bool, td int64) (j gosu.Judgment, big bool) {
+	if IsOtherColorHit(n.Color, hits) {
+		j = Miss
+	}
+	return
+}
+
+//	func (s ScenePlay) IsColorHit(color int, hits []bool) bool {
+//		var keys []int
+//		switch color {
+//		case Red:
+//			keys = []int{1, 2}
+//		case Blue:
+//			keys = []int{0, 3}
+//		}
+//		for k, hit := range hits {
+//			if hit {
+//				return true
+//			}
+//		}
+//		return false
+//	}
+//
+// Todo: no getting Flow when hands off the long note
+func (s *ScenePlay) MarkNote(n *Note, j gosu.Judgment) {
+	var a = FlowScoreFactor
+	if j == Miss {
+		s.Combo = 0
+	} else {
+		s.Combo++
+	}
+	s.Flow += j.Flow * n.Weight()
+	if s.Flow < 0 {
+		s.Flow = 0
+	} else if s.Flow > 1 {
+		s.Flow = 1
+	}
+	s.Flows += math.Pow(s.Flow, a) * n.Weight()
+	s.Accs += j.Acc * n.Weight()
+	for i, jk := range Judgments {
+		if jk.Window == j.Window {
+			s.JudgmentCounts[i]++
+			break
+		}
+	}
+	s.NoteWeights += n.Weight()
+	n.Marked = true
+	s.StagedNote = s.StagedNote.Next
+}
+func (s *ScenePlay) MarkTick() {
+	if j.Window == Cool.Window {
+		s.Extras += n.Weight()
+	}
 }

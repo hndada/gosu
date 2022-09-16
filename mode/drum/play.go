@@ -10,6 +10,7 @@ import (
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
+	"github.com/hndada/gosu/input"
 )
 
 type ScenePlay struct {
@@ -112,7 +113,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	if len(s.Chart.Dots) > 0 {
 		s.StagedDot = s.Chart.Dots[0]
 	}
-	s.WaitingColor = -1
+	s.WaitingColor = None
 	s.Flow = 1
 
 	s.Skin = DefaultSkin
@@ -215,75 +216,68 @@ func (s *ScenePlay) Update() any {
 
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
-
-	var judgment gosu.Judgment
-	var big bool
-
-	// Todo: set sample when note is hit
-	samples := make([]gosu.Sample, 4)
-	isHits := make([]bool, 4)
-
-	if s.WaitingColor != -1 {
-		if s.IsOtherColorHit(s.WaitingColor) {
-			s.WaitingColor = -1
-			s.StagedNote = s.StagedNote.Next
-		}
+	hits := make([]bool, 4)
+	for k := range hits {
+		hits[k] = s.KeyAction(k) == input.Hit
 	}
-	var j gosu.Judgment
+	var (
+		judgment gosu.Judgment
+		// color    int
+		big bool
+	)
 	func() {
-		if s.StagedNote == nil {
+		n := s.StagedNote
+		if n == nil {
 			return
 		}
-		if n := s.StagedNote; n != nil {
-			if s.IsOtherColorHit(s.WaitingColor) {
-				j = Miss
-				return
+		td := n.Time - s.time // Time difference. A negative value means late hit.
+		if s.WaitingColor != None {
+			if IsOtherColorHit(s.WaitingColor, hits) {
+				s.WaitingColor = None
+				s.StagedNote = s.StagedNote.Next
 			}
 		}
+		if j, b := Verdict(n, hits, td); j.Window != 0 {
+			s.MarkNote(n, j)
+			judgment = j
+			// color = n.Color
+			big = b
+			s.MeterDrawer.AddMark(int(td), 0)
+		}
 	}()
-	// for k, n := range s.Staged {
-	// 	if n == nil {
-	// 		continue
-	// 	}
-	// 	if n.Type != Tail && s.KeyAction(k) == input.Hit {
-	// 		if name := n.Sample.Name; name != "" {
-	// 			vol := n.Sample.Volume
-	// 			if vol == 0 {
-	// 				vol = s.TransPoint.Volume
-	// 			}
-	// 			// Todo: apply effect volume change
-	// 			s.Effects.PlayWithVolume(name, vol)
-	// 		}
-	// 	}
-	// 	td := n.Time - s.time // Time difference. A negative value infers late hit
-	// 	if n.Marked {
-	// 		if n.Type != Tail {
-	// 			return fmt.Errorf("non-Tail note has not flushed")
-	// 		}
-	// 		if td < Miss.Window { // Keep Tail staged until near ends.
-	// 			s.Staged[n.Key] = n.Next
-	// 		}
-	// 		continue
-	// 	}
-	// 	if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
-	// 		s.MarkNote(n, j)
-	// 		judgment = j
-	// 		var colorType int = 0
-	// 		if n.Type == Tail {
-	// 			colorType = 1
-	// 		}
-	// 		s.MeterDrawer.AddMark(int(td), colorType)
-	// 	}
-	// }
-	for k, hit := range isHits {
+
+	// Todo: generalize waitingColor?
+	// Todo: should custom hitsound be implemented?
+	if n.Type != Tail && s.KeyAction(k) == input.Hit {
+		if name := n.Sample.Name; name != "" {
+			vol := n.Sample.Volume
+			if vol == 0 {
+				vol = s.TransPoint.Volume
+			}
+			// Todo: apply effect volume change
+			s.Effects.PlayWithVolume(name, vol)
+		}
+	}
+	var played [2]bool
+	for k, hit := range hits {
 		if !hit {
 			continue
 		}
-		sample := samples[k]
-		vol := sample.Volume
-		if vol == 0 {
-			vol = s.TransPoint.Volume
+		switch k {
+		case 0, 3:
+			if color == Red {
+				if big {
+					// Play red-big.wav.
+				} else {
+					// Play red-regular.wav.
+				}
+			}
+		case 1, 2:
 		}
+		switch color {
+		case Red:
+		}
+		sample := samples[k]
 		if name := sample.Name; name != "" {
 			// Todo: apply effect volume change
 			s.Effects.PlayWithVolume(name, vol)
@@ -291,6 +285,8 @@ func (s *ScenePlay) Update() any {
 			// Todo: play default sounds
 		}
 	}
+	// Todo: Roll
+	// Todo: Shake
 
 	s.BarDrawer.Update(s.time)
 	// s.ShakeDrawer.Update()

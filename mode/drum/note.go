@@ -15,7 +15,8 @@ const (
 	Shake
 )
 const (
-	Red    = iota // aka Don.
+	None   = iota // No color.
+	Red           // aka Don.
 	Blue          // aka Kat.
 	Yellow        // Roll
 )
