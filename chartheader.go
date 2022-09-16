@@ -17,7 +17,7 @@ type ChartHeader struct {
 	ArtistUnicode string
 	MusicSource   string
 	ChartName     string
-	Producer      string // Name of field may change.
+	Charter       string
 	HolderID      int64
 
 	PreviewTime     int64
@@ -37,7 +37,7 @@ func NewChartHeader(f any) (c ChartHeader) {
 			ArtistUnicode: f.ArtistUnicode,
 			MusicSource:   f.Source,
 			ChartName:     f.Version,
-			Producer:      f.Creator,
+			Charter:       f.Creator,
 
 			PreviewTime:   int64(f.PreviewTime),
 			MusicFilename: f.AudioFilename,

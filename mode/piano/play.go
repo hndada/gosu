@@ -76,7 +76,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	}
 	s.KeyLogger = gosu.NewKeyLogger(KeySettings[keyCount])
 	if rf != nil {
-		s.KeyLogger.FetchPressed = gosu.NewReplayListener(rf, keyCount, s.Time())
+		s.KeyLogger.FetchPressed = NewReplayListener(rf, keyCount, s.Time())
 	}
 
 	s.TransPoint = c.TransPoints[0]

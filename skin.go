@@ -20,7 +20,8 @@ const (
 var (
 	DefaultBackground  draws.Sprite
 	CursorSprites      [3]draws.Sprite
-	ChartInfoBoxSprite draws.Sprite // Todo: various box sprite
+	ChartItemBoxSprite draws.Sprite
+	// ChartLevelBoxSprite draws.Sprite
 
 	ScoreSprites [10]draws.Sprite
 	SignSprites  [3]draws.Sprite
@@ -44,13 +45,14 @@ func LoadGeneralSkin() {
 		CursorSprites[i] = s
 	}
 	{
-		s := draws.NewSprite("skin/box.png")
+		s := draws.NewSprite("skin/box-mask.png")
 		scaleW := ChartInfoBoxWidth / s.W()
 		scaleH := ChartInfoBoxHeight / s.H()
 		s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
 		s.SetPosition(screenSizeX+chartInfoBoxshrink, screenSizeY/2, draws.OriginRightMiddle)
-		ChartInfoBoxSprite = s
+		ChartItemBoxSprite = s
 	}
+	// Todo: ChartLevelBoxSprite
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fmt.Sprintf("skin/score/%d.png", i))
 		s.SetScale(ScoreScale)

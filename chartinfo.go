@@ -8,7 +8,8 @@ import (
 type ChartInfo struct {
 	Path string
 	// Mods    Mods
-	Header  ChartHeader
+	// Header  ChartHeader
+	ChartHeader
 	Mode    int
 	SubMode int
 	Level   float64
@@ -22,8 +23,15 @@ type ChartInfo struct {
 }
 
 func (c ChartInfo) Text() string {
-	return fmt.Sprintf("(%dK Lv %.1f) %s [%s]", c.SubMode, c.Level, c.Header.MusicName, c.Header.ChartName)
+	return fmt.Sprintf("(%dK Lv %.1f) %s [%s]", c.SubMode, c.Level, c.MusicName, c.ChartName)
 }
 func (c ChartInfo) BackgroundPath() string {
-	return c.Header.BackgroundPath(c.Path)
+	return c.ChartHeader.BackgroundPath(c.Path)
+}
+func (c ChartInfo) TimeString() string {
+	c.Duration /= 1000
+	return fmt.Sprintf("%02d:%02d", c.Duration/60, c.Duration%60)
+}
+func (c ChartInfo) BPMString() string {
+	return fmt.Sprintf("%.0f BPM (%.0f ~ %.0f)", c.MainBPM, c.MinBPM, c.MaxBPM)
 }
