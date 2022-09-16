@@ -175,7 +175,8 @@ func LoadSkin() {
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 		} else {
 			s.SetScale(ShakeScale)
-			s.SetPosition(ShakePosX, ShakePosY, draws.OriginCenterMiddle)
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
+			// s.SetPosition(ShakePosX, ShakePosY, draws.OriginCenterMiddle)
 		}
 		skin.ShakeSprites[i] = s
 	}
@@ -250,13 +251,13 @@ func LoadSkin() {
 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 		skin.DotCountSprites[i] = s
 	}
-	for i := 0; i < 10; i++ {
-		s := draws.NewSpriteFromImage(comboImages[i])
-		s.SetScale(ShakeCountScale)
-		pos := ShakePosY + s.H()*ShakeCountPosition
-		s.SetPosition(ShakePosX, pos, draws.OriginCenterTop)
-		skin.ShakeCountSprites[i] = s
-	}
+	// for i := 0; i < 10; i++ {
+	// 	s := draws.NewSpriteFromImage(comboImages[i])
+	// 	s.SetScale(ShakeCountScale)
+	// 	pos := ShakePosY + s.H()*ShakeCountPosition
+	// 	s.SetPosition(ShakePosX, pos, draws.OriginCenterTop)
+	// 	skin.ShakeCountSprites[i] = s
+	// }
 }
 
 // func IsKeyImageFlipped(keyType int) bool {

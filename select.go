@@ -97,7 +97,7 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 	s.Background.Draw(screen, nil)
 	viewport, cursor := s.Viewport()
 	for i := range viewport {
-		sprite := ChartInfoBoxSprite
+		sprite := ChartItemBoxSprite
 		var tx float64
 		if i == cursor {
 			tx -= chartInfoBoxshrink
@@ -112,7 +112,7 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		dy = 30 // Padding bottom.
 	)
 	for i, info := range viewport {
-		sprite := ChartInfoBoxSprite
+		sprite := ChartItemBoxSprite
 		t := info.Text()
 		offset := float64(i-cursor) * ChartInfoBoxHeight
 		// rect := text.BoundString(draws.Face24, t)

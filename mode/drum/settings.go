@@ -28,9 +28,10 @@ var (
 	HitPosition float64 = screenSizeX * 0.1875
 	minPosition float64 = -HitPosition
 	maxPosition float64 = minPosition + screenSizeX
-	ShakePosX   float64 = screenSizeX * 0.375
-	ShakePosY   float64 = screenSizeY * 0.55
+	// ShakePosX   float64 = screenSizeX * 0.375
+	// ShakePosY   float64 = screenSizeY * 0.55
 
+	// Todo: generalize
 	DancerPosX float64 = screenSizeX * 0.05
 	DancerPosY float64 = screenSizeY * 0.1
 
@@ -38,7 +39,7 @@ var (
 	// Range of ShakeCountPosition is [0, 1].
 	// Min: Right bottom of the middle of Shake spin.
 	// Max: Right bottom of the border of Shake spin.
-	ShakeCountPosition float64 = 0.5
+	// ShakeCountPosition float64 = 0.5
 )
 
 // Skin-dependent settings.

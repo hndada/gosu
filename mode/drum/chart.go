@@ -142,15 +142,15 @@ func NewChartInfo(cpath string) (info gosu.ChartInfo, err error) {
 	info = gosu.ChartInfo{
 		Path: cpath,
 		// Mods:       mods,
-		Header:     c.ChartHeader,
-		Mode:       mode,
-		SubMode:    0,
-		Level:      gosu.Level(c),
-		Duration:   c.Duration(),
-		NoteCounts: c.NoteCounts(),
-		MainBPM:    main,
-		MinBPM:     min,
-		MaxBPM:     max,
+		ChartHeader: c.ChartHeader,
+		Mode:        mode,
+		SubMode:     0,
+		Level:       gosu.Level(c),
+		Duration:    c.Duration(),
+		NoteCounts:  c.NoteCounts(),
+		MainBPM:     main,
+		MinBPM:      min,
+		MaxBPM:      max,
 	}
 	return
 }

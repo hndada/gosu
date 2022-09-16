@@ -4,6 +4,7 @@ import (
 	"image/color"
 
 	"github.com/hndada/gosu"
+	"github.com/hndada/gosu/input"
 )
 
 // Todo: Tick judgment should be bound to MaxScaledBPM (->280)
@@ -30,3 +31,28 @@ var JudgmentColors = []color.NRGBA{
 
 // Roll / Shake note does not affect on Flow / Acc scores.
 // For example, a Roll / Shake only chart has extra score only: max score is 100k.
+
+func (s ScenePlay) IsColorHit(color int) bool {
+	var keys []int
+	switch color {
+	case Red:
+		keys = []int{1, 2}
+	case Blue:
+		keys = []int{0, 3}
+	}
+	for _, k := range keys {
+		if s.KeyAction(k) == input.Hit {
+			return true
+		}
+	}
+	return false
+}
+func (s ScenePlay) IsOtherColorHit(color int) bool {
+	switch color {
+	case Red:
+		return s.IsColorHit(Blue)
+	case Blue:
+		return s.IsColorHit(Red)
+	}
+	return false
+}

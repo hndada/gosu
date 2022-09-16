@@ -26,13 +26,14 @@ type ScenePlay struct {
 	Speed        float64
 
 	gosu.Result
-	StagedNote  *Note
-	StagedDot   *Dot
-	StagedShake *Note
-	Flow        float64
-	Combo       int
-	DotCount    int
-	ShakeCount  int
+	StagedNote   *Note
+	StagedDot    *Dot
+	StagedShake  *Note
+	WaitingColor int // For judging big note.
+	Flow         float64
+	Combo        int
+	DotCount     int
+	ShakeCount   int
 	// NoteWeights is a sum of weight of marked notes.
 	// This is also max value of each score sum can get at the time.
 	NoteWeights float64
@@ -88,7 +89,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	}
 	s.KeyLogger = gosu.NewKeyLogger(KeySettings[:])
 	if rf != nil {
-		s.KeyLogger.FetchPressed = gosu.NewReplayListener(rf, 4, s.time)
+		s.KeyLogger.FetchPressed = NewReplayListener(rf, s.time)
 	}
 
 	s.TransPoint = c.TransPoints[0]
@@ -111,6 +112,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	if len(s.Chart.Dots) > 0 {
 		s.StagedDot = s.Chart.Dots[0]
 	}
+	s.WaitingColor = -1
 	s.Flow = 1
 
 	s.Skin = DefaultSkin
@@ -216,6 +218,29 @@ func (s *ScenePlay) Update() any {
 
 	var judgment gosu.Judgment
 	var big bool
+
+	// Todo: set sample when note is hit
+	samples := make([]gosu.Sample, 4)
+	isHits := make([]bool, 4)
+
+	if s.WaitingColor != -1 {
+		if s.IsOtherColorHit(s.WaitingColor) {
+			s.WaitingColor = -1
+			s.StagedNote = s.StagedNote.Next
+		}
+	}
+	var j gosu.Judgment
+	func() {
+		if s.StagedNote == nil {
+			return
+		}
+		if n := s.StagedNote; n != nil {
+			if s.IsOtherColorHit(s.WaitingColor) {
+				j = Miss
+				return
+			}
+		}
+	}()
 	// for k, n := range s.Staged {
 	// 	if n == nil {
 	// 		continue
@@ -250,6 +275,22 @@ func (s *ScenePlay) Update() any {
 	// 		s.MeterDrawer.AddMark(int(td), colorType)
 	// 	}
 	// }
+	for k, hit := range isHits {
+		if !hit {
+			continue
+		}
+		sample := samples[k]
+		vol := sample.Volume
+		if vol == 0 {
+			vol = s.TransPoint.Volume
+		}
+		if name := sample.Name; name != "" {
+			// Todo: apply effect volume change
+			s.Effects.PlayWithVolume(name, vol)
+		} else {
+			// Todo: play default sounds
+		}
+	}
 
 	s.BarDrawer.Update(s.time)
 	// s.ShakeDrawer.Update()

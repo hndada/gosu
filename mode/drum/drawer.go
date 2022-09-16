@@ -49,6 +49,7 @@ var (
 
 // Let's draw as same as possible of osu! does.
 // Todo: should BodyDrawer's Notes also be reversed at Draw()?
+// Todo: draw a whole Roll at here
 type BodyDrawer struct {
 	BodySprites [2]draws.Sprite
 	TailSprite  [2]draws.Sprite

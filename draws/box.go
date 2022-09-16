@@ -13,9 +13,10 @@ type Box struct {
 	Sprite
 	PadW, PadH       float64
 	MarginW, MarginH float64
-	IndexX, IndexY   int // For sub boxes.
-	Boxes            []Box
-	Texts            []Text
+	// IndexX, IndexY   int // For sub boxes.
+	// Boxes            []Box
+	Grid  [][]Box
+	Texts []Text
 }
 
 //	func NewBox(i *ebiten.Image, PadW, PadH float64) Box {
@@ -25,24 +26,58 @@ type Box struct {
 //			PadH:   PadH,
 //		}
 //	}
-func (root Box) AddBox(b Box, indexX, indexY int) {
-	// sort.Slice()
+//
+//	func (root Box) AppendBoxToRow(b Box) {
+//		root.Grid = append(root.Grid, b)
+//	}
+func (root *Box) AppendBoxInNewRow(b Box) {
+	root.Grid = append(root.Grid, []Box{b})
 }
+func (root *Box) AppendBoxInRow(b Box) {
+	if len(root.Grid) == 0 {
+		root.Grid = append(root.Grid, []Box{})
+	}
+	i := len(root.Grid) - 1
+	root.Grid[i] = append(root.Grid[i], b)
+}
+
+//	func (root *Box) AddBox(b Box, i, j int) { //indexX, indexY int) {
+//		if i > len(root.Boxes) {
+//			i = len(root.Boxes)
+//			root.Boxes = append(root.Boxes, )
+//		}
+//		if i == len(root.Boxes) {
+//			j = 0
+//		} else if j > len(root.Boxes[i]) {
+//			j = len(root.Boxes[i])
+//		}
+//	}
 func (root Box) Draw(screen *ebiten.Image) {
 	root.Sprite.Draw(screen, nil)
-	// Suppose all sub boxes have same origin and initial position with the root box.
-	for _, b := range root.Boxes {
-		// Todo: move regarding its margins and indexes
-		b.Move(0, 0)
-		for _, txt := range b.Texts {
-			txt.Draw(screen, b)
+	// Suppose origins of all boxes in Grid are LeftTop.
+	// Suppose initial positions of all boxes in Grid are consistent with the root box.
+	for _, row := range root.Grid {
+		x := root.LeftTopX() + root.PadW
+		y := root.LeftTopY() + root.PadH
+		var maxH float64
+		for _, b := range row {
+			x += b.MarginW
+			b.Move(x, y)
+			for _, txt := range b.Texts {
+				txt.Draw(screen, b)
+			}
+			x += b.w + b.MarginW
+			if h := b.h + 2*b.MarginH; maxH < h {
+				maxH = h
+			}
 		}
+		y += maxH
 	}
 }
 
 type Text struct {
 	Text   string
-	Color  color.NRGBA
+	Color  color.Color // color.NRGBA
 	face   font.Face
 	origin Origin // Text's align is determined by its Origin.
 	w, h   float64
