@@ -29,5 +29,6 @@ go.work
 # !/cmd/gosu/replay
 !/cmd/gosu/skin
 
+~$gosu-ui.pptx
 
 # !/cmd/gosu/skin/*.*
