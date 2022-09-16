@@ -79,15 +79,16 @@ func (d BodyDrawer) Draw(screen *ebiten.Image) {
 		ratio := length / body.W()
 		body.SetScaleXY(ratio, 1, ebiten.FilterLinear)
 		body.Move(head.Position(d.Time), 0)
-		// op := &ebiten.DrawImageOptions{}
-		// if tail.Marked {
-		// 	op.ColorM.ChangeHSV(0, 0.3, 0.3)
-		// }
-		// body.Draw(screen, op)
-		body.Draw(screen, nil)
+		op := &ebiten.DrawImageOptions{}
+		if tail.Marked {
+			op.ColorM.ChangeHSV(0, 0.3, 0.3)
+		}
+		body.Draw(screen, op)
+		// body.Draw(screen, nil)
 		end := d.TailSprite[tail.Size]
 		end.Move(tail.Position(d.Time), 0)
-		end.Draw(screen, nil)
+		// end.Draw(screen, nil)
+		end.Draw(screen, op)
 	}
 }
 
@@ -113,15 +114,19 @@ func (d DotDrawer) Draw(screen *ebiten.Image) {
 			continue
 		}
 		sprite := d.Sprite
+		op := &ebiten.DrawImageOptions{}
 		if dot.Marked {
-			sprite.SetColor(DotColorHit)
+			op.ColorM.ScaleWithColor(DotColorHit)
+			// sprite.SetColor(DotColorHit)
 		} else if d.Staged.Time > dot.Time {
-			sprite.SetColor(DotColorMiss)
+			op.ColorM.ScaleWithColor(DotColorMiss)
+			// sprite.SetColor(DotColorMiss)
 		} else {
-			sprite.SetColor(DotColorReady)
+			op.ColorM.ScaleWithColor(DotColorReady)
+			// sprite.SetColor(DotColorReady)
 		}
 		sprite.Move(dot.Position(d.Time), 0)
-		sprite.Draw(screen, nil)
+		sprite.Draw(screen, op)
 	}
 }
 
@@ -171,6 +176,9 @@ func (d NoteDarwer) Draw(screen *ebiten.Image) {
 			note.Move(pos, 0)
 			note.Draw(screen, nil)
 			if mode == modeShakes {
+				continue
+			}
+			if n.Type == Roll {
 				continue
 			}
 			overlay := d.OverlaySprites[n.Size][d.Overlay]

@@ -116,9 +116,14 @@ func LoadSkin() {
 			skin.JudgmentSprites[i][j] = s
 		}
 		for j, clr := range []color.NRGBA{ColorRed, ColorBlue, ColorYellow} {
-			s := draws.NewSpriteFromImage(noteImage)
+			img := ebiten.NewImage(noteImage.Size())
+			op := &ebiten.DrawImageOptions{}
+			op.ColorM.ScaleWithColor(clr)
+			img.DrawImage(noteImage, op)
+
+			s := draws.NewSpriteFromImage(img)
+			// s.SetColor(clr)
 			s.SetScale(noteHeight / s.H())
-			s.SetColor(clr)
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 			skin.NoteSprites[i][j] = s
 		}
@@ -126,7 +131,7 @@ func LoadSkin() {
 			s := draws.NewSpriteFromImage(rollEndImage)
 			s.SetScale(noteHeight / s.H())
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginLeftMiddle)
-			s.SetColor(ColorYellow)
+			// s.SetColor(ColorYellow)
 			skin.TailSprites[i] = s
 		}
 		// {
@@ -151,7 +156,7 @@ func LoadSkin() {
 			s := draws.NewSpriteFromImage(rollMidImage)
 			s.SetScale(noteHeight / s.H())
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginLeftMiddle)
-			s.SetColor(ColorYellow)
+			// s.SetColor(ColorYellow)
 			skin.BodySprites[i] = s
 		}
 	}
@@ -159,7 +164,7 @@ func LoadSkin() {
 		s := draws.NewSprite("skin/drum/note/roll/dot.png")
 		s.SetScale(DotScale)
 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
-		s.SetColor(ColorYellow)
+		// s.SetColor(ColorYellow)
 		skin.DotSprite = s
 	}
 	for i, name := range []string{"note", "spin", "limit"} {
