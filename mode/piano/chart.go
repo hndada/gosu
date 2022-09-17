@@ -1,6 +1,7 @@
 package piano
 
 import (
+	"crypto/md5"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,12 +11,17 @@ import (
 	"github.com/hndada/gosu/format/osu"
 )
 
+// Level, ScoreFactors, MD5 will not exported to file.
 type Chart struct {
 	gosu.ChartHeader
+	MD5         [16]byte
 	KeyCount    int
 	TransPoints []*gosu.TransPoint
 	Notes       []*Note
 	Bars        []*Bar
+
+	Level        float64
+	ScoreFactors [3]float64
 }
 
 // Position is for calculating note and bar's sprite positions efficiently.
@@ -37,14 +43,19 @@ func NewChart(cpath string) (c *Chart, err error) {
 	}
 	c = new(Chart)
 	c.ChartHeader = gosu.NewChartHeader(f)
+	c.MD5 = md5.Sum(dat)
+	// c.MD5, err = gosu.MD5(cpath)
+	// if err != nil {
+	// 	return
+	// }
+	switch f := f.(type) {
+	case *osu.Format:
+		c.KeyCount = int(f.CircleSize)
+	}
 	c.TransPoints = gosu.NewTransPoints(f)
 	if len(c.TransPoints) == 0 {
 		err = fmt.Errorf("no TransPoints in the chart")
 		return
-	}
-	switch f := f.(type) {
-	case *osu.Format:
-		c.KeyCount = int(f.CircleSize)
 	}
 	c.Notes = NewNotes(f, c.KeyCount)
 	c.Bars = NewBars(c.TransPoints, c.Duration())
@@ -75,6 +86,7 @@ func NewChart(cpath string) (c *Chart, err error) {
 		}
 		b.Position = tp.Position + float64(b.Time-tp.Time)*tp.Speed
 	}
+	c.Level, c.ScoreFactors = gosu.Level(c)
 	return
 }
 
@@ -117,7 +129,7 @@ func NewChartInfo(cpath string) (info gosu.ChartInfo, err error) {
 		ChartHeader: c.ChartHeader,
 		Mode:        mode,
 		SubMode:     c.KeyCount,
-		Level:       gosu.Level(c),
+		Level:       c.Level,
 		Duration:    c.Duration(),
 		NoteCounts:  c.NoteCounts(),
 		MainBPM:     main,

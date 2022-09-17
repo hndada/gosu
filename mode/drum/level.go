@@ -1,11 +1,13 @@
 package drum
 
+import "math"
+
 // Todo: Variate factors based on difficulty-skewed charts
 var (
-	DifficultyDuration  int64   = 800
-	FlowScoreFactor     float64 = 0.5 // a
-	AccScoreFactor      float64 = 5   // b
-	KoolRateScoreFactor float64 = 2   // c
+	DifficultyDuration int64   = 800
+	FlowScoreFactor    float64 = 0.5 // a
+	AccScoreFactor     float64 = 5   // b
+	ExtraScoreFactor   float64 = 2   // c
 )
 
 func (n Note) Weight() float64 {
@@ -18,7 +20,9 @@ func (n Note) Weight() float64 {
 			return 1.1
 		}
 	case Shake: // Shake is apparently easier than Roll, since it is free from beat.
-		return 0.03125 // 0.125 * 0.25
+		// https://www.desmos.com/calculator/nsogcrebx9
+		return math.Pow(float64(32*n.Tick), 0.75) / 32 // 1/32 = 1/(8 * 4)
+		// return 0.03125 // 0.125 * 0.25
 	}
 	return 0
 }
@@ -46,7 +50,7 @@ func (c Chart) Difficulties() []float64 {
 		}
 
 		// Gives uniform difficulty for Shake ticks.
-		// start and end is to give difficulty bound to current section.
+		// start and end are to give difficulty bound to current section.
 		start := n.Time
 		if start < t {
 			start = t
@@ -55,21 +59,14 @@ func (c Chart) Difficulties() []float64 {
 		if end > t+DifficultyDuration {
 			end = t + DifficultyDuration
 		}
-		var rate float64 = 0.0
-		if end-start > 0 {
-			rate = float64(n.Duration) / float64(end-start)
+		var rate float64
+		// if end-start > 0 {
+		if n.Duration > 0 {
+			rate = float64(end-start) / float64(n.Duration)
 		}
-		ticks := float64(n.Tick) * rate
-		d += ticks * n.Weight()
-		// beats := float64(end-start) * n.ScaledBPM / 60000
-		// switch n.Type {
-		// case Head:
-		// 	ticks := beats * 4
-		// 	d += ticks * DotWeight
-		// case Shake:
-		// 	ticks := beats * 3
-		// 	d += ticks * ShakeWeight
-		// }
+		d += n.Weight() * rate
+		// ticks := float64(n.Tick) * rate
+		// d += ticks * n.Weight()
 	}
 	ds2 := make([]float64, 0, c.Duration()/DifficultyDuration+1)
 	for _, dot := range c.Dots {

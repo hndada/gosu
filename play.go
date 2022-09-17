@@ -1,8 +1,6 @@
 package gosu
 
 import (
-	"crypto/md5"
-	"os"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -17,15 +15,15 @@ const (
 	WaitAfter     int64 = 3000
 )
 
-func MD5(cpath string) (v [16]byte, err error) {
-	var b []byte
-	b, err = os.ReadFile(cpath)
-	if err != nil {
-		return
-	}
-	v = md5.Sum(b)
-	return
-}
+// func MD5(cpath string) (v [16]byte, err error) {
+// 	var b []byte
+// 	b, err = os.ReadFile(cpath)
+// 	if err != nil {
+// 		return
+// 	}
+// 	v = md5.Sum(b)
+// 	return
+// }
 
 type Timer struct {
 	Tick    int

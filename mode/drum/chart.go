@@ -1,6 +1,7 @@
 package drum
 
 import (
+	"crypto/md5"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -21,11 +22,16 @@ func (f Floater) Position(time int64) float64 {
 
 type Chart struct {
 	gosu.ChartHeader
+	MD5         [16]byte
 	TransPoints []*gosu.TransPoint
 	Notes       []*Note
+	Rolls       []*Note
 	Shakes      []*Note
-	Dots        []*Dot
+	Dots        []*Dot // Ticks in a Roll note.
 	Bars        []*Bar
+
+	Level        float64
+	ScoreFactors [3]float64
 }
 
 var (
@@ -51,6 +57,7 @@ func NewChart(cpath string) (c *Chart, err error) {
 	}
 	c = new(Chart)
 	c.ChartHeader = gosu.NewChartHeader(f)
+	c.MD5 = md5.Sum(dat)
 	c.TransPoints = gosu.NewTransPoints(f)
 	if len(c.TransPoints) == 0 {
 		err = fmt.Errorf("no TransPoints in the chart")
@@ -62,9 +69,9 @@ func NewChart(cpath string) (c *Chart, err error) {
 		tp.Speed *= bpmScale
 	}
 
-	c.Notes, c.Shakes = NewNotes(f)
+	c.Notes, c.Rolls, c.Shakes = NewNotes(f)
 	tp := c.TransPoints[0]
-	for _, ns := range [][]*Note{c.Notes, c.Shakes} {
+	for _, ns := range [][]*Note{c.Notes, c.Rolls, c.Shakes} {
 		for _, n := range ns {
 			for tp.Next != nil && n.Time >= tp.Next.Time {
 				tp = tp.Next
@@ -86,7 +93,7 @@ func NewChart(cpath string) (c *Chart, err error) {
 			}
 		}
 	}
-	c.Dots = NewDots(c.Notes)
+	c.Dots = NewDots(c.Rolls)
 	// switch f := f.(type) {
 	// case *osu.Format:
 	// 	// TransPoints' speed has not scaled yet.
@@ -106,6 +113,7 @@ func NewChart(cpath string) (c *Chart, err error) {
 		}
 		b.Speed = tp.Speed
 	}
+	c.Level, c.ScoreFactors = gosu.Level(c)
 	return
 }
 
@@ -145,7 +153,7 @@ func NewChartInfo(cpath string) (info gosu.ChartInfo, err error) {
 		ChartHeader: c.ChartHeader,
 		Mode:        mode,
 		SubMode:     0,
-		Level:       gosu.Level(c),
+		Level:       c.Level,
 		Duration:    c.Duration(),
 		NoteCounts:  c.NoteCounts(),
 		MainBPM:     main,

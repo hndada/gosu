@@ -16,14 +16,19 @@ var (
 	ColorRed    = color.NRGBA{235, 69, 44, 255}
 	ColorBlue   = color.NRGBA{68, 141, 171, 255}
 	ColorYellow = color.NRGBA{252, 83, 6, 255}
+	ColorPurple = color.NRGBA{150, 100, 200, 255}
 	ColorGray   = color.NRGBA{67, 67, 67, 255}
 )
 
-const (
-	ShakeNote = iota
-	ShakeSpin
-	ShakeLimit
-)
+// const (
+//
+//	ShakeNote = iota
+//	ShakeInner
+//	ShakeOuter
+//	// ShakeSpin
+//	// ShakeLimit
+//
+// )
 const (
 	LeftBlue = iota
 	LeftRed
@@ -50,13 +55,16 @@ type Skin struct {
 	JudgmentSprites [2][3]draws.Sprite // 3 Judgments.
 	// RedSprites      [2]draws.Sprite
 	// BlueSprites     [2]draws.Sprite
-	NoteSprites [2][3]draws.Sprite // [3] are for Red, Blue, Yellow each.
+	// NoteSprites [2][3]draws.Sprite // [3] are for Red, Blue, Yellow each.
+	NoteSprites [2][4]draws.Sprite // [4] are for Red, Blue, Yellow, Purple each.
 	// HeadSprites    [2]draws.Sprite    // Overlay will be drawn during game play.
 	TailSprites    [2]draws.Sprite
 	OverlaySprites [2][2]draws.Sprite // 2 Overlays.
 	BodySprites    [2]draws.Sprite
 	DotSprite      draws.Sprite
-	ShakeSprites   [3]draws.Sprite
+	// ShakeSprites   [3]draws.Sprite
+	ShakeBorderSprite draws.Sprite
+	ShakeSprite       draws.Sprite
 
 	KeySprites     [4]draws.Sprite // 4 Keys.
 	KeyFieldSprite draws.Sprite
@@ -82,8 +90,33 @@ func LoadSkin() {
 		skin.FieldSprite = s
 	}
 	{
-		s := draws.NewSpriteFromImage(noteImage)
-		s.SetScale(regularNoteHeight / s.H())
+		sw, sh := noteImage.Size()
+		outer := draws.NewScaledImage(noteImage, 1.2)
+		pad := draws.NewScaledImage(noteImage, 1.1)
+		inner := noteImage
+		img := ebiten.NewImage(outer.Size())
+		a := uint8(255 * FieldDarkness)
+		{
+			op := &ebiten.DrawImageOptions{}
+			op.ColorM.ScaleWithColor(color.NRGBA{128, 128, 128, a})
+			op.GeoM.Translate(0, 0)
+			img.DrawImage(outer, op)
+		}
+		{
+			op := &ebiten.DrawImageOptions{}
+			op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 255, 255})
+			op.CompositeMode = ebiten.CompositeModeDestinationOut
+			op.GeoM.Translate(0.05*float64(sw), 0.05*float64(sh))
+			img.DrawImage(pad, op)
+		}
+		{
+			op := &ebiten.DrawImageOptions{}
+			op.ColorM.ScaleWithColor(color.NRGBA{60, 60, 60, a})
+			op.GeoM.Translate(0.1*float64(sw), 0.1*float64(sh))
+			img.DrawImage(inner, op)
+		}
+		s := draws.NewSpriteFromImage(img)
+		s.SetScale(1.2 * regularNoteHeight / s.H())
 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 		skin.HintSprite = s
 	}
@@ -115,14 +148,13 @@ func LoadSkin() {
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 			skin.JudgmentSprites[i][j] = s
 		}
-		for j, clr := range []color.NRGBA{ColorRed, ColorBlue, ColorYellow} {
+		for j, clr := range []color.NRGBA{ColorRed, ColorBlue, ColorYellow, ColorPurple} {
 			img := ebiten.NewImage(noteImage.Size())
 			op := &ebiten.DrawImageOptions{}
 			op.ColorM.ScaleWithColor(clr)
 			img.DrawImage(noteImage, op)
 
 			s := draws.NewSpriteFromImage(img)
-			// s.SetColor(clr)
 			s.SetScale(noteHeight / s.H())
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 			skin.NoteSprites[i][j] = s
@@ -167,19 +199,59 @@ func LoadSkin() {
 		// s.SetColor(ColorYellow)
 		skin.DotSprite = s
 	}
-	for i, name := range []string{"note", "spin", "limit"} {
-		path := fmt.Sprintf("skin/drum/note/shake/%s.png", name)
-		s := draws.NewSprite(path)
-		if name == "note" {
-			s.SetScale(regularNoteHeight / s.H())
-			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
-		} else {
-			s.SetScale(ShakeScale)
-			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
-			// s.SetPosition(ShakePosX, ShakePosY, draws.OriginCenterMiddle)
+	{
+		sw, sh := noteImage.Size()
+		inner := draws.NewScaledImage(noteImage, 4)
+		shake := ebiten.NewImage(inner.Size())
+		{
+			op := &ebiten.DrawImageOptions{}
+			color := ColorPurple
+			color.A = 128
+			op.ColorM.ScaleWithColor(color)
+			shake.DrawImage(inner, op)
 		}
-		skin.ShakeSprites[i] = s
+		{
+			s := draws.NewSpriteFromImage(shake)
+			s.SetScale(4 * regularNoteHeight / s.H())
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
+			skin.ShakeSprite = s
+		}
+
+		outer := draws.NewScaledImage(noteImage, 4.1)
+		border := ebiten.NewImage(outer.Size())
+		{
+			op := &ebiten.DrawImageOptions{}
+			op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 255, 255})
+			op.GeoM.Translate(0, 0)
+			border.DrawImage(outer, op)
+		}
+		{
+			op := &ebiten.DrawImageOptions{}
+			op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 255, 255})
+			op.CompositeMode = ebiten.CompositeModeDestinationOut
+			op.GeoM.Translate(0.05*float64(sw), 0.05*float64(sh))
+			border.DrawImage(inner, op)
+		}
+		{
+			s := draws.NewSpriteFromImage(border)
+			s.SetScale(4.1 * regularNoteHeight / s.H())
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
+			skin.ShakeBorderSprite = s
+		}
 	}
+	// for i, name := range []string{"note", "spin", "limit"} {
+	// 	path := fmt.Sprintf("skin/drum/note/shake/%s.png", name)
+	// 	s := draws.NewSprite(path)
+	// 	if name == "note" {
+	// 		s.SetScale(regularNoteHeight / s.H())
+	// 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
+	// 	} else {
+	// 		s.SetScale(ShakeScale)
+	// 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
+	// 		// s.SetPosition(ShakePosX, ShakePosY, draws.OriginCenterMiddle)
+	// 	}
+	// 	skin.ShakeSprites[i] = s
+	// }
 
 	// Position of combo is dependent on widths of key sprite.
 	// Key sprites are overlapped at each side.

@@ -27,13 +27,13 @@ type ScenePlay struct {
 	Speed        float64
 	Cursor       float64
 
-	gosu.Result
 	Staged []*Note
-	Flow   float64
-	Combo  int
-	// NoteWeights is a sum of weight of marked notes.
-	// This is also max value of each score sum can get at the time.
-	NoteWeights float64
+	gosu.Scorer
+	// gosu.Result
+	// Flow         float64
+	// Combo        int
+	// NoteWeights  float64
+	// ExtraWeights float64
 
 	Skin             // The skin may be applied some custom settings: on/off some sprites
 	BackgroundDrawer gosu.BackgroundDrawer
@@ -56,7 +56,6 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	}
 	c := s.Chart
 	keyCount := c.KeyCount & ScratchMask
-
 	if rf != nil {
 		s.SetTicks(rf.BufferTime(), c.Duration())
 	} else {
@@ -85,14 +84,16 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	s.Cursor = float64(s.Time()) * s.Speed
 	s.SetSpeed()
 
-	s.Result.MD5, err = gosu.MD5(cpath)
-	if err != nil {
-		return
-	}
-	s.Result.JudgmentCounts = make([]int, len(Judgments))
-	s.Result.FlowMarks = make([]float64, 0, c.Duration()/1000)
+	s.Scorer = gosu.NewScorer()
+	s.ScoreFactors = c.ScoreFactors
+	s.JudgmentCounts = make([]int, len(Judgments))
+	// s.Result.FlowMarks = make([]float64, 0, c.Duration()/1000)
+	var maxWeight float64
 	for _, n := range c.Notes {
-		s.MaxNoteWeights += n.Weight()
+		maxWeight += n.Weight()
+	}
+	for i := range s.MaxWeights {
+		s.MaxWeights[i] = maxWeight
 	}
 	s.Staged = make([]*Note, keyCount)
 	for k := range s.Staged {
@@ -103,7 +104,6 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 			}
 		}
 	}
-	s.Flow = 1
 
 	s.Skin = Skins[keyCount]
 	s.BackgroundDrawer = gosu.BackgroundDrawer{
@@ -181,9 +181,7 @@ func (s *ScenePlay) Update() any {
 	if s.IsDone() {
 		debug.SetGCPercent(100)
 		s.MusicPlayer.Close()
-		return gosu.PlayToResultArgs{
-			Result: s.Result,
-		}
+		return gosu.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
 	}
 	if s.Tick == 0 {
 		s.MusicPlayer.Play()
@@ -222,11 +220,11 @@ func (s *ScenePlay) Update() any {
 			if worst.Window < j.Window {
 				worst = j
 			}
-			var colorType int = 0
+			var kind int = 0
 			if n.Type == Tail {
-				colorType = 1
+				kind = 1
 			}
-			s.MeterDrawer.AddMark(int(td), colorType)
+			s.MeterDrawer.AddMark(int(td), kind)
 		}
 	}
 
@@ -235,7 +233,7 @@ func (s *ScenePlay) Update() any {
 		d.Update(s.Cursor)
 	}
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
-	s.ScoreDrawer.Update(s.Score())
+	s.ScoreDrawer.Update(s.Scores[0])
 	s.ComboDrawer.Update(s.Combo)
 	s.JudgmentDrawer.Update(worst)
 	s.MeterDrawer.Update()
@@ -264,12 +262,12 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 }
 
 func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
-	var fr, ar, rr float64 = 1, 1, 1
-	if s.NoteWeights > 0 {
-		fr = s.Flows / s.NoteWeights
-		ar = s.Accs / s.NoteWeights
-		rr = s.Extras / s.NoteWeights
-	}
+	// var fr, ar, rr float64 = 1, 1, 1
+	// if s.NoteWeights > 0 {
+	// 	fr = s.Flows / s.NoteWeights
+	// 	ar = s.Accs / s.NoteWeights
+	// 	rr = s.Extras / s.ExtraWeights
+	// }
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
@@ -278,8 +276,8 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 			// "Music volume (Press 1/2): %.0f%%\nEffect volume (Press 3/4): %.0f%%\n\n"+
 			"Vsync: %v\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Time())/1000, float64(s.Chart.Duration())/1000,
-		s.Score(), s.ScoreBound(), s.Flow*100, s.Combo,
-		fr*100, ar*100, rr*100, s.JudgmentCounts,
+		s.Scores[0], s.ScoreBounds[0], s.Flow*100, s.Combo,
+		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
 		s.Speed*100, *s.SpeedHandler.Target*100, ExposureTime(s.CurrentSpeed()),
 		// gosu.MusicVolume*100, gosu.EffectVolume*100,
 		gosu.VsyncSwitch))

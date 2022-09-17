@@ -1,12 +1,6 @@
 package piano
 
-// Todo: Variate factors based on difficulty-skewed charts
-var (
-	DifficultyDuration  int64   = 800
-	FlowScoreFactor     float64 = 0.5 // a
-	AccScoreFactor      float64 = 5   // b
-	KoolRateScoreFactor float64 = 2   // c
-)
+const DifficultyDuration int64 = 800
 
 // Mods may change the duration of chart.
 // Todo: implement actual calculating chart difficulties

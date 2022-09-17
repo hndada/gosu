@@ -18,7 +18,8 @@ const (
 	None   = iota // No color.
 	Red           // aka Don.
 	Blue          // aka Kat.
-	Yellow        // Roll
+	Yellow        // For Roll.
+	Purple        // For Shake.
 )
 const (
 	Regular = iota
@@ -35,7 +36,8 @@ type Note struct {
 	Color int
 	Size  int
 	// Dots  []*Dot
-	Tick int // The number of ticks left to hit in Roll or Shake.
+	Tick    int // The number of ticks in Roll or Shake.
+	HitTick int // The number of ticks being hit.
 
 	gosu.Sample
 	Marked bool
@@ -62,6 +64,7 @@ func NewNote(f any) (n *Note) {
 		case f.NoteType&osu.HitTypeSpinner != 0:
 			n.Type = Shake
 			n.Duration = int64(f.EndTime) - n.Time
+			n.Color = Purple
 		default:
 			n.Type = Normal
 			if osu.IsDon(f) {
@@ -79,16 +82,19 @@ func NewNote(f any) (n *Note) {
 	return
 }
 
-func NewNotes(f any) (notes, shakes []*Note) {
+func NewNotes(f any) (notes, rolls, shakes []*Note) {
 	switch f := f.(type) {
 	case *osu.Format:
 		notes = make([]*Note, 0, len(f.HitObjects)*2)
 		for _, ho := range f.HitObjects {
 			n := NewNote(ho)
-			if n.Type == Shake {
-				shakes = append(shakes, n)
-			} else {
+			switch n.Type {
+			case Normal:
 				notes = append(notes, n)
+			case Roll:
+				rolls = append(rolls, n)
+			case Shake:
+				shakes = append(shakes, n)
 			}
 		}
 	}
@@ -97,18 +103,21 @@ func NewNotes(f any) (notes, shakes []*Note) {
 	sort.SliceStable(notes, func(i, j int) bool {
 		return notes[i].Time < notes[j].Time
 	})
+	sort.SliceStable(rolls, func(i, j int) bool {
+		return rolls[i].Time < rolls[j].Time
+	})
 	sort.SliceStable(shakes, func(i, j int) bool {
 		return shakes[i].Time < shakes[j].Time
 	})
 	prevs := make([]*Note, 3)
-	for _, ns := range [][]*Note{notes, shakes} {
+	for kind, ns := range [][]*Note{notes, rolls, shakes} {
 		for _, n := range ns {
-			prev := prevs[n.Type]
+			prev := prevs[kind]
 			n.Prev = prev
 			if prev != nil {
 				prev.Next = n
 			}
-			prevs[n.Type] = n
+			prevs[kind] = n
 		}
 	}
 	return
