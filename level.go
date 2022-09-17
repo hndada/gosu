@@ -6,7 +6,6 @@ import (
 )
 
 // Todo: find the best SliceDuration value
-// Todo: separate SliceDuration per mode.
 const (
 	DecayFactor = 0.95
 	LevelPower  = 1.15
@@ -15,7 +14,7 @@ const (
 
 // No need to define interface{} called ChartAnalyzer:
 // https://go.dev/play/p/PtgBkwKZFhP
-func Level(c interface{ Difficulties() []float64 }) float64 {
+func Level(c interface{ Difficulties() []float64 }) (float64, [3]float64) {
 	ds := c.Difficulties()
 	sort.Slice(ds, func(i, j int) bool { return ds[i] > ds[j] })
 	sum, weight := 0.0, 1.0
@@ -23,5 +22,7 @@ func Level(c interface{ Difficulties() []float64 }) float64 {
 		sum += weight * term
 		weight *= DecayFactor
 	}
-	return math.Pow(sum, LevelPower) * LevelScale
+	level := math.Pow(sum, LevelPower) * LevelScale
+	// Todo: Variate factors based on difficulty-skewed charts
+	return level, [3]float64{0.5, 5, 2}
 }

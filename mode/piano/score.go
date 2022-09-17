@@ -2,7 +2,6 @@ package piano
 
 import (
 	"image/color"
-	"math"
 
 	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/input"
@@ -40,35 +39,25 @@ func Verdict(noteType int, a input.KeyAction, td int64) gosu.Judgment {
 	return gosu.Judgment{}
 }
 
+// Extra primitive in Piano mode is a count of Kools.
 // Todo: no getting Flow when hands off the long note
 func (s *ScenePlay) MarkNote(n *Note, j gosu.Judgment) {
-	var a = FlowScoreFactor
 	if j == Miss {
-		s.Combo = 0
+		s.BreakCombo()
 	} else {
-		s.Combo++
+		s.AddCombo()
 	}
-	s.Flow += j.Flow * n.Weight()
-	if s.Flow < 0 {
-		s.Flow = 0
-	} else if s.Flow > 1 {
-		s.Flow = 1
-	}
-	s.Flows += math.Pow(s.Flow, a) * n.Weight()
-	s.Accs += j.Acc * n.Weight()
+	s.CalcScore(gosu.Flow, j.Flow, n.Weight())
+	s.CalcScore(gosu.Acc, j.Acc, n.Weight())
 	if j.Window == Kool.Window {
-		s.Extras += n.Weight()
+		s.CalcScore(gosu.Extra, 1, n.Weight())
 	}
-	for i, jk := range Judgments {
-		if jk.Window == j.Window {
+	for i, judgment := range Judgments {
+		if judgment.Window == j.Window {
 			s.JudgmentCounts[i]++
 			break
 		}
-		if i == 4 {
-			panic("no reach")
-		}
 	}
-	s.NoteWeights += n.Weight()
 	n.Marked = true
 	if n.Type == Head && j == Miss {
 		s.MarkNote(n.Next, Miss)
@@ -78,52 +67,52 @@ func (s *ScenePlay) MarkNote(n *Note, j gosu.Judgment) {
 	}
 }
 
-// Total score consists of 3 scores: Flow, Acc, and Kool rate score.
-// Flow score is calculated with sum of Flow. Flow once named as Karma.
-// Acc score is calculated with sum of Acc of judgments.
-// Kool rate score is calculated with a rate of Kool counts.
-// Flow recovers fast when its value is low, vice versa: math.Pow(x, a); a < 1
-// Acc and Kool rate score increase faster as each parameter approaches to max value: math.Pow(x, b); b > 1
-const (
-	MaxFlowScore  = 7 * 1e5
-	MaxAccScore   = 3 * 1e5
-	MaxExtraScore = 1 * 1e5
-	MaxScore      = MaxFlowScore + MaxAccScore + MaxExtraScore // 1.1m
-)
+// const (
+// 	MaxFlowScore  = 7 * 1e5
+// 	MaxAccScore   = 3 * 1e5
+// 	MaxExtraScore = 1 * 1e5
+// 	MaxScore      = MaxFlowScore + MaxAccScore + MaxExtraScore // 1.1m
+// )
 
-func (s ScenePlay) Score() float64 {
-	fs, as, es := s.CalcScore()
-	return math.Ceil(fs + as + es)
-}
+// // CalcScores and CalcTotalScore are separated for convenient debugging.
+// func (s ScenePlay) CalcTotalScore() float64 {
+// 	fs, as, es := s.CalcScores()
+// 	return math.Ceil(fs + as + es)
+// }
 
-// Flow, acc, kool rate score in order.
-func (s ScenePlay) CalcScore() (fs, as, es float64) {
-	if s.MaxNoteWeights == 0 {
-		return 0, 0, 0 // No score when no notes.
-	}
-	var (
-		b = AccScoreFactor
-		c = KoolRateScoreFactor
-	)
-	fs = MaxFlowScore * (s.Flows / s.MaxNoteWeights)
-	as = MaxAccScore * math.Pow(s.Accs/s.MaxNoteWeights, b)
-	es = MaxExtraScore * math.Pow(s.Extras/s.MaxNoteWeights, c)
-	return
-}
-func (s ScenePlay) ScoreBound() float64 {
-	if s.MaxNoteWeights == 0 {
-		return 0 // No score when no notes.
-	}
-	var (
-		b = AccScoreFactor
-		c = KoolRateScoreFactor
-	)
-	fr := s.MaxNoteWeights - (s.NoteWeights - s.Flows)
-	ar := s.MaxNoteWeights - (s.NoteWeights - s.Accs)
-	er := s.MaxNoteWeights - (s.NoteWeights - s.Extras)
+// // Flow, acc, extra score in order.
+// func (s ScenePlay) CalcScores() (fs, as, es float64) {
+// 	var (
+// 		b = AccScoreFactor
+// 		c = ExtraScoreFactor
+// 	)
+// 	if s.MaxNoteWeights == 0 {
+// 		fs, as = 0, 0 // No score when no notes.
+// 	} else {
+// 		fs = MaxFlowScore * (s.Flows / s.MaxNoteWeights)
+// 		as = MaxAccScore * math.Pow(s.Accs/s.MaxNoteWeights, b)
+// 	}
+// 	if s.MaxExtraWeights == 0 {
+// 		es = 0
+// 	} else {
+// 		es = MaxExtraScore * math.Pow(s.Extras/s.MaxExtraWeights, c)
+// 	}
+// 	return
+// }
+// func (s ScenePlay) ScoreBound() float64 {
+// 	if s.MaxNoteWeights == 0 {
+// 		return 0 // No score when no notes.
+// 	}
+// 	var (
+// 		b = AccScoreFactor
+// 		c = ExtraScoreFactor
+// 	)
+// 	fr := s.MaxNoteWeights - (s.NoteWeights - s.Flows)
+// 	ar := s.MaxNoteWeights - (s.NoteWeights - s.Accs)
+// 	er := s.MaxExtraWeights - (s.NoteWeights - s.Extras)
 
-	fs := MaxFlowScore * (fr / s.MaxNoteWeights)
-	as := MaxAccScore * math.Pow(ar/s.MaxNoteWeights, b)
-	es := MaxExtraScore * math.Pow(er/s.MaxNoteWeights, c)
-	return math.Ceil(fs + as + es)
-}
+// 	fs := MaxFlowScore * (fr / s.MaxNoteWeights)
+// 	as := MaxAccScore * math.Pow(ar/s.MaxNoteWeights, b)
+// 	es := MaxExtraScore * math.Pow(er/s.MaxExtraWeights, c)
+// 	return math.Ceil(fs + as + es)
+// }
