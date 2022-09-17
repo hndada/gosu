@@ -84,8 +84,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	s.Cursor = float64(s.Time()) * s.Speed
 	s.SetSpeed()
 
-	s.Scorer = gosu.NewScorer()
-	s.ScoreFactors = c.ScoreFactors
+	s.Scorer = gosu.NewScorer(c.ScoreFactors)
 	s.JudgmentCounts = make([]int, len(Judgments))
 	// s.Result.FlowMarks = make([]float64, 0, c.Duration()/1000)
 	var maxWeight float64
@@ -276,7 +275,7 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 			// "Music volume (Press 1/2): %.0f%%\nEffect volume (Press 3/4): %.0f%%\n\n"+
 			"Vsync: %v\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Time())/1000, float64(s.Chart.Duration())/1000,
-		s.Scores[0], s.ScoreBounds[0], s.Flow*100, s.Combo,
+		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
 		s.Speed*100, *s.SpeedHandler.Target*100, ExposureTime(s.CurrentSpeed()),
 		// gosu.MusicVolume*100, gosu.EffectVolume*100,

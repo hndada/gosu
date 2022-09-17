@@ -46,7 +46,7 @@ var (
 // JudgmentScale might have scaled by FieldHeight.
 // Yet, Judgment is not circle image, actually.
 var (
-	JudgmentScale      float64 = 1
+	JudgmentScale      float64 = 0.72
 	DotScale           float64 = 0.5
 	ShakeScale         float64 = 1
 	DancerScale        float64 = 1

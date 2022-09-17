@@ -112,7 +112,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	s.Speed = 1
 	s.SetSpeed()
 
-	s.Scorer = gosu.NewScorer()
+	s.Scorer = gosu.NewScorer(c.ScoreFactors)
 	s.JudgmentCounts = make([]int, len(JudgmentCountKinds))
 	// s.FlowMarks = make([]float64, 0, c.Duration()/1000)
 	for _, n := range c.Notes {
@@ -161,7 +161,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 		TailSprites: s.TailSprites,
 		DotSprite:   s.DotSprite,
 		Time:        s.time,
-		Rolls:       s.Chart.Notes,
+		Rolls:       s.Chart.Rolls,
 		Dots:        s.Chart.Dots,
 		StagedDot:   s.StagedDot,
 	}
@@ -331,7 +331,7 @@ func (s *ScenePlay) Update() any {
 	s.NoteDrawer.Update(s.time, s.BPM)
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
 
-	s.ScoreDrawer.Update(s.Scores[0])
+	s.ScoreDrawer.Update(s.Scores[gosu.Total])
 	s.ComboDrawer.Update(s.Combo)
 	s.JudgmentDrawer.Update(judgment, big)
 	s.MeterDrawer.Update()
@@ -372,7 +372,7 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 			// "Music volume (Press 1/2): %.0f%%\nEffect volume (Press 3/4): %.0f%%\n\n"+
 			"Vsync: %v\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Time())/1000, float64(s.Chart.Duration())/1000,
-		s.Scores[0], s.ScoreBounds[0], s.Flow*100, s.Combo,
+		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
 		s.Speed*100, *s.SpeedHandler.Target*100, ExposureTime(s.CurrentSpeed()),
 		// gosu.MusicVolume*100, gosu.EffectVolume*100,

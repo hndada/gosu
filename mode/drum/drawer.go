@@ -227,7 +227,7 @@ func (d NoteDarwer) Draw(screen *ebiten.Image) {
 				op.ColorM.ChangeHSV(0, 1, 0)
 			}
 			note.Move(pos, 0)
-			note.Draw(screen, nil)
+			note.Draw(screen, op)
 			if mode == modeShake {
 				continue
 			}
