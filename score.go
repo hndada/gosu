@@ -76,10 +76,10 @@ const (
 // var Primitives = [3]int{Flow, Acc, Extra}
 
 var DefaultMaxScores = [4]float64{
-	11 * 1e5,
 	7 * 1e5,
 	3 * 1e5,
 	1 * 1e5,
+	11 * 1e5,
 }
 
 // Score's fields are temporary.
@@ -114,13 +114,13 @@ type Scorer struct {
 	// TotalScore float64
 }
 
-func NewScorer() Scorer {
+func NewScorer(scoreFactors [3]float64) Scorer {
 	return Scorer{
-		Flow:   1,
-		Ratios: [3]float64{1, 1, 1},
-		// ScoreFactors:   [3]float64{},
-		ScoreBounds: DefaultMaxScores,
-		MaxScores:   DefaultMaxScores,
+		Flow:         1,
+		Ratios:       [3]float64{1, 1, 1},
+		ScoreFactors: scoreFactors,
+		ScoreBounds:  DefaultMaxScores,
+		MaxScores:    DefaultMaxScores,
 		// JudgmentCounts: []int{},
 	}
 }
@@ -147,7 +147,7 @@ func (s *Scorer) CalcScore(kind int, value, weight float64) {
 	s.Ratios[kind] = s.Primitives[kind] / s.Weights[kind]
 
 	scoreRate := (s.Primitives[kind] / s.MaxWeights[kind])
-	boundRate := s.MaxWeights[kind] - (s.Weights[kind] - s.Primitives[kind])
+	boundRate := 1 - (s.Weights[kind]-s.Primitives[kind])/s.MaxWeights[kind]
 	if kind != Flow {
 		scoreRate = math.Pow(scoreRate, s.ScoreFactors[kind])
 		boundRate = math.Pow(boundRate, s.ScoreFactors[kind])
@@ -155,7 +155,7 @@ func (s *Scorer) CalcScore(kind int, value, weight float64) {
 	s.Scores[kind] = s.MaxScores[kind] * scoreRate
 	s.ScoreBounds[kind] = s.MaxScores[kind] * boundRate
 	s.Scores[Total] = math.Ceil(Sum(s.Scores[:Total]))
-	s.ScoreBounds[Total] += math.Ceil(Sum(s.ScoreBounds[:Total]))
+	s.ScoreBounds[Total] = math.Ceil(Sum(s.ScoreBounds[:Total]))
 }
 func Sum(vs []float64) (sum float64) {
 	for _, v := range vs {

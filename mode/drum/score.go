@@ -96,6 +96,12 @@ func IsOtherColorHit(as [2]int, color int) bool {
 }
 
 func VerdictNote(n *Note, as [2]int, td int64) (j gosu.Judgment, big bool) {
+	if td > Miss.Window {
+		return
+	}
+	if td < -Miss.Window {
+		return Miss, false
+	}
 	if IsOtherColorHit(as, n.Color) {
 		return Miss, false
 	}

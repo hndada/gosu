@@ -85,16 +85,17 @@ func (s *Sprite) SetPosition(x, y float64, origin Origin) {
 // }
 
 // Todo: ColorM affects Translate.
-func (s Sprite) Draw(screen *ebiten.Image, op *ebiten.DrawImageOptions) {
-	if op == nil {
-		op = &ebiten.DrawImageOptions{}
+func (s Sprite) Draw(screen *ebiten.Image, opSrc *ebiten.DrawImageOptions) {
+	var op ebiten.DrawImageOptions
+	if opSrc != nil {
+		op = *opSrc
 	}
 	// op.ColorM = s.colorM
 	op.GeoM.Scale(s.scaleW, s.scaleH)
 	op.Filter = s.filter
 	// x, y := s.LeftTopPosition()
 	op.GeoM.Translate(s.LeftTopX(), s.LeftTopY())
-	screen.DrawImage(s.i, op)
+	screen.DrawImage(s.i, &op)
 }
 func (s Sprite) LeftTopX() float64 {
 	switch s.origin.PositionX() {
