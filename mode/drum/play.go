@@ -27,10 +27,11 @@ type ScenePlay struct {
 	Speed        float64
 
 	gosu.Result
-	StagedNote   *Note
-	StagedDot    *Dot
-	StagedShake  *Note
-	WaitingColor int // For judging big note.
+	StagedNote  *Note
+	StagedDot   *Dot
+	StagedShake *Note
+	// WaitingKeys [2]int // For judging big note.
+	LastHitTimes [4]int64 // For judging big note.
 	Flow         float64
 	Combo        int
 	DotCount     int
@@ -113,7 +114,6 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	if len(s.Chart.Dots) > 0 {
 		s.StagedDot = s.Chart.Dots[0]
 	}
-	s.WaitingColor = None
 	s.Flow = 1
 
 	s.Skin = DefaultSkin
@@ -216,14 +216,33 @@ func (s *ScenePlay) Update() any {
 
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
-	hits := make([]bool, 4)
-	for k := range hits {
-		hits[k] = s.KeyAction(k) == input.Hit
+	keyActions := s.KeyActions()
+	// var playSample [4]bool // red-regular, red-big, blue-regular, blue-big in order.
+	// // Determine whether plays big or regular sample, or none.
+	// for color, keys := range [][]int{{1, 2}, {0, 3}} {
+	// 	if !hits[keys[0]] && !hits[keys[1]] {
+	// 		continue
+	// 	}
+	// 	if hits[keys[0]] && s.time-s.LastHitTimes[keys[1]] < Good.Window {
+	// 		playSample[2*color+1] = true
+	// 		continue
+	// 	}
+	// 	if hits[keys[1]] && s.time-s.LastHitTimes[keys[0]] < Good.Window {
+	// 		playSample[2*color+1] = true
+	// 		continue
+	// 	}
+	// 	playSample[2*color] = true
+	// }
+	for color, colorName := range []string{"red", "blue"} {
+		for size, sizeName := range []string{"regular", "big"} {
+			if keyActions[color][size] {
+				path := fmt.Sprintf("%s-%s.wav", colorName, sizeName)
+			}
+		}
 	}
 	var (
 		judgment gosu.Judgment
-		// color    int
-		big bool
+		big      bool
 	)
 	func() {
 		n := s.StagedNote
@@ -240,13 +259,11 @@ func (s *ScenePlay) Update() any {
 		if j, b := Verdict(n, hits, td); j.Window != 0 {
 			s.MarkNote(n, j)
 			judgment = j
-			// color = n.Color
 			big = b
 			s.MeterDrawer.AddMark(int(td), 0)
 		}
 	}()
 
-	// Todo: generalize waitingColor?
 	// Todo: should custom hitsound be implemented?
 	if n.Type != Tail && s.KeyAction(k) == input.Hit {
 		if name := n.Sample.Name; name != "" {
@@ -258,33 +275,7 @@ func (s *ScenePlay) Update() any {
 			s.Effects.PlayWithVolume(name, vol)
 		}
 	}
-	var played [2]bool
-	for k, hit := range hits {
-		if !hit {
-			continue
-		}
-		switch k {
-		case 0, 3:
-			if color == Red {
-				if big {
-					// Play red-big.wav.
-				} else {
-					// Play red-regular.wav.
-				}
-			}
-		case 1, 2:
-		}
-		switch color {
-		case Red:
-		}
-		sample := samples[k]
-		if name := sample.Name; name != "" {
-			// Todo: apply effect volume change
-			s.Effects.PlayWithVolume(name, vol)
-		} else {
-			// Todo: play default sounds
-		}
-	}
+
 	// Todo: Roll
 	// Todo: Shake
 
@@ -383,3 +374,34 @@ func (s *ScenePlay) UpdateTransPoint() {
 
 func (s ScenePlay) Time() int64           { return s.Timer.Time() }
 func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.Speed }
+
+// func PlaySample(hits [4]bool, LastHitTimes [4]int64) {
+
+// }
+func (s *ScenePlay) KeyActions() (as [2][2]bool) {
+	const (
+		regular = 0
+		big     = 1
+	)
+	var hits [4]bool
+	for k := range hits {
+		hits[k] = s.KeyLogger.KeyAction(k) == input.Hit
+	}
+	for color, keys := range [][]int{{1, 2}, {0, 3}} {
+		switch {
+		case !hits[keys[0]] && !hits[keys[1]]:
+			// Does nothing.
+		case hits[keys[0]] && s.time-s.LastHitTimes[keys[1]] < Good.Window,
+			hits[keys[1]] && s.time-s.LastHitTimes[keys[0]] < Good.Window:
+			as[color][big] = true
+		default:
+			as[color][regular] = true
+		}
+	}
+	for k, hit := range hits {
+		if hit {
+			s.LastHitTimes[k] = s.time
+		}
+	}
+	return
+}

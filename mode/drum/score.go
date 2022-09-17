@@ -32,7 +32,7 @@ var JudgmentColors = []color.NRGBA{
 // Roll / Shake note does not affect on Flow / Acc scores.
 // For example, a Roll / Shake only chart has extra score only: max score is 100k.
 
-func IsColorHit(color int, hits []bool) bool {
+func IsColorHit(color int, hits [4]bool) bool {
 	if color == Red && (hits[1] || hits[2]) {
 		return true
 	}
@@ -41,7 +41,7 @@ func IsColorHit(color int, hits []bool) bool {
 	}
 	return false
 }
-func IsOtherColorHit(color int, hits []bool) bool {
+func IsOtherColorHit(color int, hits [4]bool) bool {
 	if color == Red && (hits[0] || hits[3]) {
 		return true
 	}
@@ -51,7 +51,7 @@ func IsOtherColorHit(color int, hits []bool) bool {
 	return false
 }
 
-func Verdict(n *Note, hits []bool, td int64) (j gosu.Judgment, big bool) {
+func Verdict(n *Note, hits [4]bool, td int64) (j gosu.Judgment, big bool) {
 	if IsOtherColorHit(n.Color, hits) {
 		j = Miss
 	}
@@ -100,8 +100,9 @@ func (s *ScenePlay) MarkNote(n *Note, j gosu.Judgment) {
 	n.Marked = true
 	s.StagedNote = s.StagedNote.Next
 }
-func (s *ScenePlay) MarkTick() {
-	if j.Window == Cool.Window {
-		s.Extras += n.Weight()
-	}
-}
+
+// func (s *ScenePlay) MarkTick() {
+// 	if j.Window == Cool.Window {
+// 		s.Extras += n.Weight()
+// 	}
+// }
