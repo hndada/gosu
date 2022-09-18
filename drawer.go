@@ -74,7 +74,8 @@ type NumberDrawer struct {
 	DigitWidth float64
 	DigitGap   float64
 	Combo      int
-	Bounce     bool
+	// Bounce     bool
+	Bounce float64
 }
 
 // Each number has different width. Number 0's width is used as standard.
@@ -109,14 +110,12 @@ func (d NumberDrawer) Draw(screen *ebiten.Image) {
 		sprite := d.Sprites[v]
 		sprite.Move(tx, 0)
 		age := d.Age()
-		if d.Bounce {
-			h := sprite.H()
-			switch {
-			case age < 0.05:
-				sprite.Move(0, 0.85*age*h)
-			case age >= 0.05 && age < 0.1:
-				sprite.Move(0, 0.85*(0.1-age)*h)
-			}
+		h := sprite.H()
+		switch {
+		case age < 0.05:
+			sprite.Move(0, d.Bounce*age*h)
+		case age >= 0.05 && age < 0.1:
+			sprite.Move(0, d.Bounce*(0.1-age)*h)
 		}
 		sprite.Draw(screen, nil)
 		tx -= w

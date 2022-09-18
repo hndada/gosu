@@ -11,16 +11,17 @@ const (
 	screenSizeY = gosu.ScreenSizeY
 )
 
-var SpeedScale float64 = 1.4
+var SpeedScale float64 = 1.1
 var KeySettings = [4]input.Key{input.KeyD, input.KeyF, input.KeyJ, input.KeyK}
 
-// Default values are derived from osu! taiko.
+// Default values are derived from osu!taiko.
 var (
-	FieldDarkness float64 = 0.8
+	FieldDarkness float64 = 0.7
 
 	FieldPosition    float64 = screenSizeY * 0.4115
 	FieldHeight      float64 = screenSizeY * 0.26
-	FieldInnerHeight float64 = FieldHeight * 0.9 // For drawing bars. // screenSizeY * 0.23
+	FieldInnerHeight float64 = FieldHeight * 0.95
+
 	// Height of notes are dependent of FieldHeight.
 	bigNoteHeight     float64 = FieldHeight * 0.725
 	regularNoteHeight float64 = bigNoteHeight * 0.65
@@ -46,11 +47,11 @@ var (
 // JudgmentScale might have scaled by FieldHeight.
 // Yet, Judgment is not circle image, actually.
 var (
-	JudgmentScale float64 = 0.75
+	JudgmentScale float64 = 1.25 // 0.75
 	DotScale      float64 = 0.5
 	ShakeScale    float64 = 1
-	DancerScale   float64 = 0.75
-	ComboScale    float64 = 0.75
+	DancerScale   float64 = 0.6  // 0.75
+	ComboScale    float64 = 1.25 // 0.75
 	ComboDigitGap float64 = screenSizeX * -0.001
 	// DotCountScale      float64 = ComboScale * 0.4
 	// DotCountDigitGap   float64 = ComboDigitGap * 0.4
