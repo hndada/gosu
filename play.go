@@ -34,8 +34,9 @@ func TimeToTick(time int64) int { return int(float64(time) / 1000 * float64(TPS)
 func TickToTime(tick int) int64 { return int64(float64(tick) / float64(TPS) * 1000) }
 func (t Timer) Time() int64     { return TickToTime(t.Tick) }
 func (t Timer) IsDone() bool {
-	return (ebiten.IsKeyPressed(ebiten.KeyEscape) ||
-		t.Tick >= t.MaxTick)
+	return (ebiten.IsKeyPressed(ebiten.KeyEscape))
+	// return (ebiten.IsKeyPressed(ebiten.KeyEscape) ||
+	// t.Tick >= t.MaxTick)
 }
 func (t *Timer) SetTicks(waitBefore, duration int64) {
 	if waitBefore > MinWaitBefore {

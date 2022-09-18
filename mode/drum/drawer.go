@@ -22,7 +22,9 @@ func (d *StageDrawer) Update(highlight bool) {
 
 // Todo: might add some effect on StageDrawer
 func (d StageDrawer) Draw(screen *ebiten.Image) {
-	d.Field.Draw(screen, nil)
+	op := &ebiten.DrawImageOptions{}
+	op.ColorM.Scale(1, 1, 1, FieldDarkness)
+	d.Field.Draw(screen, op)
 	if d.Hightlight {
 		d.Hints[1].Draw(screen, nil)
 	} else {
@@ -334,7 +336,7 @@ type DancerDrawer struct {
 
 func (d *DancerDrawer) Update(time int64, bpm float64, miss, hit bool, combo int, highlight bool) {
 	d.Time = time
-	d.Duration = 2 * 60000 / ScaledBPM(bpm)
+	d.Duration = 4 * 60000 / ScaledBPM(bpm)
 	var modeChange bool
 	// if hit && d.MissCycleCountdown > 0 {
 	// 	d.MissCycleCountdown = 0
@@ -354,7 +356,7 @@ func (d *DancerDrawer) Update(time int64, bpm float64, miss, hit bool, combo int
 	case combo >= 50 && combo%50 < 5:
 		if d.Mode != DancerYes {
 			d.Mode = DancerYes
-			d.Duration *= 4
+			// d.Duration *= 4
 			modeChange = true
 		}
 		// d.Yes = true
@@ -430,6 +432,10 @@ func (d *JudgmentDrawer) Update(j gosu.Judgment, big bool) {
 		d.radian = d.startRadian
 	}
 }
+
+// dx := hw*math.Cos(d.radian) - hh*math.Sin(d.radian)
+// dy := hw*math.Sin(d.radian) + hh*math.Cos(d.radian)
+// op.GeoM.Translate(dx, dy)
 func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	if d.Countdown <= 0 || d.judgment.Window == 0 {
 		return
@@ -445,24 +451,13 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 			break
 		}
 	}
-	hw, hh := sprite.W()/2, sprite.H()/2 // Stands for half width, half height.
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-hw, -hh)
-	op.GeoM.Rotate(d.radian)
-	// if d.reverse {
-	// 	op.GeoM.Rotate(-d.radian)
-	// } else {
-	// 	op.GeoM.Rotate(d.radian)
-	// }
-	// dx := hw*math.Cos(d.radian) - hh*math.Sin(d.radian)
-	// dy := hw*math.Sin(d.radian) + hh*math.Cos(d.radian)
-	// op.GeoM.Translate(dx, dy)
-	// fmt.Println("element: ", op.GeoM.Element(0, 0), op.GeoM.Element(1, 1))
-	// fmt.Println("before: ", sprite.W(), sprite.H())
-	// // sprite.SetScaleXY(op.GeoM.Element(0, 0), op.GeoM.Element(1, 1), ebiten.FilterLinear)
-	// sprite.SetScale(op.GeoM.Element(0, 0))
-	// fmt.Println("after: ", sprite.W(), sprite.H())
-	op.GeoM.Translate(hw, hh)
+	sw, sh := sprite.SrcSize()
+	if d.judgment.Window == Miss.Window {
+		op.GeoM.Translate(-float64(sw)/2, -float64(sh)/2)
+		op.GeoM.Rotate(d.radian)
+		op.GeoM.Translate(float64(sw)/2, float64(sh)/2)
+	}
 	ratio := 1.0
 	age := d.Age()
 	switch {
@@ -474,8 +469,6 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 		// 	ratio = 1 - 1.15*(age-0.9)
 	}
 	sprite.SetScale(ratio)
-	// fmt.Println(sprite.X(), sprite.Y(), sprite.Origin())
-	// fmt.Println(op.GeoM.String())
 	sprite.Draw(screen, op)
 }
 

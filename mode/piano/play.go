@@ -56,11 +56,12 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	}
 	c := s.Chart
 	keyCount := c.KeyCount & ScratchMask
-	if rf != nil {
-		s.SetTicks(rf.BufferTime(), c.Duration())
-	} else {
-		s.SetTicks(-1800, c.Duration())
-	}
+	// if rf != nil {
+	// 	s.SetTicks(rf.BufferTime(), c.Duration())
+	// } else {
+	// 	s.SetTicks(-1800, c.Duration())
+	// }
+	s.SetTicks(-1800, c.Duration())
 	if path, ok := c.MusicPath(cpath); ok {
 		s.MusicPlayer, err = gosu.NewMusicPlayer(gosu.MusicVolumeHandler, path)
 		if err != nil {
@@ -143,7 +144,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 		Sprites:    s.ComboSprites,
 		DigitWidth: s.ComboSprites[0].W(),
 		DigitGap:   ComboDigitGap,
-		Bounce:     true,
+		Bounce:     0.85,
 	}
 	s.ComboDrawer.Sprites = s.ComboSprites
 	s.JudgmentDrawer = NewJudgmentDrawer()

@@ -81,11 +81,12 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	}
 	c := s.Chart
 
-	if rf != nil {
-		s.SetTicks(rf.BufferTime(), c.Duration())
-	} else {
-		s.SetTicks(-1800, c.Duration())
-	}
+	// if rf != nil {
+	// 	s.SetTicks(rf.BufferTime(), c.Duration())
+	// } else {
+	// 	s.SetTicks(-1800, c.Duration())
+	// }
+	s.SetTicks(-1800, c.Duration())
 	s.time = s.Time()
 	if path, ok := c.MusicPath(cpath); ok {
 		s.MusicPlayer, err = gosu.NewMusicPlayer(gosu.MusicVolumeHandler, path)
@@ -200,7 +201,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	}
 	s.DancerDrawer = DancerDrawer{
 		Time:           s.time,
-		Duration:       50, // Temporary value.
+		Duration:       2 * 60000 / ScaledBPM(s.BPM),
 		LastFrameTimes: [4]int64{s.time, s.time, s.time, s.time},
 		Sprites:        s.DancerSprites,
 	}
@@ -213,7 +214,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 		Sprites:    s.ComboSprites,
 		DigitWidth: s.ComboSprites[0].W(),
 		DigitGap:   ComboDigitGap,
-		Bounce:     true,
+		Bounce:     1.25,
 	}
 	// s.DotCountDrawer = gosu.NumberDrawer{
 	// 	Sprites:    s.DotCountSprites,
@@ -353,7 +354,7 @@ func (s *ScenePlay) Update() any {
 			vol = s.TransPoint.Volume
 		}
 		p := audios.Context.NewPlayerFromBytes(s.SoundEffectBytes[i][size])
-		p.SetVolume(vol * 0.25)
+		p.SetVolume(vol * 0.50)
 		p.Play()
 		// if sample.Name != "" {
 		// 	s.CustomEffectPlayer.Effects.PlayWithVolume(sample.Name, vol)
@@ -398,6 +399,7 @@ func (s *ScenePlay) Update() any {
 }
 func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
+	// screen.Fill(color.NRGBA{0, 255, 0, 255})
 	s.StageDrawer.Draw(screen)
 
 	s.BarDrawer.Draw(screen)
@@ -420,7 +422,8 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 
 func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
-		"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
+		"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"+
+			"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
 			"Speed (Press 8/9): %.0f | %.0f\n(Exposure time: %.fms)\n\n"+
