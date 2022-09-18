@@ -12,7 +12,7 @@ var (
 // Todo: BarLine color settings
 var (
 	TPS         int  = 1000 // TPS should be 1000 or greater.
-	VsyncSwitch bool = false
+	VsyncSwitch bool = true
 
 	MusicVolume  float64 = 0.25
 	EffectVolume float64 = 0.25

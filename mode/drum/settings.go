@@ -11,7 +11,7 @@ const (
 	screenSizeY = gosu.ScreenSizeY
 )
 
-var SpeedScale float64 = 1.1
+var SpeedScale float64 = 1.4
 var KeySettings = [4]input.Key{input.KeyD, input.KeyF, input.KeyJ, input.KeyK}
 
 // Default values are derived from osu! taiko.
@@ -31,9 +31,9 @@ var (
 	// ShakePosX   float64 = screenSizeX * 0.375
 	// ShakePosY   float64 = screenSizeY * 0.55
 
-	// Todo: generalize
-	DancerPosX float64 = screenSizeX * 0.05
-	DancerPosY float64 = screenSizeY * 0.1
+	// Todo: generalize for all modes
+	DancerPosX float64 = screenSizeX * 0.1
+	DancerPosY float64 = screenSizeY * 0.175
 
 	keyCenter float64 // Used in key sprites and combo position.
 	// Range of ShakeCountPosition is [0, 1].
@@ -46,16 +46,16 @@ var (
 // JudgmentScale might have scaled by FieldHeight.
 // Yet, Judgment is not circle image, actually.
 var (
-	JudgmentScale      float64 = 0.72
-	DotScale           float64 = 0.5
-	ShakeScale         float64 = 1
-	DancerScale        float64 = 1
-	ComboScale         float64 = 0.75
-	ComboDigitGap      float64 = screenSizeX * -0.001
-	DotCountScale      float64 = ComboScale * 0.4
-	DotCountDigitGap   float64 = ComboDigitGap * 0.4
-	ShakeCountScale    float64 = ComboScale * 1
-	ShakeCountDigitGap float64 = ComboDigitGap * 1
+	JudgmentScale float64 = 0.75
+	DotScale      float64 = 0.5
+	ShakeScale    float64 = 1
+	DancerScale   float64 = 0.75
+	ComboScale    float64 = 0.75
+	ComboDigitGap float64 = screenSizeX * -0.001
+	// DotCountScale      float64 = ComboScale * 0.4
+	// DotCountDigitGap   float64 = ComboDigitGap * 0.4
+	// ShakeCountScale    float64 = ComboScale * 1
+	// ShakeCountDigitGap float64 = ComboDigitGap * 1
 )
 
 func SwitchDirection() {

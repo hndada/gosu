@@ -72,8 +72,14 @@ func (g *Game) Update() (err error) {
 	case error:
 		return args
 	case PlayToResultArgs: // Todo: SceneResult
+		ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
+		VsyncSwitch = true
+
 		g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
 	case SelectToPlayArgs:
+		ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
+		VsyncSwitch = false
+
 		g.Scene, err = g.ModeProps[args.Mode].NewScenePlay(
 			args.Path, args.Replay, args.SpeedHandler)
 		if err != nil {

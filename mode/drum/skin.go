@@ -13,9 +13,10 @@ import (
 )
 
 var (
-	ColorRed    = color.NRGBA{235, 69, 44, 255}
-	ColorBlue   = color.NRGBA{68, 141, 171, 255}
-	ColorYellow = color.NRGBA{252, 83, 6, 255}
+	ColorRed  = color.NRGBA{235, 69, 44, 255}
+	ColorBlue = color.NRGBA{68, 141, 171, 255}
+	// ColorYellow = color.NRGBA{252, 83, 6, 255}
+	ColorYellow = color.NRGBA{230, 170, 0, 255}
 	ColorPurple = color.NRGBA{150, 100, 200, 255}
 	ColorGray   = color.NRGBA{67, 67, 67, 255}
 )
@@ -48,7 +49,7 @@ var DefaultSkin Skin
 // https://osu.ppy.sh/wiki/en/Skinning/osu%21taiko
 type Skin struct {
 	FieldSprite draws.Sprite
-	HintSprite  draws.Sprite
+	HintSprites [2]draws.Sprite // 0, 1 are idle, highlight each.
 	BarSprite   draws.Sprite
 
 	// First [2] are for big notes.
@@ -56,8 +57,8 @@ type Skin struct {
 	// RedSprites      [2]draws.Sprite
 	// BlueSprites     [2]draws.Sprite
 	// NoteSprites [2][3]draws.Sprite // [3] are for Red, Blue, Yellow each.
-	NoteSprites [2][4]draws.Sprite // [4] are for Red, Blue, Yellow, Purple each.
-	// HeadSprites    [2]draws.Sprite    // Overlay will be drawn during game play.
+	NoteSprites    [2][4]draws.Sprite // [4] are for Red, Blue, Yellow, Purple each.
+	HeadSprites    [2]draws.Sprite    // Overlay will be drawn during game play.
 	TailSprites    [2]draws.Sprite
 	OverlaySprites [2][2]draws.Sprite // 2 Overlays.
 	BodySprites    [2]draws.Sprite
@@ -89,13 +90,13 @@ func LoadSkin() {
 		s.SetPosition(0, FieldPosition, draws.OriginLeftMiddle)
 		skin.FieldSprite = s
 	}
-	{
+	for i := range skin.HintSprites {
 		sw, sh := noteImage.Size()
 		outer := draws.NewScaledImage(noteImage, 1.2)
 		pad := draws.NewScaledImage(noteImage, 1.1)
 		inner := noteImage
-		img := ebiten.NewImage(outer.Size())
 		a := uint8(255 * FieldDarkness)
+		img := ebiten.NewImage(outer.Size())
 		{
 			op := &ebiten.DrawImageOptions{}
 			op.ColorM.ScaleWithColor(color.NRGBA{128, 128, 128, a})
@@ -104,8 +105,11 @@ func LoadSkin() {
 		}
 		{
 			op := &ebiten.DrawImageOptions{}
-			op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 255, 255})
-			op.CompositeMode = ebiten.CompositeModeDestinationOut
+			// op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 255, 255})
+			op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 0, a})
+			if i == 0 {
+				op.CompositeMode = ebiten.CompositeModeDestinationOut
+			}
 			op.GeoM.Translate(0.05*float64(sw), 0.05*float64(sh))
 			img.DrawImage(pad, op)
 		}
@@ -118,7 +122,7 @@ func LoadSkin() {
 		s := draws.NewSpriteFromImage(img)
 		s.SetScale(1.2 * regularNoteHeight / s.H())
 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
-		skin.HintSprite = s
+		skin.HintSprites[i] = s
 	}
 	{
 		src := ebiten.NewImage(1, int(FieldInnerHeight))
@@ -166,14 +170,16 @@ func LoadSkin() {
 			// s.SetColor(ColorYellow)
 			skin.TailSprites[i] = s
 		}
-		// {
-		// 	s := draws.NewSpriteFromImage(rollEndImage)
-		// 	ratio := noteHeight / s.H()
-		// 	s.SetScaleXY(-ratio, ratio, ebiten.FilterLinear) // Goes flipped.
-		// 	s.SetPosition(HitPosition, FieldPosition, draws.OriginRightMiddle)
-		// 	s.SetColor(ColorYellow)
-		// 	skin.HeadSprites[i] = s
-		// }
+		{
+			s := draws.NewSpriteFromImage(draws.FlipX(rollEndImage))
+			s.SetScale(noteHeight / s.H())
+			// s := draws.NewSpriteFromImage(rollEndImage)
+			// ratio := noteHeight / s.H()
+			// s.SetScaleXY(-ratio, ratio, ebiten.FilterLinear) // Goes flipped.
+			s.SetPosition(HitPosition, FieldPosition, draws.OriginRightMiddle)
+			// s.SetColor(ColorYellow)
+			skin.HeadSprites[i] = s
+		}
 		for j := 0; j < 2; j++ {
 			path := fmt.Sprintf("skin/drum/note/overlay/%s/%d.png", sname, j)
 			if _, err := os.Stat(path); os.IsNotExist(err) { // One overlay.
@@ -317,12 +323,12 @@ func LoadSkin() {
 		s.SetPosition(keyCenter, FieldPosition, draws.OriginCenterMiddle)
 		skin.ComboSprites[i] = s
 	}
-	for i := 0; i < 10; i++ {
-		s := draws.NewSpriteFromImage(comboImages[i])
-		s.SetScale(DotCountScale)
-		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
-		skin.DotCountSprites[i] = s
-	}
+	// for i := 0; i < 10; i++ {
+	// 	s := draws.NewSpriteFromImage(comboImages[i])
+	// 	s.SetScale(DotCountScale)
+	// 	s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
+	// 	skin.DotCountSprites[i] = s
+	// }
 	// for i := 0; i < 10; i++ {
 	// 	s := draws.NewSpriteFromImage(comboImages[i])
 	// 	s.SetScale(ShakeCountScale)

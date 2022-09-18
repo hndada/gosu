@@ -44,9 +44,9 @@ func (s *SceneSelect) Update() any {
 	// Todo: refactor it
 	if fired := VsyncSwitchHandler.Update(); fired {
 		if *VsyncSwitchHandler.Target {
-			ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
-		} else {
 			ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
+		} else {
+			ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
 		}
 	}
 	if moved := s.CursorHandler.Update(); moved {
@@ -150,7 +150,7 @@ func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
 	speed := *mode.SpeedHandler.Target
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf("Music volume (Press 1/2): %.0f%%\n"+"Effect volume (Press 3/4): %.0f%%\n"+
-			"VsyncOn (Press 5): %v\n"+
+			"Vsync enabled (Press 5): %v\n"+
 			"SpeedScale (Press 8/9): %.0f\n"+"(Exposure time: %.0fms)\n\n"+
 			"Mode (Press 0): %s\n"+
 			"Chart info index: %d\n",

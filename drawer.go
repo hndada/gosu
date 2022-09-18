@@ -50,7 +50,7 @@ func (d ScoreDrawer) Draw(screen *ebiten.Image) {
 		return
 	}
 	vs := make([]int, 0)
-	score := int(math.Ceil(d.Score.Value()))
+	score := int(math.Floor(d.Score.Value() + 0.1))
 	for v := score; v > 0; v /= 10 {
 		vs = append(vs, v%10) // Little endian.
 	}

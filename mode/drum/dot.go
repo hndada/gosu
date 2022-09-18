@@ -1,13 +1,20 @@
 package drum
 
+const (
+	DotReady = iota
+	DotHit
+	DotMiss
+)
+
 // Time is a point of time, duartion a length of time.
 // No consider situations that multiple rolls are overlapped.
 type Dot struct {
 	Floater
 	// Showtime int64 // Dot will appear at Showtime.
-	RevealTime int64
+	// RevealTime int64
 	// First      bool // Whether the dot is the first dot of a Roll note.
-	Marked bool
+	// Marked bool
+	Marked int
 	Next   *Dot
 	Prev   *Dot
 }
@@ -28,7 +35,7 @@ func NewDots(rolls []*Note) (ds []*Dot) {
 					Speed: n.Speed,
 				},
 				// First:      tick == 0,
-				RevealTime: n.Time - RevealDuration,
+				// RevealTime: n.Time - RevealDuration,
 			}
 			ds = append(ds, &d)
 		}
