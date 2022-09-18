@@ -15,22 +15,23 @@ const (
 	Shake
 )
 const (
-	None   = iota // No color.
-	Red           // aka Don.
-	Blue          // aka Kat.
-	Yellow        // For Roll.
-	Purple        // For Shake.
+	ColorNone = iota - 1
+	Red       // aka Don.
+	Blue      // aka Kat.
+	Yellow    // For Roll.
+	Purple    // For Shake.
 )
 const (
-	Regular = iota
+	SizeNone = iota - 1
+	Regular
 	Big
 )
 
 // Todo: make Dots tell when to hit shake tick at auto mods?
 type Note struct {
 	Floater
-	Duration   int64
-	RevealTime int64 // The time when Roll body or Shake reveals.
+	Duration int64
+	// RevealTime int64 // The time when Roll body or Shake reveals.
 	// DotDuration float64 // For calculating Roll tick density.
 	Type  int
 	Color int

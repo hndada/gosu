@@ -7,6 +7,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu"
+	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
@@ -19,21 +20,24 @@ type ScenePlay struct {
 	Chart *Chart
 
 	gosu.MusicPlayer
-	CustomEffectPlayer gosu.EffectPlayer
-	gosu.EffectPlayer
+	// CustomEffectPlayer gosu.EffectPlayer
+	// gosu.EffectPlayer
+	SoundEffectBytes [2][2][]byte
 	gosu.KeyLogger
+	KeyActions [2]int
 
 	*gosu.TransPoint
 	SpeedHandler ctrl.F64Handler
 	Speed        float64
 
 	gosu.Scorer
-	StagedNote        *Note
-	StagedDot         *Dot
-	StagedShake       *Note
-	LastHitTimes      [4]int64      // For judging big note.
-	StagedJudgement   gosu.Judgment // For judging big note.
-	ShakeWaitingColor int
+	StagedNote         *Note
+	StagedDot          *Dot
+	StagedShake        *Note
+	LastHitTimes       [4]int64      // For judging big note.
+	StagedJudgment     gosu.Judgment // For judging big note.
+	StagedJudgmentTime int64
+	ShakeWaitingColor  int
 	// WaitingKeys [2]int // For judging big note.
 	// StagedJudge  gosu.Judgment
 	// IsBigStaged bool // For judging big note.
@@ -53,9 +57,10 @@ type ScenePlay struct {
 	ShakeDrawer ShakeDrawer
 	// BodyDrawer  BodyDrawer
 	// DotDrawer   DotDrawer
-	RollDrawer RollDrawer
-	NoteDrawer NoteDarwer
-	KeyDrawer  KeyDrawer
+	RollDrawer   RollDrawer
+	NoteDrawer   NoteDarwer
+	KeyDrawer    KeyDrawer
+	DancerDrawer DancerDrawer
 
 	ScoreDrawer      gosu.ScoreDrawer
 	ComboDrawer      gosu.NumberDrawer
@@ -88,19 +93,23 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 			return
 		}
 	}
-	s.EffectPlayer = gosu.NewEffectPlayer(gosu.EffectVolumeHandler)
-	for _, colorName := range []string{"red", "blue"} {
-		for _, sizeName := range []string{"regular", "big"} {
+	// s.EffectPlayer = gosu.NewEffectPlayer(gosu.EffectVolumeHandler)
+	for i, colorName := range []string{"red", "blue"} {
+		for j, sizeName := range []string{"regular", "big"} {
 			path := fmt.Sprintf("skin/drum/sound/%s-%s.wav", colorName, sizeName)
-			_ = s.Effects.Register(path)
+			b, err := audios.NewBytes(path)
+			if err != nil {
+				panic(err)
+			}
+			s.SoundEffectBytes[i][j] = b
 		}
 	}
-	s.CustomEffectPlayer = gosu.NewEffectPlayer(gosu.EffectVolumeHandler)
-	for _, n := range c.Notes {
-		if path, ok := n.Sample.Path(cpath); ok {
-			_ = s.Effects.Register(path)
-		}
-	}
+	// s.CustomEffectPlayer = gosu.NewEffectPlayer(gosu.EffectVolumeHandler)
+	// for _, n := range c.Notes {
+	// 	if path, ok := n.Sample.Path(cpath); ok {
+	// 		_ = s.Effects.Register(path)
+	// 	}
+	// }
 
 	s.KeyLogger = gosu.NewKeyLogger(KeySettings[:])
 	if rf != nil {
@@ -125,14 +134,17 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	for _, shake := range c.Shakes {
 		s.MaxWeights[gosu.Extra] += shake.Weight()
 	}
-
-	if len(s.Chart.Notes) > 0 {
-		s.StagedNote = s.Chart.Notes[0]
+	s.SetMaxScores()
+	// fmt.Println(s.MaxWeights, 10*s.MaxWeights[gosu.Extra]/s.MaxWeights[gosu.Flow])
+	if len(c.Notes) > 0 {
+		s.StagedNote = c.Notes[0]
 	}
-	if len(s.Chart.Dots) > 0 {
-		s.StagedDot = s.Chart.Dots[0]
+	if len(c.Dots) > 0 {
+		s.StagedDot = c.Dots[0]
 	}
-
+	if len(c.Shakes) > 0 {
+		s.StagedShake = c.Shakes[0]
+	}
 	s.Skin = DefaultSkin
 	s.BackgroundDrawer = gosu.BackgroundDrawer{
 		Sprite:  gosu.DefaultBackground,
@@ -143,32 +155,33 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	}
 	s.StageDrawer = StageDrawer{
 		Field: s.FieldSprite,
-		Hint:  s.HintSprite,
+		Hints: s.HintSprites,
 	}
 	s.BarDrawer = BarDrawer{
 		Sprite: s.BarSprite,
 		Time:   s.time,
-		Bars:   s.Chart.Bars,
+		Bars:   c.Bars,
 	}
 	s.ShakeDrawer = ShakeDrawer{
 		BorderSprite: s.ShakeBorderSprite,
-		Sprite:       s.ShakeSprite,
+		ShakeSprite:  s.ShakeSprite,
 		Time:         s.time,
 		Staged:       s.StagedShake,
 	}
 	s.RollDrawer = RollDrawer{
+		HeadSprites: s.HeadSprites,
 		BodySprites: s.BodySprites,
 		TailSprites: s.TailSprites,
 		DotSprite:   s.DotSprite,
 		Time:        s.time,
-		Rolls:       s.Chart.Rolls,
-		Dots:        s.Chart.Dots,
-		StagedDot:   s.StagedDot,
+		Rolls:       c.Rolls,
+		Dots:        c.Dots,
+		// StagedDot:   s.StagedDot,
 	}
 	// s.DotDrawer = DotDrawer{
 	// 	Sprite: s.DotSprite,
 	// 	Time:   s.time,
-	// 	Dots:   s.Chart.Dots,
+	// 	Dots:   c.Dots,
 	// 	Staged: s.StagedDot,
 	// }
 	s.NoteDrawer = NoteDarwer{
@@ -176,16 +189,22 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 		OverlaySprites: s.OverlaySprites,
 		// ShakeNoteSprite: s.ShakeSprites[ShakeNote],
 		Time:   s.time,
-		Notes:  s.Chart.Notes,
-		Rolls:  s.Chart.Rolls,
-		Shakes: s.Chart.Shakes,
+		Notes:  c.Notes,
+		Rolls:  c.Rolls,
+		Shakes: c.Shakes,
 	}
 	s.KeyDrawer = KeyDrawer{
 		MaxCountdown: gosu.TimeToTick(50),
 		Field:        s.KeyFieldSprite,
 		Keys:         s.KeySprites,
 	}
-
+	s.DancerDrawer = DancerDrawer{
+		Time:           s.time,
+		Duration:       50, // Temporary value.
+		LastFrameTimes: [4]int64{s.time, s.time, s.time, s.time},
+		Sprites:        s.DancerSprites,
+	}
+	// s.DancerDrawer.Update(s.time, s.BPM, false, false, 0, s.Highlight)
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer = gosu.NumberDrawer{
 		BaseDrawer: draws.BaseDrawer{
@@ -241,7 +260,7 @@ func (s *ScenePlay) Update() any {
 
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
-	keyActions := s.KeyActions()
+	s.UpdateKeyActions()
 	// var playSample [4]bool // red-regular, red-big, blue-regular, blue-big in order.
 	// // Determine whether plays big or regular sample, or none.
 	// for color, keys := range [][]int{{1, 2}, {0, 3}} {
@@ -258,32 +277,49 @@ func (s *ScenePlay) Update() any {
 	// 	}
 	// 	playSample[2*color] = true
 	// }
-	if s.StagedJudgement.Window != None {
-		color := s.StagedNote.Color
-		if keyActions[color-1] == Regular || IsOtherColorHit(keyActions, color) {
-			s.MarkNote(s.StagedNote, s.StagedJudgement, false)
-			s.StagedJudgement = gosu.Judgment{}
-		}
-	}
 	var (
 		samples  [2]gosu.Sample
 		judgment gosu.Judgment
 		big      bool
 	)
+	if j := s.StagedJudgment; j.Window != 0 {
+		n := s.StagedNote
+		td := s.StagedNote.Time - s.time
+		td2 := s.StagedJudgmentTime - s.time
+		td3 := s.StagedNote.Time - s.StagedJudgmentTime
+		if td < -Miss.Window || td2 < -BigHitTimeDifferenceBound ||
+			s.KeyActions[n.Color] == Regular ||
+			IsOtherColorHit(s.KeyActions, n.Color) {
+			s.MarkNote(n, s.StagedJudgment, false)
+			s.MeterDrawer.AddMark(int(td3), 0)
+			samples[n.Color] = n.Sample
+			judgment = j
+			big = false
+
+			s.StagedJudgment = gosu.Judgment{}
+		}
+	}
 	if n := s.StagedNote; n != nil {
 		td := n.Time - s.time // Time difference. A negative value means late hit.
-		if j, b := VerdictNote(n, keyActions, td); j.Window != 0 {
-			s.MarkNote(n, j, b)
-			s.MeterDrawer.AddMark(int(td), 0)
-			judgment = j
-			big = b
-			samples[n.Color-1] = n.Sample
+		if j, b := VerdictNote(n, s.KeyActions, td); j.Window != 0 {
+			if n.Size == Big && !b {
+				s.StagedJudgment = j
+				s.StagedJudgmentTime = s.time
+			} else {
+				s.MarkNote(n, j, b)
+				s.MeterDrawer.AddMark(int(td), 0)
+				samples[n.Color] = n.Sample
+				judgment = j
+				big = b
+			}
 		}
 	}
 	if dot := s.StagedDot; dot != nil {
 		td := dot.Time - s.time
-		if marked, hit := VerdictDot(dot, keyActions, td); marked {
-			s.MarkDot(dot, hit)
+		// fmt.Println(s.KeyActions)
+		if marked := VerdictDot(dot, s.KeyActions, td); marked != DotReady {
+			// fmt.Printf("%+v %d %d\n", dot, td, marked)
+			s.MarkDot(dot, marked)
 			s.MeterDrawer.AddMark(int(td), 1)
 		}
 	}
@@ -300,15 +336,15 @@ func (s *ScenePlay) Update() any {
 			return
 		}
 		waiting := s.ShakeWaitingColor
-		if next := VerdictShake(shake, keyActions, waiting); next != waiting {
+		if next := VerdictShake(shake, s.KeyActions, waiting); next != waiting {
 			s.MarkShake(shake, false)
 			s.ShakeWaitingColor = next
 		}
 	}()
 
 	// Todo: apply effect volume change from changer
-	for i, size := range keyActions {
-		if size == None {
+	for i, size := range s.KeyActions {
+		if size == SizeNone {
 			continue
 		}
 		sample := samples[i]
@@ -316,21 +352,38 @@ func (s *ScenePlay) Update() any {
 		if vol == 0 {
 			vol = s.TransPoint.Volume
 		}
-		if sample.Name != "" {
-			s.CustomEffectPlayer.Effects.PlayWithVolume(sample.Name, vol)
-		} else {
-			s.Effects.PlayWithVolume(DefaultSampleNames[i][size-1], vol)
-		}
+		p := audios.Context.NewPlayerFromBytes(s.SoundEffectBytes[i][size])
+		p.SetVolume(vol * 0.25)
+		p.Play()
+		// if sample.Name != "" {
+		// 	s.CustomEffectPlayer.Effects.PlayWithVolume(sample.Name, vol)
+		// } else {
+		// 	s.Effects.PlayWithVolume(DefaultSampleNames[i][size-1], vol)
+		// }
 	}
+	// This works fine.
+	// for i, k := range []ebiten.Key{ebiten.KeyQ, ebiten.KeyW, ebiten.KeyZ, ebiten.KeyX} {
+	// 	if ebiten.IsKeyPressed(k) {
+	// 		p := audios.Context.NewPlayerFromBytes(s.SoundEffectBytes[i/2][i%2])
+	// 		p.SetVolume(1)
+	// 		p.Play()
+	// 	}
+	// }
 
 	s.BarDrawer.Update(s.time)
-	// s.ShakeDrawer.Update()
+	s.StageDrawer.Update(s.Highlight)
+	s.ShakeDrawer.Update(s.time, s.StagedShake)
 	// s.BodyDrawer.Update(s.time)
 	// s.DotDrawer.Update(s.time, s.StagedDot)
-	s.RollDrawer.Update(s.time, s.StagedDot)
+	// s.RollDrawer.Update(s.time, s.StagedDot)
+	s.RollDrawer.Update(s.time)
 	s.NoteDrawer.Update(s.time, s.BPM)
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
-
+	{
+		miss := judgment.Window == Miss.Window
+		hit := !miss && judgment.Window != 0
+		s.DancerDrawer.Update(s.time, s.BPM, miss, hit, s.Combo, s.Highlight)
+	}
 	s.ScoreDrawer.Update(s.Scores[gosu.Total])
 	s.ComboDrawer.Update(s.Combo)
 	s.JudgmentDrawer.Update(judgment, big)
@@ -350,14 +403,16 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BarDrawer.Draw(screen)
 	s.ShakeDrawer.Draw(screen)
 	s.RollDrawer.Draw(screen)
+	s.JudgmentDrawer.Draw(screen)
 	s.NoteDrawer.Draw(screen)
 	s.KeyDrawer.Draw(screen)
+	s.DancerDrawer.Draw(screen)
 
 	s.ScoreDrawer.Draw(screen)
 	s.ComboDrawer.Draw(screen)
 	// s.DotCountDrawer.Draw(screen)
 	// s.ShakeCountDrawer.Draw(screen)
-	s.JudgmentDrawer.Draw(screen)
+	// s.JudgmentDrawer.Draw(screen)
 	s.MeterDrawer.Draw(screen)
 
 	s.DebugPrint(screen)
@@ -370,7 +425,7 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
 			"Speed (Press 8/9): %.0f | %.0f\n(Exposure time: %.fms)\n\n"+
 			// "Music volume (Press 1/2): %.0f%%\nEffect volume (Press 3/4): %.0f%%\n\n"+
-			"Vsync: %v\n",
+			"Vsync enabled: %v\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Time())/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
@@ -382,19 +437,22 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 // Farther note has larger position. Tail's Position is always larger than Head's.
 // Need to re-calculate positions when Speed has changed.
 func (s *ScenePlay) SetSpeed() {
+	c := s.Chart
 	old := s.Speed
 	new := *s.SpeedHandler.Target
-	for _, tp := range s.Chart.TransPoints {
+	for _, tp := range c.TransPoints {
 		tp.Speed *= new / old
 	}
-	for _, n := range s.Chart.Notes {
-		n.Speed *= new / old
-	}
-	for _, b := range s.Chart.Bars {
+	for _, b := range c.Bars {
 		b.Speed *= new / old
 	}
-	for _, d := range s.Chart.Dots {
+	for _, d := range c.Dots {
 		d.Speed *= new / old
+	}
+	for _, ns := range [][]*Note{c.Notes, c.Rolls, c.Shakes} {
+		for _, n := range ns {
+			n.Speed *= new / old
+		}
 	}
 	s.Speed = new
 }
@@ -438,28 +496,51 @@ func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.Speed 
 //		}
 //		return
 //	}
-func (s *ScenePlay) KeyActions() (as [2]int) {
+func (s *ScenePlay) UpdateKeyActions() {
 	var hits [4]bool
+	// This works fine.
 	for k := range hits {
 		hits[k] = s.KeyLogger.KeyAction(k) == input.Hit
 	}
 	for color, keys := range [][]int{{1, 2}, {0, 3}} {
-		switch {
-		case !hits[keys[0]] && !hits[keys[1]]:
-			as[color] = None
-		case hits[keys[0]] && s.time-s.LastHitTimes[keys[1]] < Good.Window,
-			hits[keys[1]] && s.time-s.LastHitTimes[keys[0]] < Good.Window:
-			as[color] = Big
-		default:
-			as[color] = Regular
+		if hits[keys[0]] || hits[keys[1]] {
+			// if hits[keys[0]] && s.time-s.LastHitTimes[keys[1]] < BigHitTimeDifferenceBound ||
+			// 	hits[keys[1]] && s.time-s.LastHitTimes[keys[0]] < BigHitTimeDifferenceBound {
+			// 	s.KeyActions[color] = Big
+			// } else {
+			// 	s.KeyActions[color] = Regular
+			// }
+			s.KeyActions[color] = Regular
+		} else {
+			s.KeyActions[color] = SizeNone
 		}
+
+		// fmt.Println(s.time, color, hits)
+		// fmt.Println(hits[keys[0]], hits[keys[1]], s.KeyActions[color])
 	}
+	// fmt.Println()
+	// for color, keys := range [][]int{{1, 2}, {0, 3}} {
+	// 	switch {
+	// 	case !hits[keys[0]] && !hits[keys[1]]:
+	// 		s.KeyActions[color] = None
+	// 	case hits[keys[0]] && s.time-s.LastHitTimes[keys[1]] < BigHitTimeDifferenceBound,
+	// 		hits[keys[1]] && s.time-s.LastHitTimes[keys[0]] < BigHitTimeDifferenceBound:
+	// 		s.KeyActions[color] = Big
+	// 	default:
+	// 		s.KeyActions[color] = Regular
+	// 	}
+	// }
 	for k, hit := range hits {
 		if hit {
 			s.LastHitTimes[k] = s.time
+			// fmt.Printf("%d: hit at %d\n", s.time, k)
 		}
 	}
-	return
+	// for color, a := range s.KeyActions {
+	// 	if a != SizeNone {
+	// 		fmt.Printf("%d: %s at color %s\n", s.time, []string{"regular", "hit"}[a], []string{"red", "blue"}[color])
+	// 	}
+	// }
 }
 
 var DefaultSampleNames = [2][2]string{

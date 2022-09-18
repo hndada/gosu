@@ -7,15 +7,13 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
-var Hit = input.Hit
-
 // Todo: Tick judgment should be bound to MaxScaledBPM (->280)
 // Todo: let them put custom window
 var (
 	Cool               = gosu.Judgment{Flow: 0.01, Acc: 1, Window: 25}
 	Good               = gosu.Judgment{Flow: 0.01, Acc: 0.25, Window: 60}
 	Miss               = gosu.Judgment{Flow: -1, Acc: 0, Window: 100}
-	DotHitWindow int64 = 50 // Todo: need to find best value
+	DotHitWindow int64 = 25 // Todo: need to find best value
 )
 
 var Judgments = []gosu.Judgment{Cool, Good, Miss}
@@ -26,32 +24,82 @@ var JudgmentColors = []color.NRGBA{
 	gosu.ColorBad,
 }
 
+const BigHitTimeDifferenceBound = 20
+
+// const (
+// 	CoolSum = iota
+// 	GoodSum
+// 	MissSum
+
+// 	CoolBig
+// 	CoolPartial
+// 	GoodBig
+// 	GoodPartial
+// 	MissBig
+
+//	DotHit
+//	DotDrop
+//	ShakeHit
+//	ShakeDrop
+//
+// )
 const (
-	CoolSum = iota
-	GoodSum
-	MissSum
-
-	CoolBig
-	CoolPartial
-	GoodBig
-	GoodPartial
-	MissBig
-
-	DotHit
-	DotDrop
-	ShakeHit
-	ShakeDrop
+	Cools = iota // Stands for Cool counts.
+	Goods
+	Misses
+	CoolPartials
+	GoodPartials
+	TickHits
+	TickDrops
 )
 
+func ExtraScoreRate(nws, ews float64) float64 {
+	const factor = 10 * 1.5
+	if nws == 0 {
+		if ews == 0 {
+			return 0
+		}
+		return 1
+	}
+	rate := factor * ews / nws
+	if rate > 1 {
+		rate = 1
+	}
+	return rate
+}
+func (s *ScenePlay) SetMaxScores() {
+	nws := s.MaxWeights[gosu.Flow]
+	ews := s.MaxWeights[gosu.Extra]
+	// extraScore := s.MaxScores[gosu.Extra]
+	extraMax := gosu.DefaultMaxScores[gosu.Extra]
+	extraRate := ExtraScoreRate(nws, ews)
+	extraScore := extraMax * extraRate
+	extraRemained := extraMax * (1 - extraRate)
+	s.MaxScores[gosu.Flow] += extraRemained * 0.7
+	s.MaxScores[gosu.Acc] += extraRemained * 0.3
+	s.MaxScores[gosu.Extra] = extraScore
+	if nws == 0 {
+		s.MaxScores[gosu.Extra] += s.MaxScores[gosu.Flow] + s.MaxScores[gosu.Acc]
+		s.MaxScores[gosu.Flow] = 0
+		s.MaxScores[gosu.Acc] = 0
+	}
+	s.Scorer.SetMaxScores(s.MaxScores)
+}
+
+// var JudgmentCountKinds = []string{
+// 	"CoolSum", "GoodSum", "MissSum",
+
+// 	"CoolBig", "CoolPartial",
+// 	"GoodBig", "GoodPartial",
+// 	"MissBig",
+
+//		"DotHit", "DotDrop",
+//		"ShakeHit", "ShakeDrop",
+//	}
 var JudgmentCountKinds = []string{
-	"CoolSum", "GoodSum", "MissSum",
-
-	"CoolBig", "CoolPartial",
-	"GoodBig", "GoodPartial",
-	"MissBig",
-
-	"DotHit", "DotDrop",
-	"ShakeHit", "ShakeDrop",
+	"Cools", "Goods", "Misses",
+	"CoolPartials", "GoodPartials",
+	"TickHits", "TickDrops",
 }
 
 // When hit big notes only with one press, the note gives half the score only.
@@ -82,82 +130,17 @@ var JudgmentCountKinds = []string{
 //		}
 //		return false
 //	}
-func IsColorHit(as [2]int, color int) bool {
-	return as[color-1] != None
+func IsColorHit(actions [2]int, color int) bool {
+	return actions[color] != SizeNone
 }
-func IsOtherColorHit(as [2]int, color int) bool {
+func IsOtherColorHit(actions [2]int, color int) bool {
 	switch color {
 	case Red:
-		return IsColorHit(as, Blue)
+		return IsColorHit(actions, Blue)
 	case Blue:
-		return IsColorHit(as, Red)
+		return IsColorHit(actions, Red)
 	}
 	return false
-}
-
-func VerdictNote(n *Note, as [2]int, td int64) (j gosu.Judgment, big bool) {
-	if td > Miss.Window {
-		return
-	}
-	if td < -Miss.Window {
-		return Miss, false
-	}
-	if IsOtherColorHit(as, n.Color) {
-		return Miss, false
-	}
-	if !IsColorHit(as, n.Color) {
-		return
-	}
-	j = gosu.Verdict(Judgments, input.Hit, td)
-	if n.Size == Big && as[n.Color-1] == Big {
-		big = true
-	}
-	return
-}
-func VerdictDot(dot *Dot, as [2]int, td int64) (marked, hit bool) {
-	switch {
-	case td < -DotHitWindow:
-		return true, false
-	case td < DotHitWindow:
-		if as[0] != None || as[1] != None {
-			return true, true
-		}
-	}
-	return false, false
-}
-func VerdictShake(shake *Note, as [2]int, waitingColor int) (nextColor int) {
-	const (
-		red = iota
-		blue
-	)
-	if waitingColor == Red || waitingColor == None {
-		if as[red] != None {
-			return Blue
-		}
-	}
-	if waitingColor == Blue || waitingColor == None {
-		if as[blue] != None {
-			return Red
-		}
-	}
-	return waitingColor
-	// switch waitingColor {
-	// case None:
-	// 	if as[red] != None {
-	// 		return Blue
-	// 	}
-	// 	if as[blue] != None {
-	// 		return Red
-	// 	}
-	// case Red:
-	// 	if as[red] != None {
-	// 		return Blue
-	// 	}
-	// case Blue:
-	// 	if as[blue] != None {
-	// 		return Red
-	// 	}
-	// }
 }
 
 // func IsRedHit(as [2][2]bool) bool {
@@ -184,6 +167,26 @@ func VerdictShake(shake *Note, as [2]int, waitingColor int) (nextColor int) {
 //	}
 //
 // Todo: no getting Flow when hands off the long note
+func VerdictNote(n *Note, actions [2]int, td int64) (j gosu.Judgment, big bool) {
+	if td > Miss.Window {
+		return
+	}
+	if td < -Miss.Window {
+		return Miss, false
+	}
+	if IsOtherColorHit(actions, n.Color) {
+		return Miss, false
+	}
+	if !IsColorHit(actions, n.Color) {
+		return
+	}
+	j = gosu.Verdict(Judgments, input.Hit, td)
+	if n.Size == Big && actions[n.Color] == Big {
+		big = true
+	}
+	return
+}
+
 func (s *ScenePlay) MarkNote(n *Note, j gosu.Judgment, big bool) {
 	if j == Miss {
 		s.BreakCombo()
@@ -197,54 +200,112 @@ func (s *ScenePlay) MarkNote(n *Note, j gosu.Judgment, big bool) {
 	s.CalcScore(gosu.Acc, j.Acc, n.Weight())
 	switch j.Window {
 	case Cool.Window:
-		s.JudgmentCounts[CoolSum]++
-		if n.Size == Big {
-			if big {
-				s.JudgmentCounts[CoolBig]++
-			} else {
-				s.JudgmentCounts[CoolPartial]++
-			}
+		s.JudgmentCounts[Cools]++
+		if n.Size == Big && !big {
+			s.JudgmentCounts[CoolPartials]++
 		}
 	case Good.Window:
-		s.JudgmentCounts[GoodSum]++
-		if n.Size == Big {
-			if big {
-				s.JudgmentCounts[GoodBig]++
-			} else {
-				s.JudgmentCounts[GoodPartial]++
-			}
+		s.JudgmentCounts[Goods]++
+		if n.Size == Big && !big {
+			s.JudgmentCounts[GoodPartials]++
 		}
 	case Miss.Window:
-		s.JudgmentCounts[MissSum]++
-		if n.Size == Big {
-			s.JudgmentCounts[MissBig]++
-		}
+		s.JudgmentCounts[Misses]++
 	}
 	n.Marked = true
 	s.StagedNote = s.StagedNote.Next
 }
-
-func (s *ScenePlay) MarkDot(dot *Dot, hit bool) {
-	if hit {
-		s.JudgmentCounts[DotHit]++
-		s.CalcScore(gosu.Extra, 1, dot.Weight())
-	} else {
-		s.JudgmentCounts[DotDrop]++
-		s.CalcScore(gosu.Extra, 0, dot.Weight())
+func VerdictDot(dot *Dot, actions [2]int, td int64) (marked int) {
+	switch {
+	case td < -DotHitWindow:
+		return DotMiss
+	case td < DotHitWindow:
+		if actions[Red] != SizeNone || actions[Blue] != SizeNone {
+			return DotHit
+		}
 	}
-	dot.Marked = true
-	s.StagedDot = s.StagedDot.Next
+	return DotReady
+}
+
+//	func VerdictDot(dot *Dot, as [2]int, td int64) (marked, hit bool) {
+//		switch {
+//		case td < -DotHitWindow:
+//			return true, false
+//		case td < DotHitWindow:
+//			if as[0] != None || as[1] != None {
+//				return true, true
+//			}
+//		}
+//		return false, false
+//	}
+func (s *ScenePlay) MarkDot(dot *Dot, marked int) {
+	switch marked {
+	case DotHit:
+		s.JudgmentCounts[TickHits]++
+		s.CalcScore(gosu.Extra, 1, dot.Weight())
+		dot.Marked = DotHit
+	case DotMiss:
+		s.JudgmentCounts[TickDrops]++
+		s.CalcScore(gosu.Extra, 0, dot.Weight())
+		dot.Marked = DotMiss
+	}
+	if marked != DotReady {
+		s.StagedDot = s.StagedDot.Next
+	}
+}
+
+//	func (s *ScenePlay) MarkDot(dot *Dot, hit bool) {
+//		if hit {
+//			s.JudgmentCounts[TickHits]++
+//			s.CalcScore(gosu.Extra, 1, dot.Weight())
+//			dot.Marked = DotHit
+//		} else {
+//			s.JudgmentCounts[TickDrops]++
+//			s.CalcScore(gosu.Extra, 0, dot.Weight())
+//			dot.Marked = DotMiss
+//		}
+//		s.StagedDot = s.StagedDot.Next
+//	}
+func VerdictShake(shake *Note, actions [2]int, waitingColor int) (nextColor int) {
+	if waitingColor == Red || waitingColor == ColorNone {
+		if actions[Red] != SizeNone {
+			return Blue
+		}
+	}
+	if waitingColor == Blue || waitingColor == ColorNone {
+		if actions[Blue] != SizeNone {
+			return Red
+		}
+	}
+	return waitingColor
+	// switch waitingColor {
+	// case None:
+	// 	if as[red] != None {
+	// 		return Blue
+	// 	}
+	// 	if as[blue] != None {
+	// 		return Red
+	// 	}
+	// case Red:
+	// 	if as[red] != None {
+	// 		return Blue
+	// 	}
+	// case Blue:
+	// 	if as[blue] != None {
+	// 		return Red
+	// 	}
+	// }
 }
 func (s *ScenePlay) MarkShake(shake *Note, flush bool) {
 	if flush {
 		remained := shake.Tick - shake.HitTick
-		s.JudgmentCounts[ShakeDrop] += remained
+		s.JudgmentCounts[TickDrops] += remained
 		s.CalcScore(gosu.Extra, 0, shake.Weight()*float64(remained)/float64(shake.Tick))
 		shake.Marked = true
 		s.StagedShake = s.StagedShake.Next
 	} else {
 		shake.HitTick++
-		s.JudgmentCounts[ShakeHit]++
+		s.JudgmentCounts[TickHits]++
 		s.CalcScore(gosu.Extra, 1, shake.Weight()/float64(shake.Tick))
 		if shake.HitTick == shake.Tick {
 			shake.Marked = true

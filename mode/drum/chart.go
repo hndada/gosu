@@ -35,8 +35,8 @@ type Chart struct {
 }
 
 var (
-	RevealDuration int64   = 1500
-	TickDensity    float64 = 4.0
+	// RevealDuration int64   = 1500
+	TickDensity float64 = 4.0
 	// ShakeDensity = 4.0 // One beat has 4 Shakes.
 )
 
@@ -70,21 +70,24 @@ func NewChart(cpath string) (c *Chart, err error) {
 	}
 
 	c.Notes, c.Rolls, c.Shakes = NewNotes(f)
-	tp := c.TransPoints[0]
+	var tp *gosu.TransPoint
 	for _, ns := range [][]*Note{c.Notes, c.Rolls, c.Shakes} {
+		tp = c.TransPoints[0]
 		for _, n := range ns {
 			for tp.Next != nil && n.Time >= tp.Next.Time {
 				tp = tp.Next
 			}
 			n.Speed = tp.Speed
 			bpm := ScaledBPM(tp.BPM)
-			switch f := f.(type) {
-			case *osu.Format:
-				// speedFactor := c.TransPoints[0].BPM / 60000 * (f.SliderMultiplier * 100)
-				speed := tp.BPM * (tp.Speed / bpmScale) / 60000 * f.SliderMultiplier * 100
-				n.Duration = int64(n.length / speed)
-				if n.Type == Shake {
-					n.RevealTime = n.Time - RevealDuration
+			if n.Type == Roll {
+				switch f := f.(type) {
+				case *osu.Format:
+					// speedFactor := c.TransPoints[0].BPM / 60000 * (f.SliderMultiplier * 100)
+					speed := tp.BPM * (tp.Speed / bpmScale) / 60000 * f.SliderMultiplier * 100
+					n.Duration = int64(n.length / speed)
+					// if n.Type == Shake {
+					// 	n.RevealTime = n.Time - RevealDuration
+					// }
 				}
 			}
 			if n.Duration > 0 {
@@ -122,12 +125,17 @@ const (
 	MinScaledBPM = 60  // 128
 )
 
-func (c Chart) Duration() int64 {
-	if len(c.Notes) == 0 {
-		return 0
+func (c Chart) Duration() (last int64) {
+	for _, ns := range [][]*Note{c.Notes, c.Rolls, c.Shakes} {
+		if len(ns) == 0 {
+			continue
+		}
+		n := ns[len(ns)-1]
+		if last2 := n.Time + n.Duration; last < last2 {
+			last = last2
+		}
 	}
-	last := c.Notes[len(c.Notes)-1]
-	return last.Time + last.Duration
+	return
 }
 func (c Chart) NoteCounts() (vs []int) {
 	vs = make([]int, 3)

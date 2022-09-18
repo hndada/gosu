@@ -154,8 +154,8 @@ func (s *Scorer) CalcScore(kind int, value, weight float64) {
 	}
 	s.Scores[kind] = s.MaxScores[kind] * scoreRate
 	s.ScoreBounds[kind] = s.MaxScores[kind] * boundRate
-	s.Scores[Total] = math.Ceil(Sum(s.Scores[:Total]))
-	s.ScoreBounds[Total] = math.Ceil(Sum(s.ScoreBounds[:Total]))
+	s.Scores[Total] = math.Floor(Sum(s.Scores[:Total]) + 0.1)
+	s.ScoreBounds[Total] = math.Floor(Sum(s.ScoreBounds[:Total]) + 0.1)
 }
 func Sum(vs []float64) (sum float64) {
 	for _, v := range vs {
