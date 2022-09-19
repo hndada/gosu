@@ -44,10 +44,6 @@ func NewChart(cpath string) (c *Chart, err error) {
 	c = new(Chart)
 	c.ChartHeader = gosu.NewChartHeader(f)
 	c.MD5 = md5.Sum(dat)
-	// c.MD5, err = gosu.MD5(cpath)
-	// if err != nil {
-	// 	return
-	// }
 	switch f := f.(type) {
 	case *osu.Format:
 		c.KeyCount = int(f.CircleSize)
@@ -60,8 +56,7 @@ func NewChart(cpath string) (c *Chart, err error) {
 	c.Notes = NewNotes(f, c.KeyCount)
 	c.Bars = NewBars(c.TransPoints, c.Duration())
 
-	// Calculate positions.
-	// Position calculation is based on TransPoints.
+	// Calculate positions. Position calculation is based on TransPoints.
 	mainBPM, _, _ := c.BPMs()
 	bpmScale := c.TransPoints[0].BPM / mainBPM
 	for _, tp := range c.TransPoints {
@@ -97,17 +92,23 @@ func (c Chart) Duration() int64 {
 	last := c.Notes[len(c.Notes)-1]
 	return last.Time + last.Duration
 }
+
+// Total note count at first element,
 func (c Chart) NoteCounts() (vs []int) {
 	vs = make([]int, 2)
 	for _, n := range c.Notes {
-		switch n.Type {
-		case Normal:
-			vs[0]++
-		case Head:
-			vs[1]++
+		if n.Type == Tail {
+			continue
 		}
+		vs[n.Type]++
 	}
 	return
+}
+func (c Chart) NoteCountString() string {
+	vs := c.NoteCounts()
+	total := vs[0] + 2*vs[1]
+	ratio := float64(vs[0]) / float64(vs[0]+vs[1])
+	return fmt.Sprintf("Notes: %d\nLN: %.0f%%", total, ratio*100)
 }
 func (c Chart) BPMs() (main, min, max float64) {
 	return gosu.BPMs(c.TransPoints, c.Duration())
@@ -117,7 +118,6 @@ func NewChartInfo(cpath string) (info gosu.ChartInfo, err error) {
 	if err != nil {
 		return
 	}
-	// Todo: put mods implementation here
 	mode := gosu.ModePiano4
 	if c.KeyCount > 4 {
 		mode = gosu.ModePiano7
