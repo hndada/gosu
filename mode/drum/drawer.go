@@ -1,8 +1,8 @@
 package drum
 
 import (
+	"fmt"
 	"image/color"
-	"math"
 	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -156,24 +156,41 @@ func (d RollDrawer) Draw(screen *ebiten.Image) {
 
 // Draw first overlay at even beat, second at odd beat.
 type NoteDarwer struct {
-	Time                  int64
-	OverlayDuration       int64
-	Overlay               int // It shows which overlay sprite goes drawn.
-	LastOverlayChangeTime int64
-	Notes                 []*Note
-	Rolls                 []*Note
-	Shakes                []*Note
-	NoteSprites           [2][4]draws.Sprite
-	OverlaySprites        [2][2]draws.Sprite
+	Time           int64
+	Notes          []*Note
+	Rolls          []*Note
+	Shakes         []*Note
+	NoteSprites    [2][4]draws.Sprite
+	OverlayDrawers [2]draws.AnimationDrawer
+	// OverlayDuration  float64
+	// OverlayFrame     int
+	// OverlayStartTime int64
+	// Overlay               int // It shows which overlay sprite goes drawn.
+	// LastOverlayChangeTime int64
+	// OverlaySprites [2][2]draws.Sprite
 }
 
 func (d *NoteDarwer) Update(time int64, bpm float64) {
 	d.Time = time
-	d.OverlayDuration = int64(60000 / ScaledBPM(bpm))
-	if d.Time-d.LastOverlayChangeTime >= d.OverlayDuration {
-		d.Overlay = (d.Overlay + 1) % 2
-		d.LastOverlayChangeTime = d.Time
+	duration := 2 * 60000 / ScaledBPM(bpm)
+	for i := range d.OverlayDrawers {
+		d.OverlayDrawers[i].Update(time, int64(duration), false)
 	}
+	// if v := 60000 / ScaledBPM(bpm); d.OverlayDuration != v {
+	// 	d.OverlayStartTime = d.Time
+	// 	d.OverlayDuration = v
+	// }
+	// td := float64(d.Time - d.OverlayStartTime)
+	// rate := math.Remainder(td, d.OverlayDuration) / d.OverlayDuration
+	// if rate < 0 {
+	// 	rate += 1
+	// }
+	// frames := float64(len(d.OverlaySprites))
+	// d.OverlayFrame = int(rate * frames)
+	// if d.Time-d.LastOverlayChangeTime >= d.OverlayDuration {
+	// 	d.Overlay = (d.Overlay + 1) % 2
+	// 	d.LastOverlayChangeTime = d.Time
+	// }
 }
 
 func (d NoteDarwer) Draw(screen *ebiten.Image) {
@@ -198,7 +215,7 @@ func (d NoteDarwer) Draw(screen *ebiten.Image) {
 					op.ColorM.Scale(1, 1, 1, 0)
 				}
 			case modeRoll:
-				rate := (pos - 0) / 400
+				rate := pos / 400
 				if rate > 1 {
 					rate = 1
 				}
@@ -216,9 +233,10 @@ func (d NoteDarwer) Draw(screen *ebiten.Image) {
 			// if mode == modeShake {
 			// 	continue
 			// }
-			overlay := d.OverlaySprites[n.Size][d.Overlay]
-			overlay.Move(pos, 0)
-			overlay.Draw(screen, op)
+			d.OverlayDrawers[n.Size].Draw(screen, op, pos, 0)
+			// overlay := d.OverlaySprites[n.Size][d.OverlayFrame]
+			// overlay.Move(pos, 0)
+			// overlay.Draw(screen, op)
 		}
 	}
 }
@@ -257,62 +275,106 @@ func (d KeyDrawer) Draw(screen *ebiten.Image) {
 }
 
 type DancerDrawer struct {
-	Time             int64
-	Duration         float64
+	AnimationDrawers [4]draws.AnimationDrawer
+	AnimationEndTime int64 // For Yes and No.
 	Mode             int
-	Frame            int
-	LastFrameTimes   [4]int64
-	MissDanceEndTime int64 // Todo: EndTimes [4]int64?
-	Sprites          [4][]draws.Sprite
 }
 
-func (d *DancerDrawer) Update(time int64, bpm float64, miss, hit bool, combo int, highlight bool) {
-	d.Time = time
-	d.Duration = 4 * 60000 / ScaledBPM(bpm)
-	var modeChange bool
+func (d *DancerDrawer) Update(
+	time int64, bpm float64, combo int, miss, hit, highlight bool) {
+	duration := 4 * 60000 / ScaledBPM(bpm)
+	mode := d.Mode
+	var reset bool
 	switch {
 	case miss:
-		d.MissDanceEndTime = d.Time + int64(d.Duration*4)
-		if d.Mode != DancerNo {
-			d.Mode = DancerNo
-			modeChange = true
-		}
-	case combo >= 50 && combo%50 < 5:
-		if d.Mode != DancerYes {
-			d.Mode = DancerYes
-			d.Duration *= 2 // Yes's duration is longer than others.
-			modeChange = true
-		}
-	case hit || d.Time >= d.MissDanceEndTime:
+		mode = DancerNo
+		d.AnimationEndTime = time + int64(4*duration)
+	case combo >= 50 && combo%50 < 2:
+		mode = DancerYes
+		d.AnimationEndTime = time + int64(duration)
+	case hit || d.AnimationFinish():
 		if highlight {
-			if d.Mode != DancerHigh {
-				d.Mode = DancerHigh
-				modeChange = true
-			}
+			mode = DancerHigh
 		} else {
-			if d.Mode != DancerIdle {
-				d.Mode = DancerIdle
-				modeChange = true
-			}
+			mode = DancerIdle
 		}
 	}
-	if modeChange {
-		d.LastFrameTimes[d.Mode] = time
+	if d.Mode != mode && d.AnimationFinish() {
+		fmt.Println(d.Mode, mode)
+		d.Mode = mode
+		reset = true
 	}
-	td := float64(d.Time - d.LastFrameTimes[d.Mode])
-	// q := math.Floor(td / d.Duration)
-	// td -= q * d.Duration
-	// d.Frame = int(td) * len(d.Sprites[d.Mode])
-	rate := math.Remainder(td, d.Duration) / d.Duration
-	if rate < 0 {
-		rate += 1
+	d.AnimationDrawers[d.Mode].Update(time, int64(duration), reset)
+}
+
+// Infers Dancer is ready to change its mode.
+func (d DancerDrawer) AnimationFinish() bool {
+	if d.Mode == DancerIdle || d.Mode == DancerHigh {
+		return true
 	}
-	frames := float64(len(d.Sprites[d.Mode]))
-	d.Frame = int(rate * frames)
+	return d.AnimationDrawers[d.Mode].Time >= d.AnimationEndTime
 }
 func (d DancerDrawer) Draw(screen *ebiten.Image) {
-	d.Sprites[d.Mode][d.Frame].Draw(screen, nil)
+	d.AnimationDrawers[d.Mode].Draw(screen, nil, 0, 0)
 }
+
+// type DancerDrawer0 struct {
+// 	Time             int64
+// 	Duration         float64
+// 	Mode             int
+// 	Frame            int
+// 	StartTimes       [4]int64
+// 	MissDanceEndTime int64 // Todo: EndTimes [4]int64?
+// 	Sprites          [4][]draws.Sprite
+// }
+
+// func (d *DancerDrawer0) Update(time int64, bpm float64, miss, hit bool, combo int, highlight bool) {
+// 	d.Time = time
+// 	d.Duration = 4 * 60000 / ScaledBPM(bpm)
+// 	var modeChange bool
+// 	switch {
+// 	case miss:
+// 		d.MissDanceEndTime = d.Time + int64(d.Duration*4)
+// 		if d.Mode != DancerNo {
+// 			d.Mode = DancerNo
+// 			modeChange = true
+// 		}
+// 	case combo >= 50 && combo%50 < 5:
+// 		if d.Mode != DancerYes {
+// 			d.Mode = DancerYes
+// 			d.Duration *= 2 // Yes's duration is longer than others.
+// 			modeChange = true
+// 		}
+// 	case hit || d.Time >= d.MissDanceEndTime:
+// 		if highlight {
+// 			if d.Mode != DancerHigh {
+// 				d.Mode = DancerHigh
+// 				modeChange = true
+// 			}
+// 		} else {
+// 			if d.Mode != DancerIdle {
+// 				d.Mode = DancerIdle
+// 				modeChange = true
+// 			}
+// 		}
+// 	}
+// 	if modeChange {
+// 		d.StartTimes[d.Mode] = time
+// 	}
+// 	td := float64(d.Time - d.StartTimes[d.Mode])
+// 	// q := math.Floor(td / d.Duration)
+// 	// td -= q * d.Duration
+// 	// d.Frame = int(td) * len(d.Sprites[d.Mode])
+// 	rate := math.Remainder(td, d.Duration) / d.Duration
+// 	if rate < 0 {
+// 		rate += 1
+// 	}
+// 	frames := float64(len(d.Sprites[d.Mode]))
+// 	d.Frame = int(rate * frames)
+// }
+// func (d DancerDrawer0) Draw(screen *ebiten.Image) {
+// 	d.Sprites[d.Mode][d.Frame].Draw(screen, nil)
+// }
 
 type JudgmentDrawer struct {
 	draws.BaseDrawer

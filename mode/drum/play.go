@@ -75,9 +75,9 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 			return
 		}
 	}
-	for i, colorName := range []string{"red", "blue"} {
-		for j, sizeName := range []string{"regular", "big"} {
-			path := fmt.Sprintf("skin/drum/sound/%s-%s.wav", colorName, sizeName)
+	for i, colorName := range []string{"regular", "big"} {
+		for j, sizeName := range []string{"red", "blue"} {
+			path := fmt.Sprintf("skin/drum/sound/%s/%s.wav", colorName, sizeName)
 			b, err := audios.NewBytes(path)
 			if err != nil {
 				panic(err)
@@ -158,24 +158,38 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 		DotSprite:   s.DotSprite,
 	}
 	s.NoteDrawer = NoteDarwer{
-		Time:           s.time,
-		Notes:          c.Notes,
-		Rolls:          c.Rolls,
-		Shakes:         c.Shakes,
-		NoteSprites:    s.NoteSprites,
-		OverlaySprites: s.OverlaySprites,
+		Time:        s.time,
+		Notes:       c.Notes,
+		Rolls:       c.Rolls,
+		Shakes:      c.Shakes,
+		NoteSprites: s.NoteSprites,
+	}
+	for i, sprites := range s.OverlaySprites {
+		s.NoteDrawer.OverlayDrawers[i] = draws.AnimationDrawer{
+			Time:      s.time,
+			Duration:  int64(60000 / ScaledBPM(s.BPM)),
+			StartTime: s.TransPoint.Time,
+			Sprites:   sprites,
+		}
 	}
 	s.KeyDrawer = KeyDrawer{
 		MaxCountdown: gosu.TimeToTick(75),
 		Field:        s.KeyFieldSprite,
 		Keys:         s.KeySprites,
 	}
-	s.DancerDrawer = DancerDrawer{
-		Time:           s.time,
-		Duration:       2 * 60000 / ScaledBPM(s.BPM),
-		LastFrameTimes: [4]int64{s.time, s.time, s.time, s.time},
-		Sprites:        s.DancerSprites,
+	s.DancerDrawer.AnimationEndTime = s.time
+	if s.Highlight {
+		s.DancerDrawer.Mode = DancerHigh
 	}
+	for i := range s.DancerDrawer.AnimationDrawers {
+		s.DancerDrawer.AnimationDrawers[i].Sprites = s.DancerSprites[i]
+	}
+	// s.DancerDrawer = DancerDrawer{
+	// 	Time:       s.time,
+	// 	Duration:   2 * 60000 / ScaledBPM(s.BPM),
+	// 	StartTimes: [4]int64{s.time, s.time, s.time, s.time},
+	// 	Sprites:    s.DancerSprites,
+	// }
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer = gosu.NumberDrawer{
 		BaseDrawer: draws.BaseDrawer{
@@ -191,7 +205,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 }
 
 func (s *ScenePlay) Update() any {
-	defer s.Ticker()
+	defer func() { s.Ticker(); s.time = s.Time() }()
 	if s.IsDone() {
 		s.MusicPlayer.Close()
 		return gosu.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
@@ -283,11 +297,8 @@ func (s *ScenePlay) Update() any {
 	s.NoteDrawer.Update(s.time, s.BPM)
 
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
-	{
-		miss := judgment.Is(Miss)
-		hit := !miss && judgment.Valid()
-		s.DancerDrawer.Update(s.time, s.BPM, miss, hit, s.Combo, s.Highlight)
-	}
+	s.DancerDrawer.Update(s.time, s.BPM, s.Combo, judgment.Is(Miss),
+		!judgment.Is(Miss) && judgment.Valid(), s.Highlight)
 	s.ScoreDrawer.Update(s.Scores[gosu.Total])
 	s.ComboDrawer.Update(s.Combo)
 	s.MeterDrawer.Update()
@@ -320,7 +331,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 
 func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
-		"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"+
+		"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"+
 			"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
