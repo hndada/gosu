@@ -8,10 +8,10 @@ import (
 )
 
 // Drum note has 3 components: Color, Size, Type(Note, Roll, Shake).
-// cf. Piano note has 2 components: Key, Type(Note, Head, Tail)
+// Piano note has 2 components: Key, Type(Note, Head, Tail).
 const (
 	Normal = iota
-	Roll   // Roll with head and tail.
+	Roll
 	Shake
 )
 const (
@@ -27,28 +27,22 @@ const (
 	Big
 )
 
-// Todo: make Dots tell when to hit shake tick at auto mods?
 type Note struct {
 	Floater
+	Type     int
+	Color    int
+	Size     int
 	Duration int64
-	// RevealTime int64 // The time when Roll body or Shake reveals.
-	// DotDuration float64 // For calculating Roll tick density.
-	Type  int
-	Color int
-	Size  int
-	// Dots  []*Dot
-	Tick    int // The number of ticks in Roll or Shake.
-	HitTick int // The number of ticks being hit.
-
+	length   float64 // For compatibility with osu!.
+	Tick     int     // The number of ticks in Roll or Shake.
 	gosu.Sample
-	Marked bool
-	Next   *Note
-	Prev   *Note
-	length float64 // For compatibility with osu!.
+
+	Marked  bool
+	HitTick int // The number of ticks being hit.
+	Next    *Note
+	Prev    *Note
 }
 
-// Length is for calculating Durations of Roll and its tick.
-// NewNote temporarily set length to DotDuration.
 func NewNote(f any) (n *Note) {
 	switch f := f.(type) {
 	case osu.HitObject:
@@ -59,8 +53,7 @@ func NewNote(f any) (n *Note) {
 		switch {
 		case f.NoteType&osu.HitTypeSlider != 0:
 			n.Type = Roll
-			n.length = f.SliderLength()
-			// Roll's duration should not rely on f.EndTime.
+			n.length = f.SliderLength() // For calculating duration of Roll.
 			n.Color = Yellow
 		case f.NoteType&osu.HitTypeSpinner != 0:
 			n.Type = Shake

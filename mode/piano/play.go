@@ -61,7 +61,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	// } else {
 	// 	s.SetTicks(-1800, c.Duration())
 	// }
-	s.SetTicks(-1800, c.Duration())
+	s.SetTicks(c.Duration())
 	if path, ok := c.MusicPath(cpath); ok {
 		s.MusicPlayer, err = gosu.NewMusicPlayer(gosu.MusicVolumeHandler, path)
 		if err != nil {
@@ -292,7 +292,7 @@ func (s *ScenePlay) UpdateTransPoint() {
 	s.TransPoint = s.TransPoint.FetchByTime(s.Time())
 }
 
-func (s ScenePlay) Time() int64           { return s.Timer.Time() }
+func (s ScenePlay) Time() int64           { return s.Timer.Time }
 func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.Speed }
 
 // 1 pixel is 1 millisecond.

@@ -36,10 +36,9 @@ func NewImageSrc(path string) image.Image {
 	return src
 }
 
-// Todo: FlipX -> NewFlipXImage
-func FlipX(i *ebiten.Image) *ebiten.Image { return flip(i, true) }
-func FlipY(i *ebiten.Image) *ebiten.Image { return flip(i, false) }
-func flip(i *ebiten.Image, isX bool) *ebiten.Image {
+func XFlippedImage(i *ebiten.Image) *ebiten.Image { return flipped(i, true) }
+func YFlippedImage(i *ebiten.Image) *ebiten.Image { return flipped(i, false) }
+func flipped(i *ebiten.Image, isX bool) *ebiten.Image {
 	w, h := i.Size()
 	i2 := ebiten.NewImage(w, h)
 	op := &ebiten.DrawImageOptions{}

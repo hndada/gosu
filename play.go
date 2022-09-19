@@ -1,6 +1,7 @@
 package gosu
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -10,42 +11,39 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
-const (
-	MinWaitBefore int64 = -1800
-	WaitAfter     int64 = 3000
-)
+func SetTitle(c ChartHeader) {
+	title := fmt.Sprintf("gosu - %s - [%s]", c.MusicName, c.ChartName)
+	ebiten.SetWindowTitle(title)
+}
 
-// func MD5(cpath string) (v [16]byte, err error) {
-// 	var b []byte
-// 	b, err = os.ReadFile(cpath)
-// 	if err != nil {
-// 		return
-// 	}
-// 	v = md5.Sum(b)
-// 	return
-// }
+// Time is a point of time, duration a length of time.
+func TimeToTick(time int64) int { return int(float64(time) / 1000 * float64(TPS)) }
+func TickToTime(tick int) int64 { return int64(float64(tick) / float64(TPS) * 1000) }
+
+const (
+	WaitBefore int64 = -1800
+	WaitAfter  int64 = 3000
+)
 
 type Timer struct {
 	Tick    int
 	MaxTick int // A tick corresponding to EndTime = Duration + WaitAfter
+	Time    int64
 }
 
-func TimeToTick(time int64) int { return int(float64(time) / 1000 * float64(TPS)) }
-func TickToTime(tick int) int64 { return int64(float64(tick) / float64(TPS) * 1000) }
-func (t Timer) Time() int64     { return TickToTime(t.Tick) }
+// func (t Timer) IsDone() bool { return ebiten.IsKeyPressed(ebiten.KeyEscape) }
 func (t Timer) IsDone() bool {
-	return (ebiten.IsKeyPressed(ebiten.KeyEscape))
-	// return (ebiten.IsKeyPressed(ebiten.KeyEscape) ||
-	// t.Tick >= t.MaxTick)
+	return ebiten.IsKeyPressed(ebiten.KeyEscape) || t.Tick >= t.MaxTick
 }
-func (t *Timer) SetTicks(waitBefore, duration int64) {
-	if waitBefore > MinWaitBefore {
-		waitBefore = MinWaitBefore
-	}
-	t.Tick = TimeToTick(waitBefore)
+func (t *Timer) SetTicks(duration int64) {
+	t.Tick = TimeToTick(WaitBefore)
 	t.MaxTick = TimeToTick(duration + WaitAfter)
+	t.Time = TickToTime(t.Tick)
 }
-func (t *Timer) Ticker() { t.Tick++ }
+func (t *Timer) Ticker() {
+	t.Tick++
+	t.Time = TickToTime(t.Tick)
+}
 
 type MusicPlayer struct {
 	VolumeHandler ctrl.F64Handler
@@ -88,6 +86,7 @@ func (mp MusicPlayer) Close() {
 	mp.Closer()
 }
 
+// Todo: need to refactor
 type EffectPlayer struct {
 	VolumeHandler ctrl.F64Handler
 	Effects       audios.SoundMap // A player for sample sound is generated at a place.

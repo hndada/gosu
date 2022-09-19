@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"runtime/debug"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/ctrl"
@@ -74,11 +75,13 @@ func (g *Game) Update() (err error) {
 	case PlayToResultArgs: // Todo: SceneResult
 		ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 		VsyncSwitch = true
+		debug.SetGCPercent(0)
 
 		g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
 	case SelectToPlayArgs:
 		ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
 		VsyncSwitch = false
+		debug.SetGCPercent(100)
 
 		g.Scene, err = g.ModeProps[args.Mode].NewScenePlay(
 			args.Path, args.Replay, args.SpeedHandler)
