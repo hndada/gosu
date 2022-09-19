@@ -2,14 +2,6 @@ package drum
 
 import "math"
 
-// Todo: Variate factors based on difficulty-skewed charts
-var (
-	DifficultyDuration int64   = 800
-	FlowScoreFactor    float64 = 0.5 // a
-	AccScoreFactor     float64 = 5   // b
-	ExtraScoreFactor   float64 = 2   // c
-)
-
 func (n Note) Weight() float64 {
 	switch n.Type {
 	case Normal:
@@ -19,10 +11,10 @@ func (n Note) Weight() float64 {
 		case Big:
 			return 1.1
 		}
-	case Shake: // Shake is apparently easier than Roll, since it is free from beat.
+	case Shake:
+		// Shake is apparently easier than Roll, since it is free from beat.
 		// https://www.desmos.com/calculator/nsogcrebx9
-		return math.Pow(float64(32*n.Tick), 0.75) / 32 // 1/32 = 1/(8 * 4)
-		// return 0.03125 // 0.125 * 0.25
+		return math.Pow(float64(32*n.Tick), 0.75) / 32 // 32 comes from 8 * 4.
 	}
 	return 0
 }
@@ -34,51 +26,56 @@ func (c Chart) Difficulties() []float64 {
 	if len(c.Notes) == 0 {
 		return make([]float64, 0)
 	}
+	const sectionDuration = 800
+	sectionCount := c.Duration()/sectionDuration + 1
+	if c.Duration()%sectionDuration == 0 {
+		sectionCount--
+	}
+	ds := make([]float64, sectionCount)
+	var (
+		i int
+		d float64
+	)
 
-	ds := make([]float64, 0, c.Duration()/DifficultyDuration+1)
-	t := c.Notes[0].Time
-	var d float64
 	for _, n := range c.Notes {
-		for n.Time > t+DifficultyDuration {
-			ds = append(ds, d)
+		for next := int64(i+1) * sectionDuration; n.Time >= next; i++ {
+			ds[i] = d
 			d = 0
-			t += DifficultyDuration
 		}
-		if n.Type != Shake {
-			d += n.Weight()
-			continue
-		}
+		d += n.Weight()
+	}
+	i, d = 0, 0
 
-		// Gives uniform difficulty for Shake ticks.
-		// start and end are to give difficulty bound to current section.
-		start := n.Time
+	for _, n := range c.Dots {
+		for next := int64(i+1) * sectionDuration; n.Time >= next; i++ {
+			ds[i] = d
+			d = 0
+		}
+		d += n.Weight()
+	}
+	i, d = 0, 0
+
+	for _, n := range c.Shakes {
+		for next := int64(i+1) * sectionDuration; n.Time >= next; i++ {
+			ds[i] = d
+			d = 0
+		}
+		// Gives uniform difficulty for Shake note.
+		t := int64(i) * sectionDuration
+		start := n.Time // Lower bound to the section in time.
 		if start < t {
 			start = t
 		}
-		end := n.Time + n.Duration
-		if end > t+DifficultyDuration {
-			end = t + DifficultyDuration
+		end := n.Time + n.Duration // Upper bound to the section in time.
+		if end > t+sectionDuration {
+			end = t + sectionDuration
 		}
 		var rate float64
-		// if end-start > 0 {
 		if n.Duration > 0 {
 			rate = float64(end-start) / float64(n.Duration)
 		}
 		d += n.Weight() * rate
-		// ticks := float64(n.Tick) * rate
-		// d += ticks * n.Weight()
 	}
-	ds2 := make([]float64, 0, c.Duration()/DifficultyDuration+1)
-	for _, dot := range c.Dots {
-		for dot.Time > t+DifficultyDuration {
-			ds = append(ds, d)
-			d = 0
-			t += DifficultyDuration
-		}
-		d += dot.Weight()
-	}
-	for i, d2 := range ds2 {
-		ds[i] += d2
-	}
+	i, d = 0, 0
 	return ds
 }

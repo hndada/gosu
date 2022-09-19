@@ -2,7 +2,6 @@ package gosu
 
 import (
 	"math"
-	"time"
 
 	"github.com/hndada/gosu/input"
 )
@@ -11,10 +10,17 @@ type Judgment struct {
 	Flow   float64
 	Acc    float64
 	Window int64
-	Extra  bool // For distinguishing Big note at Drum mode.
+	// Extra  bool // For distinguishing Big note at Drum mode.
 }
 
-// Verdict for normal notes: Note, Head at long note.
+// Is returns whether j and j2 are equal by its window size.
+func (j Judgment) Is(j2 Judgment) bool { return j.Window == j2.Window }
+
+// Valid returns whether j is not a blank judgment by its window size.
+func (j Judgment) Valid() bool { return j.Window != 0 }
+
+// func inRange(td int64, j Judgment) bool { return td < j.Window && td > -j.Window }
+// Verdict for normal notes, e.g., Note, Head at Piano mode.
 func Verdict(js []Judgment, a input.KeyAction, td int64) Judgment {
 	Miss := js[len(js)-1]
 	switch {
@@ -31,7 +37,7 @@ func Verdict(js []Judgment, a input.KeyAction, td int64) Judgment {
 }
 
 func Judge(js []Judgment, td int64) Judgment {
-	if td < 0 { // Absolute value.
+	if td < 0 {
 		td *= -1
 	}
 	for _, j := range js {
@@ -41,24 +47,6 @@ func Judge(js []Judgment, td int64) Judgment {
 	}
 	return Judgment{} // Returns None when the input is out of widest range
 }
-
-// func inRange(td int64, j Judgment) bool { return td < j.Window && td > -j.Window }
-
-// const (
-//
-//	ScoreFactorFlow = iota
-//	ScoreFactorAcc
-//	ScoreFactorExtra
-//
-// )
-// const (
-//
-//	ScoreTotal = iota
-//	ScoreFlow
-//	ScoreAcc
-//	ScoreExtra
-//
-// )
 
 // Total score consists of 3 scores: Flow, Acc, and Kool rate score.
 // Flow score is calculated with sum of Flow. Flow once named as Karma.
@@ -73,8 +61,6 @@ const (
 	Total
 )
 
-// var Primitives = [3]int{Flow, Acc, Extra}
-
 var DefaultMaxScores = [4]float64{
 	7 * 1e5,
 	3 * 1e5,
@@ -82,8 +68,6 @@ var DefaultMaxScores = [4]float64{
 	11 * 1e5,
 }
 
-// Score's fields are temporary.
-// Result's fields will be exposed at SceneResult.
 type Scorer struct {
 	Flow       float64
 	Combo      int
@@ -98,20 +82,6 @@ type Scorer struct {
 	MaxScores      [4]float64
 	JudgmentCounts []int
 	MaxCombo       int
-	// Result
-	// Flows          float64 // Sum of aquired Flow.
-	// Accs           float64 // Sum of aquired Acc value.
-	// NoteWeights    float64 // Works as current max value of note weights.
-	// MaxNoteWeights float64 // Works as Upper bound.
-
-	// Extras          float64 // Kool rate in Piano mode.
-	// ExtraWeights    float64 // Same with NoteWeights in Piano mode.
-	// MaxExtraWeights float64 //  Works as Upper bound.
-
-	// FlowScore  float64
-	// AccScore   float64
-	// ExtraScore float64
-	// TotalScore float64
 }
 
 func NewScorer(scoreFactors [3]float64) Scorer {
@@ -129,6 +99,13 @@ func (s *Scorer) SetMaxScores(maxScores [4]float64) {
 	s.ScoreBounds = maxScores
 	s.MaxScores = maxScores
 }
+func (s *Scorer) AddCombo() {
+	s.Combo++
+	if s.MaxCombo < s.Combo {
+		s.MaxCombo = s.Combo
+	}
+}
+func (s *Scorer) BreakCombo() { s.Combo = 0 }
 
 // s.Primitives[Flow]+=math.Pow(s.Flow, a) * n.Weight()
 func (s *Scorer) CalcScore(kind int, value, weight float64) {
@@ -146,7 +123,7 @@ func (s *Scorer) CalcScore(kind int, value, weight float64) {
 	s.Weights[kind] += weight
 	s.Ratios[kind] = s.Primitives[kind] / s.Weights[kind]
 
-	scoreRate := (s.Primitives[kind] / s.MaxWeights[kind])
+	scoreRate := s.Primitives[kind] / s.MaxWeights[kind]
 	boundRate := 1 - (s.Weights[kind]-s.Primitives[kind])/s.MaxWeights[kind]
 	if kind != Flow {
 		scoreRate = math.Pow(scoreRate, s.ScoreFactors[kind])
@@ -163,42 +140,3 @@ func Sum(vs []float64) (sum float64) {
 	}
 	return
 }
-func (s *Scorer) AddCombo() {
-	s.Combo++
-	if s.MaxCombo < s.Combo {
-		s.MaxCombo = s.Combo
-	}
-}
-func (s *Scorer) BreakCombo() { s.Combo = 0 }
-func (s Scorer) NewResult(md5 [16]byte) Result {
-	return Result{
-		MD5:            md5,
-		PlayedTime:     time.Now(),
-		ScoreFactors:   s.ScoreFactors,
-		Scores:         s.Scores,
-		JudgmentCounts: s.JudgmentCounts,
-		MaxCombo:       s.MaxCombo,
-	}
-}
-
-// func (s *Scorer) CalcScores() {
-// 	for _, kind := range []int{Flow, Acc, Extra} {
-// 		if s.MaxWeights[kind] == 0 {
-// 			continue
-// 		}
-// 		scoreRate := (s.Primitives[kind] / s.MaxWeights[kind])
-// 		boundRate := s.MaxWeights[kind] - (s.Weights[kind] - s.Primitives[kind])
-// 		if kind != Flow {
-// 			scoreRate = math.Pow(scoreRate, s.ScoreFactors[kind])
-// 			boundRate = math.Pow(boundRate, s.ScoreFactors[kind])
-// 		}
-// 		score := s.MaxScores[kind] * scoreRate
-// 		bound := s.MaxScores[kind] * boundRate
-// 		s.Scores[kind] = score
-// 		s.ScoreBounds[kind] = bound
-// 		s.Scores[Total] += score
-// 		s.ScoreBounds[Total] += bound
-// 	}
-// 	s.Scores[Total] = math.Ceil(s.Scores[Total])
-// 	s.ScoreBounds[Total] = math.Ceil(s.ScoreBounds[Total])
-// }

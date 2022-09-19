@@ -19,17 +19,6 @@ type Box struct {
 	Texts []Text
 }
 
-//	func NewBox(i *ebiten.Image, PadW, PadH float64) Box {
-//		return Box{
-//			Sprite: NewSpriteFromImage(i),
-//			PadW:   PadW,
-//			PadH:   PadH,
-//		}
-//	}
-//
-//	func (root Box) AppendBoxToRow(b Box) {
-//		root.Grid = append(root.Grid, b)
-//	}
 func (root *Box) AppendBoxInNewRow(b Box) {
 	root.Grid = append(root.Grid, []Box{b})
 }
@@ -41,6 +30,10 @@ func (root *Box) AppendBoxInRow(b Box) {
 	root.Grid[i] = append(root.Grid[i], b)
 }
 
+//	func (root Box) AppendBoxToRow(b Box) {
+//		root.Grid = append(root.Grid, b)
+//	}
+//
 //	func (root *Box) AddBox(b Box, i, j int) { //indexX, indexY int) {
 //		if i > len(root.Boxes) {
 //			i = len(root.Boxes)
@@ -85,14 +78,6 @@ type Text struct {
 	// Align  int
 }
 
-//	func NewText(text string) (t Text) {
-//		t.text = text
-//		t.color = color.NRGBA{0, 0, 0, 0} // Black.
-//		return
-//	}
-//
-// func (t *Text) SetText(text string)      { t.text = text }
-// func (t *Text) SetColor(clr color.NRGBA) { t.color = clr }
 func (t *Text) SetFace(f font.Face, origin Origin) {
 	t.face = f
 	t.origin = origin
@@ -101,9 +86,6 @@ func (t *Text) SetFace(f font.Face, origin Origin) {
 	t.h = float64(-bound.Min.Y)
 }
 
-//	func (t Text) BoundString() image.Rectangle {
-//		return
-//	}
 func (t Text) Draw(screen *ebiten.Image, b Box) {
 	var x, y float64
 	switch t.origin.PositionX() {

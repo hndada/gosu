@@ -142,6 +142,7 @@ func (d NoteLaneDrawer) DrawLongBody(screen *ebiten.Image, tail *Note) {
 
 // KeyDrawer draws KeyDownSprite at least for 30ms, KeyUpSprite otherwise.
 // KeyDrawer uses MinCountdown instead of MaxCountdown.
+// NewXXXDrawer() is not recommended, since each ScenePlay may have different Skin.
 type KeyDrawer struct {
 	MinCountdown   int
 	Countdowns     []int

@@ -11,6 +11,8 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
+// Order of fields of drawer:
+// Updating fields, others fields, sprites.
 type BackgroundDrawer struct {
 	Sprite  draws.Sprite
 	Dimness *float64

@@ -6,14 +6,13 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 )
 
+// FaceDefault = basicfont.Face7x13
 var (
 	Face12 font.Face
 	Face16 font.Face
 	Face20 font.Face
 	Face24 font.Face
 )
-
-// FaceDefault = basicfont.Face7x13
 
 func init() {
 	const dpi = 72

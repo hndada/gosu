@@ -35,9 +35,9 @@ type Chart struct {
 }
 
 var (
-	// RevealDuration int64   = 1500
-	TickDensity float64 = 4.0
-	// ShakeDensity = 4.0 // One beat has 4 Shakes.
+	// TickDensity  float64 = 4
+	DotDensity   float64 = 4 // Infers how many dots per beat in Roll note.
+	ShakeDensity float64 = 3 // Infers how many shakes per beat in Shake note.
 )
 
 // NewChart takes file path as input for starting with parsing.
@@ -83,31 +83,19 @@ func NewChart(cpath string) (c *Chart, err error) {
 				switch f := f.(type) {
 				case *osu.Format:
 					// speedFactor := c.TransPoints[0].BPM / 60000 * (f.SliderMultiplier * 100)
-					speed := tp.BPM * (tp.Speed / bpmScale) / 60000 * f.SliderMultiplier * 100
+					speed := tp.BPM * (tp.Speed / bpmScale) / 60000 * f.SliderMultiplier * 100 // Unit is osupixel / 100ms.
 					n.Duration = int64(n.length / speed)
-					// if n.Type == Shake {
-					// 	n.RevealTime = n.Time - RevealDuration
-					// }
 				}
 			}
-			if n.Duration > 0 {
-				n.Tick = int(float64(n.Duration)*bpm/60000*TickDensity+0.1) + 1
-				// fmt.Println(c.ChartName, float64(n.Duration)*bpm/60000*TickDensity, n.Tick)
+			switch n.Type {
+			case Roll:
+				n.Tick = int(float64(n.Duration)*bpm/60000*DotDensity+0.1) + 1
+			case Shake:
+				n.Tick = int(float64(n.Duration)*bpm/60000*ShakeDensity+0.1) + 1
 			}
 		}
 	}
 	c.Dots = NewDots(c.Rolls)
-	// switch f := f.(type) {
-	// case *osu.Format:
-	// 	// TransPoints' speed has not scaled yet.
-	// 	tp := c.TransPoints[0]
-	// 	for _, n := range c.Notes {
-	// 		for tp.Next != nil && n.Time >= tp.Next.Time {
-	// 			tp = tp.Next
-	// 		}
-
-	// 	}
-	// }
 	c.Bars = NewBars(c.TransPoints, c.Duration())
 	tp = c.TransPoints[0]
 	for _, b := range c.Bars {
@@ -152,7 +140,6 @@ func NewChartInfo(cpath string) (info gosu.ChartInfo, err error) {
 	if err != nil {
 		return
 	}
-	// Todo: put mods implementation here
 	mode := gosu.ModeDrum
 	main, min, max := c.BPMs()
 	info = gosu.ChartInfo{
@@ -171,8 +158,7 @@ func NewChartInfo(cpath string) (info gosu.ChartInfo, err error) {
 	return
 }
 
-// It is proved that all BPMs are set into [MinScaledBPM, MaxScaledBPM) by v*2 or v/2
-// if MinScaledBPM *2 >= MaxScaleBPM.
+// It is proved that all BPMs are set into [min, max) by v*2 or v/2 if 2 * min >= max.
 func ScaledBPM(bpm float64) float64 {
 	if bpm < 0 {
 		bpm = -bpm

@@ -10,6 +10,7 @@ type Bar struct {
 
 func NewBars(transPoints []*gosu.TransPoint, duration int64) (bs []*Bar) {
 	var start, end, step float64 // Next time.
+
 	// Bar positions before first TransPoint.
 	start = float64(transPoints[0].Time)
 	end = start

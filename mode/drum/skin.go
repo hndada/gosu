@@ -13,23 +13,12 @@ import (
 )
 
 var (
-	ColorRed  = color.NRGBA{235, 69, 44, 255}
-	ColorBlue = color.NRGBA{68, 141, 171, 255}
-	// ColorYellow = color.NRGBA{252, 83, 6, 255}
-	ColorYellow = color.NRGBA{230, 170, 0, 255}
+	ColorRed    = color.NRGBA{235, 69, 44, 255}
+	ColorBlue   = color.NRGBA{68, 141, 171, 255}
+	ColorYellow = color.NRGBA{230, 170, 0, 255} // 252, 83, 6
 	ColorPurple = color.NRGBA{150, 100, 200, 255}
-	ColorGray   = color.NRGBA{67, 67, 67, 255}
 )
 
-// const (
-//
-//	ShakeNote = iota
-//	ShakeInner
-//	ShakeOuter
-//	// ShakeSpin
-//	// ShakeLimit
-//
-// )
 const (
 	LeftBlue = iota
 	LeftRed
@@ -46,35 +35,28 @@ const (
 
 var DefaultSkin Skin
 
+// Order of fields of Skin is roughly consistent with drawing order.
 // https://osu.ppy.sh/wiki/en/Skinning/osu%21taiko
 type Skin struct {
-	FieldSprite draws.Sprite
-	HintSprites [2]draws.Sprite // 0, 1 are idle, highlight each.
-	BarSprite   draws.Sprite
+	FieldSprite     draws.Sprite
+	HintSprites     [2]draws.Sprite
+	BarSprite       draws.Sprite
+	JudgmentSprites [2][3]draws.Sprite
 
-	// First [2] are for big notes.
-	JudgmentSprites [2][3]draws.Sprite // 3 Judgments.
-	// RedSprites      [2]draws.Sprite
-	// BlueSprites     [2]draws.Sprite
-	// NoteSprites [2][3]draws.Sprite // [3] are for Red, Blue, Yellow each.
-	NoteSprites    [2][4]draws.Sprite // [4] are for Red, Blue, Yellow, Purple each.
-	HeadSprites    [2]draws.Sprite    // Overlay will be drawn during game play.
-	TailSprites    [2]draws.Sprite
-	OverlaySprites [2][2]draws.Sprite // 2 Overlays.
-	BodySprites    [2]draws.Sprite
-	DotSprite      draws.Sprite
-	// ShakeSprites   [3]draws.Sprite
+	NoteSprites       [2][4]draws.Sprite
+	HeadSprites       [2]draws.Sprite
+	TailSprites       [2]draws.Sprite
+	OverlaySprites    [2][2]draws.Sprite
+	BodySprites       [2]draws.Sprite
+	DotSprite         draws.Sprite
 	ShakeBorderSprite draws.Sprite
 	ShakeSprite       draws.Sprite
 
-	KeySprites     [4]draws.Sprite // 4 Keys.
+	KeySprites     [4]draws.Sprite
 	KeyFieldSprite draws.Sprite
-	DancerSprites  [4][]draws.Sprite // Dancer has 4 behaviors.
-
-	ScoreSprites      [10]draws.Sprite
-	ComboSprites      [10]draws.Sprite
-	DotCountSprites   [10]draws.Sprite // For rolls.
-	ShakeCountSprites [10]draws.Sprite // For shakes.
+	DancerSprites  [4][]draws.Sprite
+	ScoreSprites   [10]draws.Sprite
+	ComboSprites   [10]draws.Sprite
 }
 
 // Todo: embed default skins to code for preventing panic when files are missing
@@ -105,9 +87,8 @@ func LoadSkin() {
 		}
 		{
 			op := &ebiten.DrawImageOptions{}
-			// op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 255, 255})
 			op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 0, a})
-			if i == 0 {
+			if i == 0 { // Blank for idle, Yellow for highlight.
 				op.CompositeMode = ebiten.CompositeModeDestinationOut
 			}
 			op.GeoM.Translate(0.05*float64(sw), 0.05*float64(sh))
@@ -126,7 +107,7 @@ func LoadSkin() {
 	}
 	{
 		src := ebiten.NewImage(1, int(FieldInnerHeight))
-		src.Fill(color.NRGBA{255, 255, 255, 255}) // White
+		src.Fill(color.NRGBA{255, 255, 255, 255})
 		s := draws.NewSpriteFromImage(src)
 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
 		skin.BarSprite = s
@@ -167,17 +148,12 @@ func LoadSkin() {
 			s := draws.NewSpriteFromImage(rollEndImage)
 			s.SetScale(noteHeight / s.H())
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginLeftMiddle)
-			// s.SetColor(ColorYellow)
 			skin.TailSprites[i] = s
 		}
 		{
-			s := draws.NewSpriteFromImage(draws.FlipX(rollEndImage))
+			s := draws.NewSpriteFromImage(draws.XFlippedImage(rollEndImage))
 			s.SetScale(noteHeight / s.H())
-			// s := draws.NewSpriteFromImage(rollEndImage)
-			// ratio := noteHeight / s.H()
-			// s.SetScaleXY(-ratio, ratio, ebiten.FilterLinear) // Goes flipped.
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginRightMiddle)
-			// s.SetColor(ColorYellow)
 			skin.HeadSprites[i] = s
 		}
 		for j := 0; j < 2; j++ {
@@ -194,7 +170,6 @@ func LoadSkin() {
 			s := draws.NewSpriteFromImage(rollMidImage)
 			s.SetScale(noteHeight / s.H())
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginLeftMiddle)
-			// s.SetColor(ColorYellow)
 			skin.BodySprites[i] = s
 		}
 	}
@@ -202,7 +177,6 @@ func LoadSkin() {
 		s := draws.NewSprite("skin/drum/note/roll/dot.png")
 		s.SetScale(DotScale)
 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
-		// s.SetColor(ColorYellow)
 		skin.DotSprite = s
 	}
 	{
@@ -245,20 +219,6 @@ func LoadSkin() {
 			skin.ShakeBorderSprite = s
 		}
 	}
-	// for i, name := range []string{"note", "spin", "limit"} {
-	// 	path := fmt.Sprintf("skin/drum/note/shake/%s.png", name)
-	// 	s := draws.NewSprite(path)
-	// 	if name == "note" {
-	// 		s.SetScale(regularNoteHeight / s.H())
-	// 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
-	// 	} else {
-	// 		s.SetScale(ShakeScale)
-	// 		s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
-	// 		// s.SetPosition(ShakePosX, ShakePosY, draws.OriginCenterMiddle)
-	// 	}
-	// 	skin.ShakeSprites[i] = s
-	// }
-
 	// Position of combo is dependent on widths of key sprite.
 	// Key sprites are overlapped at each side.
 	{
@@ -276,14 +236,14 @@ func LoadSkin() {
 	}
 	{
 		src := draws.NewImage("skin/drum/key/out.png")
-		s := draws.NewSpriteFromImage(draws.FlipX(src))
+		s := draws.NewSpriteFromImage(draws.XFlippedImage(src))
 		s.SetScale(FieldInnerHeight / s.H())
 		s.SetPosition(0, FieldPosition, draws.OriginLeftMiddle)
 		skin.KeySprites[LeftBlue] = s
 	}
 	{
 		src := draws.NewImage("skin/drum/key/in.png")
-		s := draws.NewSpriteFromImage(draws.FlipX(src))
+		s := draws.NewSpriteFromImage(draws.XFlippedImage(src))
 		s.SetScale(FieldInnerHeight / s.H())
 		s.SetPosition(keyCenter, FieldPosition, draws.OriginLeftMiddle)
 		skin.KeySprites[RightRed] = s
@@ -307,11 +267,10 @@ func LoadSkin() {
 			path := fmt.Sprintf("skin/drum/dancer/%s/%d.png", name, j)
 			s := draws.NewSprite(path)
 			s.SetScale(DancerScale)
-			s.SetPosition(DancerPosX, DancerPosY, draws.OriginCenterMiddle)
+			s.SetPosition(DancerPositionX, DancerPositionY, draws.OriginCenterMiddle)
 			skin.DancerSprites[i][j] = s
 		}
 	}
-
 	skin.ScoreSprites = gosu.ScoreSprites
 	var comboImages [10]*ebiten.Image
 	for i := 0; i < 10; i++ {
@@ -323,57 +282,4 @@ func LoadSkin() {
 		s.SetPosition(keyCenter, FieldPosition, draws.OriginCenterMiddle)
 		skin.ComboSprites[i] = s
 	}
-	// for i := 0; i < 10; i++ {
-	// 	s := draws.NewSpriteFromImage(comboImages[i])
-	// 	s.SetScale(DotCountScale)
-	// 	s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
-	// 	skin.DotCountSprites[i] = s
-	// }
-	// for i := 0; i < 10; i++ {
-	// 	s := draws.NewSpriteFromImage(comboImages[i])
-	// 	s.SetScale(ShakeCountScale)
-	// 	pos := ShakePosY + s.H()*ShakeCountPosition
-	// 	s.SetPosition(ShakePosX, pos, draws.OriginCenterTop)
-	// 	skin.ShakeCountSprites[i] = s
-	// }
 }
-
-// func IsKeyImageFlipped(keyType int) bool {
-// 	return keyType == KeyLeftKat || keyType == KeyRightDon
-// }
-// func() {
-// 	fs, err := os.ReadDir("skin/drum/overlay")
-// 	if err != nil {
-// 		return
-// 	}
-// 	for _, f := range fs {
-// 		for i, name := range []string{"regular", "big"} {
-// 			if name != f.Name() {
-// 				continue
-// 			}
-// 			if f.IsDir() {
-// 				for j := 0; j < 2; j++ {
-// 					path := fmt.Sprintf("skin/drum/overlay/%s/%d.png", name, j)
-// 					noteOverlays[i][j] = draws.NewImage(path)
-// 				}
-// 			} else {
-// 				path := fmt.Sprintf("skin/drum/overlay/%s.png", name)
-// 				noteOverlays[i][0] = draws.NewImage(path)
-// 				noteOverlays[i][1] = noteOverlays[i][0]
-// 			}
-// 		}
-// 	}
-// }()
-
-// func IsDir(path string) (bool, error) {
-// 	f, err := os.Open(path)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	defer f.Close()
-// 	info, err := f.Stat()
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	return info.IsDir(), nil
-// }
