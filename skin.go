@@ -2,6 +2,7 @@ package gosu
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
@@ -75,4 +76,18 @@ func NewBackground(path string) draws.Sprite {
 	s.SetScale(screenSizeX / s.W())
 	s.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenterMiddle)
 	return s
+}
+func Paths(base string) (paths []string) {
+	if _, err := os.Stat(base); os.IsNotExist(err) { // Only one path.
+		return []string{fmt.Sprintf("%s.png", base)}
+	}
+	fs, err := os.ReadDir(base)
+	if err != nil {
+		return
+	}
+	paths = make([]string, len(fs))
+	for i := range paths {
+		paths[i] = fmt.Sprintf("%s/%d.png", base, i)
+	}
+	return
 }

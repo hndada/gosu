@@ -1,6 +1,8 @@
 package drum
 
-import "math"
+import (
+	"math"
+)
 
 func (n Note) Weight() float64 {
 	switch n.Type {
@@ -28,37 +30,39 @@ func (c Chart) Difficulties() []float64 {
 	}
 	const sectionDuration = 800
 	sectionCount := c.Duration()/sectionDuration + 1
-	if c.Duration()%sectionDuration == 0 {
-		sectionCount--
-	}
+	// if c.Duration()%sectionDuration == 0 {
+	// 	sectionCount--
+	// }
 	ds := make([]float64, sectionCount)
 	var (
 		i int
 		d float64
 	)
-
 	for _, n := range c.Notes {
-		for next := int64(i+1) * sectionDuration; n.Time >= next; i++ {
+		for n.Time >= int64(i+1)*sectionDuration {
 			ds[i] = d
 			d = 0
+			i++
 		}
 		d += n.Weight()
 	}
 	i, d = 0, 0
 
 	for _, n := range c.Dots {
-		for next := int64(i+1) * sectionDuration; n.Time >= next; i++ {
+		for n.Time >= int64(i+1)*sectionDuration {
 			ds[i] = d
 			d = 0
+			i++
 		}
 		d += n.Weight()
 	}
 	i, d = 0, 0
 
 	for _, n := range c.Shakes {
-		for next := int64(i+1) * sectionDuration; n.Time >= next; i++ {
+		for n.Time >= int64(i+1)*sectionDuration {
 			ds[i] = d
 			d = 0
+			i++
 		}
 		// Gives uniform difficulty for Shake note.
 		t := int64(i) * sectionDuration

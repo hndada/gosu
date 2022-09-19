@@ -3,10 +3,10 @@ module github.com/hndada/gosu
 go 1.18
 
 require (
-	github.com/hajimehoshi/ebiten/v2 v2.4.2
+	github.com/hajimehoshi/ebiten/v2 v2.4.3
 	github.com/ulikunitz/xz v0.5.10
 	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69
-	golang.org/x/sys v0.0.0-20220913175220-63ea55921009
+	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8
 )
 
 require (
@@ -27,6 +27,6 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
-	golang.org/x/exp/shiny v0.0.0-20220909182711-5c715a9e8561 // indirect
+	golang.org/x/exp/shiny v0.0.0-20220916125017-b168a2c6b86b // indirect
 	golang.org/x/mobile v0.0.0-20220722155234-aaac322e2105 // indirect
 )
