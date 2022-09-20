@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 	"io"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
@@ -12,7 +11,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/format/osr"
 )
 
 type SceneSelect struct {
@@ -62,18 +60,18 @@ func (s *SceneSelect) Update() any {
 		Sounds.Play("restart")
 		cursor := s.ModeProps[*s.Mode].Cursor
 		info := s.ModeProps[*s.Mode].ChartInfos[cursor]
-		b, err := os.ReadFile("replay/MuangMuangE - cillia - Ringo Uri no Utakata Shoujo [Ringo Oni] (2019-06-14) Taiko-1.osr")
-		if err != nil {
-			panic(err)
-		}
-		replay, err := osr.Parse(b)
-		if err != nil {
-			panic(err)
-		}
+		// b, err := os.ReadFile("replay/MuangMuangE - cillia - Ringo Uri no Utakata Shoujo [Ringo Oni] (2019-06-14) Taiko-1.osr")
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// replay, err := osr.Parse(b)
+		// if err != nil {
+		// 	panic(err)
+		// }
 		return SelectToPlayArgs{
 			Path:         info.Path,
 			Mode:         *s.Mode, // Todo: duplicated. Should it be removed?
-			Replay:       replay,
+			Replay:       nil,
 			SpeedHandler: s.ModeProps[*s.Mode].SpeedHandler,
 		}
 	}

@@ -2,7 +2,6 @@ package piano
 
 import (
 	"fmt"
-	"runtime/debug"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -17,7 +16,6 @@ import (
 type ScenePlay struct {
 	gosu.Timer
 	Chart *Chart
-
 	gosu.MusicPlayer
 	gosu.EffectPlayer
 	gosu.KeyLogger
@@ -26,24 +24,18 @@ type ScenePlay struct {
 	SpeedHandler ctrl.F64Handler
 	Speed        float64
 	Cursor       float64
-
-	Staged []*Note
+	Staged       []*Note
 	gosu.Scorer
-	// gosu.Result
-	// Flow         float64
-	// Combo        int
-	// NoteWeights  float64
-	// ExtraWeights float64
 
 	Skin             // The skin may be applied some custom settings: on/off some sprites
 	BackgroundDrawer gosu.BackgroundDrawer
 	StageDrawer      StageDrawer
 	BarDrawer        BarDrawer
-	NoteLaneDrawers  []*NoteLaneDrawer
+	NoteDrawers      []NoteDrawer
 	KeyDrawer        KeyDrawer
+	JudgmentDrawer   JudgmentDrawer
 	ScoreDrawer      gosu.ScoreDrawer
 	ComboDrawer      gosu.NumberDrawer
-	JudgmentDrawer   JudgmentDrawer
 	MeterDrawer      gosu.MeterDrawer
 }
 
@@ -55,12 +47,8 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 		return
 	}
 	c := s.Chart
+	gosu.SetTitle(c.ChartHeader)
 	keyCount := c.KeyCount & ScratchMask
-	// if rf != nil {
-	// 	s.SetTicks(rf.BufferTime(), c.Duration())
-	// } else {
-	// 	s.SetTicks(-1800, c.Duration())
-	// }
 	s.SetTicks(c.Duration())
 	if path, ok := c.MusicPath(cpath); ok {
 		s.MusicPlayer, err = gosu.NewMusicPlayer(gosu.MusicVolumeHandler, path)
@@ -84,7 +72,6 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	s.Speed = 1
 	s.Cursor = float64(s.Time()) * s.Speed
 	s.SetSpeed()
-
 	s.Scorer = gosu.NewScorer(c.ScoreFactors)
 	s.JudgmentCounts = make([]int, len(Judgments))
 	// s.Result.FlowMarks = make([]float64, 0, c.Duration()/1000)
@@ -107,52 +94,52 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 
 	s.Skin = Skins[keyCount]
 	s.BackgroundDrawer = gosu.BackgroundDrawer{
-		Sprite:  gosu.DefaultBackground,
 		Dimness: &gosu.BackgroundDimness,
+		Sprite:  gosu.DefaultBackground,
 	}
 	if bg := gosu.NewBackground(c.BackgroundPath(cpath)); bg.IsValid() {
 		s.BackgroundDrawer.Sprite = bg
 	}
 	s.StageDrawer = StageDrawer{
-		Field: s.FieldSprite,
-		Hint:  s.HintSprite,
+		FieldSprite: s.FieldSprite,
+		HintSprite:  s.HintSprite,
 	}
-	s.NoteLaneDrawers = make([]*NoteLaneDrawer, keyCount)
-	for k := range s.NoteLaneDrawers {
-		s.NoteLaneDrawers[k] = &NoteLaneDrawer{
+	s.NoteDrawers = make([]NoteDrawer, keyCount)
+	for k := range s.NoteDrawers {
+		s.NoteDrawers[k] = NoteDrawer{
+			Cursor:   s.Cursor,
+			Farthest: s.Staged[k],
+			Nearest:  s.Staged[k],
 			Sprites: [4]draws.Sprite{
 				s.NoteSprites[k], s.HeadSprites[k],
 				s.TailSprites[k], s.BodySprites[k],
 			},
-			Cursor:   s.Cursor,
-			Farthest: s.Staged[k],
-			Nearest:  s.Staged[k],
 		}
 	}
 	s.BarDrawer = BarDrawer{
-		Sprite:   s.BarSprite,
 		Cursor:   s.Cursor,
 		Farthest: s.Chart.Bars[0],
 		Nearest:  s.Chart.Bars[0],
+		Sprite:   s.BarSprite,
 	}
-	s.KeyDrawer = NewKeyDrawer(s.KeyUpSprites, s.KeyDownSprites)
+	s.KeyDrawer = KeyDrawer{
+		MinCountdown:   gosu.TimeToTick(30),
+		Countdowns:     make([]int, keyCount),
+		KeyUpSprites:   s.KeyUpSprites,
+		KeyDownSprites: s.KeyDownSprites,
+	}
+	s.JudgmentDrawer = NewJudgmentDrawer()
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer = gosu.NumberDrawer{
 		BaseDrawer: draws.BaseDrawer{
 			MaxCountdown: gosu.TimeToTick(2000),
 		},
-		Sprites:    s.ComboSprites,
 		DigitWidth: s.ComboSprites[0].W(),
 		DigitGap:   ComboDigitGap,
 		Bounce:     0.85,
+		Sprites:    s.ComboSprites,
 	}
-	s.ComboDrawer.Sprites = s.ComboSprites
-	s.JudgmentDrawer = NewJudgmentDrawer()
 	s.MeterDrawer = gosu.NewMeterDrawer(Judgments, JudgmentColors)
-
-	title := fmt.Sprintf("gosu - %s - [%s]", c.MusicName, c.ChartName)
-	ebiten.SetWindowTitle(title)
-	debug.SetGCPercent(0)
 	return s, nil
 }
 
@@ -179,7 +166,6 @@ func (s *ScenePlay) SetSpeed() {
 func (s *ScenePlay) Update() any {
 	defer s.Ticker()
 	if s.IsDone() {
-		debug.SetGCPercent(100)
 		s.MusicPlayer.Close()
 		return gosu.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
 	}
@@ -229,13 +215,13 @@ func (s *ScenePlay) Update() any {
 	}
 
 	s.BarDrawer.Update(s.Cursor)
-	for _, d := range s.NoteLaneDrawers {
-		d.Update(s.Cursor)
+	for i := range s.NoteDrawers {
+		s.NoteDrawers[i].Update(s.Cursor)
 	}
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
+	s.JudgmentDrawer.Update(worst)
 	s.ScoreDrawer.Update(s.Scores[0])
 	s.ComboDrawer.Update(s.Combo)
-	s.JudgmentDrawer.Update(worst)
 	s.MeterDrawer.Update()
 
 	// Changed speed should be applied after positions are calculated.
@@ -250,28 +236,22 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
 	s.StageDrawer.Draw(screen)
 	s.BarDrawer.Draw(screen)
-	for _, d := range s.NoteLaneDrawers {
+	for _, d := range s.NoteDrawers {
 		d.Draw(screen)
 	}
 	s.KeyDrawer.Draw(screen)
+	s.JudgmentDrawer.Draw(screen)
 	s.ScoreDrawer.Draw(screen)
 	s.ComboDrawer.Draw(screen)
-	s.JudgmentDrawer.Draw(screen)
 	s.MeterDrawer.Draw(screen)
 	s.DebugPrint(screen)
 }
 
 func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
-	// var fr, ar, rr float64 = 1, 1, 1
-	// if s.NoteWeights > 0 {
-	// 	fr = s.Flows / s.NoteWeights
-	// 	ar = s.Accs / s.NoteWeights
-	// 	rr = s.Extras / s.ExtraWeights
-	// }
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
-			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
+			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Extra: %.2f%%)\nJudgment counts: %v\n\n"+
 			"Speed (Press 8/9): %.0f | %.0f\n(Exposure time: %.fms)\n\n"+
 			// "Music volume (Press 1/2): %.0f%%\nEffect volume (Press 3/4): %.0f%%\n\n"+
 			"Vsync: %v\n",
@@ -283,6 +263,11 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		gosu.VsyncSwitch))
 }
 
+// 1 pixel is 1 millisecond.
+func ExposureTime(speed float64) float64  { return HitPosition / speed }
+func (s ScenePlay) Time() int64           { return s.Timer.Time }
+func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.Speed }
+
 // Supposes one current TransPoint can increment cursor precisely.
 func (s *ScenePlay) UpdateCursor() {
 	duration := float64(s.Time() - s.TransPoint.Time)
@@ -291,9 +276,3 @@ func (s *ScenePlay) UpdateCursor() {
 func (s *ScenePlay) UpdateTransPoint() {
 	s.TransPoint = s.TransPoint.FetchByTime(s.Time())
 }
-
-func (s ScenePlay) Time() int64           { return s.Timer.Time }
-func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.Speed }
-
-// 1 pixel is 1 millisecond.
-func ExposureTime(speed float64) float64 { return HitPosition / speed }

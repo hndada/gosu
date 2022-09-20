@@ -67,6 +67,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 		return
 	}
 	c := s.Chart
+	gosu.SetTitle(c.ChartHeader)
 	s.SetTicks(c.Duration())
 	s.time = s.Time()
 	if path, ok := c.MusicPath(cpath); ok {
@@ -334,7 +335,7 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"+
 			"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
-			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Kool: %.2f%%)\nJudgment counts: %v\n\n"+
+			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Extra: %.2f%%)\nJudgment counts: %v\n\n"+
 			"Speed (Press 8/9): %.0f | %.0f\n(Exposure time: %.fms)\n\n"+
 			// "Music volume (Press 1/2): %.0f%%\nEffect volume (Press 3/4): %.0f%%\n\n"+
 			"Vsync enabled: %v\n",

@@ -11,8 +11,7 @@ const (
 	Normal = iota
 	Head
 	Tail
-
-	Body
+	Body // Todo: separate Body and other notes at Skin, Drawer?
 )
 
 type Note struct {
