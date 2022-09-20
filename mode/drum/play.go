@@ -121,8 +121,8 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 
 	s.Skin = DefaultSkin
 	s.BackgroundDrawer = gosu.BackgroundDrawer{
-		Sprite:  gosu.DefaultBackground,
 		Dimness: &gosu.BackgroundDimness,
+		Sprite:  gosu.DefaultBackground,
 	}
 	if bg := gosu.NewBackground(c.BackgroundPath(cpath)); bg.IsValid() {
 		s.BackgroundDrawer.Sprite = bg
