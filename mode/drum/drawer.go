@@ -1,7 +1,6 @@
 package drum
 
 import (
-	"fmt"
 	"image/color"
 	"math/rand"
 
@@ -275,7 +274,6 @@ func (d *DancerDrawer) Update(
 		}
 	}
 	if d.Mode != mode && d.AnimationFinish() {
-		fmt.Println(d.Mode, mode)
 		d.Mode = mode
 		reset = true
 	}

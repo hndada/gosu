@@ -173,6 +173,7 @@ func (s *ScenePlay) Update() any {
 		s.MusicPlayer.Play()
 	}
 	s.MusicPlayer.Update()
+	// fmt.Printf("game: %dms music: %s\n", s.Time(), s.MusicPlayer.Player.Current())
 
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()

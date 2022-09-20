@@ -69,8 +69,9 @@ func (s *SceneSelect) Update() any {
 		// 	panic(err)
 		// }
 		return SelectToPlayArgs{
-			Path:         info.Path,
-			Mode:         *s.Mode, // Todo: duplicated. Should it be removed?
+			Path: info.Path,
+			Mode: *s.Mode, // Todo: duplicated. Should it be removed?
+			// Replay:       replay,
 			Replay:       nil,
 			SpeedHandler: s.ModeProps[*s.Mode].SpeedHandler,
 		}
