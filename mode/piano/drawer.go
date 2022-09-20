@@ -7,44 +7,44 @@ import (
 )
 
 type StageDrawer struct {
-	Field draws.Sprite
-	Hint  draws.Sprite
+	FieldSprite draws.Sprite
+	HintSprite  draws.Sprite
 }
 
 // Todo: might add some effect on StageDrawer
 func (d StageDrawer) Draw(screen *ebiten.Image) {
-	d.Field.Draw(screen, nil)
-	d.Hint.Draw(screen, nil)
+	d.FieldSprite.Draw(screen, nil)
+	d.HintSprite.Draw(screen, nil)
 }
 
-// Bars are fixed: lane itself moves, all bars move same amount.
+// Bars are fixed. Lane itself moves, all bars move as same amount.
 type BarDrawer struct {
-	Sprite   draws.Sprite
 	Cursor   float64
 	Farthest *Bar
 	Nearest  *Bar
+	Sprite   draws.Sprite
 }
 
 func (d *BarDrawer) Update(cursor float64) {
 	d.Cursor = cursor
 	// When Farthest's prevs are still out of screen due to speed change.
 	for d.Farthest.Prev != nil &&
-		d.Farthest.Prev.Position-d.Cursor > maxPosition+posMargin {
+		d.Farthest.Prev.Position-d.Cursor > maxPosition {
 		d.Farthest = d.Farthest.Prev
 	}
 	// When Farthest is in screen, next note goes fetched if possible.
 	for d.Farthest.Next != nil &&
-		d.Farthest.Position-d.Cursor <= maxPosition+posMargin {
+		d.Farthest.Position-d.Cursor <= maxPosition {
 		d.Farthest = d.Farthest.Next
 	}
 	// When Nearest is still in screen due to speed change.
 	for d.Nearest.Prev != nil &&
-		d.Nearest.Position-d.Cursor > minPosition-posMargin {
+		d.Nearest.Position-d.Cursor > minPosition {
 		d.Nearest = d.Nearest.Prev
 	}
 	// When Nearest's next is still out of screen, next note goes fetched.
 	for d.Nearest.Next != nil &&
-		d.Nearest.Next.Position-d.Cursor <= minPosition-posMargin {
+		d.Nearest.Next.Position-d.Cursor <= minPosition {
 		d.Nearest = d.Nearest.Next
 	}
 }
@@ -61,46 +61,45 @@ func (d BarDrawer) Draw(screen *ebiten.Image) {
 	}
 }
 
-// Notes are fixed: lane itself moves, all notes move same amount.
-// Todo: NoteLaneDrawer -> NoteDrawer
-type NoteLaneDrawer struct {
-	Sprites  [4]draws.Sprite
+// Notes are fixed. Lane itself moves, all notes move same amount.
+type NoteDrawer struct {
 	Cursor   float64
 	Farthest *Note
 	Nearest  *Note
+	Sprites  [4]draws.Sprite
 }
 
 // Farthest and Nearest are borders of displaying notes.
-// All notes are certainly drawn when drawing from Farthest to Nearest.
-func (d *NoteLaneDrawer) Update(cursor float64) {
+// All in-screen notes are confirmed to be drawn when drawing from Farthest to Nearest.
+func (d *NoteDrawer) Update(cursor float64) {
 	d.Cursor = cursor
 	if d.Farthest == nil || d.Nearest == nil {
 		return
 	}
 	// When Farthest's prevs are still out of screen due to speed change.
 	for d.Farthest.Prev != nil &&
-		d.Farthest.Prev.Position-d.Cursor > maxPosition+posMargin {
+		d.Farthest.Prev.Position-d.Cursor > maxPosition {
 		d.Farthest = d.Farthest.Prev
 	}
 	// When Farthest is in screen, next note goes fetched if possible.
 	for d.Farthest.Next != nil &&
-		d.Farthest.Position-d.Cursor <= maxPosition+posMargin {
+		d.Farthest.Position-d.Cursor <= maxPosition {
 		d.Farthest = d.Farthest.Next
 	}
 	// When Nearest is still in screen due to speed change.
 	for d.Nearest.Prev != nil &&
-		d.Nearest.Position-d.Cursor > minPosition-posMargin {
+		d.Nearest.Position-d.Cursor > minPosition {
 		d.Nearest = d.Nearest.Prev
 	}
 	// When Nearest's next is still out of screen, next note goes fetched.
 	for d.Nearest.Next != nil &&
-		d.Nearest.Next.Position-d.Cursor <= minPosition-posMargin {
+		d.Nearest.Next.Position-d.Cursor <= minPosition {
 		d.Nearest = d.Nearest.Next
 	}
 }
 
 // Draw from farthest to nearest to make nearer notes priorly exposed.
-func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
+func (d NoteDrawer) Draw(screen *ebiten.Image) {
 	if d.Farthest == nil || d.Nearest == nil {
 		return
 	}
@@ -120,7 +119,7 @@ func (d NoteLaneDrawer) Draw(screen *ebiten.Image) {
 }
 
 // DrawLongBody draws scaled, corresponding sub-image of Body sprite.
-func (d NoteLaneDrawer) DrawLongBody(screen *ebiten.Image, tail *Note) {
+func (d NoteDrawer) DrawLongBody(screen *ebiten.Image, tail *Note) {
 	head := tail.Prev
 	body := d.Sprites[Body]
 	length := tail.Position - head.Position
@@ -142,7 +141,6 @@ func (d NoteLaneDrawer) DrawLongBody(screen *ebiten.Image, tail *Note) {
 
 // KeyDrawer draws KeyDownSprite at least for 30ms, KeyUpSprite otherwise.
 // KeyDrawer uses MinCountdown instead of MaxCountdown.
-// NewXXXDrawer() is not recommended, since each ScenePlay may have different Skin.
 type KeyDrawer struct {
 	MinCountdown   int
 	Countdowns     []int
@@ -152,14 +150,6 @@ type KeyDrawer struct {
 	pressed        []bool
 }
 
-func NewKeyDrawer(ups, downs []draws.Sprite) KeyDrawer {
-	return KeyDrawer{
-		MinCountdown:   gosu.TimeToTick(30),
-		Countdowns:     make([]int, len(ups)),
-		KeyUpSprites:   ups,
-		KeyDownSprites: downs,
-	}
-}
 func (d *KeyDrawer) Update(lastPressed, pressed []bool) {
 	d.lastPressed = lastPressed
 	d.pressed = pressed
@@ -205,7 +195,7 @@ func (d *JudgmentDrawer) Update(worst gosu.Judgment) {
 	} else {
 		d.Countdown--
 	}
-	if worst.Window != 0 {
+	if worst.Valid() {
 		d.Judgment = worst
 		d.Countdown = d.MaxCountdown
 	}

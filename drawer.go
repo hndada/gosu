@@ -11,11 +11,10 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-// Order of fields of drawer:
-// Updating fields, others fields, sprites.
+// Order of fields of drawer: updating fields, others fields, sprites.
 type BackgroundDrawer struct {
-	Sprite  draws.Sprite
 	Dimness *float64
+	Sprite  draws.Sprite
 }
 
 func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
@@ -24,60 +23,19 @@ func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
 	d.Sprite.Draw(screen, op)
 }
 
-type ScoreDrawer struct {
-	draws.BaseDrawer
-	Sprites    [10]draws.Sprite
-	DigitWidth float64 // Use number 0's width.
-	DigitGap   float64
-	ZeroFill   int
-	Score      ctrl.Delayed
-}
-
-func NewScoreDrawer() ScoreDrawer {
-	return ScoreDrawer{
-		Sprites:    ScoreSprites,
-		DigitWidth: ScoreSprites[0].W(),
-		DigitGap:   ScoreDigitGap,
-		ZeroFill:   1,
-		Score:      ctrl.Delayed{Mode: ctrl.DelayedModeExp},
-	}
-}
-func (d *ScoreDrawer) Update(score float64) {
-	d.Score.Update(score)
-}
-
-// NumberDrawer's Draw draws each number at the center of constant-width bound.
-func (d ScoreDrawer) Draw(screen *ebiten.Image) {
-	if d.MaxCountdown != 0 && d.Countdown == 0 {
-		return
-	}
-	vs := make([]int, 0)
-	score := int(math.Floor(d.Score.Value() + 0.1))
-	for v := score; v > 0; v /= 10 {
-		vs = append(vs, v%10) // Little endian.
-	}
-	for i := len(vs); i < d.ZeroFill; i++ {
-		vs = append(vs, 0)
-	}
-	w := d.DigitWidth + d.DigitGap
-	var tx float64
-	for _, v := range vs {
-		sprite := d.Sprites[v]
-		sprite.Move(tx, 0)
-		sprite.Move(-w/2+sprite.W()/2, 0) // Need to set at center since origin is RightTop.
-		sprite.Draw(screen, nil)
-		tx -= w
-	}
-}
+const (
+	SignDot = iota
+	SignComma
+	SignPercent
+)
 
 type NumberDrawer struct {
 	draws.BaseDrawer
-	Sprites    [10]draws.Sprite
 	DigitWidth float64
 	DigitGap   float64
 	Combo      int
-	// Bounce     bool
-	Bounce float64
+	Bounce     float64
+	Sprites    [10]draws.Sprite
 }
 
 // Each number has different width. Number 0's width is used as standard.
@@ -124,11 +82,52 @@ func (d NumberDrawer) Draw(screen *ebiten.Image) {
 	}
 }
 
-const (
-	SignDot = iota
-	SignComma
-	SignPercent
-)
+// Todo: DigitWidth -> digitWidth with ScoreSprites[0].W()
+type ScoreDrawer struct {
+	draws.BaseDrawer
+	DigitWidth float64 // Use number 0's width.
+	DigitGap   float64
+	ZeroFill   int
+	Score      ctrl.Delayed
+	Sprites    [10]draws.Sprite
+}
+
+func NewScoreDrawer() ScoreDrawer {
+	return ScoreDrawer{
+		DigitWidth: ScoreSprites[0].W(),
+		DigitGap:   ScoreDigitGap,
+		ZeroFill:   1,
+		Score:      ctrl.Delayed{Mode: ctrl.DelayedModeExp},
+		Sprites:    ScoreSprites,
+	}
+}
+func (d *ScoreDrawer) Update(score float64) {
+	d.Score.Update(score)
+}
+
+// NumberDrawer's Draw draws each number at the center of constant-width bound.
+func (d ScoreDrawer) Draw(screen *ebiten.Image) {
+	if d.MaxCountdown != 0 && d.Countdown == 0 {
+		return
+	}
+	vs := make([]int, 0)
+	score := int(math.Floor(d.Score.Value() + 0.1))
+	for v := score; v > 0; v /= 10 {
+		vs = append(vs, v%10) // Little endian.
+	}
+	for i := len(vs); i < d.ZeroFill; i++ {
+		vs = append(vs, 0)
+	}
+	w := d.DigitWidth + d.DigitGap
+	var tx float64
+	for _, v := range vs {
+		sprite := d.Sprites[v]
+		sprite.Move(tx, 0)
+		sprite.Move(-w/2+sprite.W()/2, 0) // Need to set at center since origin is RightTop.
+		sprite.Draw(screen, nil)
+		tx -= w
+	}
+}
 
 var (
 	ColorKool = color.NRGBA{0, 170, 242, 255}   // Blue
@@ -144,13 +143,12 @@ var MeterMarkColors = []color.NRGBA{
 	{252, 83, 6, 255},    // Orange
 }
 
-// Meter is also known as TimingMeter.
 type MeterDrawer struct {
 	MaxCountdown int
+	Marks        []MeterMark
 	Meter        draws.Sprite
 	Anchor       draws.Sprite
 	Unit         draws.Sprite
-	Marks        []MeterMark
 }
 type MeterMark struct {
 	Countdown int
@@ -246,12 +244,3 @@ func (d MeterDrawer) Draw(screen *ebiten.Image) {
 func (d MeterDrawer) MarkAge(m MeterMark) float64 {
 	return 1 - float64(m.Countdown)/float64(d.MaxCountdown)
 }
-
-// type Direction int
-
-// const (
-// 	Upward   Direction = iota // e.g., Rhythm games using feet.
-// 	Downward                  // e.g., Piano mode.
-// 	Leftward                  // e.g., Drum mode.
-// 	Rightward
-// )

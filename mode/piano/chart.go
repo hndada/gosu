@@ -93,7 +93,6 @@ func (c Chart) Duration() int64 {
 	return last.Time + last.Duration
 }
 
-// Total note count at first element,
 func (c Chart) NoteCounts() (vs []int) {
 	vs = make([]int, 2)
 	for _, n := range c.Notes {
