@@ -185,12 +185,6 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	for i := range s.DancerDrawer.AnimationDrawers {
 		s.DancerDrawer.AnimationDrawers[i].Sprites = s.DancerSprites[i]
 	}
-	// s.DancerDrawer = DancerDrawer{
-	// 	Time:       s.time,
-	// 	Duration:   2 * 60000 / ScaledBPM(s.BPM),
-	// 	StartTimes: [4]int64{s.time, s.time, s.time, s.time},
-	// 	Sprites:    s.DancerSprites,
-	// }
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer = gosu.NumberDrawer{
 		BaseDrawer: draws.BaseDrawer{

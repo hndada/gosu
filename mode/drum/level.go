@@ -30,9 +30,6 @@ func (c Chart) Difficulties() []float64 {
 	}
 	const sectionDuration = 800
 	sectionCount := c.Duration()/sectionDuration + 1
-	// if c.Duration()%sectionDuration == 0 {
-	// 	sectionCount--
-	// }
 	ds := make([]float64, sectionCount)
 	var (
 		i int

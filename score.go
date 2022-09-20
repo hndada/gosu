@@ -20,6 +20,7 @@ func (j Judgment) Is(j2 Judgment) bool { return j.Window == j2.Window }
 func (j Judgment) Valid() bool { return j.Window != 0 }
 
 // func inRange(td int64, j Judgment) bool { return td < j.Window && td > -j.Window }
+
 // Verdict for normal notes, e.g., Note, Head at Piano mode.
 func Verdict(js []Judgment, a input.KeyAction, td int64) Judgment {
 	Miss := js[len(js)-1]

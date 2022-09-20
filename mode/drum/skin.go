@@ -43,10 +43,9 @@ type Skin struct {
 	BarSprite       draws.Sprite
 	JudgmentSprites [2][3]draws.Sprite
 
-	NoteSprites [2][4]draws.Sprite
-	HeadSprites [2]draws.Sprite
-	TailSprites [2]draws.Sprite
-	// OverlaySprites    [2][2]draws.Sprite
+	NoteSprites       [2][4]draws.Sprite
+	HeadSprites       [2]draws.Sprite
+	TailSprites       [2]draws.Sprite
 	OverlaySprites    [2][]draws.Sprite
 	BodySprites       [2]draws.Sprite
 	DotSprite         draws.Sprite
@@ -167,46 +166,6 @@ func LoadSkin() {
 				skin.OverlaySprites[i][j] = s
 			}
 		}
-		// {
-		// 	path := fmt.Sprintf("skin/drum/note/overlay/%s", sname)
-		// 	if _, err := os.Stat(path); os.IsNotExist(err) { // One overlay.
-		// 		path = fmt.Sprintf("skin/drum/note/overlay/%s.png", sname)
-		// 	} else {
-		// 		func() {
-		// 			fs, err := os.ReadDir(path)
-		// 			if err != nil {
-		// 				return
-		// 			}
-		// 			skin.OverlaySprites[i] = make([]draws.Sprite, len(fs))
-		// 			for j := range fs {
-		// 				s := draws.NewSprite(path)
-		// 				s.SetScale(DancerScale)
-		// 				s.SetPosition(DancerPositionX, DancerPositionY, draws.OriginCenterMiddle)
-		// 				skin.OverlaySprites[i][j] = s
-		// 			}
-		// 		}()
-		// 	}
-		// }
-		// for j := 0; j < 2; j++ {
-		// 	path := fmt.Sprintf("skin/drum/note/overlay/%s/%d.png", sname, j)
-		// 	if _, err := os.Stat(path); os.IsNotExist(err) { // One overlay.
-		// 		path = fmt.Sprintf("skin/drum/note/overlay/%s.png", sname)
-		// 	}
-		// 	s := draws.NewSprite(path)
-		// 	s.SetScale(noteHeight / s.W())
-		// 	s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
-		// 	skin.OverlaySprites[i][j] = s
-		// }
-		// for j := 0; j < 2; j++ {
-		// 	path := fmt.Sprintf("skin/drum/note/overlay/%s/%d.png", sname, j)
-		// 	if _, err := os.Stat(path); os.IsNotExist(err) { // One overlay.
-		// 		path = fmt.Sprintf("skin/drum/note/overlay/%s.png", sname)
-		// 	}
-		// 	s := draws.NewSprite(path)
-		// 	s.SetScale(noteHeight / s.W())
-		// 	s.SetPosition(HitPosition, FieldPosition, draws.OriginCenterMiddle)
-		// 	skin.OverlaySprites[i][j] = s
-		// }
 		{
 			s := draws.NewSpriteFromImage(rollMidImage)
 			s.SetScale(noteHeight / s.H())

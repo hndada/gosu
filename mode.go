@@ -29,8 +29,8 @@ type ModeProp struct { // Stands for Mode properties.
 // For example, sub mode of Piano is Key count (with scratch mode bit adjusted).
 const ModeUnknown = -1
 const (
-	ModePiano4 = iota // ~ 4 Key
-	ModePiano7        // 5 ~ Key
+	ModePiano4 = iota // 1 to 4 Key and 6 Key
+	ModePiano7        // 5 Key and 7+ Key
 	ModeDrum
 	ModeKaraoke
 )
@@ -42,7 +42,7 @@ func ChartFileMode(fpath string) int {
 		mode, keyCount := osu.Mode(fpath)
 		switch mode {
 		case osu.ModeMania:
-			if keyCount <= 4 {
+			if keyCount <= 4 || keyCount == 6 {
 				return ModePiano4
 			}
 			return ModePiano7
