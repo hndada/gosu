@@ -21,7 +21,7 @@ var HandlerKeyTypes = []int{
 type Handler struct {
 	Keys       []ebiten.Key
 	PlaySounds []func()
-	HoldKey    ebiten.Key
+	HoldingKey ebiten.Key
 	Countdown  int // Require to hold for a while to move a cursor.
 	Active     bool
 }
@@ -33,23 +33,23 @@ func (h *Handler) Update() {
 	if h.Countdown < 0 {
 		h.Countdown = 0
 	}
-	if ebiten.IsKeyPressed(h.HoldKey) {
+	if ebiten.IsKeyPressed(h.HoldingKey) {
 		return
 	}
 	h.Active = false
 	h.Countdown = 0
-	h.HoldKey = KeyNone
+	h.HoldingKey = KeyNone
 	for _, keyType := range HandlerKeyTypes[:len(h.Keys)] {
 		key := h.Keys[keyType]
 		if ebiten.IsKeyPressed(key) {
-			h.HoldKey = key
+			h.HoldingKey = key
 		}
 	}
 }
 
 func (h Handler) KeyType() int {
 	for i, t := range HandlerKeyTypes[:len(h.Keys)] {
-		if h.HoldKey == h.Keys[i] {
+		if h.HoldingKey == h.Keys[i] {
 			return t
 		}
 	}
