@@ -118,7 +118,7 @@ func (d RollDrawer) Draw(screen *ebiten.Image) {
 
 		bodySprite := d.BodySprites[head.Size]
 		ratio := length / bodySprite.W()
-		bodySprite.SetScaleXY(ratio, 1, ebiten.FilterNearest)
+		bodySprite.SetScaleXY(ratio, 1, ebiten.FilterLinear)
 		bodySprite.Move(head.Position(d.Time), 0)
 		bodySprite.Draw(screen, op)
 
