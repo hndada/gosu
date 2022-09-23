@@ -11,11 +11,11 @@ import (
 	"github.com/hndada/gosu/format/osr"
 )
 
-var (
-	MusicVolumeHandler  ctrl.F64Handler
-	EffectVolumeHandler ctrl.F64Handler
-	VsyncSwitchHandler  ctrl.BoolHandler
-)
+// var (
+// 	MusicVolumeHandler  ctrl.F64Handler
+// 	EffectVolumeHandler ctrl.F64Handler
+// 	VsyncSwitchHandler  ctrl.BoolHandler
+// )
 
 type Game struct {
 	Scene

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
 )
 
@@ -17,7 +18,12 @@ const (
 	ScreenSizeY = screenSizeY
 )
 
-// Skin is a set of Sprites.
+var (
+	TransitionSounds [2][]byte
+	ToggleSounds     [2][]byte
+)
+
+// Skin is a set of Sprites and sounds.
 var (
 	DefaultBackground  draws.Sprite
 	CursorSprites      [3]draws.Sprite
@@ -26,7 +32,6 @@ var (
 
 	ScoreSprites [10]draws.Sprite
 	SignSprites  [3]draws.Sprite
-	// ComboSprites [10]draws.Sprite
 )
 
 const (
@@ -36,6 +41,11 @@ const (
 )
 
 func LoadGeneralSkin() {
+	for i, name := range []string{"down", "up"} {
+		path := fmt.Sprintf("skin/transition/%s.wav", name)
+		TransitionSounds[i], _ = audios.NewBytes(path)
+	}
+
 	DefaultBackground = NewBackground("skin/default-bg.jpg")
 	// Todo: cursor may have outer circle
 	names := []string{"menu-cursor", "menu-cursor-additive", "cursortrail"}
