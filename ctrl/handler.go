@@ -2,165 +2,175 @@ package ctrl
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/audios"
 )
+
+type EffectPlayer struct {
+	MainVolume *float64
+}
+
+var effectPlayer EffectPlayer
+
+func (ep EffectPlayer) Play(src []byte, vol float64) {
+	player := audios.Context.NewPlayerFromBytes(src)
+	player.SetVolume(*ep.MainVolume * vol)
+	player.Play()
+}
 
 const (
-	HandlerKeyIncrease = iota
-	HandlerKeyDecrease
-	HandlerKeyNext
-	HandlerKeyPrev
+	Down = iota
+	Up
 )
 
-var HandlerKeyTypes = []int{
-	HandlerKeyIncrease,
-	HandlerKeyDecrease,
-	HandlerKeyNext,
-	HandlerKeyPrev,
+type BoolHandler struct {
+	Value  *bool
+	Sounds [2][]byte
 }
 
-type Handler struct {
-	Keys       []ebiten.Key
-	PlaySounds []func()
-	HoldingKey ebiten.Key
-	Countdown  int // Require to hold for a while to move a cursor.
-	Active     bool
-}
-
-const KeyNone = -1
-
-func (h *Handler) Update() {
-	h.Countdown--
-	if h.Countdown < 0 {
-		h.Countdown = 0
-	}
-	if ebiten.IsKeyPressed(h.HoldingKey) {
-		return
-	}
-	h.Active = false
-	h.Countdown = 0
-	h.HoldingKey = KeyNone
-	for _, keyType := range HandlerKeyTypes[:len(h.Keys)] {
-		key := h.Keys[keyType]
-		if ebiten.IsKeyPressed(key) {
-			h.HoldingKey = key
-		}
-	}
-}
-
-func (h Handler) KeyType() int {
-	for i, t := range HandlerKeyTypes[:len(h.Keys)] {
-		if h.HoldingKey == h.Keys[i] {
-			return t
-		}
-	}
-	return -1
-}
-
-type F64Handler struct {
-	Handler
-	Min    float64
-	Max    float64
-	Unit   float64
-	Target *float64
-}
-
-// Update returns whether the handler has fired or not.
-func (h *F64Handler) Update() bool {
-	h.Handler.Update()
-	if h.Countdown > 0 || h.KeyType() == -1 {
-		return false
-	}
-	// Now countdown is 0.
-	h.PlaySounds[h.KeyType()]()
-	switch h.KeyType() {
-	case HandlerKeyIncrease:
-		*h.Target += h.Unit
-		if *h.Target > h.Max {
-			*h.Target = h.Max
-		}
-	case HandlerKeyDecrease:
-		*h.Target -= h.Unit
-		if *h.Target < h.Min {
-			*h.Target = h.Min
-		}
-	case HandlerKeyNext:
-	case HandlerKeyPrev:
-	}
-	if h.Active {
-		h.Countdown = shortCountdown
+func (h *BoolHandler) Down() { h.swap() }
+func (h *BoolHandler) Up()   { h.swap() }
+func (h *BoolHandler) swap() {
+	if !*h.Value {
+		*h.Value = true
+		effectPlayer.Play(h.Sounds[Up], 1)
 	} else {
-		h.Countdown = longCountdown
+		*h.Value = false
+		effectPlayer.Play(h.Sounds[Down], 1)
 	}
-	h.Active = true
-	return true
+}
+
+type FloatHandler struct {
+	Value          *float64
+	Unit, Min, Max float64
+	Sounds         [2][]byte
+}
+
+func (h *FloatHandler) Down() {
+	*h.Value -= h.Unit
+	if *h.Value < h.Min {
+		*h.Value = h.Min
+	}
+	effectPlayer.Play(h.Sounds[Down], 1)
+}
+func (h *FloatHandler) Up() {
+	*h.Value += h.Unit
+	if *h.Value > h.Max {
+		*h.Value = h.Max
+	}
+	effectPlayer.Play(h.Sounds[Up], 1)
 }
 
 type IntHandler struct {
-	Handler
-	Min    int
-	Max    int
-	Unit   int
-	Target *int
-	Loop   bool
+	Value          *int
+	Unit, Min, Max int
+	Loop           bool
+	Sounds         [2][]byte
 }
 
-// Update returns whether the handler has fired or not.
-func (h *IntHandler) Update() bool {
-	h.Handler.Update()
-	if h.Countdown > 0 || h.KeyType() == -1 {
-		return false
-	}
-	h.PlaySounds[h.KeyType()]()
-	switch h.KeyType() {
-	case HandlerKeyIncrease:
-		*h.Target += h.Unit
-		if *h.Target >= h.Max {
-			if h.Loop {
-				*h.Target -= h.Max
-			} else {
-				*h.Target = h.Max
-			}
+func (h *IntHandler) Down() {
+	*h.Value -= h.Unit
+	if *h.Value < h.Min {
+		if h.Loop {
+			*h.Value = h.Max
+		} else {
+			*h.Value = h.Min
 		}
-	case HandlerKeyDecrease:
-		*h.Target -= h.Unit
-		if *h.Target < h.Min {
-			if h.Loop {
-				*h.Target += h.Max
-			} else {
-				*h.Target = h.Min
-			}
-		}
-	case HandlerKeyNext:
-	case HandlerKeyPrev:
 	}
-	if h.Active {
-		h.Countdown = shortCountdown
+	effectPlayer.Play(h.Sounds[Down], 1)
+}
+func (h *IntHandler) Up() {
+	*h.Value += h.Unit
+	if *h.Value > h.Max {
+		if h.Loop {
+			*h.Value = h.Min
+		} else {
+			*h.Value = h.Max
+		}
+	}
+	effectPlayer.Play(h.Sounds[Up], 1)
+}
+
+const (
+	KeyIndexNone = iota - 1
+	KeyIndexDown
+	KeyIndexUp
+)
+
+type KeyHandler struct {
+	Handler
+	modifiers []ebiten.Key // Handler works only when all Modifier are pressed.
+	keys      [2]ebiten.Key
+	// sounds    [2][]byte
+	holdIndex int // ebiten.Key
+	countdown int // Require to hold for a while to move a cursor.
+	active    bool
+}
+
+//	func NewKeyHandler(modifiers []ebiten.Key, keys [2]ebiten.Key, sounds [2][]byte) KeyHandler {
+//		return KeyHandler{
+//			Modifiers:  modifiers,
+//			Keys:       keys,
+//			Sounds:     sounds,
+//			countdown:  0,
+//			holdingKey: KeyIndexNone,
+//		}
+//	}
+func (h *KeyHandler) SetKeys(modifiers []ebiten.Key, keys [2]ebiten.Key) {
+	h.modifiers = modifiers
+	h.keys = keys
+	h.holdIndex = KeyIndexNone
+}
+
+// func (h *KeyHandler) SetSounds(sounds [2][]byte) {
+// 	h.sounds = sounds
+// }
+
+// Update returns whether the handler has triggered or not.
+func (h *KeyHandler) Update() (trigger bool) {
+	if h.countdown > 0 {
+		h.countdown--
+		return
+	}
+	for _, k := range h.modifiers {
+		if !ebiten.IsKeyPressed(k) {
+			h.reset()
+			return
+		}
+	}
+	if k := h.keys[h.holdIndex]; !ebiten.IsKeyPressed(k) {
+		h.reset()
+		k2 := (h.holdIndex + 1) % 2
+		if ebiten.IsKeyPressed(h.keys[k2]) {
+			h.holdIndex = k2
+		}
+	}
+	switch h.holdIndex {
+	case KeyIndexNone:
+		return
+	case KeyIndexDown:
+		h.Down()
+	case KeyIndexUp:
+		h.Up()
+	}
+	if h.active {
+		h.countdown = shortCountdown
 	} else {
-		h.Countdown = longCountdown
+		h.countdown = longCountdown
 	}
-	h.Active = true
-	return true
+	h.active = true
+	// if h.holdIndex != KeyIndexNone {
+	// 	h.PlaySound(h.sounds[h.holdIndex])
+	// }
+	return
 }
 
-type BoolHandler struct {
-	Handler
-	Target *bool
+func (h *KeyHandler) reset() {
+	h.active = false
+	h.countdown = 0
+	h.holdIndex = KeyIndexNone
 }
 
-// Update returns whether the handler has fired or not.
-func (h *BoolHandler) Update() bool {
-	h.Handler.Update()
-	// Bool value is updated only once regardless of hold duration.
-	if h.Countdown > 0 || h.KeyType() == -1 || h.Active {
-		return false
-	}
-	switch h.KeyType() {
-	case HandlerKeyIncrease:
-		*h.Target = !*h.Target
-	case HandlerKeyDecrease:
-	case HandlerKeyNext:
-	case HandlerKeyPrev:
-	}
-	h.Active = true
-	return true
+type Handler interface {
+	Down()
+	Up()
 }

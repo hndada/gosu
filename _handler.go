@@ -5,43 +5,21 @@ import (
 	"github.com/hndada/gosu/ctrl"
 )
 
-//	func NewVolumeHandler(vol *float64, keys []ebiten.Key) ctrl.F64Handler {
-//		play := func() { Sounds.Play("default-hover") }
-//		return ctrl.F64Handler{
-//			Handler: ctrl.Handler{
-//				Keys:       keys,
-//				PlaySounds: []func(){play, play},
-//				HoldKey:    -1,
-//			},
-//			Min:    0,
-//			Max:    1,
-//			Unit:   0.05,
-//			Target: vol,
-//		}
-//	}
-var (
-	// MusicVolumeHandler    *ctrl.FloatHandler // Todo: make it unexported?
-	MusicVolumeKeyHandler ctrl.KeyHandler
-)
-
-func LoadHandlers() {
-	{
-		h := &ctrl.FloatHandler{
-			Value:  &MusicVolume,
-			Unit:   0.05,
-			Min:    0,
-			Max:    1,
-			Sounds: TransitionSounds,
-		}
-		MusicVolumeKeyHandler = ctrl.KeyHandler{
-			Handler: h,
-		}
-		MusicVolumeKeyHandler.SetKeys(
-			[]ebiten.Key{ebiten.KeyAlt},
-			[2]ebiten.Key{ebiten.KeyArrowDown, ebiten.KeyArrowUp},
-		)
+func NewVolumeHandler(vol *float64, keys []ebiten.Key) ctrl.F64Handler {
+	play := func() { Sounds.Play("default-hover") }
+	return ctrl.F64Handler{
+		Handler: ctrl.Handler{
+			Keys:       keys,
+			PlaySounds: []func(){play, play},
+			HoldKey:    -1,
+		},
+		Min:    0,
+		Max:    1,
+		Unit:   0.05,
+		Target: vol,
 	}
 }
+
 func NewSpeedHandler(speedScale *float64) ctrl.F64Handler {
 	play := func() { Sounds.Play("default-hover") }
 	return ctrl.F64Handler{
