@@ -25,7 +25,7 @@ var (
 	EffectVolumeKeyHandler ctrl.KeyHandler
 	// SpeedKeyHandlers       []ctrl.KeyHandler
 	// modeHandler    ctrl.Handler
-	ModeKeyHandler ctrl.Handler
+	ModeKeyHandler ctrl.KeyHandler
 )
 
 func LoadHandlers(modeProps []ModeProp) {
@@ -70,26 +70,13 @@ func LoadHandlers(modeProps []ModeProp) {
 			Loop:   true,
 			Sounds: TransitionSounds,
 		}
-		EffectVolumeKeyHandler = ctrl.KeyHandler{
+		ModeKeyHandler = ctrl.KeyHandler{
 			Handler: h,
 		}
-		EffectVolumeKeyHandler.SetKeys(
-			[]ebiten.Key{ebiten.KeyControlLeft},
-			[2]ebiten.Key{ebiten.KeyArrowDown, ebiten.KeyArrowUp},
+		ModeKeyHandler.SetKeys(
+			[]ebiten.Key{ebiten.KeyControlLeft, ebiten.KeyAltLeft, ebiten.KeyShiftLeft},
+			[2]ebiten.Key{ebiten.KeyArrowLeft, ebiten.KeyArrowRight},
 		)
-	}
-	play := func() { Sounds.Play("default-hover") }
-	return ctrl.IntHandler{
-		Handler: ctrl.Handler{
-			Keys:       []ebiten.Key{ebiten.Key0},
-			PlaySounds: []func(){play},
-			HoldKey:    -1,
-		},
-		Min:    0,
-		Max:    len,
-		Unit:   1,
-		Target: cursor,
-		Loop:   true,
 	}
 }
 
@@ -124,23 +111,6 @@ func LoadHandlers(modeProps []ModeProp) {
 // 	}
 // }
 
-// Todo: should Max be *int?
-func NewCursorHandler(cursor *int, len int) ctrl.IntHandler {
-	play := func() { Sounds.Play("default-hover") }
-	return ctrl.IntHandler{
-		Handler: ctrl.Handler{
-			Keys:       []ebiten.Key{ebiten.KeyDown, ebiten.KeyUp},
-			PlaySounds: []func(){play, play},
-			HoldKey:    -1,
-		},
-		Min:    0,
-		Max:    len,
-		Unit:   1,
-		Target: cursor,
-		Loop:   true,
-	}
-}
-
 // func NewVsyncSwitchHandler(b *bool) ctrl.BoolHandler {
 // 	play := func() { Sounds.Play("default-hover") }
 // 	return ctrl.BoolHandler{
@@ -152,3 +122,20 @@ func NewCursorHandler(cursor *int, len int) ctrl.IntHandler {
 // 		Target: b,
 // 	}
 // }
+
+func NewSpeedKeyHandler(speedScale *float64) (h ctrl.KeyHandler) {
+	h = ctrl.KeyHandler{
+		Handler: &ctrl.FloatHandler{
+			Value:  speedScale,
+			Unit:   0.1,
+			Min:    0.1,
+			Max:    2,
+			Sounds: [2][]byte{},
+		},
+	}
+	h.SetKeys(
+		[]ebiten.Key{ebiten.KeyControlLeft},
+		[2]ebiten.Key{ebiten.KeyPageDown, ebiten.KeyPageUp},
+	)
+	return
+}

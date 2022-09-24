@@ -7,7 +7,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hndada/gosu/audios"
-	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/input"
 )
 
@@ -46,22 +45,25 @@ func (t *Timer) Ticker() {
 }
 
 type MusicPlayer struct {
-	VolumeHandler ctrl.F64Handler
-	Player        *audio.Player
-	Closer        func() error
+	// VolumeHandler ctrl.F64Handler
+	// Volume float64
+	Player *audio.Player
+	Closer func() error
 }
 
-func NewMusicPlayer(mvh ctrl.F64Handler, path string) (MusicPlayer, error) {
+// func NewMusicPlayer(mvh ctrl.F64Handler, path string) (MusicPlayer, error) {
+func NewMusicPlayer(path string) (MusicPlayer, error) {
 	player, closer, err := audios.NewPlayer(path)
 	if err != nil {
 		return MusicPlayer{}, err
 	}
-	player.SetVolume(*mvh.Target)
+	// player.SetVolume(*mvh.Target)
+	// player.SetVolume(MusicVolume)
 	player.SetBufferSize(100 * time.Millisecond)
 	return MusicPlayer{
-		VolumeHandler: mvh,
-		Player:        player,
-		Closer:        closer,
+		// VolumeHandler: mvh,
+		Player: player,
+		Closer: closer,
 	}, nil
 }
 func (mp MusicPlayer) Play() {
@@ -72,32 +74,37 @@ func (mp MusicPlayer) Play() {
 }
 
 // Todo: volume does not increment gradually.
-func (mp MusicPlayer) Update() {
-	if fired := mp.VolumeHandler.Update(); fired {
-		vol := *mp.VolumeHandler.Target
-		mp.Player.SetVolume(vol)
-	}
+func (p MusicPlayer) Update() {
+	// Calling SetVolume in every Update is fine, confirmed by the author.
+	p.Player.SetVolume(MusicVolume)
+	// if p.Volume != MusicVolume {
+	// 	p.Volume = MusicVolume
+	// 	p.Player.SetVolume(p.Volume)
+	// }
+	// if act := mp.VolumeHandler.Update(); act {
+	// 	vol := *mp.VolumeHandler.Target
+	// 	mp.Player.SetVolume(vol)
+	// }
 }
-func (mp MusicPlayer) Close() {
-	if mp.Player == nil {
-		return
+func (p MusicPlayer) Close() {
+	if p.Player != nil {
+		p.Player.Close()
+		p.Closer()
 	}
-	mp.Player.Close()
-	mp.Closer()
 }
 
 // Todo: need to refactor
-type EffectPlayer struct {
-	VolumeHandler ctrl.F64Handler
-	Effects       audios.SoundMap // A player for sample sound is generated at a place.
-}
+// type EffectPlayer struct {
+// 	VolumeHandler ctrl.F64Handler
+// 	Effects       audios.SoundMap // A player for sample sound is generated at a place.
+// }
 
-func NewEffectPlayer(evh ctrl.F64Handler) EffectPlayer {
-	return EffectPlayer{
-		VolumeHandler: evh,
-		Effects:       audios.NewSoundMap(evh.Target),
-	}
-}
+// func NewEffectPlayer(evh ctrl.F64Handler) EffectPlayer {
+// 	return EffectPlayer{
+// 		VolumeHandler: evh,
+// 		Effects:       audios.NewSoundMap(evh.Target),
+// 	}
+// }
 
 type KeyLogger struct {
 	FetchPressed func() []bool

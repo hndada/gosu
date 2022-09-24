@@ -21,6 +21,7 @@ const (
 var (
 	TransitionSounds [2][]byte
 	ToggleSounds     [2][]byte
+	SwipeSound       []byte
 )
 
 // Skin is a set of Sprites and sounds.
@@ -45,6 +46,11 @@ func LoadGeneralSkin() {
 		path := fmt.Sprintf("skin/transition/%s.wav", name)
 		TransitionSounds[i], _ = audios.NewBytes(path)
 	}
+	for i, name := range []string{"off", "on"} {
+		path := fmt.Sprintf("skin/toggle/%s.wav", name)
+		ToggleSounds[i], _ = audios.NewBytes(path)
+	}
+	SwipeSound, _ = audios.NewBytes("skin/sound/swipe.wav")
 
 	DefaultBackground = NewBackground("skin/default-bg.jpg")
 	// Todo: cursor may have outer circle

@@ -14,37 +14,38 @@ import (
 // LoadChartInfos supposes Game's Modes has already set.
 // ChartInfos are sorted with path, then mods.
 // Todo: can the slice be sorted with Mode first, then MusicName?
-func (g *Game) LoadChartInfosSet() error {
+func LoadChartInfosSet(modeProps []ModeProp) error {
 	var err error
 	set := make([][]ChartInfo, 0)
 	err = db.LoadData("chart.db", &set)
 	if err != nil {
 		return err
 	}
-	if len(g.ModeProps) != len(set) {
+	if len(modeProps) != len(set) {
 		return fmt.Errorf("mismatch game's modes length and db's modes length")
 	}
 	for mode, infos := range set {
-		g.ModeProps[mode].ChartInfos = infos
+		modeProps[mode].ChartInfos = infos
 	}
 	return nil
 }
 
 // TidyChartInfosSet drops unavailable chart infos from games.
-func (g *Game) TidyChartInfosSet() {
-	for i, prop := range g.ModeProps {
+func TidyChartInfosSet(modeProps []ModeProp) {
+	for i, prop := range modeProps {
 		for j, info := range prop.ChartInfos {
 			if _, err := os.Stat(info.Path); err != nil {
 				info1 := prop.ChartInfos[:j]
 				info2 := prop.ChartInfos[j+1:]
-				g.ModeProps[i].ChartInfos = append(info1, info2...)
+				modeProps[i].ChartInfos = append(info1, info2...)
 			}
 		}
 	}
 }
 
 // Todo: multiple music root. Would be not that hard.
-func LoadNewChartInfos(musicRoot string, prop *ModeProp) []ChartInfo {
+// func LoadNewChartInfos(musicRoot string, prop *ModeProp) []ChartInfo {
+func (prop ModeProp) LoadNewChartInfos(musicRoot string) []ChartInfo {
 	chartInfos := make([]ChartInfo, 0)
 	isNew := func(e fs.DirEntry) bool {
 		info, err := e.Info()
@@ -93,9 +94,9 @@ func LoadNewChartInfos(musicRoot string, prop *ModeProp) []ChartInfo {
 	return chartInfos
 }
 
-func (g Game) SaveChartInfosSet() {
-	set := make([][]ChartInfo, len(g.ModeProps))
-	for i, prop := range g.ModeProps {
+func SaveChartInfosSet(modeProps []ModeProp) {
+	set := make([][]ChartInfo, len(modeProps))
+	for i, prop := range modeProps {
 		set[i] = prop.ChartInfos
 	}
 	var fname string

@@ -7,7 +7,6 @@ import (
 	"runtime/debug"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/format/osr"
 )
 
@@ -18,6 +17,7 @@ import (
 //	VsyncSwitchHandler  ctrl.BoolHandler
 //
 // )
+var sceneSelect *SceneSelect
 
 type Game struct {
 	Scene
@@ -40,21 +40,24 @@ func NewGame(props []ModeProp) *Game {
 	g := new(Game)
 	// Todo: load settings here
 	// g.ModeProps = props
-	g.LoadChartInfosSet()      // 1. Load chart info and score data
-	g.TidyChartInfosSet()      // 2. Check removed chart
-	for i := range ModeProps { // 3. Check added chart
+	LoadChartInfosSet(props)         // 1. Load chart info and score data
+	TidyChartInfosSet(props)         // 2. Check removed chart
+	for i, prop := range ModeProps { // 3. Check added chart
 		// Each mode scans Music root independently.
-		ModeProps[i].ChartInfos = LoadNewChartInfos(MusicRoot, &ModeProps[i])
+		ModeProps[i].ChartInfos = prop.LoadNewChartInfos(MusicRoot)
 	}
-	g.SaveChartInfosSet() // 4. Save chart infos to local file
+	SaveChartInfosSet(props) // 4. Save chart infos to local file
 	// LoadSounds("skin/sound")
 	LoadGeneralSkin()
 	for _, mode := range ModeProps {
-		for _, load := range mode.Loads {
-			load()
-		}
-		// mode.LoadSkin()
+		mode.LoadSkin()
 	}
+	// for _, mode := range ModeProps {
+	// 	for _, load := range mode.Loads {
+	// 		load()
+	// 	}
+	// 	// mode.LoadSkin()
+	// }
 	// g.Mode = ModePiano4
 	// MusicVolumeHandler = NewVolumeHandler(
 	// 	&MusicVolume, []ebiten.Key{ebiten.Key2, ebiten.Key1})
@@ -64,6 +67,7 @@ func NewGame(props []ModeProp) *Game {
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
 	ebiten.SetTPS(TPS)
+	sceneSelect = NewSceneSelect()
 	// ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	return g
 }
@@ -73,7 +77,8 @@ func (g *Game) Update() (err error) {
 	// g.EffectVolumeHandler.Update()
 	if g.Scene == nil {
 		// g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
-		g.Scene = NewSceneSelect()
+		// g.Scene = NewSceneSelect()
+		g.Scene = sceneSelect
 	}
 	args := g.Scene.Update()
 	switch args := args.(type) {
@@ -81,22 +86,23 @@ func (g *Game) Update() (err error) {
 		return args
 	case PlayToResultArgs: // Todo: SceneResult
 		ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
-		VsyncSwitch = true
-		debug.SetGCPercent(0)
-
-		g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
+		// VsyncSwitch = true
+		debug.SetGCPercent(100)
+		// g.Scene = NewSceneSelect() //(g.ModeProps, &g.Mode)
+		g.Scene = sceneSelect
+		ebiten.SetWindowTitle("gosu")
 	case SelectToPlayArgs:
 		ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
-		VsyncSwitch = false
-		debug.SetGCPercent(100)
+		// VsyncSwitch = false
+		debug.SetGCPercent(0)
 
-		g.Scene, err = g.ModeProps[args.Mode].NewScenePlay(
-			args.Path, args.Replay, args.SpeedHandler)
+		// g.Scene, err = g.ModeProps[args.Mode].NewScenePlay(
+		// 	args.Path, args.Replay, args.SpeedHandler)
+		prop := ModeProps[CurrentMode]
+		g.Scene, err = prop.NewScenePlay(args.Path, args.Replay)
 		if err != nil {
 			return
 		}
-	case nil:
-		return
 	}
 	return
 }
@@ -108,11 +114,11 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 type SelectToPlayArgs struct {
-	Mode int
+	// Mode int
 	Path string
 	// Mods   Mods
-	Replay       *osr.Format
-	SpeedHandler ctrl.F64Handler
+	Replay *osr.Format
+	// SpeedHandler ctrl.F64Handler
 }
 
 type PlayToResultArgs struct {
