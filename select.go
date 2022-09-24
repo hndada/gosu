@@ -13,14 +13,20 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
+// var SelectedChart ChartInfo
+var (
+	Query string
+)
+
 type SceneSelect struct {
-	ModeProps []ModeProp
-	Mode      *int
+	// ModeProps []ModeProp
+	// Mode      *int
 	// ViewQuery     string
-	View          []ChartInfo // Todo: ChartInfo -> *ChartInfo?
-	Cursor        *int
-	ModeHandler   ctrl.IntHandler
+	View []ChartInfo // Todo: ChartInfo -> *ChartInfo?
+	// Cursor        *int
+	Cursor        int
 	CursorHandler ctrl.IntHandler
+	// ModeHandler   ctrl.IntHandler
 
 	Background  draws.Sprite  // Todo: BackgroundDrawer with some effects
 	MusicPlayer *audio.Player // Todo: Rewind after preview has finished.
@@ -31,24 +37,23 @@ var count = int(screenSizeY/ChartInfoBoxHeight/2*2) + 2 // Gives count some marg
 
 // Todo: Score / Replay fetch
 // Todo: preview music
-func NewSceneSelect(modes []ModeProp, mode *int) *SceneSelect {
+// func NewSceneSelect(modes []ModeProp, mode *int) *SceneSelect {
+func NewSceneSelect() *SceneSelect {
 	s := new(SceneSelect)
-	s.ModeProps = modes
-	s.Mode = mode
-	s.ModeHandler = NewModeHandler(s.Mode, len(modes))
+	// s.ModeHandler = NewModeHandler(s.Mode, len(modes))
 	s.UpdateMode()
 	ebiten.SetWindowTitle("gosu")
 	return s
 }
 func (s *SceneSelect) Update() any {
 	// Todo: refactor it
-	if fired := VsyncSwitchHandler.Update(); fired {
-		if *VsyncSwitchHandler.Target {
-			ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
-		} else {
-			ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
-		}
-	}
+	// if fired := VsyncSwitchHandler.Update(); fired {
+	// 	if *VsyncSwitchHandler.Target {
+	// 		ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
+	// 	} else {
+	// 		ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
+	// 	}
+	// }
 	if moved := s.CursorHandler.Update(); moved {
 		s.UpdateBackground()
 	}
@@ -70,17 +75,24 @@ func (s *SceneSelect) Update() any {
 		// }
 		return SelectToPlayArgs{
 			Path: info.Path,
-			Mode: *s.Mode, // Todo: duplicated. Should it be removed?
+			// Mode: *s.Mode, // Todo: duplicated. Should it be removed?
 			// Replay:       replay,
-			Replay:       nil,
-			SpeedHandler: s.ModeProps[*s.Mode].SpeedHandler,
+			Replay: nil,
+			// SpeedHandler: s.ModeProps[*s.Mode].SpeedHandler,
 		}
 	}
 	return nil
 }
+
+//	func (s *SceneSelect) UpdateMode() {
+//		s.View = s.ModeProps[*s.Mode].ChartInfos
+//		s.Cursor = &s.ModeProps[*s.Mode].Cursor
+//		s.CursorHandler = NewCursorHandler(&s.ModeProps[*s.Mode].Cursor, len(s.View))
+//		s.UpdateBackground()
+//	}
 func (s *SceneSelect) UpdateMode() {
-	s.View = s.ModeProps[*s.Mode].ChartInfos
-	s.Cursor = &s.ModeProps[*s.Mode].Cursor
+	s.View = ModeProps[CurrentMode].ChartInfos
+	s.Cursor = &ModeProps[CurrentMode].Cursor
 	s.CursorHandler = NewCursorHandler(&s.ModeProps[*s.Mode].Cursor, len(s.View))
 	s.UpdateBackground()
 }

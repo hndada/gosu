@@ -32,10 +32,14 @@ func (h *BoolHandler) Up()   { h.swap() }
 func (h *BoolHandler) swap() {
 	if !*h.Value {
 		*h.Value = true
-		effectPlayer.Play(h.Sounds[Up], 1)
+		if sound := h.Sounds[Up]; sound != nil {
+			effectPlayer.Play(sound, 1)
+		}
 	} else {
 		*h.Value = false
-		effectPlayer.Play(h.Sounds[Down], 1)
+		if sound := h.Sounds[Down]; sound != nil {
+			effectPlayer.Play(sound, 1)
+		}
 	}
 }
 
@@ -50,14 +54,18 @@ func (h *FloatHandler) Down() {
 	if *h.Value < h.Min {
 		*h.Value = h.Min
 	}
-	effectPlayer.Play(h.Sounds[Down], 1)
+	if sound := h.Sounds[Down]; sound != nil {
+		effectPlayer.Play(sound, 1)
+	}
 }
 func (h *FloatHandler) Up() {
 	*h.Value += h.Unit
 	if *h.Value > h.Max {
 		*h.Value = h.Max
 	}
-	effectPlayer.Play(h.Sounds[Up], 1)
+	if sound := h.Sounds[Up]; sound != nil {
+		effectPlayer.Play(sound, 1)
+	}
 }
 
 type IntHandler struct {
@@ -71,23 +79,27 @@ func (h *IntHandler) Down() {
 	*h.Value -= h.Unit
 	if *h.Value < h.Min {
 		if h.Loop {
-			*h.Value = h.Max
+			*h.Value = h.Max - 1
 		} else {
 			*h.Value = h.Min
 		}
 	}
-	effectPlayer.Play(h.Sounds[Down], 1)
+	if sound := h.Sounds[Down]; sound != nil {
+		effectPlayer.Play(sound, 1)
+	}
 }
 func (h *IntHandler) Up() {
 	*h.Value += h.Unit
-	if *h.Value > h.Max {
+	if *h.Value >= h.Max {
 		if h.Loop {
 			*h.Value = h.Min
 		} else {
-			*h.Value = h.Max
+			*h.Value = h.Max - 1
 		}
 	}
-	effectPlayer.Play(h.Sounds[Up], 1)
+	if sound := h.Sounds[Up]; sound != nil {
+		effectPlayer.Play(sound, 1)
+	}
 }
 
 const (

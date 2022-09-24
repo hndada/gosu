@@ -5,7 +5,7 @@ var (
 	WindowSizeX = 1600
 	WindowSizeY = 900
 )
-
+var CurrentMode = ModePiano4
 var (
 	// TPS supposed to be multiple of 1000, since only one speed value
 	// goes passed per Update, while unit of TransPoint's time is 1ms.
