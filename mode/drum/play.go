@@ -7,7 +7,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/audios"
-	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
@@ -23,8 +22,8 @@ type ScenePlay struct {
 	gosu.KeyLogger
 	KeyActions [2]int
 	*gosu.TransPoint
-	SpeedHandler ctrl.F64Handler
-	Speed        float64
+	// SpeedHandler ctrl.F64Handler
+	Speed float64
 
 	gosu.Scorer
 	StagedNote         *Note
@@ -60,7 +59,7 @@ func (s ScenePlay) Time() int64 { return s.Timer.Time }
 
 // Todo: actual auto replay generator for gimmick charts
 // Todo: support mods: show Piano's ScenePlay during Drum's ScenePlay
-func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.Scene, err error) {
+func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	s := new(ScenePlay)
 	s.Chart, err = NewChart(cpath)
 	if err != nil {
@@ -71,7 +70,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 	s.SetTicks(c.Duration())
 	s.time = s.Time()
 	if path, ok := c.MusicPath(cpath); ok {
-		s.MusicPlayer, err = gosu.NewMusicPlayer(gosu.MusicVolumeHandler, path)
+		s.MusicPlayer, err = gosu.NewMusicPlayer(path) //(gosu.MusicVolumeHandler, path)
 		if err != nil {
 			return
 		}
@@ -91,7 +90,7 @@ func NewScenePlay(cpath string, rf *osr.Format, sh ctrl.F64Handler) (scene gosu.
 		s.KeyLogger.FetchPressed = NewReplayListener(rf, s.time)
 	}
 	s.TransPoint = c.TransPoints[0]
-	s.SpeedHandler = sh
+	// s.SpeedHandler = sh
 	s.Speed = 1
 	s.SetSpeed()
 
@@ -301,7 +300,7 @@ func (s *ScenePlay) Update() any {
 
 	// Changed speed should be applied after positions are calculated.
 	s.UpdateTransPoint()
-	if fired := s.SpeedHandler.Update(); fired {
+	if act := SpeedKeyHandler.Update(); act {
 		s.SetSpeed()
 	}
 	return nil
@@ -331,15 +330,15 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 			"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Extra: %.2f%%)\nJudgment counts: %v\n\n"+
-			"Speed (Press 8/9): %.0f | %.0f\n(Exposure time: %.fms)\n\n"+
-			// "Music volume (Press 1/2): %.0f%%\nEffect volume (Press 3/4): %.0f%%\n\n"+
-			"Vsync enabled: %v\n",
+			"Speed (Press 8/9): %.0f | %.0f\n(Exposure time: %.fms)\n\n",
+		// "Music volume (Press 1/2): %.0f%%\nEffect volume (Press 3/4): %.0f%%\n\n"+
+		// "Vsync enabled: %v\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.time)/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
-		s.Speed*100, *s.SpeedHandler.Target*100, ExposureTime(s.CurrentSpeed()),
-		// gosu.MusicVolume*100, gosu.EffectVolume*100,
-		gosu.VsyncSwitch))
+		s.Speed*100, SpeedScale*100, ExposureTime(s.CurrentSpeed())))
+	// gosu.MusicVolume*100, gosu.EffectVolume*100,
+	// gosu.VsyncSwitch))
 }
 
 // Farther note has larger position. Tail's Position is always larger than Head's.
@@ -347,7 +346,7 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 func (s *ScenePlay) SetSpeed() {
 	c := s.Chart
 	old := s.Speed
-	new := *s.SpeedHandler.Target
+	new := SpeedScale
 	for _, tp := range c.TransPoints {
 		tp.Speed *= new / old
 	}

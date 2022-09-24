@@ -2,20 +2,9 @@ package ctrl
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/audios"
 )
 
-type EffectPlayer struct {
-	MainVolume *float64
-}
-
-var effectPlayer EffectPlayer
-
-func (ep EffectPlayer) Play(src []byte, vol float64) {
-	player := audios.Context.NewPlayerFromBytes(src)
-	player.SetVolume(*ep.MainVolume * vol)
-	player.Play()
-}
+// var effectPlayer audios.EffectPlayer
 
 const (
 	Down = iota
@@ -29,17 +18,19 @@ type BoolHandler struct {
 
 func (h *BoolHandler) Down() { h.swap() }
 func (h *BoolHandler) Up()   { h.swap() }
+
+// func (h *BoolHandler) Value() {return h.value}
 func (h *BoolHandler) swap() {
 	if !*h.Value {
 		*h.Value = true
-		if sound := h.Sounds[Up]; sound != nil {
-			effectPlayer.Play(sound, 1)
-		}
+		// if sound := h.Sounds[Up]; sound != nil {
+		// 	effectPlayer.Play(sound, 1)
+		// }
 	} else {
 		*h.Value = false
-		if sound := h.Sounds[Down]; sound != nil {
-			effectPlayer.Play(sound, 1)
-		}
+		// if sound := h.Sounds[Down]; sound != nil {
+		// 	effectPlayer.Play(sound, 1)
+		// }
 	}
 }
 
@@ -54,18 +45,18 @@ func (h *FloatHandler) Down() {
 	if *h.Value < h.Min {
 		*h.Value = h.Min
 	}
-	if sound := h.Sounds[Down]; sound != nil {
-		effectPlayer.Play(sound, 1)
-	}
+	// if sound := h.Sounds[Down]; sound != nil {
+	// 	effectPlayer.Play(sound, 1)
+	// }
 }
 func (h *FloatHandler) Up() {
 	*h.Value += h.Unit
 	if *h.Value > h.Max {
 		*h.Value = h.Max
 	}
-	if sound := h.Sounds[Up]; sound != nil {
-		effectPlayer.Play(sound, 1)
-	}
+	// if sound := h.Sounds[Up]; sound != nil {
+	// 	effectPlayer.Play(sound, 1)
+	// }
 }
 
 type IntHandler struct {
@@ -76,19 +67,6 @@ type IntHandler struct {
 }
 
 func (h *IntHandler) Down() {
-	*h.Value -= h.Unit
-	if *h.Value < h.Min {
-		if h.Loop {
-			*h.Value = h.Max - 1
-		} else {
-			*h.Value = h.Min
-		}
-	}
-	if sound := h.Sounds[Down]; sound != nil {
-		effectPlayer.Play(sound, 1)
-	}
-}
-func (h *IntHandler) Up() {
 	*h.Value += h.Unit
 	if *h.Value >= h.Max {
 		if h.Loop {
@@ -97,9 +75,22 @@ func (h *IntHandler) Up() {
 			*h.Value = h.Max - 1
 		}
 	}
-	if sound := h.Sounds[Up]; sound != nil {
-		effectPlayer.Play(sound, 1)
+	// if sound := h.Sounds[Down]; sound != nil {
+	// 	effectPlayer.Play(sound, 1)
+	// }
+}
+func (h *IntHandler) Up() {
+	*h.Value -= h.Unit
+	if *h.Value < h.Min {
+		if h.Loop {
+			*h.Value = h.Max - 1
+		} else {
+			*h.Value = h.Min
+		}
 	}
+	// if sound := h.Sounds[Up]; sound != nil {
+	// 	effectPlayer.Play(sound, 1)
+	// }
 }
 
 const (
@@ -149,13 +140,21 @@ func (h *KeyHandler) Update() (trigger bool) {
 			return
 		}
 	}
-	if k := h.keys[h.holdIndex]; !ebiten.IsKeyPressed(k) {
+	if h.holdIndex >= 0 && !ebiten.IsKeyPressed(h.keys[h.holdIndex]) {
 		h.reset()
-		k2 := (h.holdIndex + 1) % 2
-		if ebiten.IsKeyPressed(h.keys[k2]) {
-			h.holdIndex = k2
+	}
+	for i, k := range h.keys {
+		if ebiten.IsKeyPressed(k) {
+			h.holdIndex = i
 		}
 	}
+	// if k := h.keys[h.holdIndex]; !ebiten.IsKeyPressed(k) {
+	// 	h.reset()
+	// 	k2 := (h.holdIndex + 1) % 2
+	// 	if ebiten.IsKeyPressed(h.keys[k2]) {
+	// 		h.holdIndex = k2
+	// 	}
+	// }
 	switch h.holdIndex {
 	case KeyIndexNone:
 		return

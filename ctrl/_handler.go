@@ -64,7 +64,7 @@ type F64Handler struct {
 	Target *float64
 }
 
-// Update returns whether the handler has fired or not.
+// Update returns whether the handler has act or not.
 func (h *F64Handler) Update() bool {
 	h.Handler.Update()
 	if h.Countdown > 0 || h.KeyType() == -1 {
@@ -104,7 +104,7 @@ type IntHandler struct {
 	Loop   bool
 }
 
-// Update returns whether the handler has fired or not.
+// Update returns whether the handler has act or not.
 func (h *IntHandler) Update() bool {
 	h.Handler.Update()
 	if h.Countdown > 0 || h.KeyType() == -1 {
@@ -147,7 +147,7 @@ type BoolHandler struct {
 	Target *bool
 }
 
-// Update returns whether the handler has fired or not.
+// Update returns whether the handler has act or not.
 func (h *BoolHandler) Update() bool {
 	h.Handler.Update()
 	// Bool value is updated only once regardless of hold duration.

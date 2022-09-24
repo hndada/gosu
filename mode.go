@@ -5,22 +5,27 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/format/osu"
 )
 
-var ModeNames = []string{"Piano4", "Piano7", "Drum", "Karaoke"}
+// var ModeNames = []string{"Piano4", "Piano7", "Drum", "Karaoke"}
 var ModeProps []ModeProp // Todo: make it unexported?
 
 type ModeProp struct { // Stands for Mode properties.
+	Name           string
 	Mode           int
 	ChartInfos     []ChartInfo
 	Cursor         int                 // Todo: custom chart infos - custom cursor
 	Results        map[[16]byte]Result // md5.Size = 16
 	LastUpdateTime time.Time
 	// SpeedHandler   ctrl.F64Handler
-	// LoadSkin       func()
-	Loads        []func()
+	LoadSkin func()
+	// Skin interface{ Load() } // Todo: use this later
+	SpeedKeyHandler ctrl.KeyHandler
+	// Loads        []func()
+	SpeedScale   *float64
 	NewChartInfo func(string) (ChartInfo, error)
 	// NewScenePlay func(cpath string, rf *osr.Format, sh ctrl.F64Handler) (Scene, error)
 	NewScenePlay func(cpath string, rf *osr.Format) (Scene, error)

@@ -10,8 +10,8 @@ var (
 	// TPS supposed to be multiple of 1000, since only one speed value
 	// goes passed per Update, while unit of TransPoint's time is 1ms.
 	// TPS affects only on Update(), not on Draw().
-	TPS          int     = 1000 // TPS should be 1000 or greater.
-	VsyncSwitch  bool    = true
+	TPS int = 1000 // TPS should be 1000 or greater.
+	// VsyncSwitch  bool    = true
 	MusicVolume  float64 = 0.25
 	EffectVolume float64 = 0.25
 
@@ -20,6 +20,7 @@ var (
 	ChartInfoBoxHeight float64 = 50
 	ChartInfoBoxShrink float64 = 0.15
 	chartInfoBoxshrink float64 = ChartInfoBoxWidth * ChartInfoBoxShrink
+	chartItemBoxCount  int     = int(screenSizeY/ChartInfoBoxHeight) + 2 // Gives some margin.
 
 	BackgroundDimness float64 = 0.5
 	ScoreScale        float64 = 0.65
