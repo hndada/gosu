@@ -12,15 +12,17 @@ import (
 )
 
 // var (
-// 	MusicVolumeHandler  ctrl.F64Handler
-// 	EffectVolumeHandler ctrl.F64Handler
-// 	VsyncSwitchHandler  ctrl.BoolHandler
+//
+//	MusicVolumeHandler  ctrl.F64Handler
+//	EffectVolumeHandler ctrl.F64Handler
+//	VsyncSwitchHandler  ctrl.BoolHandler
+//
 // )
 
 type Game struct {
 	Scene
-	ModeProps []ModeProp
-	Mode      int
+	// ModeProps []ModeProp
+	// Mode      int
 }
 type Scene interface {
 	Update() any
@@ -29,32 +31,36 @@ type Scene interface {
 
 func init() {
 	if runtime.GOOS == "windows" {
-		fmt.Println("OpenGL mode has enabled.")
 		os.Setenv("EBITEN_GRAPHICS_LIBRARY", "opengl")
+		fmt.Println("OpenGL mode has enabled.")
 	}
 }
 func NewGame(props []ModeProp) *Game {
+	ModeProps = props
 	g := new(Game)
 	// Todo: load settings here
-	g.ModeProps = props
-	g.LoadChartInfosSet()        // 1. Load chart info and score data
-	g.TidyChartInfosSet()        // 2. Check removed chart
-	for i := range g.ModeProps { // 3. Check added chart
+	// g.ModeProps = props
+	g.LoadChartInfosSet()      // 1. Load chart info and score data
+	g.TidyChartInfosSet()      // 2. Check removed chart
+	for i := range ModeProps { // 3. Check added chart
 		// Each mode scans Music root independently.
-		g.ModeProps[i].ChartInfos = LoadNewChartInfos(MusicRoot, &g.ModeProps[i])
+		ModeProps[i].ChartInfos = LoadNewChartInfos(MusicRoot, &ModeProps[i])
 	}
 	g.SaveChartInfosSet() // 4. Save chart infos to local file
-	LoadSounds("skin/sound")
+	// LoadSounds("skin/sound")
 	LoadGeneralSkin()
-	for _, mode := range g.ModeProps {
-		mode.LoadSkin()
+	for _, mode := range ModeProps {
+		for _, load := range mode.Loads {
+			load()
+		}
+		// mode.LoadSkin()
 	}
-	g.Mode = ModePiano4
-	MusicVolumeHandler = NewVolumeHandler(
-		&MusicVolume, []ebiten.Key{ebiten.Key2, ebiten.Key1})
-	EffectVolumeHandler = NewVolumeHandler(
-		&EffectVolume, []ebiten.Key{ebiten.Key4, ebiten.Key3})
-	VsyncSwitchHandler = NewVsyncSwitchHandler(&VsyncSwitch)
+	// g.Mode = ModePiano4
+	// MusicVolumeHandler = NewVolumeHandler(
+	// 	&MusicVolume, []ebiten.Key{ebiten.Key2, ebiten.Key1})
+	// EffectVolumeHandler = NewVolumeHandler(
+	// 	&EffectVolume, []ebiten.Key{ebiten.Key4, ebiten.Key3})
+	// VsyncSwitchHandler = NewVsyncSwitchHandler(&VsyncSwitch)
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
 	ebiten.SetTPS(TPS)
@@ -66,7 +72,8 @@ func (g *Game) Update() (err error) {
 	// g.MusicVolumeHandler.Update()
 	// g.EffectVolumeHandler.Update()
 	if g.Scene == nil {
-		g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
+		// g.Scene = NewSceneSelect(g.ModeProps, &g.Mode)
+		g.Scene = NewSceneSelect()
 	}
 	args := g.Scene.Update()
 	switch args := args.(type) {

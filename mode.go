@@ -5,12 +5,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/format/osu"
 )
 
 var ModeNames = []string{"Piano4", "Piano7", "Drum", "Karaoke"}
+var ModeProps []ModeProp // Todo: make it unexported?
 
 type ModeProp struct { // Stands for Mode properties.
 	Mode           int
@@ -18,19 +18,22 @@ type ModeProp struct { // Stands for Mode properties.
 	Cursor         int                 // Todo: custom chart infos - custom cursor
 	Results        map[[16]byte]Result // md5.Size = 16
 	LastUpdateTime time.Time
-	SpeedHandler   ctrl.F64Handler
-	LoadSkin       func()
-	NewChartInfo   func(string) (ChartInfo, error)
-	NewScenePlay   func(cpath string, rf *osr.Format, sh ctrl.F64Handler) (Scene, error)
-	ExposureTime   func(float64) float64
+	// SpeedHandler   ctrl.F64Handler
+	// LoadSkin       func()
+	Loads        []func()
+	NewChartInfo func(string) (ChartInfo, error)
+	// NewScenePlay func(cpath string, rf *osr.Format, sh ctrl.F64Handler) (Scene, error)
+	NewScenePlay func(cpath string, rf *osr.Format) (Scene, error)
+	ExposureTime func(float64) float64
 }
 
 // Mode consists of main mode and sub mode.
 // For example, sub mode of Piano is Key count (with scratch mode bit adjusted).
-const ModeUnknown = -1
+// const ModeUnknown = -1
 const (
-	ModePiano4 = iota // 1 to 4 Key and 6 Key
-	ModePiano7        // 5 Key and 7+ Key
+	ModeNone   = iota - 1
+	ModePiano4 // 1 to 4 Key
+	ModePiano7 // 5, 6 Key and 7+ Key
 	ModeDrum
 	ModeKaraoke
 )
@@ -49,10 +52,10 @@ func ChartFileMode(fpath string) int {
 		case osu.ModeTaiko:
 			return ModeDrum
 		default:
-			return ModeUnknown
+			return ModeNone
 		}
 	case ".ojn", ".bms":
 		return ModePiano7
 	}
-	return ModeUnknown
+	return ModeNone
 }
