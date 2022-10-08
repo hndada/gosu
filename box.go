@@ -21,7 +21,7 @@ func NewChartBoardBox(c ChartInfo) draws.Box {
 			Text:  c.MusicSource,
 			Color: color.White,
 		}
-		t.SetFace(draws.Face12, draws.OriginLeftTop)
+		t.SetFace(Face12, draws.OriginLeftTop)
 		b.Texts = append(b.Texts, t)
 	}
 	{ // Artist at center top.
@@ -29,7 +29,7 @@ func NewChartBoardBox(c ChartInfo) draws.Box {
 			Text:  c.Artist,
 			Color: color.White,
 		}
-		t.SetFace(draws.Face16, draws.OriginCenterMiddle)
+		t.SetFace(Face16, draws.OriginCenterMiddle)
 		b.Texts = append(b.Texts, t)
 	}
 	{ // Charter, note counts at right top.
@@ -37,7 +37,7 @@ func NewChartBoardBox(c ChartInfo) draws.Box {
 			Text:  fmt.Sprintf("%s\n◎ %d", c.Charter, c.NoteCounts[0]),
 			Color: color.White,
 		}
-		t.SetFace(draws.Face12, draws.OriginRightTop)
+		t.SetFace(Face12, draws.OriginRightTop)
 		b.Texts = append(b.Texts, t)
 	}
 	{ // Music name at center middle.
@@ -45,7 +45,7 @@ func NewChartBoardBox(c ChartInfo) draws.Box {
 			Text:  c.MusicName,
 			Color: color.White,
 		}
-		t.SetFace(draws.Face24, draws.OriginCenterMiddle)
+		t.SetFace(Face24, draws.OriginCenterMiddle)
 		b.Texts = append(b.Texts, t)
 	}
 	{ // Time and BPM at left bottom.
@@ -53,7 +53,7 @@ func NewChartBoardBox(c ChartInfo) draws.Box {
 			Text:  fmt.Sprintf("%s\n%s", c.TimeString(), c.BPMString()),
 			Color: color.White,
 		}
-		t.SetFace(draws.Face12, draws.OriginLeftBottom)
+		t.SetFace(Face12, draws.OriginLeftBottom)
 		b.Texts = append(b.Texts, t)
 	}
 	{ // Chart name at center bottom.
@@ -61,7 +61,7 @@ func NewChartBoardBox(c ChartInfo) draws.Box {
 			Text:  c.ChartName,
 			Color: color.White,
 		}
-		t.SetFace(draws.Face20, draws.OriginCenterBottom)
+		t.SetFace(Face20, draws.OriginCenterBottom)
 		b.Texts = append(b.Texts, t)
 	}
 	// Todo: ranked status at right bottom.
@@ -72,19 +72,25 @@ func NewChartItemBox(c ChartInfo) draws.Box {
 		w = 500
 		h = 80
 	)
+	// root := draws.Box{
+	// 	Sprite:  draws.NewSpriteFromImage(ebiten.NewImage(w, h)),
+	// 	PadW:    5,
+	// 	PadH:    5,
+	// 	MarginW: 5,
+	// 	MarginH: 5,
+	// }
 	root := draws.Box{
 		Sprite:  draws.NewSpriteFromImage(ebiten.NewImage(w, h)),
-		PadW:    5,
-		PadH:    5,
-		MarginW: 5,
-		MarginH: 5,
+		Pad:     draws.WH{5, 5},
+		Margin:  draws.WH{5, 5},
+		Content: nil,
 	}
 	{ // Chart level box.
 		t := draws.Text{
 			Text:  fmt.Sprintf("%02.f", c.Level),
 			Color: color.White,
 		}
-		t.SetFace(draws.Face20, draws.OriginCenterMiddle)
+		t.SetFace(Face20, draws.OriginCenterMiddle)
 		b := draws.Box{
 			Sprite:  draws.NewSpriteFromImage(ebiten.NewImage(w, h)),
 			MarginW: 2,
@@ -98,7 +104,7 @@ func NewChartItemBox(c ChartInfo) draws.Box {
 			Text:  fmt.Sprintf("%s [%s]\n%s / %s", c.MusicName, c.ChartName, c.Artist, c.Charter),
 			Color: color.White,
 		}
-		t.SetFace(draws.Face20, draws.OriginLeftMiddle)
+		t.SetFace(Face20, draws.OriginLeftMiddle)
 		b := draws.Box{
 			Sprite:  draws.NewSpriteFromImage(ebiten.NewImage(w, h)),
 			MarginW: 2,
