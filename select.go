@@ -170,7 +170,7 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		if i == cursor {
 			x -= int(chartInfoBoxshrink)
 		}
-		text.Draw(screen, t, draws.Face12, x, y+int(offset), color.Black)
+		text.Draw(screen, t, Face12, x, y+int(offset), color.Black)
 		// text.Draw(screen, t, basicfont.Face7x13, x, y+int(offset), color.Black)
 	}
 	s.DebugPrint(screen)

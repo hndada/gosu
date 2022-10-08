@@ -1,4 +1,4 @@
-package draws
+package gosu
 
 import (
 	"github.com/golang/freetype/truetype"

@@ -14,17 +14,6 @@ type Sprite struct {
 	scaleW, scaleH float64
 }
 
-// func (s Sprite) Image() *ebiten.Image     { return s.i }
-func (s Sprite) W() float64               { return s.w }
-func (s Sprite) H() float64               { return s.h }
-func (s Sprite) X() float64               { return s.x }
-func (s Sprite) Y() float64               { return s.y }
-func (s Sprite) Origin() Origin           { return s.origin }
-func (s Sprite) Filter() ebiten.Filter    { return s.filter }
-func (s Sprite) Size() (float64, float64) { return s.w, s.h }
-func (s Sprite) SrcSize() (int, int)      { return s.i.Size() }
-func (s Sprite) IsValid() bool            { return s.i != nil }
-
 func NewSprite(path string) Sprite {
 	return NewSpriteFromImage(NewImage(path))
 }
@@ -40,25 +29,21 @@ func NewSpriteFromImage(src *ebiten.Image) Sprite {
 	s.scaleH = 1
 	return s
 }
-func (s *Sprite) SetScale(scale float64) {
-	s.SetScaleXY(scale, scale, ebiten.FilterLinear)
-}
-func (s *Sprite) SetScaleXY(scaleW, scaleH float64, filter ebiten.Filter) {
-	s.w *= scaleW // / s.scaleW
-	s.h *= scaleH // / s.scaleH
-	s.scaleW *= scaleW
-	s.scaleH *= scaleH
-	s.filter = filter
-}
-func (s *Sprite) SetPosition(x, y float64, origin Origin) {
-	s.x = x
-	s.y = y
-	s.origin = origin
-}
 
-func (s *Sprite) Move(tx, ty float64) {
-	s.x += tx
-	s.y += ty
+// func (s Sprite) Image() *ebiten.Image     { return s.i }
+func (s Sprite) W() float64               { return s.w }
+func (s Sprite) H() float64               { return s.h }
+func (s Sprite) X() float64               { return s.x }
+func (s Sprite) Y() float64               { return s.y }
+func (s Sprite) Origin() Origin           { return s.origin }
+func (s Sprite) Filter() ebiten.Filter    { return s.filter }
+func (s Sprite) Size() (float64, float64) { return s.w, s.h }
+func (s Sprite) SrcSize() (int, int)      { return s.i.Size() }
+func (s Sprite) IsValid() bool            { return s.i != nil }
+func (s Sprite) In(x, y float64) bool {
+	x -= s.LeftTopX()
+	y -= s.LeftTopY()
+	return x >= 0 && x <= s.W() && y >= 0 && y <= s.H()
 }
 func (s Sprite) LeftTopX() float64 {
 	switch s.origin.PositionX() {
@@ -81,6 +66,25 @@ func (s Sprite) LeftTopY() float64 {
 		s.y -= s.h
 	}
 	return s.y
+}
+func (s *Sprite) SetScale(scale float64) {
+	s.SetScaleXY(scale, scale, ebiten.FilterLinear)
+}
+func (s *Sprite) SetScaleXY(scaleW, scaleH float64, filter ebiten.Filter) {
+	s.w *= scaleW // / s.scaleW
+	s.h *= scaleH // / s.scaleH
+	s.scaleW *= scaleW
+	s.scaleH *= scaleH
+	s.filter = filter
+}
+func (s *Sprite) SetPosition(x, y float64, origin Origin) {
+	s.x = x
+	s.y = y
+	s.origin = origin
+}
+func (s *Sprite) Move(tx, ty float64) {
+	s.x += tx
+	s.y += ty
 }
 func (s Sprite) Draw(screen *ebiten.Image, opSrc *ebiten.DrawImageOptions) {
 	var op ebiten.DrawImageOptions
