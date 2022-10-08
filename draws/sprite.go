@@ -7,11 +7,14 @@ import (
 // Sprite is a image drawn in screen based on its position and scale.
 // DrawImageOptions is not commutative. Do translate at final stage.
 type Sprite struct {
-	i              *ebiten.Image
-	w, h, x, y     float64
+	i          *ebiten.Image
+	w, h, x, y float64
+	// wh
+	// xy
 	origin         Origin
 	filter         ebiten.Filter
 	scaleW, scaleH float64
+	// scale wh
 }
 
 func NewSprite(path string) Sprite {

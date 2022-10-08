@@ -16,6 +16,11 @@ const (
 	ButtonModeClicked // onClick goes called when mouse button is pressed and released.
 )
 
+func (b *Button) CursorIn() bool {
+	cx, cy := ebiten.CursorPosition()
+	return b.Sprite.In(float64(cx), float64(cy))
+}
+
 func (b *Button) Update() {
 	if !b.CursorIn() {
 		b.pressed = false

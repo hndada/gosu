@@ -15,7 +15,8 @@ type Text struct {
 	Color  color.Color // color.NRGBA
 	face   font.Face
 	origin Origin // Text's align is determined by its Origin.
-	// xy
+	align  int
+	xy
 	wh
 }
 
