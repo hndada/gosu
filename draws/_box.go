@@ -2,6 +2,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// https://www.w3schools.com/css/css_grid.asps
+// Star model: Prev, Next, Parent, First/Last Child
 type Box struct {
 	Sprite
 	PadW, PadH       float64

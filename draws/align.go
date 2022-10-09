@@ -13,6 +13,11 @@ const (
 	AlignBottom
 )
 
-func (a Align) Min(size Point) Point {
+func (a Align) Min(min, size Point) Point {
+	switch a.X {
+	case AlignLeft:
 
+	case AlignCenter:
+	case AlignBottom:
+	}
 }
