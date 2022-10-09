@@ -151,7 +151,7 @@ func LoadSkin() {
 			skin.TailSprites[i] = s
 		}
 		{
-			s := draws.NewSpriteFromImage(draws.XFlippedImage(rollEndImage))
+			s := draws.NewSpriteFromImage(draws.NewXFlippedImage(rollEndImage))
 			s.SetScale(noteHeight / s.H())
 			s.SetPosition(HitPosition, FieldPosition, draws.OriginRightMiddle)
 			skin.HeadSprites[i] = s
@@ -236,14 +236,14 @@ func LoadSkin() {
 	}
 	{
 		src := draws.NewImage("skin/drum/key/out.png")
-		s := draws.NewSpriteFromImage(draws.XFlippedImage(src))
+		s := draws.NewSpriteFromImage(draws.NewXFlippedImage(src))
 		s.SetScale(FieldInnerHeight / s.H())
 		s.SetPosition(0, FieldPosition, draws.OriginLeftMiddle)
 		skin.KeySprites[LeftBlue] = s
 	}
 	{
 		src := draws.NewImage("skin/drum/key/in.png")
-		s := draws.NewSpriteFromImage(draws.XFlippedImage(src))
+		s := draws.NewSpriteFromImage(draws.NewXFlippedImage(src))
 		s.SetScale(FieldInnerHeight / s.H())
 		s.SetPosition(keyCenter, FieldPosition, draws.OriginLeftMiddle)
 		skin.KeySprites[RightRed] = s
