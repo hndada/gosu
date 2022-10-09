@@ -18,7 +18,6 @@ type Subject interface {
 type Sprite3 struct {
 	i     *ebiten.Image
 	Scale Point
-	// Scale_1 Point
 }
 
 func NewSprite3(path string) Sprite3 {
@@ -28,20 +27,14 @@ func NewSprite3FromImage(i *ebiten.Image) Sprite3 {
 	return Sprite3{i, Point{1, 1}}
 }
 func (s Sprite3) Size() Point {
-	// scale := s.Scale_1.Add(Pt(1, 1))
-	// return Pt(s.i.Size()).Mul(scale)
 	return Pt(s.i.Size()).Mul(s.Scale)
 }
 func (s *Sprite3) SetSize(size Point) {
-	// scale := size.Div(Pt(s.i.Size()))
-	// s.Scale_1 = scale.Sub(Pt(1, 1))
 	s.Scale = size.Div(Pt(s.i.Size()))
 }
 
 // Currently option's Filter is fixed with FilterLinear.
 func (s Sprite3) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions, p Point) {
-	// scale := s.Scale_1.Add(Pt(1, 1))
-	// op.GeoM.Scale(scale.XY())
 	op.GeoM.Scale(s.Scale.XY())
 	op.GeoM.Translate(p.XY())
 	op.Filter = ebiten.FilterLinear
