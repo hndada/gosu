@@ -3,16 +3,6 @@ package draws
 type Origin int
 
 const (
-	OriginLeft = iota
-	OriginCenter
-	OriginRight
-)
-const (
-	OriginTop = iota
-	OriginMiddle
-	OriginBottom
-)
-const (
 	OriginLeftTop      Origin = iota // Default Origin.
 	OriginLeftMiddle                 // e.g., Notes in Piano mode.
 	OriginLeftBottom                 // e.g., back button.

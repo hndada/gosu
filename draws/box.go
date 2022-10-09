@@ -1,93 +1,98 @@
 package draws
 
-import (
-	"github.com/hajimehoshi/ebiten/v2"
-)
+import "github.com/hajimehoshi/ebiten/v2"
 
-// Box model
 // Box is wrapped Subject(Sprite, Label) with Position data.
 type Box struct {
-	Subject
+	Outer Sprite3 // Subject
+	Inner Subject
 	Point
-	Origin
-
-	Subs    [][]Box
-	Padding Point
-	Margin  Point
+	Origin2
+	Pad Point
 	Align
 }
 
-// Zero-valued Point infers tight box.
-func (b Box) mins() [][]Point {
-
-}
-
-// x and y of Sub box are determined by Outer box.
-// Suppose boxes in a same row has equal height.
-// Wait, no, labels have different height.
-func (b Box) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
-	b.Subject.Draw(screen, op, b.Min())
-	var offset Point
-	for _, row := range b.Subs {
-		offset.X = 0
-		offset.Y += b.Pad.Y
-		for _, sub := range row {
-			offset.X += b.Pad.X
-			sub.Point.Add(offset)
-			sub.Draw(screen, op)
-			offset.X += sub.Subject.Size().X
-		}
-		offset.Y += row[0].Subject.Size().Y
-	}
-}
-
-func (b Box) Min() Point {
-	p := b.Point
-	w, h := b.Size().XY()
-	switch b.Origin.PositionX() {
+func (b Box) OuterMin() Point {
+	min := b.Point
+	w, h := b.Inner.Size().XY()
+	switch b.Origin2.X {
 	case OriginLeft:
-		p.X -= 0
+		min.X -= 0
 	case OriginCenter:
-		p.X -= w / 2
+		min.X -= w / 2
 	case OriginRight:
-		p.X -= w
+		min.X -= w
 	}
-	switch b.Origin.PositionY() {
+	switch b.Origin2.Y {
 	case OriginTop:
-		p.Y -= 0
+		min.Y -= 0
 	case OriginMiddle:
-		p.Y -= h / 2
+		min.Y -= h / 2
 	case OriginBottom:
-		p.Y -= h
+		min.Y -= h
 	}
-	return p
+	return min
 }
-
-// Input is usually cursor's position.
-func (b Box) In(p Point) bool {
-	p = p.Sub(b.Min())
-	w, h := b.Size().XY()
+func (b Box) InnerMin() Point {
+	min := b.OuterMin()
+	switch b.Align.X {
+	case AlignLeft:
+		min.X += b.Pad.X
+	case AlignCenter:
+	case AlignRight:
+		min.X -= b.Pad.X
+	}
+	switch b.Align.Y {
+	case AlignTop:
+		min.Y += b.Pad.Y
+	case AlignMiddle:
+	case AlignBottom:
+		min.Y -= b.Pad.Y
+	}
+	return min
+}
+func (b Box) OuterMax() Point {
+	return b.OuterMin().Add(b.Outer.Size())
+}
+func (b Box) InnerMax() Point {
+	return b.InnerMin().Add(b.Inner.Size())
+}
+func (b Box) In(p Point) bool { // Input is usually cursor's position.
+	p = p.Sub(b.OuterMin())
+	w, h := b.Outer.Size().XY()
 	return p.X >= 0 && p.X <= w && p.Y >= 0 && p.Y <= h
 }
 
-// func (b Box) Max() Point {
-// 	p := b.Point
-// 	w, h := b.Size().XY()
-// 	switch b.Origin.PositionX() {
-// 	case OriginLeft:
-// 		p.X += w
-// 	case OriginCenter:
-// 		p.X += w / 2
-// 	case OriginRight:
-// 		p.X += 0
-// 	}
-// 	switch b.Origin.PositionY() {
-// 	case OriginTop:
-// 		p.Y += h
-// 	case OriginMiddle:
-// 		p.Y += h / 2
-// 	case OriginBottom:
-// 		p.Y += 0
-// 	}
-// 	return p
-// }
+// Input point passes external translate values.
+func (b Box) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) { //, p Point) {
+	// b.Outer.Draw(screen, op, b.OuterMin().Add(p))
+	// b.Inner.Draw(screen, op, b.InnerMin().Add(p))
+	b.Outer.Draw(screen, op, b.OuterMin())
+	b.Inner.Draw(screen, op, b.InnerMin())
+}
+
+type Origin2 struct{ X, Y int }
+
+const (
+	OriginLeft = iota
+	OriginCenter
+	OriginRight
+)
+const (
+	OriginTop = iota
+	OriginMiddle
+	OriginBottom
+)
+
+type Align struct{ X, Y int }
+
+const (
+	AlignLeft = iota
+	AlignCenter
+	AlignRight
+)
+const (
+	AlignTop = iota
+	AlignMiddle
+	AlignBottom
+)
