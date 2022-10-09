@@ -9,7 +9,6 @@ import (
 	"golang.org/x/image/font"
 )
 
-// Todo: embed Sprite?
 type Text struct {
 	Text   string
 	Color  color.Color // color.NRGBA

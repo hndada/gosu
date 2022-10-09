@@ -9,10 +9,11 @@ import (
 )
 
 type Subject interface {
-	WH() Point
-	Draw(screen *ebiten.Image, x, y float64, op ebiten.DrawImageOptions)
+	Size() Point
+	Draw(*ebiten.Image, ebiten.DrawImageOptions, Point)
 }
 
+// Sprite is scaled image.
 type Sprite3 struct {
 	i     *ebiten.Image
 	Scale Point
@@ -22,9 +23,10 @@ func (s Sprite3) Size() Point {
 	return Pt(s.i.Size()).Mul(s.Scale)
 }
 
-func (s Sprite3) Draw(screen *ebiten.Image, x, y float64, op ebiten.DrawImageOptions) {
+// Currently option's Filter is fixed with FilterLinear.
+func (s Sprite3) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions, p Point) {
 	op.GeoM.Scale(s.Scale.XY())
-	op.GeoM.Translate(x, y)
+	op.GeoM.Translate(p.XY())
 	op.Filter = ebiten.FilterLinear
 	screen.DrawImage(s.i, &op)
 }
@@ -49,10 +51,7 @@ func (l Label) Size() Point {
 	return Pt(b.Max.X, -b.Min.Y)
 }
 
-// Label's Draw ignores given op.
-func (l Label) Draw(screen *ebiten.Image, x, y float64, op ebiten.DrawImageOptions) {
-	text.Draw(screen, l.Text, l.Face, int(x), int(y), l.Color)
-	// i := ebiten.NewImage(l.Size().XYInt())
-	// text.Draw(i, l.Text, l.Face, int(x), int(y), l.Color)
-	// screen.DrawImage(i, &op)
+func (l Label) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions, p Point) {
+	op.GeoM.Translate(p.XY())
+	text.DrawWithOptions(screen, l.Text, l.Face, &op)
 }
