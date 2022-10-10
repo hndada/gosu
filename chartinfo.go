@@ -67,14 +67,14 @@ func (c ChartInfo) NewChartBoard() draws.Box {
 		},
 		{
 			{
-				Inner: draws.NewRectangle(draws.Pt(ws[0], hs[1])),
+				// Inner: draws.NewRectangle(draws.Pt(ws[0], hs[1])),
 			},
 			{
 				Inner: draws.NewLabel(c.MusicName, Face20, color.White),
 				Align: draws.ModeXY{X: draws.ModeMid, Y: draws.ModeMax},
 			},
 			{
-				Inner: draws.NewRectangle(draws.Pt(ws[2], hs[1])),
+				// Inner: draws.NewRectangle(draws.Pt(ws[2], hs[1])),
 			},
 		},
 		{
@@ -87,7 +87,7 @@ func (c ChartInfo) NewChartBoard() draws.Box {
 				Align: draws.ModeXY{X: draws.ModeMid, Y: draws.ModeMin},
 			},
 			{
-				Inner: draws.NewRectangle(draws.Pt(ws[2], hs[2])),
+				// Inner: draws.NewRectangle(draws.Pt(ws[2], hs[2])),
 			},
 		},
 		{
@@ -100,10 +100,17 @@ func (c ChartInfo) NewChartBoard() draws.Box {
 				Align: draws.ModeXY{X: draws.ModeMid, Y: draws.ModeMax},
 			},
 			{ // Todo: ranked status
-				Inner: draws.NewRectangle(draws.Pt(ws[2], hs[3])),
+				// Inner: draws.NewRectangle(draws.Pt(ws[2], hs[3])),
 				Align: draws.ModeXY{X: draws.ModeMax, Y: draws.ModeMax},
 			},
 		},
+	}
+	for i, row := range boxs {
+		for j := range row {
+			boxs[i][j].Outer = draws.NewRectangle(draws.Pt(ws[j], hs[i]))
+			// fmt.Printf("%d %d: %+v\n", i, j, box)
+		}
+		// fmt.Println()
 	}
 	// boxs = make([][]draws.Box, 3)
 	// for i := range boxs {
@@ -115,6 +122,7 @@ func (c ChartInfo) NewChartBoard() draws.Box {
 	// 		}
 	// 	}
 	// }
+
 	board := draws.Box{
 		Inner:   draws.NewGrid(boxs, ws, hs, draws.Point{}),
 		Pad:     draws.Pt(10, 10),
