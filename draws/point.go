@@ -2,7 +2,8 @@ package draws
 
 type Point struct{ X, Y float64 }
 
-func Pt(x, y int) Point      { return Point{float64(x), float64(y)} }
+func IntPt(x, y int) Point   { return Point{float64(x), float64(y)} }
+func Pt(x, y float64) Point  { return Point{x, y} }
 func Scalar(v float64) Point { return Point{v, v} }
 func (p Point) Add(q Point) Point {
 	return Point{p.X + q.X, p.Y + q.Y}
