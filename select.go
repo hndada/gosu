@@ -35,6 +35,7 @@ type SceneSelect struct {
 	Background  draws.Sprite  // Todo: BackgroundDrawer with some effects
 	MusicPlayer *audio.Player // Todo: Rewind after preview has finished.
 	MusicCloser io.Closer
+	// board       draws.Box
 	// MultiMode   int
 }
 
@@ -173,6 +174,7 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		text.Draw(screen, t, Face12, x, y+int(offset), color.Black)
 		// text.Draw(screen, t, basicfont.Face7x13, x, y+int(offset), color.Black)
 	}
+	s.View[cursor].NewChartBoard().Draw(screen, ebiten.DrawImageOptions{}, draws.Point{})
 	s.DebugPrint(screen)
 }
 func (s SceneSelect) Viewport() ([]ChartInfo, int) {

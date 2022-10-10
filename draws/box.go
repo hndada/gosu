@@ -43,7 +43,7 @@ func (b *Box) SetSize(size Point) {
 }
 func (b Box) OuterMin() Point {
 	min := b.Point
-	w, h := b.Inner.Size().XY()
+	w, h := b.Outer.Size().XY()
 	switch b.Origin2.X {
 	case OriginLeft:
 		min.X -= 0
@@ -100,8 +100,12 @@ func (b Box) In(p Point) bool { // Input is usually cursor's position.
 // Box may be a inner subject.
 // Input point passes external translate values.
 func (b Box) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions, p Point) {
-	b.Outer.Draw(screen, op, b.OuterMin().Add(p))
-	b.Inner.Draw(screen, op, b.InnerMin().Add(p))
+	if b.Outer != nil {
+		b.Outer.Draw(screen, op, b.OuterMin().Add(p))
+	}
+	if b.Inner != nil {
+		b.Inner.Draw(screen, op, b.InnerMin().Add(p))
+	}
 }
 
 type Origin2 struct{ X, Y int }

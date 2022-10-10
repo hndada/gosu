@@ -14,19 +14,23 @@ import "github.com/hajimehoshi/ebiten/v2"
 // Grid implements inteface Subject.
 type Grid [][]Box
 
-func NewGrid(inners [][]Box, ws, hs []float64, gap Point) *Grid {
-	var g Grid
+func NewGrid(boxs [][]Box, ws, hs []float64, gap Point) *Grid {
+	// g := make(Grid, len(hs))
+	// for i := range g {
+	// 	g[i] = make([]Box, len(ws))
+	// }
 	var offset Point
 	for i, h := range hs {
 		offset.X = 0
 		for j, w := range ws {
-			g[i][j].Outer.SetSize(Point{w, h})
-			g[i][j].Point = offset
-			g[i][j].Origin2 = AtMin
+			boxs[i][j].Outer.SetSize(Point{w, h})
+			boxs[i][j].Point = offset
+			boxs[i][j].Origin2 = AtMin
 			offset.X += w + gap.X
 		}
 		offset.Y += h + gap.Y
 	}
+	g := Grid(boxs)
 	return &g
 }
 func (g Grid) Size() (p Point) {
