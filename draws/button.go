@@ -17,7 +17,7 @@ const (
 )
 
 func (b *Button) Hover() bool {
-	return b.In(Pt(ebiten.CursorPosition()))
+	return b.In(IntPt(ebiten.CursorPosition()))
 }
 
 func (b *Button) Update() {
