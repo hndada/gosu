@@ -2,11 +2,13 @@
 
 package input
 
-func NewListener(keySettings []ebiten.Key) func() []bool {
+import "github.com/hajimehoshi/ebiten/v2"
+
+func NewListener(keySettings []Key) func() []bool {
 	return func() []bool {
 		pressed := make([]bool, len(keySettings))
 		for k, ek := range keySettings {
-			pressed[k] = ebiten.IsKeyPressed(ek)
+			pressed[k] = ebiten.IsKeyPressed(ebiten.Key(ek))
 		}
 		return pressed
 	}
