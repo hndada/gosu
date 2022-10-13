@@ -99,18 +99,17 @@ func (s *SceneSelect) Update() any {
 }
 
 func NewCursorKeyHandler(cursor *int, len int) ctrl.KeyHandler {
-	h := ctrl.KeyHandler{
+	return ctrl.KeyHandler{
 		Handler: &ctrl.IntHandler{
-			Value:  cursor,
-			Unit:   1,
-			Min:    0,
-			Max:    len,
-			Loop:   true,
-			Sounds: [2][]byte{SwipeSound, SwipeSound},
+			Value: cursor,
+			Min:   0,
+			Max:   len,
+			Loop:  true,
 		},
+		Modifiers: []ebiten.Key{},
+		Keys:      [2]ebiten.Key{ebiten.KeyUp, ebiten.KeyDown},
+		Sounds:    [2][]byte{SwipeSound, SwipeSound},
 	}
-	h.SetKeys([]ebiten.Key{}, [2]ebiten.Key{ebiten.KeyDown, ebiten.KeyUp})
-	return h
 }
 
 //	func (s *SceneSelect) UpdateMode() {
