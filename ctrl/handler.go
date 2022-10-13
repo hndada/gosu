@@ -4,70 +4,63 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// var effectPlayer audios.EffectPlayer
-
-const (
-	Down = iota
-	Up
-)
-
-type BoolHandler struct {
-	Value  *bool
-	Sounds [2][]byte
+type Handler interface {
+	Decrease()
+	Increase()
 }
 
-func (h *BoolHandler) Down() { h.swap() }
-func (h *BoolHandler) Up()   { h.swap() }
+type BoolHandler struct {
+	Value *bool
+}
 
-// func (h *BoolHandler) Value() {return h.value}
+func (h *BoolHandler) Decrease() { h.swap() }
+func (h *BoolHandler) Increase() { h.swap() }
 func (h *BoolHandler) swap() {
 	if !*h.Value {
 		*h.Value = true
-		// if sound := h.Sounds[Up]; sound != nil {
-		// 	effectPlayer.Play(sound, 1)
-		// }
 	} else {
 		*h.Value = false
-		// if sound := h.Sounds[Down]; sound != nil {
-		// 	effectPlayer.Play(sound, 1)
-		// }
 	}
 }
 
 type FloatHandler struct {
-	Value          *float64
-	Unit, Min, Max float64
-	Sounds         [2][]byte
+	Value    *float64
+	Min, Max float64
+	Unit     float64
 }
 
-func (h *FloatHandler) Down() {
+func (h *FloatHandler) Decrease() {
 	*h.Value -= h.Unit
 	if *h.Value < h.Min {
 		*h.Value = h.Min
 	}
-	// if sound := h.Sounds[Down]; sound != nil {
-	// 	effectPlayer.Play(sound, 1)
-	// }
 }
-func (h *FloatHandler) Up() {
+func (h *FloatHandler) Increase() {
 	*h.Value += h.Unit
 	if *h.Value > h.Max {
 		*h.Value = h.Max
 	}
-	// if sound := h.Sounds[Up]; sound != nil {
-	// 	effectPlayer.Play(sound, 1)
-	// }
 }
 
 type IntHandler struct {
-	Value          *int
-	Unit, Min, Max int
-	Loop           bool
-	Sounds         [2][]byte
+	Value    *int
+	Min, Max int
+	Loop     bool
+	// Unit     int
 }
 
-func (h *IntHandler) Down() {
-	*h.Value += h.Unit
+func (h *IntHandler) Decrease() {
+	*h.Value -= 1
+	if *h.Value < h.Min {
+		if h.Loop {
+			*h.Value = h.Max - 1
+		} else {
+			*h.Value = h.Min
+		}
+	}
+}
+func (h *IntHandler) Increase() {
+	*h.Value += 1
 	if *h.Value >= h.Max {
 		if h.Loop {
 			*h.Value = h.Min
@@ -75,93 +68,61 @@ func (h *IntHandler) Down() {
 			*h.Value = h.Max - 1
 		}
 	}
-	// if sound := h.Sounds[Down]; sound != nil {
-	// 	effectPlayer.Play(sound, 1)
-	// }
-}
-func (h *IntHandler) Up() {
-	*h.Value -= h.Unit
-	if *h.Value < h.Min {
-		if h.Loop {
-			*h.Value = h.Max - 1
-		} else {
-			*h.Value = h.Min
-		}
-	}
-	// if sound := h.Sounds[Up]; sound != nil {
-	// 	effectPlayer.Play(sound, 1)
-	// }
 }
 
+// const (
+//
+//	KeyIndexNone = iota // - 1
+//	KeyIndexDecrease
+//	KeyIndexIncrease
+//
+// )
 const (
-	KeyIndexNone = iota - 1
-	KeyIndexDown
-	KeyIndexUp
+	None = iota - 1
+	Decrease
+	Increase
 )
 
 type KeyHandler struct {
 	Handler
-	modifiers []ebiten.Key // Handler works only when all Modifier are pressed.
-	keys      [2]ebiten.Key
-	// sounds    [2][]byte
-	holdIndex int // ebiten.Key
+	Modifiers []ebiten.Key // Handler works only when all Modifier are pressed.
+	Keys      [2]ebiten.Key
+	Sounds    [2][]byte // Todo: implement
+
+	holdIndex int
+	// holdKey   ebiten.Key
 	countdown int // Require to hold for a while to move a cursor.
 	active    bool
 }
 
-//	func NewKeyHandler(modifiers []ebiten.Key, keys [2]ebiten.Key, sounds [2][]byte) KeyHandler {
-//		return KeyHandler{
-//			Modifiers:  modifiers,
-//			Keys:       keys,
-//			Sounds:     sounds,
-//			countdown:  0,
-//			holdingKey: KeyIndexNone,
-//		}
-//	}
-func (h *KeyHandler) SetKeys(modifiers []ebiten.Key, keys [2]ebiten.Key) {
-	h.modifiers = modifiers
-	h.keys = keys
-	h.holdIndex = KeyIndexNone
-}
-
-// func (h *KeyHandler) SetSounds(sounds [2][]byte) {
-// 	h.sounds = sounds
-// }
-
-// Update returns whether the handler has triggered or not.
-func (h *KeyHandler) Update() (trigger bool) {
+// Update returns whether the handler has set off (triggered) or not.
+func (h *KeyHandler) Update() (set bool) {
 	if h.countdown > 0 {
 		h.countdown--
 		return
 	}
-	for _, k := range h.modifiers {
+	for _, k := range h.Modifiers {
 		if !ebiten.IsKeyPressed(k) {
 			h.reset()
 			return
 		}
 	}
-	if h.holdIndex >= 0 && !ebiten.IsKeyPressed(h.keys[h.holdIndex]) {
+	if h.holdIndex > None && !ebiten.IsKeyPressed(h.Keys[h.holdIndex]) {
 		h.reset()
 	}
-	for i, k := range h.keys {
+	for i, k := range h.Keys {
 		if ebiten.IsKeyPressed(k) {
 			h.holdIndex = i
+			break
 		}
 	}
-	// if k := h.keys[h.holdIndex]; !ebiten.IsKeyPressed(k) {
-	// 	h.reset()
-	// 	k2 := (h.holdIndex + 1) % 2
-	// 	if ebiten.IsKeyPressed(h.keys[k2]) {
-	// 		h.holdIndex = k2
-	// 	}
-	// }
 	switch h.holdIndex {
-	case KeyIndexNone:
+	case None:
 		return
-	case KeyIndexDown:
-		h.Down()
-	case KeyIndexUp:
-		h.Up()
+	case Decrease:
+		h.Decrease()
+	case Increase:
+		h.Increase()
 	}
 	if h.active {
 		h.countdown = shortCountdown
@@ -169,19 +130,10 @@ func (h *KeyHandler) Update() (trigger bool) {
 		h.countdown = longCountdown
 	}
 	h.active = true
-	// if h.holdIndex != KeyIndexNone {
-	// 	h.PlaySound(h.sounds[h.holdIndex])
-	// }
 	return
 }
 
 func (h *KeyHandler) reset() {
 	h.active = false
-	h.countdown = 0
-	h.holdIndex = KeyIndexNone
-}
-
-type Handler interface {
-	Down()
-	Up()
+	h.holdIndex = None
 }
