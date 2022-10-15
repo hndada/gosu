@@ -54,7 +54,7 @@ type ScenePlay struct {
 	MeterDrawer  gosu.MeterDrawer
 }
 
-func (s ScenePlay) Time() int64 { return s.Timer.Time }
+func (s ScenePlay) Time() int64 { return s.Timer.Time() }
 
 // Todo: actual auto replay generator for gimmick charts
 // Todo: support mods: show Piano's ScenePlay during Drum's ScenePlay
@@ -66,7 +66,8 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	}
 	c := s.Chart
 	gosu.SetTitle(c.ChartHeader)
-	s.SetTicks(c.Duration())
+	s.Timer = gosu.NewTimer(c.Duration())
+	// s.SetTicks(c.Duration())
 	s.time = s.Time()
 	if path, ok := c.MusicPath(cpath); ok {
 		s.MusicPlayer, err = gosu.NewMusicPlayer(path) //(gosu.MusicVolumeHandler, path)
@@ -86,7 +87,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	}
 	s.KeyLogger = gosu.NewKeyLogger(KeySettings[:])
 	if rf != nil {
-		s.KeyLogger.FetchPressed = NewReplayListener(rf, s.time)
+		s.KeyLogger.FetchPressed = NewReplayListener(rf, &s.Timer)
 	}
 
 	s.TransPoint = c.TransPoints[0]
@@ -220,7 +221,8 @@ func (s *ScenePlay) SetSpeed() {
 }
 
 func (s *ScenePlay) Update() any {
-	defer func() { s.Ticker(); s.time = s.Time() }()
+	// defer func() { s.Ticker(); s.time = s.Time() }()
+	defer func() { s.time = s.Time() }()
 	if s.IsDone() {
 		s.MusicPlayer.Close()
 		return gosu.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
@@ -352,7 +354,8 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\nExtra: %.2f%%\nJudgment counts: %v\n\n"+
 			"Speed scale (Z/X): %.0f (x%.2f)\n(Exposure time: %.fms)\n\n"+
-			"Music volume (Q/W): %.0f%%\nEffect volume (A/S): %.0f%%\n\n",
+			"Music volume (Q/W): %.0f%%\nEffect volume (A/S): %.0f%%\n\n"+
+			"Press ESC to select a song",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.time)/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,

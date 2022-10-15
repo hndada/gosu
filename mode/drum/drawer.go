@@ -118,7 +118,7 @@ func (d RollDrawer) Draw(screen *ebiten.Image) {
 
 		bodySprite := d.BodySprites[head.Size]
 		ratio := length / bodySprite.W()
-		bodySprite.SetScaleXY(ratio, 1, ebiten.FilterLinear)
+		bodySprite.SetScaleXY(ratio, 1, ebiten.FilterNearest)
 		bodySprite.Move(head.Position(d.Time), 0)
 		bodySprite.Draw(screen, op)
 
@@ -273,9 +273,12 @@ func (d *DancerDrawer) Update(
 			mode = DancerIdle
 		}
 	}
-	if d.Mode != mode && d.AnimationFinish() {
-		d.Mode = mode
-		reset = true
+	if d.Mode != mode { // && d.AnimationFinish()
+		if d.Mode == DancerYes && mode != DancerNo && !d.AnimationFinish() {
+		} else {
+			d.Mode = mode
+			reset = true
+		}
 	}
 	d.AnimationDrawers[d.Mode].Update(time, int64(duration), reset)
 }

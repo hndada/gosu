@@ -4,6 +4,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/audio"
 )
 
+// var bufferSize = 100 * time.Millisecond
+
 func NewPlayer(path string) (*audio.Player, func() error, error) {
 	s, closer, err := decode(path)
 	if err != nil {
@@ -13,6 +15,7 @@ func NewPlayer(path string) (*audio.Player, func() error, error) {
 	if err != nil {
 		return nil, closer, err
 	}
+	// p.SetBufferSize(bufferSize)
 	return p, closer, err
 }
 func PlayEffect(src []byte, vol float64) {

@@ -20,48 +20,63 @@ func TimeToTick(time int64) int { return int(float64(time) / 1000 * float64(TPS)
 func TickToTime(tick int) int64 { return int64(float64(tick) / float64(TPS) * 1000) }
 
 const (
-	WaitBefore int64 = -1800
-	WaitAfter  int64 = 3000
+	Wait = 1800
+	// WaitBefore int64 = -1800
+	// WaitAfter  int64 = 3000
 )
 
 type Timer struct {
-	Tick    int
-	MaxTick int // A tick corresponding to EndTime = Duration + WaitAfter
-	Time    int64
+	StartTime time.Time
+	Duration  time.Duration
+	// Tick      int
+	// MaxTick   int // A tick corresponding to EndTime = Duration + WaitAfter
+	// Time     int64
+}
+
+func NewTimer(duration int64) Timer {
+	return Timer{
+		StartTime: time.Now().Add(Wait * time.Millisecond),
+		Duration:  time.Duration(duration+2*Wait) * time.Millisecond,
+		// Tick:      TimeToTick(WaitBefore),
+		// MaxTick:   TimeToTick(duration + WaitAfter),
+		// Time: int64(TimeToTick(WaitBefore)),
+	}
 }
 
 // func (t Timer) IsDone() bool { return ebiten.IsKeyPressed(ebiten.KeyEscape) }
+
 func (t Timer) IsDone() bool {
-	return ebiten.IsKeyPressed(ebiten.KeyEscape) || t.Tick >= t.MaxTick
+	return ebiten.IsKeyPressed(ebiten.KeyEscape) || time.Since(t.StartTime) >= t.Duration // t.Tick >= t.MaxTick
 }
-func (t *Timer) SetTicks(duration int64) {
-	t.Tick = TimeToTick(WaitBefore)
-	t.MaxTick = TimeToTick(duration + WaitAfter)
-	t.Time = TickToTime(t.Tick)
-}
-func (t *Timer) Ticker() {
-	t.Tick++
-	t.Time = TickToTime(t.Tick)
+func (t Timer) Time() int64 {
+	return time.Since(t.StartTime).Milliseconds()
 }
 
+// func (t *Timer) Ticker() {
+// 	t.Tick++
+// 	since := time.Since(t.StartTime).Milliseconds() + WaitBefore
+// 	if e := since - t.Time; e >= 1 {
+// 		fmt.Printf("adjusting time error at %dms: %d\n", t.Time, e)
+// 		t.Tick += TimeToTick(e)
+// 	}
+// 	t.Time = TickToTime(t.Tick)
+// }
+
 type MusicPlayer struct {
-	// VolumeHandler ctrl.F64Handler
 	// Volume float64
 	Player *audio.Player
 	Closer func() error
 }
 
-// func NewMusicPlayer(mvh ctrl.F64Handler, path string) (MusicPlayer, error) {
 func NewMusicPlayer(path string) (MusicPlayer, error) {
 	player, closer, err := audios.NewPlayer(path)
 	if err != nil {
 		return MusicPlayer{}, err
 	}
-	// player.SetVolume(*mvh.Target)
 	// player.SetVolume(MusicVolume)
 	player.SetBufferSize(100 * time.Millisecond)
 	return MusicPlayer{
-		// VolumeHandler: mvh,
+		// Volume: MusicVolume,
 		Player: player,
 		Closer: closer,
 	}, nil
@@ -73,17 +88,12 @@ func (mp MusicPlayer) Play() {
 	mp.Player.Play()
 }
 
-// Todo: volume does not increment gradually.
 func (p MusicPlayer) Update() {
 	// Calling SetVolume in every Update is fine, confirmed by the author.
 	p.Player.SetVolume(MusicVolume)
 	// if p.Volume != MusicVolume {
 	// 	p.Volume = MusicVolume
 	// 	p.Player.SetVolume(p.Volume)
-	// }
-	// if act := mp.VolumeHandler.Update(); act {
-	// 	vol := *mp.VolumeHandler.Target
-	// 	mp.Player.SetVolume(vol)
 	// }
 }
 func (p MusicPlayer) Close() {

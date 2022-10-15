@@ -48,7 +48,8 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	c := s.Chart
 	gosu.SetTitle(c.ChartHeader)
 	keyCount := c.KeyCount & ScratchMask
-	s.SetTicks(c.Duration())
+	s.Timer = gosu.NewTimer(c.Duration())
+	// s.SetTicks(c.Duration())
 	if path, ok := c.MusicPath(cpath); ok {
 		s.MusicPlayer, err = gosu.NewMusicPlayer(path) //(gosu.MusicVolumeHandler, path)
 		if err != nil {
@@ -63,7 +64,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	// }
 	s.KeyLogger = gosu.NewKeyLogger(KeySettings[keyCount])
 	if rf != nil {
-		s.KeyLogger.FetchPressed = NewReplayListener(rf, keyCount, s.Time())
+		s.KeyLogger.FetchPressed = NewReplayListener(rf, keyCount, &s.Timer)
 	}
 
 	s.TransPoint = c.TransPoints[0]
@@ -163,12 +164,12 @@ func (s *ScenePlay) SetSpeed() {
 // Todo: apply other values of TransPoint (Volume has finished so far)
 // Todo: keep playing music when making SceneResult
 func (s *ScenePlay) Update() any {
-	defer s.Ticker()
+	// defer s.Ticker()
 	if s.IsDone() {
 		s.MusicPlayer.Close()
 		return gosu.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
 	}
-	if s.Tick == 0 {
+	if s.Time() == 0 {
 		s.MusicPlayer.Play()
 	}
 	s.MusicPlayer.Update()
@@ -253,7 +254,8 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\nExtra: %.2f%%\nJudgment counts: %v\n\n"+
 			"Speed scale (Z/X): %.0f (x%.2f)\n(Exposure time: %.fms)\n\n"+
-			"Music volume (Q/W): %.0f%%\nEffect volume (A/S): %.0f%%\n\n",
+			"Music volume (Q/W): %.0f%%\nEffect volume (A/S): %.0f%%\n\n"+
+			"Press ESC to select a song",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Time())/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
@@ -263,7 +265,7 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 
 // 1 pixel is 1 millisecond.
 func ExposureTime(speed float64) float64  { return HitPosition / speed }
-func (s ScenePlay) Time() int64           { return s.Timer.Time }
+func (s ScenePlay) Time() int64           { return s.Timer.Time() }
 func (s ScenePlay) Speed()                { s.CurrentSpeed() }
 func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.SpeedScale }
 
