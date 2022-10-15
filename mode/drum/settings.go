@@ -11,7 +11,7 @@ const (
 	screenSizeY = gosu.ScreenSizeY
 )
 
-var SpeedScale float64 = 1.1
+var SpeedScale float64 = 1.0
 var KeySettings = [4]input.Key{input.KeyD, input.KeyF, input.KeyJ, input.KeyK}
 
 const PositionMargin = 100
@@ -39,11 +39,11 @@ var (
 // Skin-dependent settings.
 var (
 	FieldInnerHeight float64 = FieldHeight * 0.95
-	JudgmentScale    float64 = 1.25 // 0.75
+	JudgmentScale    float64 = 0.75 // 1.25
 	DotScale         float64 = 0.5
 	ShakeScale       float64 = 1
-	DancerScale      float64 = 0.6  // 0.75
-	ComboScale       float64 = 1.25 // 0.75
+	DancerScale      float64 = 0.75 // 0.6
+	ComboScale       float64 = 0.75 // 1.25
 	ComboDigitGap    float64 = screenSizeX * -0.001
 )
 

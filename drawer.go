@@ -13,13 +13,13 @@ import (
 
 // Order of fields of drawer: updating fields, others fields, sprites.
 type BackgroundDrawer struct {
-	Dimness *float64
-	Sprite  draws.Sprite
+	Brightness *float64
+	Sprite     draws.Sprite
 }
 
 func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
 	op := &ebiten.DrawImageOptions{}
-	op.ColorM.ChangeHSV(0, 1, *d.Dimness)
+	op.ColorM.ChangeHSV(0, 1, *d.Brightness)
 	d.Sprite.Draw(screen, op)
 }
 

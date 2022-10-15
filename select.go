@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image/color"
 	"io"
+	"sort"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
@@ -11,7 +12,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
-	"github.com/hndada/gosu/draws"
 )
 
 // SceneSelect might be created after one play at multiplayer.
@@ -24,21 +24,23 @@ type SceneSelect struct {
 	CursorKeyHandler ctrl.KeyHandler
 	// board       draws.Box
 
-	Background  draws.Sprite  // Todo: BackgroundDrawer with some effects
+	BackgroundDrawer BackgroundDrawer
+	// Background       draws.Sprite
 	MusicPlayer *audio.Player // Todo: Rewind after preview has finished.
 	MusicCloser io.Closer
 }
 
 func NewSceneSelect() *SceneSelect {
 	s := &SceneSelect{}
+	s.BackgroundDrawer.Brightness = &BackgroundBrightness
 	s.UpdateMode()
 	return s
 }
 func (s *SceneSelect) Update() any {
-	if set := ModeKeyHandler.Update(); set {
+	if set := ModeKeyHandler.Update() || SortKeyHandler.Update(); set {
 		s.UpdateMode()
 	}
-	if set := s.CursorKeyHandler.Update(); set {
+	if set := s.CursorKeyHandler.Update() || BrightKeyHandler.Update(); set {
 		s.UpdateBackground()
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsKeyPressed(ebiten.KeyNumpadEnter) {
@@ -56,6 +58,22 @@ func (s *SceneSelect) Update() any {
 func (s *SceneSelect) UpdateMode() {
 	SpeedScaleKeyHandler.Handler = speedScaleHandlers[currentMode]
 	s.View = modeProps[currentMode].ChartInfos
+	switch currentSort {
+	case SortByName:
+		sort.Slice(s.View, func(i, j int) bool {
+			if s.View[i].MusicName == s.View[j].MusicName {
+				return s.View[i].Level < s.View[j].Level
+			}
+			return s.View[i].MusicName < s.View[j].MusicName
+		})
+	case SortByLevel:
+		sort.Slice(s.View, func(i, j int) bool {
+			if s.View[i].Level == s.View[j].Level {
+				return s.View[i].MusicName < s.View[j].MusicName
+			}
+			return s.View[i].Level < s.View[j].Level
+		})
+	}
 	s.Cursor = 0
 	s.CursorKeyHandler = NewCursorKeyHandler(&s.Cursor, len(s.View))
 	s.UpdateBackground()
@@ -75,7 +93,7 @@ func NewCursorKeyHandler(cursor *int, len int) ctrl.KeyHandler {
 	}
 }
 func (s *SceneSelect) UpdateBackground() {
-	s.Background = DefaultBackground
+	s.BackgroundDrawer.Sprite = DefaultBackground
 	if len(s.View) == 0 {
 		return
 	}
@@ -85,14 +103,14 @@ func (s *SceneSelect) UpdateBackground() {
 	info := s.View[s.Cursor]
 	sprite := NewBackground(info.BackgroundPath())
 	if sprite.IsValid() {
-		s.Background = sprite
+		s.BackgroundDrawer.Sprite = sprite
 	}
 }
 
 // Currently Chart infos are not in loop.
 // May add extra effect to box arrangement. e.g., x -= y / 5
 func (s SceneSelect) Draw(screen *ebiten.Image) {
-	s.Background.Draw(screen, nil)
+	s.BackgroundDrawer.Draw(screen)
 	viewport, cursor := s.Viewport()
 	for i := range viewport {
 		sprite := ChartItemBoxSprite
@@ -152,12 +170,16 @@ func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf(
 			"Music volume (Q/W): %.0f%%\n"+
-				"Effect volume (A/S): %.0f%%\n"+
-				"Speed (Z/X): %.0f (Exposure time: %.0fms)\n\n"+
-				"Mode (Space): %s\n",
+				"Effect volume (E/R): %.0f%%\n"+
+				"Speed (Z/X): %.0f (Exposure time: %.0fms)\n"+
+				"Brightness (O/P): %.0f%%\n\n"+
+				"Mode (Ctrl): %s\n"+
+				"Sort (Alt): %s\n",
 			MusicVolume*100, EffectVolume*100,
 			speed*100, prop.ExposureTime(speed),
-			prop.Name))
+			BackgroundBrightness*100,
+			prop.Name,
+			[]string{"by name", "by level"}[currentSort]))
 	// "Music volume (Alt+↑/↓): %.0f%%\n"+"Effect volume (Ctrl+↑/↓): %.0f%%\n"+
 	// "Speed (Ctrl+PageUp/PageDown): %.0f\n"+"(Exposure time: %.0fms)\n\n"+
 	// "Mode (Ctrl+Alt+Shift+←/→): %s\n",

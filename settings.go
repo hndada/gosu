@@ -18,11 +18,10 @@ var (
 	chartInfoBoxshrink float64 = ChartInfoBoxWidth * ChartInfoBoxShrink
 	chartItemBoxCount  int     = int(screenSizeY/ChartInfoBoxHeight) + 2 // Gives some margin.
 
-	BackgroundDimness float64 = 0.5
-	ScoreScale        float64 = 0.65
-	ScoreDigitGap     float64 = 0
-	MeterWidth        float64 = 4 // The number of pixels per 1ms.
-	MeterHeight       float64 = 50
+	ScoreScale    float64 = 0.65
+	ScoreDigitGap float64 = 0
+	MeterWidth    float64 = 4 // The number of pixels per 1ms.
+	MeterHeight   float64 = 50
 )
 
 // Todo: reset all tick-dependent variables.

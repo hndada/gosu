@@ -92,8 +92,8 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 
 	s.Skin = Skins[keyCount]
 	s.BackgroundDrawer = gosu.BackgroundDrawer{
-		Dimness: &gosu.BackgroundDimness,
-		Sprite:  gosu.DefaultBackground,
+		Brightness: &gosu.BackgroundBrightness,
+		Sprite:     gosu.DefaultBackground,
 	}
 	if bg := gosu.NewBackground(c.BackgroundPath(cpath)); bg.IsValid() {
 		s.BackgroundDrawer.Sprite = bg
@@ -257,7 +257,7 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Time())/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
-		s.SpeedScale*100, s.TransPoint.Speed/s.SpeedScale, ExposureTime(s.CurrentSpeed()),
+		s.SpeedScale*100, s.TransPoint.Speed, ExposureTime(s.CurrentSpeed()),
 		gosu.MusicVolume*100, gosu.EffectVolume*100))
 }
 
