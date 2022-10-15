@@ -32,3 +32,6 @@ go.work
 ~$gosu-ui.pptx
 
 # !/cmd/gosu/skin/*.*
+
+/cmd/web/*
+!/cmd/web/main.go
