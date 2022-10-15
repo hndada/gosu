@@ -13,9 +13,9 @@ type BoolHandler struct {
 	Value *bool
 }
 
-func (h *BoolHandler) Decrease() { h.swap() }
-func (h *BoolHandler) Increase() { h.swap() }
-func (h *BoolHandler) swap() {
+func (h BoolHandler) Decrease() { h.swap() }
+func (h BoolHandler) Increase() { h.swap() }
+func (h BoolHandler) swap() {
 	if !*h.Value {
 		*h.Value = true
 	} else {
@@ -29,13 +29,13 @@ type FloatHandler struct {
 	Unit     float64
 }
 
-func (h *FloatHandler) Decrease() {
+func (h FloatHandler) Decrease() {
 	*h.Value -= h.Unit
 	if *h.Value < h.Min {
 		*h.Value = h.Min
 	}
 }
-func (h *FloatHandler) Increase() {
+func (h FloatHandler) Increase() {
 	*h.Value += h.Unit
 	if *h.Value > h.Max {
 		*h.Value = h.Max
@@ -49,7 +49,7 @@ type IntHandler struct {
 	// Unit     int
 }
 
-func (h *IntHandler) Decrease() {
+func (h IntHandler) Decrease() {
 	*h.Value -= 1
 	if *h.Value < h.Min {
 		if h.Loop {
@@ -59,7 +59,7 @@ func (h *IntHandler) Decrease() {
 		}
 	}
 }
-func (h *IntHandler) Increase() {
+func (h IntHandler) Increase() {
 	*h.Value += 1
 	if *h.Value >= h.Max {
 		if h.Loop {
@@ -130,7 +130,7 @@ func (h *KeyHandler) Update() (set bool) {
 		h.countdown = longCountdown
 	}
 	h.active = true
-	return
+	return true
 }
 
 func (h *KeyHandler) reset() {

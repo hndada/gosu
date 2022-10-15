@@ -20,9 +20,9 @@ type ScenePlay struct {
 
 	*gosu.TransPoint
 	// SpeedHandler ctrl.F64Handler
-	Speed  float64
-	Cursor float64
-	Staged []*Note
+	SpeedScale float64
+	Cursor     float64
+	Staged     []*Note
 	gosu.Scorer
 
 	Skin             // The skin may be applied some custom settings: on/off some sprites
@@ -67,8 +67,8 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 
 	s.TransPoint = c.TransPoints[0]
 	// s.SpeedHandler = sh
-	s.Speed = 1
-	s.Cursor = float64(s.Time()) * s.Speed
+	s.SpeedScale = 1
+	s.Cursor = float64(s.Time()) * s.SpeedScale
 	s.SetSpeed()
 	s.Scorer = gosu.NewScorer(c.ScoreFactors)
 	s.JudgmentCounts = make([]int, len(Judgments))
@@ -144,7 +144,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 // Farther note has larger position. Tail's Position is always larger than Head's.
 // Need to re-calculate positions when Speed has changed.
 func (s *ScenePlay) SetSpeed() {
-	old := s.Speed
+	old := s.SpeedScale
 	new := SpeedScale // *s.SpeedHandler.Target
 	s.Cursor *= new / old
 	for _, tp := range s.Chart.TransPoints {
@@ -156,7 +156,7 @@ func (s *ScenePlay) SetSpeed() {
 	for _, b := range s.Chart.Bars {
 		b.Position *= new / old
 	}
-	s.Speed = new
+	s.SpeedScale = new
 }
 
 // Todo: apply other values of TransPoint (Volume has finished so far)
@@ -226,7 +226,7 @@ func (s *ScenePlay) Update() any {
 	// Changed speed should be applied after positions are calculated.
 	s.UpdateTransPoint()
 	s.UpdateCursor()
-	if act := SpeedKeyHandler.Update(); act {
+	if SpeedScale != s.SpeedScale {
 		s.SetSpeed()
 	}
 	return nil
@@ -251,13 +251,13 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Extra: %.2f%%)\nJudgment counts: %v\n\n"+
-			"Speed (Press 8/9): %.0f | %.0f\n(Exposure time: %.fms)\n\n",
+			"SpeedScale (Press 8/9): %.0f | %.0f\n(Exposure time: %.fms)\n\n",
 		// "Music volume (Press 1/2): %.0f%%\nEffect volume (Press 3/4): %.0f%%\n\n"+
 		// "Vsync: %v\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Time())/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
-		s.Speed*100, SpeedScale*100, ExposureTime(s.CurrentSpeed())))
+		s.SpeedScale*100, SpeedScale*100, ExposureTime(s.CurrentSpeed())))
 	// gosu.MusicVolume*100, gosu.EffectVolume*100,
 	// gosu.VsyncSwitch))
 }
@@ -265,7 +265,8 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 // 1 pixel is 1 millisecond.
 func ExposureTime(speed float64) float64  { return HitPosition / speed }
 func (s ScenePlay) Time() int64           { return s.Timer.Time }
-func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.Speed }
+func (s ScenePlay) Speed()                { s.CurrentSpeed() }
+func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.SpeedScale }
 
 // Supposes one current TransPoint can increment cursor precisely.
 func (s *ScenePlay) UpdateCursor() {
