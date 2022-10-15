@@ -18,12 +18,6 @@ const (
 	ScreenSizeY = screenSizeY
 )
 
-var (
-	TransitionSounds [2][]byte
-	ToggleSounds     [2][]byte
-	SwipeSound       []byte
-)
-
 // Skin is a set of Sprites and sounds.
 var (
 	DefaultBackground  draws.Sprite
@@ -41,17 +35,14 @@ const (
 	CursorSpriteTrail
 )
 
-func LoadGeneralSkin() {
-	for i, name := range []string{"down", "up"} {
-		path := fmt.Sprintf("skin/transition/%s.wav", name)
-		TransitionSounds[i], _ = audios.NewBytes(path)
-	}
-	for i, name := range []string{"off", "on"} {
-		path := fmt.Sprintf("skin/toggle/%s.wav", name)
-		ToggleSounds[i], _ = audios.NewBytes(path)
-	}
-	SwipeSound, _ = audios.NewBytes("skin/sound/swipe.wav")
+var (
+	SelectSound      []byte
+	SwipeSound       []byte
+	ToggleSounds     [2][]byte
+	TransitionSounds [2][]byte
+)
 
+func LoadGeneralSkin() {
 	DefaultBackground = NewBackground("skin/default-bg.jpg")
 	// Todo: cursor may have outer circle
 	names := []string{"menu-cursor", "menu-cursor-additive", "cursortrail"}
@@ -85,6 +76,16 @@ func LoadGeneralSkin() {
 		s.SetScale(ScoreScale)
 		s.SetPosition(screenSizeX, 0, draws.OriginRightTop)
 		SignSprites[i] = s
+	}
+	SelectSound, _ = audios.NewBytes("skin/sound/old/restart.wav")
+	SwipeSound, _ = audios.NewBytes("skin/sound/swipe.wav")
+	for i, name := range []string{"off", "on"} {
+		path := fmt.Sprintf("skin/sound/toggle/%s.wav", name)
+		ToggleSounds[i], _ = audios.NewBytes(path)
+	}
+	for i, name := range []string{"down", "up"} {
+		path := fmt.Sprintf("skin/sound/transition/%s.wav", name)
+		TransitionSounds[i], _ = audios.NewBytes(path)
 	}
 }
 func NewBackground(path string) draws.Sprite {

@@ -23,7 +23,6 @@ type ScenePlay struct {
 	KeyActions [2]int
 
 	*gosu.TransPoint
-	// SpeedHandler ctrl.F64Handler
 	SpeedScale         float64
 	StagedNote         *Note
 	StagedDot          *Dot
@@ -89,11 +88,10 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	if rf != nil {
 		s.KeyLogger.FetchPressed = NewReplayListener(rf, s.time)
 	}
+
 	s.TransPoint = c.TransPoints[0]
-	// s.SpeedHandler = sh
 	s.SpeedScale = 1
 	s.SetSpeed()
-
 	s.Scorer = gosu.NewScorer(c.ScoreFactors)
 	s.JudgmentCounts = make([]int, len(JudgmentCountKinds))
 	// s.FlowMarks = make([]float64, 0, c.Duration()/1000)
@@ -198,6 +196,29 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	return s, nil
 }
 
+// Farther note has larger position. Tail's Position is always larger than Head's.
+// Need to re-calculate positions when Speed has changed.
+func (s *ScenePlay) SetSpeed() {
+	c := s.Chart
+	old := s.SpeedScale
+	new := SpeedScale
+	for _, tp := range c.TransPoints {
+		tp.Speed *= new / old
+	}
+	for _, b := range c.Bars {
+		b.Speed *= new / old
+	}
+	for _, ns := range [][]*Note{c.Notes, c.Rolls, c.Shakes} {
+		for _, n := range ns {
+			n.Speed *= new / old
+		}
+	}
+	for _, n := range c.Dots { // Not a Note type.
+		n.Speed *= new / old
+	}
+	s.SpeedScale = new
+}
+
 func (s *ScenePlay) Update() any {
 	defer func() { s.Ticker(); s.time = s.Time() }()
 	if s.IsDone() {
@@ -280,7 +301,7 @@ func (s *ScenePlay) Update() any {
 		}
 		vol := s.TransPoint.Volume
 		p := audios.Context.NewPlayerFromBytes(s.SoundEffectBytes[i][size])
-		p.SetVolume(vol * 0.50) // Todo: apply Effect volume handler
+		p.SetVolume(vol * gosu.EffectVolume)
 		p.Play()
 	}
 	s.StageDrawer.Update(s.Highlight)
@@ -329,39 +350,14 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"+
 			"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
-			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Extra: %.2f%%)\nJudgment counts: %v\n\n"+
-			"SpeedScale (Press 8/9): %.0f | %.0f\n(Exposure time: %.fms)\n\n",
-		// "Music volume (Press 1/2): %.0f%%\nEffect volume (Press 3/4): %.0f%%\n\n"+
-		// "Vsync enabled: %v\n",
+			"Flow rate: %.2f%%\nAccuracy: %.2f%%\nExtra: %.2f%%\nJudgment counts: %v\n\n"+
+			"Speed scale (Z/X): %.0f (x%.2f)\n(Exposure time: %.fms)\n\n"+
+			"Music volume (Q/W): %.0f%%\nEffect volume (A/S): %.0f%%\n\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.time)/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
-		s.SpeedScale*100, SpeedScale*100, ExposureTime(s.CurrentSpeed())))
-	// gosu.MusicVolume*100, gosu.EffectVolume*100,
-	// gosu.VsyncSwitch))
-}
-
-// Farther note has larger position. Tail's Position is always larger than Head's.
-// Need to re-calculate positions when Speed has changed.
-func (s *ScenePlay) SetSpeed() {
-	c := s.Chart
-	old := s.SpeedScale
-	new := SpeedScale
-	for _, tp := range c.TransPoints {
-		tp.Speed *= new / old
-	}
-	for _, b := range c.Bars {
-		b.Speed *= new / old
-	}
-	for _, ns := range [][]*Note{c.Notes, c.Rolls, c.Shakes} {
-		for _, n := range ns {
-			n.Speed *= new / old
-		}
-	}
-	for _, n := range c.Dots { // Not a Note type.
-		n.Speed *= new / old
-	}
-	s.SpeedScale = new
+		s.SpeedScale*100, s.TransPoint.Speed/s.SpeedScale, ExposureTime(s.CurrentSpeed()),
+		gosu.MusicVolume*100, gosu.EffectVolume*100))
 }
 
 // 1 pixel is 1 millisecond.
