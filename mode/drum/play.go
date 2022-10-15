@@ -21,11 +21,10 @@ type ScenePlay struct {
 	SoundEffectBytes [2][2][]byte
 	gosu.KeyLogger
 	KeyActions [2]int
+
 	*gosu.TransPoint
 	// SpeedHandler ctrl.F64Handler
-	Speed float64
-
-	gosu.Scorer
+	SpeedScale         float64
 	StagedNote         *Note
 	StagedDot          *Dot
 	StagedShake        *Note
@@ -33,6 +32,7 @@ type ScenePlay struct {
 	StagedJudgment     gosu.Judgment // For judging big note.
 	StagedJudgmentTime int64
 	ShakeWaitingColor  int
+	gosu.Scorer
 	// WaitingKeys [2]int // For judging big note.
 	// StagedJudge  gosu.Judgment
 	// IsBigStaged bool // For judging big note.
@@ -91,7 +91,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	}
 	s.TransPoint = c.TransPoints[0]
 	// s.SpeedHandler = sh
-	s.Speed = 1
+	s.SpeedScale = 1
 	s.SetSpeed()
 
 	s.Scorer = gosu.NewScorer(c.ScoreFactors)
@@ -300,7 +300,7 @@ func (s *ScenePlay) Update() any {
 
 	// Changed speed should be applied after positions are calculated.
 	s.UpdateTransPoint()
-	if act := SpeedKeyHandler.Update(); act {
+	if SpeedScale != s.SpeedScale {
 		s.SetSpeed()
 	}
 	return nil
@@ -330,13 +330,13 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 			"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\n(Extra: %.2f%%)\nJudgment counts: %v\n\n"+
-			"Speed (Press 8/9): %.0f | %.0f\n(Exposure time: %.fms)\n\n",
+			"SpeedScale (Press 8/9): %.0f | %.0f\n(Exposure time: %.fms)\n\n",
 		// "Music volume (Press 1/2): %.0f%%\nEffect volume (Press 3/4): %.0f%%\n\n"+
 		// "Vsync enabled: %v\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.time)/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
-		s.Speed*100, SpeedScale*100, ExposureTime(s.CurrentSpeed())))
+		s.SpeedScale*100, SpeedScale*100, ExposureTime(s.CurrentSpeed())))
 	// gosu.MusicVolume*100, gosu.EffectVolume*100,
 	// gosu.VsyncSwitch))
 }
@@ -345,7 +345,7 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 // Need to re-calculate positions when Speed has changed.
 func (s *ScenePlay) SetSpeed() {
 	c := s.Chart
-	old := s.Speed
+	old := s.SpeedScale
 	new := SpeedScale
 	for _, tp := range c.TransPoints {
 		tp.Speed *= new / old
@@ -358,10 +358,10 @@ func (s *ScenePlay) SetSpeed() {
 			n.Speed *= new / old
 		}
 	}
-	for _, n := range c.Dots {
+	for _, n := range c.Dots { // Not a Note type.
 		n.Speed *= new / old
 	}
-	s.Speed = new
+	s.SpeedScale = new
 }
 
 // 1 pixel is 1 millisecond.
@@ -372,8 +372,8 @@ func ExposureTime(speedScale float64) float64 {
 func (s *ScenePlay) UpdateTransPoint() {
 	s.TransPoint = s.TransPoint.FetchByTime(s.time)
 }
-
-func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.Speed }
+func (s ScenePlay) Speed()                { s.CurrentSpeed() }
+func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.SpeedScale }
 func (s *ScenePlay) UpdateKeyActions() {
 	var hits [4]bool
 	for k := range hits {

@@ -6,7 +6,7 @@ import (
 	"github.com/hndada/gosu"
 )
 
-var SpeedKeyHandler = gosu.NewSpeedKeyHandler(&SpeedScale)
+// var SpeedKeyHandler = gosu.NewSpeedKeyHandler(&SpeedScale)
 var ModeDrum = gosu.ModeProp{
 	Name:           "Drum",
 	Mode:           gosu.ModeDrum,
@@ -15,10 +15,10 @@ var ModeDrum = gosu.ModeProp{
 	LastUpdateTime: time.Time{},                    // Zero value.
 	// Loads:          []func(){LoadSkin, LoadHandlers},
 	// SpeedHandler:   gosu.NewSpeedHandler(&SpeedScale),
-	LoadSkin:        LoadSkin,
-	SpeedScale:      &SpeedScale,
-	SpeedKeyHandler: SpeedKeyHandler,
-	NewChartInfo:    NewChartInfo,
-	NewScenePlay:    NewScenePlay,
-	ExposureTime:    ExposureTime,
+	LoadSkin:   LoadSkin,
+	SpeedScale: &SpeedScale,
+	// SpeedKeyHandler: SpeedKeyHandler,
+	NewChartInfo: NewChartInfo,
+	NewScenePlay: NewScenePlay,
+	ExposureTime: ExposureTime,
 }

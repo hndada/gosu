@@ -10,31 +10,6 @@ import (
 	"github.com/hndada/gosu/format/osu"
 )
 
-// var ModeNames = []string{"Piano4", "Piano7", "Drum", "Karaoke"}
-var ModeProps []ModeProp // Todo: make it unexported?
-
-type ModeProp struct { // Stands for Mode properties.
-	Name           string
-	Mode           int
-	ChartInfos     []ChartInfo
-	Cursor         int                 // Todo: custom chart infos - custom cursor
-	Results        map[[16]byte]Result // md5.Size = 16
-	LastUpdateTime time.Time
-	// SpeedHandler   ctrl.F64Handler
-	LoadSkin func()
-	// Skin interface{ Load() } // Todo: use this later
-	SpeedKeyHandler ctrl.KeyHandler
-	// Loads        []func()
-	SpeedScale   *float64
-	NewChartInfo func(string) (ChartInfo, error)
-	// NewScenePlay func(cpath string, rf *osr.Format, sh ctrl.F64Handler) (Scene, error)
-	NewScenePlay func(cpath string, rf *osr.Format) (Scene, error)
-	ExposureTime func(float64) float64
-}
-
-// Mode consists of main mode and sub mode.
-// For example, sub mode of Piano is Key count (with scratch mode bit adjusted).
-// const ModeUnknown = -1
 const (
 	ModeNone   = iota - 1
 	ModePiano4 // 1 to 4 Key
@@ -42,6 +17,23 @@ const (
 	ModeDrum
 	ModeKaraoke
 )
+
+// ModeProp stands for Mode properties.
+type ModeProp struct {
+	Name           string
+	Mode           int
+	ChartInfos     []ChartInfo
+	Cursor         int                 // Todo: custom chart infos - custom cursor
+	Results        map[[16]byte]Result // md5.Size = 16
+	LastUpdateTime time.Time
+	LoadSkin       func()
+	// Skin interface{ Load() } // Todo: use this later
+	SpeedKeyHandler ctrl.KeyHandler
+	SpeedScale      *float64
+	NewChartInfo    func(string) (ChartInfo, error)
+	NewScenePlay    func(cpath string, rf *osr.Format) (Scene, error)
+	ExposureTime    func(float64) float64
+}
 
 // Mode determines a mode of chart file by its path.
 func ChartFileMode(fpath string) int {

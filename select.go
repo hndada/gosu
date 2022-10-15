@@ -13,91 +13,52 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-// var SelectedChart ChartInfo
-// var (
-//
-//	Query string
-//	View  []ChartInfo
-//
-// )
-// Currently SceneSelect's Cursor has reset every play has finished.
+// SceneSelect might be created after one play at multiplayer.
+// Todo: fetch Score with Replay
+// Todo: preview music. Start at PreviewTime, keeps playing until end.
 type SceneSelect struct {
-	// ModeProps []ModeProp
-	// Mode      *int
-	// ViewQuery     string
-	View []ChartInfo // Todo: ChartInfo -> *ChartInfo?
-	// Cursor        *int
-	Cursor int
-	// CursorHandler ctrl.IntHandler
+	// Query     string
+	View             []ChartInfo // Todo: ChartInfo -> *ChartInfo?
+	Cursor           int
 	CursorKeyHandler ctrl.KeyHandler
-	// ModeHandler   ctrl.IntHandler
+	// board       draws.Box
 
 	Background  draws.Sprite  // Todo: BackgroundDrawer with some effects
 	MusicPlayer *audio.Player // Todo: Rewind after preview has finished.
 	MusicCloser io.Closer
-	// board       draws.Box
-	// MultiMode   int
 }
 
-// const (
-// 	MultiModeNone = iota
-// 	MultiMode
-// )
-
-// Todo: Score / Replay fetch
-// Todo: preview music. Start at PreviewTime, keeps playing until end.
-// func NewSceneSelect(modes []ModeProp, mode *int) *SceneSelect {
-// SceneSelect should be created every play has done considering multiplay.
 func NewSceneSelect() *SceneSelect {
-	s := new(SceneSelect)
-	// s.ModeHandler = NewModeHandler(s.Mode, len(modes))
+	s := &SceneSelect{}
 	s.UpdateMode()
-	// ebiten.SetWindowTitle("gosu")
 	return s
 }
 func (s *SceneSelect) Update() any {
-	// Todo: refactor it
-	// if act := VsyncSwitchHandler.Update(); act {
-	// 	if *VsyncSwitchHandler.Target {
-	// 		ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
-	// 	} else {
-	// 		ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
-	// 	}
-	// }
-	if act := ModeKeyHandler.Update(); act {
+	if set := ModeKeyHandler.Update(); set {
 		s.UpdateMode()
 	}
-	if act := s.CursorKeyHandler.Update(); act {
+	if set := s.CursorKeyHandler.Update(); set {
 		s.UpdateBackground()
 	}
-	prop := ModeProps[CurrentMode]
-	prop.SpeedKeyHandler.Update()
-	// s.ModeProps[*s.Mode].SpeedHandler.Update()
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsKeyPressed(ebiten.KeyNumpadEnter) {
 		// Sounds.Play("restart")
-		// cursor := s.ModeProps[*s.Mode].Cursor
-		// info := s.ModeProps[*s.Mode].ChartInfos[cursor]
+		prop := modeProps[currentMode]
 		info := prop.ChartInfos[s.Cursor]
-
-		// b, err := os.ReadFile("replay/MuangMuangE - cillia - Ringo Uri no Utakata Shoujo [Ringo Oni] (2019-06-14) Taiko-1.osr")
-		// if err != nil {
-		// 	panic(err)
-		// }
-		// replay, err := osr.Parse(b)
-		// if err != nil {
-		// 	panic(err)
-		// }
 		return SelectToPlayArgs{
-			Path: info.Path,
-			// Mode: *s.Mode, // Todo: duplicated. Should it be removed?
-			// Replay:       replay,
-			Replay: nil,
-			// SpeedHandler: s.ModeProps[*s.Mode].SpeedHandler,
+			Path:   info.Path,
+			Replay: nil, // replay,
 		}
 	}
 	return nil
 }
 
+func (s *SceneSelect) UpdateMode() {
+	SpeedScaleKeyHandler.Handler = speedScaleHandlers[currentMode]
+	s.View = modeProps[currentMode].ChartInfos
+	s.Cursor = 0
+	s.CursorKeyHandler = NewCursorKeyHandler(&s.Cursor, len(s.View))
+	s.UpdateBackground()
+}
 func NewCursorKeyHandler(cursor *int, len int) ctrl.KeyHandler {
 	return ctrl.KeyHandler{
 		Handler: &ctrl.IntHandler{
@@ -111,20 +72,6 @@ func NewCursorKeyHandler(cursor *int, len int) ctrl.KeyHandler {
 		Sounds:    [2][]byte{SwipeSound, SwipeSound},
 	}
 }
-
-//	func (s *SceneSelect) UpdateMode() {
-//		s.View = s.ModeProps[*s.Mode].ChartInfos
-//		s.Cursor = &s.ModeProps[*s.Mode].Cursor
-//		s.CursorHandler = NewCursorHandler(&s.ModeProps[*s.Mode].Cursor, len(s.View))
-//		s.UpdateBackground()
-//	}
-func (s *SceneSelect) UpdateMode() {
-	s.View = ModeProps[CurrentMode].ChartInfos
-	// s.Cursor = &ModeProps[CurrentMode].Cursor
-	s.CursorKeyHandler = NewCursorKeyHandler(&s.Cursor, len(s.View))
-	s.UpdateBackground()
-}
-
 func (s *SceneSelect) UpdateBackground() {
 	s.Background = DefaultBackground
 	if len(s.View) == 0 {
@@ -173,7 +120,7 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		text.Draw(screen, t, Face12, x, y+int(offset), color.Black)
 		// text.Draw(screen, t, basicfont.Face7x13, x, y+int(offset), color.Black)
 	}
-	s.View[cursor].NewChartBoard().Draw(screen, ebiten.DrawImageOptions{}, draws.Point{})
+	// s.View[cursor].NewChartBoard().Draw(screen, ebiten.DrawImageOptions{}, draws.Point{})
 	s.DebugPrint(screen)
 }
 func (s SceneSelect) Viewport() ([]ChartInfo, int) {
@@ -196,19 +143,20 @@ func (s SceneSelect) Viewport() ([]ChartInfo, int) {
 	}
 	return viewport, cursor
 }
+
 func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
-	// mode := s.ModeProps[*s.Mode]
-	prop := ModeProps[CurrentMode]
+	prop := modeProps[currentMode]
 	speed := *prop.SpeedScale
 	ebitenutil.DebugPrint(screen,
-		fmt.Sprintf("Music volume (Alt+↑/↓): %.0f%%\n"+"Effect volume (Ctrl+↑/↓): %.0f%%\n"+
-			// "Vsync enabled (Press 5): %v\n"+
-			"Speed (Ctrl+PageUp/PageDown): %.0f\n"+"(Exposure time: %.0fms)\n\n"+
-			"Mode (Ctrl+Alt+Shift+←/→): %s\n",
-			// "Chart info index: %d\n",
+		fmt.Sprintf(
+			"Music volume (Q/W): %.0f%%\n"+
+				"Effect volume (A/S): %.0f%%\n"+
+				"Speed (Z/X): %.0f (Exposure time: %.0fms)\n\n"+
+				"Mode (Space): %s\n",
 			MusicVolume*100, EffectVolume*100,
-			// VsyncSwitch,
 			speed*100, prop.ExposureTime(speed),
 			prop.Name))
-	// s.Cursor))
+	// "Music volume (Alt+↑/↓): %.0f%%\n"+"Effect volume (Ctrl+↑/↓): %.0f%%\n"+
+	// "Speed (Ctrl+PageUp/PageDown): %.0f\n"+"(Exposure time: %.0fms)\n\n"+
+	// "Mode (Ctrl+Alt+Shift+←/→): %s\n",
 }
