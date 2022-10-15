@@ -15,6 +15,11 @@ func NewPlayer(path string) (*audio.Player, func() error, error) {
 	}
 	return p, closer, err
 }
+func PlayEffect(src []byte, vol float64) {
+	p := Context.NewPlayerFromBytes(src)
+	p.SetVolume(vol)
+	p.Play()
+}
 
 // func NewStreamer(path string) (io.ReadSeeker, func() error, error) {
 // 	s, closer, err := decode(path)

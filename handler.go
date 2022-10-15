@@ -28,14 +28,15 @@ func LoadHandlers(props []ModeProp) {
 	modeHandler = ctrl.IntHandler{
 		Value: &currentMode,
 		Min:   0,
-		Max:   len(props),
+		Max:   len(props) - 1,
 		Loop:  true,
 	}
 	ModeKeyHandler = ctrl.KeyHandler{
 		Handler:   modeHandler,
 		Modifiers: []ebiten.Key{},
-		Keys:      [2]ebiten.Key{ebiten.Key0, ebiten.KeySpace}, // Todo: remove Key0
-		// Sounds:    [2][]byte{},
+		Keys:      [2]ebiten.Key{ebiten.Key0, ebiten.KeySpace},
+		Sounds:    [2][]byte{SwipeSound, SwipeSound},
+		Volume:    &EffectVolume,
 	}
 
 	musicVolumeHandler = ctrl.FloatHandler{
@@ -48,7 +49,8 @@ func LoadHandlers(props []ModeProp) {
 		Handler:   musicVolumeHandler,
 		Modifiers: []ebiten.Key{},
 		Keys:      [2]ebiten.Key{ebiten.KeyQ, ebiten.KeyW},
-		// Sounds:    [2][]byte{},
+		Sounds:    [2][]byte{ToggleSounds[0], ToggleSounds[1]},
+		Volume:    &EffectVolume,
 	}
 	effectVolumeHandler = ctrl.FloatHandler{
 		Value: &EffectVolume,
@@ -60,7 +62,8 @@ func LoadHandlers(props []ModeProp) {
 		Handler:   effectVolumeHandler,
 		Modifiers: []ebiten.Key{},
 		Keys:      [2]ebiten.Key{ebiten.KeyA, ebiten.KeyS},
-		// Sounds:    [2][]byte{},
+		Sounds:    [2][]byte{ToggleSounds[0], ToggleSounds[1]},
+		Volume:    &EffectVolume,
 	}
 
 	speedScaleHandlers = make([]ctrl.FloatHandler, len(props))
@@ -76,6 +79,7 @@ func LoadHandlers(props []ModeProp) {
 		Handler:   speedScaleHandlers[currentMode],
 		Modifiers: []ebiten.Key{},
 		Keys:      [2]ebiten.Key{ebiten.KeyZ, ebiten.KeyX},
-		// Sounds:    [2][]byte{},
+		Sounds:    [2][]byte{TransitionSounds[0], TransitionSounds[1]},
+		Volume:    &EffectVolume,
 	}
 }

@@ -2,6 +2,7 @@ package ctrl
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/audios"
 )
 
 type Handler interface {
@@ -50,33 +51,26 @@ type IntHandler struct {
 }
 
 func (h IntHandler) Decrease() {
-	*h.Value -= 1
+	*h.Value--
 	if *h.Value < h.Min {
 		if h.Loop {
-			*h.Value = h.Max - 1
+			*h.Value = h.Max
 		} else {
 			*h.Value = h.Min
 		}
 	}
 }
 func (h IntHandler) Increase() {
-	*h.Value += 1
-	if *h.Value >= h.Max {
+	*h.Value++
+	if *h.Value > h.Max {
 		if h.Loop {
 			*h.Value = h.Min
 		} else {
-			*h.Value = h.Max - 1
+			*h.Value = h.Max
 		}
 	}
 }
 
-// const (
-//
-//	KeyIndexNone = iota // - 1
-//	KeyIndexDecrease
-//	KeyIndexIncrease
-//
-// )
 const (
 	None = iota - 1
 	Decrease
@@ -88,6 +82,7 @@ type KeyHandler struct {
 	Modifiers []ebiten.Key // Handler works only when all Modifier are pressed.
 	Keys      [2]ebiten.Key
 	Sounds    [2][]byte // Todo: implement
+	Volume    *float64
 
 	holdIndex int
 	// holdKey   ebiten.Key
@@ -121,8 +116,10 @@ func (h *KeyHandler) Update() (set bool) {
 		return
 	case Decrease:
 		h.Decrease()
+		audios.PlayEffect(h.Sounds[0], *h.Volume)
 	case Increase:
 		h.Increase()
+		audios.PlayEffect(h.Sounds[1], *h.Volume)
 	}
 	if h.active {
 		h.countdown = shortCountdown

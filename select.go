@@ -9,6 +9,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text"
+	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 )
@@ -41,7 +42,7 @@ func (s *SceneSelect) Update() any {
 		s.UpdateBackground()
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsKeyPressed(ebiten.KeyNumpadEnter) {
-		// Sounds.Play("restart")
+		audios.PlayEffect(SelectSound, EffectVolume)
 		prop := modeProps[currentMode]
 		info := prop.ChartInfos[s.Cursor]
 		return SelectToPlayArgs{
@@ -64,12 +65,13 @@ func NewCursorKeyHandler(cursor *int, len int) ctrl.KeyHandler {
 		Handler: &ctrl.IntHandler{
 			Value: cursor,
 			Min:   0,
-			Max:   len,
+			Max:   len - 1,
 			Loop:  true,
 		},
 		Modifiers: []ebiten.Key{},
 		Keys:      [2]ebiten.Key{ebiten.KeyUp, ebiten.KeyDown},
 		Sounds:    [2][]byte{SwipeSound, SwipeSound},
+		Volume:    &EffectVolume,
 	}
 }
 func (s *SceneSelect) UpdateBackground() {

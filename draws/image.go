@@ -10,7 +10,10 @@ import (
 
 // NewImage returns nil when fails to load image from the path.
 func NewImage(path string) *ebiten.Image {
-	return ebiten.NewImageFromImage(NewImageImage(path))
+	if i := NewImageImage(path); i != nil {
+		return ebiten.NewImageFromImage(i)
+	}
+	return nil
 }
 
 // NewImageImage returns image.Image.
@@ -26,20 +29,6 @@ func NewImageImage(path string) image.Image {
 	}
 	return src
 }
-
-// // This is for when image.Image is needed
-// func NewImageSrc(path string) image.Image {
-// 	f, err := os.Open(path)
-// 	if err != nil {
-// 		return nil
-// 	}
-// 	defer f.Close()
-// 	src, _, err := image.Decode(f)
-// 	if err != nil {
-// 		return nil
-// 	}
-// 	return src
-// }
 
 func NewXFlippedImage(i *ebiten.Image) *ebiten.Image {
 	w, h := i.Size()
