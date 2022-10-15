@@ -11,7 +11,7 @@ import (
 )
 
 func SetTitle(c ChartHeader) {
-	title := fmt.Sprintf("gosu - %s - [%s]", c.MusicName, c.ChartName)
+	title := fmt.Sprintf("gosu | %s - %s [%s] (%s) ", c.Artist, c.MusicName, c.ChartName, c.Charter)
 	ebiten.SetWindowTitle(title)
 }
 

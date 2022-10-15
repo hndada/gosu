@@ -26,7 +26,13 @@ type ChartInfo struct {
 }
 
 func (c ChartInfo) Text() string {
-	return fmt.Sprintf("(%dK Lv %.1f) %s [%s]", c.SubMode, c.Level, c.MusicName, c.ChartName)
+	switch c.Mode {
+	case ModePiano4, ModePiano7:
+		return fmt.Sprintf("(%dK Level %3.1f) %s [%s]", c.SubMode, c.Level, c.MusicName, c.ChartName)
+	case ModeDrum:
+		return fmt.Sprintf("(Level %3.1f) %s [%s]", c.Level, c.MusicName, c.ChartName)
+	}
+	return ""
 }
 func (c ChartInfo) BackgroundPath() string {
 	return c.ChartHeader.BackgroundPath(c.Path)

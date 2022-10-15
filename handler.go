@@ -7,21 +7,34 @@ import (
 
 var (
 	currentMode int
+	currentSort int
 
-	MusicVolume  float64 = 0.25
-	EffectVolume float64 = 0.25
+	MusicVolume          float64 = 0.25
+	EffectVolume         float64 = 0.25
+	BackgroundBrightness float64 = 0.6
 )
 var (
 	modeHandler    ctrl.IntHandler
 	ModeKeyHandler ctrl.KeyHandler
+	sortHandler    ctrl.IntHandler
+	SortKeyHandler ctrl.KeyHandler
 
 	musicVolumeHandler     ctrl.FloatHandler
 	MusicVolumeKeyHandler  ctrl.KeyHandler
 	effectVolumeHandler    ctrl.FloatHandler
 	EffectVolumeKeyHandler ctrl.KeyHandler
 
+	brightHandler    ctrl.FloatHandler
+	BrightKeyHandler ctrl.KeyHandler
+)
+var (
 	speedScaleHandlers   []ctrl.FloatHandler
 	SpeedScaleKeyHandler ctrl.KeyHandler
+)
+
+const (
+	SortByName = iota
+	SortByLevel
 )
 
 func LoadHandlers(props []ModeProp) {
@@ -34,7 +47,20 @@ func LoadHandlers(props []ModeProp) {
 	ModeKeyHandler = ctrl.KeyHandler{
 		Handler:   modeHandler,
 		Modifiers: []ebiten.Key{},
-		Keys:      [2]ebiten.Key{ebiten.Key0, ebiten.KeySpace},
+		Keys:      [2]ebiten.Key{ebiten.KeyControlLeft, ebiten.KeyControlLeft},
+		Sounds:    [2][]byte{SwipeSound, SwipeSound},
+		Volume:    &EffectVolume,
+	}
+	sortHandler = ctrl.IntHandler{
+		Value: &currentSort,
+		Min:   0,
+		Max:   1,
+		Loop:  true,
+	}
+	SortKeyHandler = ctrl.KeyHandler{
+		Handler:   sortHandler,
+		Modifiers: []ebiten.Key{},
+		Keys:      [2]ebiten.Key{ebiten.KeyAltLeft, ebiten.KeyAltLeft},
 		Sounds:    [2][]byte{SwipeSound, SwipeSound},
 		Volume:    &EffectVolume,
 	}
@@ -61,7 +87,21 @@ func LoadHandlers(props []ModeProp) {
 	EffectVolumeKeyHandler = ctrl.KeyHandler{
 		Handler:   effectVolumeHandler,
 		Modifiers: []ebiten.Key{},
-		Keys:      [2]ebiten.Key{ebiten.KeyA, ebiten.KeyS},
+		Keys:      [2]ebiten.Key{ebiten.KeyE, ebiten.KeyR},
+		Sounds:    [2][]byte{ToggleSounds[0], ToggleSounds[1]},
+		Volume:    &EffectVolume,
+	}
+
+	brightHandler = ctrl.FloatHandler{
+		Value: &BackgroundBrightness,
+		Min:   0,
+		Max:   1,
+		Unit:  0.1,
+	}
+	BrightKeyHandler = ctrl.KeyHandler{
+		Handler:   brightHandler,
+		Modifiers: []ebiten.Key{},
+		Keys:      [2]ebiten.Key{ebiten.KeyO, ebiten.KeyP},
 		Sounds:    [2][]byte{ToggleSounds[0], ToggleSounds[1]},
 		Volume:    &EffectVolume,
 	}

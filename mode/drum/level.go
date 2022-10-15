@@ -37,7 +37,7 @@ func (c Chart) Difficulties() []float64 {
 	)
 	for _, n := range c.Notes {
 		for n.Time >= int64(i+1)*sectionDuration {
-			ds[i] = d
+			ds[i] += d
 			d = 0
 			i++
 		}
@@ -47,7 +47,7 @@ func (c Chart) Difficulties() []float64 {
 
 	for _, n := range c.Dots {
 		for n.Time >= int64(i+1)*sectionDuration {
-			ds[i] = d
+			ds[i] += d
 			d = 0
 			i++
 		}
@@ -57,7 +57,7 @@ func (c Chart) Difficulties() []float64 {
 
 	for _, n := range c.Shakes {
 		for n.Time >= int64(i+1)*sectionDuration {
-			ds[i] = d
+			ds[i] += d
 			d = 0
 			i++
 		}
