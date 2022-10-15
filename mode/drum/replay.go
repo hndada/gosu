@@ -1,17 +1,20 @@
 package drum
 
-import "github.com/hndada/gosu/format/osr"
+import (
+	"github.com/hndada/gosu"
+	"github.com/hndada/gosu/format/osr"
+)
 
 // ReplayListener supposes closure function is called every 1 ms.
 // ReplayListener supposes the first the time of replay data is 0ms and no any inputs.
 // Todo: Make sure to ReplayListener time is independent of Game's update tick
-func NewReplayListener(f *osr.Format, waitBefore int64) func() []bool {
+func NewReplayListener(f *osr.Format, timer *gosu.Timer) func() []bool {
 	actions := append(f.ReplayData, osr.Action{W: 2e9})
+
 	var i int
-	var t = waitBefore
 	var next int64 = actions[0].W + actions[1].W // +1
 	return func() []bool {
-		for t >= next { // There might be negative values on actions in a row.
+		for timer.Time() >= next { // There might be negative values on actions in a row.
 			i++
 			next += actions[i+1].W
 		}
@@ -22,7 +25,6 @@ func NewReplayListener(f *osr.Format, waitBefore int64) func() []bool {
 				pressed[k] = true
 			}
 		}
-		t++
 		return pressed
 	}
 }
