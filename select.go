@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image/color"
 	"io"
-	"os"
 	"sort"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -48,15 +47,15 @@ func (s *SceneSelect) Update() any {
 		audios.PlayEffect(SelectSound, EffectVolume)
 		prop := modeProps[currentMode]
 		info := prop.ChartInfos[s.Cursor]
-		// var replay *osr.Format
-		b, err := os.ReadFile("replay/mekkadosu! - Doubutsu Biscuits x PPP - Youkoso JAPARI PARK e (TV size ver.) [Muzukashii] (2022-10-15) Taiko.osr")
-		if err != nil {
-			panic(err)
-		}
-		replay, err := osr.Parse(b)
-		if err != nil {
-			panic(err)
-		}
+		var replay *osr.Format
+		// b, err := os.ReadFile("replay/MuangMuangE - Doubutsu Biscuits x PPP - Youkoso JAPARI PARK e (TV size ver.) [Muzukashii] (2019-05-15) Taiko.osr")
+		// if err != nil {
+		// 	panic(err)
+		// }
+		// replay, err := osr.Parse(b)
+		// if err != nil {
+		// 	panic(err)
+		// }
 		return SelectToPlayArgs{
 			Path:   info.Path,
 			Replay: replay,

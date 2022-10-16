@@ -235,22 +235,25 @@ func (s *ScenePlay) Update() any {
 		judgment gosu.Judgment
 		big      bool
 	)
-	if s.StagedJudgment.Window != 0 {
+	if s.StagedJudgment.Valid() {
 		n := s.StagedNote
 		j := s.StagedJudgment
 		jTime := s.StagedJudgmentTime
 
 		flush := false
-		if s.KeyActions[n.Color] == Regular || IsOtherColorHit(s.KeyActions, n.Color) {
-			flush = true
-		}
-		if td := n.Time - s.Now; td < -Miss.Window {
+		if IsOtherColorHit(s.KeyActions, n.Color) { // s.KeyActions[n.Color] == Regular ||
 			flush = true
 		}
 		if td := jTime - s.Now; td < -MaxBigHitDuration {
 			flush = true
 		}
+		if td := n.Time - s.Now; td < -Miss.Window {
+			flush = true
+		}
 		if flush {
+			for _, key := range [][]int{{1, 2}, {0, 3}}[n.Color] {
+				s.LastHitTimes[key] = -gosu.Wait
+			}
 			td := n.Time - jTime
 			s.MarkNote(n, j, false)
 			s.MeterDrawer.AddMark(int(td), 0)
@@ -270,6 +273,9 @@ func (s *ScenePlay) Update() any {
 				s.MeterDrawer.AddMark(int(td), 0)
 				judgment = j
 				big = b
+				if s.StagedJudgment.Valid() {
+					s.StagedJudgment = gosu.Judgment{}
+				}
 			}
 		}
 	}
