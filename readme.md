@@ -1,6 +1,6 @@
-# gosu (private)
+# gosu
 
-A classic rhythm game written in go
+A classic rhythm game written in go with ebitengine
 
 # How to play
 Change the mode with `Ctrl`
@@ -45,18 +45,18 @@ Drum:  S, D, J, K
     * You can try it right now with changing value at `settings.go` and build. 
 
 * Effective score and level system (originally designed)
-  * The motivation of gosu dev
+  * The motivation of gosu dev.
   * Tried to make feel score and actual performance are related.
-  * Level calculation is currently primitive 
-    * Will be exquisite in a short time 
+  * Level calculation is currently naive.
+    * Will be exquisite in a short time.
 
 * Quick input supported (1ms)
   * *Hook* is used in `Windows`.
   * Others is currently depending on `ebiten.IsKeyPressed` .
 
 * Codebase with high readability
-  * Super-fast in loading files and playing
-  * Fairly scalable for future work
+  * Super-fast in loading files and playing.
+  * Fairly scalable for future work.
 
 # Build
 Go to root directory of the repository first. 
