@@ -19,7 +19,7 @@ const (
 	One NoteKind = iota
 	Two
 	Mid
-	Tip
+	Tip = Mid
 )
 
 var NoteKindsMap = map[int][]NoteKind{
@@ -85,14 +85,14 @@ func LoadSkin() {
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fmt.Sprintf("skin/combo/%d.png", i))
 		s.SetScale(ComboScale)
-		s.SetPosition(screenSizeX/2, ComboPosition, draws.OriginCenterMiddle)
+		s.SetPosition(FieldPosition, ComboPosition, draws.OriginCenterMiddle)
 		GeneralSkin.ComboSprites[i] = s
 	}
 	GeneralSkin.JudgmentSprites = make([]draws.Sprite, 5)
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
 		s := draws.NewSprite(fmt.Sprintf("skin/piano/judgment/%s.png", name))
 		s.SetScale(JudgmentScale)
-		s.SetPosition(screenSizeX/2, JudgmentPosition, draws.OriginCenterMiddle)
+		s.SetPosition(FieldPosition, JudgmentPosition, draws.OriginCenterMiddle)
 		GeneralSkin.JudgmentSprites[i] = s
 	}
 
@@ -146,7 +146,7 @@ func LoadSkin() {
 		for _, kind := range noteKinds {
 			wsum += math.Ceil(noteWidths[kind])
 		}
-		x := screenSizeX/2 - wsum/2
+		x := FieldPosition - wsum/2
 		for k, kind := range noteKinds {
 			w := math.Ceil(noteWidths[kind])
 			{
@@ -201,7 +201,7 @@ func LoadSkin() {
 			src := ebiten.NewImage(int(wsum), screenSizeY)
 			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
 			s := draws.NewSpriteFromImage(src)
-			s.SetPosition(screenSizeX/2, 0, draws.OriginCenterTop)
+			s.SetPosition(FieldPosition, 0, draws.OriginCenterTop)
 			skin.FieldSprite = s
 		}
 		{
@@ -209,14 +209,14 @@ func LoadSkin() {
 			scaleW := wsum / s.W()
 			scaleH := HintHeight / s.H()
 			s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
-			s.SetPosition(screenSizeX/2, HitPosition-HintHeight, draws.OriginCenterTop)
+			s.SetPosition(FieldPosition, HitPosition-HintHeight, draws.OriginCenterTop)
 			skin.HintSprite = s
 		}
 		{
 			src := ebiten.NewImage(int(wsum), 1)
 			src.Fill(color.NRGBA{255, 255, 255, 255}) // White
 			s := draws.NewSpriteFromImage(src)
-			s.SetPosition(screenSizeX/2, HitPosition, draws.OriginCenterBottom)
+			s.SetPosition(FieldPosition, HitPosition, draws.OriginCenterBottom)
 			skin.BarSprite = s
 		}
 		Skins[keyCount] = skin

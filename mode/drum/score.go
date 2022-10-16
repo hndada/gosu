@@ -45,7 +45,37 @@ var JudgmentCountKinds = []string{
 // When one side of judgment is Cool, Good on the other hand, overall judgment of Big note goes Good.
 // In other word, to get Cool at Big note, you have to hit it Cool with both sides.
 // Todo: judge for Big note when judgment goes different depending on selecting 2 key actions
-const BigHitTimeDifferenceBound = 20
+const MaxBigHitDuration = 20
+
+func (s *ScenePlay) UpdateKeyActions() {
+	var hits [4]bool
+	for k := range hits {
+		hits[k] = s.KeyLogger.KeyAction(k) == input.Hit
+	}
+	for color, keys := range [][]int{{1, 2}, {0, 3}} {
+		if hits[keys[0]] || hits[keys[1]] {
+			if hits[keys[0]] && s.Now-s.LastHitTimes[keys[1]] < MaxBigHitDuration ||
+				hits[keys[1]] && s.Now-s.LastHitTimes[keys[0]] < MaxBigHitDuration {
+				s.KeyActions[color] = Big
+			} else {
+				s.KeyActions[color] = Regular
+			}
+			s.KeyActions[color] = Regular
+		} else {
+			s.KeyActions[color] = SizeNone
+		}
+	}
+	for k, hit := range hits {
+		if hit {
+			s.LastHitTimes[k] = s.Now
+		}
+	}
+	// for color, a := range s.KeyActions {
+	// 	if a != SizeNone {
+	// 		fmt.Printf("%d: %s at color %s\n", s.time, []string{"regular", "hit"}[a], []string{"red", "blue"}[color])
+	// 	}
+	// }
+}
 
 func IsColorHit(actions [2]int, color int) bool {
 	return actions[color] != SizeNone

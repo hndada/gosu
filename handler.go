@@ -10,7 +10,7 @@ var (
 	currentSort int
 
 	MusicVolume          float64 = 0.25
-	EffectVolume         float64 = 0.25
+	EffectVolume         float64 = 0 // 0.25
 	BackgroundBrightness float64 = 0.6
 )
 var (

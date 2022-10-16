@@ -2,6 +2,7 @@ package drum
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -9,16 +10,14 @@ import (
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
-	"github.com/hndada/gosu/input"
 )
 
-// No custom hitsound at Drum mode.
 type ScenePlay struct {
 	Chart *Chart
 	gosu.Timer
-	time int64 // Just a cache.
+	// time int64 // Just a cache.
 	gosu.MusicPlayer
-	SoundEffectBytes [2][2][]byte
+	SoundEffectBytes [2][2][]byte // No custom hitsound at Drum mode.
 	gosu.KeyLogger
 	KeyActions [2]int
 
@@ -32,9 +31,6 @@ type ScenePlay struct {
 	StagedJudgmentTime int64
 	ShakeWaitingColor  int
 	gosu.Scorer
-	// WaitingKeys [2]int // For judging big note.
-	// StagedJudge  gosu.Judgment
-	// IsBigStaged bool // For judging big note.
 
 	// Skin may be applied some custom settings: on/off some sprites
 	Skin
@@ -54,8 +50,6 @@ type ScenePlay struct {
 	MeterDrawer  gosu.MeterDrawer
 }
 
-func (s ScenePlay) Time() int64 { return s.Timer.Time() }
-
 // Todo: actual auto replay generator for gimmick charts
 // Todo: support mods: show Piano's ScenePlay during Drum's ScenePlay
 func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
@@ -67,8 +61,6 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	c := s.Chart
 	gosu.SetTitle(c.ChartHeader)
 	s.Timer = gosu.NewTimer(c.Duration())
-	// s.SetTicks(c.Duration())
-	s.time = s.Time()
 	if path, ok := c.MusicPath(cpath); ok {
 		s.MusicPlayer, err = gosu.NewMusicPlayer(path) //(gosu.MusicVolumeHandler, path)
 		if err != nil {
@@ -131,7 +123,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		HintSprites: s.HintSprites,
 	}
 	s.BarDrawer = BarDrawer{
-		Time:   s.time,
+		Time:   s.Now,
 		Bars:   c.Bars,
 		Sprite: s.BarSprite,
 	}
@@ -142,13 +134,13 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		Sprites: s.JudgmentSprites,
 	}
 	s.ShakeDrawer = ShakeDrawer{
-		Time:         s.time,
+		Time:         s.Now,
 		Staged:       s.StagedShake,
 		BorderSprite: s.ShakeBorderSprite,
 		ShakeSprite:  s.ShakeSprite,
 	}
 	s.RollDrawer = RollDrawer{
-		Time:        s.time,
+		Time:        s.Now,
 		Rolls:       c.Rolls,
 		Dots:        c.Dots,
 		HeadSprites: s.HeadSprites,
@@ -157,7 +149,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		DotSprite:   s.DotSprite,
 	}
 	s.NoteDrawer = NoteDarwer{
-		Time:        s.time,
+		Time:        s.Now,
 		Notes:       c.Notes,
 		Rolls:       c.Rolls,
 		Shakes:      c.Shakes,
@@ -165,7 +157,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	}
 	for i, sprites := range s.OverlaySprites {
 		s.NoteDrawer.OverlayDrawers[i] = draws.AnimationDrawer{
-			Time:      s.time,
+			Time:      s.Now,
 			Duration:  int64(60000 / ScaledBPM(s.BPM)),
 			StartTime: s.TransPoint.Time,
 			Sprites:   sprites,
@@ -176,7 +168,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		Field:        s.KeyFieldSprite,
 		Keys:         s.KeySprites,
 	}
-	s.DancerDrawer.AnimationEndTime = s.time
+	s.DancerDrawer.AnimationEndTime = s.Now
 	if s.Highlight {
 		s.DancerDrawer.Mode = DancerHigh
 	}
@@ -221,17 +213,19 @@ func (s *ScenePlay) SetSpeed() {
 }
 
 func (s *ScenePlay) Update() any {
-	// defer func() { s.Ticker(); s.time = s.Time() }()
-	defer func() { s.time = s.Time() }()
+	defer s.Ticker()
 	if s.IsDone() {
 		s.MusicPlayer.Close()
 		return gosu.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
 	}
-	if s.time == 0 {
+	if s.Now == 0 {
 		s.MusicPlayer.Play()
 	}
+	if s.Now == 150 {
+		s.MusicPlayer.Player.Seek(time.Duration(s.Now) * time.Millisecond)
+	}
 	s.MusicPlayer.Update()
-	// fmt.Printf("game: %dms music: %s\n", s.Time(), s.MusicPlayer.Player.Current())
+	// fmt.Printf("game: %dms music: %s\n", s.Now, s.MusicPlayer.Player.Current())
 
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
@@ -241,27 +235,36 @@ func (s *ScenePlay) Update() any {
 		judgment gosu.Judgment
 		big      bool
 	)
-	if j := s.StagedJudgment; j.Window != 0 {
+	if s.StagedJudgment.Window != 0 {
 		n := s.StagedNote
-		td1 := s.StagedNote.Time - s.time
-		td2 := s.StagedJudgmentTime - s.time
-		td3 := s.StagedNote.Time - s.StagedJudgmentTime
-		if td1 < -Miss.Window || td2 < -BigHitTimeDifferenceBound ||
-			s.KeyActions[n.Color] == Regular ||
-			IsOtherColorHit(s.KeyActions, n.Color) {
-			s.MarkNote(n, s.StagedJudgment, false)
-			s.MeterDrawer.AddMark(int(td3), 0)
+		j := s.StagedJudgment
+		jTime := s.StagedJudgmentTime
+
+		flush := false
+		if s.KeyActions[n.Color] == Regular || IsOtherColorHit(s.KeyActions, n.Color) {
+			flush = true
+		}
+		if td := n.Time - s.Now; td < -Miss.Window {
+			flush = true
+		}
+		if td := jTime - s.Now; td < -MaxBigHitDuration {
+			flush = true
+		}
+		if flush {
+			td := n.Time - jTime
+			s.MarkNote(n, j, false)
+			s.MeterDrawer.AddMark(int(td), 0)
 			judgment = j
 			big = false
 			s.StagedJudgment = gosu.Judgment{}
 		}
 	}
 	if n := s.StagedNote; n != nil {
-		td := n.Time - s.time // A negative value means late hit.
+		td := n.Time - s.Now // A negative value means late hit.
 		if j, b := VerdictNote(n, s.KeyActions, td); j.Window != 0 {
 			if n.Size == Big && !b {
 				s.StagedJudgment = j
-				s.StagedJudgmentTime = s.time
+				s.StagedJudgmentTime = s.Now
 			} else {
 				s.MarkNote(n, j, b)
 				s.MeterDrawer.AddMark(int(td), 0)
@@ -271,7 +274,7 @@ func (s *ScenePlay) Update() any {
 		}
 	}
 	if n := s.StagedDot; n != nil {
-		td := n.Time - s.time
+		td := n.Time - s.Now
 		if marked := VerdictDot(n, s.KeyActions, td); marked != DotReady {
 			s.MarkDot(n, marked)
 			s.MeterDrawer.AddMark(int(td), 1)
@@ -282,10 +285,10 @@ func (s *ScenePlay) Update() any {
 		if n == nil {
 			return
 		}
-		if t := n.Time - s.time; t > 0 {
+		if t := n.Time - s.Now; t > 0 {
 			return
 		}
-		if t := n.Time + n.Duration - s.time; t < 0 {
+		if t := n.Time + n.Duration - s.Now; t < 0 {
 			s.MarkShake(n, true)
 			return
 		}
@@ -307,15 +310,15 @@ func (s *ScenePlay) Update() any {
 		p.Play()
 	}
 	s.StageDrawer.Update(s.Highlight)
-	s.BarDrawer.Update(s.time)
+	s.BarDrawer.Update(s.Now)
 	s.JudgmentDrawer.Update(judgment, big)
 
-	s.ShakeDrawer.Update(s.time, s.StagedShake)
-	s.RollDrawer.Update(s.time)
-	s.NoteDrawer.Update(s.time, s.BPM)
+	s.ShakeDrawer.Update(s.Now, s.StagedShake)
+	s.RollDrawer.Update(s.Now)
+	s.NoteDrawer.Update(s.Now, s.BPM)
 
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
-	s.DancerDrawer.Update(s.time, s.BPM, s.Combo, judgment.Is(Miss),
+	s.DancerDrawer.Update(s.Now, s.BPM, s.Combo, judgment.Is(Miss),
 		!judgment.Is(Miss) && judgment.Valid(), s.Highlight)
 	s.ScoreDrawer.Update(s.Scores[gosu.Total])
 	s.ComboDrawer.Update(s.Combo)
@@ -350,15 +353,17 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"+
+			"Press ESC to select a song\n\n"+
 			"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
-			"Flow rate: %.2f%%\nAccuracy: %.2f%%\nExtra: %.2f%%\nJudgment counts: %v\n\n"+
+			"Flow rate: %.2f%%\nAccuracy: %.2f%%\nExtra: %.2f%%\n"+
+			"Judgment counts: %v\nPartial counts: %v\nTick counts: %v\n\n"+
 			"Speed scale (Z/X): %.0f (x%.2f)\n(Exposure time: %.fms)\n\n"+
-			"Music volume (Q/W): %.0f%%\nEffect volume (A/S): %.0f%%\n\n"+
-			"Press ESC to select a song",
-		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.time)/1000, float64(s.Chart.Duration())/1000,
+			"Music volume (Q/W): %.0f%%\nEffect volume (E/R): %.0f%%\n\n",
+		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
-		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
+		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100,
+		s.JudgmentCounts[:3], s.JudgmentCounts[3:5], s.JudgmentCounts[5:],
 		s.SpeedScale*100, s.SpeedScale/s.TransPoint.Speed, ExposureTime(s.CurrentSpeed()),
 		gosu.MusicVolume*100, gosu.EffectVolume*100))
 }
@@ -369,39 +374,10 @@ func ExposureTime(speedScale float64) float64 {
 	return (screenSizeX - HitPosition) / speedScale
 }
 func (s *ScenePlay) UpdateTransPoint() {
-	s.TransPoint = s.TransPoint.FetchByTime(s.time)
+	s.TransPoint = s.TransPoint.FetchByTime(s.Now)
 }
 func (s ScenePlay) Speed()                { s.CurrentSpeed() }
 func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.SpeedScale }
-func (s *ScenePlay) UpdateKeyActions() {
-	var hits [4]bool
-	for k := range hits {
-		hits[k] = s.KeyLogger.KeyAction(k) == input.Hit
-	}
-	for color, keys := range [][]int{{1, 2}, {0, 3}} {
-		if hits[keys[0]] || hits[keys[1]] {
-			// if hits[keys[0]] && s.time-s.LastHitTimes[keys[1]] < BigHitTimeDifferenceBound ||
-			// 	hits[keys[1]] && s.time-s.LastHitTimes[keys[0]] < BigHitTimeDifferenceBound {
-			// 	s.KeyActions[color] = Big
-			// } else {
-			// 	s.KeyActions[color] = Regular
-			// }
-			s.KeyActions[color] = Regular
-		} else {
-			s.KeyActions[color] = SizeNone
-		}
-	}
-	for k, hit := range hits {
-		if hit {
-			s.LastHitTimes[k] = s.time
-		}
-	}
-	// for color, a := range s.KeyActions {
-	// 	if a != SizeNone {
-	// 		fmt.Printf("%d: %s at color %s\n", s.time, []string{"regular", "hit"}[a], []string{"red", "blue"}[color])
-	// 	}
-	// }
-}
 
 var DefaultSampleNames = [2][2]string{
 	{"red-regular", "red-big"},

@@ -3,7 +3,7 @@
 A classic rhythm game written in go
 
 # How to play
-Select the song with `Enter`, and press keys corresponding to falling notes.
+Select the song with `Enter`, and press keys corresponding to approaching notes.
 Following is default key settings:
 ```
 var KeySettings = map[int][]Key{

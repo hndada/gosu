@@ -2,6 +2,7 @@ package piano
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -69,7 +70,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 
 	s.TransPoint = c.TransPoints[0]
 	s.SpeedScale = 1
-	s.Cursor = float64(s.Time()) * s.SpeedScale
+	s.Cursor = float64(s.Now) * s.SpeedScale
 	s.SetSpeed()
 	s.Scorer = gosu.NewScorer(c.ScoreFactors)
 	s.JudgmentCounts = make([]int, len(Judgments))
@@ -164,16 +165,19 @@ func (s *ScenePlay) SetSpeed() {
 // Todo: apply other values of TransPoint (Volume has finished so far)
 // Todo: keep playing music when making SceneResult
 func (s *ScenePlay) Update() any {
-	// defer s.Ticker()
+	defer s.Ticker()
 	if s.IsDone() {
 		s.MusicPlayer.Close()
 		return gosu.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
 	}
-	if s.Time() == 0 {
+	if s.Now == 0 {
 		s.MusicPlayer.Play()
 	}
+	if s.Now == 150 {
+		s.MusicPlayer.Player.Seek(time.Duration(s.Now) * time.Millisecond)
+	}
 	s.MusicPlayer.Update()
-	// fmt.Printf("game: %dms music: %s\n", s.Time(), s.MusicPlayer.Player.Current())
+	// fmt.Printf("game: %dms music: %s\n", s.Now, s.MusicPlayer.Player.Current())
 
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
@@ -192,7 +196,7 @@ func (s *ScenePlay) Update() any {
 		// 		s.Effects.PlayWithVolume(name, vol)
 		// 	}
 		// }
-		td := n.Time - s.Time() // Time difference. A negative value infers late hit
+		td := n.Time - s.Now // Time difference. A negative value infers late hit
 		if n.Marked {
 			if n.Type != Tail {
 				return fmt.Errorf("non-Tail note has not flushed")
@@ -221,7 +225,7 @@ func (s *ScenePlay) Update() any {
 	}
 	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
 	s.JudgmentDrawer.Update(worst)
-	s.ScoreDrawer.Update(s.Scores[0])
+	s.ScoreDrawer.Update(s.Scores[3])
 	s.ComboDrawer.Update(s.Combo)
 	s.MeterDrawer.Update()
 
@@ -256,7 +260,7 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 			"Speed scale (Z/X): %.0f (x%.2f)\n(Exposure time: %.fms)\n\n"+
 			"Music volume (Q/W): %.0f%%\nEffect volume (A/S): %.0f%%\n\n"+
 			"Press ESC to select a song",
-		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Time())/1000, float64(s.Chart.Duration())/1000,
+		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
 		s.SpeedScale*100, s.TransPoint.Speed, ExposureTime(s.CurrentSpeed()),
@@ -264,16 +268,17 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 }
 
 // 1 pixel is 1 millisecond.
-func ExposureTime(speed float64) float64  { return HitPosition / speed }
-func (s ScenePlay) Time() int64           { return s.Timer.Time() }
+func ExposureTime(speed float64) float64 { return HitPosition / speed }
+
+// func (s ScenePlay) Time() int64           { return s.Timer.Time() }
 func (s ScenePlay) Speed()                { s.CurrentSpeed() }
 func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.SpeedScale }
 
 // Supposes one current TransPoint can increment cursor precisely.
 func (s *ScenePlay) UpdateCursor() {
-	duration := float64(s.Time() - s.TransPoint.Time)
+	duration := float64(s.Now - s.TransPoint.Time)
 	s.Cursor = s.TransPoint.Position + duration*s.CurrentSpeed()
 }
 func (s *ScenePlay) UpdateTransPoint() {
-	s.TransPoint = s.TransPoint.FetchByTime(s.Time())
+	s.TransPoint = s.TransPoint.FetchByTime(s.Now)
 }
