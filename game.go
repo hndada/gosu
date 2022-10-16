@@ -1,9 +1,6 @@
 package gosu
 
 import (
-	"fmt"
-	"os"
-	"runtime"
 	"runtime/debug"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -18,12 +15,12 @@ type Scene interface {
 	Draw(screen *ebiten.Image)
 }
 
-func init() {
-	if runtime.GOOS == "windows" {
-		os.Setenv("EBITEN_GRAPHICS_LIBRARY", "opengl")
-		fmt.Println("OpenGL mode has enabled.")
-	}
-}
+// func init() {
+// 	if runtime.GOOS == "windows" {
+// 		os.Setenv("EBITEN_GRAPHICS_LIBRARY", "opengl")
+// 		fmt.Println("OpenGL mode has enabled.")
+// 	}
+// }
 
 var (
 	modeProps   []ModeProp
@@ -58,6 +55,26 @@ func NewGame(props []ModeProp) *Game {
 	// ebiten.SetCursorMode(ebiten.CursorModeHidden)
 	return g
 }
+
+// func NewGameWithEmbed(props []ModeProp, skin, music embed.FS) *Game {
+// 	modeProps = props
+// 	g := &Game{}
+// 	for i, prop := range modeProps {
+// 		modeProps[i].ChartInfos = prop.LoadNewChartInfos(music)
+// 	}
+// 	LoadGeneralSkin()
+// 	for _, mode := range modeProps {
+// 		mode.LoadSkin()
+// 	}
+// 	LoadHandlers(props)
+// 	ebiten.SetWindowTitle("gosu")
+// 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
+// 	ebiten.SetTPS(TPS)
+// 	modeHandler.Max = len(props)
+// 	sceneSelect = NewSceneSelect()
+// 	// ebiten.SetCursorMode(ebiten.CursorModeHidden)
+// 	return g
+// }
 
 func (g *Game) Update() (err error) {
 	MusicVolumeKeyHandler.Update()
