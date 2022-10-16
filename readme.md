@@ -1,6 +1,6 @@
-# gosu
+# gosu (private)
 
-Classic rhythm games written in go with ebitengine
+A classic rhythm game written in go
 
 # How to play
 Change the mode with `Ctrl`
@@ -13,15 +13,20 @@ Press matching keys with notes!
 
 Following is default key settings:
 ```
-4 Key: S, D, J, K
-7 Key: S, D, F, Space, J, K, L
-Drum:  S, D, J, K
+var KeySettings = map[int][]Key{
+	4:               {KeyD, KeyF, KeyJ, KeyK},
+	5:               {KeyD, KeyF, KeySpace, KeyJ, KeyK},
+	6:               {KeyS, KeyD, KeyF, KeyJ, KeyK, KeyL},
+	7:               {KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL},
+	8 + LeftScratch: {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL},
+	8:               {KeyA, KeyS, KeyD, KeyF, KeyJ, KeyK, KeyL, KeySemicolon},
+	9:               {KeyA, KeyS, KeyD, KeyF, KeySpace, KeyJ, KeyK, KeyL, KeySemicolon},
+	10:              {KeyA, KeyS, KeyD, KeyF, KeyV, KeyN, KeyJ, KeyK, KeyL, KeySemicolon},
+}
 ```
 
 # Game play preview
 ## Video
-[cillia - Ringo Uri no Utakata Shoujo [Ringo Oni]](https://youtu.be/8VgzAlc4SJ0)
-
 [The Flashbulb - The Bridgeport Run [Escapism]](https://youtu.be/5VWaSAs7bbQ)
 
 [Real-time replay of Taishi - bluefieldcreator [Etherealization]](https://www.youtube.com/watch?v=9kMUT8vQI24&list=PLQhd8A8gGbIBm_oJdW5K9Pwv9jZpmJzLW&index=2&ab_channel=MuangMuangE)
@@ -46,18 +51,25 @@ Drum:  S, D, J, K
     * You can try it right now with changing value at `settings.go` and build. 
 
 * Effective score and level system (originally designed)
-  * The motivation of gosu dev.
+  * The motivation of gosu dev
   * Tried to make feel score and actual performance are related.
-  * Level calculation is currently naive. 
-    * Will be exquisite in a short time.
+  * Level calculation is currently primitive 
+    * Will be exquisite in a short time 
 
 * Quick input supported (1ms)
   * *Hook* is used in `Windows`.
-  * Others is currently depending on `ebiten.IsKeyPressed`.
+  * Others is currently depending on `ebiten.IsKeyPressed` .
 
-* Codebase with high readability
+* Lightweight codebase
+  * Rebase version of previous *gosu* (see `v0` branch)
+    * `v0` was verbose and has complex structure. 
   * Super-fast in loading files and playing
   * Fairly scalable for future work
+
+# Flow of game logic
+Work in Progress
+
+Will also post details at [wiki](https://github.com/hndada/gosu/wiki).
 
 # Build
 Go to root directory of the repository first. 
@@ -66,12 +78,5 @@ cd cmd/gosu
 go build .
 ```
 
-# Flow of game logic
-Work in Progress
-
-Will also post details at [wiki](https://github.com/hndada/gosu/wiki).
-
 # License
-Codebase: MIT
-
 Skin images and music tracks are from [osu-resources](https://github.com/ppy/osu-resources), licensed under [CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode).
