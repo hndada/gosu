@@ -45,12 +45,15 @@ var JudgmentCountKinds = []string{
 // When one side of judgment is Cool, Good on the other hand, overall judgment of Big note goes Good.
 // In other word, to get Cool at Big note, you have to hit it Cool with both sides.
 // Todo: judge for Big note when judgment goes different depending on selecting 2 key actions
-const MaxBigHitDuration = 20
+const MaxBigHitDuration = 25
 
 func (s *ScenePlay) UpdateKeyActions() {
 	var hits [4]bool
 	for k := range hits {
-		hits[k] = s.KeyLogger.KeyAction(k) == input.Hit
+		if s.KeyLogger.KeyAction(k) == input.Hit {
+			hits[k] = true
+			s.LastHitTimes[k] = s.Now
+		}
 	}
 	for color, keys := range [][]int{{1, 2}, {0, 3}} {
 		if hits[keys[0]] || hits[keys[1]] {
@@ -60,14 +63,8 @@ func (s *ScenePlay) UpdateKeyActions() {
 			} else {
 				s.KeyActions[color] = Regular
 			}
-			s.KeyActions[color] = Regular
 		} else {
 			s.KeyActions[color] = SizeNone
-		}
-	}
-	for k, hit := range hits {
-		if hit {
-			s.LastHitTimes[k] = s.Now
 		}
 	}
 	// for color, a := range s.KeyActions {
@@ -107,6 +104,7 @@ func VerdictNote(n *Note, actions [2]int, td int64) (j gosu.Judgment, big bool) 
 	if n.Size == Big && actions[n.Color] == Big {
 		big = true
 	}
+	// fmt.Println(n.Time, n.Size, n.Color, actions, j, big)
 	return
 }
 func (s *ScenePlay) MarkNote(n *Note, j gosu.Judgment, big bool) {

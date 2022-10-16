@@ -1,6 +1,7 @@
 package drum
 
 import (
+	"math"
 	"sort"
 
 	"github.com/hndada/gosu"
@@ -116,3 +117,21 @@ func NewNotes(f any) (notes, rolls, shakes []*Note) {
 	}
 	return
 }
+
+func (n Note) Weight() float64 {
+	switch n.Type {
+	case Normal:
+		switch n.Size {
+		case Regular:
+			return 1.0
+		case Big:
+			return 1.0 // 1.1
+		}
+	case Shake:
+		// Shake is apparently easier than Roll, since it is free from beat.
+		// https://www.desmos.com/calculator/nsogcrebx9
+		return math.Pow(float64(32*n.Tick), 0.75) / 32 // 32 comes from 8 * 4.
+	}
+	return 0
+}
+func (d Dot) Weight() float64 { return 0.125 } // Assumes 8 ticks worth one normal note.
