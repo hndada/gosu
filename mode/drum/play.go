@@ -62,7 +62,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	gosu.SetTitle(c.ChartHeader)
 	s.Timer = gosu.NewTimer(c.Duration())
 	if path, ok := c.MusicPath(cpath); ok {
-		s.MusicPlayer, err = gosu.NewMusicPlayer(path) //(gosu.MusicVolumeHandler, path)
+		s.MusicPlayer, err = gosu.NewMusicPlayer(path)
 		if err != nil {
 			return
 		}

@@ -71,11 +71,13 @@ func (g *Game) Update() (err error) {
 	case error:
 		return args
 	case PlayToResultArgs: // Todo: SceneResult
+		EffectVolume = 0.25 // Todo: resolve delayed effect sound playing
 		ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 		debug.SetGCPercent(100)
 		g.Scene = sceneSelect
 		ebiten.SetWindowTitle("gosu")
 	case SelectToPlayArgs:
+		EffectVolume = 0 // Todo: resolve delayed effect sound playing
 		ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
 		debug.SetGCPercent(0)
 		prop := modeProps[currentMode]
