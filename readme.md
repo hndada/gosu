@@ -4,9 +4,13 @@ Classic rhythm games written in go with ebitengine
 
 # How to play
 Change the mode with `Ctrl`
+
 Change the Speed with `Z/X`
+
 Select the song with `Enter`
+
 Press matching keys with notes!
+
 Following is default key settings:
 ```
 4 Key: S, D, J, K
@@ -15,19 +19,19 @@ Drum:  S, D, J, K
 ```
 
 # Game play preview
-## Screenshots
-![4 Key](https://i.imgur.com/6veaLI6.png)
-
-![7 Key](https://i.imgur.com/MJTFmE3.png)
-
-![Drum](https://i.imgur.com/gMblTsc.png)
-
 ## Video
 [cillia - Ringo Uri no Utakata Shoujo [Ringo Oni]](https://youtu.be/8VgzAlc4SJ0)
 
 [The Flashbulb - The Bridgeport Run [Escapism]](https://youtu.be/5VWaSAs7bbQ)
 
 [Real-time replay of Taishi - bluefieldcreator [Etherealization]](https://www.youtube.com/watch?v=9kMUT8vQI24&list=PLQhd8A8gGbIBm_oJdW5K9Pwv9jZpmJzLW&index=2&ab_channel=MuangMuangE)
+
+## Screenshots
+![4 Key](https://i.imgur.com/6veaLI6.png)
+
+![7 Key](https://i.imgur.com/MJTFmE3.png)
+
+![Drum](https://i.imgur.com/VquWLWk.png)
 
 # Feature
 * osu! files supported
