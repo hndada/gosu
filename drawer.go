@@ -227,6 +227,7 @@ func (d *MeterDrawer) Update() {
 }
 func (d MeterDrawer) Draw(screen *ebiten.Image) {
 	d.Meter.Draw(screen, nil)
+	d.Anchor.Draw(screen, nil)
 	for _, m := range d.Marks {
 		sprite := d.Unit
 		op := &ebiten.DrawImageOptions{}
@@ -238,7 +239,6 @@ func (d MeterDrawer) Draw(screen *ebiten.Image) {
 		op.GeoM.Translate(-float64(m.Offset)*MeterWidth, 0)
 		sprite.Draw(screen, op)
 	}
-	d.Anchor.Draw(screen, nil)
 }
 
 func (d MeterDrawer) MarkAge(m MeterMark) float64 {

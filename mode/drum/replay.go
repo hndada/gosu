@@ -14,7 +14,7 @@ func NewReplayListener(f *osr.Format, timer *gosu.Timer) func() []bool {
 	var i int
 	var next int64 = actions[0].W + actions[1].W // +1
 	return func() []bool {
-		for timer.Time() >= next { // There might be negative values on actions in a row.
+		for timer.Now >= next { // There might be negative values on actions in a row.
 			i++
 			next += actions[i+1].W
 		}

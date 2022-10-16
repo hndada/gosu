@@ -19,38 +19,46 @@ func SetTitle(c ChartHeader) {
 func TimeToTick(time int64) int { return int(float64(time) / 1000 * float64(TPS)) }
 func TickToTime(tick int) int64 { return int64(float64(tick) / float64(TPS) * 1000) }
 
-const (
-	Wait = 1800
-	// WaitBefore int64 = -1800
-	// WaitAfter  int64 = 3000
-)
+const Wait = 1800
 
 type Timer struct {
 	StartTime time.Time
-	Duration  time.Duration
-	// Tick      int
-	// MaxTick   int // A tick corresponding to EndTime = Duration + WaitAfter
-	// Time     int64
+	// Duration  time.Duration
+	Tick    int
+	MaxTick int // A tick corresponding to EndTime = Duration + WaitAfter
+	Now     int64
 }
 
 func NewTimer(duration int64) Timer {
 	return Timer{
 		StartTime: time.Now().Add(Wait * time.Millisecond),
-		Duration:  time.Duration(duration+2*Wait) * time.Millisecond,
-		// Tick:      TimeToTick(WaitBefore),
-		// MaxTick:   TimeToTick(duration + WaitAfter),
-		// Time: int64(TimeToTick(WaitBefore)),
+		// Duration:  time.Duration(duration+2*Wait) * time.Millisecond,
+		Tick:    TimeToTick(-Wait),
+		MaxTick: TimeToTick(duration + Wait),
+		Now:     -Wait,
 	}
 }
 
-// func (t Timer) IsDone() bool { return ebiten.IsKeyPressed(ebiten.KeyEscape) }
+func (t Timer) IsDone() bool { return ebiten.IsKeyPressed(ebiten.KeyEscape) }
+func (t *Timer) Ticker() {
+	t.Tick++
+	t.Now = TickToTime(t.Tick)
+}
+func (t *Timer) Sync() {
+	since := time.Since(t.StartTime).Milliseconds() + Wait
+	if e := since - t.Now; e >= 1 {
+		fmt.Printf("adjusting time error at %dms: %d\n", t.Now, e)
+		t.Tick += TimeToTick(e)
+	}
+	t.Now = TickToTime(t.Tick)
+}
 
-func (t Timer) IsDone() bool {
-	return ebiten.IsKeyPressed(ebiten.KeyEscape) || time.Since(t.StartTime) >= t.Duration // t.Tick >= t.MaxTick
-}
-func (t Timer) Time() int64 {
-	return time.Since(t.StartTime).Milliseconds()
-}
+//	func (t Timer) IsDone() bool {
+//		return ebiten.IsKeyPressed(ebiten.KeyEscape) || t.Tick >= t.MaxTick // time.Since(t.StartTime) >= t.Duration
+//	}
+// func (t Timer) Time() int64 {
+// 	return time.Since(t.StartTime).Milliseconds()
+// }
 
 // func (t *Timer) Ticker() {
 // 	t.Tick++
