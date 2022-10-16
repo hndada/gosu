@@ -71,7 +71,6 @@ Work in Progress
 
 Will also post details at [wiki](https://github.com/hndada/gosu/wiki).
 
-
 # License
 Codebase: MIT
 

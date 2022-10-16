@@ -28,10 +28,11 @@ go.work
 /cmd/gosu/*
 # !/cmd/gosu/replay
 !/cmd/gosu/skin
-
+!/cmd/gosu/keys.txt
 ~$gosu-ui.pptx
 
 # !/cmd/gosu/skin/*.*
 
 /cmd/web/*
 !/cmd/web/main.go
+!/cmd/web/keys.txt
