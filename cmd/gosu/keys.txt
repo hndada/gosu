@@ -1,7 +1,7 @@
-4: S, D, J, K
-5: S, D, Space, K, L
+4: D, F, J, K
+5: D, F, Space, J, K
 6: S, D, F, J, K, L
 7: S, D, F, Space, J, K, L
 8: A, S, D, F, Space, J, K, L
 9: A, S, D, F, Space, J, K, L, Semicolon
-Drum: S, D, J, K
+Drum: D, F, J, K

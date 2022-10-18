@@ -17,6 +17,7 @@ var ModePiano4 = gosu.ModeProp{
 	NewChartInfo:   NewChartInfo,
 	NewScenePlay:   NewScenePlay,
 	ExposureTime:   ExposureTime,
+	KeySettings:    KeySettings,
 }
 
 var ModePiano7 = gosu.ModeProp{
@@ -30,4 +31,5 @@ var ModePiano7 = gosu.ModeProp{
 	NewChartInfo:   NewChartInfo,
 	NewScenePlay:   NewScenePlay,
 	ExposureTime:   ExposureTime,
+	KeySettings:    KeySettings,
 }

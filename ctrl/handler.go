@@ -91,6 +91,7 @@ type KeyHandler struct {
 }
 
 // Update returns whether the handler has set off (triggered) or not.
+// Todo: set off the stricter handler only
 func (h *KeyHandler) Update() (set bool) {
 	if h.countdown > 0 {
 		h.countdown--

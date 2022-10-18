@@ -8,6 +8,7 @@ import (
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/format/osu"
+	"github.com/hndada/gosu/input"
 )
 
 const (
@@ -33,6 +34,7 @@ type ModeProp struct {
 	NewChartInfo    func(string) (ChartInfo, error)
 	NewScenePlay    func(cpath string, rf *osr.Format) (Scene, error)
 	ExposureTime    func(float64) float64
+	KeySettings     map[int][]input.Key
 }
 
 // Mode determines a mode of chart file by its path.

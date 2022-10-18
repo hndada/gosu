@@ -31,7 +31,7 @@ var (
 func NewGame(props []ModeProp) *Game {
 	modeProps = props
 	g := &Game{}
-
+	SetKeySettings(props)
 	// 1. Load chart info and score data
 	// 2. Check removed chart
 	// 3. Check added chart

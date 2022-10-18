@@ -178,23 +178,22 @@ func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
 	speed := *prop.SpeedScale
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf(
-			"Music volume (Q/W): %.0f%%\n"+
-				"Effect volume (E/R): %.0f%%\n"+
-				"Speed (Z/X): %.0f (Exposure time: %.0fms)\n"+
-				"Brightness (O/P): %.0f%%\n"+
+			"Mode (F1): %s\n"+
+				"Sort (F2): %s\n"+
 				"\n"+
-				"Mode (Ctrl): %s\n"+
-				"Sort (Alt): %s\n"+
-				"Offset (1/2): %dms\n",
-			MusicVolume*100,
-			EffectVolume*100,
-			speed*100, prop.ExposureTime(speed),
-			BackgroundBrightness*100,
-
+				"Music volume (Alt+ Left/Right): %.0f%%\n"+
+				"Effect volume (Ctrl+ Left/Right): %.0f%%\n"+
+				"Brightness (Ctrl+ O/P): %.0f%%\n"+
+				"\n"+
+				"Speed (PageUp/Down): %.0f (Exposure time: %.0fms)\n"+
+				"Offset (Shift+ Left/Right): %dms\n",
 			prop.Name,
 			[]string{"by name", "by level"}[currentSort],
+
+			MusicVolume*100,
+			EffectVolume*100,
+			BackgroundBrightness*100,
+
+			speed*100, prop.ExposureTime(speed),
 			Offset))
-	// "Music volume (Alt+↑/↓): %.0f%%\n"+"Effect volume (Ctrl+↑/↓): %.0f%%\n"+
-	// "Speed (Ctrl+PageUp/PageDown): %.0f\n"+"(Exposure time: %.0fms)\n\n"+
-	// "Mode (Ctrl+Alt+Shift+←/→): %s\n",
 }

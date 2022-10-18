@@ -115,6 +115,24 @@ const (
 	KeyReserved3
 )
 
+func NamesToKeys(names []string) []Key {
+	keys := make([]Key, len(names))
+	for i, name := range names {
+		keys[i] = NameToKey(name)
+	}
+	return keys
+}
+func IsKeysValid(keys []Key) bool {
+	m := make(map[Key]bool)
+	for _, k := range keys {
+		if m[k] {
+			return false
+		}
+		m[k] = true
+	}
+	return true
+}
+
 // https://go.dev/play/p/9Lv0u4sqwKq
 func NameToKey(name string) Key {
 	switch name {

@@ -38,6 +38,7 @@ const (
 var (
 	SelectSound      []byte
 	SwipeSound       []byte
+	TapSound         []byte
 	ToggleSounds     [2][]byte
 	TransitionSounds [2][]byte
 )
@@ -77,6 +78,7 @@ func LoadGeneralSkin() {
 		s.SetPosition(screenSizeX, 0, draws.OriginRightTop)
 		SignSprites[i] = s
 	}
+	TapSound, _ = audios.NewBytes("skin/sound/tap/0.wav")
 	SelectSound, _ = audios.NewBytes("skin/sound/old/restart.wav")
 	SwipeSound, _ = audios.NewBytes("skin/sound/swipe.wav")
 	for i, name := range []string{"off", "on"} {
