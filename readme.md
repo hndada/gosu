@@ -1,6 +1,6 @@
 # gosu
 
-A classic rhythm game written in go with ebitengine
+Classic rhythm games written in go with Ebitengine
 
 # How to play
 Change the mode with `Ctrl`
