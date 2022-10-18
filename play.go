@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/audio"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/input"
 )
@@ -28,6 +29,7 @@ type Timer struct {
 	Tick    int
 	MaxTick int // A tick corresponding to EndTime = Duration + WaitAfter
 	Now     int64
+	Pause   bool
 }
 
 func NewTimer(duration int64) Timer {
@@ -46,7 +48,14 @@ func NewTimer(duration int64) Timer {
 //	}
 func (t Timer) IsDone() bool { return ebiten.IsKeyPressed(ebiten.KeyEscape) }
 
+// func (t *Timer) SwitchPause() {}
 func (t *Timer) Ticker() {
+	if inpututil.IsKeyJustPressed(ebiten.KeyTab) {
+		t.Pause = !t.Pause
+	}
+	if t.Pause {
+		return
+	}
 	t.Tick++
 	if td := int64(Offset) - t.Offset; td != 0 {
 		t.Offset += td
@@ -82,6 +91,7 @@ type MusicPlayer struct {
 	Volume float64
 	Player *audio.Player
 	Closer func() error
+	pause  bool
 }
 
 func NewMusicPlayer(path string, timer *Timer) (MusicPlayer, error) {
@@ -106,10 +116,29 @@ func NewMusicPlayer(path string, timer *Timer) (MusicPlayer, error) {
 // 	mp.Player.Play()
 // }
 
-func (p MusicPlayer) Update() {
+func (p *MusicPlayer) Update() {
 	if p.Player == nil {
 		return
 	}
+	if p.Volume != MusicVolume {
+		p.Volume = MusicVolume
+		p.Player.SetVolume(p.Volume)
+	}
+	if p.Timer.Pause {
+		if !p.pause {
+			p.Player.Pause()
+			p.pause = true
+		}
+	} else {
+		if p.pause {
+			p.Player.Play()
+			p.pause = false
+		}
+	}
+	if p.pause {
+		return
+	}
+
 	if p.Now == 0+p.Offset {
 		p.Player.Play()
 	}
@@ -119,10 +148,7 @@ func (p MusicPlayer) Update() {
 	// if p.IsDone() {
 	// 	p.Close()
 	// }
-	if p.Volume != MusicVolume {
-		p.Volume = MusicVolume
-		p.Player.SetVolume(p.Volume)
-	}
+
 	// Calling SetVolume in every Update is fine, confirmed by the author, by the way.
 	// p.Player.SetVolume(MusicVolume)
 }
