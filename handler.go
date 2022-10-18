@@ -12,6 +12,8 @@ var (
 	MusicVolume          float64 = 0.25
 	EffectVolume         float64 = 0.25
 	BackgroundBrightness float64 = 0.6
+
+	Offset int = -65
 )
 var (
 	modeHandler    ctrl.IntHandler
@@ -26,6 +28,9 @@ var (
 
 	brightHandler    ctrl.FloatHandler
 	BrightKeyHandler ctrl.KeyHandler
+
+	offsetHandler    ctrl.IntHandler
+	OffsetKeyHandler ctrl.KeyHandler
 )
 var (
 	speedScaleHandlers   []ctrl.FloatHandler
@@ -120,6 +125,20 @@ func LoadHandlers(props []ModeProp) {
 		Modifiers: []ebiten.Key{},
 		Keys:      [2]ebiten.Key{ebiten.KeyZ, ebiten.KeyX},
 		Sounds:    [2][]byte{TransitionSounds[0], TransitionSounds[1]},
+		Volume:    &EffectVolume,
+	}
+
+	offsetHandler = ctrl.IntHandler{
+		Value: &Offset,
+		Min:   -300,
+		Max:   300,
+		Loop:  false,
+	}
+	OffsetKeyHandler = ctrl.KeyHandler{
+		Handler:   offsetHandler,
+		Modifiers: []ebiten.Key{},
+		Keys:      [2]ebiten.Key{ebiten.Key1, ebiten.Key2},
+		Sounds:    [2][]byte{},
 		Volume:    &EffectVolume,
 	}
 }

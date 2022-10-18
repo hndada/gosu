@@ -350,10 +350,15 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 		op.GeoM.Rotate(d.radian)
 		op.GeoM.Translate(float64(sw)/2, float64(sh)/2)
 	}
-	ratio := 1.0
-	if age := d.Age(); age < 0.15 {
-		ratio = 1 + (0.15 - age)
+	// ratio := 1.0
+	age := d.Age()
+	if age < 0.25 {
+		ratio := 1 + (0.25 - age)
+		sprite.SetScale(ratio)
 	}
-	sprite.SetScale(ratio)
+	if age > 0.75 {
+		rate := 1 - (age-0.75)/0.25
+		op.ColorM.Scale(1, 1, 1, rate)
+	}
 	sprite.Draw(screen, op)
 }

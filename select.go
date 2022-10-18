@@ -181,14 +181,19 @@ func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
 			"Music volume (Q/W): %.0f%%\n"+
 				"Effect volume (E/R): %.0f%%\n"+
 				"Speed (Z/X): %.0f (Exposure time: %.0fms)\n"+
-				"Brightness (O/P): %.0f%%\n\n"+
+				"Brightness (O/P): %.0f%%\n"+
+				"\n"+
 				"Mode (Ctrl): %s\n"+
-				"Sort (Alt): %s\n",
-			MusicVolume*100, EffectVolume*100,
+				"Sort (Alt): %s\n"+
+				"Offset (1/2): %dms\n",
+			MusicVolume*100,
+			EffectVolume*100,
 			speed*100, prop.ExposureTime(speed),
 			BackgroundBrightness*100,
+
 			prop.Name,
-			[]string{"by name", "by level"}[currentSort]))
+			[]string{"by name", "by level"}[currentSort],
+			Offset))
 	// "Music volume (Alt+↑/↓): %.0f%%\n"+"Effect volume (Ctrl+↑/↓): %.0f%%\n"+
 	// "Speed (Ctrl+PageUp/PageDown): %.0f\n"+"(Exposure time: %.0fms)\n\n"+
 	// "Mode (Ctrl+Alt+Shift+←/→): %s\n",

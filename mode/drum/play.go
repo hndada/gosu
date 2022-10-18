@@ -2,7 +2,6 @@ package drum
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -62,7 +61,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	gosu.SetTitle(c.ChartHeader)
 	s.Timer = gosu.NewTimer(c.Duration())
 	if path, ok := c.MusicPath(cpath); ok {
-		s.MusicPlayer, err = gosu.NewMusicPlayer(path)
+		s.MusicPlayer, err = gosu.NewMusicPlayer(path, &s.Timer)
 		if err != nil {
 			return
 		}
@@ -129,7 +128,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	}
 	s.JudgmentDrawer = JudgmentDrawer{
 		BaseDrawer: draws.BaseDrawer{
-			MaxCountdown: gosu.TimeToTick(600),
+			MaxCountdown: gosu.TimeToTick(400),
 		},
 		Sprites: s.JudgmentSprites,
 	}
@@ -218,12 +217,12 @@ func (s *ScenePlay) Update() any {
 		s.MusicPlayer.Close()
 		return gosu.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
 	}
-	if s.Now == 0 {
-		s.MusicPlayer.Play()
-	}
-	if s.Now == 150 {
-		s.MusicPlayer.Player.Seek(time.Duration(s.Now) * time.Millisecond)
-	}
+	// if s.Now == 0 {
+	// 	s.MusicPlayer.Play()
+	// }
+	// if s.Now == 150 {
+	// 	s.MusicPlayer.Player.Seek(time.Duration(s.Now) * time.Millisecond)
+	// }
 	s.MusicPlayer.Update()
 	// fmt.Printf("game: %dms music: %s\n", s.Now, s.MusicPlayer.Player.Current())
 
@@ -365,13 +364,15 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\nExtra: %.2f%%\n"+
 			"Judgment counts: %v\nPartial counts: %v\nTick counts: %v\n\n"+
 			"Speed scale (Z/X): %.0f (x%.2f)\n(Exposure time: %.fms)\n\n"+
-			"Music volume (Q/W): %.0f%%\nEffect volume (E/R): %.0f%%\n\n",
+			"Music volume (Q/W): %.0f%%\nEffect volume (E/R): %.0f%%\n\n"+
+			"Offset (1/2): %dms\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100,
 		s.JudgmentCounts[:3], s.JudgmentCounts[3:5], s.JudgmentCounts[5:],
 		s.SpeedScale*100, s.SpeedScale/s.TransPoint.Speed, ExposureTime(s.CurrentSpeed()),
-		gosu.MusicVolume*100, gosu.EffectVolume*100))
+		gosu.MusicVolume*100, gosu.EffectVolume*100,
+		gosu.Offset))
 }
 
 // 1 pixel is 1 millisecond.
