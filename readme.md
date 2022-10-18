@@ -18,19 +18,13 @@ Drum:  S, D, J, K
 ```
 
 # Game play preview
-## Video
-[cillia - Ringo Uri no Utakata Shoujo [Ringo Oni]](https://youtu.be/8VgzAlc4SJ0)
+## Video (Click thumbnails to watch at YouTube)
+[![Taishi - bluefieldcreator [Etherealization]](https://i.imgur.com/DN8JTzQ.png)](https://youtu.be/9kMUT8vQI24)
 
-[The Flashbulb - The Bridgeport Run [Escapism]](https://youtu.be/5VWaSAs7bbQ)
+[![The Flashbulb - The Bridgeport Run [Escapism]](https://i.imgur.com/tIVTiXo.png)](https://youtu.be/5VWaSAs7bbQ)
 
-[Real-time replay of Taishi - bluefieldcreator [Etherealization]](https://www.youtube.com/watch?v=9kMUT8vQI24&list=PLQhd8A8gGbIBm_oJdW5K9Pwv9jZpmJzLW&index=2&ab_channel=MuangMuangE)
+[![cillia - Ringo Uri no Utakata Shoujo [Ringo Oni]](https://i.imgur.com/0Ven6Oa.png)](https://youtu.be/8VgzAlc4SJ0)
 
-## Screenshots
-![4 Key](https://i.imgur.com/6veaLI6.png)
-
-![7 Key](https://i.imgur.com/MJTFmE3.png)
-
-![Drum](https://i.imgur.com/VquWLWk.png)
 
 # Feature
 * osu! files supported
