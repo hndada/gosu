@@ -358,7 +358,7 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 	ebitenutil.DebugPrint(screen, fmt.Sprintf(
 		"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"+
-			"Press ESC to select a song\n\n"+
+			"Press ESC to select a song.\nPress TAB to pause.\n\n"+
 			"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\nExtra: %.2f%%\n"+
