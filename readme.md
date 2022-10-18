@@ -18,7 +18,8 @@ Drum:  S, D, J, K
 ```
 
 # Game play preview
-## Video (Click thumbnails to watch at YouTube)
+Click thumbnails to watch at YouTube.
+
 [![Taishi - bluefieldcreator [Etherealization]](https://i.imgur.com/DN8JTzQ.png)](https://youtu.be/9kMUT8vQI24)
 
 [![The Flashbulb - The Bridgeport Run [Escapism]](https://i.imgur.com/tIVTiXo.png)](https://youtu.be/5VWaSAs7bbQ)
