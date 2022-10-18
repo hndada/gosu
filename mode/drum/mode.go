@@ -21,4 +21,5 @@ var ModeDrum = gosu.ModeProp{
 	NewChartInfo: NewChartInfo,
 	NewScenePlay: NewScenePlay,
 	ExposureTime: ExposureTime,
+	KeySettings:  KeySettings,
 }

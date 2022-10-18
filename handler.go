@@ -52,7 +52,7 @@ func LoadHandlers(props []ModeProp) {
 	ModeKeyHandler = ctrl.KeyHandler{
 		Handler:   modeHandler,
 		Modifiers: []ebiten.Key{},
-		Keys:      [2]ebiten.Key{ebiten.KeyControlLeft, ebiten.KeyControlLeft},
+		Keys:      [2]ebiten.Key{-1, ebiten.KeyF1},
 		Sounds:    [2][]byte{SwipeSound, SwipeSound},
 		Volume:    &EffectVolume,
 	}
@@ -65,7 +65,7 @@ func LoadHandlers(props []ModeProp) {
 	SortKeyHandler = ctrl.KeyHandler{
 		Handler:   sortHandler,
 		Modifiers: []ebiten.Key{},
-		Keys:      [2]ebiten.Key{ebiten.KeyAltLeft, ebiten.KeyAltLeft},
+		Keys:      [2]ebiten.Key{-1, ebiten.KeyF2},
 		Sounds:    [2][]byte{SwipeSound, SwipeSound},
 		Volume:    &EffectVolume,
 	}
@@ -78,8 +78,8 @@ func LoadHandlers(props []ModeProp) {
 	}
 	MusicVolumeKeyHandler = ctrl.KeyHandler{
 		Handler:   musicVolumeHandler,
-		Modifiers: []ebiten.Key{},
-		Keys:      [2]ebiten.Key{ebiten.KeyQ, ebiten.KeyW},
+		Modifiers: []ebiten.Key{ebiten.KeyControlLeft},
+		Keys:      [2]ebiten.Key{ebiten.KeyLeft, ebiten.KeyRight},
 		Sounds:    [2][]byte{ToggleSounds[0], ToggleSounds[1]},
 		Volume:    &EffectVolume,
 	}
@@ -91,8 +91,8 @@ func LoadHandlers(props []ModeProp) {
 	}
 	EffectVolumeKeyHandler = ctrl.KeyHandler{
 		Handler:   effectVolumeHandler,
-		Modifiers: []ebiten.Key{},
-		Keys:      [2]ebiten.Key{ebiten.KeyE, ebiten.KeyR},
+		Modifiers: []ebiten.Key{ebiten.KeyAltLeft},
+		Keys:      [2]ebiten.Key{ebiten.KeyLeft, ebiten.KeyRight},
 		Sounds:    [2][]byte{ToggleSounds[0], ToggleSounds[1]},
 		Volume:    &EffectVolume,
 	}
@@ -105,7 +105,7 @@ func LoadHandlers(props []ModeProp) {
 	}
 	BrightKeyHandler = ctrl.KeyHandler{
 		Handler:   brightHandler,
-		Modifiers: []ebiten.Key{},
+		Modifiers: []ebiten.Key{ebiten.KeyControlLeft},
 		Keys:      [2]ebiten.Key{ebiten.KeyO, ebiten.KeyP},
 		Sounds:    [2][]byte{ToggleSounds[0], ToggleSounds[1]},
 		Volume:    &EffectVolume,
@@ -123,7 +123,7 @@ func LoadHandlers(props []ModeProp) {
 	SpeedScaleKeyHandler = ctrl.KeyHandler{
 		Handler:   speedScaleHandlers[currentMode],
 		Modifiers: []ebiten.Key{},
-		Keys:      [2]ebiten.Key{ebiten.KeyZ, ebiten.KeyX},
+		Keys:      [2]ebiten.Key{ebiten.KeyPageDown, ebiten.KeyPageUp},
 		Sounds:    [2][]byte{TransitionSounds[0], TransitionSounds[1]},
 		Volume:    &EffectVolume,
 	}
@@ -136,9 +136,9 @@ func LoadHandlers(props []ModeProp) {
 	}
 	OffsetKeyHandler = ctrl.KeyHandler{
 		Handler:   offsetHandler,
-		Modifiers: []ebiten.Key{},
-		Keys:      [2]ebiten.Key{ebiten.Key1, ebiten.Key2},
-		Sounds:    [2][]byte{},
+		Modifiers: []ebiten.Key{ebiten.KeyShiftLeft},
+		Keys:      [2]ebiten.Key{ebiten.KeyLeft, ebiten.KeyRight},
+		Sounds:    [2][]byte{TapSound, TapSound},
 		Volume:    &EffectVolume,
 	}
 }

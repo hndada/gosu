@@ -76,7 +76,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 			s.SoundEffectBytes[i][j] = b
 		}
 	}
-	s.KeyLogger = gosu.NewKeyLogger(KeySettings[:])
+	s.KeyLogger = gosu.NewKeyLogger(KeySettings[4][:])
 	if rf != nil {
 		s.KeyLogger.FetchPressed = NewReplayListener(rf, &s.Timer)
 	}
@@ -363,9 +363,9 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\nExtra: %.2f%%\n"+
 			"Judgment counts: %v\nPartial counts: %v\nTick counts: %v\n\n"+
-			"Speed scale (Z/X): %.0f (x%.2f)\n(Exposure time: %.fms)\n\n"+
-			"Music volume (Q/W): %.0f%%\nEffect volume (E/R): %.0f%%\n\n"+
-			"Offset (1/2): %dms\n",
+			"Speed scale (PageUp/Down): %.0f (x%.2f)\n(Exposure time: %.fms)\n\n"+
+			"Music volume (Alt+ Left/Right): %.0f%%\nEffect volume (Ctrl+ Left/Right): %.0f%%\n\n"+
+			"Offset (Shift+ Left/Right): %dms\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100,

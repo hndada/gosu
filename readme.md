@@ -11,6 +11,7 @@ Select the song with `Enter`
 
 Press matching keys with notes!
 
+You can change key settings by modifying `keys.txt`. Default Key settings are below:
 ```
 4 Key: S, D, J, K
 7 Key: S, D, F, Space, J, K, L

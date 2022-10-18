@@ -12,7 +12,11 @@ const (
 )
 
 var SpeedScale float64 = 1.0
-var KeySettings = [4]input.Key{input.KeyD, input.KeyF, input.KeyJ, input.KeyK}
+
+// var KeySettings = [4]input.Key{input.KeyD, input.KeyF, input.KeyJ, input.KeyK}
+var KeySettings = map[int][]input.Key{
+	4: {input.KeyD, input.KeyF, input.KeyJ, input.KeyK},
+}
 
 const PositionMargin = 100
 
