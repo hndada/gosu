@@ -23,6 +23,7 @@ const Wait = 1800
 
 type Timer struct {
 	StartTime time.Time
+	Offset    int64
 	// Duration  time.Duration
 	Tick    int
 	MaxTick int // A tick corresponding to EndTime = Duration + WaitAfter
@@ -32,6 +33,7 @@ type Timer struct {
 func NewTimer(duration int64) Timer {
 	return Timer{
 		StartTime: time.Now().Add(Wait * time.Millisecond),
+		Offset:    int64(Offset),
 		// Duration:  time.Duration(duration+2*Wait) * time.Millisecond,
 		Tick:    TimeToTick(-Wait),
 		MaxTick: TimeToTick(duration + Wait),
@@ -39,9 +41,17 @@ func NewTimer(duration int64) Timer {
 	}
 }
 
+//	func (t Timer) IsDone() bool {
+//		return ebiten.IsKeyPressed(ebiten.KeyEscape) || t.Tick >= t.MaxTick // time.Since(t.StartTime) >= t.Duration
+//	}
 func (t Timer) IsDone() bool { return ebiten.IsKeyPressed(ebiten.KeyEscape) }
+
 func (t *Timer) Ticker() {
 	t.Tick++
+	if td := int64(Offset) - t.Offset; td != 0 {
+		t.Offset += td
+		t.Tick += TimeToTick(td)
+	}
 	t.Now = TickToTime(t.Tick)
 }
 func (t *Timer) Sync() {
@@ -53,9 +63,6 @@ func (t *Timer) Sync() {
 	t.Now = TickToTime(t.Tick)
 }
 
-//	func (t Timer) IsDone() bool {
-//		return ebiten.IsKeyPressed(ebiten.KeyEscape) || t.Tick >= t.MaxTick // time.Since(t.StartTime) >= t.Duration
-//	}
 // func (t Timer) Time() int64 {
 // 	return time.Since(t.StartTime).Milliseconds()
 // }
@@ -71,38 +78,53 @@ func (t *Timer) Sync() {
 // }
 
 type MusicPlayer struct {
-	// Volume float64
+	*Timer
+	Volume float64
 	Player *audio.Player
 	Closer func() error
 }
 
-func NewMusicPlayer(path string) (MusicPlayer, error) {
+func NewMusicPlayer(path string, timer *Timer) (MusicPlayer, error) {
 	player, closer, err := audios.NewPlayer(path)
 	if err != nil {
 		return MusicPlayer{}, err
 	}
-	// player.SetVolume(MusicVolume)
-	player.SetBufferSize(100 * time.Millisecond)
+	player.SetVolume(MusicVolume)
+	// player.SetBufferSize(100 * time.Millisecond)
 	return MusicPlayer{
-		// Volume: MusicVolume,
+		Timer:  timer,
+		Volume: MusicVolume,
 		Player: player,
 		Closer: closer,
 	}, nil
 }
-func (mp MusicPlayer) Play() {
-	if mp.Player == nil {
-		return
-	}
-	mp.Player.Play()
-}
+
+// func (mp MusicPlayer) Play() {
+// 	if mp.Player == nil {
+// 		return
+// 	}
+// 	mp.Player.Play()
+// }
 
 func (p MusicPlayer) Update() {
-	// Calling SetVolume in every Update is fine, confirmed by the author.
-	p.Player.SetVolume(MusicVolume)
-	// if p.Volume != MusicVolume {
-	// 	p.Volume = MusicVolume
-	// 	p.Player.SetVolume(p.Volume)
+	if p.Player == nil {
+		return
+	}
+	if p.Now == 0+p.Offset {
+		p.Player.Play()
+	}
+	if p.Now == 150+p.Offset {
+		p.Player.Seek(time.Duration(150) * time.Millisecond)
+	}
+	// if p.IsDone() {
+	// 	p.Close()
 	// }
+	if p.Volume != MusicVolume {
+		p.Volume = MusicVolume
+		p.Player.SetVolume(p.Volume)
+	}
+	// Calling SetVolume in every Update is fine, confirmed by the author, by the way.
+	// p.Player.SetVolume(MusicVolume)
 }
 func (p MusicPlayer) Close() {
 	if p.Player != nil {
