@@ -10,6 +10,7 @@ import (
 // Chaning ChartHeader's data will not affect integrity of the chart.
 // Mode-specific fields are located to each Chart struct.
 type ChartHeader struct {
+	ChartSetID    int64 // Compatibility for osu.
 	ChartID       int64
 	MusicName     string
 	MusicUnicode  string
