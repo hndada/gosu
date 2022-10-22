@@ -66,6 +66,9 @@ go build .
 
 Will also post details at [wiki](https://github.com/hndada/gosu/wiki).
 
+# Community
+[Discord server](https://discord.gg/4TztgpaC)
+
 # License
 Codebase: Apache License 2.0
 
