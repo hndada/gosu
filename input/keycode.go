@@ -354,6 +354,10 @@ func NameToKey(name string) Key {
 		return KeyReserved2
 	case "Reserved3":
 		return KeyReserved3
+	case " ":
+		return KeySpace
+	case ";":
+		return KeySemicolon
 	}
 	return -1
 }
