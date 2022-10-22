@@ -42,11 +42,11 @@ func SetTPS() {}
 // Temporary function.
 func SetKeySettings(props []ModeProp) {
 	data, err := os.ReadFile("keys.txt")
-	data = bytes.ReplaceAll(data, []byte("\r\n"), []byte("\n"))
 	if err != nil {
 		fmt.Printf("error: %v", err)
 		return
 	}
+	data = bytes.ReplaceAll(data, []byte("\r\n"), []byte("\n"))
 	for _, line := range strings.Split(string(data), "\n") {
 		if len(line) == 0 {
 			continue
