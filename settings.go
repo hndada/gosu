@@ -1,11 +1,9 @@
 package gosu
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strconv"
 	"strings"
 
@@ -71,33 +69,12 @@ func LoadSettings() (config Config) {
 	return
 }
 
-// Temporary function.
-func SetKeySettings(props []ModeProp) {
-	data, err := os.ReadFile("keys.txt")
-	if err != nil {
-		fmt.Printf("error: %v", err)
-		return
-	}
-	data = bytes.ReplaceAll(data, []byte("\r\n"), []byte("\n"))
-	for _, line := range strings.Split(string(data), "\n") {
-		if len(line) == 0 {
-			continue
-		}
-		if len(line) >= 1 && line[0] == '#' {
-			continue
-		}
-		if len(line) >= 2 && line[0] == '/' && line[1] == '/' {
-			continue
-		}
-		kv := strings.Split(line, ": ")
-		mode := kv[0]
-		names := strings.Split(kv[1], ", ")
-		for i, name := range names {
-			names[i] = strings.TrimSpace(name)
-		}
-		keys := input.NamesToKeys(names)
+func SetKeySettings(props []ModeProp, KeyConfigs []KeyConfig) {
+	for _, KeyConfig := range KeyConfigs {
+		mode := KeyConfig.Mode
+		keys := input.NamesToKeys(KeyConfig.Keys)
 		if !input.IsKeysValid(keys) {
-			fmt.Printf("mapping keys are duplicated: %v\n", names)
+			fmt.Printf("mapping keys are duplicated: #{names}\n")
 			continue
 		}
 		switch mode {
@@ -109,9 +86,9 @@ func SetKeySettings(props []ModeProp) {
 				}
 			}
 		default:
-			subMode, err := strconv.Atoi(mode)
+			subMode, err := strconv.Atoi(strings.Replace(mode, "Key", "", 1))
 			if err != nil {
-				fmt.Printf("error at loading key settings %s: %v", line, err)
+				fmt.Printf("error at loading key settings %s: %v", KeyConfig, err)
 				continue
 			}
 			for _, prop := range props {
