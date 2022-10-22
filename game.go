@@ -50,7 +50,7 @@ func NewGame(props []ModeProp) *Game {
 	}
 	LoadHandlers(props)
 	ebiten.SetWindowTitle("gosu")
-	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
+	ebiten.SetWindowSize(config.WindowSize.Width, config.WindowSize.Height)
 	ebiten.SetTPS(TPS)
 	modeHandler.Max = len(props)
 	sceneSelect = NewSceneSelect()
