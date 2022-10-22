@@ -2,7 +2,9 @@ package gosu
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -34,10 +36,40 @@ var (
 	MeterHeight   float64 = 50
 )
 
+type Size2D struct {
+	Width  int `json:"Width"`
+	Height int `json:"Height"`
+}
+
+type KeyConfig struct {
+	Mode string   `json:"Mode"`
+	Keys []string `json:"Keys"`
+}
+
+type Config struct {
+	MusicRoot  string      `json:"MusicRoot"`
+	WindowSize Size2D      `json:"WindowSize"`
+	KeyConfigs []KeyConfig `json:"KeyConfig"`
+}
+
 // Todo: reset all tick-dependent variables.
 // They are mostly at drawer.go or play.go, settings.go
 // Keyword: TimeToTick
 func SetTPS() {}
+
+func LoadSettings() (config Config) {
+	// TODO: Overwrite user's custom settings
+	data, err := ioutil.ReadFile("config.json")
+	if err != nil {
+		fmt.Printf("error: #{err}")
+		return
+	}
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		return
+	}
+	return
+}
 
 // Temporary function.
 func SetKeySettings(props []ModeProp) {
