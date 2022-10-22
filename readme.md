@@ -3,9 +3,9 @@
 Classic rhythm games written in go with Ebitengine
 
 # How to play
-Change the mode with `Ctrl`
+Change the mode with `F1`
 
-Change the Speed with `Z/X`
+Change the Speed with `PageUp / PageDown`
 
 Select the song with `Enter`
 
@@ -62,7 +62,7 @@ go build .
 ```
 
 # Flow of game logic
-Work in Progress
+[Powerpoint and SlideShare.](https://www.slideshare.net/MuangMuangE/gosupresentpptx-253675145)
 
 Will also post details at [wiki](https://github.com/hndada/gosu/wiki).
 
