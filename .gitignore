@@ -36,3 +36,6 @@ go.work
 /cmd/web/*
 !/cmd/web/main.go
 !/cmd/web/keys.txt
+
+# Jetbrains
+.idea/
