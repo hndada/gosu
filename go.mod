@@ -1,7 +1,7 @@
 module github.com/hndada/gosu
 
 go 1.18
-
+retract v1.0.1 // Published accidentally.
 require (
 	github.com/hajimehoshi/ebiten/v2 v2.5.0-alpha.3.0.20221007032359-cf5c74ed76e8
 	github.com/ulikunitz/xz v0.5.10
