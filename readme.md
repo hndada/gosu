@@ -55,10 +55,20 @@ Click thumbnails to watch at YouTube.
   * Fairly scalable for future work.
 
 # Build
-Go to root directory of the repository first. 
-```
+
+1. For MacOS and Linux users, install Ebitengine dependencies first by referring to the documentation([Ebitengine/Install](https://ebitengine.org/en/documents/install.html)).
+
+2. Go to root directory of the repository and build as below. 
+
+```zsh
 cd cmd/gosu
 go build .
+```
+
+3. Run gosu
+
+```zsh
+./gosu
 ```
 
 # Flow of game logic
