@@ -1,0 +1,37 @@
+{
+  "MusicRoot": "music",
+  "WindowSize": {
+    "Width": 1600,
+    "Height": 900
+  },
+  "KeyConfig": [
+    {
+      "Mode": "4Key",
+      "Keys": ["D", "F", "J", "K"]
+    },
+    {
+      "Mode": "5Key",
+      "Keys": ["D", "F", " ", "J", "K"]
+    },
+    {
+      "Mode": "6Key",
+      "Keys": ["S", "D", "F", "J", "K", "L"]
+    },
+    {
+      "Mode": "7Key",
+      "Keys": ["S", "D", "F", " ", "J", "K", "L"]
+    },
+    {
+      "Mode": "8Key",
+      "Keys": ["A", "S", "D", "F", "J", "K", "L", ";"]
+    },
+    {
+      "Mode": "9Key",
+      "Keys": ["A", "S", "D", "F", " ", "J", "K", "L", ";"]
+    },
+    {
+      "Mode": "Drum",
+      "Keys": ["D", "F", "J", "K"]
+    }
+  ]
+}

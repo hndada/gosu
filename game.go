@@ -25,13 +25,15 @@ type Scene interface {
 var (
 	modeProps   []ModeProp
 	sceneSelect *SceneSelect
+	config      Config
 )
 
 // Todo: load settings
 func NewGame(props []ModeProp) *Game {
 	modeProps = props
 	g := &Game{}
-	SetKeySettings(props)
+	config = LoadSettings()
+	SetKeySettings(props, config.KeyConfigs)
 	// 1. Load chart info and score data
 	// 2. Check removed chart
 	// 3. Check added chart
@@ -48,7 +50,7 @@ func NewGame(props []ModeProp) *Game {
 	}
 	LoadHandlers(props)
 	ebiten.SetWindowTitle("gosu")
-	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
+	ebiten.SetWindowSize(config.WindowSize.Width, config.WindowSize.Height)
 	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetTPS(TPS)
 	modeHandler.Max = len(props)

@@ -29,6 +29,7 @@ go.work
 # !/cmd/gosu/replay
 !/cmd/gosu/skin
 !/cmd/gosu/keys.txt
+!/cmd/gosu/config.json
 ~$gosu-ui.pptx
 
 # !/cmd/gosu/skin/*.*
@@ -36,3 +37,6 @@ go.work
 /cmd/web/*
 !/cmd/web/main.go
 !/cmd/web/keys.txt
+
+# Jetbrains
+.idea/

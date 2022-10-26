@@ -1,9 +1,9 @@
 package gosu
 
 import (
-	"bytes"
+	"encoding/json"
 	"fmt"
-	"os"
+	"io/ioutil"
 	"strconv"
 	"strings"
 
@@ -34,38 +34,47 @@ var (
 	MeterHeight   float64 = 50
 )
 
+type Size2D struct {
+	Width  int `json:"Width"`
+	Height int `json:"Height"`
+}
+
+type KeyConfig struct {
+	Mode string   `json:"Mode"`
+	Keys []string `json:"Keys"`
+}
+
+type Config struct {
+	MusicRoot  string      `json:"MusicRoot"`
+	WindowSize Size2D      `json:"WindowSize"`
+	KeyConfigs []KeyConfig `json:"KeyConfig"`
+}
+
 // Todo: reset all tick-dependent variables.
 // They are mostly at drawer.go or play.go, settings.go
 // Keyword: TimeToTick
 func SetTPS() {}
 
-// Temporary function.
-func SetKeySettings(props []ModeProp) {
-	data, err := os.ReadFile("keys.txt")
+func LoadSettings() (config Config) {
+	// TODO: Overwrite user's custom settings
+	data, err := ioutil.ReadFile("config.json")
 	if err != nil {
-		fmt.Printf("error: %v", err)
+		fmt.Printf("error: #{err}")
 		return
 	}
-	data = bytes.ReplaceAll(data, []byte("\r\n"), []byte("\n"))
-	for _, line := range strings.Split(string(data), "\n") {
-		if len(line) == 0 {
-			continue
-		}
-		if len(line) >= 1 && line[0] == '#' {
-			continue
-		}
-		if len(line) >= 2 && line[0] == '/' && line[1] == '/' {
-			continue
-		}
-		kv := strings.Split(line, ": ")
-		mode := kv[0]
-		names := strings.Split(kv[1], ", ")
-		for i, name := range names {
-			names[i] = strings.TrimSpace(name)
-		}
-		keys := input.NamesToKeys(names)
+	err = json.Unmarshal(data, &config)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func SetKeySettings(props []ModeProp, KeyConfigs []KeyConfig) {
+	for _, KeyConfig := range KeyConfigs {
+		mode := KeyConfig.Mode
+		keys := input.NamesToKeys(KeyConfig.Keys)
 		if !input.IsKeysValid(keys) {
-			fmt.Printf("mapping keys are duplicated: %v\n", names)
+			fmt.Printf("mapping keys are duplicated: #{names}\n")
 			continue
 		}
 		switch mode {
@@ -77,9 +86,9 @@ func SetKeySettings(props []ModeProp) {
 				}
 			}
 		default:
-			subMode, err := strconv.Atoi(mode)
+			subMode, err := strconv.Atoi(strings.Replace(mode, "Key", "", 1))
 			if err != nil {
-				fmt.Printf("error at loading key settings %s: %v", line, err)
+				fmt.Printf("error at loading key settings %s: %v", KeyConfig, err)
 				continue
 			}
 			for _, prop := range props {
