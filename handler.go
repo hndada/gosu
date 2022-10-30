@@ -8,6 +8,7 @@ import (
 var (
 	currentMode int
 	currentSort int
+	currentSize int = 1
 
 	MusicVolume          float64 = 0.25
 	EffectVolume         float64 = 0.25
@@ -20,6 +21,8 @@ var (
 	ModeKeyHandler ctrl.KeyHandler
 	sortHandler    ctrl.IntHandler
 	SortKeyHandler ctrl.KeyHandler
+	sizeHandler    ctrl.IntHandler
+	SizeKeyHandler ctrl.KeyHandler
 
 	musicVolumeHandler     ctrl.FloatHandler
 	MusicVolumeKeyHandler  ctrl.KeyHandler
@@ -66,6 +69,19 @@ func LoadHandlers(props []ModeProp) {
 		Handler:   sortHandler,
 		Modifiers: []ebiten.Key{},
 		Keys:      [2]ebiten.Key{-1, ebiten.KeyF2},
+		Sounds:    [2][]byte{SwipeSound, SwipeSound},
+		Volume:    &EffectVolume,
+	}
+	sizeHandler = ctrl.IntHandler{
+		Value: &currentSize,
+		Min:   0,
+		Max:   2,
+		Loop:  true,
+	}
+	SizeKeyHandler = ctrl.KeyHandler{
+		Handler:   sizeHandler,
+		Modifiers: []ebiten.Key{},
+		Keys:      [2]ebiten.Key{-1, ebiten.KeyF3},
 		Sounds:    [2][]byte{SwipeSound, SwipeSound},
 		Volume:    &EffectVolume,
 	}

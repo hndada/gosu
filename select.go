@@ -43,6 +43,9 @@ func (s *SceneSelect) Update() any {
 	if set := s.CursorKeyHandler.Update() || BrightKeyHandler.Update(); set {
 		s.UpdateBackground()
 	}
+	if set := SizeKeyHandler.Update(); set {
+		s.UpdateWindowSize()
+	}
 	if ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsKeyPressed(ebiten.KeyNumpadEnter) {
 		audios.PlayEffect(SelectSound, EffectVolume)
 		prop := modeProps[currentMode]
@@ -86,6 +89,9 @@ func (s *SceneSelect) UpdateMode() {
 	s.Cursor = 0
 	s.CursorKeyHandler = NewCursorKeyHandler(&s.Cursor, len(s.View))
 	s.UpdateBackground()
+}
+func (s *SceneSelect) UpdateWindowSize() {
+	ebiten.SetWindowSize(WindowSizeX[currentSize], WindowSizeY[currentSize])
 }
 func NewCursorKeyHandler(cursor *int, len int) ctrl.KeyHandler {
 	return ctrl.KeyHandler{
@@ -176,10 +182,12 @@ func (s SceneSelect) Viewport() ([]ChartInfo, int) {
 func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
 	prop := modeProps[currentMode]
 	speed := *prop.SpeedScale
+	sizeX, sizeY := ebiten.WindowSize()
 	ebitenutil.DebugPrint(screen,
 		fmt.Sprintf(
 			"Mode (F1): %s\n"+
 				"Sort (F2): %s\n"+
+				"Window size (F3): %dx%d\n"+
 				"\n"+
 				"Music volume (Alt+ Left/Right): %.0f%%\n"+
 				"Effect volume (Ctrl+ Left/Right): %.0f%%\n"+
@@ -189,6 +197,8 @@ func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
 				"Offset (Shift+ Left/Right): %dms\n",
 			prop.Name,
 			[]string{"by name", "by level"}[currentSort],
+			sizeX,
+			sizeY,
 
 			MusicVolume*100,
 			EffectVolume*100,

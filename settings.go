@@ -12,8 +12,8 @@ import (
 
 var (
 	MusicRoot   = "music"
-	WindowSizeX = 1600
-	WindowSizeY = 900
+	WindowSizeX = [3]int{1280, 1600, 1920}
+	WindowSizeY = [3]int{720, 900, 1080}
 )
 var (
 	// TPS supposed to be multiple of 1000, since only one speed value
