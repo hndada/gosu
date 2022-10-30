@@ -82,6 +82,9 @@ func (g *Game) Update() (err error) {
 	EffectVolumeKeyHandler.Update()
 	SpeedScaleKeyHandler.Update()
 	OffsetKeyHandler.Update()
+	FullScreenKeyHandler.Update()
+
+	ebiten.SetFullscreen(isFullScreen)
 	if g.Scene == nil {
 		g.Scene = sceneSelect
 	}

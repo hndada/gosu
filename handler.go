@@ -14,6 +14,7 @@ var (
 	BackgroundBrightness float64 = 0.6
 
 	Offset int = -65
+	isFullScreen bool = false
 )
 var (
 	modeHandler    ctrl.IntHandler
@@ -31,6 +32,9 @@ var (
 
 	offsetHandler    ctrl.IntHandler
 	OffsetKeyHandler ctrl.KeyHandler
+	
+	fullScreenHandler    ctrl.BoolHandler
+	FullScreenKeyHandler ctrl.KeyHandler
 )
 var (
 	speedScaleHandlers   []ctrl.FloatHandler
@@ -138,6 +142,18 @@ func LoadHandlers(props []ModeProp) {
 		Handler:   offsetHandler,
 		Modifiers: []ebiten.Key{ebiten.KeyShiftLeft},
 		Keys:      [2]ebiten.Key{ebiten.KeyLeft, ebiten.KeyRight},
+		Sounds:    [2][]byte{TapSound, TapSound},
+		Volume:    &EffectVolume,
+	}
+
+	fullScreenHandler = ctrl.BoolHandler{
+		Value: &isFullScreen,	
+	}
+
+	FullScreenKeyHandler = ctrl.KeyHandler{
+		Handler:   fullScreenHandler,
+		Modifiers: []ebiten.Key{},
+		Keys:      [2]ebiten.Key{-1, ebiten.KeyF5},
 		Sounds:    [2][]byte{TapSound, TapSound},
 		Volume:    &EffectVolume,
 	}
