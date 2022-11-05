@@ -13,7 +13,7 @@ var (
 	EffectVolume         float64 = 0.25
 	BackgroundBrightness float64 = 0.6
 
-	Offset int = -65
+	Offset int = -30
 )
 var (
 	modeHandler    ctrl.IntHandler

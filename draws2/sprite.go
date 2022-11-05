@@ -21,12 +21,12 @@ func NewSpriteFromImage(i *ebiten.Image) Sprite {
 		Box: NewBox(),
 	}
 }
-func (s Sprite) srcSize() Point { return IntPt(s.i.Size()) }
+func (s Sprite) SrcSize() Point { return IntPt(s.i.Size()) }
 func (s Sprite) Size() Point {
 	if s.i == nil {
 		return Point{}
 	}
-	return s.srcSize().Mul(s.Scale)
+	return s.SrcSize().Mul(s.Scale)
 }
 func (s Sprite) XY() (float64, float64) { return s.Box.XY(s.Size()) } // s.Min(s.Size()).XY() }
 func (s Sprite) W() float64             { return s.Size().X }
@@ -37,12 +37,13 @@ func (s *Sprite) SetSize(w, h float64) {
 	if s.i == nil {
 		return
 	}
-	s.Scale = Pt(w, h).Div(s.srcSize())
+	s.Scale = Pt(w, h).Div(s.SrcSize())
 	// s.Box.SetSize(IntPt(s.i.Size()), size)
 }
-func (s *Sprite) SetScale(scale Point) { s.Scale = scale }
-
-func (s Sprite) IsValid() bool { return s.i != nil }
+func (s *Sprite) SetScaleToW(w float64) { s.SetScale(Scalar(w / s.W())) }
+func (s *Sprite) SetScaleToH(h float64) { s.SetScale(Scalar(h / s.H())) }
+func (s Sprite) IsValid() bool          { return s.i != nil }
+func (s Sprite) In(p Point) bool        { return s.Box.In(s.Size(), p) }
 func (s Sprite) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
 	if s.i == nil {
 		return

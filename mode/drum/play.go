@@ -7,7 +7,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/audios"
-	"github.com/hndada/gosu/draws"
+	draws "github.com/hndada/gosu/draws2"
 	"github.com/hndada/gosu/format/osr"
 )
 
@@ -127,9 +127,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		Sprite: s.BarSprite,
 	}
 	s.JudgmentDrawer = JudgmentDrawer{
-		BaseDrawer: draws.BaseDrawer{
-			MaxCountdown: gosu.TimeToTick(400),
-		},
+		Timer:   draws.NewTimer(gosu.TimeToTick(400)),
 		Sprites: s.JudgmentSprites,
 	}
 	s.ShakeDrawer = ShakeDrawer{
@@ -155,7 +153,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		NoteSprites: s.NoteSprites,
 	}
 	for i, sprites := range s.OverlaySprites {
-		s.NoteDrawer.OverlayDrawers[i] = draws.AnimationDrawer{
+		s.NoteDrawer.OverlayAnimations[i] = draws.Animation{
 			Time:      s.Now,
 			Duration:  int64(60000 / ScaledBPM(s.BPM)),
 			StartTime: s.TransPoint.Time,
@@ -171,14 +169,13 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	if s.Highlight {
 		s.DancerDrawer.Mode = DancerHigh
 	}
-	for i := range s.DancerDrawer.AnimationDrawers {
-		s.DancerDrawer.AnimationDrawers[i].Sprites = s.DancerSprites[i]
+	for i := range s.DancerDrawer.Animations {
+		s.DancerDrawer.Animations[i].Sprites = s.DancerSprites[i]
+		s.DancerDrawer.Animations[i].Update(s.Now, int64(60000/ScaledBPM(s.BPM)), false)
 	}
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer = gosu.NumberDrawer{
-		BaseDrawer: draws.BaseDrawer{
-			MaxCountdown: gosu.TimeToTick(2000),
-		},
+		Timer:      draws.NewTimer(gosu.TimeToTick(2000)),
 		Sprites:    s.ComboSprites,
 		DigitWidth: s.ComboSprites[0].W(),
 		DigitGap:   ComboDigitGap,

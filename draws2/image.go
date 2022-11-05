@@ -2,6 +2,7 @@ package draws
 
 import (
 	"image"
+	"math"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -27,4 +28,32 @@ func NewImageImage(path string) image.Image {
 		return nil
 	}
 	return src
+}
+func NewXFlippedImage(i *ebiten.Image) *ebiten.Image {
+	w, h := i.Size()
+	i2 := ebiten.NewImage(w, h)
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(-1, 1)
+	op.GeoM.Translate(float64(w), 0)
+	i2.DrawImage(i, op)
+	return i2
+}
+func NewYFlippedImage(i *ebiten.Image) *ebiten.Image {
+	w, h := i.Size()
+	i2 := ebiten.NewImage(w, h)
+	op := &ebiten.DrawImageOptions{}
+	op.GeoM.Scale(1, -1)
+	op.GeoM.Translate(0, float64(h))
+	i2.DrawImage(i, op)
+	return i2
+}
+func NewScaledImage(i *ebiten.Image, scale float64) *ebiten.Image {
+	sw, sh := i.Size()
+	w, h := math.Ceil(float64(sw)*scale), math.Ceil(float64(sh)*scale)
+	i2 := ebiten.NewImage(int(w), int(h))
+	op := &ebiten.DrawImageOptions{}
+	op.Filter = ebiten.FilterLinear
+	op.GeoM.Scale(scale, scale)
+	i2.DrawImage(i, op)
+	return i2
 }
