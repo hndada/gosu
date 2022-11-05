@@ -4,7 +4,7 @@ import "github.com/hajimehoshi/ebiten/v2"
 
 type Subject interface {
 	Size() Point
-	SetSize(size Point)
+	// SetSize(w, h float64)
 	Draw(*ebiten.Image, ebiten.DrawImageOptions)
-	In(Point) bool
+	In(p Point) bool
 }

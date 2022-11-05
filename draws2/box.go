@@ -20,6 +20,7 @@ func (b *Box) SetPoint(x, y float64, origin Origin) {
 	b.Y = y
 	b.Origin = origin
 }
+func (b *Box) SetScale(scale Point) { b.Scale = scale }
 
 // func (b Box) Size(src Point) Point     { return src.Mul(b.Scale) }
 // func (b *Box) SetSize(src, size Point) { b.Scale = size.Div(src) }
