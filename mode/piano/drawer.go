@@ -175,15 +175,14 @@ func (d KeyDrawer) Draw(screen *ebiten.Image) {
 
 type JudgmentDrawer struct {
 	draws.Timer
-	Sprites  []draws.Sprite
+	Sprites [5][]draws.Sprite
+	// Sprites  [5]draws.Animation3
 	Judgment gosu.Judgment
 }
 
 func NewJudgmentDrawer() (d JudgmentDrawer) {
 	return JudgmentDrawer{
-		Timer: draws.Timer{
-			MaxCountdown: gosu.TimeToTick(600),
-		},
+		Timer:   draws.NewTimer(gosu.TimeToTick(600), gosu.TimeToTick(20)),
 		Sprites: GeneralSkin.JudgmentSprites,
 	}
 }
@@ -203,14 +202,15 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	if d.Countdown <= 0 || d.Judgment.Window == 0 {
 		return
 	}
-	var sprite draws.Sprite
+	var idx int
 	for i, j := range Judgments {
 		if j.Window == d.Judgment.Window {
-			sprite = d.Sprites[i]
+			idx = i
 			break
 		}
 	}
 	age := d.Age()
+	sprite := d.Frame(d.Sprites[idx])
 	scale := 1.0
 	switch {
 	case age < 0.1:

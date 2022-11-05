@@ -129,7 +129,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	s.JudgmentDrawer = NewJudgmentDrawer()
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer = gosu.NumberDrawer{
-		Timer:      draws.NewTimer(gosu.TimeToTick(2000)),
+		Timer:      draws.NewTimer(gosu.TimeToTick(2000), 0),
 		DigitWidth: s.ComboSprites[0].Size().X,
 		DigitGap:   ComboDigitGap,
 		Bounce:     0.85,

@@ -126,7 +126,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		Sprite: s.BarSprite,
 	}
 	s.JudgmentDrawer = JudgmentDrawer{
-		Timer:   draws.NewTimer(gosu.TimeToTick(400)),
+		Timer:   draws.NewTimer(gosu.TimeToTick(400), 01),
 		Sprites: s.JudgmentSprites,
 	}
 	s.ShakeDrawer = ShakeDrawer{
@@ -174,7 +174,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	}
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer = gosu.NumberDrawer{
-		Timer:      draws.NewTimer(gosu.TimeToTick(2000)),
+		Timer:      draws.NewTimer(gosu.TimeToTick(2000), 0),
 		Sprites:    s.ComboSprites,
 		DigitWidth: s.ComboSprites[0].W(),
 		DigitGap:   ComboDigitGap,

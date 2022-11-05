@@ -12,6 +12,7 @@ type Animation struct {
 	Time      int64
 	Duration  int64 // float64
 	Point
+	// Box
 }
 
 func (d *Animation) Update(time, duration int64, reset bool) {
@@ -34,6 +35,7 @@ func (d Animation) Frame() int {
 	}
 	return int(rate * float64(len(d.Sprites)))
 }
+func (d Animation) CurrentFrame() Sprite { return d.Sprites[d.Frame()] }
 func (d Animation) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
 	if len(d.Sprites) == 0 {
 		return
