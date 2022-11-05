@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/audios"
-	"github.com/hndada/gosu/draws"
+	draws "github.com/hndada/gosu/draws2"
 )
 
 // ScreenSize is a logical size of in-game screen.
@@ -49,33 +48,31 @@ func LoadGeneralSkin() {
 	names := []string{"menu-cursor", "menu-cursor-additive", "cursortrail"}
 	for i, name := range names {
 		s := draws.NewSprite(fmt.Sprintf("skin/cursor/%s.png", name))
-		s.SetScale(CursorScale)
-		s.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenterMiddle)
+		s.SetScale(draws.Scalar(CursorScale))
+		s.SetPoint(screenSizeX/2, screenSizeY/2, draws.CenterMiddle)
 		CursorSprites[i] = s
 	}
 	{
 		s := draws.NewSprite("skin/box-mask.png")
-		scaleW := ChartInfoBoxWidth / s.W()
-		scaleH := ChartInfoBoxHeight / s.H()
-		s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
-		s.SetPosition(screenSizeX+chartInfoBoxshrink, screenSizeY/2, draws.OriginRightMiddle)
+		s.SetSize(ChartInfoBoxWidth, ChartInfoBoxHeight)
+		s.SetPoint(screenSizeX+chartInfoBoxshrink, screenSizeY/2, draws.RightMiddle)
 		ChartItemBoxSprite = s
 	}
 	// Todo: ChartLevelBoxSprite
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fmt.Sprintf("skin/score/%d.png", i))
-		s.SetScale(ScoreScale)
+		s.SetScale(draws.Scalar(ScoreScale))
 		if i == 0 {
-			s.SetPosition(screenSizeX, 0, draws.OriginRightTop)
+			s.SetPoint(screenSizeX, 0, draws.RightTop)
 		} else { // Need to set same base line, since each number has different height.
-			s.SetPosition(screenSizeX, ScoreSprites[0].H()-s.H(), draws.OriginRightTop)
+			s.SetPoint(screenSizeX, ScoreSprites[0].H()-s.H(), draws.RightTop)
 		}
 		ScoreSprites[i] = s
 	}
 	for i, name := range []string{"dot", "comma", "percent"} {
 		s := draws.NewSprite(fmt.Sprintf("skin/score/%s.png", name))
-		s.SetScale(ScoreScale)
-		s.SetPosition(screenSizeX, 0, draws.OriginRightTop)
+		s.SetScale(draws.Scalar(ScoreScale))
+		s.SetPoint(screenSizeX, 0, draws.RightTop)
 		SignSprites[i] = s
 	}
 	TapSound, _ = audios.NewBytes("skin/sound/tap/0.wav")
@@ -92,8 +89,8 @@ func LoadGeneralSkin() {
 }
 func NewBackground(path string) draws.Sprite {
 	s := draws.NewSprite(path)
-	s.SetScale(screenSizeX / s.W())
-	s.SetPosition(screenSizeX/2, screenSizeY/2, draws.OriginCenterMiddle)
+	s.SetScale(draws.Scalar(screenSizeX / s.W()))
+	s.SetPoint(screenSizeX/2, screenSizeY/2, draws.CenterMiddle)
 	return s
 }
 func Paths(base string) (paths []string) {

@@ -6,7 +6,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu"
-	"github.com/hndada/gosu/draws"
+	draws "github.com/hndada/gosu/draws2"
 	"github.com/hndada/gosu/format/osr"
 )
 
@@ -49,7 +49,6 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	gosu.SetTitle(c.ChartHeader)
 	keyCount := c.KeyCount & ScratchMask
 	s.Timer = gosu.NewTimer(c.Duration())
-	// s.SetTicks(c.Duration())
 	if path, ok := c.MusicPath(cpath); ok {
 		s.MusicPlayer, err = gosu.NewMusicPlayer(path, &s.Timer) //(gosu.MusicVolumeHandler, path)
 		if err != nil {
@@ -130,10 +129,8 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	s.JudgmentDrawer = NewJudgmentDrawer()
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer = gosu.NumberDrawer{
-		BaseDrawer: draws.BaseDrawer{
-			MaxCountdown: gosu.TimeToTick(2000),
-		},
-		DigitWidth: s.ComboSprites[0].W(),
+		Timer:      draws.NewTimer(gosu.TimeToTick(2000)),
+		DigitWidth: s.ComboSprites[0].Size().X,
 		DigitGap:   ComboDigitGap,
 		Bounce:     0.85,
 		Sprites:    s.ComboSprites,

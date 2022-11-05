@@ -129,7 +129,7 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		}
 		ty := float64(i-cursor) * ChartInfoBoxHeight
 		sprite.Move(tx, ty)
-		sprite.Draw(screen, nil)
+		sprite.Draw(screen, ebiten.DrawImageOptions{})
 	}
 
 	const (
@@ -141,8 +141,8 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		t := info.Text()
 		offset := float64(i-cursor) * ChartInfoBoxHeight
 		// rect := text.BoundString(draws.Face24, t)
-		x := int(sprite.X()-sprite.W()) + dx   //+ rect.Dx()
-		y := int(sprite.Y()-sprite.H()/2) + dy //+ rect.Dy()
+		x := int(sprite.X-sprite.W()) + dx   //+ rect.Dx()
+		y := int(sprite.Y-sprite.H()/2) + dy //+ rect.Dy()
 		if i == cursor {
 			x -= int(chartInfoBoxshrink)
 		}

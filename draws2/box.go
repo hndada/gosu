@@ -3,9 +3,9 @@ package draws
 import "github.com/hajimehoshi/ebiten/v2"
 
 type Box struct {
+	Scale Point
 	Point
 	Origin Origin
-	Scale  Point
 	Filter ebiten.Filter
 }
 
@@ -14,6 +14,11 @@ func NewBox() Box {
 		Scale:  Point{1, 1},
 		Filter: ebiten.FilterLinear, // In ebiten, default filter is FilterNearest.
 	}
+}
+func (b *Box) SetPoint(x, y float64, origin Origin) {
+	b.X = x
+	b.Y = y
+	b.Origin = origin
 }
 
 // func (b Box) Size(src Point) Point     { return src.Mul(b.Scale) }
@@ -24,6 +29,7 @@ func (b Box) In(size, p Point) bool {
 	p = p.Sub(min)
 	return p.X >= 0 && p.X <= max.X && p.Y >= 0 && p.Y <= max.Y
 }
+func (b Box) XY(size Point) (float64, float64) { return b.Min(size).XY() }
 func (b Box) Min(size Point) (min Point) {
 	min = b.Point
 	switch b.Origin.X {
@@ -45,4 +51,4 @@ func (b Box) Min(size Point) (min Point) {
 	return
 }
 func (b Box) Max(size Point) Point { return b.Min(size).Add(size) }
-func (b *Box) Move(p Point)        { b.Point.Add(p) }
+func (b *Box) Move(x, y float64)   { b.Point = b.Point.Add(Pt(x, y)) }
