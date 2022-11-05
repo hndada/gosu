@@ -254,7 +254,7 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
-		s.SpeedScale*100, s.TransPoint.Speed, ExposureTime(s.CurrentSpeed()),
+		s.SpeedScale*100, s.TransPoint.Speed, ExposureTime(s.Speed()),
 		gosu.MusicVolume*100, gosu.EffectVolume*100,
 		gosu.Offset))
 }
@@ -262,14 +262,12 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 // 1 pixel is 1 millisecond.
 func ExposureTime(speed float64) float64 { return HitPosition / speed }
 
-// func (s ScenePlay) Time() int64           { return s.Timer.Time() }
-func (s ScenePlay) Speed()                { s.CurrentSpeed() }
-func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.SpeedScale }
+func (s ScenePlay) Speed() float64 { return s.TransPoint.Speed * s.SpeedScale }
 
 // Supposes one current TransPoint can increment cursor precisely.
 func (s *ScenePlay) UpdateCursor() {
 	duration := float64(s.Now - s.TransPoint.Time)
-	s.Cursor = s.TransPoint.Position + duration*s.CurrentSpeed()
+	s.Cursor = s.TransPoint.Position + duration*s.Speed()
 }
 func (s *ScenePlay) UpdateTransPoint() {
 	s.TransPoint = s.TransPoint.FetchByTime(s.Now)

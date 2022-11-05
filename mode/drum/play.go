@@ -359,7 +359,7 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 		s.Scores[gosu.Total], s.ScoreBounds[gosu.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100,
 		s.JudgmentCounts[:3], s.JudgmentCounts[3:5], s.JudgmentCounts[5:],
-		s.SpeedScale*100, s.SpeedScale/s.TransPoint.Speed, ExposureTime(s.CurrentSpeed()),
+		s.SpeedScale*100, s.SpeedScale/s.TransPoint.Speed, ExposureTime(s.Speed()),
 		gosu.MusicVolume*100, gosu.EffectVolume*100,
 		gosu.Offset))
 }
@@ -372,8 +372,7 @@ func ExposureTime(speedScale float64) float64 {
 func (s *ScenePlay) UpdateTransPoint() {
 	s.TransPoint = s.TransPoint.FetchByTime(s.Now)
 }
-func (s ScenePlay) Speed()                { s.CurrentSpeed() }
-func (s ScenePlay) CurrentSpeed() float64 { return s.TransPoint.Speed * s.SpeedScale }
+func (s ScenePlay) Speed() float64 { return s.TransPoint.Speed * s.SpeedScale }
 
 var DefaultSampleNames = [2][2]string{
 	{"red-regular", "red-big"},
