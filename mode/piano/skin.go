@@ -53,17 +53,15 @@ func init() { // I'm proud of the following code.
 
 var GeneralSkin struct { // Singleton
 	ComboSprites    [10]draws.Sprite
-	JudgmentSprites []draws.Sprite
+	JudgmentSprites [5][]draws.Sprite
 }
 
 // Todo: should each skin has own skin settings?
-// Order of fields in Skin is focused on readability.
 type Skin struct {
-	ScoreSprites [10]draws.Sprite
-	SignSprites  [3]draws.Sprite
-
+	ScoreSprites    [10]draws.Sprite
+	SignSprites     [3]draws.Sprite
 	ComboSprites    [10]draws.Sprite
-	JudgmentSprites []draws.Sprite // Todo: slice -> array?
+	JudgmentSprites [5][]draws.Sprite
 
 	KeyUpSprites   []draws.Sprite
 	KeyDownSprites []draws.Sprite
@@ -72,10 +70,9 @@ type Skin struct {
 	TailSprites    []draws.Sprite
 	BodySprites    []draws.Sprite
 	// BodySprites    [][]draws.Sprite // Binary-building method
-
 	FieldSprite draws.Sprite
 	HintSprite  draws.Sprite
-	BarSprite   draws.Sprite // Seperator of each bar (aka measure)
+	BarSprite   draws.Sprite
 }
 
 var Skins = make(map[int]Skin)
@@ -88,12 +85,14 @@ func LoadSkin() {
 		s.SetPoint(FieldPosition, ComboPosition, draws.CenterMiddle)
 		GeneralSkin.ComboSprites[i] = s
 	}
-	GeneralSkin.JudgmentSprites = make([]draws.Sprite, 5)
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
-		s := draws.NewSprite(fmt.Sprintf("skin/piano/judgment/%s.png", name))
-		s.SetScale(draws.Scalar(JudgmentScale))
-		s.SetPoint(FieldPosition, JudgmentPosition, draws.CenterMiddle)
-		GeneralSkin.JudgmentSprites[i] = s
+		a := draws.NewAnimation(fmt.Sprintf("skin/piano/judgment/%s", name))
+		// s := draws.NewSprite(fmt.Sprintf("skin/piano/judgment/%s.png", name))
+		for i := range a {
+			a[i].SetScale(draws.Scalar(JudgmentScale))
+			a[i].SetPoint(FieldPosition, JudgmentPosition, draws.CenterMiddle)
+		}
+		GeneralSkin.JudgmentSprites[i] = a
 	}
 
 	// Following sprites are dependent of key count.
@@ -129,7 +128,7 @@ func LoadSkin() {
 			SignSprites:  gosu.SignSprites,
 
 			ComboSprites:    GeneralSkin.ComboSprites,
-			JudgmentSprites: GeneralSkin.JudgmentSprites[:],
+			JudgmentSprites: GeneralSkin.JudgmentSprites,
 
 			KeyUpSprites:   make([]draws.Sprite, keyCount&ScratchMask),
 			KeyDownSprites: make([]draws.Sprite, keyCount&ScratchMask),
