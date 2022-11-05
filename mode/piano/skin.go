@@ -10,7 +10,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu"
-	"github.com/hndada/gosu/draws"
+	draws "github.com/hndada/gosu/draws2"
 )
 
 type NoteKind int
@@ -84,15 +84,15 @@ func LoadSkin() {
 	// Sprites that are independent of key count.
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fmt.Sprintf("skin/combo/%d.png", i))
-		s.SetScale(ComboScale)
-		s.SetPosition(FieldPosition, ComboPosition, draws.OriginCenterMiddle)
+		s.SetScale(draws.Scalar(ComboScale))
+		s.SetPoint(FieldPosition, ComboPosition, draws.CenterMiddle)
 		GeneralSkin.ComboSprites[i] = s
 	}
 	GeneralSkin.JudgmentSprites = make([]draws.Sprite, 5)
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
 		s := draws.NewSprite(fmt.Sprintf("skin/piano/judgment/%s.png", name))
-		s.SetScale(JudgmentScale)
-		s.SetPosition(FieldPosition, JudgmentPosition, draws.OriginCenterMiddle)
+		s.SetScale(draws.Scalar(JudgmentScale))
+		s.SetPoint(FieldPosition, JudgmentPosition, draws.CenterMiddle)
 		GeneralSkin.JudgmentSprites[i] = s
 	}
 
@@ -151,48 +151,38 @@ func LoadSkin() {
 			w := math.Ceil(noteWidths[kind])
 			{
 				s := draws.NewSpriteFromImage(keyUpImage)
-				scaleW := w / s.W()
-				scaleH := (screenSizeY - HitPosition) / s.H()
-				s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginLeftTop)
+				s.SetSize(w, screenSizeY-HitPosition)
+				s.SetPoint(x, HitPosition, draws.LeftTop)
 				skin.KeyUpSprites[k] = s
 			}
 			{
 				s := draws.NewSpriteFromImage(keyDownImage)
-				scaleW := w / s.W()
-				scaleH := (screenSizeY - HitPosition) / s.H()
-				s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginLeftTop)
+				s.SetSize(w, screenSizeY-HitPosition)
+				s.SetPoint(x, HitPosition, draws.LeftTop)
 				skin.KeyDownSprites[k] = s
 			}
 			{
 				s := draws.NewSpriteFromImage(noteImages[kind])
-				scaleW := w / s.W()
-				scaleH := NoteHeigth / s.H()
-				s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginLeftBottom)
+				s.SetSize(w, NoteHeigth)
+				s.SetPoint(x, HitPosition, draws.LeftBottom)
 				skin.NoteSprites[k] = s
 			}
 			{
 				s := draws.NewSpriteFromImage(headImages[kind])
-				scaleW := w / s.W()
-				scaleH := NoteHeigth / s.H()
-				s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginLeftBottom)
+				s.SetSize(w, NoteHeigth)
+				s.SetPoint(x, HitPosition, draws.LeftBottom)
 				skin.HeadSprites[k] = s
 			}
 			{
 				s := draws.NewSpriteFromImage(tailImages[kind])
-				scaleW := w / s.W()
-				scaleH := NoteHeigth / s.H()
-				s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
-				s.SetPosition(x, HitPosition, draws.OriginLeftBottom)
+				s.SetSize(w, NoteHeigth)
+				s.SetPoint(x, HitPosition, draws.LeftBottom)
 				skin.TailSprites[k] = s
 			}
 			{
 				s := draws.NewSpriteFromImage(bodyImages[kind])
-				s.SetScale(w / s.W())
-				s.SetPosition(x, HitPosition, draws.OriginLeftBottom) // Todo: need a test // -NoteHeigth
+				s.SetSize(w, s.H())                          // Height is variadic.
+				s.SetPoint(x, HitPosition, draws.LeftBottom) // Todo: need a test // -NoteHeigth
 				skin.BodySprites[k] = s
 			}
 			x += w
@@ -201,22 +191,20 @@ func LoadSkin() {
 			src := ebiten.NewImage(int(wsum), screenSizeY)
 			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
 			s := draws.NewSpriteFromImage(src)
-			s.SetPosition(FieldPosition, 0, draws.OriginCenterTop)
+			s.SetPoint(FieldPosition, 0, draws.CenterTop)
 			skin.FieldSprite = s
 		}
 		{
 			s := draws.NewSpriteFromImage(hintImage)
-			scaleW := wsum / s.W()
-			scaleH := HintHeight / s.H()
-			s.SetScaleXY(scaleW, scaleH, ebiten.FilterLinear)
-			s.SetPosition(FieldPosition, HitPosition-HintHeight, draws.OriginCenterTop)
+			s.SetSize(wsum, HintHeight)
+			s.SetPoint(FieldPosition, HitPosition-HintHeight, draws.CenterTop)
 			skin.HintSprite = s
 		}
 		{
 			src := ebiten.NewImage(int(wsum), 1)
 			src.Fill(color.NRGBA{255, 255, 255, 255}) // White
 			s := draws.NewSpriteFromImage(src)
-			s.SetPosition(FieldPosition, HitPosition, draws.OriginCenterBottom)
+			s.SetPoint(FieldPosition, HitPosition, draws.CenterBottom)
 			skin.BarSprite = s
 		}
 		Skins[keyCount] = skin

@@ -8,7 +8,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/ctrl"
-	"github.com/hndada/gosu/draws"
+	draws "github.com/hndada/gosu/draws2"
 )
 
 // Order of fields of drawer: updating fields, others fields, sprites.
@@ -18,7 +18,7 @@ type BackgroundDrawer struct {
 }
 
 func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
-	op := &ebiten.DrawImageOptions{}
+	op := ebiten.DrawImageOptions{}
 	op.ColorM.ChangeHSV(0, 1, *d.Brightness)
 	d.Sprite.Draw(screen, op)
 }
@@ -30,7 +30,7 @@ const (
 )
 
 type NumberDrawer struct {
-	draws.BaseDrawer
+	draws.Timer
 	DigitWidth float64
 	DigitGap   float64
 	Combo      int
@@ -70,21 +70,21 @@ func (d NumberDrawer) Draw(screen *ebiten.Image) {
 		sprite := d.Sprites[v]
 		sprite.Move(tx, 0)
 		age := d.Age()
-		h := sprite.H()
+		h := sprite.Size().Y
 		switch {
 		case age < 0.05:
 			sprite.Move(0, d.Bounce*age*h)
 		case age >= 0.05 && age < 0.1:
 			sprite.Move(0, d.Bounce*(0.1-age)*h)
 		}
-		sprite.Draw(screen, nil)
+		sprite.Draw(screen, ebiten.DrawImageOptions{})
 		tx -= w
 	}
 }
 
 // Todo: DigitWidth -> digitWidth with ScoreSprites[0].W()
 type ScoreDrawer struct {
-	draws.BaseDrawer
+	draws.Timer
 	DigitWidth float64 // Use number 0's width.
 	DigitGap   float64
 	ZeroFill   int
@@ -124,7 +124,7 @@ func (d ScoreDrawer) Draw(screen *ebiten.Image) {
 		sprite := d.Sprites[v]
 		sprite.Move(tx, 0)
 		sprite.Move(-w/2+sprite.W()/2, 0) // Need to set at center since origin is RightTop.
-		sprite.Draw(screen, nil)
+		sprite.Draw(screen, ebiten.DrawImageOptions{})
 		tx -= w
 	}
 }
@@ -184,7 +184,7 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 		}
 		i := ebiten.NewImageFromImage(src)
 		base := draws.NewSpriteFromImage(i)
-		base.SetPosition(screenSizeX/2, screenSizeY, draws.OriginCenterBottom)
+		base.SetPoint(screenSizeX/2, screenSizeY, draws.CenterBottom)
 		d.Meter = base
 	}
 	{
@@ -192,7 +192,7 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 		src.Fill(colorRed)
 		i := ebiten.NewImageFromImage(src)
 		anchor := draws.NewSpriteFromImage(i)
-		anchor.SetPosition(screenSizeX/2, screenSizeY, draws.OriginCenterBottom)
+		anchor.SetPoint(screenSizeX/2, screenSizeY, draws.CenterBottom)
 		d.Anchor = anchor
 	}
 	{
@@ -200,7 +200,7 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 		src.Fill(colorWhite)
 		i := ebiten.NewImageFromImage(src)
 		unit := draws.NewSpriteFromImage(i)
-		unit.SetPosition(screenSizeX/2, screenSizeY, draws.OriginCenterBottom)
+		unit.SetPoint(screenSizeX/2, screenSizeY, draws.CenterBottom)
 		d.Unit = unit
 	}
 	return
@@ -226,11 +226,11 @@ func (d *MeterDrawer) Update() {
 	d.Marks = d.Marks[cursor:] // Drop old marks.
 }
 func (d MeterDrawer) Draw(screen *ebiten.Image) {
-	d.Meter.Draw(screen, nil)
-	d.Anchor.Draw(screen, nil)
+	d.Meter.Draw(screen, ebiten.DrawImageOptions{})
+	d.Anchor.Draw(screen, ebiten.DrawImageOptions{})
 	for _, m := range d.Marks {
 		sprite := d.Unit
-		op := &ebiten.DrawImageOptions{}
+		op := ebiten.DrawImageOptions{}
 		color := MeterMarkColors[m.ColorType]
 		op.ColorM.ScaleWithColor(color)
 		if age := d.MarkAge(m); age >= 0.8 {

@@ -3,7 +3,7 @@ package piano
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu"
-	"github.com/hndada/gosu/draws"
+	draws "github.com/hndada/gosu/draws2"
 )
 
 type StageDrawer struct {
@@ -13,8 +13,8 @@ type StageDrawer struct {
 
 // Todo: might add some effect on StageDrawer
 func (d StageDrawer) Draw(screen *ebiten.Image) {
-	d.FieldSprite.Draw(screen, nil)
-	d.HintSprite.Draw(screen, nil)
+	d.FieldSprite.Draw(screen, ebiten.DrawImageOptions{})
+	d.HintSprite.Draw(screen, ebiten.DrawImageOptions{})
 }
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
@@ -57,7 +57,7 @@ func (d BarDrawer) Draw(screen *ebiten.Image) {
 		sprite := d.Sprite
 		pos := b.Position - d.Cursor
 		sprite.Move(0, -pos)
-		sprite.Draw(screen, nil)
+		sprite.Draw(screen, ebiten.DrawImageOptions{})
 	}
 }
 
@@ -105,12 +105,12 @@ func (d NoteDrawer) Draw(screen *ebiten.Image) {
 	}
 	for n := d.Farthest; n != nil && n != d.Nearest.Prev; n = n.Prev {
 		if n.Type == Tail {
-			d.DrawLongBody(screen, n)
+			d.DrawBody(screen, n)
 		}
 		sprite := d.Sprites[n.Type]
 		pos := n.Position - d.Cursor
 		sprite.Move(0, -pos)
-		op := &ebiten.DrawImageOptions{}
+		op := ebiten.DrawImageOptions{}
 		if n.Marked {
 			op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		}
@@ -118,19 +118,16 @@ func (d NoteDrawer) Draw(screen *ebiten.Image) {
 	}
 }
 
-// DrawLongBody draws scaled, corresponding sub-image of Body sprite.
-func (d NoteDrawer) DrawLongBody(screen *ebiten.Image, tail *Note) {
+// DrawBody draws scaled, corresponding sub-image of Body sprite.
+func (d NoteDrawer) DrawBody(screen *ebiten.Image, tail *Note) {
 	head := tail.Prev
 	body := d.Sprites[Body]
 	length := tail.Position - head.Position
 	length -= -bodyLoss
-	ratio := length / body.H()
-	op := &ebiten.DrawImageOptions{}
-	if ReverseBody {
-		body.SetScaleXY(1, -ratio, ebiten.FilterLinear)
-	} else {
-		body.SetScaleXY(1, ratio, ebiten.FilterLinear)
-	}
+	ratio := length / body.Size().Y
+	body.SetScale(body.Scale.Mul(draws.Pt(1, ratio)))
+
+	op := ebiten.DrawImageOptions{}
 	if tail.Marked {
 		op.ColorM.ChangeHSV(0, 0.3, 0.3)
 	}
@@ -168,22 +165,22 @@ func (d *KeyDrawer) Update(lastPressed, pressed []bool) {
 func (d KeyDrawer) Draw(screen *ebiten.Image) {
 	for k, p := range d.pressed {
 		if p || d.Countdowns[k] > 0 {
-			d.KeyDownSprites[k].Draw(screen, nil)
+			d.KeyDownSprites[k].Draw(screen, ebiten.DrawImageOptions{})
 		} else {
-			d.KeyUpSprites[k].Draw(screen, nil)
+			d.KeyUpSprites[k].Draw(screen, ebiten.DrawImageOptions{})
 		}
 	}
 }
 
 type JudgmentDrawer struct {
-	draws.BaseDrawer
+	draws.Timer
 	Sprites  []draws.Sprite
 	Judgment gosu.Judgment
 }
 
 func NewJudgmentDrawer() (d JudgmentDrawer) {
 	return JudgmentDrawer{
-		BaseDrawer: draws.BaseDrawer{
+		Timer: draws.Timer{
 			MaxCountdown: gosu.TimeToTick(600),
 		},
 		Sprites: GeneralSkin.JudgmentSprites,
@@ -222,6 +219,6 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	case age > 0.9:
 		ratio = 1 - 1.15*(age-0.9)
 	}
-	sprite.SetScale(ratio)
-	sprite.Draw(screen, nil)
+	sprite.SetScale(sprite.Scale.Mul(draws.Scalar(ratio)))
+	sprite.Draw(screen, ebiten.DrawImageOptions{})
 }
