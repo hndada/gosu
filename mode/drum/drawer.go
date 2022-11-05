@@ -114,10 +114,10 @@ func (d RollDrawer) Draw(screen *ebiten.Image) {
 		}
 		op := ebiten.DrawImageOptions{}
 		op.ColorM.ScaleWithColor(ColorYellow)
-		length := tail.Position(d.Time) - head.Position(d.Time)
 
 		bodySprite := d.BodySprites[head.Size]
-		bodySprite.SetSize(length, bodySprite.Y)
+		length := tail.Position(d.Time) - head.Position(d.Time)
+		bodySprite.SetSize(length, bodySprite.H())
 		bodySprite.Move(head.Position(d.Time), 0)
 		bodySprite.Draw(screen, op)
 
