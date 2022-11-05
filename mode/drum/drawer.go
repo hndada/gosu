@@ -191,14 +191,14 @@ func (d NoteDarwer) Draw(screen *ebiten.Image) {
 					op.ColorM.Scale(1, 1, 1, 0)
 				}
 			case modeRoll:
-				rate := pos / 400
-				if rate > 1 {
-					rate = 1
+				alpha := pos / 400
+				if alpha > 1 {
+					alpha = 1
 				}
-				if rate < 0 {
-					rate = 0
+				if alpha < 0 {
+					alpha = 0
 				}
-				op.ColorM.Scale(1, 1, 1, rate)
+				op.ColorM.Scale(1, 1, 1, alpha)
 			case modeNote:
 				if n.Marked {
 					op.ColorM.Scale(1, 1, 1, 0)
@@ -310,13 +310,6 @@ func (d *JudgmentDrawer) Update(j gosu.Judgment, big bool) {
 		d.big = false
 	} else {
 		d.Countdown--
-		if j.Is(Miss) {
-			rate := 1.0
-			if age := d.Age(); age >= 0.25 {
-				rate = (1 + 0.6*(age-0.25)/0.75)
-			}
-			d.radian = d.startRadian * rate
-		}
 	}
 	if j.Valid() {
 		d.Countdown = d.MaxCountdown
@@ -346,21 +339,32 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	}
 	op := ebiten.DrawImageOptions{}
 	if d.judgment.Is(Miss) {
+		age := d.Age()
+		if age < 0.2 {
+			scale := 1 + 0.2*(0.2-age)/0.2
+			sprite.SetScale(draws.Scalar(scale))
+			alpha := 1 - 0.5*(0.2-age)/0.2
+			op.ColorM.Scale(1, 1, 1, alpha)
+		}
+		if age >= 0.5 {
+			scale := 1 + 0.6*(age-0.5)/0.5
+			d.radian = d.startRadian * scale
+		}
 		op.GeoM.Translate(sprite.SrcSize().Div(draws.Scalar(-2)).XY())
 		// op.GeoM.Translate(-float64(sw)/2, -float64(sh)/2)
 		op.GeoM.Rotate(d.radian)
 		op.GeoM.Translate(sprite.SrcSize().Div(draws.Scalar(2)).XY())
 		// op.GeoM.Translate(float64(sw)/2, float64(sh)/2)
-	}
-	// ratio := 1.0
-	age := d.Age()
-	if age < 0.25 {
-		ratio := 1 + (0.25 - age)
-		sprite.SetScale(draws.Scalar(ratio))
-	}
-	if age > 0.75 {
-		rate := 1 - (age-0.75)/0.25
-		op.ColorM.Scale(1, 1, 1, rate)
+	} else {
+		age := d.Age()
+		if age < 0.25 {
+			scale := 1 + (0.25 - age)
+			sprite.SetScale(draws.Scalar(scale))
+		}
+		if age > 0.75 {
+			alpha := 1 - (age-0.75)/0.25
+			op.ColorM.Scale(1, 1, 1, alpha)
+		}
 	}
 	sprite.Draw(screen, op)
 }

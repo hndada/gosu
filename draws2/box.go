@@ -15,21 +15,13 @@ func NewBox() Box {
 		Filter: ebiten.FilterLinear, // In ebiten, default filter is FilterNearest.
 	}
 }
+func (b *Box) SetScale(scale Point) { b.Scale = scale }
 func (b *Box) SetPoint(x, y float64, origin Origin) {
 	b.X = x
 	b.Y = y
 	b.Origin = origin
 }
-func (b *Box) SetScale(scale Point) { b.Scale = scale }
-
-// func (b Box) Size(src Point) Point     { return src.Mul(b.Scale) }
-// func (b *Box) SetSize(src, size Point) { b.Scale = size.Div(src) }
-func (b Box) In(size, p Point) bool {
-	min := b.Min(size)
-	max := b.Max(size)
-	p = p.Sub(min)
-	return p.X >= 0 && p.X <= max.X && p.Y >= 0 && p.Y <= max.Y
-}
+func (b *Box) Move(x, y float64)               { b.Point = b.Point.Add(Pt(x, y)) }
 func (b Box) XY(size Point) (float64, float64) { return b.Min(size).XY() }
 func (b Box) Min(size Point) (min Point) {
 	min = b.Point
@@ -52,4 +44,9 @@ func (b Box) Min(size Point) (min Point) {
 	return
 }
 func (b Box) Max(size Point) Point { return b.Min(size).Add(size) }
-func (b *Box) Move(x, y float64)   { b.Point = b.Point.Add(Pt(x, y)) }
+func (b Box) In(size, p Point) bool {
+	min := b.Min(size)
+	max := b.Max(size)
+	p = p.Sub(min)
+	return p.X >= 0 && p.X <= max.X && p.Y >= 0 && p.Y <= max.Y
+}
