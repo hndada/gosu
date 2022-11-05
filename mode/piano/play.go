@@ -166,18 +166,12 @@ func (s *ScenePlay) Update() any {
 		s.MusicPlayer.Close()
 		return gosu.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
 	}
-	// if s.Now == 0 {
-	// 	s.MusicPlayer.Play()
-	// }
-	// if s.Now == 150 {
-	// 	s.MusicPlayer.Player.Seek(time.Duration(s.Now) * time.Millisecond)
-	// }
 	s.MusicPlayer.Update()
-	// fmt.Printf("game: %dms music: %s\n", s.Now, s.MusicPlayer.Player.Current())
 
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
 	var worst gosu.Judgment
+
 	for _, n := range s.Staged {
 		if n == nil {
 			continue

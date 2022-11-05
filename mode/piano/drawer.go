@@ -124,8 +124,9 @@ func (d NoteDrawer) DrawBody(screen *ebiten.Image, tail *Note) {
 	body := d.Sprites[Body]
 	length := tail.Position - head.Position
 	length -= -bodyLoss
-	ratio := length / body.Size().Y
-	body.SetScale(body.Scale.Mul(draws.Pt(1, ratio)))
+	// scale := length / body.Size().Y
+	// body.SetScale(body.Scale.Mul(draws.Pt(1, scale)))
+	body.SetSize(body.W(), length)
 
 	op := ebiten.DrawImageOptions{}
 	if tail.Marked {
@@ -210,15 +211,15 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 		}
 	}
 	age := d.Age()
-	ratio := 1.0
+	scale := 1.0
 	switch {
 	case age < 0.1:
-		ratio = 1.15 * (1 + age)
+		scale = 1.15 * (1 + age)
 	case age >= 0.1 && age < 0.2:
-		ratio = 1.15 * (1.2 - age)
+		scale = 1.15 * (1.2 - age)
 	case age > 0.9:
-		ratio = 1 - 1.15*(age-0.9)
+		scale = 1 - 1.15*(age-0.9)
 	}
-	sprite.SetScale(sprite.Scale.Mul(draws.Scalar(ratio)))
+	sprite.SetScale(sprite.Scale.Mul(draws.Scalar(scale)))
 	sprite.Draw(screen, ebiten.DrawImageOptions{})
 }

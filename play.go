@@ -142,9 +142,9 @@ func (p *MusicPlayer) Update() {
 	if p.Now == 0+p.Offset {
 		p.Player.Play()
 	}
-	if p.Now == 150+p.Offset {
-		p.Player.Seek(time.Duration(150) * time.Millisecond)
-	}
+	// if p.Now == 150+p.Offset {
+	// 	p.Player.Seek(time.Duration(150) * time.Millisecond)
+	// }
 	// if p.IsDone() {
 	// 	p.Close()
 	// }

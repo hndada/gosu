@@ -28,7 +28,6 @@ func NewButton(s Subject, onClick func(), mode ButtonMode) Button {
 func (b *Button) Hover() bool {
 	return b.subject.In(IntPt(ebiten.CursorPosition()))
 }
-
 func (b *Button) Update() {
 	if !b.Hover() {
 		b.pressed = false

@@ -24,15 +24,15 @@ func NewLabel(text string, face font.Face) *Label {
 		Box:   NewBox(),
 	}
 }
-func (l Label) srcSize() Point {
+func (l Label) SrcSize() Point {
 	b := text.BoundString(l.Face, l.Text)
 	return IntPt(b.Max.X, -b.Min.Y)
 }
 func (l Label) Size() Point {
-	return l.srcSize().Mul(l.Scale)
+	return l.SrcSize().Mul(l.Scale)
 }
 func (l *Label) SetSize(size Point) {
-	l.Scale = size.Div(l.srcSize())
+	l.Scale = size.Div(l.SrcSize())
 }
 func (l Label) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
 	op.GeoM.Scale(l.Scale.XY())
