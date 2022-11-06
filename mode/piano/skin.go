@@ -54,7 +54,6 @@ func init() { // I'm proud of the following code.
 var GeneralSkin struct { // Singleton
 	ComboSprites    [10]draws.Sprite
 	JudgmentSprites [5][]draws.Sprite
-	// JudgmentSprites [5]draws.Animation3
 }
 
 // Todo: should each skin has own skin settings?
@@ -83,16 +82,13 @@ func LoadSkin() {
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fmt.Sprintf("skin/combo/%d.png", i))
 		s.ApplyScale(ComboScale)
-		// s.SetScale(draws.Scalar(ComboScale))
 		s.SetPoint(FieldPosition, ComboPosition, draws.CenterMiddle)
 		GeneralSkin.ComboSprites[i] = s
 	}
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
 		a := draws.NewAnimation(fmt.Sprintf("skin/piano/judgment/%s", name))
-		// s := draws.NewSprite(fmt.Sprintf("skin/piano/judgment/%s.png", name))
 		for i := range a {
 			a[i].ApplyScale(JudgmentScale)
-			// a[i].SetScale(draws.Scalar(JudgmentScale))
 			a[i].SetPoint(FieldPosition, JudgmentPosition, draws.CenterMiddle)
 		}
 		GeneralSkin.JudgmentSprites[i] = a

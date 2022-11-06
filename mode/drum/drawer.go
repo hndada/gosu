@@ -45,18 +45,6 @@ func (d StageDrawer) Draw(screen *ebiten.Image) {
 		d.FieldSprites[high].Draw(screen, op1)
 		d.HintSprites[high].Draw(screen, op2)
 	}
-	// if d.Highlight || d.Tick < d.MaxTick {
-	// 	{
-	// 		op := ebiten.DrawImageOptions{}
-	// 		op.ColorM.Scale(1, 1, 1, FieldDarkness*d.Age())
-	// 		d.FieldSprites[high].Draw(screen, op)
-	// 	}
-	// 	{
-	// 		op := ebiten.DrawImageOptions{}
-	// 		op.ColorM.Scale(1, 1, 1, d.Age())
-	// 		d.HintSprites[high].Draw(screen, op)
-	// 	}
-	// }
 }
 
 // Floating-type lane drawer.
@@ -103,12 +91,10 @@ func (d ShakeDrawer) Draw(screen *ebiten.Image) {
 		borderScale = 1
 	}
 	d.BorderSprite.ApplyScale(borderScale)
-	// d.BorderSprite.SetScale(draws.Scalar(borderScale))
 	d.BorderSprite.Draw(screen, ebiten.DrawImageOptions{})
 
 	shakeScale := float64(d.Staged.HitTick) / float64(d.Staged.Tick)
 	d.ShakeSprite.ApplyScale(shakeScale)
-	// d.ShakeSprite.SetScale(draws.Scalar(shakeScale))
 	d.ShakeSprite.Draw(screen, ebiten.DrawImageOptions{})
 }
 
@@ -195,12 +181,8 @@ type NoteDrawer struct {
 
 func (d *NoteDrawer) Update(time int64, bpm float64) {
 	d.Ticker()
-	d.Time = time
 	d.Period = int(2 * 60000 / ScaledBPM(bpm))
-	// duration := 2 * 60000 / ScaledBPM(bpm)
-	// for i := range d.OverlaySprites {
-	// 	d.OverlaySprites[i].Update(time, int64(duration), false)
-	// }
+	d.Time = time
 }
 
 func (d NoteDrawer) Draw(screen *ebiten.Image) {
@@ -240,9 +222,6 @@ func (d NoteDrawer) Draw(screen *ebiten.Image) {
 			}
 			note.Move(pos, 0)
 			note.Draw(screen, op)
-			// if mode == modeShake {
-			// 	continue
-			// }
 			overlay := d.Frame(d.OverlaySprites[n.Size])
 			overlay.Move(pos, 0)
 			overlay.Draw(screen, op)
@@ -289,30 +268,23 @@ type DancerDrawer struct {
 	Sprites     [4][]draws.Sprite
 	Mode        int
 	ModeEndTime int64 // It extends when notes are continuously missed.
-	// ModeMaxTick int // For Yes and No.
-	// Duration int64
 }
 
 func (d *DancerDrawer) Update(time int64, bpm float64, combo int, miss, hit, high bool) {
 	d.Ticker()
 	d.Time = time
-	// maxTick := 0
 	period := 4 * 60000 / ScaledBPM(bpm)
 	d.Period = int(period) // It should be updated even in constant mode.
 
 	mode := d.Mode
-	// var reset bool
 	switch {
 	case miss:
 		mode = DancerNo
-		// maxTick = int(4 * period)
 		d.ModeEndTime = time + int64(4*period)
 	case combo >= 50 && combo%50 <= 1:
 		mode = DancerYes
-		// maxTick = int(period)
 		d.ModeEndTime = time + int64(period)
-	// case hit || d.IsModeFinished():
-	case d.Time >= d.ModeEndTime, d.Mode == DancerNo && hit: //, d.Mode == DancerIdle, d.Mode == DancerHigh:
+	case d.Time >= d.ModeEndTime, d.Mode == DancerNo && hit:
 		if high {
 			mode = DancerHigh
 		} else {
@@ -320,29 +292,13 @@ func (d *DancerDrawer) Update(time int64, bpm float64, combo int, miss, hit, hig
 		}
 	}
 	if d.Mode != mode {
+		if time < 0 && combo == 0 && !miss { // No update before start.
+			return
+		}
 		d.Tick = 0
 		d.Mode = mode
 	}
-	// if d.Mode != mode { // && d.AnimationFinish()
-	// 	if d.Mode == DancerYes && mode != DancerNo && !d.IsModeFinished() {
-	// 	} else {
-	// 		d.Tick = 0
-	// 		// d.Timer2 = draws.NewTimer2(maxTick, int(period))
-	// 		d.Mode = mode
-	// 		// reset = true
-	// 	}
-	// }
-	// d.Sprites[d.Mode].Update(time, int64(duration), reset)
 }
-
-// AnimationFinish infers if Dancer is ready to change its mode.
-//
-//	func (d DancerDrawer) IsModeFinished() bool {
-//		if d.Mode == DancerIdle || d.Mode == DancerHigh {
-//			return true
-//		}
-//		return d.Time >= d.ModeEndTime
-//	}
 func (d DancerDrawer) Draw(screen *ebiten.Image) {
 	d.Frame(d.Sprites[d.Mode]).Draw(screen, ebiten.DrawImageOptions{})
 }
@@ -390,31 +346,27 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 		}
 	}
 	op := ebiten.DrawImageOptions{}
+	age := d.Age()
+	if age < 0.25 {
+		sprite.ApplyScale(1 + 0.2*(0.25-age)/0.25)
+		alpha := 1 - 0.5*(0.2-age)/0.2
+		op.ColorM.Scale(1, 1, 1, alpha)
+	}
+	if age > 0.75 {
+		alpha := 1 - (age-0.75)/0.25
+		op.ColorM.Scale(1, 1, 1, alpha)
+	}
 	if d.judgment.Is(Miss) {
-		age := d.Age()
-		if age < 0.25 {
-			sprite.ApplyScale(1 + 0.2*(0.25-age)/0.25)
-			alpha := 1 - 0.5*(0.2-age)/0.2
-			op.ColorM.Scale(1, 1, 1, alpha)
-		}
 		if age >= 0.5 {
 			scale := 1 + 0.6*(age-0.5)/0.5
 			d.radian = d.startRadian * scale
 		}
-		op.GeoM.Translate(sprite.SrcSize().Div(draws.Scalar(-2)).XY())
-		// op.GeoM.Translate(-float64(sw)/2, -float64(sh)/2)
+		sw, sh := sprite.SrcSize().XY()
+		// op.GeoM.Translate(sprite.SrcSize().Div(draws.Scalar(-2)).XY())
+		op.GeoM.Translate(-sw/2, -sh/2)
 		op.GeoM.Rotate(d.radian)
-		op.GeoM.Translate(sprite.SrcSize().Div(draws.Scalar(2)).XY())
-		// op.GeoM.Translate(float64(sw)/2, float64(sh)/2)
-	} else {
-		age := d.Age()
-		if age < 0.25 {
-			sprite.ApplyScale(1 + 0.2*(0.25-age)/0.25)
-		}
-		if age > 0.75 {
-			alpha := 1 - (age-0.75)/0.25
-			op.ColorM.Scale(1, 1, 1, alpha)
-		}
+		// op.GeoM.Translate(sprite.SrcSize().Div(draws.Scalar(2)).XY())
+		op.GeoM.Translate(sw/2, sh/2)
 	}
 	sprite.Draw(screen, op)
 }

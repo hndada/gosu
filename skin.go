@@ -49,7 +49,6 @@ func LoadGeneralSkin() {
 	for i, name := range names {
 		s := draws.NewSprite(fmt.Sprintf("skin/cursor/%s.png", name))
 		s.ApplyScale(CursorScale)
-		// s.SetScale(draws.Scalar(CursorScale))
 		s.SetPoint(screenSizeX/2, screenSizeY/2, draws.CenterMiddle)
 		CursorSprites[i] = s
 	}
@@ -63,7 +62,6 @@ func LoadGeneralSkin() {
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fmt.Sprintf("skin/score/%d.png", i))
 		s.ApplyScale(ScoreScale)
-		// s.SetScale(draws.Scalar(ScoreScale))
 		if i == 0 {
 			s.SetPoint(screenSizeX, 0, draws.RightTop)
 		} else { // Need to set same base line, since each number has different height.
@@ -74,7 +72,6 @@ func LoadGeneralSkin() {
 	for i, name := range []string{"dot", "comma", "percent"} {
 		s := draws.NewSprite(fmt.Sprintf("skin/score/%s.png", name))
 		s.ApplyScale(ScoreScale)
-		// s.SetScale(draws.Scalar(ScoreScale))
 		s.SetPoint(screenSizeX, 0, draws.RightTop)
 		SignSprites[i] = s
 	}
@@ -93,7 +90,6 @@ func LoadGeneralSkin() {
 func NewBackground(path string) draws.Sprite {
 	s := draws.NewSprite(path)
 	s.ApplyScale(screenSizeX / s.W())
-	// s.SetScale(draws.Scalar(screenSizeX / s.W()))
 	s.SetPoint(screenSizeX/2, screenSizeY/2, draws.CenterMiddle)
 	return s
 }
