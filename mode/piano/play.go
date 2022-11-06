@@ -107,12 +107,13 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 			Cursor:   s.Cursor,
 			Farthest: s.Staged[k],
 			Nearest:  s.Staged[k],
-			Sprites: [4]draws.Animation{
-				s.NoteSprites[k],
-				s.HeadSprites[k],
-				s.TailSprites[k],
-				s.BodySprites[k],
-			},
+			Sprites:  s.NoteSprites[k],
+			// Sprites: [4]draws.Animation{
+			// 	s.NoteSprites[k],
+			// 	s.HeadSprites[k],
+			// 	s.TailSprites[k],
+			// 	s.BodySprites[k],
+			// },
 		}
 	}
 	s.BarDrawer = BarDrawer{
