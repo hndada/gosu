@@ -175,14 +175,16 @@ func (d KeyDrawer) Draw(screen *ebiten.Image) {
 
 type JudgmentDrawer struct {
 	draws.Timer
-	Sprites [5][]draws.Sprite
-	// Sprites  [5]draws.Animation3
+	Sprites  [5][]draws.Sprite
 	Judgment gosu.Judgment
 }
 
 func NewJudgmentDrawer() (d JudgmentDrawer) {
+	const frameDuration = 1000.0 / 60
+	count := float64(len(GeneralSkin.JudgmentSprites))
+	period := int64(frameDuration * count)
 	return JudgmentDrawer{
-		Timer:   draws.NewTimer(gosu.TimeToTick(600), gosu.TimeToTick(20)),
+		Timer:   draws.NewTimer(gosu.TimeToTick(250), gosu.TimeToTick(period)),
 		Sprites: GeneralSkin.JudgmentSprites,
 	}
 }
@@ -220,6 +222,7 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	case age > 0.9:
 		scale = 1 - 1.15*(age-0.9)
 	}
-	sprite.SetScale(sprite.Scale.Mul(draws.Scalar(scale)))
+	sprite.ApplyScale(scale)
+	// sprite.SetScale(sprite.Scale.Mul(draws.Scalar(scale)))
 	sprite.Draw(screen, ebiten.DrawImageOptions{})
 }

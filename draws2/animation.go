@@ -1,46 +1,43 @@
 package draws
 
 import (
-	"math"
-
-	"github.com/hajimehoshi/ebiten/v2"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
 )
 
-type Animation struct {
-	Sprites   []Sprite
-	StartTime int64
-	Time      int64
-	Duration  int64 // float64
-	Point
-	// Box
-}
+type Animation []Sprite
 
-func (d *Animation) Update(time, duration int64, reset bool) {
-	if reset {
-		d.StartTime = time
+func NewAnimation(path string) (a Animation) {
+	const ext = ".png"
+	one := Animation{NewSprite(path + ext)}
+	dir, err := os.Open(path)
+	if err != nil {
+		return one
 	}
-	d.Time = time
-	d.Duration = duration
-}
-func (d *Animation) Move(x, y float64) { d.Point = d.Point.Add(Pt(x, y)) }
-func (d Animation) Frame() int {
-	if d.Duration == 0 {
-		return 0
+	defer dir.Close()
+	fs, err := dir.ReadDir(-1)
+	if err != nil {
+		return one
 	}
-	td := float64(d.Time - d.StartTime)
-	duration := float64(d.Duration)
-	rate := math.Remainder(td, duration) / duration
-	if rate < 0 {
-		rate += 1
+
+	nums := make([]int, 0, len(fs))
+	for _, f := range fs {
+		if f.IsDir() {
+			continue
+		}
+		num := strings.TrimSuffix(f.Name(), ext)
+		if num, err := strconv.Atoi(num); err == nil {
+			nums = append(nums, num)
+		}
 	}
-	return int(rate * float64(len(d.Sprites)))
-}
-func (d Animation) CurrentFrame() Sprite { return d.Sprites[d.Frame()] }
-func (d Animation) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
-	if len(d.Sprites) == 0 {
-		return
+	sort.Ints(nums)
+	for _, num := range nums {
+		path := filepath.Join(path, fmt.Sprintf("%d.png", num))
+		a = append(a, NewSprite(path))
 	}
-	sprite := d.Sprites[d.Frame()]
-	sprite.Move(d.Point.XY())
-	sprite.Draw(screen, op)
+	return
 }

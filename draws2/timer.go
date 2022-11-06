@@ -1,7 +1,5 @@
 package draws
 
-import "fmt"
-
 // Timer helps drawing a sprite with visual effects.
 type Timer struct {
 	Countdown    int
@@ -30,6 +28,6 @@ func (t Timer) Frame(sprites []Sprite) Sprite {
 	tick := t.MaxCountdown - t.Countdown
 	rate := float64(tick%t.Duration) / float64(t.Duration)
 	count := float64(len(sprites))
-	fmt.Println(rate)
+	// fmt.Println(rate)
 	return sprites[int(rate*count)]
 }

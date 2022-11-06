@@ -54,6 +54,7 @@ func init() { // I'm proud of the following code.
 var GeneralSkin struct { // Singleton
 	ComboSprites    [10]draws.Sprite
 	JudgmentSprites [5][]draws.Sprite
+	// JudgmentSprites [5]draws.Animation3
 }
 
 // Todo: should each skin has own skin settings?
@@ -81,7 +82,8 @@ func LoadSkin() {
 	// Sprites that are independent of key count.
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fmt.Sprintf("skin/combo/%d.png", i))
-		s.SetScale(draws.Scalar(ComboScale))
+		s.ApplyScale(ComboScale)
+		// s.SetScale(draws.Scalar(ComboScale))
 		s.SetPoint(FieldPosition, ComboPosition, draws.CenterMiddle)
 		GeneralSkin.ComboSprites[i] = s
 	}
@@ -89,7 +91,8 @@ func LoadSkin() {
 		a := draws.NewAnimation(fmt.Sprintf("skin/piano/judgment/%s", name))
 		// s := draws.NewSprite(fmt.Sprintf("skin/piano/judgment/%s.png", name))
 		for i := range a {
-			a[i].SetScale(draws.Scalar(JudgmentScale))
+			a[i].ApplyScale(JudgmentScale)
+			// a[i].SetScale(draws.Scalar(JudgmentScale))
 			a[i].SetPoint(FieldPosition, JudgmentPosition, draws.CenterMiddle)
 		}
 		GeneralSkin.JudgmentSprites[i] = a
