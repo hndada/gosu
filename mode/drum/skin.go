@@ -35,9 +35,8 @@ type Skin struct {
 	BarSprite       draws.Sprite
 	JudgmentSprites [2][3]draws.Sprite
 
-	NoteSprites    [2][4]draws.Sprite
-	OverlaySprites [2]draws.Animation
-	// RollSprites    [2][4]draws.Sprite // First 2 is a Size, next 4 is a kind.
+	NoteSprites       [2][4]draws.Sprite
+	OverlaySprites    [2]draws.Animation
 	HeadSprites       [2]draws.Sprite
 	TailSprites       [2]draws.Sprite
 	BodySprites       [2]draws.Sprite
@@ -69,7 +68,6 @@ func LoadSkin() {
 			outerScale = 1.2
 		)
 		sw, sh := noteImage.Size()
-		// srcSize := draws.IntPt(noteImage.Size())
 		outer := draws.NewScaledImage(noteImage, outerScale)
 		pad := draws.NewScaledImage(noteImage, padScale)
 		inner := noteImage
@@ -88,7 +86,6 @@ func LoadSkin() {
 				op.CompositeMode = ebiten.CompositeModeDestinationOut
 			}
 			sd := outerScale - padScale // Size difference.
-			// op.GeoM.Translate(srcSize.Mul(draws.Scalar((outerScale - padScale) / 2)).XY())
 			op.GeoM.Translate(sd/2*float64(sw), sd/2*float64(sh))
 			img.DrawImage(pad, op)
 		}
@@ -96,7 +93,6 @@ func LoadSkin() {
 			op := &ebiten.DrawImageOptions{}
 			op.ColorM.ScaleWithColor(color.NRGBA{60, 60, 60, a})
 			sd := outerScale - 1 // Size difference.
-			// op.GeoM.Translate(srcSize.Mul(draws.Scalar((outerScale - 1) / 2)).XY())
 			op.GeoM.Translate(sd/2*float64(sw), sd/2*float64(sh))
 			img.DrawImage(inner, op)
 		}
@@ -112,24 +108,8 @@ func LoadSkin() {
 		sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
 		skin.BarSprite = sprite
 	}
-	// var (
-	// 	rollEndImage = draws.NewImage("skin/drum/note/roll/end.png")
-	// 	rollMidImage = draws.NewImage("skin/drum/note/roll/mid.png")
-	// )
-	// const (
-	// 	head = iota
-	// 	tail
-	// 	body
-	// 	dot
-	// )
 	var (
-		end = draws.NewImage("skin/drum/note/roll/end.png")
-		// rollImages = [3]*ebiten.Image{
-		// 	draws.NewXFlippedImage(end),
-		// 	draws.NewImage("skin/drum/note/roll/mid.png"),
-		// 	end,
-		// 	// draws.NewImage("skin/drum/note/roll/dot.png"),
-		// }
+		end  = draws.NewImage("skin/drum/note/roll/end.png")
 		head = draws.NewXFlippedImage(end)
 		tail = end
 		body = draws.NewImage("skin/drum/note/roll/mid.png")
@@ -172,27 +152,6 @@ func LoadSkin() {
 				skin.OverlaySprites[size][j] = sprite
 			}
 		}
-		// for kind, image := range rollImages {
-		// 	sprite := draws.NewSpriteFromImage(image)
-		// 	// if kind == dot {
-		// 	// 	sprite.ApplyScale(DotScale)
-		// 	// } else {
-		// 	// 	sprite.SetScaleToH(noteHeight)
-		// 	// }
-		// 	sprite.SetScaleToH(noteHeight)
-		// 	origin := draws.LeftMiddle
-		// 	switch kind {
-		// 	case tail:
-		// 		origin = draws.LeftMiddle
-		// 	case head:
-		// 		origin = draws.RightMiddle
-		// 	}
-		// 	sprite.SetPoint(HitPosition, FieldPosition, origin)
-		// 	if kind == body {
-		// 		sprite.Filter = ebiten.FilterNearest
-		// 	}
-		// 	skin.RollSprites[size][kind] = sprite
-		// }
 		{
 			sprite := draws.NewSpriteFromImage(head)
 			sprite.SetScaleToH(noteHeight)
@@ -263,14 +222,7 @@ func LoadSkin() {
 			skin.ShakeBorderSprite = sprite
 		}
 	}
-	// Position of combo is dependent on widths of key sprite.
 	// Key sprites are overlapped at each side.
-	// const (
-	// 	leftBlue = iota
-	// 	leftRed
-	// 	rightRed
-	// 	rightBlue
-	// )
 	var (
 		in        = draws.NewImage("skin/drum/key/in.png")
 		out       = draws.NewImage("skin/drum/key/out.png")
@@ -280,16 +232,11 @@ func LoadSkin() {
 			draws.NewXFlippedImage(in),
 			out,
 		}
-		// keyFieldCenter float64
-		// keyFieldWidth float64
 		keyFieldSize draws.Point
 	)
 	for k, image := range keyImages {
 		sprite := draws.NewSpriteFromImage(image)
 		sprite.SetScaleToH(FieldInnerHeight)
-		// if k == 0 {
-		// 	keyFieldCenter = sprite.W()
-		// }
 		if k < 2 { // Includes determining key field size.
 			sprite.SetPoint(0, FieldPosition, draws.LeftMiddle)
 			if w := sprite.W(); keyFieldSize.X < w*2 {
@@ -304,37 +251,7 @@ func LoadSkin() {
 
 		skin.KeySprites[k] = sprite
 	}
-	// {
-	// 	sprite := draws.NewSprite("skin/drum/key/in.png")
-	// 	sprite.SetScaleToH(FieldInnerHeight)
-	// 	sprite.SetPoint(0, FieldPosition, draws.LeftMiddle)
-	// 	keyCenter = sprite.W()
-	// 	skin.KeySprites[leftRed] = sprite
-	// }
-	// {
-	// 	sprite := draws.NewSprite("skin/drum/key/out.png")
-	// 	sprite.SetScaleToH(FieldInnerHeight)
-	// 	sprite.SetPoint(keyCenter, FieldPosition, draws.LeftMiddle)
-	// 	skin.KeySprites[rightBlue] = sprite
-	// }
-	// {
-	// 	src := draws.NewImage("skin/drum/key/out.png")
-	// 	sprite := draws.NewSpriteFromImage(draws.NewXFlippedImage(src))
-	// 	sprite.SetScaleToH(FieldInnerHeight)
-	// 	sprite.SetPoint(0, FieldPosition, draws.LeftMiddle)
-	// 	skin.KeySprites[leftBlue] = sprite
-	// }
-	// {
-	// 	src := draws.NewImage("skin/drum/key/in.png")
-	// 	sprite := draws.NewSpriteFromImage(draws.NewXFlippedImage(src))
-	// 	sprite.SetScaleToH(FieldInnerHeight)
-	// 	sprite.SetPoint(keyCenter, FieldPosition, draws.LeftMiddle)
-	// 	skin.KeySprites[rightRed] = sprite
-	// }
 	{
-		// w := keyCenter + skin.KeySprites[3].W()
-		// h := skin.KeySprites[3].H()
-		// src := ebiten.NewImage(int(w), int(h))
 		src := ebiten.NewImage(keyFieldSize.XYInt())
 		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
 		sprite := draws.NewSpriteFromImage(src)
@@ -356,6 +273,7 @@ func LoadSkin() {
 		}
 	}
 	skin.ScoreSprites = gosu.ScoreSprites
+	// Position of combo is dependent on widths of key sprite.
 	var comboImages [10]*ebiten.Image
 	for i := 0; i < 10; i++ {
 		comboImages[i] = draws.NewImage(fmt.Sprintf("skin/combo/%d.png", i))
