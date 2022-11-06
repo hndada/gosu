@@ -67,10 +67,6 @@ type Skin struct {
 	// Sprites which are dependent of key count.
 	KeySprites  [][2]draws.Sprite
 	NoteSprites [][4]draws.Animation
-	// NoteSprites []draws.Animation
-	// HeadSprites []draws.Animation
-	// TailSprites []draws.Animation
-	// BodySprites []draws.Animation
 	FieldSprite draws.Sprite
 	HintSprite  draws.Sprite
 	BarSprite   draws.Sprite
@@ -96,11 +92,7 @@ func LoadSkin() {
 	var (
 		keyImages  [2]*ebiten.Image
 		noteImages [4][4][]*ebiten.Image // First 4 is a type, next 4 is a kind.
-		// noteImages [4][]*ebiten.Image
-		// headImages [4][]*ebiten.Image
-		// tailImages [4][]*ebiten.Image
-		// bodyImages [4][]*ebiten.Image
-		hintImage *ebiten.Image
+		hintImage  *ebiten.Image
 	)
 	for i, name := range []string{"up", "down"} {
 		keyImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/key/%s.png", name))
@@ -111,13 +103,6 @@ func LoadSkin() {
 			noteImages[i][j] = draws.NewImages(fmt.Sprintf("skin/piano/note/%s/%d", _type, kind))
 		}
 	}
-	// for i, kind := range []int{1, 2, 3, 3} {
-	// 	noteImages[i] = draws.NewImages(fmt.Sprintf("skin/piano/note/note/%d", kind))
-	// 	headImages[i] = draws.NewImages(fmt.Sprintf("skin/piano/note/head/%d", kind))
-	// 	tailImages[i] = draws.NewImages(fmt.Sprintf("skin/piano/note/tail/%d", kind))
-	// 	bodyImages[i] = draws.NewImages(fmt.Sprintf("skin/piano/note/body/%d", kind))
-	// }
-
 	// Todo: Key count 1, 2, 3 and with scratch
 	for keyCount := 4; keyCount <= 10; keyCount++ {
 		noteKinds := NoteKindsMap[keyCount]
@@ -129,10 +114,6 @@ func LoadSkin() {
 			JudgmentSprites: GeneralSkin.JudgmentSprites,
 			KeySprites:      make([][2]draws.Sprite, len(noteKinds)),
 			NoteSprites:     make([][4]draws.Animation, len(noteKinds)),
-			// NoteSprites: make([]draws.Animation, len(noteKinds)),
-			// HeadSprites: make([]draws.Animation, len(noteKinds)),
-			// TailSprites: make([]draws.Animation, len(noteKinds)),
-			// BodySprites: make([]draws.Animation, len(noteKinds)),
 		}
 		// Keys are drawn below Hint, which bottom is along with HitPosition.
 		// Each w should be integer, since it is a width of independent sprite.
@@ -158,38 +139,6 @@ func LoadSkin() {
 				}
 				skin.NoteSprites[k][_type] = animation
 			}
-			// {
-			// 	animation := draws.NewAnimationFromImages(noteImages[kind])
-			// 	for i := range animation {
-			// 		animation[i].SetSize(w, NoteHeigth)
-			// 		animation[i].SetPoint(x, HitPosition, draws.LeftBottom)
-			// 	}
-			// 	skin.NoteSprites[k] = animation
-			// }
-			// {
-			// 	animation := draws.NewAnimationFromImages(headImages[kind])
-			// 	for i := range animation {
-			// 		animation[i].SetSize(w, NoteHeigth)
-			// 		animation[i].SetPoint(x, HitPosition, draws.LeftBottom)
-			// 	}
-			// 	skin.HeadSprites[k] = animation
-			// }
-			// {
-			// 	animation := draws.NewAnimationFromImages(tailImages[kind])
-			// 	for i := range animation {
-			// 		animation[i].SetSize(w, NoteHeigth)
-			// 		animation[i].SetPoint(x, HitPosition, draws.LeftBottom)
-			// 	}
-			// 	skin.TailSprites[k] = animation
-			// }
-			// {
-			// 	animation := draws.NewAnimationFromImages(bodyImages[kind])
-			// 	for i, sprite := range animation {
-			// 		animation[i].SetSize(w, sprite.H()) // Height is variadic.
-			// 		animation[i].SetPoint(x, HitPosition, draws.LeftBottom)
-			// 	}
-			// 	skin.BodySprites[k] = animation
-			// }
 			x += w
 		}
 		{

@@ -108,12 +108,6 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 			Farthest: s.Staged[k],
 			Nearest:  s.Staged[k],
 			Sprites:  s.NoteSprites[k],
-			// Sprites: [4]draws.Animation{
-			// 	s.NoteSprites[k],
-			// 	s.HeadSprites[k],
-			// 	s.TailSprites[k],
-			// 	s.BodySprites[k],
-			// },
 		}
 	}
 	s.BarDrawer = BarDrawer{
@@ -129,12 +123,6 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 			Sprites: s.KeySprites[k],
 		}
 	}
-	// s.KeyDrawer = KeyDrawer{
-	// 	MinCountdown:   gosu.TimeToTick(30),
-	// 	Countdowns:     make([]int, keyCount),
-	// 	KeyUpSprites:   s.KeyUpSprites,
-	// 	KeyDownSprites: s.KeyDownSprites,
-	// }
 	s.JudgmentDrawer = NewJudgmentDrawer()
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer = gosu.NumberDrawer{
@@ -248,7 +236,6 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	for _, d := range s.KeyDrawers {
 		d.Draw(screen)
 	}
-	// s.KeyDrawer.Draw(screen)
 	s.JudgmentDrawer.Draw(screen)
 	s.ScoreDrawer.Draw(screen)
 	s.ComboDrawer.Draw(screen)
@@ -275,8 +262,7 @@ func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
 
 // 1 pixel is 1 millisecond.
 func ExposureTime(speed float64) float64 { return HitPosition / speed }
-
-func (s ScenePlay) Speed() float64 { return s.TransPoint.Speed * s.SpeedScale }
+func (s ScenePlay) Speed() float64       { return s.TransPoint.Speed * s.SpeedScale }
 
 // Supposes one current TransPoint can increment cursor precisely.
 func (s *ScenePlay) UpdateCursor() {
