@@ -137,12 +137,10 @@ func (d NoteDrawer) DrawBody(screen *ebiten.Image, tail *Note) {
 	body.Draw(screen, op)
 }
 
-// KeyDrawer draws KeyDownSprite at least for 30ms, KeyUpSprite otherwise.
 type KeyDrawer struct {
 	draws.Timer
 	Sprites     [2]draws.Sprite
 	lastPressed bool
-	// pressed     bool
 }
 
 func (d *KeyDrawer) Update(pressed bool) {
@@ -158,6 +156,7 @@ func (d KeyDrawer) Draw(screen *ebiten.Image) {
 		down
 	)
 	sprite := d.Sprites[up]
+	// It still draws for a while even when pressed off very shortly.
 	if d.lastPressed || d.Tick < d.MaxTick {
 		sprite = d.Sprites[down]
 	}
@@ -200,12 +199,12 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	}
 	age := d.Age()
 	sprite := d.Frame(d.Sprites[idx])
-	scale := 1.0
 	const (
 		bound0 = 0.1
 		bound1 = 0.2
 		bound2 = 0.9
 	)
+	scale := 1.0
 	if age < bound0 {
 		scale = 1 + 0.15*d.Progress(0, bound0)
 	}
@@ -215,14 +214,6 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	if age >= bound2 {
 		scale = 1 - 0.25*d.Progress(bound2, 1)
 	}
-	// switch {
-	// case age < 0.1:
-	// 	scale = 1.15 * (1 + age)
-	// case age >= 0.1 && age < 0.2:
-	// 	scale = 1.15 * (1.2 - age)
-	// case age > 0.9:
-	// 	scale = 1 - 1.15*(age-0.9)
-	// }
 	sprite.ApplyScale(scale)
 	sprite.Draw(screen, ebiten.DrawImageOptions{})
 }
