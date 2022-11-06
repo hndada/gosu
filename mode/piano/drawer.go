@@ -150,17 +150,78 @@ func (d *KeyDrawer) Update(pressed bool) {
 	}
 	d.lastPressed = pressed
 }
+
+// KeyDrawer draws for a while even when pressed off very shortly.
 func (d KeyDrawer) Draw(screen *ebiten.Image) {
 	const (
 		up = iota
 		down
 	)
 	sprite := d.Sprites[up]
-	// It still draws for a while even when pressed off very shortly.
 	if d.lastPressed || d.Tick < d.MaxTick {
 		sprite = d.Sprites[down]
 	}
 	sprite.Draw(screen, ebiten.DrawImageOptions{})
+}
+
+type KeyLightingDrawer struct {
+	draws.Timer
+	Sprite      draws.Sprite
+	lastPressed bool
+}
+
+func (d *KeyLightingDrawer) Update(pressed bool) {
+	d.Ticker()
+	if !d.lastPressed && pressed {
+		d.Timer.Reset()
+	}
+	d.lastPressed = pressed
+}
+
+// KeyLightingDrawer draws for a while even when pressed off very shortly.
+func (d KeyLightingDrawer) Draw(screen *ebiten.Image) {
+	if d.lastPressed || d.Tick < d.MaxTick {
+		d.Sprite.Draw(screen, ebiten.DrawImageOptions{})
+	}
+}
+
+type HitLightingDrawer struct {
+	draws.Timer
+	Sprites draws.Animation
+}
+
+// HitLightingDrawer draws when Normal is Hit or Tail is Release.
+func (d *HitLightingDrawer) Update(hit bool) {
+	d.Ticker()
+	if hit {
+		d.Timer.Reset()
+	}
+}
+func (d HitLightingDrawer) Draw(screen *ebiten.Image) {
+	if d.Done() {
+		return
+	}
+	d.Frame(d.Sprites).Draw(screen, ebiten.DrawImageOptions{})
+}
+
+type HoldLightingDrawer struct {
+	draws.Timer
+	Sprites     draws.Animation
+	lastPressed bool
+}
+
+func (d *HoldLightingDrawer) Update(pressed bool) {
+	d.Ticker()
+	if d.lastPressed != pressed {
+		d.Timer.Reset()
+		d.lastPressed = pressed
+	}
+}
+func (d HoldLightingDrawer) Draw(screen *ebiten.Image) {
+	if !d.lastPressed {
+		return
+	}
+	d.Frame(d.Sprites).Draw(screen, ebiten.DrawImageOptions{})
 }
 
 type JudgmentDrawer struct {
