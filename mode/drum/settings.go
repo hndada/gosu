@@ -35,8 +35,6 @@ var (
 	maxPosition     float64 = -HitPosition + screenSizeX + PositionMargin
 	DancerPositionX float64 = screenSizeX * 0.1
 	DancerPositionY float64 = screenSizeY * 0.175
-
-	// keyCenter float64 // Used in key sprites and combo position.
 )
 
 // Skin-dependent settings.
