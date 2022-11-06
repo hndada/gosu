@@ -57,47 +57,19 @@ func LoadSkin() {
 	defer func() { DefaultSkin = skin }()
 	var noteImage = draws.NewImage("skin/drum/note/note.png")
 	for i, name := range []string{"idle", "high"} {
-		sprite := draws.NewSprite(fmt.Sprintf("skin/drum/stage/%s.png", name))
+		sprite := draws.NewSprite(fmt.Sprintf("skin/drum/field/%s.png", name))
 		sprite.SetSize(screenSizeX, FieldHeight)
 		sprite.SetPoint(0, FieldPosition, draws.LeftMiddle)
 		skin.FieldSprites[i] = sprite
 	}
-	for i := range skin.HintSprites {
-		const (
-			padScale   = 1.1
-			outerScale = 1.2
-		)
-		sw, sh := noteImage.Size()
-		outer := draws.NewScaledImage(noteImage, outerScale)
-		pad := draws.NewScaledImage(noteImage, padScale)
-		inner := noteImage
-		a := uint8(255 * FieldDarkness)
-		img := ebiten.NewImage(outer.Size())
-		{
-			op := &ebiten.DrawImageOptions{}
-			op.ColorM.ScaleWithColor(color.NRGBA{128, 128, 128, a})
-			op.GeoM.Translate(0, 0)
-			img.DrawImage(outer, op)
+	var hintScale float64
+	for i, name := range []string{"idle", "high"} {
+		sprite := draws.NewSprite(fmt.Sprintf("skin/drum/hint/%s.png", name))
+		if name == "idle" {
+			hintScale = 1.2 * regularNoteHeight / sprite.H()
 		}
-		{
-			op := &ebiten.DrawImageOptions{}
-			op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 0, a})
-			if i == 0 { // Blank for idle, Yellow for highlight.
-				op.CompositeMode = ebiten.CompositeModeDestinationOut
-			}
-			sd := outerScale - padScale // Size difference.
-			op.GeoM.Translate(sd/2*float64(sw), sd/2*float64(sh))
-			img.DrawImage(pad, op)
-		}
-		{
-			op := &ebiten.DrawImageOptions{}
-			op.ColorM.ScaleWithColor(color.NRGBA{60, 60, 60, a})
-			sd := outerScale - 1 // Size difference.
-			op.GeoM.Translate(sd/2*float64(sw), sd/2*float64(sh))
-			img.DrawImage(inner, op)
-		}
-		sprite := draws.NewSpriteFromImage(img)
-		sprite.SetScaleToH(1.2 * regularNoteHeight)
+		sprite.ApplyScale(hintScale)
+		// sprite.SetScaleToH(1.2 * regularNoteHeight)
 		sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
 		skin.HintSprites[i] = sprite
 	}
@@ -281,5 +253,48 @@ func LoadSkin() {
 		sprite.ApplyScale(ComboScale)
 		sprite.SetPoint(keyFieldSize.X/2, FieldPosition, draws.CenterMiddle)
 		skin.ComboSprites[i] = sprite
+	}
+}
+
+// Deprecated.
+func NewHintGlowImage(skin Skin, noteImage *ebiten.Image) {
+	for i := range skin.HintSprites {
+		const (
+			padScale   = 1.1
+			outerScale = 1.2
+		)
+		sw, sh := noteImage.Size()
+		outer := draws.NewScaledImage(noteImage, outerScale)
+		pad := draws.NewScaledImage(noteImage, padScale)
+		inner := noteImage
+		a := uint8(255 * FieldDarkness)
+		img := ebiten.NewImage(outer.Size())
+		{
+			op := &ebiten.DrawImageOptions{}
+			op.ColorM.ScaleWithColor(color.NRGBA{128, 128, 128, a})
+			op.GeoM.Translate(0, 0)
+			img.DrawImage(outer, op)
+		}
+		{
+			op := &ebiten.DrawImageOptions{}
+			op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 0, a})
+			if i == 0 { // Blank for idle, Yellow for highlight.
+				op.CompositeMode = ebiten.CompositeModeDestinationOut
+			}
+			sd := outerScale - padScale // Size difference.
+			op.GeoM.Translate(sd/2*float64(sw), sd/2*float64(sh))
+			img.DrawImage(pad, op)
+		}
+		{
+			op := &ebiten.DrawImageOptions{}
+			op.ColorM.ScaleWithColor(color.NRGBA{60, 60, 60, a})
+			sd := outerScale - 1 // Size difference.
+			op.GeoM.Translate(sd/2*float64(sw), sd/2*float64(sh))
+			img.DrawImage(inner, op)
+		}
+		sprite := draws.NewSpriteFromImage(img)
+		sprite.SetScaleToH(1.2 * regularNoteHeight)
+		sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
+		skin.HintSprites[i] = sprite
 	}
 }

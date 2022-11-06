@@ -34,16 +34,17 @@ func (d StageDrawer) Draw(screen *ebiten.Image) {
 	d.FieldSprites[idle].Draw(screen, op)
 	d.HintSprites[idle].Draw(screen, ebiten.DrawImageOptions{})
 	if d.Highlight || d.Tick < d.MaxTick {
-		var op1, op2 ebiten.DrawImageOptions
+		var opField, opHint ebiten.DrawImageOptions
 		if d.Highlight {
-			op1.ColorM.Scale(1, 1, 1, FieldDarkness*d.Age())
-			op2.ColorM.Scale(1, 1, 1, FieldDarkness*d.Age())
+			opField.ColorM.Scale(1, 1, 1, FieldDarkness*d.Age())
+			opHint.ColorM.Scale(1, 1, 1, FieldDarkness*d.Age())
 		} else {
-			op1.ColorM.Scale(1, 1, 1, FieldDarkness*(1-d.Age()))
-			op2.ColorM.Scale(1, 1, 1, FieldDarkness*(1-d.Age()))
+			opField.ColorM.Scale(1, 1, 1, FieldDarkness*(1-d.Age()))
+			opHint.ColorM.Scale(1, 1, 1, FieldDarkness*(1-d.Age()))
 		}
-		d.FieldSprites[high].Draw(screen, op1)
-		d.HintSprites[high].Draw(screen, op2)
+		opHint.ColorM.ScaleWithColor(ColorYellow)
+		d.FieldSprites[high].Draw(screen, opField)
+		d.HintSprites[high].Draw(screen, opHint)
 	}
 }
 
