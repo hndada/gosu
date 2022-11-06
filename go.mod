@@ -1,16 +1,19 @@
 module github.com/hndada/gosu
 
 go 1.18
+
 retract v1.0.1 // Published accidentally.
+
 require (
-	github.com/hajimehoshi/ebiten/v2 v2.5.0-alpha.3.0.20221007032359-cf5c74ed76e8
+	github.com/hajimehoshi/ebiten/v2 v2.4.11
 	github.com/ulikunitz/xz v0.5.10
-	golang.org/x/image v0.0.0-20220902085622-e7cb96979f69
+	golang.org/x/image v0.1.0
 	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8
 )
 
 require (
 	github.com/ebitengine/purego v0.2.0-alpha.0.20220915044048-aa1b0f680473 // indirect
+	github.com/hajimehoshi/file2byteslice v0.0.0-20210813153925-5340248a8f41 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

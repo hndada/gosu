@@ -39,7 +39,7 @@ type ScenePlay struct {
 
 	ShakeDrawer ShakeDrawer
 	RollDrawer  RollDrawer
-	NoteDrawer  NoteDarwer
+	NoteDrawer  NoteDrawer
 
 	KeyDrawer    KeyDrawer
 	DancerDrawer DancerDrawer
@@ -116,9 +116,10 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		s.BackgroundDrawer.Sprite = bg
 	}
 	s.StageDrawer = StageDrawer{
-		Hightlight:  s.Highlight,
-		FieldSprite: s.FieldSprite,
-		HintSprites: s.HintSprites,
+		Timer2:       draws.NewTimer2(gosu.TimeToTick(150), 0),
+		Highlight:    false, //s.Highlight,
+		FieldSprites: s.FieldSprites,
+		HintSprites:  s.HintSprites,
 	}
 	s.BarDrawer = BarDrawer{
 		Time:   s.Now,
@@ -126,7 +127,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		Sprite: s.BarSprite,
 	}
 	s.JudgmentDrawer = JudgmentDrawer{
-		Timer:   draws.NewTimer(gosu.TimeToTick(400), 01),
+		Timer:   draws.NewTimer(gosu.TimeToTick(250), 0),
 		Sprites: s.JudgmentSprites,
 	}
 	s.ShakeDrawer = ShakeDrawer{
@@ -144,34 +145,42 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		TailSprites: s.TailSprites,
 		DotSprite:   s.DotSprite,
 	}
-	s.NoteDrawer = NoteDarwer{
-		Time:        s.Now,
-		Notes:       c.Notes,
-		Rolls:       c.Rolls,
-		Shakes:      c.Shakes,
-		NoteSprites: s.NoteSprites,
+	s.NoteDrawer = NoteDrawer{
+		// Timer:          draws.Timer{},
+		Timer2:         draws.NewTimer2(int(60000/ScaledBPM(s.BPM)), 0),
+		Time:           s.Now,
+		Notes:          c.Notes,
+		Rolls:          c.Rolls,
+		Shakes:         c.Shakes,
+		NoteSprites:    s.NoteSprites,
+		OverlaySprites: s.OverlaySprites,
 	}
-	for i, sprites := range s.OverlaySprites {
-		s.NoteDrawer.OverlayAnimations[i] = draws.Animation{
-			Time:      s.Now,
-			Duration:  int64(60000 / ScaledBPM(s.BPM)),
-			StartTime: s.TransPoint.Time,
-			Sprites:   sprites,
-		}
-	}
+	// for i, sprites := range s.OverlaySprites {
+	// 	s.NoteDrawer.OverlaySprites[i] = draws.Animation{
+	// 		Time:      s.Now,
+	// 		Duration:  int64(60000 / ScaledBPM(s.BPM)),
+	// 		StartTime: s.TransPoint.Time,
+	// 		Sprites:   sprites,
+	// 	}
+	// }
 	s.KeyDrawer = KeyDrawer{
 		MaxCountdown: gosu.TimeToTick(75),
 		Field:        s.KeyFieldSprite,
 		Keys:         s.KeySprites,
 	}
-	s.DancerDrawer.AnimationEndTime = s.Now
+	s.DancerDrawer = DancerDrawer{
+		Timer2:  draws.NewTimer2(0, int(60000/ScaledBPM(s.BPM))),
+		Sprites: s.DancerSprites,
+		Mode:    DancerIdle,
+	}
+	// s.DancerDrawer.AnimationEndTime = s.Now
 	if s.Highlight {
 		s.DancerDrawer.Mode = DancerHigh
 	}
-	for i := range s.DancerDrawer.Animations {
-		s.DancerDrawer.Animations[i].Sprites = s.DancerSprites[i]
-		s.DancerDrawer.Animations[i].Update(s.Now, int64(60000/ScaledBPM(s.BPM)), false)
-	}
+	// for i := range s.DancerDrawer.Sprites {
+	// 	s.DancerDrawer.Animations[i].Sprites = s.DancerSprites[i]
+	// 	s.DancerDrawer.Animations[i].Update(s.Now, int64(60000/ScaledBPM(s.BPM)), false)
+	// }
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer = gosu.NumberDrawer{
 		Timer:      draws.NewTimer(gosu.TimeToTick(2000), 0),

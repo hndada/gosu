@@ -1,6 +1,8 @@
 package draws
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 type Box struct {
 	Scale Point
@@ -15,7 +17,8 @@ func NewBox() Box {
 		Filter: ebiten.FilterLinear, // In ebiten, default filter is FilterNearest.
 	}
 }
-func (b *Box) SetScale(scale Point) { b.Scale = scale }
+func (b *Box) SetScale(scale Point)     { b.Scale = scale }
+func (b *Box) ApplyScale(scale float64) { b.Scale = b.Scale.Mul(Scalar(scale)) }
 func (b *Box) SetPoint(x, y float64, origin Origin) {
 	b.X = x
 	b.Y = y

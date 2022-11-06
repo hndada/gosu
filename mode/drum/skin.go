@@ -38,7 +38,7 @@ var DefaultSkin Skin
 // Order of fields of Skin is roughly consistent with drawing order.
 // https://osu.ppy.sh/wiki/en/Skinning/osu%21taiko
 type Skin struct {
-	FieldSprite     draws.Sprite
+	FieldSprites    [2]draws.Sprite
 	HintSprites     [2]draws.Sprite
 	BarSprite       draws.Sprite
 	JudgmentSprites [2][3]draws.Sprite
@@ -64,11 +64,11 @@ func LoadSkin() {
 	var skin Skin
 	defer func() { DefaultSkin = skin }()
 	var noteImage = draws.NewImage("skin/drum/note/note.png")
-	{
-		s := draws.NewSprite("skin/drum/field.png")
+	for i, name := range []string{"idle", "high"} {
+		s := draws.NewSprite(fmt.Sprintf("skin/drum/field/%s.png", name))
 		s.SetSize(screenSizeX, FieldHeight)
 		s.SetPoint(0, FieldPosition, draws.LeftMiddle)
-		skin.FieldSprite = s
+		skin.FieldSprites[i] = s
 	}
 	for i := range skin.HintSprites {
 		const (
@@ -134,7 +134,8 @@ func LoadSkin() {
 				path = fmt.Sprintf("skin/drum/judgment/%s/%s.png", sname, jname)
 			}
 			s := draws.NewSprite(path)
-			s.SetScale(draws.Scalar(JudgmentScale))
+			s.ApplyScale(JudgmentScale)
+			// s.SetScale(draws.Scalar(JudgmentScale))
 			s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
 			skin.JudgmentSprites[i][j] = s
 		}
@@ -181,13 +182,18 @@ func LoadSkin() {
 	}
 	{
 		s := draws.NewSprite("skin/drum/note/roll/dot.png")
-		s.SetScale(draws.Scalar(DotScale))
+		s.ApplyScale(DotScale)
+		// s.SetScale(draws.Scalar(DotScale))
 		s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
 		skin.DotSprite = s
 	}
 	{
+		const (
+			scale     = 4.0
+			thickness = 0.1
+		)
 		sw, sh := noteImage.Size()
-		inner := draws.NewScaledImage(noteImage, 4)
+		inner := draws.NewScaledImage(noteImage, scale)
 		shake := ebiten.NewImage(inner.Size())
 		{
 			op := &ebiten.DrawImageOptions{}
@@ -198,12 +204,12 @@ func LoadSkin() {
 		}
 		{
 			s := draws.NewSpriteFromImage(shake)
-			s.SetScaleToH(4 * regularNoteHeight)
+			s.SetScaleToH(scale * regularNoteHeight)
 			s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
 			skin.ShakeSprite = s
 		}
 
-		outer := draws.NewScaledImage(noteImage, 4.1)
+		outer := draws.NewScaledImage(noteImage, scale+thickness)
 		border := ebiten.NewImage(outer.Size())
 		{
 			op := &ebiten.DrawImageOptions{}
@@ -215,12 +221,12 @@ func LoadSkin() {
 			op := &ebiten.DrawImageOptions{}
 			op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 255, 255})
 			op.CompositeMode = ebiten.CompositeModeDestinationOut
-			op.GeoM.Translate(0.05*float64(sw), 0.05*float64(sh))
+			op.GeoM.Translate(thickness/2*float64(sw), thickness/2*float64(sh))
 			border.DrawImage(inner, op)
 		}
 		{
 			s := draws.NewSpriteFromImage(border)
-			s.SetScaleToH(4.1 * regularNoteHeight)
+			s.SetScaleToH((scale + thickness) * regularNoteHeight)
 			s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
 			skin.ShakeBorderSprite = s
 		}
@@ -272,7 +278,8 @@ func LoadSkin() {
 		for j := range fs {
 			path := fmt.Sprintf("skin/drum/dancer/%s/%d.png", name, j)
 			s := draws.NewSprite(path)
-			s.SetScale(draws.Scalar(DancerScale))
+			s.ApplyScale(DancerScale)
+			// s.SetScale(draws.Scalar(DancerScale))
 			s.SetPoint(DancerPositionX, DancerPositionY, draws.CenterMiddle)
 			skin.DancerSprites[i][j] = s
 		}
@@ -284,7 +291,8 @@ func LoadSkin() {
 	}
 	for i := 0; i < 10; i++ {
 		s := draws.NewSpriteFromImage(comboImages[i])
-		s.SetScale(draws.Scalar(ComboScale))
+		s.ApplyScale(ComboScale)
+		// s.SetScale(draws.Scalar(ComboScale))
 		s.SetPoint(keyCenter, FieldPosition, draws.CenterMiddle)
 		skin.ComboSprites[i] = s
 	}
