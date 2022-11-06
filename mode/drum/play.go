@@ -7,7 +7,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/audios"
-	draws "github.com/hndada/gosu/draws2"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
 )
 

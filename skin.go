@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/hndada/gosu/audios"
-	draws "github.com/hndada/gosu/draws2"
+	"github.com/hndada/gosu/draws"
 )
 
 // ScreenSize is a logical size of in-game screen.

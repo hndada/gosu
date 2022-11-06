@@ -6,7 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu"
-	draws "github.com/hndada/gosu/draws2"
+	"github.com/hndada/gosu/draws"
 )
 
 type StageDrawer struct {
