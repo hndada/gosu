@@ -43,10 +43,10 @@ func NewTimer(duration int64) Timer {
 	}
 }
 
-//	func (t Timer) IsDone() bool {
+//	func (t Timer) Done() bool {
 //		return ebiten.IsKeyPressed(ebiten.KeyEscape) || t.Tick >= t.MaxTick // time.Since(t.StartTime) >= t.Duration
 //	}
-func (t Timer) IsDone() bool { return ebiten.IsKeyPressed(ebiten.KeyEscape) }
+func (t Timer) Done() bool { return ebiten.IsKeyPressed(ebiten.KeyEscape) }
 
 // func (t *Timer) SwitchPause() {}
 func (t *Timer) Ticker() {
@@ -145,7 +145,7 @@ func (p *MusicPlayer) Update() {
 	// if p.Now == 150+p.Offset {
 	// 	p.Player.Seek(time.Duration(150) * time.Millisecond)
 	// }
-	// if p.IsDone() {
+	// if p.Done() {
 	// 	p.Close()
 	// }
 

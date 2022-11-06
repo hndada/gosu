@@ -40,18 +40,16 @@ type NumberDrawer struct {
 
 // Each number has different width. Number 0's width is used as standard.
 func (d *NumberDrawer) Update(combo int) {
-	if d.Countdown > 0 {
-		d.Countdown--
-	}
+	d.Ticker()
 	if d.Combo != combo {
 		d.Combo = combo
-		d.Countdown = d.MaxCountdown
+		d.Timer.Reset()
 	}
 }
 
 // ComboDrawer's Draw draws each number at constant x regardless of their widths.
 func (d NumberDrawer) Draw(screen *ebiten.Image) {
-	if d.MaxCountdown != 0 && d.Countdown == 0 {
+	if d.Done() {
 		return
 	}
 	if d.Combo == 0 {
@@ -107,7 +105,7 @@ func (d *ScoreDrawer) Update(score float64) {
 
 // NumberDrawer's Draw draws each number at the center of constant-width bound.
 func (d ScoreDrawer) Draw(screen *ebiten.Image) {
-	if d.MaxCountdown != 0 && d.Countdown == 0 {
+	if d.Done() {
 		return
 	}
 	vs := make([]int, 0)
