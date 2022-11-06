@@ -33,7 +33,7 @@ type Skin struct {
 	FieldSprites    [2]draws.Sprite
 	HintSprites     [2]draws.Sprite
 	BarSprite       draws.Sprite
-	JudgmentSprites [2][3]draws.Sprite
+	JudgmentSprites [2][3]draws.Animation
 
 	NoteSprites       [2][4]draws.Sprite
 	OverlaySprites    [2]draws.Animation
@@ -114,22 +114,24 @@ func LoadSkin() {
 		tail = end
 		body = draws.NewImage("skin/drum/note/roll/mid.png")
 	)
-	for size, sname := range []string{"regular", "big"} {
+	for size, sizeName := range []string{"regular", "big"} {
 		noteHeight := regularNoteHeight
 		if size == Big {
 			noteHeight = bigNoteHeight
 		}
-		for kind, jname := range []string{"cool", "good", "miss"} {
+		for kind, kindName := range []string{"cool", "good", "miss"} {
 			var path string
-			if jname == "miss" {
-				path = "skin/drum/judgment/miss.png"
+			if kindName == "miss" {
+				path = "skin/drum/judgment/miss"
 			} else {
-				path = fmt.Sprintf("skin/drum/judgment/%s/%s.png", sname, jname)
+				path = fmt.Sprintf("skin/drum/judgment/%s/%s", sizeName, kindName)
 			}
-			sprite := draws.NewSprite(path)
-			sprite.ApplyScale(JudgmentScale)
-			sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
-			skin.JudgmentSprites[size][kind] = sprite
+			animation := draws.NewAnimation(path)
+			for i := range animation {
+				animation[i].ApplyScale(JudgmentScale)
+				animation[i].SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
+			}
+			skin.JudgmentSprites[size][kind] = animation
 		}
 		for kind, clr := range []color.NRGBA{ColorRed, ColorBlue, ColorYellow, ColorPurple} {
 			img := ebiten.NewImage(noteImage.Size())
@@ -142,16 +144,12 @@ func LoadSkin() {
 			sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
 			skin.NoteSprites[size][kind] = sprite
 		}
-		{
-			paths := gosu.Paths(fmt.Sprintf("skin/drum/note/overlay/%s", sname))
-			skin.OverlaySprites[size] = make(draws.Animation, len(paths))
-			for j, path := range paths {
-				sprite := draws.NewSprite(path)
-				sprite.SetScaleToH(noteHeight)
-				sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
-				skin.OverlaySprites[size][j] = sprite
-			}
+		animation := draws.NewAnimation(fmt.Sprintf("skin/drum/note/overlay/%s", sizeName))
+		for i := range animation {
+			animation[i].SetScaleToH(noteHeight)
+			animation[i].SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
 		}
+		skin.OverlaySprites[size] = animation
 		{
 			sprite := draws.NewSpriteFromImage(head)
 			sprite.SetScaleToH(noteHeight)

@@ -308,7 +308,7 @@ func (d DancerDrawer) Draw(screen *ebiten.Image) {
 
 type JudgmentDrawer struct {
 	draws.Timer
-	Sprites     [2][3]draws.Sprite
+	Sprites     [2][3]draws.Animation
 	judgment    gosu.Judgment
 	big         bool
 	startRadian float64
@@ -317,14 +317,15 @@ type JudgmentDrawer struct {
 
 func (d *JudgmentDrawer) Update(j gosu.Judgment, big bool) {
 	d.Ticker()
-	if j.Valid() {
-		d.Timer.Reset()
-		d.judgment = j
-		d.big = big
-		if j.Is(Miss) {
-			d.startRadian = (5*rand.Float64() - 2.5) / 24
-			d.radian = d.startRadian
-		}
+	if !j.Valid() {
+		return
+	}
+	d.Timer.Reset()
+	d.judgment = j
+	d.big = big
+	if j.Is(Miss) {
+		d.startRadian = (5*rand.Float64() - 2.5) / 24
+		d.radian = d.startRadian
 	}
 }
 
@@ -332,14 +333,14 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	if d.Done() || d.judgment.Window == 0 {
 		return
 	}
-	sprites := d.Sprites[0]
+	sprites := d.Sprites[Regular]
 	if d.big {
-		sprites = d.Sprites[1]
+		sprites = d.Sprites[Big]
 	}
 	var sprite draws.Sprite
 	for i, j := range Judgments {
 		if d.judgment.Is(j) {
-			sprite = sprites[i]
+			sprite = d.Frame(sprites[i])
 			break
 		}
 	}
