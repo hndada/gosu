@@ -2,8 +2,6 @@ module github.com/hndada/gosu
 
 go 1.18
 
-retract v1.0.1 // Published accidentally.
-
 require (
 	github.com/hajimehoshi/ebiten/v2 v2.4.11
 	github.com/ulikunitz/xz v0.5.10
@@ -33,3 +31,5 @@ require (
 	golang.org/x/exp/shiny v0.0.0-20220916125017-b168a2c6b86b // indirect
 	golang.org/x/mobile v0.0.0-20220928052126-fa6bcb076835 // indirect
 )
+
+retract v1.0.1 // Put the version carelessly.
