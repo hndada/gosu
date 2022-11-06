@@ -105,10 +105,9 @@ var (
 )
 
 type RollDrawer struct {
-	Time  int64
-	Rolls []*Note
-	Dots  []*Dot
-	// Sprites [2][4]draws.Sprite
+	Time        int64
+	Rolls       []*Note
+	Dots        []*Dot
 	HeadSprites [2]draws.Sprite
 	TailSprites [2]draws.Sprite
 	BodySprites [2]draws.Sprite
@@ -149,19 +148,6 @@ func (d RollDrawer) Draw(screen *ebiten.Image) {
 			sprite.Move(tail.Position(d.Time), 0)
 			sprite.Draw(screen, op)
 		}
-		// bodySprite := d.BodySprites[head.Size]
-		// length := tail.Position(d.Time) - head.Position(d.Time)
-		// bodySprite.SetSize(length, bodySprite.H())
-		// bodySprite.Move(head.Position(d.Time), 0)
-		// bodySprite.Draw(screen, op)
-
-		// headSprite := d.HeadSprites[head.Size]
-		// headSprite.Move(head.Position(d.Time), 0)
-		// headSprite.Draw(screen, op)
-
-		// tailSprite := d.TailSprites[tail.Size]
-		// tailSprite.Move(tail.Position(d.Time), 0)
-		// tailSprite.Draw(screen, op)
 	}
 	max = len(d.Dots) - 1
 	for i := range d.Dots {
@@ -298,7 +284,7 @@ func (d *DancerDrawer) Update(time int64, bpm float64, combo int, miss, hit, hig
 	case miss:
 		mode = DancerNo
 		d.ModeEndTime = time + int64(4*period)
-	case combo >= 50 && combo%50 == 0: //<= 1:
+	case combo >= 50 && combo%50 == 0:
 		mode = DancerYes
 		d.ModeEndTime = time + int64(period)
 	case d.Time >= d.ModeEndTime, d.Mode == DancerNo && hit:
@@ -361,26 +347,21 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	age := d.Age()
 	if bound := 0.25; age < bound {
 		sprite.ApplyScale(1.2 - 0.2*d.Progress(0, bound))
-		// sprite.ApplyScale(1 + 0.2*(0.25-age)/0.25)
-		// alpha := 1 - 0.5*(0.2-age)/0.2
 		alpha := 0.5 + 0.5*d.Progress(0, bound)
 		op.ColorM.Scale(1, 1, 1, alpha)
 	}
 	if bound := 0.75; age > bound {
-		// alpha := 1 - (age-0.75)/0.25
 		alpha := 1 - d.Progress(bound, 1)
 		op.ColorM.Scale(1, 1, 1, alpha)
 	}
 	if d.judgment.Is(Miss) {
 		if bound := 0.5; age >= bound {
-			// scale := 1 + 0.6*(age-0.5)/0.5
-			d.radian = d.startRadian * (1 + 0.6*d.Progress(bound, 1))
+			scale := 1 + 0.6*d.Progress(bound, 1)
+			d.radian = d.startRadian * scale
 		}
 		sw, sh := sprite.SrcSize().XY()
-		// op.GeoM.Translate(sprite.SrcSize().Div(draws.Scalar(-2)).XY())
 		op.GeoM.Translate(-sw/2, -sh/2)
 		op.GeoM.Rotate(d.radian)
-		// op.GeoM.Translate(sprite.SrcSize().Div(draws.Scalar(2)).XY())
 		op.GeoM.Translate(sw/2, sh/2)
 	}
 	sprite.Draw(screen, op)

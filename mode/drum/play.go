@@ -303,7 +303,6 @@ func (s *ScenePlay) Update() any {
 	}
 	s.BarDrawer.Update(s.Now)
 	s.JudgmentDrawer.Update(judgment, big)
-
 	s.ShakeDrawer.Update(s.Now, s.StagedShake)
 	s.RollDrawer.Update(s.Now)
 	s.NoteDrawer.Update(s.Now, s.BPM)
@@ -372,6 +371,5 @@ func (s *ScenePlay) UpdateTransPoint() {
 func (s ScenePlay) Speed() float64 { return s.TransPoint.Speed * s.SpeedScale }
 
 var DefaultSampleNames = [2][2]string{
-	{"red-regular", "red-big"},
-	{"blue-regular", "blue-big"},
+	{"red-regular", "red-big"}, {"blue-regular", "blue-big"},
 }
