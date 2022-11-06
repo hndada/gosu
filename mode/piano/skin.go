@@ -65,11 +65,14 @@ type Skin struct {
 	ComboSprites    [10]draws.Sprite
 	JudgmentSprites [5]draws.Animation
 	// Sprites which are dependent of key count.
-	KeySprites  [][2]draws.Sprite
-	NoteSprites [][4]draws.Animation
-	FieldSprite draws.Sprite
-	HintSprite  draws.Sprite
-	BarSprite   draws.Sprite
+	KeySprites          [][2]draws.Sprite
+	KeyLightingSprites  []draws.Sprite
+	HitLightingSprites  []draws.Animation
+	HoldLightingSprites []draws.Animation
+	NoteSprites         [][4]draws.Animation
+	FieldSprite         draws.Sprite
+	HintSprite          draws.Sprite
+	BarSprite           draws.Sprite
 }
 
 var Skins = make(map[int]Skin)
@@ -90,30 +93,40 @@ func LoadSkin() {
 		GeneralSkin.JudgmentSprites[i] = animation
 	}
 	var (
-		keyImages  [2]*ebiten.Image
-		noteImages [4][4][]*ebiten.Image // First 4 is a type, next 4 is a kind.
-		hintImage  *ebiten.Image
+		keyImages          [2]*ebiten.Image
+		keyLightingImage   *ebiten.Image
+		hitLightingImages  []*ebiten.Image
+		holdLightingImages []*ebiten.Image
+		noteImages         [4][4][]*ebiten.Image // First 4 is a type, next 4 is a kind.
+		hintImage          *ebiten.Image
 	)
 	for i, name := range []string{"up", "down"} {
 		keyImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/key/%s.png", name))
 	}
-	hintImage = draws.NewImage("skin/piano/hint.png")
+	keyLightingImage = draws.NewImage("skin/piano/key/lighting.png")
+	hitLightingImages = draws.NewImages("skin/piano/lighting/hit")
+	holdLightingImages = draws.NewImages("skin/piano/lighting/hold")
 	for i, _type := range []string{"normal", "head", "tail", "body"} {
 		for j, kind := range []int{1, 2, 3, 3} { // Todo: 4th note image with custom color settings?
 			noteImages[i][j] = draws.NewImages(fmt.Sprintf("skin/piano/note/%s/%d", _type, kind))
 		}
 	}
+	hintImage = draws.NewImage("skin/piano/hint.png")
+
 	// Todo: Key count 1, 2, 3 and with scratch
 	for keyCount := 4; keyCount <= 10; keyCount++ {
 		noteKinds := NoteKindsMap[keyCount]
 		noteWidths := NoteWidthsMap[keyCount]
 		skin := Skin{
-			ScoreSprites:    gosu.ScoreSprites,
-			SignSprites:     gosu.SignSprites,
-			ComboSprites:    GeneralSkin.ComboSprites,
-			JudgmentSprites: GeneralSkin.JudgmentSprites,
-			KeySprites:      make([][2]draws.Sprite, len(noteKinds)),
-			NoteSprites:     make([][4]draws.Animation, len(noteKinds)),
+			ScoreSprites:        gosu.ScoreSprites,
+			SignSprites:         gosu.SignSprites,
+			ComboSprites:        GeneralSkin.ComboSprites,
+			JudgmentSprites:     GeneralSkin.JudgmentSprites,
+			KeySprites:          make([][2]draws.Sprite, len(noteKinds)),
+			KeyLightingSprites:  make([]draws.Sprite, len(noteKinds)),
+			HitLightingSprites:  make([]draws.Animation, len(noteKinds)),
+			HoldLightingSprites: make([]draws.Animation, len(noteKinds)),
+			NoteSprites:         make([][4]draws.Animation, len(noteKinds)),
 		}
 		// Keys are drawn below Hint, which bottom is along with HitPosition.
 		// Each w should be integer, since it is a width of independent sprite.
@@ -130,6 +143,28 @@ func LoadSkin() {
 				sprite.SetSize(w, screenSizeY-HitPosition)
 				sprite.SetPoint(x, HitPosition, draws.LeftTop)
 				skin.KeySprites[k][i] = sprite
+			}
+			{
+				sprite := draws.NewSpriteFromImage(keyLightingImage)
+				sprite.SetScaleToW(w)
+				sprite.SetPoint(x, HitPosition-HintHeight, draws.CenterTop)
+				skin.KeyLightingSprites[k] = sprite
+			}
+			{
+				animation := draws.NewAnimationFromImages(hitLightingImages)
+				for i := range animation {
+					animation[i].SetScaleToW(LightingScale * w)
+					animation[i].SetPoint(x, HitPosition-HintHeight, draws.CenterTop)
+				}
+				skin.HitLightingSprites[k] = animation
+			}
+			{
+				animation := draws.NewAnimationFromImages(holdLightingImages)
+				for i := range animation {
+					animation[i].SetScaleToW(LightingScale * w)
+					animation[i].SetPoint(x, HitPosition-HintHeight, draws.CenterTop)
+				}
+				skin.HoldLightingSprites[k] = animation
 			}
 			for _type, images := range noteImages {
 				animation := draws.NewAnimationFromImages(images[kind])

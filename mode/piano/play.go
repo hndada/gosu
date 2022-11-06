@@ -24,16 +24,19 @@ type ScenePlay struct {
 	Staged     []*Note
 	gosu.Scorer
 
-	Skin             // The skin may be applied some custom settings: on/off some sprites
-	BackgroundDrawer gosu.BackgroundDrawer
-	StageDrawer      StageDrawer
-	BarDrawer        BarDrawer
-	NoteDrawers      []NoteDrawer
-	KeyDrawers       []KeyDrawer
-	JudgmentDrawer   JudgmentDrawer
-	ScoreDrawer      gosu.ScoreDrawer
-	ComboDrawer      gosu.NumberDrawer
-	MeterDrawer      gosu.MeterDrawer
+	Skin                // The skin may be applied some custom settings: on/off some sprites
+	BackgroundDrawer    gosu.BackgroundDrawer
+	StageDrawer         StageDrawer
+	BarDrawer           BarDrawer
+	NoteDrawers         []NoteDrawer
+	KeyDrawers          []KeyDrawer
+	KeyLightingDrawers  []KeyLightingDrawer
+	HitLightingDrawers  []HitLightingDrawer
+	HoldLightingDrawers []HoldLightingDrawer
+	JudgmentDrawer      JudgmentDrawer
+	ScoreDrawer         gosu.ScoreDrawer
+	ComboDrawer         gosu.NumberDrawer
+	MeterDrawer         gosu.MeterDrawer
 }
 
 // Todo: add Mods
@@ -100,8 +103,18 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		FieldSprite: s.FieldSprite,
 		HintSprite:  s.HintSprite,
 	}
+	s.BarDrawer = BarDrawer{
+		Cursor:   s.Cursor,
+		Farthest: c.Bars[0],
+		Nearest:  c.Bars[0],
+		Sprite:   s.BarSprite,
+	}
 	s.NoteDrawers = make([]NoteDrawer, keyCount)
-	for k := range s.NoteDrawers {
+	s.KeyDrawers = make([]KeyDrawer, keyCount)
+	s.KeyLightingDrawers = make([]KeyLightingDrawer, keyCount)
+	s.HitLightingDrawers = make([]HitLightingDrawer, keyCount)
+	s.HoldLightingDrawers = make([]HoldLightingDrawer, keyCount)
+	for k := 0; k < keyCount; k++ {
 		s.NoteDrawers[k] = NoteDrawer{
 			Timer:    draws.NewTimer(0, gosu.TimeToTick(800)), // Todo: make it BPM-dependent?
 			Cursor:   s.Cursor,
@@ -109,18 +122,21 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 			Nearest:  s.Staged[k],
 			Sprites:  s.NoteSprites[k],
 		}
-	}
-	s.BarDrawer = BarDrawer{
-		Cursor:   s.Cursor,
-		Farthest: c.Bars[0],
-		Nearest:  c.Bars[0],
-		Sprite:   s.BarSprite,
-	}
-	s.KeyDrawers = make([]KeyDrawer, keyCount)
-	for k := range s.KeyDrawers {
 		s.KeyDrawers[k] = KeyDrawer{
 			Timer:   draws.NewTimer(gosu.TimeToTick(30), 0),
 			Sprites: s.KeySprites[k],
+		}
+		s.KeyLightingDrawers[k] = KeyLightingDrawer{
+			Timer:  draws.NewTimer(gosu.TimeToTick(30), 0),
+			Sprite: s.KeyLightingSprites[k],
+		}
+		s.HitLightingDrawers[k] = HitLightingDrawer{
+			Timer:   draws.NewTimer(gosu.TimeToTick(250), 0),
+			Sprites: s.HitLightingSprites[k],
+		}
+		s.HoldLightingDrawers[k] = HoldLightingDrawer{
+			Timer:   draws.NewTimer(0, gosu.TimeToTick(250)),
+			Sprites: s.HoldLightingSprites[k],
 		}
 	}
 	s.JudgmentDrawer = NewJudgmentDrawer()
@@ -168,7 +184,6 @@ func (s *ScenePlay) Update() any {
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
 	var worst gosu.Judgment
-
 	for _, n := range s.Staged {
 		if n == nil {
 			continue
@@ -203,15 +218,18 @@ func (s *ScenePlay) Update() any {
 				kind = 1
 			}
 			s.MeterDrawer.AddMark(int(td), kind)
+			if !j.Is(Miss) && n.Type != Head {
+				s.HitLightingDrawers[n.Key].Update(true)
+			}
 		}
 	}
-
 	s.BarDrawer.Update(s.Cursor)
-	for k := range s.NoteDrawers {
+	for k := 0; k < s.Chart.KeyCount; k++ {
 		s.NoteDrawers[k].Update(s.Cursor)
-	}
-	for k := range s.KeyDrawers {
 		s.KeyDrawers[k].Update(s.Pressed[k])
+		s.KeyLightingDrawers[k].Update(s.Pressed[k])
+		holding := s.Staged[k].Type == Tail && s.Pressed[k]
+		s.HoldLightingDrawers[k].Update(holding)
 	}
 	s.JudgmentDrawer.Update(worst)
 	s.ScoreDrawer.Update(s.Scores[3])
@@ -230,11 +248,12 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
 	s.StageDrawer.Draw(screen)
 	s.BarDrawer.Draw(screen)
-	for _, d := range s.NoteDrawers {
-		d.Draw(screen)
-	}
-	for _, d := range s.KeyDrawers {
-		d.Draw(screen)
+	for k := 0; k < s.Chart.KeyCount; k++ {
+		s.NoteDrawers[k].Draw(screen)
+		s.KeyDrawers[k].Draw(screen)
+		s.KeyLightingDrawers[k].Draw(screen)
+		s.HitLightingDrawers[k].Draw(screen)
+		s.HoldLightingDrawers[k].Draw(screen)
 	}
 	s.JudgmentDrawer.Draw(screen)
 	s.ScoreDrawer.Draw(screen)

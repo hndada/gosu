@@ -44,6 +44,7 @@ func init() {
 	}
 }
 
+// Todo: add note lighting color settings per kind
 // Todo: Should NoteHeight be separated into NoteHeight, HeadHeight, TailHeight?
 var (
 	FieldDarkness float64 = 0.8
@@ -77,6 +78,7 @@ var (
 	ComboDigitGap float64 = screenSizeX * -0.0008
 	JudgmentScale float64 = 0.33
 	HintHeight    float64 = screenSizeY * 0.04
+	LightingScale float64 = 1.2 // 1.0: same as note width
 )
 
 func SwitchDirection() {
