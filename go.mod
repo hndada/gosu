@@ -33,3 +33,4 @@ require (
 )
 
 retract v1.0.1 // Put the version carelessly.
+retract v1.0.2 // For retracking v1.0.1.
