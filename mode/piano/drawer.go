@@ -201,14 +201,28 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	age := d.Age()
 	sprite := d.Frame(d.Sprites[idx])
 	scale := 1.0
-	switch {
-	case age < 0.1:
-		scale = 1.15 * (1 + age)
-	case age >= 0.1 && age < 0.2:
-		scale = 1.15 * (1.2 - age)
-	case age > 0.9:
-		scale = 1 - 1.15*(age-0.9)
+	const (
+		bound0 = 0.1
+		bound1 = 0.2
+		bound2 = 0.9
+	)
+	if age < bound0 {
+		scale = 1 + 0.15*d.Progress(0, bound0)
 	}
+	if age >= bound0 && age < bound1 {
+		scale = 1.15 - 0.15*d.Progress(bound0, bound1)
+	}
+	if age >= bound2 {
+		scale = 1 - 0.25*d.Progress(bound2, 1)
+	}
+	// switch {
+	// case age < 0.1:
+	// 	scale = 1.15 * (1 + age)
+	// case age >= 0.1 && age < 0.2:
+	// 	scale = 1.15 * (1.2 - age)
+	// case age > 0.9:
+	// 	scale = 1 - 1.15*(age-0.9)
+	// }
 	sprite.ApplyScale(scale)
 	sprite.Draw(screen, ebiten.DrawImageOptions{})
 }

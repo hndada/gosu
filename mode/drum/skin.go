@@ -65,10 +65,10 @@ func LoadSkin() {
 	defer func() { DefaultSkin = skin }()
 	var noteImage = draws.NewImage("skin/drum/note/note.png")
 	for i, name := range []string{"idle", "high"} {
-		s := draws.NewSprite(fmt.Sprintf("skin/drum/field/%s.png", name))
-		s.SetSize(screenSizeX, FieldHeight)
-		s.SetPoint(0, FieldPosition, draws.LeftMiddle)
-		skin.FieldSprites[i] = s
+		sprite := draws.NewSprite(fmt.Sprintf("skin/drum/field/%s.png", name))
+		sprite.SetSize(screenSizeX, FieldHeight)
+		sprite.SetPoint(0, FieldPosition, draws.LeftMiddle)
+		skin.FieldSprites[i] = sprite
 	}
 	for i := range skin.HintSprites {
 		const (
@@ -107,17 +107,17 @@ func LoadSkin() {
 			op.GeoM.Translate(sd/2*float64(sw), sd/2*float64(sh))
 			img.DrawImage(inner, op)
 		}
-		s := draws.NewSpriteFromImage(img)
-		s.SetScaleToH(1.2 * regularNoteHeight)
-		s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
-		skin.HintSprites[i] = s
+		sprite := draws.NewSpriteFromImage(img)
+		sprite.SetScaleToH(1.2 * regularNoteHeight)
+		sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
+		skin.HintSprites[i] = sprite
 	}
 	{
 		src := ebiten.NewImage(1, int(FieldInnerHeight))
 		src.Fill(color.NRGBA{255, 255, 255, 255})
-		s := draws.NewSpriteFromImage(src)
-		s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
-		skin.BarSprite = s
+		sprite := draws.NewSpriteFromImage(src)
+		sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
+		skin.BarSprite = sprite
 	}
 	var (
 		rollEndImage = draws.NewImage("skin/drum/note/roll/end.png")
@@ -135,10 +135,10 @@ func LoadSkin() {
 			} else {
 				path = fmt.Sprintf("skin/drum/judgment/%s/%s.png", sname, jname)
 			}
-			s := draws.NewSprite(path)
-			s.ApplyScale(JudgmentScale)
-			s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
-			skin.JudgmentSprites[i][j] = s
+			sprite := draws.NewSprite(path)
+			sprite.ApplyScale(JudgmentScale)
+			sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
+			skin.JudgmentSprites[i][j] = sprite
 		}
 		for j, clr := range []color.NRGBA{ColorRed, ColorBlue, ColorYellow, ColorPurple} {
 			img := ebiten.NewImage(noteImage.Size())
@@ -146,46 +146,46 @@ func LoadSkin() {
 			op.ColorM.ScaleWithColor(clr)
 			img.DrawImage(noteImage, op)
 
-			s := draws.NewSpriteFromImage(img)
-			s.SetScaleToH(noteHeight)
-			s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
-			skin.NoteSprites[i][j] = s
+			sprite := draws.NewSpriteFromImage(img)
+			sprite.SetScaleToH(noteHeight)
+			sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
+			skin.NoteSprites[i][j] = sprite
 		}
 		{
-			s := draws.NewSpriteFromImage(rollEndImage)
-			s.SetScaleToH(noteHeight)
-			s.SetPoint(HitPosition, FieldPosition, draws.LeftMiddle)
-			skin.TailSprites[i] = s
+			sprite := draws.NewSpriteFromImage(rollEndImage)
+			sprite.SetScaleToH(noteHeight)
+			sprite.SetPoint(HitPosition, FieldPosition, draws.LeftMiddle)
+			skin.TailSprites[i] = sprite
 		}
 		{
-			s := draws.NewSpriteFromImage(draws.NewXFlippedImage(rollEndImage))
-			s.SetScaleToH(noteHeight)
-			s.SetPoint(HitPosition, FieldPosition, draws.RightMiddle)
-			skin.HeadSprites[i] = s
+			sprite := draws.NewSpriteFromImage(draws.NewXFlippedImage(rollEndImage))
+			sprite.SetScaleToH(noteHeight)
+			sprite.SetPoint(HitPosition, FieldPosition, draws.RightMiddle)
+			skin.HeadSprites[i] = sprite
 		}
 		{
 			paths := gosu.Paths(fmt.Sprintf("skin/drum/note/overlay/%s", sname))
 			skin.OverlaySprites[i] = make(draws.Animation, len(paths))
 			for j, path := range paths {
-				s := draws.NewSprite(path)
-				s.SetScaleToH(noteHeight)
-				s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
-				skin.OverlaySprites[i][j] = s
+				sprite := draws.NewSprite(path)
+				sprite.SetScaleToH(noteHeight)
+				sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
+				skin.OverlaySprites[i][j] = sprite
 			}
 		}
 		{
-			s := draws.NewSpriteFromImage(rollMidImage)
-			s.SetScaleToH(noteHeight)
-			s.SetPoint(HitPosition, FieldPosition, draws.LeftMiddle)
-			s.Filter = ebiten.FilterNearest
-			skin.BodySprites[i] = s
+			sprite := draws.NewSpriteFromImage(rollMidImage)
+			sprite.SetScaleToH(noteHeight)
+			sprite.SetPoint(HitPosition, FieldPosition, draws.LeftMiddle)
+			sprite.Filter = ebiten.FilterNearest
+			skin.BodySprites[i] = sprite
 		}
 	}
 	{
-		s := draws.NewSprite("skin/drum/note/roll/dot.png")
-		s.ApplyScale(DotScale)
-		s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
-		skin.DotSprite = s
+		sprite := draws.NewSprite("skin/drum/note/roll/dot.png")
+		sprite.ApplyScale(DotScale)
+		sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
+		skin.DotSprite = sprite
 	}
 	{
 		const (
@@ -203,10 +203,10 @@ func LoadSkin() {
 			shake.DrawImage(inner, op)
 		}
 		{
-			s := draws.NewSpriteFromImage(shake)
-			s.SetScaleToH(scale * regularNoteHeight)
-			s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
-			skin.ShakeSprite = s
+			sprite := draws.NewSpriteFromImage(shake)
+			sprite.SetScaleToH(scale * regularNoteHeight)
+			sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
+			skin.ShakeSprite = sprite
 		}
 
 		outer := draws.NewScaledImage(noteImage, scale+thickness)
@@ -225,49 +225,49 @@ func LoadSkin() {
 			border.DrawImage(inner, op)
 		}
 		{
-			s := draws.NewSpriteFromImage(border)
-			s.SetScaleToH((scale + thickness) * regularNoteHeight)
-			s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
-			skin.ShakeBorderSprite = s
+			sprite := draws.NewSpriteFromImage(border)
+			sprite.SetScaleToH((scale + thickness) * regularNoteHeight)
+			sprite.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
+			skin.ShakeBorderSprite = sprite
 		}
 	}
 	// Position of combo is dependent on widths of key sprite.
 	// Key sprites are overlapped at each side.
 	{
-		s := draws.NewSprite("skin/drum/key/in.png")
-		s.SetScaleToH(FieldInnerHeight)
-		s.SetPoint(0, FieldPosition, draws.LeftMiddle)
-		keyCenter = s.W()
-		skin.KeySprites[LeftRed] = s
+		sprite := draws.NewSprite("skin/drum/key/in.png")
+		sprite.SetScaleToH(FieldInnerHeight)
+		sprite.SetPoint(0, FieldPosition, draws.LeftMiddle)
+		keyCenter = sprite.W()
+		skin.KeySprites[LeftRed] = sprite
 	}
 	{
-		s := draws.NewSprite("skin/drum/key/out.png")
-		s.SetScaleToH(FieldInnerHeight)
-		s.SetPoint(keyCenter, FieldPosition, draws.LeftMiddle)
-		skin.KeySprites[RightBlue] = s
+		sprite := draws.NewSprite("skin/drum/key/out.png")
+		sprite.SetScaleToH(FieldInnerHeight)
+		sprite.SetPoint(keyCenter, FieldPosition, draws.LeftMiddle)
+		skin.KeySprites[RightBlue] = sprite
 	}
 	{
 		src := draws.NewImage("skin/drum/key/out.png")
-		s := draws.NewSpriteFromImage(draws.NewXFlippedImage(src))
-		s.SetScaleToH(FieldInnerHeight)
-		s.SetPoint(0, FieldPosition, draws.LeftMiddle)
-		skin.KeySprites[LeftBlue] = s
+		sprite := draws.NewSpriteFromImage(draws.NewXFlippedImage(src))
+		sprite.SetScaleToH(FieldInnerHeight)
+		sprite.SetPoint(0, FieldPosition, draws.LeftMiddle)
+		skin.KeySprites[LeftBlue] = sprite
 	}
 	{
 		src := draws.NewImage("skin/drum/key/in.png")
-		s := draws.NewSpriteFromImage(draws.NewXFlippedImage(src))
-		s.SetScaleToH(FieldInnerHeight)
-		s.SetPoint(keyCenter, FieldPosition, draws.LeftMiddle)
-		skin.KeySprites[RightRed] = s
+		sprite := draws.NewSpriteFromImage(draws.NewXFlippedImage(src))
+		sprite.SetScaleToH(FieldInnerHeight)
+		sprite.SetPoint(keyCenter, FieldPosition, draws.LeftMiddle)
+		skin.KeySprites[RightRed] = sprite
 	}
 	{
 		w := keyCenter + skin.KeySprites[RightBlue].W()
 		h := skin.KeySprites[RightBlue].H()
 		src := ebiten.NewImage(int(w), int(h))
 		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
-		s := draws.NewSpriteFromImage(src)
-		s.SetPoint(0, FieldPosition, draws.LeftMiddle)
-		skin.KeyFieldSprite = s
+		sprite := draws.NewSpriteFromImage(src)
+		sprite.SetPoint(0, FieldPosition, draws.LeftMiddle)
+		skin.KeyFieldSprite = sprite
 	}
 	for i, name := range []string{"idle", "yes", "no", "high"} {
 		fs, err := os.ReadDir(fmt.Sprintf("skin/drum/dancer/%s", name))
@@ -277,10 +277,10 @@ func LoadSkin() {
 		skin.DancerSprites[i] = make(draws.Animation, len(fs))
 		for j := range fs {
 			path := fmt.Sprintf("skin/drum/dancer/%s/%d.png", name, j)
-			s := draws.NewSprite(path)
-			s.ApplyScale(DancerScale)
-			s.SetPoint(DancerPositionX, DancerPositionY, draws.CenterMiddle)
-			skin.DancerSprites[i][j] = s
+			sprite := draws.NewSprite(path)
+			sprite.ApplyScale(DancerScale)
+			sprite.SetPoint(DancerPositionX, DancerPositionY, draws.CenterMiddle)
+			skin.DancerSprites[i][j] = sprite
 		}
 	}
 	skin.ScoreSprites = gosu.ScoreSprites
@@ -289,9 +289,9 @@ func LoadSkin() {
 		comboImages[i] = draws.NewImage(fmt.Sprintf("skin/combo/%d.png", i))
 	}
 	for i := 0; i < 10; i++ {
-		s := draws.NewSpriteFromImage(comboImages[i])
-		s.ApplyScale(ComboScale)
-		s.SetPoint(keyCenter, FieldPosition, draws.CenterMiddle)
-		skin.ComboSprites[i] = s
+		sprite := draws.NewSpriteFromImage(comboImages[i])
+		sprite.ApplyScale(ComboScale)
+		sprite.SetPoint(keyCenter, FieldPosition, draws.CenterMiddle)
+		skin.ComboSprites[i] = sprite
 	}
 }

@@ -64,17 +64,29 @@ func (d NumberDrawer) Draw(screen *ebiten.Image) {
 	// Since sprites are already at origin, no need to care of two 0.5w.
 	w := d.DigitWidth + d.DigitGap
 	tx := float64(len(vs)-1) * w / 2
+	const (
+		bound0 = 0.05
+		bound1 = 0.1
+	)
 	for _, v := range vs {
 		sprite := d.Sprites[v]
 		sprite.Move(tx, 0)
 		age := d.Age()
-		h := sprite.Size().Y
-		switch {
-		case age < 0.05:
-			sprite.Move(0, d.Bounce*age*h)
-		case age >= 0.05 && age < 0.1:
-			sprite.Move(0, d.Bounce*(0.1-age)*h)
+		if age < bound0 {
+			scale := 0.1 * d.Progress(0, bound0)
+			sprite.Move(0, d.Bounce*sprite.H()*scale)
 		}
+		if age >= bound0 && age < bound1 {
+			scale := 0.1 - 0.1*d.Progress(bound0, bound1)
+			sprite.Move(0, d.Bounce*sprite.H()*scale)
+		}
+		// h := sprite.Size().Y
+		// switch {
+		// case age < 0.05:
+		// 	sprite.Move(0, d.Bounce*age*h)
+		// case age >= 0.05 && age < 0.1:
+		// 	sprite.Move(0, d.Bounce*(0.1-age)*h)
+		// }
 		sprite.Draw(screen, ebiten.DrawImageOptions{})
 		tx -= w
 	}

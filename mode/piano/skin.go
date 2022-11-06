@@ -76,18 +76,18 @@ var Skins = make(map[int]Skin)
 
 func LoadSkin() {
 	for i := 0; i < 10; i++ {
-		s := draws.NewSprite(fmt.Sprintf("skin/combo/%d.png", i))
-		s.ApplyScale(ComboScale)
-		s.SetPoint(FieldPosition, ComboPosition, draws.CenterMiddle)
-		GeneralSkin.ComboSprites[i] = s
+		sprite := draws.NewSprite(fmt.Sprintf("skin/combo/%d.png", i))
+		sprite.ApplyScale(ComboScale)
+		sprite.SetPoint(FieldPosition, ComboPosition, draws.CenterMiddle)
+		GeneralSkin.ComboSprites[i] = sprite
 	}
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
-		a := draws.NewAnimation(fmt.Sprintf("skin/piano/judgment/%s", name))
-		for i := range a {
-			a[i].ApplyScale(JudgmentScale)
-			a[i].SetPoint(FieldPosition, JudgmentPosition, draws.CenterMiddle)
+		animation := draws.NewAnimation(fmt.Sprintf("skin/piano/judgment/%s", name))
+		for i := range animation {
+			animation[i].ApplyScale(JudgmentScale)
+			animation[i].SetPoint(FieldPosition, JudgmentPosition, draws.CenterMiddle)
 		}
-		GeneralSkin.JudgmentSprites[i] = a
+		GeneralSkin.JudgmentSprites[i] = animation
 	}
 	var (
 		keyImages  [2]*ebiten.Image
@@ -126,10 +126,10 @@ func LoadSkin() {
 		for k, kind := range noteKinds {
 			w := math.Ceil(noteWidths[kind])
 			for i, img := range keyImages {
-				s := draws.NewSpriteFromImage(img)
-				s.SetSize(w, screenSizeY-HitPosition)
-				s.SetPoint(x, HitPosition, draws.LeftTop)
-				skin.KeySprites[k][i] = s
+				sprite := draws.NewSpriteFromImage(img)
+				sprite.SetSize(w, screenSizeY-HitPosition)
+				sprite.SetPoint(x, HitPosition, draws.LeftTop)
+				skin.KeySprites[k][i] = sprite
 			}
 			for _type, images := range noteImages {
 				animation := draws.NewAnimationFromImages(images[kind])
@@ -144,22 +144,22 @@ func LoadSkin() {
 		{
 			src := ebiten.NewImage(int(wsum), screenSizeY)
 			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
-			s := draws.NewSpriteFromImage(src)
-			s.SetPoint(FieldPosition, 0, draws.CenterTop)
-			skin.FieldSprite = s
+			sprite := draws.NewSpriteFromImage(src)
+			sprite.SetPoint(FieldPosition, 0, draws.CenterTop)
+			skin.FieldSprite = sprite
 		}
 		{
-			s := draws.NewSpriteFromImage(hintImage)
-			s.SetSize(wsum, HintHeight)
-			s.SetPoint(FieldPosition, HitPosition-HintHeight, draws.CenterTop)
-			skin.HintSprite = s
+			sprite := draws.NewSpriteFromImage(hintImage)
+			sprite.SetSize(wsum, HintHeight)
+			sprite.SetPoint(FieldPosition, HitPosition-HintHeight, draws.CenterTop)
+			skin.HintSprite = sprite
 		}
 		{
 			src := ebiten.NewImage(int(wsum), 1)
 			src.Fill(color.NRGBA{255, 255, 255, 255}) // White
-			s := draws.NewSpriteFromImage(src)
-			s.SetPoint(FieldPosition, HitPosition, draws.CenterBottom)
-			skin.BarSprite = s
+			sprite := draws.NewSpriteFromImage(src)
+			sprite.SetPoint(FieldPosition, HitPosition, draws.CenterBottom)
+			skin.BarSprite = sprite
 		}
 		Skins[keyCount] = skin
 	}
