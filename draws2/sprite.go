@@ -4,6 +4,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+// Sprite is an image drawn in a screen based on its position and scale.
+// DrawImageOptions is not commutative. Do Translate at the final stage.
 type Sprite struct {
 	i *ebiten.Image
 	Box

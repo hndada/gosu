@@ -8,7 +8,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/ctrl"
-	draws "github.com/hndada/gosu/draws2"
+	"github.com/hndada/gosu/draws"
 )
 
 // Order of fields of drawer: updating fields, others fields, sprites.
