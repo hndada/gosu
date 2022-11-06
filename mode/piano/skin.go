@@ -63,12 +63,13 @@ type Skin struct {
 	ComboSprites    [10]draws.Sprite
 	JudgmentSprites [5]draws.Animation
 
-	KeyUpSprites   []draws.Sprite
-	KeyDownSprites []draws.Sprite
-	NoteSprites    []draws.Sprite
-	HeadSprites    []draws.Sprite
-	TailSprites    []draws.Sprite
-	BodySprites    []draws.Sprite
+	// KeyUpSprites   []draws.Sprite
+	// KeyDownSprites []draws.Sprite
+	KeySprites  [][2]draws.Sprite
+	NoteSprites []draws.Animation
+	HeadSprites []draws.Animation
+	TailSprites []draws.Animation
+	BodySprites []draws.Animation
 	// BodySprites    [][]draws.Sprite // Binary-building method
 	FieldSprite draws.Sprite
 	HintSprite  draws.Sprite
@@ -97,24 +98,26 @@ func LoadSkin() {
 	// Following sprites are dependent of key count.
 	// Todo: animated sprite support. Starting with [4][]*ebiten.Image will help.
 	var (
-		keyUpImage   *ebiten.Image
-		keyDownImage *ebiten.Image
-		hintImage    *ebiten.Image
-		noteImages   [4]*ebiten.Image
-		headImages   [4]*ebiten.Image
-		tailImages   [4]*ebiten.Image
+		// keyUpImage   *ebiten.Image
+		// keyDownImage *ebiten.Image
+		keyImages  [2]*ebiten.Image
+		hintImage  *ebiten.Image
+		noteImages [4][]*ebiten.Image
+		headImages [4][]*ebiten.Image
+		tailImages [4][]*ebiten.Image
+		bodyImages [4][]*ebiten.Image
 		// bodyImages   [4]image.Image // binary-building method
-		bodyImages [4]*ebiten.Image
 	)
-	keyUpImage = draws.NewImage("skin/piano/key/up.png") // Todo: combine with declaration?
-	keyDownImage = draws.NewImage("skin/piano/key/down.png")
+	for i, name := range []string{"up", "down"} {
+		keyImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/key/%s.png", name))
+	}
 	hintImage = draws.NewImage("skin/piano/hint.png")
 	// Todo: 4th note image. 1st note with custom color settings.
 	for i, kind := range []int{1, 2, 3, 3} {
-		noteImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/note/%d.png", kind))
-		headImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/head/%d.png", kind))
-		tailImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/tail/%d.png", kind))
-		bodyImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/note/body/%d.png", kind))
+		noteImages[i] = draws.NewImages(fmt.Sprintf("skin/piano/note/note/%d", kind))
+		headImages[i] = draws.NewImages(fmt.Sprintf("skin/piano/note/head/%d", kind))
+		tailImages[i] = draws.NewImages(fmt.Sprintf("skin/piano/note/tail/%d", kind))
+		bodyImages[i] = draws.NewImages(fmt.Sprintf("skin/piano/note/body/%d", kind))
 		// bodyImages[i] = draws.NewImageSrc(fmt.Sprintf("skin/piano/note/body/%d.png", kind))
 	}
 
@@ -129,12 +132,13 @@ func LoadSkin() {
 			ComboSprites:    GeneralSkin.ComboSprites,
 			JudgmentSprites: GeneralSkin.JudgmentSprites,
 
-			KeyUpSprites:   make([]draws.Sprite, keyCount&ScratchMask),
-			KeyDownSprites: make([]draws.Sprite, keyCount&ScratchMask),
-			NoteSprites:    make([]draws.Sprite, keyCount&ScratchMask),
-			HeadSprites:    make([]draws.Sprite, keyCount&ScratchMask),
-			TailSprites:    make([]draws.Sprite, keyCount&ScratchMask),
-			BodySprites:    make([]draws.Sprite, keyCount&ScratchMask),
+			// KeyUpSprites:   make([]draws.Sprite, keyCount&ScratchMask),
+			// KeyDownSprites: make([]draws.Sprite, keyCount&ScratchMask),
+			KeySprites:  make([][2]draws.Sprite, keyCount&ScratchMask),
+			NoteSprites: make([]draws.Animation, keyCount&ScratchMask),
+			HeadSprites: make([]draws.Animation, keyCount&ScratchMask),
+			TailSprites: make([]draws.Animation, keyCount&ScratchMask),
+			BodySprites: make([]draws.Animation, keyCount&ScratchMask),
 			// BodySprites:    make([][]draws.Sprite, keyCount&ScratchMask),
 		}
 		// KeyUp and KeyDown are drawn below Hint, which bottom is along with HitPosition.
@@ -147,41 +151,55 @@ func LoadSkin() {
 		x := FieldPosition - wsum/2
 		for k, kind := range noteKinds {
 			w := math.Ceil(noteWidths[kind])
-			{
-				s := draws.NewSpriteFromImage(keyUpImage)
+			for i, img := range keyImages {
+				s := draws.NewSpriteFromImage(img)
 				s.SetSize(w, screenSizeY-HitPosition)
 				s.SetPoint(x, HitPosition, draws.LeftTop)
-				skin.KeyUpSprites[k] = s
+				skin.KeySprites[k][i] = s
+			}
+			// {
+			// 	s := draws.NewSpriteFromImage(keyUpImage)
+			// 	s.SetSize(w, screenSizeY-HitPosition)
+			// 	s.SetPoint(x, HitPosition, draws.LeftTop)
+			// 	skin.KeyUpSprites[k] = s
+			// }
+			// {
+			// 	s := draws.NewSpriteFromImage(keyDownImage)
+			// 	s.SetSize(w, screenSizeY-HitPosition)
+			// 	s.SetPoint(x, HitPosition, draws.LeftTop)
+			// 	skin.KeyDownSprites[k] = s
+			// }
+			{
+				animation := draws.NewAnimationFromImages(noteImages[kind])
+				for i := range animation {
+					animation[i].SetSize(w, NoteHeigth)
+					animation[i].SetPoint(x, HitPosition, draws.LeftBottom)
+				}
+				skin.NoteSprites[k] = animation
 			}
 			{
-				s := draws.NewSpriteFromImage(keyDownImage)
-				s.SetSize(w, screenSizeY-HitPosition)
-				s.SetPoint(x, HitPosition, draws.LeftTop)
-				skin.KeyDownSprites[k] = s
+				animation := draws.NewAnimationFromImages(headImages[kind])
+				for i := range animation {
+					animation[i].SetSize(w, NoteHeigth)
+					animation[i].SetPoint(x, HitPosition, draws.LeftBottom)
+				}
+				skin.HeadSprites[k] = animation
 			}
 			{
-				s := draws.NewSpriteFromImage(noteImages[kind])
-				s.SetSize(w, NoteHeigth)
-				s.SetPoint(x, HitPosition, draws.LeftBottom)
-				skin.NoteSprites[k] = s
+				animation := draws.NewAnimationFromImages(tailImages[kind])
+				for i := range animation {
+					animation[i].SetSize(w, NoteHeigth)
+					animation[i].SetPoint(x, HitPosition, draws.LeftBottom)
+				}
+				skin.TailSprites[k] = animation
 			}
 			{
-				s := draws.NewSpriteFromImage(headImages[kind])
-				s.SetSize(w, NoteHeigth)
-				s.SetPoint(x, HitPosition, draws.LeftBottom)
-				skin.HeadSprites[k] = s
-			}
-			{
-				s := draws.NewSpriteFromImage(tailImages[kind])
-				s.SetSize(w, NoteHeigth)
-				s.SetPoint(x, HitPosition, draws.LeftBottom)
-				skin.TailSprites[k] = s
-			}
-			{
-				s := draws.NewSpriteFromImage(bodyImages[kind])
-				s.SetSize(w, s.H())                          // Height is variadic.
-				s.SetPoint(x, HitPosition, draws.LeftBottom) // Todo: need a test // -NoteHeigth
-				skin.BodySprites[k] = s
+				animation := draws.NewAnimationFromImages(bodyImages[kind])
+				for i, sprite := range animation {
+					animation[i].SetSize(w, sprite.H()) // Height is variadic.
+					animation[i].SetPoint(x, HitPosition, draws.LeftBottom)
+				}
+				skin.BodySprites[k] = animation
 			}
 			x += w
 		}
