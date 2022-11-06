@@ -105,12 +105,13 @@ var (
 )
 
 type RollDrawer struct {
-	Time        int64
-	Rolls       []*Note
-	Dots        []*Dot
+	Time  int64
+	Rolls []*Note
+	Dots  []*Dot
+	// Sprites [2][4]draws.Sprite
 	HeadSprites [2]draws.Sprite
-	BodySprites [2]draws.Sprite
 	TailSprites [2]draws.Sprite
+	BodySprites [2]draws.Sprite
 	DotSprite   draws.Sprite
 }
 
@@ -131,20 +132,36 @@ func (d RollDrawer) Draw(screen *ebiten.Image) {
 		}
 		op := ebiten.DrawImageOptions{}
 		op.ColorM.ScaleWithColor(ColorYellow)
+		{
+			sprite := d.BodySprites[head.Size]
+			length := tail.Position(d.Time) - head.Position(d.Time)
+			sprite.SetSize(length, sprite.H())
+			sprite.Move(head.Position(d.Time), 0)
+			sprite.Draw(screen, op)
+		}
+		{
+			sprite := d.HeadSprites[head.Size]
+			sprite.Move(head.Position(d.Time), 0)
+			sprite.Draw(screen, op)
+		}
+		{
+			sprite := d.TailSprites[tail.Size]
+			sprite.Move(tail.Position(d.Time), 0)
+			sprite.Draw(screen, op)
+		}
+		// bodySprite := d.BodySprites[head.Size]
+		// length := tail.Position(d.Time) - head.Position(d.Time)
+		// bodySprite.SetSize(length, bodySprite.H())
+		// bodySprite.Move(head.Position(d.Time), 0)
+		// bodySprite.Draw(screen, op)
 
-		bodySprite := d.BodySprites[head.Size]
-		length := tail.Position(d.Time) - head.Position(d.Time)
-		bodySprite.SetSize(length, bodySprite.H())
-		bodySprite.Move(head.Position(d.Time), 0)
-		bodySprite.Draw(screen, op)
+		// headSprite := d.HeadSprites[head.Size]
+		// headSprite.Move(head.Position(d.Time), 0)
+		// headSprite.Draw(screen, op)
 
-		headSprite := d.HeadSprites[head.Size]
-		headSprite.Move(head.Position(d.Time), 0)
-		headSprite.Draw(screen, op)
-
-		tailSprite := d.TailSprites[tail.Size]
-		tailSprite.Move(tail.Position(d.Time), 0)
-		tailSprite.Draw(screen, op)
+		// tailSprite := d.TailSprites[tail.Size]
+		// tailSprite.Move(tail.Position(d.Time), 0)
+		// tailSprite.Draw(screen, op)
 	}
 	max = len(d.Dots) - 1
 	for i := range d.Dots {

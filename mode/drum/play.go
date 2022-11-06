@@ -141,8 +141,8 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		Rolls:       c.Rolls,
 		Dots:        c.Dots,
 		HeadSprites: s.HeadSprites,
-		BodySprites: s.BodySprites,
 		TailSprites: s.TailSprites,
+		BodySprites: s.BodySprites,
 		DotSprite:   s.DotSprite,
 	}
 	period := int(60000 / ScaledBPM(s.BPM))
