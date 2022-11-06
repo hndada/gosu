@@ -33,4 +33,7 @@ require (
 )
 
 retract v1.0.1 // Put the version carelessly.
-retract v1.0.2 // For retracking v1.0.1.
+retract v1.0.2 // For retracting v1.0.1.
+retract v1.0.3 // For adding suffix "+incompatible"
+retract [v1.0.1+incompatible, v1.0.3+incompatible] 
+retract [v1.0.1, v1.0.3] 
