@@ -75,8 +75,8 @@ func LoadSkin() {
 			padScale   = 1.1
 			outerScale = 1.2
 		)
-		// sw, sh := noteImage.Size()
-		srcSize := draws.IntPt(noteImage.Size())
+		sw, sh := noteImage.Size()
+		// srcSize := draws.IntPt(noteImage.Size())
 		outer := draws.NewScaledImage(noteImage, outerScale)
 		pad := draws.NewScaledImage(noteImage, padScale)
 		inner := noteImage
@@ -94,15 +94,17 @@ func LoadSkin() {
 			if i == 0 { // Blank for idle, Yellow for highlight.
 				op.CompositeMode = ebiten.CompositeModeDestinationOut
 			}
-			op.GeoM.Translate(srcSize.Mul(draws.Scalar((outerScale - padScale) / 2)).XY())
-			// op.GeoM.Translate(0.05*float64(sw), 0.05*float64(sh))
+			sd := outerScale - padScale // Size difference.
+			// op.GeoM.Translate(srcSize.Mul(draws.Scalar((outerScale - padScale) / 2)).XY())
+			op.GeoM.Translate(sd/2*float64(sw), sd/2*float64(sh))
 			img.DrawImage(pad, op)
 		}
 		{
 			op := &ebiten.DrawImageOptions{}
 			op.ColorM.ScaleWithColor(color.NRGBA{60, 60, 60, a})
-			op.GeoM.Translate(srcSize.Mul(draws.Scalar((outerScale - 1) / 2)).XY())
-			// op.GeoM.Translate(0.1*float64(sw), 0.1*float64(sh))
+			sd := outerScale - 1 // Size difference.
+			// op.GeoM.Translate(srcSize.Mul(draws.Scalar((outerScale - 1) / 2)).XY())
+			op.GeoM.Translate(sd/2*float64(sw), sd/2*float64(sh))
 			img.DrawImage(inner, op)
 		}
 		s := draws.NewSpriteFromImage(img)
@@ -135,7 +137,6 @@ func LoadSkin() {
 			}
 			s := draws.NewSprite(path)
 			s.ApplyScale(JudgmentScale)
-			// s.SetScale(draws.Scalar(JudgmentScale))
 			s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
 			skin.JudgmentSprites[i][j] = s
 		}
@@ -183,7 +184,6 @@ func LoadSkin() {
 	{
 		s := draws.NewSprite("skin/drum/note/roll/dot.png")
 		s.ApplyScale(DotScale)
-		// s.SetScale(draws.Scalar(DotScale))
 		s.SetPoint(HitPosition, FieldPosition, draws.CenterMiddle)
 		skin.DotSprite = s
 	}
@@ -279,7 +279,6 @@ func LoadSkin() {
 			path := fmt.Sprintf("skin/drum/dancer/%s/%d.png", name, j)
 			s := draws.NewSprite(path)
 			s.ApplyScale(DancerScale)
-			// s.SetScale(draws.Scalar(DancerScale))
 			s.SetPoint(DancerPositionX, DancerPositionY, draws.CenterMiddle)
 			skin.DancerSprites[i][j] = s
 		}
@@ -292,7 +291,6 @@ func LoadSkin() {
 	for i := 0; i < 10; i++ {
 		s := draws.NewSpriteFromImage(comboImages[i])
 		s.ApplyScale(ComboScale)
-		// s.SetScale(draws.Scalar(ComboScale))
 		s.SetPoint(keyCenter, FieldPosition, draws.CenterMiddle)
 		skin.ComboSprites[i] = s
 	}

@@ -34,13 +34,6 @@ func (t *Timer2) Ticker() {
 	}
 }
 
-// func (t Timer2) Finished() bool {
-// 	if t.MaxTick == 0 {
-// 		return false
-// 	}
-// 	return t.Tick == t.MaxTick
-// }
-
 // For visual effects.
 func (t Timer2) Age() float64 {
 	if t.MaxTick == 0 {

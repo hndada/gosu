@@ -146,8 +146,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		DotSprite:   s.DotSprite,
 	}
 	s.NoteDrawer = NoteDrawer{
-		// Timer:          draws.Timer{},
-		Timer2:         draws.NewTimer2(int(60000/ScaledBPM(s.BPM)), 0),
+		Timer2:         draws.NewTimer2(0, int(60000/ScaledBPM(s.BPM))),
 		Time:           s.Now,
 		Notes:          c.Notes,
 		Rolls:          c.Rolls,
@@ -155,32 +154,18 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		NoteSprites:    s.NoteSprites,
 		OverlaySprites: s.OverlaySprites,
 	}
-	// for i, sprites := range s.OverlaySprites {
-	// 	s.NoteDrawer.OverlaySprites[i] = draws.Animation{
-	// 		Time:      s.Now,
-	// 		Duration:  int64(60000 / ScaledBPM(s.BPM)),
-	// 		StartTime: s.TransPoint.Time,
-	// 		Sprites:   sprites,
-	// 	}
-	// }
 	s.KeyDrawer = KeyDrawer{
 		MaxCountdown: gosu.TimeToTick(75),
 		Field:        s.KeyFieldSprite,
 		Keys:         s.KeySprites,
 	}
 	s.DancerDrawer = DancerDrawer{
-		Timer2:  draws.NewTimer2(0, int(60000/ScaledBPM(s.BPM))),
-		Sprites: s.DancerSprites,
-		Mode:    DancerIdle,
+		Timer2:      draws.NewTimer2(0, int(60000/ScaledBPM(s.BPM))),
+		Time:        s.Now,
+		Sprites:     s.DancerSprites,
+		Mode:        DancerIdle,
+		ModeEndTime: s.Now,
 	}
-	// s.DancerDrawer.AnimationEndTime = s.Now
-	if s.Highlight {
-		s.DancerDrawer.Mode = DancerHigh
-	}
-	// for i := range s.DancerDrawer.Sprites {
-	// 	s.DancerDrawer.Animations[i].Sprites = s.DancerSprites[i]
-	// 	s.DancerDrawer.Animations[i].Update(s.Now, int64(60000/ScaledBPM(s.BPM)), false)
-	// }
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer = gosu.NumberDrawer{
 		Timer:      draws.NewTimer(gosu.TimeToTick(2000), 0),
@@ -312,7 +297,9 @@ func (s *ScenePlay) Update() any {
 		p.SetVolume(vol * gosu.EffectVolume)
 		p.Play()
 	}
-	s.StageDrawer.Update(s.Highlight)
+	if s.Now >= 0 {
+		s.StageDrawer.Update(s.Highlight)
+	}
 	s.BarDrawer.Update(s.Now)
 	s.JudgmentDrawer.Update(judgment, big)
 
