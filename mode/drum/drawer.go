@@ -176,7 +176,7 @@ type NoteDrawer struct {
 	Rolls          []*Note
 	Shakes         []*Note
 	NoteSprites    [2][4]draws.Sprite
-	OverlaySprites [2][]draws.Sprite
+	OverlaySprites [2]draws.Animation
 }
 
 func (d *NoteDrawer) Update(time int64, bpm float64) {
@@ -265,7 +265,7 @@ func (d KeyDrawer) Draw(screen *ebiten.Image) {
 type DancerDrawer struct {
 	draws.Timer
 	Time        int64
-	Sprites     [4][]draws.Sprite
+	Sprites     [4]draws.Animation
 	Mode        int
 	ModeEndTime int64 // It extends when notes are continuously missed.
 }

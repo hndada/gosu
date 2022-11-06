@@ -46,7 +46,7 @@ type Skin struct {
 	NoteSprites       [2][4]draws.Sprite
 	HeadSprites       [2]draws.Sprite
 	TailSprites       [2]draws.Sprite
-	OverlaySprites    [2][]draws.Sprite
+	OverlaySprites    [2]draws.Animation
 	BodySprites       [2]draws.Sprite
 	DotSprite         draws.Sprite
 	ShakeBorderSprite draws.Sprite
@@ -54,7 +54,7 @@ type Skin struct {
 
 	KeySprites     [4]draws.Sprite
 	KeyFieldSprite draws.Sprite
-	DancerSprites  [4][]draws.Sprite
+	DancerSprites  [4]draws.Animation
 	ScoreSprites   [10]draws.Sprite
 	ComboSprites   [10]draws.Sprite
 }
@@ -165,7 +165,7 @@ func LoadSkin() {
 		}
 		{
 			paths := gosu.Paths(fmt.Sprintf("skin/drum/note/overlay/%s", sname))
-			skin.OverlaySprites[i] = make([]draws.Sprite, len(paths))
+			skin.OverlaySprites[i] = make(draws.Animation, len(paths))
 			for j, path := range paths {
 				s := draws.NewSprite(path)
 				s.SetScaleToH(noteHeight)
@@ -274,7 +274,7 @@ func LoadSkin() {
 		if err != nil {
 			continue
 		}
-		skin.DancerSprites[i] = make([]draws.Sprite, len(fs))
+		skin.DancerSprites[i] = make(draws.Animation, len(fs))
 		for j := range fs {
 			path := fmt.Sprintf("skin/drum/dancer/%s/%d.png", name, j)
 			s := draws.NewSprite(path)

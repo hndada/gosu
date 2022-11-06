@@ -175,7 +175,7 @@ func (d KeyDrawer) Draw(screen *ebiten.Image) {
 
 type JudgmentDrawer struct {
 	draws.Timer
-	Sprites  [5][]draws.Sprite
+	Sprites  [5]draws.Animation
 	Judgment gosu.Judgment
 }
 

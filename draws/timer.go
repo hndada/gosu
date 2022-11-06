@@ -53,14 +53,14 @@ func (t Timer) Done() bool { return t.MaxTick != 0 && t.Tick == t.MaxTick }
 // func (t Timer) Regress(start, end float64) float64 { return 1 - t.Progress(start, end) }
 
 // For Animation.
-func (t Timer) Frame(sprites []Sprite) Sprite {
-	if len(sprites) == 0 {
+func (t Timer) Frame(animation Animation) Sprite {
+	if len(animation) == 0 {
 		return Sprite{}
 	}
 	if t.Period == 0 {
-		return sprites[0]
+		return animation[0]
 	}
 	progress := float64(t.Tick%t.Period) / float64(t.Period)
-	count := float64(len(sprites))
-	return sprites[int(progress*count)]
+	count := float64(len(animation))
+	return animation[int(progress*count)]
 }
