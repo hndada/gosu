@@ -41,6 +41,14 @@ func (t Timer2) Age() float64 {
 	}
 	return float64(t.Tick) / float64(t.MaxTick)
 }
+func (t Timer) Progress(start, end float64) float64 {
+	if end-start == 0 {
+		return 0
+	}
+	return float64(t.Age()-start) / float64(end-start)
+}
+
+// func (t Timer) Regress(start, end float64) float64 { return 1 - t.Progress(start, end) }
 
 // For Animation.
 func (t Timer2) Frame(sprites []Sprite) Sprite {

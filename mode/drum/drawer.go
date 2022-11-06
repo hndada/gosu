@@ -347,19 +347,22 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 	}
 	op := ebiten.DrawImageOptions{}
 	age := d.Age()
-	if age < 0.25 {
-		sprite.ApplyScale(1 + 0.2*(0.25-age)/0.25)
-		alpha := 1 - 0.5*(0.2-age)/0.2
+	if bound := 0.25; age < bound {
+		sprite.ApplyScale(1.2 - 0.2*d.Progress(0, bound))
+		// sprite.ApplyScale(1 + 0.2*(0.25-age)/0.25)
+		// alpha := 1 - 0.5*(0.2-age)/0.2
+		alpha := 0.5 + 0.5*d.Progress(0, bound)
 		op.ColorM.Scale(1, 1, 1, alpha)
 	}
-	if age > 0.75 {
-		alpha := 1 - (age-0.75)/0.25
+	if bound := 0.75; age > bound {
+		// alpha := 1 - (age-0.75)/0.25
+		alpha := 1 - d.Progress(bound, 1)
 		op.ColorM.Scale(1, 1, 1, alpha)
 	}
 	if d.judgment.Is(Miss) {
-		if age >= 0.5 {
-			scale := 1 + 0.6*(age-0.5)/0.5
-			d.radian = d.startRadian * scale
+		if bound := 0.5; age >= bound {
+			// scale := 1 + 0.6*(age-0.5)/0.5
+			d.radian = d.startRadian * (1 + 0.6*d.Progress(bound, 1))
 		}
 		sw, sh := sprite.SrcSize().XY()
 		// op.GeoM.Translate(sprite.SrcSize().Div(draws.Scalar(-2)).XY())
