@@ -10,7 +10,7 @@ import (
 )
 
 type StageDrawer struct {
-	draws.Timer2
+	draws.Timer
 	Highlight    bool
 	FieldSprites [2]draws.Sprite
 	HintSprites  [2]draws.Sprite
@@ -19,7 +19,7 @@ type StageDrawer struct {
 func (d *StageDrawer) Update(highlight bool) {
 	d.Ticker()
 	if d.Highlight != highlight {
-		d.Tick = 0
+		d.Timer.Reset()
 		d.Highlight = highlight
 	}
 }
@@ -170,7 +170,7 @@ func (d RollDrawer) Draw(screen *ebiten.Image) {
 }
 
 type NoteDrawer struct {
-	draws.Timer2
+	draws.Timer
 	Time           int64
 	Notes          []*Note
 	Rolls          []*Note
@@ -263,7 +263,7 @@ func (d KeyDrawer) Draw(screen *ebiten.Image) {
 }
 
 type DancerDrawer struct {
-	draws.Timer2
+	draws.Timer
 	Time        int64
 	Sprites     [4][]draws.Sprite
 	Mode        int
@@ -281,7 +281,7 @@ func (d *DancerDrawer) Update(time int64, bpm float64, combo int, miss, hit, hig
 	case miss:
 		mode = DancerNo
 		d.ModeEndTime = time + int64(4*period)
-	case combo >= 50 && combo%50 <= 1:
+	case combo >= 50 && combo%50 == 0: //<= 1:
 		mode = DancerYes
 		d.ModeEndTime = time + int64(period)
 	case d.Time >= d.ModeEndTime, d.Mode == DancerNo && hit:
@@ -295,7 +295,7 @@ func (d *DancerDrawer) Update(time int64, bpm float64, combo int, miss, hit, hig
 		if time < 0 && combo == 0 && !miss { // No update before start.
 			return
 		}
-		d.Tick = 0
+		d.Timer.Reset()
 		d.Mode = mode
 	}
 }
@@ -313,14 +313,9 @@ type JudgmentDrawer struct {
 }
 
 func (d *JudgmentDrawer) Update(j gosu.Judgment, big bool) {
-	if d.Countdown <= 0 {
-		d.judgment = gosu.Judgment{}
-		d.big = false
-	} else {
-		d.Countdown--
-	}
+	d.Ticker()
 	if j.Valid() {
-		d.Countdown = d.MaxCountdown
+		d.Timer.Reset()
 		d.judgment = j
 		d.big = big
 		if j.Is(Miss) {
@@ -331,7 +326,7 @@ func (d *JudgmentDrawer) Update(j gosu.Judgment, big bool) {
 }
 
 func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
-	if d.Countdown <= 0 || d.judgment.Window == 0 {
+	if d.Done() || d.judgment.Window == 0 {
 		return
 	}
 	sprites := d.Sprites[0]

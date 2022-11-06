@@ -162,7 +162,7 @@ func (s *ScenePlay) SetSpeed() {
 // Todo: keep playing music when making SceneResult
 func (s *ScenePlay) Update() any {
 	defer s.Ticker()
-	if s.IsDone() {
+	if s.Done() {
 		s.MusicPlayer.Close()
 		return gosu.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
 	}

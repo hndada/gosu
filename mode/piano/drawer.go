@@ -189,19 +189,15 @@ func NewJudgmentDrawer() (d JudgmentDrawer) {
 	}
 }
 func (d *JudgmentDrawer) Update(worst gosu.Judgment) {
-	if d.Countdown <= 0 {
-		d.Judgment = gosu.Judgment{}
-	} else {
-		d.Countdown--
-	}
+	d.Ticker()
 	if worst.Valid() {
 		d.Judgment = worst
-		d.Countdown = d.MaxCountdown
+		d.Timer.Reset()
 	}
 }
 
 func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
-	if d.Countdown <= 0 || d.Judgment.Window == 0 {
+	if d.Done() {
 		return
 	}
 	var idx int

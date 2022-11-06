@@ -116,7 +116,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		s.BackgroundDrawer.Sprite = bg
 	}
 	s.StageDrawer = StageDrawer{
-		Timer2:       draws.NewTimer2(gosu.TimeToTick(150), 0),
+		Timer:        draws.NewTimer(gosu.TimeToTick(150), 0),
 		Highlight:    false, //s.Highlight,
 		FieldSprites: s.FieldSprites,
 		HintSprites:  s.HintSprites,
@@ -145,8 +145,9 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		TailSprites: s.TailSprites,
 		DotSprite:   s.DotSprite,
 	}
+	period := int(60000 / ScaledBPM(s.BPM))
 	s.NoteDrawer = NoteDrawer{
-		Timer2:         draws.NewTimer2(0, int(60000/ScaledBPM(s.BPM))),
+		Timer:          draws.NewTimer(0, period),
 		Time:           s.Now,
 		Notes:          c.Notes,
 		Rolls:          c.Rolls,
@@ -160,7 +161,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		Keys:         s.KeySprites,
 	}
 	s.DancerDrawer = DancerDrawer{
-		Timer2:      draws.NewTimer2(0, int(60000/ScaledBPM(s.BPM))),
+		Timer:       draws.NewTimer(0, period),
 		Time:        s.Now,
 		Sprites:     s.DancerSprites,
 		Mode:        DancerIdle,
@@ -203,7 +204,7 @@ func (s *ScenePlay) SetSpeed() {
 
 func (s *ScenePlay) Update() any {
 	defer s.Ticker()
-	if s.IsDone() {
+	if s.Done() {
 		s.MusicPlayer.Close()
 		return gosu.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
 	}
