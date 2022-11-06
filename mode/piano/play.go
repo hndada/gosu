@@ -28,14 +28,12 @@ type ScenePlay struct {
 	BackgroundDrawer gosu.BackgroundDrawer
 	StageDrawer      StageDrawer
 	BarDrawer        BarDrawer
-
-	NoteDrawers    []NoteDrawer
-	KeyDrawer      KeyDrawer
-	JudgmentDrawer JudgmentDrawer
-
-	ScoreDrawer gosu.ScoreDrawer
-	ComboDrawer gosu.NumberDrawer
-	MeterDrawer gosu.MeterDrawer
+	NoteDrawers      []NoteDrawer
+	KeyDrawers       []KeyDrawer
+	JudgmentDrawer   JudgmentDrawer
+	ScoreDrawer      gosu.ScoreDrawer
+	ComboDrawer      gosu.NumberDrawer
+	MeterDrawer      gosu.MeterDrawer
 }
 
 // Todo: add Mods
@@ -105,12 +103,15 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	s.NoteDrawers = make([]NoteDrawer, keyCount)
 	for k := range s.NoteDrawers {
 		s.NoteDrawers[k] = NoteDrawer{
+			Timer:    draws.NewTimer(0, gosu.TimeToTick(800)), // Todo: make it BPM-dependent?
 			Cursor:   s.Cursor,
 			Farthest: s.Staged[k],
 			Nearest:  s.Staged[k],
-			Sprites: [4]draws.Sprite{
-				s.NoteSprites[k], s.HeadSprites[k],
-				s.TailSprites[k], s.BodySprites[k],
+			Sprites: [4]draws.Animation{
+				s.NoteSprites[k],
+				s.HeadSprites[k],
+				s.TailSprites[k],
+				s.BodySprites[k],
 			},
 		}
 	}
@@ -120,12 +121,19 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		Nearest:  c.Bars[0],
 		Sprite:   s.BarSprite,
 	}
-	s.KeyDrawer = KeyDrawer{
-		MinCountdown:   gosu.TimeToTick(30),
-		Countdowns:     make([]int, keyCount),
-		KeyUpSprites:   s.KeyUpSprites,
-		KeyDownSprites: s.KeyDownSprites,
+	s.KeyDrawers = make([]KeyDrawer, keyCount)
+	for k := range s.KeyDrawers {
+		s.KeyDrawers[k] = KeyDrawer{
+			Timer:   draws.NewTimer(gosu.TimeToTick(30), 0),
+			Sprites: s.KeySprites[k],
+		}
 	}
+	// s.KeyDrawer = KeyDrawer{
+	// 	MinCountdown:   gosu.TimeToTick(30),
+	// 	Countdowns:     make([]int, keyCount),
+	// 	KeyUpSprites:   s.KeyUpSprites,
+	// 	KeyDownSprites: s.KeyDownSprites,
+	// }
 	s.JudgmentDrawer = NewJudgmentDrawer()
 	s.ScoreDrawer = gosu.NewScoreDrawer()
 	s.ComboDrawer = gosu.NumberDrawer{
@@ -210,10 +218,12 @@ func (s *ScenePlay) Update() any {
 	}
 
 	s.BarDrawer.Update(s.Cursor)
-	for i := range s.NoteDrawers {
-		s.NoteDrawers[i].Update(s.Cursor)
+	for k := range s.NoteDrawers {
+		s.NoteDrawers[k].Update(s.Cursor)
 	}
-	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
+	for k := range s.KeyDrawers {
+		s.KeyDrawers[k].Update(s.Pressed[k])
+	}
 	s.JudgmentDrawer.Update(worst)
 	s.ScoreDrawer.Update(s.Scores[3])
 	s.ComboDrawer.Update(s.Combo)
@@ -234,7 +244,10 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	for _, d := range s.NoteDrawers {
 		d.Draw(screen)
 	}
-	s.KeyDrawer.Draw(screen)
+	for _, d := range s.KeyDrawers {
+		d.Draw(screen)
+	}
+	// s.KeyDrawer.Draw(screen)
 	s.JudgmentDrawer.Draw(screen)
 	s.ScoreDrawer.Draw(screen)
 	s.ComboDrawer.Draw(screen)

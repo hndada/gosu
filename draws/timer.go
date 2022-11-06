@@ -50,8 +50,6 @@ func (t Timer) Progress(start, end float64) float64 {
 }
 func (t Timer) Done() bool { return t.MaxTick != 0 && t.Tick == t.MaxTick }
 
-// func (t Timer) Regress(start, end float64) float64 { return 1 - t.Progress(start, end) }
-
 // For Animation.
 func (t Timer) Frame(animation Animation) Sprite {
 	if len(animation) == 0 {

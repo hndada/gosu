@@ -1,9 +1,14 @@
 package draws
 
 import (
+	"fmt"
 	"image"
 	"math"
 	"os"
+	"path/filepath"
+	"sort"
+	"strconv"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -29,6 +34,37 @@ func NewImageImage(path string) image.Image {
 	}
 	return src
 }
+func NewImages(path string) (is []*ebiten.Image) {
+	const ext = ".png"
+	one := []*ebiten.Image{NewImage(path + ext)}
+	dir, err := os.Open(path)
+	if err != nil {
+		return one
+	}
+	defer dir.Close()
+	fs, err := dir.ReadDir(-1)
+	if err != nil {
+		return one
+	}
+
+	nums := make([]int, 0, len(fs))
+	for _, f := range fs {
+		if f.IsDir() {
+			continue
+		}
+		num := strings.TrimSuffix(f.Name(), ext)
+		if num, err := strconv.Atoi(num); err == nil {
+			nums = append(nums, num)
+		}
+	}
+	sort.Ints(nums)
+	for _, num := range nums {
+		path := filepath.Join(path, fmt.Sprintf("%d.png", num))
+		is = append(is, NewImage(path))
+	}
+	return
+}
+
 func NewXFlippedImage(i *ebiten.Image) *ebiten.Image {
 	w, h := i.Size()
 	i2 := ebiten.NewImage(w, h)

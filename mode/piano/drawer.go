@@ -63,15 +63,17 @@ func (d BarDrawer) Draw(screen *ebiten.Image) {
 
 // Notes are fixed. Lane itself moves, all notes move same amount.
 type NoteDrawer struct {
+	draws.Timer
 	Cursor   float64
 	Farthest *Note
 	Nearest  *Note
-	Sprites  [4]draws.Sprite
+	Sprites  [4]draws.Animation
 }
 
 // Farthest and Nearest are borders of displaying notes.
 // All in-screen notes are confirmed to be drawn when drawing from Farthest to Nearest.
 func (d *NoteDrawer) Update(cursor float64) {
+	d.Ticker()
 	d.Cursor = cursor
 	if d.Farthest == nil || d.Nearest == nil {
 		return
@@ -107,7 +109,7 @@ func (d NoteDrawer) Draw(screen *ebiten.Image) {
 		if n.Type == Tail {
 			d.DrawBody(screen, n)
 		}
-		sprite := d.Sprites[n.Type]
+		sprite := d.Frame(d.Sprites[n.Type])
 		pos := n.Position - d.Cursor
 		sprite.Move(0, -pos)
 		op := ebiten.DrawImageOptions{}
@@ -121,12 +123,10 @@ func (d NoteDrawer) Draw(screen *ebiten.Image) {
 // DrawBody draws scaled, corresponding sub-image of Body sprite.
 func (d NoteDrawer) DrawBody(screen *ebiten.Image, tail *Note) {
 	head := tail.Prev
-	body := d.Sprites[Body]
-
+	body := d.Frame(d.Sprites[Body])
 	length := tail.Position - head.Position
 	length -= -bodyLoss
 	body.SetSize(body.W(), length)
-
 	ty := head.Position - d.Cursor
 	body.Move(0, -ty)
 
@@ -138,39 +138,30 @@ func (d NoteDrawer) DrawBody(screen *ebiten.Image, tail *Note) {
 }
 
 // KeyDrawer draws KeyDownSprite at least for 30ms, KeyUpSprite otherwise.
-// KeyDrawer uses MinCountdown instead of MaxCountdown.
 type KeyDrawer struct {
-	MinCountdown   int
-	Countdowns     []int
-	KeyUpSprites   []draws.Sprite
-	KeyDownSprites []draws.Sprite
-	lastPressed    []bool
-	pressed        []bool
+	draws.Timer
+	Sprites     [2]draws.Sprite
+	lastPressed bool
+	// pressed     bool
 }
 
-func (d *KeyDrawer) Update(lastPressed, pressed []bool) {
-	d.lastPressed = lastPressed
-	d.pressed = pressed
-	for k, countdown := range d.Countdowns {
-		if countdown > 0 {
-			d.Countdowns[k]--
-		}
+func (d *KeyDrawer) Update(pressed bool) {
+	d.Ticker()
+	if !d.lastPressed && pressed {
+		d.Timer.Reset()
 	}
-	for k, now := range d.pressed {
-		last := d.lastPressed[k]
-		if !last && now {
-			d.Countdowns[k] = d.MinCountdown
-		}
-	}
+	d.lastPressed = pressed
 }
 func (d KeyDrawer) Draw(screen *ebiten.Image) {
-	for k, p := range d.pressed {
-		if p || d.Countdowns[k] > 0 {
-			d.KeyDownSprites[k].Draw(screen, ebiten.DrawImageOptions{})
-		} else {
-			d.KeyUpSprites[k].Draw(screen, ebiten.DrawImageOptions{})
-		}
+	const (
+		up = iota
+		down
+	)
+	sprite := d.Sprites[up]
+	if d.lastPressed || d.Tick < d.MaxTick {
+		sprite = d.Sprites[down]
 	}
+	sprite.Draw(screen, ebiten.DrawImageOptions{})
 }
 
 type JudgmentDrawer struct {
