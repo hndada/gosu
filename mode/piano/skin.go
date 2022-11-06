@@ -53,7 +53,7 @@ func init() { // I'm proud of the following code.
 
 var GeneralSkin struct { // Singleton
 	ComboSprites    [10]draws.Sprite
-	JudgmentSprites [5][]draws.Sprite
+	JudgmentSprites [5]draws.Animation
 }
 
 // Todo: should each skin has own skin settings?
@@ -61,7 +61,7 @@ type Skin struct {
 	ScoreSprites    [10]draws.Sprite
 	SignSprites     [3]draws.Sprite
 	ComboSprites    [10]draws.Sprite
-	JudgmentSprites [5][]draws.Sprite
+	JudgmentSprites [5]draws.Animation
 
 	KeyUpSprites   []draws.Sprite
 	KeyDownSprites []draws.Sprite
