@@ -80,13 +80,6 @@ func (d NumberDrawer) Draw(screen *ebiten.Image) {
 			scale := 0.1 - 0.1*d.Progress(bound0, bound1)
 			sprite.Move(0, d.Bounce*sprite.H()*scale)
 		}
-		// h := sprite.Size().Y
-		// switch {
-		// case age < 0.05:
-		// 	sprite.Move(0, d.Bounce*age*h)
-		// case age >= 0.05 && age < 0.1:
-		// 	sprite.Move(0, d.Bounce*(0.1-age)*h)
-		// }
 		sprite.Draw(screen, ebiten.DrawImageOptions{})
 		tx -= w
 	}
