@@ -57,7 +57,7 @@ func LoadSkin() {
 	defer func() { DefaultSkin = skin }()
 	var noteImage = draws.NewImage("skin/drum/note/note.png")
 	for i, name := range []string{"idle", "high"} {
-		sprite := draws.NewSprite(fmt.Sprintf("skin/drum/field/%s.png", name))
+		sprite := draws.NewSprite(fmt.Sprintf("skin/drum/stage/%s.png", name))
 		sprite.SetSize(screenSizeX, FieldHeight)
 		sprite.SetPoint(0, FieldPosition, draws.LeftMiddle)
 		skin.FieldSprites[i] = sprite
