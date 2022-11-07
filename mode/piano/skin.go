@@ -155,7 +155,6 @@ func LoadSkin() {
 				animation := draws.NewAnimationFromImages(hitLightingImages)
 				for i := range animation {
 					animation[i].ApplyScale(LightingScale)
-					// animation[i].SetScaleToW(LightingScale * w)
 					animation[i].SetPoint(x, HitPosition, draws.CenterMiddle) // -HintHeight
 				}
 				skin.HitLightingSprites[k] = animation
@@ -164,7 +163,6 @@ func LoadSkin() {
 				animation := draws.NewAnimationFromImages(holdLightingImages)
 				for i := range animation {
 					animation[i].ApplyScale(LightingScale)
-					// animation[i].SetScaleToW(LightingScale * w)
 					animation[i].SetPoint(x, HitPosition-HintHeight/2, draws.CenterMiddle)
 				}
 				skin.HoldLightingSprites[k] = animation

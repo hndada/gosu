@@ -24,9 +24,8 @@ type ScenePlay struct {
 	Staged     []*Note
 	gosu.Scorer
 
-	Skin             // The skin may be applied some custom settings: on/off some sprites
-	BackgroundDrawer gosu.BackgroundDrawer
-	// StageDrawer         StageDrawer
+	Skin                // The skin may be applied some custom settings: on/off some sprites
+	BackgroundDrawer    gosu.BackgroundDrawer
 	FieldDrawer         FieldDrawer
 	BarDrawer           BarDrawer
 	NoteDrawers         []NoteDrawer
@@ -258,7 +257,6 @@ func (s *ScenePlay) Update() any {
 }
 func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
-	// s.StageDrawer.Draw(screen)
 	s.FieldDrawer.Draw(screen)
 	s.BarDrawer.Draw(screen)
 	for k := 0; k < s.Chart.KeyCount; k++ {
