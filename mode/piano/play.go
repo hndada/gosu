@@ -120,7 +120,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	s.HoldLightingDrawers = make([]HoldLightingDrawer, keyCount)
 	for k := 0; k < keyCount; k++ {
 		s.NoteDrawers[k] = NoteDrawer{
-			Timer:    draws.NewTimer(0, gosu.TimeToTick(800)), // Todo: make it BPM-dependent?
+			Timer:    draws.NewTimer(0, gosu.TimeToTick(400)), // Todo: make it BPM-dependent?
 			Cursor:   s.Cursor,
 			Farthest: s.Staged[k],
 			Nearest:  s.Staged[k],
@@ -233,14 +233,15 @@ func (s *ScenePlay) Update() any {
 	}
 	s.BarDrawer.Update(s.Cursor)
 	for k := 0; k < s.Chart.KeyCount; k++ {
-		s.NoteDrawers[k].Update(s.Cursor)
+		holding := false
+		if s.Staged[k] != nil {
+			holding = s.Staged[k].Type == Tail && s.Pressed[k]
+		}
+		s.NoteDrawers[k].Update(s.Cursor, holding)
 		s.KeyDrawers[k].Update(s.Pressed[k])
 		s.KeyLightingDrawers[k].Update(s.Pressed[k])
 		s.HitLightingDrawers[k].Update(hits[k])
-		if s.Staged[k] != nil {
-			holding := s.Staged[k].Type == Tail && s.Pressed[k]
-			s.HoldLightingDrawers[k].Update(holding)
-		}
+		s.HoldLightingDrawers[k].Update(holding)
 	}
 	s.JudgmentDrawer.Update(worst)
 	s.ScoreDrawer.Update(s.Scores[3])
