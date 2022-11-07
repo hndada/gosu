@@ -22,17 +22,6 @@ func (d HintDrawer) Draw(screen *ebiten.Image) {
 	d.Sprite.Draw(screen, ebiten.DrawImageOptions{})
 }
 
-// type StageDrawer struct {
-// 	FieldSprite draws.Sprite
-// 	HintSprite  draws.Sprite
-// }
-
-// // Todo: might add some effect on StageDrawer
-// func (d StageDrawer) Draw(screen *ebiten.Image) {
-// 	d.FieldSprite.Draw(screen, ebiten.DrawImageOptions{})
-// 	d.HintSprite.Draw(screen, ebiten.DrawImageOptions{})
-// }
-
 // Bars are fixed. Lane itself moves, all bars move as same amount.
 type BarDrawer struct {
 	Cursor   float64
