@@ -36,6 +36,10 @@ var (
 	speedScaleHandlers   []ctrl.FloatHandler
 	SpeedScaleKeyHandler ctrl.KeyHandler
 )
+var (
+	tailExtraTimeHandler    ctrl.FloatHandler
+	TailExtraTimeKeyHandler ctrl.KeyHandler
+)
 
 const (
 	SortByName = iota
@@ -137,6 +141,20 @@ func LoadHandlers(props []ModeProp) {
 	OffsetKeyHandler = ctrl.KeyHandler{
 		Handler:   offsetHandler,
 		Modifiers: []ebiten.Key{ebiten.KeyShiftLeft},
+		Keys:      [2]ebiten.Key{ebiten.KeyLeft, ebiten.KeyRight},
+		Sounds:    [2][]byte{TapSound, TapSound},
+		Volume:    &EffectVolume,
+	}
+
+	tailExtraTimeHandler = ctrl.FloatHandler{
+		Value: props[ModePiano4].Settings["TailExtraTime"],
+		Min:   -250,
+		Max:   250,
+		Unit:  10,
+	}
+	TailExtraTimeKeyHandler = ctrl.KeyHandler{
+		Handler:   tailExtraTimeHandler,
+		Modifiers: []ebiten.Key{ebiten.KeyF3}, // Todo: configurate by Button in future
 		Keys:      [2]ebiten.Key{ebiten.KeyLeft, ebiten.KeyRight},
 		Sounds:    [2][]byte{TapSound, TapSound},
 		Volume:    &EffectVolume,

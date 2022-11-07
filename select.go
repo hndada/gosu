@@ -186,7 +186,9 @@ func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
 				"Brightness (Ctrl+ O/P): %.0f%%\n"+
 				"\n"+
 				"Speed (PageUp/Down): %.0f (Exposure time: %.0fms)\n"+
-				"Offset (Shift+ Left/Right): %dms\n",
+				"Offset (Shift+ Left/Right): %dms\n"+
+				"\n"+
+				"Tail extra time (F3+ Left/Right): %.0f\n",
 			prop.Name,
 			[]string{"by name", "by level"}[currentSort],
 
@@ -195,5 +197,7 @@ func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
 			BackgroundBrightness*100,
 
 			speed*100, prop.ExposureTime(speed),
-			Offset))
+			Offset,
+
+			*tailExtraTime))
 }

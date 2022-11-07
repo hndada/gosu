@@ -50,13 +50,16 @@ var (
 	FieldDarkness float64 = 0.8
 	FieldPosition float64 = screenSizeX * 0.5
 
-	HitPosition    float64 = screenSizeY * 0.90 // The bottom y-value of Hint,  not a middle or top.
-	positionMargin float64 = 100                // It should be larger than MaxSize/2 of all note sprites' width or height.
+	HitPosition float64 = screenSizeY * 0.90 // The bottom y-value of Hint,  not a middle or top.
+
+	// positionMargin should be larger than MaxSize/2 of all note sprites' width or height.
+	positionMargin float64 = 100
 	maxPosition    float64 = HitPosition + positionMargin
 	minPosition    float64 = HitPosition - screenSizeY - positionMargin
 
-	NoteHeigth float64 = screenSizeY * 0.05 // Applies to all notes
-	bodyLoss   float64 = NoteHeigth         // Head/2 + Tail/2.
+	NoteHeigth    float64 = screenSizeY * 0.05 // Applies to all notes
+	TailExtraTime float64 = 0
+	// bodyLoss   float64 = NoteHeigth // Head/2 + Tail/2.
 
 	ComboPosition    float64 = screenSizeY * 0.40
 	JudgmentPosition float64 = screenSizeY * 0.66

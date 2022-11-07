@@ -73,6 +73,9 @@ func NewChart(cpath string) (c *Chart, err error) {
 			tp = tp.Next
 		}
 		n.Position = tp.Position + float64(n.Time-tp.Time)*tp.Speed
+		if n.Type == Tail {
+			n.Position += float64(TailExtraTime) * tp.Speed
+		}
 	}
 	tp = c.TransPoints[0]
 	for _, b := range c.Bars {
