@@ -57,19 +57,23 @@ func (t *Timer) Ticker() {
 		return
 	}
 	t.Tick++
+	// Real-time offset adjusting.
 	if td := int64(Offset) - t.Offset; td != 0 {
 		t.Offset += td
 		t.Tick += TimeToTick(td)
 	}
+	if t.Now > 0 && ebiten.ActualTPS() < 0.8*float64(TPS) {
+		t.Sync()
+	}
 	t.Now = TickToTime(t.Tick)
 }
 func (t *Timer) Sync() {
-	since := time.Since(t.StartTime).Milliseconds() + Wait
+	since := time.Since(t.StartTime).Milliseconds() // - Wait
 	if e := since - t.Now; e >= 1 {
 		fmt.Printf("adjusting time error at %dms: %d\n", t.Now, e)
 		t.Tick += TimeToTick(e)
 	}
-	t.Now = TickToTime(t.Tick)
+	// t.Now = TickToTime(t.Tick)
 }
 
 // func (t Timer) Time() int64 {
