@@ -138,31 +138,34 @@ func LoadSkin() {
 		x := FieldPosition - wsum/2
 		for k, kind := range noteKinds {
 			w := math.Ceil(noteWidths[kind])
+			x += w / 2
 			for i, img := range keyImages {
 				sprite := draws.NewSpriteFromImage(img)
 				sprite.SetSize(w, screenSizeY-HitPosition)
-				sprite.SetPoint(x, HitPosition, draws.LeftTop)
+				sprite.SetPoint(x, HitPosition, draws.CenterTop)
 				skin.KeySprites[k][i] = sprite
 			}
 			{
 				sprite := draws.NewSpriteFromImage(keyLightingImage)
 				sprite.SetScaleToW(w)
-				sprite.SetPoint(x, HitPosition-HintHeight, draws.CenterTop)
+				sprite.SetPoint(x, HitPosition, draws.CenterBottom) // -HintHeight
 				skin.KeyLightingSprites[k] = sprite
 			}
 			{
 				animation := draws.NewAnimationFromImages(hitLightingImages)
 				for i := range animation {
-					animation[i].SetScaleToW(LightingScale * w)
-					animation[i].SetPoint(x, HitPosition-HintHeight, draws.CenterTop)
+					animation[i].ApplyScale(LightingScale)
+					// animation[i].SetScaleToW(LightingScale * w)
+					animation[i].SetPoint(x, HitPosition, draws.CenterMiddle) // -HintHeight
 				}
 				skin.HitLightingSprites[k] = animation
 			}
 			{
 				animation := draws.NewAnimationFromImages(holdLightingImages)
 				for i := range animation {
-					animation[i].SetScaleToW(LightingScale * w)
-					animation[i].SetPoint(x, HitPosition-HintHeight, draws.CenterTop)
+					animation[i].ApplyScale(LightingScale)
+					// animation[i].SetScaleToW(LightingScale * w)
+					animation[i].SetPoint(x, HitPosition-HintHeight/2, draws.CenterMiddle)
 				}
 				skin.HoldLightingSprites[k] = animation
 			}
@@ -170,11 +173,11 @@ func LoadSkin() {
 				animation := draws.NewAnimationFromImages(images[kind])
 				for i := range animation {
 					animation[i].SetSize(w, NoteHeigth)
-					animation[i].SetPoint(x, HitPosition, draws.LeftBottom)
+					animation[i].SetPoint(x, HitPosition, draws.CenterBottom)
 				}
 				skin.NoteSprites[k][_type] = animation
 			}
-			x += w
+			x += w / 2
 		}
 		{
 			src := ebiten.NewImage(int(wsum), screenSizeY)

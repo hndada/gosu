@@ -6,16 +6,32 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-type StageDrawer struct {
-	FieldSprite draws.Sprite
-	HintSprite  draws.Sprite
+type FieldDrawer struct {
+	Sprite draws.Sprite
 }
 
-// Todo: might add some effect on StageDrawer
-func (d StageDrawer) Draw(screen *ebiten.Image) {
-	d.FieldSprite.Draw(screen, ebiten.DrawImageOptions{})
-	d.HintSprite.Draw(screen, ebiten.DrawImageOptions{})
+func (d FieldDrawer) Draw(screen *ebiten.Image) {
+	d.Sprite.Draw(screen, ebiten.DrawImageOptions{})
 }
+
+type HintDrawer struct {
+	Sprite draws.Sprite
+}
+
+func (d HintDrawer) Draw(screen *ebiten.Image) {
+	d.Sprite.Draw(screen, ebiten.DrawImageOptions{})
+}
+
+// type StageDrawer struct {
+// 	FieldSprite draws.Sprite
+// 	HintSprite  draws.Sprite
+// }
+
+// // Todo: might add some effect on StageDrawer
+// func (d StageDrawer) Draw(screen *ebiten.Image) {
+// 	d.FieldSprite.Draw(screen, ebiten.DrawImageOptions{})
+// 	d.HintSprite.Draw(screen, ebiten.DrawImageOptions{})
+// }
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
 type BarDrawer struct {
@@ -181,7 +197,9 @@ func (d *KeyLightingDrawer) Update(pressed bool) {
 // KeyLightingDrawer draws for a while even when pressed off very shortly.
 func (d KeyLightingDrawer) Draw(screen *ebiten.Image) {
 	if d.lastPressed || d.Tick < d.MaxTick {
-		d.Sprite.Draw(screen, ebiten.DrawImageOptions{})
+		op := ebiten.DrawImageOptions{}
+		op.ColorM.Scale(1, 1, 1, KeyLightingOpaque)
+		d.Sprite.Draw(screen, op)
 	}
 }
 
@@ -201,7 +219,10 @@ func (d HitLightingDrawer) Draw(screen *ebiten.Image) {
 	if d.Done() {
 		return
 	}
-	d.Frame(d.Sprites).Draw(screen, ebiten.DrawImageOptions{})
+	op := ebiten.DrawImageOptions{}
+	opaque := HitLightingOpaque * (1 - d.Progress(0.75, 1))
+	op.ColorM.Scale(1, 1, 1, opaque)
+	d.Frame(d.Sprites).Draw(screen, op)
 }
 
 type HoldLightingDrawer struct {
@@ -221,7 +242,9 @@ func (d HoldLightingDrawer) Draw(screen *ebiten.Image) {
 	if !d.lastPressed {
 		return
 	}
-	d.Frame(d.Sprites).Draw(screen, ebiten.DrawImageOptions{})
+	op := ebiten.DrawImageOptions{}
+	op.ColorM.Scale(1, 1, 1, HitLightingOpaque)
+	d.Frame(d.Sprites).Draw(screen, op)
 }
 
 type JudgmentDrawer struct {

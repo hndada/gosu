@@ -1,5 +1,7 @@
 package draws
 
+// I once considered introducing struct type XY, but then
+// implementation of Point goes way too complicated.
 type Point struct{ X, Y float64 }
 
 // Input integers.

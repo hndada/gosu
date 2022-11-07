@@ -73,12 +73,14 @@ var (
 	BodyStyle   int  = BodyStyleStretch
 	ReverseBody bool = false
 
-	ScoreScale    float64 = 0.65
-	ComboScale    float64 = 0.75
-	ComboDigitGap float64 = screenSizeX * -0.0008
-	JudgmentScale float64 = 0.33
-	HintHeight    float64 = screenSizeY * 0.04
-	LightingScale float64 = 1.2 // 1.0: same as note width
+	ScoreScale        float64 = 0.65
+	ComboScale        float64 = 0.75
+	ComboDigitGap     float64 = screenSizeX * -0.0008
+	JudgmentScale     float64 = 0.33
+	HintHeight        float64 = screenSizeY * 0.04
+	LightingScale     float64 = 1.0
+	KeyLightingOpaque float64 = 0.5
+	HitLightingOpaque float64 = 1
 )
 
 func SwitchDirection() {
