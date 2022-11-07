@@ -73,13 +73,15 @@ type NoteDrawer struct {
 	Farthest *Note
 	Nearest  *Note
 	Sprites  [4]draws.Animation
+	holding  bool
 }
 
 // Farthest and Nearest are borders of displaying notes.
 // All in-screen notes are confirmed to be drawn when drawing from Farthest to Nearest.
-func (d *NoteDrawer) Update(cursor float64) {
+func (d *NoteDrawer) Update(cursor float64, holding bool) {
 	d.Ticker()
 	d.Cursor = cursor
+	defer func() { d.holding = holding }()
 	if d.Farthest == nil || d.Nearest == nil {
 		return
 	}
@@ -128,7 +130,10 @@ func (d NoteDrawer) Draw(screen *ebiten.Image) {
 // DrawBody draws scaled, corresponding sub-image of Body sprite.
 func (d NoteDrawer) DrawBody(screen *ebiten.Image, tail *Note) {
 	head := tail.Prev
-	body := d.Frame(d.Sprites[Body])
+	body := d.Sprites[Body][0]
+	if d.holding {
+		body = d.Frame(d.Sprites[Body])
+	}
 	length := tail.Position - head.Position
 	length -= -bodyLoss
 	body.SetSize(body.W(), length)
