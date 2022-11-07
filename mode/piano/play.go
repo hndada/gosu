@@ -24,13 +24,15 @@ type ScenePlay struct {
 	Staged     []*Note
 	gosu.Scorer
 
-	Skin                // The skin may be applied some custom settings: on/off some sprites
-	BackgroundDrawer    gosu.BackgroundDrawer
-	StageDrawer         StageDrawer
+	Skin             // The skin may be applied some custom settings: on/off some sprites
+	BackgroundDrawer gosu.BackgroundDrawer
+	// StageDrawer         StageDrawer
+	FieldDrawer         FieldDrawer
 	BarDrawer           BarDrawer
 	NoteDrawers         []NoteDrawer
 	KeyDrawers          []KeyDrawer
 	KeyLightingDrawers  []KeyLightingDrawer
+	HintDrawer          HintDrawer
 	HitLightingDrawers  []HitLightingDrawer
 	HoldLightingDrawers []HoldLightingDrawer
 	JudgmentDrawer      JudgmentDrawer
@@ -99,10 +101,13 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 	if bg := gosu.NewBackground(c.BackgroundPath(cpath)); bg.IsValid() {
 		s.BackgroundDrawer.Sprite = bg
 	}
-	s.StageDrawer = StageDrawer{
-		FieldSprite: s.FieldSprite,
-		HintSprite:  s.HintSprite,
+	s.FieldDrawer = FieldDrawer{
+		Sprite: s.FieldSprite,
 	}
+	// s.StageDrawer = StageDrawer{
+	// 	FieldSprite: s.FieldSprite,
+	// 	HintSprite:  s.HintSprite,
+	// }
 	s.BarDrawer = BarDrawer{
 		Cursor:   s.Cursor,
 		Farthest: c.Bars[0],
@@ -131,13 +136,16 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 			Sprite: s.KeyLightingSprites[k],
 		}
 		s.HitLightingDrawers[k] = HitLightingDrawer{
-			Timer:   draws.NewTimer(gosu.TimeToTick(250), 0),
+			Timer:   draws.NewTimer(gosu.TimeToTick(150), gosu.TimeToTick(150)),
 			Sprites: s.HitLightingSprites[k],
 		}
 		s.HoldLightingDrawers[k] = HoldLightingDrawer{
 			Timer:   draws.NewTimer(0, gosu.TimeToTick(250)),
 			Sprites: s.HoldLightingSprites[k],
 		}
+	}
+	s.HintDrawer = HintDrawer{
+		Sprite: s.HintSprite,
 	}
 	s.JudgmentDrawer = NewJudgmentDrawer()
 	s.ScoreDrawer = gosu.NewScoreDrawer()
@@ -184,6 +192,7 @@ func (s *ScenePlay) Update() any {
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
 	var worst gosu.Judgment
+	hits := make([]bool, s.Chart.KeyCount)
 	for _, n := range s.Staged {
 		if n == nil {
 			continue
@@ -219,7 +228,7 @@ func (s *ScenePlay) Update() any {
 			}
 			s.MeterDrawer.AddMark(int(td), kind)
 			if !j.Is(Miss) && n.Type != Head {
-				s.HitLightingDrawers[n.Key].Update(true)
+				hits[n.Key] = true
 			}
 		}
 	}
@@ -228,8 +237,11 @@ func (s *ScenePlay) Update() any {
 		s.NoteDrawers[k].Update(s.Cursor)
 		s.KeyDrawers[k].Update(s.Pressed[k])
 		s.KeyLightingDrawers[k].Update(s.Pressed[k])
-		holding := s.Staged[k].Type == Tail && s.Pressed[k]
-		s.HoldLightingDrawers[k].Update(holding)
+		s.HitLightingDrawers[k].Update(hits[k])
+		if s.Staged[k] != nil {
+			holding := s.Staged[k].Type == Tail && s.Pressed[k]
+			s.HoldLightingDrawers[k].Update(holding)
+		}
 	}
 	s.JudgmentDrawer.Update(worst)
 	s.ScoreDrawer.Update(s.Scores[3])
@@ -246,12 +258,16 @@ func (s *ScenePlay) Update() any {
 }
 func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.BackgroundDrawer.Draw(screen)
-	s.StageDrawer.Draw(screen)
+	// s.StageDrawer.Draw(screen)
+	s.FieldDrawer.Draw(screen)
 	s.BarDrawer.Draw(screen)
 	for k := 0; k < s.Chart.KeyCount; k++ {
 		s.NoteDrawers[k].Draw(screen)
 		s.KeyDrawers[k].Draw(screen)
 		s.KeyLightingDrawers[k].Draw(screen)
+	}
+	s.HintDrawer.Draw(screen)
+	for k := 0; k < s.Chart.KeyCount; k++ {
 		s.HitLightingDrawers[k].Draw(screen)
 		s.HoldLightingDrawers[k].Draw(screen)
 	}
