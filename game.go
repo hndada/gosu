@@ -15,13 +15,6 @@ type Scene interface {
 	Draw(screen *ebiten.Image)
 }
 
-// func init() {
-// 	if runtime.GOOS == "windows" {
-// 		os.Setenv("EBITEN_GRAPHICS_LIBRARY", "opengl")
-// 		fmt.Println("OpenGL mode has enabled.")
-// 	}
-// }
-
 var (
 	modeProps     []ModeProp
 	sceneSelect   *SceneSelect

@@ -118,12 +118,6 @@ func (d NoteDrawer) Draw(screen *ebiten.Image) {
 		}
 		sprite := d.Frame(d.Sprites[n.Type])
 		pos := n.Position - d.Cursor
-		// if n.Type == Tail {
-		// 	pos += BodyGain * SpeedScale
-		// 	if headPos := n.Prev.Position - d.Cursor; pos < headPos {
-		// 		pos = headPos
-		// 	}
-		// }
 		sprite.Move(0, -pos)
 		op := ebiten.DrawImageOptions{}
 		if n.Marked {
