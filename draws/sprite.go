@@ -41,6 +41,8 @@ func (s *Sprite) SetScaleToH(h float64) { s.SetScale(Scalar(h / s.H())) }
 func (s Sprite) W() float64             { return s.Size().X }
 func (s Sprite) H() float64             { return s.Size().Y }
 func (s Sprite) XY() (float64, float64) { return s.Box.XY(s.Size()) } // s.Min(s.Size()).XY() }
+func (s Sprite) Min() Point             { return s.Box.Min(s.Size()) }
+func (s Sprite) Max() Point             { return s.Box.Max(s.Size()) }
 func (s Sprite) IsValid() bool          { return s.i != nil }
 func (s Sprite) In(p Point) bool        { return s.Box.In(s.Size(), p) }
 func (s Sprite) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
