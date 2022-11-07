@@ -75,6 +75,11 @@ func NewChart(cpath string) (c *Chart, err error) {
 		n.Position = tp.Position + float64(n.Time-tp.Time)*tp.Speed
 		if n.Type == Tail {
 			n.Position += float64(TailExtraTime) * tp.Speed
+			// It is guaranteed that Tail's Prev (which is Head)
+			// has already proceeded, since c.Notes is sorted by Time.
+			if n.Position < n.Prev.Position {
+				n.Position = n.Prev.Position
+			}
 		}
 	}
 	tp = c.TransPoints[0]

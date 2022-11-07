@@ -148,8 +148,8 @@ func LoadHandlers(props []ModeProp) {
 
 	tailExtraTimeHandler = ctrl.FloatHandler{
 		Value: props[ModePiano4].Settings["TailExtraTime"],
-		Min:   -250,
-		Max:   250,
+		Min:   -200,
+		Max:   200,
 		Unit:  10,
 	}
 	TailExtraTimeKeyHandler = ctrl.KeyHandler{
