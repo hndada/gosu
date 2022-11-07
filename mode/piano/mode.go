@@ -14,10 +14,13 @@ var ModePiano4 = gosu.ModeProp{
 	LastUpdateTime: time.Time{},                    // Zero value.
 	LoadSkin:       LoadSkin,
 	SpeedScale:     &SpeedScale,
-	NewChartInfo:   NewChartInfo,
-	NewScenePlay:   NewScenePlay,
-	ExposureTime:   ExposureTime,
-	KeySettings:    KeySettings,
+	Settings: map[string]*float64{
+		"TailExtraTime": &TailExtraTime,
+	},
+	NewChartInfo: NewChartInfo,
+	NewScenePlay: NewScenePlay,
+	ExposureTime: ExposureTime,
+	KeySettings:  KeySettings,
 }
 
 var ModePiano7 = gosu.ModeProp{
@@ -28,8 +31,11 @@ var ModePiano7 = gosu.ModeProp{
 	LastUpdateTime: time.Time{},                    // Zero value.
 	LoadSkin:       LoadSkin,
 	SpeedScale:     &SpeedScale,
-	NewChartInfo:   NewChartInfo,
-	NewScenePlay:   NewScenePlay,
-	ExposureTime:   ExposureTime,
-	KeySettings:    KeySettings,
+	Settings: map[string]*float64{
+		"TailExtraTime": &TailExtraTime,
+	},
+	NewChartInfo: NewChartInfo,
+	NewScenePlay: NewScenePlay,
+	ExposureTime: ExposureTime,
+	KeySettings:  KeySettings,
 }

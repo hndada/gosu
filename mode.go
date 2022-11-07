@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/input"
@@ -29,12 +28,13 @@ type ModeProp struct {
 	LastUpdateTime time.Time
 	LoadSkin       func()
 	// Skin interface{ Load() } // Todo: use this later
-	SpeedKeyHandler ctrl.KeyHandler
-	SpeedScale      *float64
-	NewChartInfo    func(string) (ChartInfo, error)
-	NewScenePlay    func(cpath string, rf *osr.Format) (Scene, error)
-	ExposureTime    func(float64) float64
-	KeySettings     map[int][]input.Key
+	// SpeedKeyHandler ctrl.KeyHandler
+	SpeedScale   *float64
+	Settings     map[string]*float64
+	NewChartInfo func(string) (ChartInfo, error)
+	NewScenePlay func(cpath string, rf *osr.Format) (Scene, error)
+	ExposureTime func(float64) float64
+	KeySettings  map[int][]input.Key
 }
 
 // Mode determines a mode of chart file by its path.

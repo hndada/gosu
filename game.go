@@ -23,13 +23,15 @@ type Scene interface {
 // }
 
 var (
-	modeProps   []ModeProp
-	sceneSelect *SceneSelect
+	modeProps     []ModeProp
+	sceneSelect   *SceneSelect
+	tailExtraTime *float64 // For cache.
 )
 
 // Todo: load settings
 func NewGame(props []ModeProp) *Game {
 	modeProps = props
+	tailExtraTime = modeProps[ModePiano4].Settings["TailExtraTime"]
 	g := &Game{}
 	SetKeySettings(props)
 	// 1. Load chart info and score data
@@ -82,6 +84,7 @@ func (g *Game) Update() (err error) {
 	EffectVolumeKeyHandler.Update()
 	SpeedScaleKeyHandler.Update()
 	OffsetKeyHandler.Update()
+	TailExtraTimeKeyHandler.Update()
 	if g.Scene == nil {
 		g.Scene = sceneSelect
 	}
