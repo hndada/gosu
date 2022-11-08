@@ -12,45 +12,26 @@ type Sprite struct {
 }
 
 func NewSprite(path string) Sprite {
-	return Sprite{
-		i:   NewImage(path),
-		Box: NewBox(),
-	}
+	i := NewImage(path)
+	return NewSpriteFromImage(i)
 }
 func NewSpriteFromImage(i *ebiten.Image) Sprite {
+	if i == nil {
+		return Sprite{}
+	}
 	return Sprite{
 		i:   i,
-		Box: NewBox(),
+		Box: NewBox(ImageSize(i)),
 	}
 }
-func (s Sprite) IsValid() bool    { return s.i != nil }
-func (s Sprite) SrcSize() Vector2 { return IntVec2(s.i.Size()) }
-func (s Sprite) Size() Vector2 {
-	if s.i == nil {
-		return Vector2{}
-	}
-	return s.SrcSize().Mul(s.Scale)
-}
-func (s *Sprite) SetSize(w, h float64) {
-	if s.i == nil {
-		return
-	}
-	s.Scale = Vec2(w, h).Div(s.SrcSize())
-}
-func (s *Sprite) SetScaleToW(w float64) { s.Scale = Scalar(w / s.W()) }
-func (s *Sprite) SetScaleToH(h float64) { s.Scale = Scalar(h / s.H()) }
-func (s Sprite) W() float64             { return s.Size().X }
-func (s Sprite) H() float64             { return s.Size().Y }
-
-func (s Sprite) Min() Vector2      { return s.Box.Min(s.Size()) }
-func (s Sprite) Max() Vector2      { return s.Box.Max(s.Size()) }
-func (s Sprite) In(p Vector2) bool { return s.Box.In(s.Size(), p) }
+func (s Sprite) IsValid() bool { return s.i != nil }
 func (s Sprite) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
 	if s.i == nil {
 		return
 	}
 	op.GeoM.Scale(s.Scale.XY())
-	op.GeoM.Translate(s.XY())
+	leftTop := s.LeftTop(ImageSize(screen))
+	op.GeoM.Translate(leftTop.XY())
 	op.Filter = s.Filter
 	screen.DrawImage(s.i, &op)
 }

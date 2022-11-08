@@ -1,43 +1,34 @@
 package draws
 
 import (
-	"image/color"
-
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"golang.org/x/image/font"
 )
 
-// Label may have expecting w and h by selecting specific Face.
 type Label struct {
-	Text  string
-	Face  font.Face
-	Color color.Color
+	text string
+	face font.Face
 	Box
 }
 
-func NewLabel(text string, face font.Face) *Label {
-	return &Label{
-		Text:  text,
-		Face:  face,
-		Color: color.Black,
-		Box:   NewBox(),
+// if either size's X or Y is 0, Label use BoundString for setting size.
+func NewLabel(txt string, face font.Face, size Vector2) (l Label) {
+	if size.X == 0 || size.Y == 0 {
+		b := text.BoundString(face, txt)
+		size = IntVec2(b.Max.X, -b.Min.Y)
+	}
+	return Label{
+		text: txt,
+		face: face,
+		Box:  NewBox(size),
 	}
 }
-func (l Label) SrcSize() Vector2 {
-	b := text.BoundString(l.Face, l.Text)
-	return IntVec2(b.Max.X, -b.Min.Y)
-}
-func (l Label) Size() Vector2 {
-	return l.SrcSize().Mul(l.Scale)
-}
-func (l *Label) SetSize(size Vector2) {
-	l.Scale = size.Div(l.SrcSize())
-}
+
 func (l Label) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
 	op.GeoM.Scale(l.Scale.XY())
-	op.GeoM.Translate(l.XY())
-	op.ColorM.ScaleWithColor(l.Color)
+	leftTop := l.LeftTop(ImageSize(screen))
+	op.GeoM.Translate(leftTop.XY())
 	op.Filter = l.Filter
-	text.DrawWithOptions(screen, l.Text, l.Face, &op)
+	text.DrawWithOptions(screen, l.text, l.face, &op)
 }

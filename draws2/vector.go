@@ -1,7 +1,5 @@
 package draws
 
-// I once considered introducing struct type Vector2, but then
-// implementation of Vector2 goes way too complicated.
 type Vector2 struct{ X, Y float64 }
 
 // Input integers.
