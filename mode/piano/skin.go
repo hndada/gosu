@@ -81,14 +81,14 @@ func LoadSkin() {
 	for i := 0; i < 10; i++ {
 		sprite := draws.NewSprite(fmt.Sprintf("skin/combo/%d.png", i))
 		sprite.ApplyScale(ComboScale)
-		sprite.SetPoint(FieldPosition, ComboPosition, draws.CenterMiddle)
+		sprite.Locate(FieldPosition, ComboPosition, draws.CenterMiddle)
 		GeneralSkin.ComboSprites[i] = sprite
 	}
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
 		animation := draws.NewAnimation(fmt.Sprintf("skin/piano/judgment/%s", name))
 		for i := range animation {
 			animation[i].ApplyScale(JudgmentScale)
-			animation[i].SetPoint(FieldPosition, JudgmentPosition, draws.CenterMiddle)
+			animation[i].Locate(FieldPosition, JudgmentPosition, draws.CenterMiddle)
 		}
 		GeneralSkin.JudgmentSprites[i] = animation
 	}
@@ -142,20 +142,20 @@ func LoadSkin() {
 			for i, img := range keyImages {
 				sprite := draws.NewSpriteFromImage(img)
 				sprite.SetSize(w, screenSizeY-HitPosition)
-				sprite.SetPoint(x, HitPosition, draws.CenterTop)
+				sprite.Locate(x, HitPosition, draws.CenterTop)
 				skin.KeySprites[k][i] = sprite
 			}
 			{
 				sprite := draws.NewSpriteFromImage(keyLightingImage)
 				sprite.SetScaleToW(w)
-				sprite.SetPoint(x, HitPosition, draws.CenterBottom) // -HintHeight
+				sprite.Locate(x, HitPosition, draws.CenterBottom) // -HintHeight
 				skin.KeyLightingSprites[k] = sprite
 			}
 			{
 				animation := draws.NewAnimationFromImages(hitLightingImages)
 				for i := range animation {
 					animation[i].ApplyScale(LightingScale)
-					animation[i].SetPoint(x, HitPosition, draws.CenterMiddle) // -HintHeight
+					animation[i].Locate(x, HitPosition, draws.CenterMiddle) // -HintHeight
 				}
 				skin.HitLightingSprites[k] = animation
 			}
@@ -163,7 +163,7 @@ func LoadSkin() {
 				animation := draws.NewAnimationFromImages(holdLightingImages)
 				for i := range animation {
 					animation[i].ApplyScale(LightingScale)
-					animation[i].SetPoint(x, HitPosition-HintHeight/2, draws.CenterMiddle)
+					animation[i].Locate(x, HitPosition-HintHeight/2, draws.CenterMiddle)
 				}
 				skin.HoldLightingSprites[k] = animation
 			}
@@ -171,7 +171,7 @@ func LoadSkin() {
 				animation := draws.NewAnimationFromImages(images[kind])
 				for i := range animation {
 					animation[i].SetSize(w, NoteHeigth)
-					animation[i].SetPoint(x, HitPosition, draws.CenterBottom)
+					animation[i].Locate(x, HitPosition, draws.CenterBottom)
 				}
 				skin.NoteSprites[k][_type] = animation
 			}
@@ -181,20 +181,20 @@ func LoadSkin() {
 			src := ebiten.NewImage(int(wsum), screenSizeY)
 			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
 			sprite := draws.NewSpriteFromImage(src)
-			sprite.SetPoint(FieldPosition, 0, draws.CenterTop)
+			sprite.Locate(FieldPosition, 0, draws.CenterTop)
 			skin.FieldSprite = sprite
 		}
 		{
 			sprite := draws.NewSpriteFromImage(hintImage)
 			sprite.SetSize(wsum, HintHeight)
-			sprite.SetPoint(FieldPosition, HitPosition-HintHeight, draws.CenterTop)
+			sprite.Locate(FieldPosition, HitPosition-HintHeight, draws.CenterTop)
 			skin.HintSprite = sprite
 		}
 		{
 			src := ebiten.NewImage(int(wsum), 1)
 			src.Fill(color.NRGBA{255, 255, 255, 255}) // White
 			sprite := draws.NewSpriteFromImage(src)
-			sprite.SetPoint(FieldPosition, HitPosition, draws.CenterBottom)
+			sprite.Locate(FieldPosition, HitPosition, draws.CenterBottom)
 			skin.BarSprite = sprite
 		}
 		Skins[keyCount] = skin
