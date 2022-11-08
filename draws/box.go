@@ -80,10 +80,10 @@ func (b Box) In(p Vector2) bool {
 func (b Box) LeftTop(screenSize Vector2) (v Vector2) {
 	v = b.Min()
 	if b.AxisReversed[axisX] {
-		v.X = screenSize.X - b.X
+		v.X = screenSize.X - b.X + b.W()
 	}
 	if b.AxisReversed[axisY] {
-		v.Y = screenSize.Y - b.Y
+		v.Y = screenSize.Y - b.Y + b.H()
 	}
 	return
 }
