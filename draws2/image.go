@@ -93,3 +93,4 @@ func NewScaledImage(i *ebiten.Image, scale float64) *ebiten.Image {
 	i2.DrawImage(i, op)
 	return i2
 }
+func ImageSize(i *ebiten.Image) Vector2 { return IntVec2(i.Size()) }
