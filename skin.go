@@ -48,13 +48,13 @@ func LoadGeneralSkin() {
 	for i, name := range names {
 		s := draws.NewSprite(fmt.Sprintf("skin/cursor/%s.png", name))
 		s.ApplyScale(CursorScale)
-		s.SetPoint(screenSizeX/2, screenSizeY/2, draws.CenterMiddle)
+		s.Locate(screenSizeX/2, screenSizeY/2, draws.CenterMiddle)
 		CursorSprites[i] = s
 	}
 	{
 		s := draws.NewSprite("skin/box-mask.png")
 		s.SetSize(ChartInfoBoxWidth, ChartInfoBoxHeight)
-		s.SetPoint(screenSizeX+chartInfoBoxshrink, screenSizeY/2, draws.RightMiddle)
+		s.Locate(screenSizeX+chartInfoBoxshrink, screenSizeY/2, draws.RightMiddle)
 		ChartItemBoxSprite = s
 	}
 	// Todo: ChartLevelBoxSprite
@@ -62,16 +62,16 @@ func LoadGeneralSkin() {
 		s := draws.NewSprite(fmt.Sprintf("skin/score/%d.png", i))
 		s.ApplyScale(ScoreScale)
 		if i == 0 {
-			s.SetPoint(screenSizeX, 0, draws.RightTop)
+			s.Locate(screenSizeX, 0, draws.RightTop)
 		} else { // Need to set same base line, since each number has different height.
-			s.SetPoint(screenSizeX, ScoreSprites[0].H()-s.H(), draws.RightTop)
+			s.Locate(screenSizeX, ScoreSprites[0].H()-s.H(), draws.RightTop)
 		}
 		ScoreSprites[i] = s
 	}
 	for i, name := range []string{"dot", "comma", "percent"} {
 		s := draws.NewSprite(fmt.Sprintf("skin/score/%s.png", name))
 		s.ApplyScale(ScoreScale)
-		s.SetPoint(screenSizeX, 0, draws.RightTop)
+		s.Locate(screenSizeX, 0, draws.RightTop)
 		SignSprites[i] = s
 	}
 	TapSound, _ = audios.NewBytes("skin/sound/tap/0.wav")
@@ -89,7 +89,7 @@ func LoadGeneralSkin() {
 func NewBackground(path string) draws.Sprite {
 	s := draws.NewSprite(path)
 	s.ApplyScale(screenSizeX / s.W())
-	s.SetPoint(screenSizeX/2, screenSizeY/2, draws.CenterMiddle)
+	s.Locate(screenSizeX/2, screenSizeY/2, draws.CenterMiddle)
 	return s
 }
 
