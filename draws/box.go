@@ -4,6 +4,11 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+const (
+	axisX = iota
+	axisY
+)
+
 type Position = Vector2
 
 type Box struct {
@@ -40,6 +45,12 @@ func (b *Box) Move(x, y float64) { b.Position = b.Position.Add(Vec2(x, y)) }
 func (b Box) Min() (min Vector2) {
 	size := b.Size()
 	min = b.Position
+	if b.AxisReversed[axisX] {
+		b.Origin.X = []int{Right, Center, Left}[b.Origin.X]
+	}
+	if b.AxisReversed[axisY] {
+		b.Origin.Y = []int{Bottom, Center, Top}[b.Origin.Y]
+	}
 	switch b.Origin.X {
 	case Left:
 		min.X -= 0
@@ -68,10 +79,6 @@ func (b Box) In(p Vector2) bool {
 
 func (b Box) LeftTop(screenSize Vector2) (v Vector2) {
 	v = b.Min()
-	const (
-		axisX = iota
-		axisY
-	)
 	if b.AxisReversed[axisX] {
 		v.X = screenSize.X - b.X
 	}
