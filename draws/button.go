@@ -45,3 +45,6 @@ func (b *Button) Update() {
 		}
 	}
 }
+func (b *Button) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
+	b.subject.Draw(screen, op)
+}
