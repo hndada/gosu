@@ -47,7 +47,7 @@ func init() {
 // Todo: add note lighting color settings per kind
 // Todo: Should NoteHeight be separated into NoteHeight, HeadHeight, TailHeight?
 var (
-	FieldDarkness float64 = 0.8
+	FieldDarkness float64 = 0.8 // Todo: FieldDarkness -> FieldOpaque
 	FieldPosition float64 = screenSizeX * 0.5
 
 	HitPosition float64 = screenSizeY * 0.90 // The bottom y-value of Hint,  not a middle or top.

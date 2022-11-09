@@ -3,6 +3,7 @@ module github.com/hndada/gosu
 go 1.18
 
 require (
+	github.com/BurntSushi/toml v1.2.1
 	github.com/hajimehoshi/ebiten/v2 v2.4.11
 	github.com/ulikunitz/xz v0.5.10
 	golang.org/x/image v0.1.0
