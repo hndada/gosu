@@ -1,0 +1,8 @@
+// For identifying and query
+
+// Chart
+MD5
+Ranked (bool)
+UpdateDate
+ChartInfo
+LChartHeader
