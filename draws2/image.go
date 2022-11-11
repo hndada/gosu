@@ -3,7 +3,6 @@ package draws
 import (
 	"fmt"
 	"image"
-	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -13,12 +12,28 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-// NewImage returns nil when fails to load image from the path.
-func NewImage(path string) *ebiten.Image {
-	if i := NewImageImage(path); i != nil {
-		return ebiten.NewImageFromImage(i)
+func ImageSize(i *ebiten.Image) Vector2 { return IntVec2(i.Size()) }
+
+type Image struct{ *ebiten.Image }
+
+func (i Image) Size() Vector2 {
+	if !i.IsValid() {
+		return Vector2{}
 	}
-	return nil
+	return ImageSize(i.Image)
+}
+func (i Image) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
+	screen.DrawImage(i.Image, &op)
+}
+func (i Image) IsValid() bool { return i.Image != nil }
+
+// NewImage returns nil when fails to load image from the path.
+func NewImage(path string) Image {
+	// ebiten.NewImageFromImage will panic when input is nil.
+	if i := NewImageImage(path); i != nil {
+		return Image{ebiten.NewImageFromImage(i)}
+	}
+	return Image{}
 }
 
 // NewImageImage returns image.Image.
@@ -34,9 +49,10 @@ func NewImageImage(path string) image.Image {
 	}
 	return src
 }
-func NewImages(path string) (is []*ebiten.Image) {
+
+func NewImages(path string) (is []Image) {
 	const ext = ".png"
-	one := []*ebiten.Image{NewImage(path + ext)}
+	one := []Image{NewImage(path + ext)}
 	dir, err := os.Open(path)
 	if err != nil {
 		return one
@@ -65,32 +81,33 @@ func NewImages(path string) (is []*ebiten.Image) {
 	return
 }
 
-func NewXFlippedImage(i *ebiten.Image) *ebiten.Image {
-	w, h := i.Size()
+func NewImageXFlipped(i Image) Image {
+	w, h := i.Image.Size()
 	i2 := ebiten.NewImage(w, h)
+
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(-1, 1)
 	op.GeoM.Translate(float64(w), 0)
-	i2.DrawImage(i, op)
-	return i2
+	i2.DrawImage(i.Image, op)
+	return Image{i2}
 }
-func NewYFlippedImage(i *ebiten.Image) *ebiten.Image {
-	w, h := i.Size()
+func NewImageYFlipped(i Image) Image {
+	w, h := i.Image.Size()
 	i2 := ebiten.NewImage(w, h)
+
 	op := &ebiten.DrawImageOptions{}
 	op.GeoM.Scale(1, -1)
 	op.GeoM.Translate(0, float64(h))
-	i2.DrawImage(i, op)
-	return i2
+	i2.DrawImage(i.Image, op)
+	return Image{i2}
 }
-func NewScaledImage(i *ebiten.Image, scale float64) *ebiten.Image {
-	sw, sh := i.Size()
-	w, h := math.Ceil(float64(sw)*scale), math.Ceil(float64(sh)*scale)
-	i2 := ebiten.NewImage(int(w), int(h))
+func NewImageScaled(i Image, scale float64) Image {
+	size := i.Size().Mul(Scalar(scale))
+	i2 := ebiten.NewImage(size.XYInt())
+
 	op := &ebiten.DrawImageOptions{}
 	op.Filter = ebiten.FilterLinear
 	op.GeoM.Scale(scale, scale)
-	i2.DrawImage(i, op)
-	return i2
+	i2.DrawImage(i.Image, op)
+	return Image{i2}
 }
-func ImageSize(i *ebiten.Image) Vector2 { return IntVec2(i.Size()) }

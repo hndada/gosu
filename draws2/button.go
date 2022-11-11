@@ -5,7 +5,7 @@ import (
 )
 
 type Button struct {
-	subject Subject
+	Sprite
 	onClick func()
 	mode    ButtonMode
 	pressed bool
@@ -17,16 +17,16 @@ const (
 	ButtonModeClicked // onClick goes called when mouse button is pressed and released.
 )
 
-func NewButton(s Subject, onClick func(), mode ButtonMode) Button {
+func NewButton(sprite Sprite, onClick func(), mode ButtonMode) Button {
 	return Button{
-		subject: s,
+		Sprite:  sprite,
 		onClick: onClick,
 		mode:    mode,
 	}
 }
 
 func (b *Button) Hover() bool {
-	return b.subject.In(IntVec2(ebiten.CursorPosition()))
+	return b.Sprite.In(IntVec2(ebiten.CursorPosition()))
 }
 func (b *Button) Update() {
 	if !b.Hover() {
@@ -46,5 +46,5 @@ func (b *Button) Update() {
 	}
 }
 func (b *Button) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
-	b.subject.Draw(screen, op)
+	b.Sprite.Draw(screen, op)
 }
