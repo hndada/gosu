@@ -112,16 +112,6 @@ func NewImageYFlipped(src Image) Image {
 	src.Draw(dst, op)
 	return dst
 }
-func NewImageScaled(src Image, scale float64) Image {
-	size := src.Size().Mul(Scalar(scale))
-	dst := Image{ebiten.NewImage(size.XYInt())}
-	op := Op{}
-	op.GeoM.Scale(scale, scale)
-	op.GeoM.Translate(0, size.Y)
-	// op.ColorM.ScaleWithColor(color.Transparent)
-	src.Draw(dst, op)
-	return dst
-}
 func NewImageColored(src Image, color color.Color) Image {
 	size := src.Size()
 	dst := Image{ebiten.NewImage(size.XYInt())}
@@ -130,3 +120,13 @@ func NewImageColored(src Image, color color.Color) Image {
 	src.Draw(dst, op)
 	return dst
 }
+
+//	func NewImageScaled(src Image, scale float64) Image {
+//		size := src.Size().Mul(Scalar(scale))
+//		dst := Image{ebiten.NewImage(size.XYInt())}
+//		op := Op{}
+//		op.GeoM.Scale(scale, scale)
+//		op.GeoM.Translate(0, size.Y)
+//		src.Draw(dst, op)
+//		return dst
+//	}
