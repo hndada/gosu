@@ -3,7 +3,7 @@ package game
 import (
 	"path/filepath"
 
-	"github.com/hndada/gosu/format/osu"
+	"github.com/hndada/gosu/game/format/osu"
 )
 
 // ChartHeader contains non-play information.

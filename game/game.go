@@ -4,8 +4,8 @@ import (
 	"runtime/debug"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/framework/draws"
+	"github.com/hndada/gosu/game/format/osr"
 )
 
 type Game struct {

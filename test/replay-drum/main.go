@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hndada/gosu/format/osr"
+	"github.com/hndada/gosu/game/format/osr"
 )
 
 // - Soleily - Renatus [don DON] (2022-09-16) Taiko.osr

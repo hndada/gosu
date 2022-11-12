@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/hndada/gosu/format/osr"
+	"github.com/hndada/gosu/game/format/osr"
 )
 
 // Todo: Make own ScenePlay for calculating score from input replay file

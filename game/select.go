@@ -10,11 +10,11 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/text"
-	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/framework/audios"
 	"github.com/hndada/gosu/framework/ctrl"
 	"github.com/hndada/gosu/framework/draws"
 	"github.com/hndada/gosu/framework/input"
+	"github.com/hndada/gosu/game/format/osr"
 )
 
 // SceneSelect might be created after one play at multiplayer.

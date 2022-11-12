@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/format/osu"
 )
 
 type Floater struct {

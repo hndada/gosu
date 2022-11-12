@@ -1,8 +1,8 @@
 package drum
 
 import (
-	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/format/osr"
 )
 
 // ReplayListener supposes closure function is called every 1 ms.
