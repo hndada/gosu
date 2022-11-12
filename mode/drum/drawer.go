@@ -24,15 +24,15 @@ func (d *StageDrawer) Update(highlight bool) {
 	}
 }
 
-func (d StageDrawer) Draw(screen *ebiten.Image) {
+func (d StageDrawer) Draw(dst draws.Image) {
 	const (
 		idle = iota
 		high
 	)
 	op := ebiten.DrawImageOptions{}
 	op.ColorM.Scale(1, 1, 1, FieldDarkness)
-	d.FieldSprites[idle].Draw(screen, op)
-	d.HintSprites[idle].Draw(screen, ebiten.DrawImageOptions{})
+	d.FieldSprites[idle].Draw(dst, op)
+	d.HintSprites[idle].Draw(dst, ebiten.DrawImageOptions{})
 	if d.Highlight || d.Tick < d.MaxTick {
 		var opField, opHint ebiten.DrawImageOptions
 		if d.Highlight {
@@ -43,8 +43,8 @@ func (d StageDrawer) Draw(screen *ebiten.Image) {
 			opHint.ColorM.Scale(1, 1, 1, FieldDarkness*(1-d.Age()))
 		}
 		opHint.ColorM.ScaleWithColor(ColorYellow)
-		d.FieldSprites[high].Draw(screen, opField)
-		d.HintSprites[high].Draw(screen, opHint)
+		d.FieldSprites[high].Draw(dst, opField)
+		d.HintSprites[high].Draw(dst, opHint)
 	}
 }
 
@@ -58,45 +58,53 @@ type BarDrawer struct {
 func (d *BarDrawer) Update(time int64) {
 	d.Time = time
 }
-func (d BarDrawer) Draw(screen *ebiten.Image) {
+func (d BarDrawer) Draw(dst draws.Image) {
 	for _, b := range d.Bars {
 		pos := b.Speed * float64(b.Time-d.Time)
 		if pos <= maxPosition && pos >= minPosition {
 			sprite := d.Sprite
 			sprite.Move(pos, 0)
-			sprite.Draw(screen, ebiten.DrawImageOptions{})
+			sprite.Draw(dst, ebiten.DrawImageOptions{})
 		}
 	}
 }
 
 type ShakeDrawer struct {
-	Time         int64
-	Staged       *Note
-	BorderSprite draws.Sprite
-	ShakeSprite  draws.Sprite
+	Time    int64
+	Staged  *Note
+	Sprites [2]draws.Sprite
+	// BorderSprite draws.Sprite
+	// ShakeSprite  draws.Sprite
 }
 
 func (d *ShakeDrawer) Update(time int64, staged *Note) {
 	d.Time = time
 	d.Staged = staged
 }
-func (d ShakeDrawer) Draw(screen *ebiten.Image) {
+func (d ShakeDrawer) Draw(dst draws.Image) {
+	const (
+		outer = iota
+		inner
+	)
 	if d.Staged == nil {
 		return
 	}
 	if d.Staged.Time > d.Time {
 		return
 	}
-	borderScale := 0.25 + 0.75*float64(d.Time-d.Staged.Time)/80
-	if borderScale > 1 {
-		borderScale = 1
+	{
+		scale := 0.5 + 0.5*float64(d.Time-d.Staged.Time)/150
+		if scale > 1 {
+			scale = 1
+		}
+		d.Sprites[outer].ApplyScale(scale)
+		d.Sprites[outer].Draw(dst, draws.Op{})
 	}
-	d.BorderSprite.ApplyScale(borderScale)
-	d.BorderSprite.Draw(screen, ebiten.DrawImageOptions{})
-
-	shakeScale := float64(d.Staged.HitTick) / float64(d.Staged.Tick)
-	d.ShakeSprite.ApplyScale(shakeScale)
-	d.ShakeSprite.Draw(screen, ebiten.DrawImageOptions{})
+	{
+		scale := float64(d.Staged.HitTick) / float64(d.Staged.Tick)
+		d.Sprites[inner].ApplyScale(scale)
+		d.Sprites[inner].Draw(dst, draws.Op{})
+	}
 }
 
 var (
@@ -118,7 +126,7 @@ type RollDrawer struct {
 func (d *RollDrawer) Update(time int64) {
 	d.Time = time
 }
-func (d RollDrawer) Draw(screen *ebiten.Image) {
+func (d RollDrawer) Draw(dst draws.Image) {
 	max := len(d.Rolls) - 1
 	for i := range d.Rolls {
 		head := d.Rolls[max-i]
@@ -137,17 +145,17 @@ func (d RollDrawer) Draw(screen *ebiten.Image) {
 			length := tail.Position(d.Time) - head.Position(d.Time)
 			sprite.SetSize(length, sprite.H())
 			sprite.Move(head.Position(d.Time), 0)
-			sprite.Draw(screen, op)
+			sprite.Draw(dst, op)
 		}
 		{
 			sprite := d.HeadSprites[head.Size]
 			sprite.Move(head.Position(d.Time), 0)
-			sprite.Draw(screen, op)
+			sprite.Draw(dst, op)
 		}
 		{
 			sprite := d.TailSprites[tail.Size]
 			sprite.Move(tail.Position(d.Time), 0)
-			sprite.Draw(screen, op)
+			sprite.Draw(dst, op)
 		}
 	}
 	max = len(d.Dots) - 1
@@ -169,7 +177,7 @@ func (d RollDrawer) Draw(screen *ebiten.Image) {
 			op.GeoM.Scale(1.5, 1.5)
 		}
 		sprite.Move(dot.Position(d.Time), 0)
-		sprite.Draw(screen, op)
+		sprite.Draw(dst, op)
 	}
 }
 
@@ -189,7 +197,7 @@ func (d *NoteDrawer) Update(time int64, bpm float64) {
 	d.Time = time
 }
 
-func (d NoteDrawer) Draw(screen *ebiten.Image) {
+func (d NoteDrawer) Draw(dst draws.Image) {
 	const (
 		modeShake = iota
 		modeRoll
@@ -225,10 +233,10 @@ func (d NoteDrawer) Draw(screen *ebiten.Image) {
 				}
 			}
 			note.Move(pos, 0)
-			note.Draw(screen, op)
+			note.Draw(dst, op)
 			overlay := d.Frame(d.OverlaySprites[n.Size])
 			overlay.Move(pos, 0)
-			overlay.Draw(screen, op)
+			overlay.Draw(dst, op)
 		}
 	}
 }
@@ -257,11 +265,11 @@ func (d *KeyDrawer) Update(lastPressed, pressed []bool) {
 		}
 	}
 }
-func (d KeyDrawer) Draw(screen *ebiten.Image) {
-	d.Field.Draw(screen, ebiten.DrawImageOptions{})
+func (d KeyDrawer) Draw(dst draws.Image) {
+	d.Field.Draw(dst, ebiten.DrawImageOptions{})
 	for k, countdown := range d.countdowns {
 		if countdown > 0 {
-			d.Keys[k].Draw(screen, ebiten.DrawImageOptions{})
+			d.Keys[k].Draw(dst, ebiten.DrawImageOptions{})
 		}
 	}
 }
@@ -303,8 +311,8 @@ func (d *DancerDrawer) Update(time int64, bpm float64, combo int, miss, hit, hig
 		d.Mode = mode
 	}
 }
-func (d DancerDrawer) Draw(screen *ebiten.Image) {
-	d.Frame(d.Sprites[d.Mode]).Draw(screen, ebiten.DrawImageOptions{})
+func (d DancerDrawer) Draw(dst draws.Image) {
+	d.Frame(d.Sprites[d.Mode]).Draw(dst, ebiten.DrawImageOptions{})
 }
 
 type JudgmentDrawer struct {
@@ -330,7 +338,7 @@ func (d *JudgmentDrawer) Update(j gosu.Judgment, big bool) {
 	}
 }
 
-func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
+func (d JudgmentDrawer) Draw(dst draws.Image) {
 	if d.Done() || d.judgment.Window == 0 {
 		return
 	}
@@ -366,5 +374,5 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 		op.GeoM.Rotate(d.radian)
 		op.GeoM.Translate(sw/2, sh/2)
 	}
-	sprite.Draw(screen, op)
+	sprite.Draw(dst, op)
 }

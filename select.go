@@ -12,6 +12,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
 )
 
@@ -118,7 +119,7 @@ func (s *SceneSelect) UpdateBackground() {
 
 // Currently Chart infos are not in loop.
 // May add extra effect to box arrangement. e.g., x -= y / 5
-func (s SceneSelect) Draw(screen *ebiten.Image) {
+func (s SceneSelect) Draw(screen draws.Image) {
 	s.BackgroundDrawer.Draw(screen)
 	viewport, cursor := s.Viewport()
 	for i := range viewport {
@@ -146,7 +147,7 @@ func (s SceneSelect) Draw(screen *ebiten.Image) {
 		if i == cursor {
 			x -= int(chartInfoBoxshrink)
 		}
-		text.Draw(screen, t, Face12, x, y+int(offset), color.Black)
+		text.Draw(screen.Image, t, Face12, x, y+int(offset), color.Black)
 		// text.Draw(screen, t, basicfont.Face7x13, x, y+int(offset), color.Black)
 	}
 	// s.View[cursor].NewChartBoard().Draw(screen, ebiten.DrawImageOptions{}, draws.Point{})
@@ -173,10 +174,10 @@ func (s SceneSelect) Viewport() ([]ChartInfo, int) {
 	return viewport, cursor
 }
 
-func (s SceneSelect) DebugPrint(screen *ebiten.Image) {
+func (s SceneSelect) DebugPrint(screen draws.Image) {
 	prop := modeProps[currentMode]
 	speed := *prop.SpeedScale
-	ebitenutil.DebugPrint(screen,
+	ebitenutil.DebugPrint(screen.Image,
 		fmt.Sprintf(
 			"Mode (F1): %s\n"+
 				"Sort (F2): %s\n"+

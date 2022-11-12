@@ -10,16 +10,16 @@ type FieldDrawer struct {
 	Sprite draws.Sprite
 }
 
-func (d FieldDrawer) Draw(screen *ebiten.Image) {
-	d.Sprite.Draw(screen, ebiten.DrawImageOptions{})
+func (d FieldDrawer) Draw(dst draws.Image) {
+	d.Sprite.Draw(dst, ebiten.DrawImageOptions{})
 }
 
 type HintDrawer struct {
 	Sprite draws.Sprite
 }
 
-func (d HintDrawer) Draw(screen *ebiten.Image) {
-	d.Sprite.Draw(screen, ebiten.DrawImageOptions{})
+func (d HintDrawer) Draw(dst draws.Image) {
+	d.Sprite.Draw(dst, ebiten.DrawImageOptions{})
 }
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
@@ -54,7 +54,7 @@ func (d *BarDrawer) Update(cursor float64) {
 	}
 }
 
-func (d BarDrawer) Draw(screen *ebiten.Image) {
+func (d BarDrawer) Draw(dst draws.Image) {
 	if d.Farthest == nil || d.Nearest == nil {
 		return
 	}
@@ -62,7 +62,7 @@ func (d BarDrawer) Draw(screen *ebiten.Image) {
 		sprite := d.Sprite
 		pos := b.Position - d.Cursor
 		sprite.Move(0, -pos)
-		sprite.Draw(screen, ebiten.DrawImageOptions{})
+		sprite.Draw(dst, ebiten.DrawImageOptions{})
 	}
 }
 
@@ -108,13 +108,13 @@ func (d *NoteDrawer) Update(cursor float64, holding bool) {
 }
 
 // Draw from farthest to nearest to make nearer notes priorly exposed.
-func (d NoteDrawer) Draw(screen *ebiten.Image) {
+func (d NoteDrawer) Draw(dst draws.Image) {
 	if d.Farthest == nil || d.Nearest == nil {
 		return
 	}
 	for n := d.Farthest; n != nil && n != d.Nearest.Prev; n = n.Prev {
 		if n.Type == Tail {
-			d.DrawBody(screen, n)
+			d.DrawBody(dst, n)
 		}
 		sprite := d.Frame(d.Sprites[n.Type])
 		pos := n.Position - d.Cursor
@@ -123,12 +123,12 @@ func (d NoteDrawer) Draw(screen *ebiten.Image) {
 		if n.Marked {
 			op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		}
-		sprite.Draw(screen, op)
+		sprite.Draw(dst, op)
 	}
 }
 
 // DrawBody draws scaled, corresponding sub-image of Body sprite.
-func (d NoteDrawer) DrawBody(screen *ebiten.Image, tail *Note) {
+func (d NoteDrawer) DrawBody(dst draws.Image, tail *Note) {
 	head := tail.Prev
 	body := d.Sprites[Body][0]
 	if d.holding {
@@ -147,7 +147,7 @@ func (d NoteDrawer) DrawBody(screen *ebiten.Image, tail *Note) {
 	if tail.Marked {
 		op.ColorM.ChangeHSV(0, 0.3, 0.3)
 	}
-	body.Draw(screen, op)
+	body.Draw(dst, op)
 }
 
 type KeyDrawer struct {
@@ -165,7 +165,7 @@ func (d *KeyDrawer) Update(pressed bool) {
 }
 
 // KeyDrawer draws for a while even when pressed off very shortly.
-func (d KeyDrawer) Draw(screen *ebiten.Image) {
+func (d KeyDrawer) Draw(dst draws.Image) {
 	const (
 		up = iota
 		down
@@ -174,7 +174,7 @@ func (d KeyDrawer) Draw(screen *ebiten.Image) {
 	if d.lastPressed || d.Tick < d.MaxTick {
 		sprite = d.Sprites[down]
 	}
-	sprite.Draw(screen, ebiten.DrawImageOptions{})
+	sprite.Draw(dst, ebiten.DrawImageOptions{})
 }
 
 type KeyLightingDrawer struct {
@@ -192,11 +192,11 @@ func (d *KeyLightingDrawer) Update(pressed bool) {
 }
 
 // KeyLightingDrawer draws for a while even when pressed off very shortly.
-func (d KeyLightingDrawer) Draw(screen *ebiten.Image) {
+func (d KeyLightingDrawer) Draw(dst draws.Image) {
 	if d.lastPressed || d.Tick < d.MaxTick {
 		op := ebiten.DrawImageOptions{}
 		op.ColorM.Scale(1, 1, 1, KeyLightingOpaque)
-		d.Sprite.Draw(screen, op)
+		d.Sprite.Draw(dst, op)
 	}
 }
 
@@ -212,14 +212,14 @@ func (d *HitLightingDrawer) Update(hit bool) {
 		d.Timer.Reset()
 	}
 }
-func (d HitLightingDrawer) Draw(screen *ebiten.Image) {
+func (d HitLightingDrawer) Draw(dst draws.Image) {
 	if d.Done() {
 		return
 	}
 	op := ebiten.DrawImageOptions{}
 	opaque := HitLightingOpaque * (1 - d.Progress(0.75, 1))
 	op.ColorM.Scale(1, 1, 1, opaque)
-	d.Frame(d.Sprites).Draw(screen, op)
+	d.Frame(d.Sprites).Draw(dst, op)
 }
 
 type HoldLightingDrawer struct {
@@ -235,13 +235,13 @@ func (d *HoldLightingDrawer) Update(pressed bool) {
 		d.lastPressed = pressed
 	}
 }
-func (d HoldLightingDrawer) Draw(screen *ebiten.Image) {
+func (d HoldLightingDrawer) Draw(dst draws.Image) {
 	if !d.lastPressed {
 		return
 	}
 	op := ebiten.DrawImageOptions{}
 	op.ColorM.Scale(1, 1, 1, HitLightingOpaque)
-	d.Frame(d.Sprites).Draw(screen, op)
+	d.Frame(d.Sprites).Draw(dst, op)
 }
 
 type JudgmentDrawer struct {
@@ -267,7 +267,7 @@ func (d *JudgmentDrawer) Update(worst gosu.Judgment) {
 	}
 }
 
-func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
+func (d JudgmentDrawer) Draw(dst draws.Image) {
 	if d.Done() {
 		return
 	}
@@ -296,5 +296,5 @@ func (d JudgmentDrawer) Draw(screen *ebiten.Image) {
 		scale = 1 - 0.25*d.Progress(bound2, 1)
 	}
 	sprite.ApplyScale(scale)
-	sprite.Draw(screen, ebiten.DrawImageOptions{})
+	sprite.Draw(dst, ebiten.DrawImageOptions{})
 }
