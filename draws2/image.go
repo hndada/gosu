@@ -12,20 +12,20 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-func ImageSize(i *ebiten.Image) Vector2 { return IntVec2(i.Size()) }
-
 type Image struct{ *ebiten.Image }
 
+// func ImageSize(i *ebiten.Image) Vector2 { return IntVec2(i.Size()) }
+func (i Image) IsValid() bool { return i.Image != nil }
 func (i Image) Size() Vector2 {
 	if !i.IsValid() {
 		return Vector2{}
 	}
-	return ImageSize(i.Image)
+	return IntVec2(i.Image.Size())
+	// return ImageSize(i.Image)
 }
-func (i Image) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
-	screen.DrawImage(i.Image, &op)
+func (i Image) Draw(dst Image, op Op) {
+	dst.Image.DrawImage(i.Image, &op)
 }
-func (i Image) IsValid() bool { return i.Image != nil }
 
 // NewImage returns nil when fails to load image from the path.
 func NewImage(path string) Image {
@@ -80,34 +80,30 @@ func NewImages(path string) (is []Image) {
 	}
 	return
 }
-
-func NewImageXFlipped(i Image) Image {
-	w, h := i.Image.Size()
-	i2 := ebiten.NewImage(w, h)
-
-	op := &ebiten.DrawImageOptions{}
+func NewImageXFlipped(src Image) Image {
+	size := src.Size()
+	dst := Image{ebiten.NewImage(size.XYInt())}
+	op := Op{}
 	op.GeoM.Scale(-1, 1)
-	op.GeoM.Translate(float64(w), 0)
-	i2.DrawImage(i.Image, op)
-	return Image{i2}
+	op.GeoM.Translate(size.X, 0)
+	src.Draw(dst, op)
+	return dst
 }
-func NewImageYFlipped(i Image) Image {
-	w, h := i.Image.Size()
-	i2 := ebiten.NewImage(w, h)
-
-	op := &ebiten.DrawImageOptions{}
+func NewImageYFlipped(src Image) Image {
+	size := src.Size()
+	dst := Image{ebiten.NewImage(size.XYInt())}
+	op := Op{}
 	op.GeoM.Scale(1, -1)
-	op.GeoM.Translate(0, float64(h))
-	i2.DrawImage(i.Image, op)
-	return Image{i2}
+	op.GeoM.Translate(0, size.Y)
+	src.Draw(dst, op)
+	return dst
 }
-func NewImageScaled(i Image, scale float64) Image {
-	size := i.Size().Mul(Scalar(scale))
-	i2 := ebiten.NewImage(size.XYInt())
-
-	op := &ebiten.DrawImageOptions{}
-	op.Filter = ebiten.FilterLinear
+func NewImageScaled(src Image, scale float64) Image {
+	size := src.Size().Mul(Scalar(scale))
+	dst := Image{ebiten.NewImage(size.XYInt())}
+	op := Op{}
 	op.GeoM.Scale(scale, scale)
-	i2.DrawImage(i.Image, op)
-	return Image{i2}
+	op.GeoM.Translate(0, size.Y)
+	src.Draw(dst, op)
+	return dst
 }

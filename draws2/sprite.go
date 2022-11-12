@@ -9,11 +9,20 @@ const (
 	axisY
 )
 
+// Unit of Location is percent.
+type Location = Vector2
+
+// Unit of Position is pixel.
 type Position = Vector2
 
 // Sprite is an image or a text drawn in a screen based on its position and scale.
 // DrawImageOptions is not commutative. Do Translate at the final stage.
+
+// Todo: let Sprite skip calculating Inners' Position when Outer's Size is fixed
 type Sprite struct {
+	Outer  *Sprite
+	Inners []Sprite
+
 	Source
 	Scale  Vector2
 	Filter ebiten.Filter
@@ -26,11 +35,24 @@ func NewSprite(src Source) Sprite {
 	return Sprite{
 		Source: src,
 		Scale:  Vector2{1, 1},
-		// In ebiten, FilterNearest is the default.
 		Filter: ebiten.FilterLinear,
+		// In ebiten, FilterNearest is the default.
 	}
 }
+func (s *Sprite) Append(src Source, loc Location) {
+	outer := s
+	inner := NewSprite(src)
+	inner.Outer = outer
+	if ratio := loc.X; ratio <= 1 {
+		inner.X += (outer.W() - s.W()) * ratio
+	}
+	if ratio := loc.Y; ratio <= 1 {
+		inner.Y += (outer.H() - s.H()) * ratio
+	}
+	outer.Inners = append(outer.Inners, inner)
+}
 
+// func (s *Sprite) SetRelativePosition(outer Sprite, location Vector2) {}
 func (s Sprite) SrcSize() Vector2          { return s.Source.Size() }
 func (s Sprite) Size() Vector2             { return s.SrcSize().Mul(s.Scale) }
 func (s Sprite) W() float64                { return s.Size().X }
@@ -65,15 +87,19 @@ func (s Sprite) In(p Vector2) bool {
 	p = p.Sub(min)
 	return p.X >= 0 && p.X <= max.X && p.Y >= 0 && p.Y <= max.Y
 }
-func (s Sprite) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
+func (s Sprite) Draw(dst Image, op Op) {
 	if !s.IsValid() {
 		return
 	}
 	op.GeoM.Scale(s.Scale.XY())
-	leftTop := s.LeftTop(ImageSize(screen))
+	// leftTop := s.LeftTop(ImageSize(screen))
+	leftTop := s.LeftTop(dst.Size())
 	op.GeoM.Translate(leftTop.XY())
 	op.Filter = s.Filter
-	s.Source.Draw(screen, op)
+	s.Source.Draw(dst, op)
+	for _, inner := range s.Inners {
+		inner.Draw(dst, op)
+	}
 }
 func (s Sprite) LeftTop(screenSize Vector2) (v Vector2) {
 	v = s.Min()
@@ -86,7 +112,7 @@ func (s Sprite) LeftTop(screenSize Vector2) (v Vector2) {
 	return
 }
 
-//	func (s Sprite) Op(screen *ebiten.Image, op ebiten.DrawImageOptions) ebiten.DrawImageOptions {
+//	func (s Sprite) Op(screen *ebiten.Image, op Op) Op {
 //		op.GeoM.Scale(s.Scale.XY())
 //		leftTop := s.LeftTop(ImageSize(screen))
 //		op.GeoM.Translate(leftTop.XY())
