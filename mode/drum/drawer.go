@@ -68,20 +68,43 @@ func (d BarDrawer) Draw(dst draws.Image) {
 }
 
 type ShakeDrawer struct {
+	draws.Timer
 	Time    int64
 	Staged  *Note
 	Sprites [2]draws.Sprite
 }
 
 func (d *ShakeDrawer) Update(time int64, staged *Note) {
+	d.Ticker()
 	d.Time = time
-	d.Staged = staged
+	if d.Staged != staged {
+		if d.Staged.HitTick == d.Staged.Tick {
+			d.Timer.Reset()
+		}
+		d.Staged = staged
+	}
 }
 func (d ShakeDrawer) Draw(dst draws.Image) {
 	const (
 		outer = iota
 		inner
 	)
+	if d.Tick < d.MaxTick {
+		scale := 1 + 0.25*d.Progress(0, 1)
+		alpha := 1 - d.Progress(0, 1)
+		op := draws.Op{}
+		op.ColorM.Scale(1, 1, 1, alpha)
+		{
+			sprite := d.Sprites[outer]
+			sprite.ApplyScale(scale)
+			sprite.Draw(dst, op)
+		}
+		{
+			sprite := d.Sprites[inner]
+			sprite.ApplyScale(scale)
+			sprite.Draw(dst, op)
+		}
+	}
 	if d.Staged == nil {
 		return
 	}
@@ -89,17 +112,24 @@ func (d ShakeDrawer) Draw(dst draws.Image) {
 		return
 	}
 	{
-		scale := 0.5 + 0.5*float64(d.Time-d.Staged.Time)/150
+		op := draws.Op{}
+		scale := 0.25 + 0.75*float64(d.Time-d.Staged.Time)/200
 		if scale > 1 {
 			scale = 1
 		}
-		d.Sprites[outer].ApplyScale(scale)
-		d.Sprites[outer].Draw(dst, draws.Op{})
+		op.ColorM.Scale(1, 1, 1, scale)
+		sprite := d.Sprites[outer]
+		sprite.ApplyScale(scale)
+		sprite.Draw(dst, op)
 	}
 	{
-		scale := float64(d.Staged.HitTick) / float64(d.Staged.Tick)
-		d.Sprites[inner].ApplyScale(scale)
-		d.Sprites[inner].Draw(dst, draws.Op{})
+		scale := 1.0
+		if d.Staged.Tick > 0 {
+			scale = float64(d.Staged.HitTick) / float64(d.Staged.Tick)
+		}
+		sprite := d.Sprites[inner]
+		sprite.ApplyScale(scale)
+		sprite.Draw(dst, draws.Op{})
 	}
 }
 
