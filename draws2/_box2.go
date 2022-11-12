@@ -2,7 +2,6 @@ package draws
 
 import "github.com/hajimehoshi/ebiten/v2"
 
-// Location Vector2 // Unit is percent.
 // < 1 value: Percent, else Pixel.
 
 type Box struct {

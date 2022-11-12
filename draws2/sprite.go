@@ -92,6 +92,9 @@ func (s Sprite) Draw(dst Image, op Op) {
 		return
 	}
 	op.GeoM.Scale(s.Scale.XY())
+	if s.Outer != nil {
+		s.Add(s.Outer.Position)
+	}
 	// leftTop := s.LeftTop(ImageSize(screen))
 	leftTop := s.LeftTop(dst.Size())
 	op.GeoM.Translate(leftTop.XY())
