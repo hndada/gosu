@@ -59,8 +59,9 @@ func (d BarDrawer) Draw(dst draws.Image) {
 	}
 	for b := d.Farthest; b != d.Nearest.Prev; b = b.Prev {
 		pos := b.Position - d.Cursor
-		d.Sprite.Move(0, -pos)
-		d.Sprite.Draw(dst, draws.Op{})
+		sprite := d.Sprite
+		sprite.Move(0, -pos)
+		sprite.Draw(dst, draws.Op{})
 	}
 }
 

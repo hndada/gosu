@@ -50,12 +50,12 @@ func (s *Sprite) Append(src Source, loc Location) {
 	inner := NewSpriteFromSource(src)
 	inner.Outer = outer
 	if ratio := loc.X; ratio <= 1 {
-		inner.X += (outer.W() - s.W()) * ratio
+		inner.X += (outer.W() - inner.W()) * ratio
 	}
 	if ratio := loc.Y; ratio <= 1 {
-		inner.Y += (outer.H() - s.H()) * ratio
+		inner.Y += (outer.H() - inner.H()) * ratio
 	}
-	outer.Inners = append(outer.Inners, inner)
+	s.Inners = append(s.Inners, inner)
 }
 
 // func (s *Sprite) SetRelativePosition(outer Sprite, location Vector2) {}

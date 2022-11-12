@@ -140,20 +140,20 @@ func NewChartInfo(cpath string) (info gosu.ChartInfo, err error) {
 	if err != nil {
 		return
 	}
-	mode := gosu.ModeDrum
+	// mode := gosu.ModeDrum
 	main, min, max := c.BPMs()
 	info = gosu.ChartInfo{
 		Path: cpath,
 		// Mods:       mods,
 		ChartHeader: c.ChartHeader,
-		Mode:        mode,
-		SubMode:     0,
-		Level:       c.Level,
-		Duration:    c.Duration(),
-		NoteCounts:  c.NoteCounts(),
-		MainBPM:     main,
-		MinBPM:      min,
-		MaxBPM:      max,
+		// Mode:        mode,
+		// SubMode:     0,
+		Level:      c.Level,
+		Duration:   c.Duration(),
+		NoteCounts: c.NoteCounts(),
+		MainBPM:    main,
+		MinBPM:     min,
+		MaxBPM:     max,
 	}
 	return
 }
