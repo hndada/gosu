@@ -14,6 +14,7 @@ import (
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
+	"github.com/hndada/gosu/input"
 )
 
 // SceneSelect might be created after one play at multiplayer.
@@ -44,7 +45,7 @@ func (s *SceneSelect) Update() any {
 	if set := s.CursorKeyHandler.Update() || BrightKeyHandler.Update(); set {
 		s.UpdateBackground()
 	}
-	if ebiten.IsKeyPressed(ebiten.KeyEnter) || ebiten.IsKeyPressed(ebiten.KeyNumpadEnter) {
+	if ebiten.IsKeyPressed(input.KeyEnter) || ebiten.IsKeyPressed(input.KeyNumpadEnter) {
 		audios.PlayEffect(SelectSound, EffectVolume)
 		prop := modeProps[currentMode]
 		info := prop.ChartInfos[s.Cursor]
@@ -96,8 +97,8 @@ func NewCursorKeyHandler(cursor *int, len int) ctrl.KeyHandler {
 			Max:   len - 1,
 			Loop:  true,
 		},
-		Modifiers: []ebiten.Key{},
-		Keys:      [2]ebiten.Key{ebiten.KeyUp, ebiten.KeyDown},
+		Modifiers: []input.Key{},
+		Keys:      [2]input.Key{input.KeyArrowUp, input.KeyArrowDown},
 		Sounds:    [2][]byte{SwipeSound, SwipeSound},
 		Volume:    &EffectVolume,
 	}
@@ -130,7 +131,7 @@ func (s SceneSelect) Draw(screen draws.Image) {
 		}
 		ty := float64(i-cursor) * ChartInfoBoxHeight
 		sprite.Move(tx, ty)
-		sprite.Draw(screen, ebiten.DrawImageOptions{})
+		sprite.Draw(screen, draws.Op{})
 	}
 
 	const (
@@ -150,7 +151,7 @@ func (s SceneSelect) Draw(screen draws.Image) {
 		text.Draw(screen.Image, t, Face12, x, y+int(offset), color.Black)
 		// text.Draw(screen, t, basicfont.Face7x13, x, y+int(offset), color.Black)
 	}
-	// s.View[cursor].NewChartBoard().Draw(screen, ebiten.DrawImageOptions{}, draws.Point{})
+	// s.View[cursor].NewChartBoard().Draw(screen, draws.Op{}, draws.Point{})
 	s.DebugPrint(screen)
 }
 func (s SceneSelect) Viewport() ([]ChartInfo, int) {

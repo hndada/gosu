@@ -17,10 +17,10 @@ type BackgroundDrawer struct {
 	Sprite     draws.Sprite
 }
 
-func (d BackgroundDrawer) Draw(screen draws.Image) {
-	op := ebiten.DrawImageOptions{}
+func (d BackgroundDrawer) Draw(dst draws.Image) {
+	op := draws.Op{}
 	op.ColorM.ChangeHSV(0, 1, *d.Brightness)
-	d.Sprite.Draw(screen, op)
+	d.Sprite.Draw(dst, op)
 }
 
 const (
@@ -48,7 +48,7 @@ func (d *NumberDrawer) Update(combo int) {
 }
 
 // ComboDrawer's Draw draws each number at constant x regardless of their widths.
-func (d NumberDrawer) Draw(screen draws.Image) {
+func (d NumberDrawer) Draw(dst draws.Image) {
 	if d.Done() {
 		return
 	}
@@ -80,7 +80,7 @@ func (d NumberDrawer) Draw(screen draws.Image) {
 			scale := 0.1 - 0.1*d.Progress(bound0, bound1)
 			sprite.Move(0, d.Bounce*sprite.H()*scale)
 		}
-		sprite.Draw(screen, ebiten.DrawImageOptions{})
+		sprite.Draw(dst, draws.Op{})
 		tx -= w
 	}
 }
@@ -109,7 +109,7 @@ func (d *ScoreDrawer) Update(score float64) {
 }
 
 // NumberDrawer's Draw draws each number at the center of constant-width bound.
-func (d ScoreDrawer) Draw(screen draws.Image) {
+func (d ScoreDrawer) Draw(dst draws.Image) {
 	if d.Done() {
 		return
 	}
@@ -127,7 +127,7 @@ func (d ScoreDrawer) Draw(screen draws.Image) {
 		sprite := d.Sprites[v]
 		sprite.Move(tx, 0)
 		sprite.Move(-w/2+sprite.W()/2, 0) // Need to set at center since origin is RightTop.
-		sprite.Draw(screen, ebiten.DrawImageOptions{})
+		sprite.Draw(dst, draws.Op{})
 		tx -= w
 	}
 }
@@ -159,6 +159,7 @@ type MeterMark struct {
 	ColorType int
 }
 
+// Todo: draw Meter with ebiten.Image
 // Anchor is a unit sprite constantly drawn at the middle of meter.
 func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 	var (
@@ -228,19 +229,19 @@ func (d *MeterDrawer) Update() {
 	}
 	d.Marks = d.Marks[cursor:] // Drop old marks.
 }
-func (d MeterDrawer) Draw(screen draws.Image) {
-	d.Meter.Draw(screen, ebiten.DrawImageOptions{})
-	d.Anchor.Draw(screen, ebiten.DrawImageOptions{})
+func (d MeterDrawer) Draw(dst draws.Image) {
+	d.Meter.Draw(dst, draws.Op{})
+	d.Anchor.Draw(dst, draws.Op{})
 	for _, m := range d.Marks {
 		sprite := d.Unit
-		op := ebiten.DrawImageOptions{}
+		op := draws.Op{}
 		color := MeterMarkColors[m.ColorType]
 		op.ColorM.ScaleWithColor(color)
 		if age := d.MarkAge(m); age >= 0.8 {
 			op.ColorM.Scale(1, 1, 1, 1-(age-0.8)/0.2)
 		}
 		op.GeoM.Translate(-float64(m.Offset)*MeterWidth, 0)
-		sprite.Draw(screen, op)
+		sprite.Draw(dst, op)
 	}
 }
 

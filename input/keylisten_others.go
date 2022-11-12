@@ -8,7 +8,7 @@ func NewListener(keySettings []Key) func() []bool {
 	return func() []bool {
 		pressed := make([]bool, len(keySettings))
 		for k, ek := range keySettings {
-			pressed[k] = ebiten.IsKeyPressed(ebiten.Key(ek))
+			pressed[k] = ebiten.IsKeyPressed(ek)
 		}
 		return pressed
 	}

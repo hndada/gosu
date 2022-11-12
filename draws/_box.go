@@ -49,7 +49,7 @@ func NewSimpleBox(sprite Sprite, padding Vector2, align Align) (b Box) {
 	b.Inners = [][]Box{{inner}}
 	return
 }
-func (b Box) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
+func (b Box) Draw(screen *ebiten.Image, op draws.Op) {
 	b.Sprite.Draw(screen, op)
 	for i := range b.Inners {
 		for j := range b.Inners[i] {

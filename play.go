@@ -44,13 +44,13 @@ func NewTimer(duration int64) Timer {
 }
 
 //	func (t Timer) Done() bool {
-//		return ebiten.IsKeyPressed(ebiten.KeyEscape) || t.Tick >= t.MaxTick // time.Since(t.StartTime) >= t.Duration
+//		return ebiten.IsKeyPressed(input.KeyEscape) || t.Tick >= t.MaxTick // time.Since(t.StartTime) >= t.Duration
 //	}
-func (t Timer) Done() bool { return ebiten.IsKeyPressed(ebiten.KeyEscape) }
+func (t Timer) Done() bool { return ebiten.IsKeyPressed(input.KeyEscape) }
 
 // func (t *Timer) SwitchPause() {}
 func (t *Timer) Ticker() {
-	if inpututil.IsKeyJustPressed(ebiten.KeyTab) {
+	if inpututil.IsKeyJustPressed(input.KeyTab) {
 		t.Pause = !t.Pause
 	}
 	if t.Pause {

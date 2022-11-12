@@ -15,43 +15,32 @@ import (
 
 type Image struct{ *ebiten.Image }
 
-// func ImageSize(i *ebiten.Image) Vector2 { return IntVec2(i.Size()) }
 func (i Image) IsValid() bool { return i.Image != nil }
 func (i Image) Size() Vector2 {
 	if !i.IsValid() {
 		return Vector2{}
 	}
 	return IntVec2(i.Image.Size())
-	// return ImageSize(i.Image)
 }
 func (i Image) Draw(dst Image, op Op) {
 	dst.Image.DrawImage(i.Image, &op)
 }
 
-func LoadImage(path string) Image {
-	return NewImage(path)
-}
-
-func LoadImageImage(path string) image.Image {
-	return NewImageImage(path)
-}
-
-func NewImage2(w, h float64) Image {
+func NewImage(w, h float64) Image {
 	return Image{ebiten.NewImage(int(w), int(h))}
 }
-func (i Image) Fill(color color.Color) { i.Image.Fill(color) }
 
-// NewImage returns nil when fails to load image from the path.
-func NewImage(path string) Image {
+// LoadImage returns nil when fails to load image from the path.
+func LoadImage(path string) Image {
 	// ebiten.NewImageFromImage will panic when input is nil.
-	if i := NewImageImage(path); i != nil {
+	if i := LoadImageImage(path); i != nil {
 		return Image{ebiten.NewImageFromImage(i)}
 	}
 	return Image{}
 }
 
-// NewImageImage returns image.Image.
-func NewImageImage(path string) image.Image {
+// LoadImageImage returns image.Image.
+func LoadImageImage(path string) image.Image {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil
@@ -64,9 +53,9 @@ func NewImageImage(path string) image.Image {
 	return src
 }
 
-func NewImages(path string) (is []Image) {
+func LoadImages(path string) (is []Image) {
 	const ext = ".png"
-	one := []Image{NewImage(path + ext)}
+	one := []Image{LoadImage(path + ext)}
 	dir, err := os.Open(path)
 	if err != nil {
 		return one
@@ -90,7 +79,7 @@ func NewImages(path string) (is []Image) {
 	sort.Ints(nums)
 	for _, num := range nums {
 		path := filepath.Join(path, fmt.Sprintf("%d.png", num))
-		is = append(is, NewImage(path))
+		is = append(is, LoadImage(path))
 	}
 	return
 }
