@@ -25,7 +25,7 @@ type SceneSelect struct {
 	View             []ChartInfo // Todo: ChartInfo -> *ChartInfo?
 	Cursor           int
 	CursorKeyHandler ctrl.KeyHandler
-	// board       draws.Box
+	panel            draws.Sprite
 
 	BackgroundDrawer BackgroundDrawer
 	MusicPlayer      *audio.Player // Todo: Rewind after preview has finished.
@@ -104,6 +104,7 @@ func NewCursorKeyHandler(cursor *int, len int) ctrl.KeyHandler {
 	}
 }
 func (s *SceneSelect) UpdateBackground() {
+	s.panel = s.View[s.Cursor].NewChartPanel()
 	s.BackgroundDrawer.Sprite = DefaultBackground
 	if len(s.View) == 0 {
 		return
@@ -152,6 +153,7 @@ func (s SceneSelect) Draw(screen draws.Image) {
 		// text.Draw(screen, t, basicfont.Face7x13, x, y+int(offset), color.Black)
 	}
 	// s.View[cursor].NewChartBoard().Draw(screen, draws.Op{}, draws.Point{})
+	s.panel.Draw(screen, draws.Op{})
 	s.DebugPrint(screen)
 }
 func (s SceneSelect) Viewport() ([]ChartInfo, int) {

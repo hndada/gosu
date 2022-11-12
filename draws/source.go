@@ -8,6 +8,5 @@ type Op = ebiten.DrawImageOptions
 type Source interface {
 	IsValid() bool
 	Size() Vector2
-	// Draw(*ebiten.Image, Op)
 	Draw(Image, Op)
 }

@@ -11,6 +11,7 @@ require (
 )
 
 require (
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/ebitengine/purego v0.2.0-alpha.0.20221031034428-fbeb60f11c96 // indirect
 	github.com/hajimehoshi/file2byteslice v1.0.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect

@@ -61,8 +61,9 @@ func (d BarDrawer) Draw(dst draws.Image) {
 	for _, b := range d.Bars {
 		pos := b.Speed * float64(b.Time-d.Time)
 		if pos <= maxPosition && pos >= minPosition {
-			d.Sprite.Move(pos, 0)
-			d.Sprite.Draw(dst, draws.Op{})
+			sprite := d.Sprite
+			sprite.Move(pos, 0)
+			sprite.Draw(dst, draws.Op{})
 		}
 	}
 }
@@ -201,8 +202,9 @@ func (d RollDrawer) Draw(dst draws.Image) {
 			op.ColorM.ScaleWithColor(DotColorMiss)
 			op.GeoM.Scale(1.5, 1.5)
 		}
-		d.DotSprite.Move(dot.Position(d.Time), 0)
-		d.DotSprite.Draw(dst, op)
+		sprite := d.DotSprite
+		sprite.Move(dot.Position(d.Time), 0)
+		sprite.Draw(dst, op)
 	}
 }
 

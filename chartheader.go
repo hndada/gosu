@@ -26,6 +26,9 @@ type ChartHeader struct {
 	ImageFilename   string
 	VideoFilename   string
 	VideoTimeOffset int64
+
+	Mode    int
+	SubMode int
 }
 
 func NewChartHeader(f any) (c ChartHeader) {
@@ -48,6 +51,20 @@ func NewChartHeader(f any) (c ChartHeader) {
 		c.ImageFilename = e.Filename
 		e, _ = f.Video()
 		c.VideoFilename, c.VideoTimeOffset = e.Filename, int64(e.StartTime)
+
+		switch f.Mode {
+		case osu.ModeMania:
+			keyCount := int(f.CircleSize)
+			if keyCount <= 4 {
+				c.Mode = ModePiano4
+			} else {
+				c.Mode = ModePiano7
+			}
+			c.SubMode = keyCount
+		case osu.ModeTaiko:
+			c.Mode = ModeDrum
+			c.SubMode = 4
+		}
 	}
 	return c
 }

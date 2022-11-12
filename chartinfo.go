@@ -6,20 +6,18 @@ import (
 
 // ChartInfo is used at SceneSelect.
 type ChartInfo struct {
+	ChartHeader
+	// Tags       []string // Auto-generated or User-defined
 	Path string
 	// Mods    Mods
-	// Header  ChartHeader
-	ChartHeader
-	Mode    int
-	SubMode int
-	Level   float64
 
-	Duration   int64
+	// Following fields are derived values.
+	Level      float64
 	NoteCounts []int
+	Duration   int64
 	MainBPM    float64
 	MinBPM     float64
 	MaxBPM     float64
-	// Tags       []string // Auto-generated or User-defined
 }
 
 func (c ChartInfo) Text() string {
