@@ -1,7 +1,6 @@
 package piano
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/draws"
 )
@@ -11,7 +10,7 @@ type FieldDrawer struct {
 }
 
 func (d FieldDrawer) Draw(dst draws.Image) {
-	d.Sprite.Draw(dst, ebiten.DrawImageOptions{})
+	d.Sprite.Draw(dst, draws.Op{})
 }
 
 type HintDrawer struct {
@@ -19,7 +18,7 @@ type HintDrawer struct {
 }
 
 func (d HintDrawer) Draw(dst draws.Image) {
-	d.Sprite.Draw(dst, ebiten.DrawImageOptions{})
+	d.Sprite.Draw(dst, draws.Op{})
 }
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
@@ -59,10 +58,9 @@ func (d BarDrawer) Draw(dst draws.Image) {
 		return
 	}
 	for b := d.Farthest; b != d.Nearest.Prev; b = b.Prev {
-		sprite := d.Sprite
 		pos := b.Position - d.Cursor
-		sprite.Move(0, -pos)
-		sprite.Draw(dst, ebiten.DrawImageOptions{})
+		d.Sprite.Move(0, -pos)
+		d.Sprite.Draw(dst, draws.Op{})
 	}
 }
 
@@ -119,7 +117,7 @@ func (d NoteDrawer) Draw(dst draws.Image) {
 		sprite := d.Frame(d.Sprites[n.Type])
 		pos := n.Position - d.Cursor
 		sprite.Move(0, -pos)
-		op := ebiten.DrawImageOptions{}
+		op := draws.Op{}
 		if n.Marked {
 			op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		}
@@ -143,7 +141,7 @@ func (d NoteDrawer) DrawBody(dst draws.Image, tail *Note) {
 	ty := head.Position - d.Cursor
 	body.Move(0, -ty)
 
-	op := ebiten.DrawImageOptions{}
+	op := draws.Op{}
 	if tail.Marked {
 		op.ColorM.ChangeHSV(0, 0.3, 0.3)
 	}
@@ -174,7 +172,7 @@ func (d KeyDrawer) Draw(dst draws.Image) {
 	if d.lastPressed || d.Tick < d.MaxTick {
 		sprite = d.Sprites[down]
 	}
-	sprite.Draw(dst, ebiten.DrawImageOptions{})
+	sprite.Draw(dst, draws.Op{})
 }
 
 type KeyLightingDrawer struct {
@@ -194,7 +192,7 @@ func (d *KeyLightingDrawer) Update(pressed bool) {
 // KeyLightingDrawer draws for a while even when pressed off very shortly.
 func (d KeyLightingDrawer) Draw(dst draws.Image) {
 	if d.lastPressed || d.Tick < d.MaxTick {
-		op := ebiten.DrawImageOptions{}
+		op := draws.Op{}
 		op.ColorM.Scale(1, 1, 1, KeyLightingOpaque)
 		d.Sprite.Draw(dst, op)
 	}
@@ -216,7 +214,7 @@ func (d HitLightingDrawer) Draw(dst draws.Image) {
 	if d.Done() {
 		return
 	}
-	op := ebiten.DrawImageOptions{}
+	op := draws.Op{}
 	opaque := HitLightingOpaque * (1 - d.Progress(0.75, 1))
 	op.ColorM.Scale(1, 1, 1, opaque)
 	d.Frame(d.Sprites).Draw(dst, op)
@@ -239,7 +237,7 @@ func (d HoldLightingDrawer) Draw(dst draws.Image) {
 	if !d.lastPressed {
 		return
 	}
-	op := ebiten.DrawImageOptions{}
+	op := draws.Op{}
 	op.ColorM.Scale(1, 1, 1, HitLightingOpaque)
 	d.Frame(d.Sprites).Draw(dst, op)
 }
@@ -296,5 +294,5 @@ func (d JudgmentDrawer) Draw(dst draws.Image) {
 		scale = 1 - 0.25*d.Progress(bound2, 1)
 	}
 	sprite.ApplyScale(scale)
-	sprite.Draw(dst, ebiten.DrawImageOptions{})
+	sprite.Draw(dst, draws.Op{})
 }

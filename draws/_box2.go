@@ -37,7 +37,7 @@ func (b *Box) Append(s Sprite, loc Location) {
 	b.Inners = append(b.Inners, inner)
 }
 
-func (b Box) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
+func (b Box) Draw(screen *ebiten.Image, op draws.Op) {
 	p := b.Outer.Min()
 	if ratio := b.Location.X; ratio <= 1 {
 		p.X += (b.Outer.W() - b.W()) * ratio

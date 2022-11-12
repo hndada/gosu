@@ -1,6 +1,9 @@
 package input
 
-type Key int
+import "github.com/hajimehoshi/ebiten/v2"
+
+// type Key int
+type Key = ebiten.Key
 
 // The order is consistent with Ebiten.
 const (

@@ -1,8 +1,8 @@
 package gosu
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/ctrl"
+	"github.com/hndada/gosu/input"
 )
 
 var (
@@ -55,8 +55,8 @@ func LoadHandlers(props []ModeProp) {
 	}
 	ModeKeyHandler = ctrl.KeyHandler{
 		Handler:   modeHandler,
-		Modifiers: []ebiten.Key{},
-		Keys:      [2]ebiten.Key{-1, ebiten.KeyF1},
+		Modifiers: []input.Key{},
+		Keys:      [2]input.Key{-1, input.KeyF1},
 		Sounds:    [2][]byte{SwipeSound, SwipeSound},
 		Volume:    &EffectVolume,
 	}
@@ -68,8 +68,8 @@ func LoadHandlers(props []ModeProp) {
 	}
 	SortKeyHandler = ctrl.KeyHandler{
 		Handler:   sortHandler,
-		Modifiers: []ebiten.Key{},
-		Keys:      [2]ebiten.Key{-1, ebiten.KeyF2},
+		Modifiers: []input.Key{},
+		Keys:      [2]input.Key{-1, input.KeyF2},
 		Sounds:    [2][]byte{SwipeSound, SwipeSound},
 		Volume:    &EffectVolume,
 	}
@@ -82,8 +82,8 @@ func LoadHandlers(props []ModeProp) {
 	}
 	MusicVolumeKeyHandler = ctrl.KeyHandler{
 		Handler:   musicVolumeHandler,
-		Modifiers: []ebiten.Key{ebiten.KeyControlLeft},
-		Keys:      [2]ebiten.Key{ebiten.KeyLeft, ebiten.KeyRight},
+		Modifiers: []input.Key{input.KeyControlLeft},
+		Keys:      [2]input.Key{input.KeyArrowLeft, input.KeyArrowRight},
 		Sounds:    [2][]byte{ToggleSounds[0], ToggleSounds[1]},
 		Volume:    &EffectVolume,
 	}
@@ -95,8 +95,8 @@ func LoadHandlers(props []ModeProp) {
 	}
 	EffectVolumeKeyHandler = ctrl.KeyHandler{
 		Handler:   effectVolumeHandler,
-		Modifiers: []ebiten.Key{ebiten.KeyAltLeft},
-		Keys:      [2]ebiten.Key{ebiten.KeyLeft, ebiten.KeyRight},
+		Modifiers: []input.Key{input.KeyAltLeft},
+		Keys:      [2]input.Key{input.KeyArrowLeft, input.KeyArrowRight},
 		Sounds:    [2][]byte{ToggleSounds[0], ToggleSounds[1]},
 		Volume:    &EffectVolume,
 	}
@@ -109,8 +109,8 @@ func LoadHandlers(props []ModeProp) {
 	}
 	BrightKeyHandler = ctrl.KeyHandler{
 		Handler:   brightHandler,
-		Modifiers: []ebiten.Key{ebiten.KeyControlLeft},
-		Keys:      [2]ebiten.Key{ebiten.KeyO, ebiten.KeyP},
+		Modifiers: []input.Key{input.KeyControlLeft},
+		Keys:      [2]input.Key{input.KeyO, input.KeyP},
 		Sounds:    [2][]byte{ToggleSounds[0], ToggleSounds[1]},
 		Volume:    &EffectVolume,
 	}
@@ -126,8 +126,8 @@ func LoadHandlers(props []ModeProp) {
 	}
 	SpeedScaleKeyHandler = ctrl.KeyHandler{
 		Handler:   speedScaleHandlers[currentMode],
-		Modifiers: []ebiten.Key{},
-		Keys:      [2]ebiten.Key{ebiten.KeyPageDown, ebiten.KeyPageUp},
+		Modifiers: []input.Key{},
+		Keys:      [2]input.Key{input.KeyPageDown, input.KeyPageUp},
 		Sounds:    [2][]byte{TransitionSounds[0], TransitionSounds[1]},
 		Volume:    &EffectVolume,
 	}
@@ -140,8 +140,8 @@ func LoadHandlers(props []ModeProp) {
 	}
 	OffsetKeyHandler = ctrl.KeyHandler{
 		Handler:   offsetHandler,
-		Modifiers: []ebiten.Key{ebiten.KeyShiftLeft},
-		Keys:      [2]ebiten.Key{ebiten.KeyLeft, ebiten.KeyRight},
+		Modifiers: []input.Key{input.KeyShiftLeft},
+		Keys:      [2]input.Key{input.KeyArrowLeft, input.KeyArrowRight},
 		Sounds:    [2][]byte{TapSound, TapSound},
 		Volume:    &EffectVolume,
 	}
@@ -154,8 +154,8 @@ func LoadHandlers(props []ModeProp) {
 	}
 	TailExtraTimeKeyHandler = ctrl.KeyHandler{
 		Handler:   tailExtraTimeHandler,
-		Modifiers: []ebiten.Key{ebiten.KeyF3}, // Todo: configurate by Button in future
-		Keys:      [2]ebiten.Key{ebiten.KeyLeft, ebiten.KeyRight},
+		Modifiers: []input.Key{input.KeyF3}, // Todo: configurate by Button in future
+		Keys:      [2]input.Key{input.KeyArrowLeft, input.KeyArrowRight},
 		Sounds:    [2][]byte{TapSound, TapSound},
 		Volume:    &EffectVolume,
 	}

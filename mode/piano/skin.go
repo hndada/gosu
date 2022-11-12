@@ -8,7 +8,6 @@ import (
 	_ "image/jpeg"
 	_ "image/png"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/draws"
 )
@@ -101,17 +100,17 @@ func LoadSkin() {
 		hintImage          draws.Image
 	)
 	for i, name := range []string{"up", "down"} {
-		keyImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/key/%s.png", name))
+		keyImages[i] = draws.LoadImage(fmt.Sprintf("skin/piano/key/%s.png", name))
 	}
-	keyLightingImage = draws.NewImage("skin/piano/key/lighting.png")
-	hitLightingImages = draws.NewImages("skin/piano/lighting/hit")
-	holdLightingImages = draws.NewImages("skin/piano/lighting/hold")
+	keyLightingImage = draws.LoadImage("skin/piano/key/lighting.png")
+	hitLightingImages = draws.LoadImages("skin/piano/lighting/hit")
+	holdLightingImages = draws.LoadImages("skin/piano/lighting/hold")
 	for i, _type := range []string{"normal", "head", "tail", "body"} {
 		for j, kind := range []int{1, 2, 3, 3} { // Todo: 4th note image with custom color settings?
-			noteImages[i][j] = draws.NewImages(fmt.Sprintf("skin/piano/note/%s/%d", _type, kind))
+			noteImages[i][j] = draws.LoadImages(fmt.Sprintf("skin/piano/note/%s/%d", _type, kind))
 		}
 	}
-	hintImage = draws.NewImage("skin/piano/hint.png")
+	hintImage = draws.LoadImage("skin/piano/hint.png")
 
 	// Todo: Key count 1, 2, 3 and with scratch
 	for keyCount := 4; keyCount <= 10; keyCount++ {
@@ -177,10 +176,10 @@ func LoadSkin() {
 			}
 			x += w / 2
 		}
-		{ // Todo: ebiten.NewImage() -> draws.NewImage()
-			src := ebiten.NewImage(int(wsum), screenSizeY)
+		{
+			src := draws.NewImage(wsum, screenSizeY)
 			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
-			sprite := draws.NewSpriteFromSource(draws.Image{Image: src})
+			sprite := draws.NewSpriteFromSource(src)
 			sprite.Locate(FieldPosition, 0, draws.CenterTop)
 			skin.FieldSprite = sprite
 		}
@@ -191,9 +190,9 @@ func LoadSkin() {
 			skin.HintSprite = sprite
 		}
 		{
-			src := ebiten.NewImage(int(wsum), 1)
+			src := draws.NewImage(wsum, 1)
 			src.Fill(color.White)
-			sprite := draws.NewSpriteFromSource(draws.Image{Image: src})
+			sprite := draws.NewSpriteFromSource(src)
 			sprite.Locate(FieldPosition, HitPosition, draws.CenterBottom)
 			skin.BarSprite = sprite
 		}

@@ -3,6 +3,7 @@ package ctrl
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/audios"
+	"github.com/hndada/gosu/input"
 )
 
 type Handler interface {
@@ -79,13 +80,13 @@ const (
 
 type KeyHandler struct {
 	Handler
-	Modifiers []ebiten.Key // Handler works only when all Modifier are pressed.
-	Keys      [2]ebiten.Key
+	Modifiers []input.Key // Handler works only when all Modifier are pressed.
+	Keys      [2]input.Key
 	Sounds    [2][]byte // Todo: implement
 	Volume    *float64
 
 	holdIndex int
-	// holdKey   ebiten.Key
+	// holdKey   input.Key
 	countdown int // Require to hold for a while to move a cursor.
 	active    bool
 }

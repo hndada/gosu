@@ -4,7 +4,6 @@ import (
 	"image/color"
 	"math/rand"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu"
 	"github.com/hndada/gosu/draws"
 )
@@ -29,12 +28,12 @@ func (d StageDrawer) Draw(dst draws.Image) {
 		idle = iota
 		high
 	)
-	op := ebiten.DrawImageOptions{}
+	op := draws.Op{}
 	op.ColorM.Scale(1, 1, 1, FieldDarkness)
 	d.FieldSprites[idle].Draw(dst, op)
-	d.HintSprites[idle].Draw(dst, ebiten.DrawImageOptions{})
+	d.HintSprites[idle].Draw(dst, draws.Op{})
 	if d.Highlight || d.Tick < d.MaxTick {
-		var opField, opHint ebiten.DrawImageOptions
+		var opField, opHint draws.Op
 		if d.Highlight {
 			opField.ColorM.Scale(1, 1, 1, FieldDarkness*d.Age())
 			opHint.ColorM.Scale(1, 1, 1, FieldDarkness*d.Age())
@@ -62,9 +61,8 @@ func (d BarDrawer) Draw(dst draws.Image) {
 	for _, b := range d.Bars {
 		pos := b.Speed * float64(b.Time-d.Time)
 		if pos <= maxPosition && pos >= minPosition {
-			sprite := d.Sprite
-			sprite.Move(pos, 0)
-			sprite.Draw(dst, ebiten.DrawImageOptions{})
+			d.Sprite.Move(pos, 0)
+			d.Sprite.Draw(dst, draws.Op{})
 		}
 	}
 }
@@ -73,8 +71,6 @@ type ShakeDrawer struct {
 	Time    int64
 	Staged  *Note
 	Sprites [2]draws.Sprite
-	// BorderSprite draws.Sprite
-	// ShakeSprite  draws.Sprite
 }
 
 func (d *ShakeDrawer) Update(time int64, staged *Note) {
@@ -138,7 +134,7 @@ func (d RollDrawer) Draw(dst draws.Image) {
 		if tail.Position(d.Time) < minPosition {
 			continue
 		}
-		op := ebiten.DrawImageOptions{}
+		op := draws.Op{}
 		op.ColorM.ScaleWithColor(ColorYellow)
 		{
 			sprite := d.BodySprites[head.Size]
@@ -165,8 +161,7 @@ func (d RollDrawer) Draw(dst draws.Image) {
 		if pos > maxPosition || pos < minPosition {
 			continue
 		}
-		sprite := d.DotSprite
-		op := ebiten.DrawImageOptions{}
+		op := draws.Op{}
 		switch dot.Marked {
 		case DotReady:
 			op.ColorM.ScaleWithColor(DotColorReady)
@@ -176,8 +171,8 @@ func (d RollDrawer) Draw(dst draws.Image) {
 			op.ColorM.ScaleWithColor(DotColorMiss)
 			op.GeoM.Scale(1.5, 1.5)
 		}
-		sprite.Move(dot.Position(d.Time), 0)
-		sprite.Draw(dst, op)
+		d.DotSprite.Move(dot.Position(d.Time), 0)
+		d.DotSprite.Draw(dst, op)
 	}
 }
 
@@ -212,7 +207,7 @@ func (d NoteDrawer) Draw(dst draws.Image) {
 				continue
 			}
 			note := d.NoteSprites[n.Size][n.Color]
-			op := ebiten.DrawImageOptions{}
+			op := draws.Op{}
 			switch mode {
 			case modeShake:
 				if n.Time < d.Time {
@@ -266,10 +261,10 @@ func (d *KeyDrawer) Update(lastPressed, pressed []bool) {
 	}
 }
 func (d KeyDrawer) Draw(dst draws.Image) {
-	d.Field.Draw(dst, ebiten.DrawImageOptions{})
+	d.Field.Draw(dst, draws.Op{})
 	for k, countdown := range d.countdowns {
 		if countdown > 0 {
-			d.Keys[k].Draw(dst, ebiten.DrawImageOptions{})
+			d.Keys[k].Draw(dst, draws.Op{})
 		}
 	}
 }
@@ -312,7 +307,7 @@ func (d *DancerDrawer) Update(time int64, bpm float64, combo int, miss, hit, hig
 	}
 }
 func (d DancerDrawer) Draw(dst draws.Image) {
-	d.Frame(d.Sprites[d.Mode]).Draw(dst, ebiten.DrawImageOptions{})
+	d.Frame(d.Sprites[d.Mode]).Draw(dst, draws.Op{})
 }
 
 type JudgmentDrawer struct {
@@ -353,7 +348,7 @@ func (d JudgmentDrawer) Draw(dst draws.Image) {
 			break
 		}
 	}
-	op := ebiten.DrawImageOptions{}
+	op := draws.Op{}
 	age := d.Age()
 	if bound := 0.25; age < bound {
 		sprite.ApplyScale(1.2 - 0.2*d.Progress(0, bound))

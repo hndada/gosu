@@ -3,7 +3,7 @@ package draws
 type Animation []Sprite
 
 func NewAnimation(path string) Animation {
-	return NewAnimationFromImages(NewImages(path))
+	return NewAnimationFromImages(LoadImages(path))
 }
 func NewAnimationFromImages(images []Image) (a Animation) {
 	a = make(Animation, len(images))

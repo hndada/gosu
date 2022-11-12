@@ -15,10 +15,14 @@ type Location = Vector2
 // Unit of Position is pixel.
 type Position = Vector2
 
+// type Filter = ebiten.Filter
+// const (
+// 	Linear  = iota
+// 	Nearest
+// )
+
 // Sprite is an image or a text drawn in a screen based on its position and scale.
 // DrawImageOptions is not commutative. Do Translate at the final stage.
-
-// Todo: let Sprite skip calculating Inners' Position when Outer's Size is fixed
 type Sprite struct {
 	Outer  *Sprite
 	Inners []Sprite
@@ -32,14 +36,13 @@ type Sprite struct {
 }
 
 func NewSprite(path string) Sprite {
-	return NewSpriteFromSource(NewImage(path))
+	return NewSpriteFromSource(LoadImage(path))
 }
 func NewSpriteFromSource(src Source) Sprite {
 	return Sprite{
 		Source: src,
 		Scale:  Vector2{1, 1},
-		Filter: ebiten.FilterLinear,
-		// In ebiten, FilterNearest is the default.
+		Filter: ebiten.FilterLinear, // FilterNearest is the default in ebiten.
 	}
 }
 func (s *Sprite) Append(src Source, loc Location) {
@@ -98,7 +101,6 @@ func (s Sprite) Draw(dst Image, op Op) {
 	if s.Outer != nil {
 		s.Add(s.Outer.Position)
 	}
-	// leftTop := s.LeftTop(ImageSize(screen))
 	leftTop := s.LeftTop(dst.Size())
 	op.GeoM.Translate(leftTop.XY())
 	op.Filter = s.Filter
@@ -130,3 +132,5 @@ func (s Sprite) LeftTop(screenSize Vector2) (v Vector2) {
 //	func NewSpriteFromImage(i *ebiten.Image) Sprite {
 //		return Sprite{Source: Image{i}}
 //	}
+
+// Todo: let Sprite skip calculating Inners' Position when Outer's Size is fixed

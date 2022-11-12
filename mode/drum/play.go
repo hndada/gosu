@@ -134,8 +134,6 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		Time:    s.Now,
 		Staged:  s.StagedShake,
 		Sprites: s.ShakeSprites,
-		// BorderSprite: s.ShakeBorderSprite,
-		// ShakeSprite:  s.ShakeSprite,
 	}
 	s.RollDrawer = RollDrawer{
 		Time:        s.Now,
