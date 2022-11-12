@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hndada/gosu/format/osr"
-	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/framework/input"
+	"github.com/hndada/gosu/game/format/osr"
+	"github.com/hndada/gosu/game/format/osu"
 )
 
 const (

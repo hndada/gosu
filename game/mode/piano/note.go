@@ -3,8 +3,8 @@ package piano
 import (
 	"sort"
 
-	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/format/osu"
 )
 
 const (

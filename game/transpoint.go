@@ -4,7 +4,7 @@ import (
 	"math"
 	"sort"
 
-	"github.com/hndada/gosu/format/osu"
+	"github.com/hndada/gosu/game/format/osu"
 )
 
 type TransPoint struct {

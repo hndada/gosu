@@ -5,10 +5,10 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/framework/audios"
 	"github.com/hndada/gosu/framework/draws"
 	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/format/osr"
 )
 
 type ScenePlay struct {

@@ -4,8 +4,8 @@ import (
 	"math"
 	"sort"
 
-	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/format/osu"
 )
 
 // Drum note has 3 components: Color, Size, Type(Note, Roll, Shake).
