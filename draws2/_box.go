@@ -14,6 +14,26 @@ func NewBox(inner [][]Sprite) Box {
 	return Box{}
 }
 
+// Inners' relative position is pre-calculated and fixed unless Box's Size has fixed.
+func (b *Box) SetSize(w, h float64) {
+	outer := b
+	b.Sprite.SetSize(w, h)
+	for i := range b.Inners {
+		var offset Position
+		// if i>=1{
+		// 	offset.Y=b.Inners[i-1][0].Max
+		// }
+		for j, inner := range b.Inners[i] {
+			p := b.Padding
+			p.X += []float64{0, outer.W()/2 - inner.W()/2, outer.W() - inner.W()}[b.Align.X]
+			p.Y += []float64{0, outer.H()/2 - inner.H()/2, outer.H() - inner.H()}[b.Align.Y]
+			p.X += []float64{0, inner.W() / 2, inner.W()}[inner.Origin.X]
+			p.Y += []float64{0, inner.H() / 2, inner.H()}[inner.Origin.Y]
+			b.Inners[i][j].Position = p
+		}
+	}
+}
+
 // Todo: recalculate inners' Position when Box's Size goes changed
 func NewSimpleBox(sprite Sprite, padding Vector2, align Align) (b Box) {
 	b.Sprite = sprite

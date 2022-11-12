@@ -45,6 +45,6 @@ func (b *Button) Update() {
 		}
 	}
 }
-func (b *Button) Draw(screen *ebiten.Image, op ebiten.DrawImageOptions) {
-	b.Sprite.Draw(screen, op)
+func (b *Button) Draw(dst Image, op Op) {
+	b.Sprite.Draw(dst, op)
 }
