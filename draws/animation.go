@@ -8,7 +8,7 @@ func NewAnimation(path string) Animation {
 func NewAnimationFromImages(images []Image) (a Animation) {
 	a = make(Animation, len(images))
 	for i, image := range images {
-		a[i] = NewSprite(image)
+		a[i] = NewSpriteFromSource(image)
 	}
 	return
 }

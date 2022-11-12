@@ -93,12 +93,12 @@ func LoadSkin() {
 		GeneralSkin.JudgmentSprites[i] = animation
 	}
 	var (
-		keyImages          [2]*ebiten.Image
-		keyLightingImage   *ebiten.Image
-		hitLightingImages  []*ebiten.Image
-		holdLightingImages []*ebiten.Image
-		noteImages         [4][4][]*ebiten.Image // First 4 is a type, next 4 is a kind.
-		hintImage          *ebiten.Image
+		keyImages          [2]draws.Image
+		keyLightingImage   draws.Image
+		hitLightingImages  []draws.Image
+		holdLightingImages []draws.Image
+		noteImages         [4][4][]draws.Image // First 4 is a type, next 4 is a kind.
+		hintImage          draws.Image
 	)
 	for i, name := range []string{"up", "down"} {
 		keyImages[i] = draws.NewImage(fmt.Sprintf("skin/piano/key/%s.png", name))
@@ -140,13 +140,13 @@ func LoadSkin() {
 			w := math.Ceil(noteWidths[kind])
 			x += w / 2
 			for i, img := range keyImages {
-				sprite := draws.NewSpriteFromImage(img)
+				sprite := draws.NewSpriteFromSource(img)
 				sprite.SetSize(w, screenSizeY-HitPosition)
 				sprite.Locate(x, HitPosition, draws.CenterTop)
 				skin.KeySprites[k][i] = sprite
 			}
 			{
-				sprite := draws.NewSpriteFromImage(keyLightingImage)
+				sprite := draws.NewSpriteFromSource(keyLightingImage)
 				sprite.SetScaleToW(w)
 				sprite.Locate(x, HitPosition, draws.CenterBottom) // -HintHeight
 				skin.KeyLightingSprites[k] = sprite
@@ -177,23 +177,23 @@ func LoadSkin() {
 			}
 			x += w / 2
 		}
-		{
+		{ // Todo: ebiten.NewImage() -> draws.NewImage()
 			src := ebiten.NewImage(int(wsum), screenSizeY)
 			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
-			sprite := draws.NewSpriteFromImage(src)
+			sprite := draws.NewSpriteFromSource(draws.Image{Image: src})
 			sprite.Locate(FieldPosition, 0, draws.CenterTop)
 			skin.FieldSprite = sprite
 		}
 		{
-			sprite := draws.NewSpriteFromImage(hintImage)
+			sprite := draws.NewSpriteFromSource(hintImage)
 			sprite.SetSize(wsum, HintHeight)
 			sprite.Locate(FieldPosition, HitPosition-HintHeight, draws.CenterTop)
 			skin.HintSprite = sprite
 		}
 		{
 			src := ebiten.NewImage(int(wsum), 1)
-			src.Fill(color.NRGBA{255, 255, 255, 255}) // White
-			sprite := draws.NewSpriteFromImage(src)
+			src.Fill(color.White)
+			sprite := draws.NewSpriteFromSource(draws.Image{Image: src})
 			sprite.Locate(FieldPosition, HitPosition, draws.CenterBottom)
 			skin.BarSprite = sprite
 		}

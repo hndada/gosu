@@ -256,7 +256,7 @@ func (s *ScenePlay) Update() any {
 	}
 	return nil
 }
-func (s ScenePlay) Draw(screen *ebiten.Image) {
+func (s ScenePlay) Draw(screen draws.Image) {
 	s.BackgroundDrawer.Draw(screen)
 	s.FieldDrawer.Draw(screen)
 	s.BarDrawer.Draw(screen)
@@ -277,8 +277,8 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.DebugPrint(screen)
 }
 
-func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
-	ebitenutil.DebugPrint(screen, fmt.Sprintf(
+func (s ScenePlay) DebugPrint(screen draws.Image) {
+	ebitenutil.DebugPrint(screen.Image, fmt.Sprintf(
 		"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\nExtra: %.2f%%\nJudgment counts: %v\n\n"+

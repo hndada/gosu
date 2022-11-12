@@ -83,7 +83,7 @@ var (
 	HintHeight        float64 = screenSizeY * 0.04
 	LightingScale     float64 = 1.0
 	KeyLightingOpaque float64 = 0.5
-	HitLightingOpaque float64 = 1
+	HitLightingOpaque float64 = 1 // Todo: set color per note kind
 )
 
 func SwitchDirection() {

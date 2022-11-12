@@ -131,10 +131,11 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene gosu.Scene, err error) {
 		Sprites: s.JudgmentSprites,
 	}
 	s.ShakeDrawer = ShakeDrawer{
-		Time:         s.Now,
-		Staged:       s.StagedShake,
-		BorderSprite: s.ShakeBorderSprite,
-		ShakeSprite:  s.ShakeSprite,
+		Time:    s.Now,
+		Staged:  s.StagedShake,
+		Sprites: s.ShakeSprites,
+		// BorderSprite: s.ShakeBorderSprite,
+		// ShakeSprite:  s.ShakeSprite,
 	}
 	s.RollDrawer = RollDrawer{
 		Time:        s.Now,
@@ -321,7 +322,7 @@ func (s *ScenePlay) Update() any {
 	}
 	return nil
 }
-func (s ScenePlay) Draw(screen *ebiten.Image) {
+func (s ScenePlay) Draw(screen draws.Image) {
 	// screen.Fill(color.NRGBA{0, 255, 0, 255}) // Chroma-key
 	s.BackgroundDrawer.Draw(screen)
 	s.StageDrawer.Draw(screen)
@@ -340,8 +341,8 @@ func (s ScenePlay) Draw(screen *ebiten.Image) {
 	s.DebugPrint(screen)
 }
 
-func (s ScenePlay) DebugPrint(screen *ebiten.Image) {
-	ebitenutil.DebugPrint(screen, fmt.Sprintf(
+func (s ScenePlay) DebugPrint(screen draws.Image) {
+	ebitenutil.DebugPrint(screen.Image, fmt.Sprintf(
 		"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"+
 			"Press ESC to select a song.\nPress TAB to pause.\n\n"+
 			"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+

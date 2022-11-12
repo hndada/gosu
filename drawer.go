@@ -17,7 +17,7 @@ type BackgroundDrawer struct {
 	Sprite     draws.Sprite
 }
 
-func (d BackgroundDrawer) Draw(screen *ebiten.Image) {
+func (d BackgroundDrawer) Draw(screen draws.Image) {
 	op := ebiten.DrawImageOptions{}
 	op.ColorM.ChangeHSV(0, 1, *d.Brightness)
 	d.Sprite.Draw(screen, op)
@@ -48,7 +48,7 @@ func (d *NumberDrawer) Update(combo int) {
 }
 
 // ComboDrawer's Draw draws each number at constant x regardless of their widths.
-func (d NumberDrawer) Draw(screen *ebiten.Image) {
+func (d NumberDrawer) Draw(screen draws.Image) {
 	if d.Done() {
 		return
 	}
@@ -109,7 +109,7 @@ func (d *ScoreDrawer) Update(score float64) {
 }
 
 // NumberDrawer's Draw draws each number at the center of constant-width bound.
-func (d ScoreDrawer) Draw(screen *ebiten.Image) {
+func (d ScoreDrawer) Draw(screen draws.Image) {
 	if d.Done() {
 		return
 	}
@@ -186,7 +186,7 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 			draw.Draw(src, rect, &image.Uniform{clr}, image.Point{}, draw.Src)
 		}
 		i := ebiten.NewImageFromImage(src)
-		base := draws.NewSpriteFromImage(i)
+		base := draws.NewSpriteFromSource(draws.Image{Image: i})
 		base.Locate(screenSizeX/2, screenSizeY, draws.CenterBottom)
 		d.Meter = base
 	}
@@ -194,7 +194,7 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 		src := ebiten.NewImage(int(MeterWidth), int(MeterHeight))
 		src.Fill(colorRed)
 		i := ebiten.NewImageFromImage(src)
-		anchor := draws.NewSpriteFromImage(i)
+		anchor := draws.NewSpriteFromSource(draws.Image{Image: i})
 		anchor.Locate(screenSizeX/2, screenSizeY, draws.CenterBottom)
 		d.Anchor = anchor
 	}
@@ -202,7 +202,7 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 		src := ebiten.NewImage(int(MeterWidth), int(MeterHeight))
 		src.Fill(colorWhite)
 		i := ebiten.NewImageFromImage(src)
-		unit := draws.NewSpriteFromImage(i)
+		unit := draws.NewSpriteFromSource(draws.Image{Image: i})
 		unit.Locate(screenSizeX/2, screenSizeY, draws.CenterBottom)
 		d.Unit = unit
 	}
@@ -228,7 +228,7 @@ func (d *MeterDrawer) Update() {
 	}
 	d.Marks = d.Marks[cursor:] // Drop old marks.
 }
-func (d MeterDrawer) Draw(screen *ebiten.Image) {
+func (d MeterDrawer) Draw(screen draws.Image) {
 	d.Meter.Draw(screen, ebiten.DrawImageOptions{})
 	d.Anchor.Draw(screen, ebiten.DrawImageOptions{})
 	for _, m := range d.Marks {

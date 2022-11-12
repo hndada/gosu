@@ -3,6 +3,7 @@ package draws
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"os"
 	"path/filepath"
 	"sort"
@@ -26,6 +27,19 @@ func (i Image) Size() Vector2 {
 func (i Image) Draw(dst Image, op Op) {
 	dst.Image.DrawImage(i.Image, &op)
 }
+
+func LoadImage(path string) Image {
+	return NewImage(path)
+}
+
+func LoadImageImage(path string) image.Image {
+	return NewImageImage(path)
+}
+
+func NewImage2(w, h float64) Image {
+	return Image{ebiten.NewImage(int(w), int(h))}
+}
+func (i Image) Fill(color color.Color) { i.Image.Fill(color) }
 
 // NewImage returns nil when fails to load image from the path.
 func NewImage(path string) Image {
@@ -104,6 +118,15 @@ func NewImageScaled(src Image, scale float64) Image {
 	op := Op{}
 	op.GeoM.Scale(scale, scale)
 	op.GeoM.Translate(0, size.Y)
+	// op.ColorM.ScaleWithColor(color.Transparent)
+	src.Draw(dst, op)
+	return dst
+}
+func NewImageColored(src Image, color color.Color) Image {
+	size := src.Size()
+	dst := Image{ebiten.NewImage(size.XYInt())}
+	op := Op{}
+	op.ColorM.ScaleWithColor(color)
 	src.Draw(dst, op)
 	return dst
 }

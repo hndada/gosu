@@ -31,7 +31,10 @@ type Sprite struct {
 	AxisReversed [2]bool
 }
 
-func NewSprite(src Source) Sprite {
+func NewSprite(path string) Sprite {
+	return NewSpriteFromSource(NewImage(path))
+}
+func NewSpriteFromSource(src Source) Sprite {
 	return Sprite{
 		Source: src,
 		Scale:  Vector2{1, 1},
@@ -41,7 +44,7 @@ func NewSprite(src Source) Sprite {
 }
 func (s *Sprite) Append(src Source, loc Location) {
 	outer := s
-	inner := NewSprite(src)
+	inner := NewSpriteFromSource(src)
 	inner.Outer = outer
 	if ratio := loc.X; ratio <= 1 {
 		inner.X += (outer.W() - s.W()) * ratio

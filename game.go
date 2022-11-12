@@ -4,6 +4,7 @@ import (
 	"runtime/debug"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
 )
 
@@ -12,7 +13,8 @@ type Game struct {
 }
 type Scene interface {
 	Update() any
-	Draw(screen *ebiten.Image)
+	// Draw(screen *ebiten.Image)
+	Draw(screen draws.Image)
 }
 
 var (
@@ -104,7 +106,7 @@ func (g *Game) Update() (err error) {
 	return
 }
 func (g *Game) Draw(screen *ebiten.Image) {
-	g.Scene.Draw(screen)
+	g.Scene.Draw(draws.Image{Image: screen})
 }
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return screenSizeX, screenSizeY
