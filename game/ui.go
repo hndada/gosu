@@ -6,14 +6,15 @@ import (
 	"time"
 
 	"github.com/hndada/gosu/framework/draws"
+	"github.com/hndada/gosu/game/db"
 )
 
 // Todo: different face on same Sprite (or Box, or sth)
-func (c ChartInfo) NewChartPanel() (panel draws.Sprite) {
+func NewChartPanel(c db.Chart) (panel draws.Sprite) {
 	i := draws.NewImage(800, 225)
 	i.Fill(color.Black)
 	panel = draws.NewSpriteFromSource(i)
-	panel.Locate(screenSizeX/2, screenSizeY/2, draws.CenterMiddle)
+	panel.Locate(100, 100, draws.CenterMiddle)
 	{
 		t := c.MusicName
 		text := draws.NewText(t, draws.LoadDefaultFace(24))
@@ -74,9 +75,6 @@ func (c ChartInfo) NewChartPanel() (panel draws.Sprite) {
 		src := draws.NewSpriteFromSource(text)
 		panel.Append(src, draws.Location{X: 0.85, Y: 1})
 	}
-	// pp := panel.Inners[0]
-	// pp.Source = nil
-	// spew.Dump(pp)
 	fmt.Printf("%+v\n", panel)
 	return
 }

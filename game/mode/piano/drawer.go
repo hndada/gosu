@@ -2,7 +2,8 @@ package piano
 
 import (
 	"github.com/hndada/gosu/framework/draws"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/framework/scene"
+	"github.com/hndada/gosu/game/mode"
 )
 
 type FieldDrawer struct {
@@ -246,7 +247,7 @@ func (d HoldLightingDrawer) Draw(dst draws.Image) {
 type JudgmentDrawer struct {
 	draws.Timer
 	Sprites  [5]draws.Animation
-	Judgment game.Judgment
+	Judgment mode.Judgment
 }
 
 func NewJudgmentDrawer() (d JudgmentDrawer) {
@@ -254,11 +255,11 @@ func NewJudgmentDrawer() (d JudgmentDrawer) {
 	count := float64(len(GeneralSkin.JudgmentSprites))
 	period := int64(frameDuration * count)
 	return JudgmentDrawer{
-		Timer:   draws.NewTimer(game.TimeToTick(250), game.TimeToTick(period)),
+		Timer:   draws.NewTimer(scene.ToTick(250), scene.ToTick(period)),
 		Sprites: GeneralSkin.JudgmentSprites,
 	}
 }
-func (d *JudgmentDrawer) Update(worst game.Judgment) {
+func (d *JudgmentDrawer) Update(worst mode.Judgment) {
 	d.Ticker()
 	if worst.Valid() {
 		d.Judgment = worst

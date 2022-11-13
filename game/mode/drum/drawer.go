@@ -5,7 +5,7 @@ import (
 	"math/rand"
 
 	"github.com/hndada/gosu/framework/draws"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/mode"
 )
 
 type StageDrawer struct {
@@ -345,13 +345,13 @@ func (d DancerDrawer) Draw(dst draws.Image) {
 type JudgmentDrawer struct {
 	draws.Timer
 	Sprites     [2][3]draws.Animation
-	judgment    game.Judgment
+	judgment    mode.Judgment
 	big         bool
 	startRadian float64
 	radian      float64
 }
 
-func (d *JudgmentDrawer) Update(j game.Judgment, big bool) {
+func (d *JudgmentDrawer) Update(j mode.Judgment, big bool) {
 	d.Ticker()
 	if !j.Valid() {
 		return

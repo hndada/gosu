@@ -4,7 +4,7 @@ import (
 	"math"
 	"sort"
 
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/chart"
 	"github.com/hndada/gosu/game/format/osu"
 )
 
@@ -36,7 +36,7 @@ type Note struct {
 	Duration int64
 	length   float64 // For compatibility with osu!.
 	Tick     int     // The number of ticks in Roll or Shake.
-	game.Sample
+	chart.Sample
 
 	Marked  bool
 	HitTick int // The number of ticks being hit.
@@ -48,7 +48,7 @@ func NewNote(f any) (n *Note) {
 	switch f := f.(type) {
 	case osu.HitObject:
 		n = &Note{
-			Sample: game.NewSample(f),
+			Sample: chart.NewSample(f),
 		}
 		n.Time = int64(f.Time)
 		switch {

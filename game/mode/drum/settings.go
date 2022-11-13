@@ -7,8 +7,8 @@ import (
 
 // Logical size of in-game screen.
 const (
-	screenSizeX = game.ScreenSizeX
-	screenSizeY = game.ScreenSizeY
+	ScreenSizeX = game.ScreenSizeX
+	ScreenSizeY = game.ScreenSizeY
 )
 
 var SpeedScale float64 = 1.0
@@ -23,18 +23,18 @@ const PositionMargin = 100
 // Todo: generalize Dancer for all modes?
 var (
 	FieldDarkness float64 = 0.7
-	FieldPosition float64 = screenSizeY * 0.4115
-	FieldHeight   float64 = screenSizeY * 0.26
+	FieldPosition float64 = ScreenSizeY * 0.4115
+	FieldHeight   float64 = ScreenSizeY * 0.26
 
 	// Height of notes are dependent of FieldHeight.
 	bigNoteHeight     float64 = FieldHeight * 0.725
 	regularNoteHeight float64 = bigNoteHeight * 0.65
 
-	HitPosition     float64 = screenSizeX * 0.1875
+	HitPosition     float64 = ScreenSizeX * 0.1875
 	minPosition     float64 = -HitPosition - PositionMargin
-	maxPosition     float64 = -HitPosition + screenSizeX + PositionMargin
-	DancerPositionX float64 = screenSizeX * 0.1
-	DancerPositionY float64 = screenSizeY * 0.175
+	maxPosition     float64 = -HitPosition + ScreenSizeX + PositionMargin
+	DancerPositionX float64 = ScreenSizeX * 0.1
+	DancerPositionY float64 = ScreenSizeY * 0.175
 )
 
 // Skin-dependent settings.
@@ -45,7 +45,7 @@ var (
 	ShakeScale       float64 = 1
 	DancerScale      float64 = 0.75 // 0.6
 	ComboScale       float64 = 0.75 // 1.25
-	ComboDigitGap    float64 = screenSizeX * -0.001
+	ComboDigitGap    float64 = ScreenSizeX * -0.001
 )
 
 func SwitchDirection() {

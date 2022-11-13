@@ -3,7 +3,7 @@ package piano
 import (
 	"sort"
 
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/chart"
 	"github.com/hndada/gosu/game/format/osu"
 )
 
@@ -20,7 +20,7 @@ type Note struct {
 	Type     int
 	Key      int
 	Position float64 // Scaled x or y value.
-	game.Sample
+	chart.Sample
 	Marked bool
 	Next   *Note
 	Prev   *Note // For accessing to Head from Tail.
@@ -33,7 +33,7 @@ func NewNote(f any, keyCount int) (ns []*Note) {
 			Time:   int64(f.Time),
 			Type:   Normal,
 			Key:    f.Column(keyCount),
-			Sample: game.NewSample(f),
+			Sample: chart.NewSample(f),
 		}
 		if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
 			n.Type = Head

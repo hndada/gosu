@@ -5,10 +5,10 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
-// Logical size of in-game screen
+// Logical size of in-game screen.
 const (
-	screenSizeX = game.ScreenSizeX
-	screenSizeY = game.ScreenSizeY
+	ScreenSizeX = game.ScreenSizeX
+	ScreenSizeY = game.ScreenSizeY
 )
 
 var SpeedScale float64 = 1.0
@@ -38,7 +38,7 @@ func init() {
 	for k, ws := range NoteWidthsMap {
 		ws2 := ws
 		for i, w := range ws2 {
-			ws2[i] = screenSizeX * w
+			ws2[i] = ScreenSizeX * w
 		}
 		NoteWidthsMap[k] = ws2
 	}
@@ -48,21 +48,21 @@ func init() {
 // Todo: Should NoteHeight be separated into NoteHeight, HeadHeight, TailHeight?
 var (
 	FieldDarkness float64 = 0.8 // Todo: FieldDarkness -> FieldOpaque
-	FieldPosition float64 = screenSizeX * 0.5
+	FieldPosition float64 = ScreenSizeX * 0.5
 
-	HitPosition float64 = screenSizeY * 0.90 // The bottom y-value of Hint,  not a middle or top.
+	HitPosition float64 = ScreenSizeY * 0.90 // The bottom y-value of Hint,  not a middle or top.
 
 	// positionMargin should be larger than MaxSize/2 of all note sprites' width or height.
 	positionMargin float64 = 100
 	maxPosition    float64 = HitPosition + positionMargin
-	minPosition    float64 = HitPosition - screenSizeY - positionMargin
+	minPosition    float64 = HitPosition - ScreenSizeY - positionMargin
 
-	NoteHeigth    float64 = screenSizeY * 0.05 // Applies to all notes
+	NoteHeigth    float64 = ScreenSizeY * 0.05 // Applies to all notes
 	TailExtraTime float64 = 0
 	// bodyLoss   float64 = NoteHeigth // Head/2 + Tail/2.
 
-	ComboPosition    float64 = screenSizeY * 0.40
-	JudgmentPosition float64 = screenSizeY * 0.66
+	ComboPosition    float64 = ScreenSizeY * 0.40
+	JudgmentPosition float64 = ScreenSizeY * 0.66
 )
 
 const (
@@ -78,9 +78,9 @@ var (
 
 	ScoreScale        float64 = 0.65
 	ComboScale        float64 = 0.75
-	ComboDigitGap     float64 = screenSizeX * -0.0008
+	ComboDigitGap     float64 = ScreenSizeX * -0.0008
 	JudgmentScale     float64 = 0.33
-	HintHeight        float64 = screenSizeY * 0.04
+	HintHeight        float64 = ScreenSizeY * 0.04
 	LightingScale     float64 = 1.0
 	KeyLightingOpaque float64 = 0.5
 	HitLightingOpaque float64 = 1 // Todo: set color per note kind

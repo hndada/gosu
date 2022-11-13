@@ -3,20 +3,21 @@ package piano
 import (
 	"crypto/md5"
 	"fmt"
-	"os"
+	"io/fs"
 	"path/filepath"
-	"strings"
 
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/chart"
 	"github.com/hndada/gosu/game/format/osu"
 )
 
 // Level, ScoreFactors, MD5 will not exported to file.
 type Chart struct {
-	game.ChartHeader
-	MD5         [16]byte
+	chart.Header
+	MD5  [16]byte
+	Mods interface{}
+
 	KeyCount    int
-	TransPoints []*game.TransPoint
+	TransPoints []*chart.TransPoint
 	Notes       []*Note
 	Bars        []*Bar
 
@@ -28,27 +29,28 @@ type Chart struct {
 // Positions of notes and bars at time = 0 are calculated in advance.
 // In every Update(), only current cursor's Position is calculated.
 // Notes and bars are drawn based on the difference between their positions and cursor's.
-func NewChart(cpath string) (c *Chart, err error) {
-	var f any
-	dat, err := os.ReadFile(cpath)
+func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
+	var dat []byte
+	dat, err = fs.ReadFile(fsys, name)
 	if err != nil {
 		return
 	}
-	switch strings.ToLower(filepath.Ext(cpath)) {
-	case ".osu":
+	var f any // f stands for Format. // Todo: f -> _type?
+	switch filepath.Ext(name) {
+	case ".osu", ".OSU":
 		f, err = osu.Parse(dat)
 		if err != nil {
 			return
 		}
 	}
 	c = new(Chart)
-	c.ChartHeader = game.NewChartHeader(f)
+	c.Header = chart.NewHeader(f)
 	c.MD5 = md5.Sum(dat)
 	switch f := f.(type) {
 	case *osu.Format:
 		c.KeyCount = int(f.CircleSize)
 	}
-	c.TransPoints = game.NewTransPoints(f)
+	c.TransPoints = chart.NewTransPoints(f)
 	if len(c.TransPoints) == 0 {
 		err = fmt.Errorf("no TransPoints in the chart")
 		return
@@ -89,7 +91,7 @@ func NewChart(cpath string) (c *Chart, err error) {
 		}
 		b.Position = tp.Position + float64(b.Time-tp.Time)*tp.Speed
 	}
-	c.Level, c.ScoreFactors = game.Level(c)
+	c.Level, c.ScoreFactors = chart.Level(c)
 	return
 }
 
@@ -118,30 +120,31 @@ func (c Chart) NoteCountString() string {
 	return fmt.Sprintf("Notes: %d\nLN: %.0f%%", total, ratio*100)
 }
 func (c Chart) BPMs() (main, min, max float64) {
-	return game.BPMs(c.TransPoints, c.Duration())
+	return chart.BPMs(c.TransPoints, c.Duration())
 }
-func NewChartInfo(cpath string) (info game.ChartInfo, err error) {
-	c, err := NewChart(cpath)
-	if err != nil {
-		return
-	}
-	// mode := game.ModePiano4
-	// if c.KeyCount > 4 {
-	// 	mode = game.ModePiano7
-	// }
-	main, min, max := c.BPMs()
-	info = game.ChartInfo{
-		Path: cpath,
-		// Mods:       mods,
-		ChartHeader: c.ChartHeader,
-		// Mode:        mode,
-		// SubMode:     c.KeyCount,
-		Level:      c.Level,
-		Duration:   c.Duration(),
-		NoteCounts: c.NoteCounts(),
-		MainBPM:    main,
-		MinBPM:     min,
-		MaxBPM:     max,
-	}
-	return
-}
+
+// func NewChartInfo(cpath string) (info game.ChartInfo, err error) {
+// 	c, err := NewChart(cpath)
+// 	if err != nil {
+// 		return
+// 	}
+// 	// mode := game.ModePiano4
+// 	// if c.KeyCount > 4 {
+// 	// 	mode = game.ModePiano7
+// 	// }
+// 	main, min, max := c.BPMs()
+// 	info = game.ChartInfo{
+// 		Path: cpath,
+// 		// Mods:       mods,
+// 		Header: c.Header,
+// 		// Mode:        mode,
+// 		// SubMode:     c.KeyCount,
+// 		Level:      c.Level,
+// 		Duration:   c.Duration(),
+// 		NoteCounts: c.NoteCounts(),
+// 		MainBPM:    main,
+// 		MinBPM:     min,
+// 		MaxBPM:     max,
+// 	}
+// 	return
+// }

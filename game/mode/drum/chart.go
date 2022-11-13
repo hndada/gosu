@@ -3,12 +3,12 @@ package drum
 import (
 	"crypto/md5"
 	"fmt"
-	"os"
+	"io/fs"
 	"path/filepath"
-	"strings"
 
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/chart"
 	"github.com/hndada/gosu/game/format/osu"
+	"github.com/hndada/gosu/game/mode"
 )
 
 type Floater struct {
@@ -21,9 +21,9 @@ func (f Floater) Position(time int64) float64 {
 }
 
 type Chart struct {
-	game.ChartHeader
+	chart.Header
 	MD5         [16]byte
-	TransPoints []*game.TransPoint
+	TransPoints []*chart.TransPoint
 	Notes       []*Note
 	Rolls       []*Note
 	Shakes      []*Note
@@ -42,13 +42,14 @@ var (
 
 // NewChart takes file path as input for starting with parsing.
 // Chart data should not rely on the ChartInfo; users may have modified it.
-func NewChart(cpath string) (c *Chart, err error) {
-	var f any
-	dat, err := os.ReadFile(cpath)
+func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
+	var dat []byte
+	dat, err = fs.ReadFile(fsys, name)
 	if err != nil {
 		return
 	}
-	switch strings.ToLower(filepath.Ext(cpath)) {
+	var f any
+	switch filepath.Ext(name) {
 	case ".osu":
 		f, err = osu.Parse(dat)
 		if err != nil {
@@ -56,9 +57,11 @@ func NewChart(cpath string) (c *Chart, err error) {
 		}
 	}
 	c = new(Chart)
-	c.ChartHeader = game.NewChartHeader(f)
+	c.Header = chart.NewHeader(f)
+	c.Mode, c.SubMode = mode.ModeDrum, 4
+
 	c.MD5 = md5.Sum(dat)
-	c.TransPoints = game.NewTransPoints(f)
+	c.TransPoints = chart.NewTransPoints(f)
 	if len(c.TransPoints) == 0 {
 		err = fmt.Errorf("no TransPoints in the chart")
 		return
@@ -70,7 +73,7 @@ func NewChart(cpath string) (c *Chart, err error) {
 	}
 
 	c.Notes, c.Rolls, c.Shakes = NewNotes(f)
-	var tp *game.TransPoint
+	var tp *chart.TransPoint
 	for _, ns := range [][]*Note{c.Notes, c.Rolls, c.Shakes} {
 		tp = c.TransPoints[0]
 		for _, n := range ns {
@@ -104,7 +107,7 @@ func NewChart(cpath string) (c *Chart, err error) {
 		}
 		b.Speed = tp.Speed
 	}
-	c.Level, c.ScoreFactors = game.Level(c)
+	c.Level, c.ScoreFactors = chart.Level(c)
 	return
 }
 
@@ -133,29 +136,7 @@ func (c Chart) NoteCounts() (vs []int) {
 	return
 }
 func (c Chart) BPMs() (main, min, max float64) {
-	return game.BPMs(c.TransPoints, c.Duration())
-}
-func NewChartInfo(cpath string) (info game.ChartInfo, err error) {
-	c, err := NewChart(cpath)
-	if err != nil {
-		return
-	}
-	// mode := game.ModeDrum
-	main, min, max := c.BPMs()
-	info = game.ChartInfo{
-		Path: cpath,
-		// Mods:       mods,
-		ChartHeader: c.ChartHeader,
-		// Mode:        mode,
-		// SubMode:     0,
-		Level:      c.Level,
-		Duration:   c.Duration(),
-		NoteCounts: c.NoteCounts(),
-		MainBPM:    main,
-		MinBPM:     min,
-		MaxBPM:     max,
-	}
-	return
+	return chart.BPMs(c.TransPoints, c.Duration())
 }
 
 // It is proved that all BPMs are set into [min, max) by v*2 or v/2 if 2 * min >= max.
@@ -177,3 +158,26 @@ func ScaledBPM(bpm float64) float64 {
 	}
 	return bpm
 }
+
+// func NewChartInfo(cpath string) (info game.ChartInfo, err error) {
+// 	c, err := NewChart(cpath)
+// 	if err != nil {
+// 		return
+// 	}
+// 	// mode := game.ModeDrum
+// 	main, min, max := c.BPMs()
+// 	info = game.ChartInfo{
+// 		Path: cpath,
+// 		// Mods:       mods,
+// 		Header: c.Header,
+// 		// Mode:        mode,
+// 		// SubMode:     0,
+// 		Level:      c.Level,
+// 		Duration:   c.Duration(),
+// 		NoteCounts: c.NoteCounts(),
+// 		MainBPM:    main,
+// 		MinBPM:     min,
+// 		MaxBPM:     max,
+// 	}
+// 	return
+// }

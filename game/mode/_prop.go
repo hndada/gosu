@@ -1,4 +1,4 @@
-package game
+package mode
 
 import (
 	"path/filepath"
@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/hndada/gosu/framework/input"
+	"github.com/hndada/gosu/framework/scene"
+	"github.com/hndada/gosu/game/db"
 	"github.com/hndada/gosu/game/format/osr"
 	"github.com/hndada/gosu/game/format/osu"
 )
@@ -22,7 +24,7 @@ const (
 type ModeProp struct {
 	Name           string
 	Mode           int
-	ChartInfos     []ChartInfo
+	ChartInfos     []db.Chart
 	Cursor         int                 // Todo: custom chart infos - custom cursor
 	Results        map[[16]byte]Result // md5.Size = 16
 	LastUpdateTime time.Time
@@ -31,8 +33,8 @@ type ModeProp struct {
 	// SpeedKeyHandler ctrl.KeyHandler
 	SpeedScale   *float64
 	Settings     map[string]*float64
-	NewChartInfo func(string) (ChartInfo, error)
-	NewScenePlay func(cpath string, rf *osr.Format) (Scene, error)
+	NewChartInfo func(string) (db.Chart, error)
+	NewScenePlay func(cpath string, rf *osr.Format) (scene.Scene, error)
 	ExposureTime func(float64) float64
 	KeySettings  map[int][]input.Key
 }

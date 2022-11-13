@@ -3,6 +3,7 @@ package piano
 import (
 	"fmt"
 	"image/color"
+	"io/fs"
 	"math"
 
 	_ "image/jpeg"
@@ -76,15 +77,18 @@ type Skin struct {
 
 var Skins = make(map[int]Skin)
 
-func LoadSkin() {
+// fsys = "skin"
+// Todo: need a test whether fsys is immutable
+func LoadSkin(fsys fs.FS) {
+	// defer func() { fmt.Printf("%+v\n", Skins[7]) }()
 	for i := 0; i < 10; i++ {
-		sprite := draws.NewSprite(fmt.Sprintf("skin/combo/%d.png", i))
+		sprite := draws.NewSprite(fsys, fmt.Sprintf("combo/%d.png", i))
 		sprite.ApplyScale(ComboScale)
 		sprite.Locate(FieldPosition, ComboPosition, draws.CenterMiddle)
 		GeneralSkin.ComboSprites[i] = sprite
 	}
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
-		animation := draws.NewAnimation(fmt.Sprintf("skin/piano/judgment/%s", name))
+		animation := draws.NewAnimation(fsys, fmt.Sprintf("piano/judgment/%s", name))
 		for i := range animation {
 			animation[i].ApplyScale(JudgmentScale)
 			animation[i].Locate(FieldPosition, JudgmentPosition, draws.CenterMiddle)
@@ -100,17 +104,17 @@ func LoadSkin() {
 		hintImage          draws.Image
 	)
 	for i, name := range []string{"up", "down"} {
-		keyImages[i] = draws.LoadImage(fmt.Sprintf("skin/piano/key/%s.png", name))
+		keyImages[i] = draws.LoadImage(fsys, fmt.Sprintf("piano/key/%s.png", name))
 	}
-	keyLightingImage = draws.LoadImage("skin/piano/key/lighting.png")
-	hitLightingImages = draws.LoadImages("skin/piano/lighting/hit")
-	holdLightingImages = draws.LoadImages("skin/piano/lighting/hold")
+	keyLightingImage = draws.LoadImage(fsys, "piano/key/lighting.png")
+	hitLightingImages = draws.LoadImages(fsys, "piano/lighting/hit")
+	holdLightingImages = draws.LoadImages(fsys, "piano/lighting/hold")
 	for i, _type := range []string{"normal", "head", "tail", "body"} {
 		for j, kind := range []int{1, 2, 3, 3} { // Todo: 4th note image with custom color settings?
-			noteImages[i][j] = draws.LoadImages(fmt.Sprintf("skin/piano/note/%s/%d", _type, kind))
+			noteImages[i][j] = draws.LoadImages(fsys, fmt.Sprintf("piano/note/%s/%d", _type, kind))
 		}
 	}
-	hintImage = draws.LoadImage("skin/piano/hint.png")
+	hintImage = draws.LoadImage(fsys, "piano/hint.png")
 
 	// Todo: Key count 1, 2, 3 and with scratch
 	for keyCount := 4; keyCount <= 10; keyCount++ {
@@ -140,7 +144,7 @@ func LoadSkin() {
 			x += w / 2
 			for i, img := range keyImages {
 				sprite := draws.NewSpriteFromSource(img)
-				sprite.SetSize(w, screenSizeY-HitPosition)
+				sprite.SetSize(w, ScreenSizeY-HitPosition)
 				sprite.Locate(x, HitPosition, draws.CenterTop)
 				skin.KeySprites[k][i] = sprite
 			}
@@ -177,7 +181,7 @@ func LoadSkin() {
 			x += w / 2
 		}
 		{
-			src := draws.NewImage(wsum, screenSizeY)
+			src := draws.NewImage(wsum, ScreenSizeY)
 			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
 			sprite := draws.NewSpriteFromSource(src)
 			sprite.Locate(FieldPosition, 0, draws.CenterTop)

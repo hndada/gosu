@@ -1,10 +1,10 @@
 package audios
 
 import (
+	"bytes"
 	"io"
-	"os"
+	"io/fs"
 	"path/filepath"
-	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2/audio"
 	"github.com/hajimehoshi/ebiten/v2/audio/mp3"
@@ -13,32 +13,28 @@ import (
 )
 
 var SampleRate = 44100
-
 var Context *audio.Context = audio.NewContext(SampleRate)
 
-// decode returns streamer, closer, and error.
-func decode(apath string) (io.ReadSeeker, func() error, error) { // apath stands for audio path.
-	var s io.ReadSeeker
-	f, err := os.Open(apath)
+func decode(fsys fs.FS, name string) (streamer io.ReadSeeker, close func() error, err error) {
+	// var f fs.File
+	// f, err = fsys.Open(name)
+	// if err != nil {
+	// 	return
+	// }
+	// close = f.Close
+	dat, err := fs.ReadFile(fsys, name)
 	if err != nil {
-		return nil, nil, err
+		return
 	}
-	switch strings.ToLower(filepath.Ext(apath)) {
-	case ".mp3":
-		s, err = mp3.DecodeWithSampleRate(SampleRate, io.ReadSeekCloser(f))
-		if err != nil {
-			return nil, f.Close, err
-		}
-	case ".wav":
-		s, err = wav.DecodeWithSampleRate(SampleRate, io.ReadSeekCloser(f))
-		if err != nil {
-			return nil, f.Close, err
-		}
-	case ".ogg":
-		s, err = vorbis.DecodeWithSampleRate(SampleRate, io.ReadSeekCloser(f))
-		if err != nil {
-			return nil, f.Close, err
-		}
+	r := bytes.NewReader(dat)
+	close = func() error { return nil } // Todo: need a test
+	switch filepath.Ext(name) {
+	case ".mp3", ".MP3":
+		streamer, err = mp3.DecodeWithSampleRate(SampleRate, r)
+	case ".wav", ".WAV":
+		streamer, err = wav.DecodeWithSampleRate(SampleRate, r)
+	case ".ogg", ".OGG":
+		streamer, err = vorbis.DecodeWithSampleRate(SampleRate, r)
 	}
-	return s, f.Close, nil
+	return
 }

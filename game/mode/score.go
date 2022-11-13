@@ -1,53 +1,6 @@
-package game
+package mode
 
-import (
-	"math"
-
-	"github.com/hndada/gosu/framework/input"
-)
-
-type Judgment struct {
-	Flow   float64
-	Acc    float64
-	Window int64
-	// Extra  bool // For distinguishing Big note at Drum mode.
-}
-
-// Is returns whether j and j2 are equal by its window size.
-func (j Judgment) Is(j2 Judgment) bool { return j.Window == j2.Window }
-
-// Valid returns whether j is not a blank judgment by its window size.
-func (j Judgment) Valid() bool { return j.Window != 0 }
-
-// func inRange(td int64, j Judgment) bool { return td < j.Window && td > -j.Window }
-
-// Verdict for normal notes, e.g., Note, Head at Piano mode.
-func Verdict(js []Judgment, a input.KeyAction, td int64) Judgment {
-	Miss := js[len(js)-1]
-	switch {
-	case td > Miss.Window:
-		// Does nothing.
-	case td < -Miss.Window:
-		return Miss
-	default: // In range
-		if a == input.Hit {
-			return Judge(js, td)
-		}
-	}
-	return Judgment{}
-}
-
-func Judge(js []Judgment, td int64) Judgment {
-	if td < 0 {
-		td *= -1
-	}
-	for _, j := range js {
-		if td <= j.Window {
-			return j
-		}
-	}
-	return Judgment{} // Returns None when the input is out of widest range
-}
+import "math"
 
 // Total score consists of 3 scores: Flow, Acc, and Kool rate score.
 // Flow score is calculated with sum of Flow. Flow once named as Karma.
@@ -132,10 +85,10 @@ func (s *Scorer) CalcScore(kind int, value, weight float64) {
 	}
 	s.Scores[kind] = s.MaxScores[kind] * scoreRate
 	s.ScoreBounds[kind] = s.MaxScores[kind] * boundRate
-	s.Scores[Total] = math.Floor(Sum(s.Scores[:Total]) + 0.1)
-	s.ScoreBounds[Total] = math.Floor(Sum(s.ScoreBounds[:Total]) + 0.1)
+	s.Scores[Total] = math.Floor(sum(s.Scores[:Total]) + 0.1)
+	s.ScoreBounds[Total] = math.Floor(sum(s.ScoreBounds[:Total]) + 0.1)
 }
-func Sum(vs []float64) (sum float64) {
+func sum(vs []float64) (sum float64) {
 	for _, v := range vs {
 		sum += v
 	}

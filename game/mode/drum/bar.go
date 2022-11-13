@@ -1,6 +1,6 @@
 package drum
 
-import "github.com/hndada/gosu/game"
+import "github.com/hndada/gosu/game/chart"
 
 type Bar struct {
 	Floater
@@ -8,7 +8,7 @@ type Bar struct {
 	Prev *Bar
 }
 
-func NewBars(transPoints []*game.TransPoint, duration int64) (bs []*Bar) {
+func NewBars(transPoints []*chart.TransPoint, duration int64) (bs []*Bar) {
 	var start, end, step float64 // Next time.
 
 	// Bar positions before first TransPoint.
@@ -29,7 +29,7 @@ func NewBars(transPoints []*game.TransPoint, duration int64) (bs []*Bar) {
 
 	// Bar positions after first TransPoint.
 	bs = bs[:len(bs)-1] // Drop for avoiding duplicattion
-	newBeatPoints := make([]*game.TransPoint, 0)
+	newBeatPoints := make([]*chart.TransPoint, 0)
 	for _, tp := range transPoints {
 		if tp.NewBeat {
 			newBeatPoints = append(newBeatPoints, tp)

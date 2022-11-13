@@ -1,6 +1,8 @@
 package draws
 
 import (
+	"io/fs"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
@@ -35,8 +37,8 @@ type Sprite struct {
 	AxisReversed [2]bool
 }
 
-func NewSprite(path string) Sprite {
-	return NewSpriteFromSource(LoadImage(path))
+func NewSprite(fsys fs.FS, name string) Sprite {
+	return NewSpriteFromSource(LoadImage(fsys, name))
 }
 func NewSpriteFromSource(src Source) Sprite {
 	return Sprite{
