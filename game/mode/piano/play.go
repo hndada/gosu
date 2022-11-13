@@ -2,27 +2,31 @@ package piano
 
 import (
 	"fmt"
+	"io/fs"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/framework/draws"
+	"github.com/hndada/gosu/framework/scene"
 	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/chart"
 	"github.com/hndada/gosu/game/format/osr"
+	"github.com/hndada/gosu/game/mode"
 )
 
 // ScenePlay: struct, PlayScene: function
 type ScenePlay struct {
 	Chart *Chart
-	game.Timer
-	game.MusicPlayer
-	// game.EffectPlayer
-	game.KeyLogger
+	scene.Timer
+	scene.MusicPlayer
+	// scene.EffectPlayer
+	scene.KeyLogger
 
-	*game.TransPoint
+	*chart.TransPoint
 	SpeedScale float64
 	Cursor     float64
 	Staged     []*Note
-	game.Scorer
+	mode.Scorer
 
 	Skin                // The skin may be applied some custom settings: on/off some sprites
 	BackgroundDrawer    game.BackgroundDrawer
@@ -41,29 +45,27 @@ type ScenePlay struct {
 }
 
 // Todo: add Mods
-func NewScenePlay(cpath string, rf *osr.Format) (scene game.Scene, err error) {
+func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (_scene scene.Scene, err error) {
 	s := new(ScenePlay)
-	s.Chart, err = NewChart(cpath)
+	s.Chart, err = NewChart(fsys, cname)
 	if err != nil {
 		return
 	}
 	c := s.Chart
-	game.SetTitle(c.ChartHeader)
+	game.SetTitle(c.Header)
 	keyCount := c.KeyCount & ScratchMask
-	s.Timer = game.NewTimer(c.Duration())
-	if path, ok := c.MusicPath(cpath); ok {
-		s.MusicPlayer, err = game.NewMusicPlayer(path, &s.Timer) //(game.MusicVolumeHandler, path)
-		if err != nil {
-			return
-		}
+	s.Timer = scene.NewTimer(c.Duration(), &game.Offset)
+	s.MusicPlayer, err = scene.NewMusicPlayer(fsys, c.MusicFilename, &s.Timer, &game.MusicVolume)
+	if err != nil {
+		return
 	}
-	// s.EffectPlayer = game.NewEffectPlayer(game.EffectVolumeHandler)
+	// s.EffectPlayer = scene.NewEffectPlayer(scene.EffectVolumeHandler)
 	// for _, n := range c.Notes {
 	// 	if path, ok := n.Sample.Path(cpath); ok {
 	// 		_ = s.Effects.Register(path)
 	// 	}
 	// }
-	s.KeyLogger = game.NewKeyLogger(KeySettings[keyCount])
+	s.KeyLogger = scene.NewKeyLogger(KeySettings[keyCount])
 	if rf != nil {
 		s.KeyLogger.FetchPressed = NewReplayListener(rf, keyCount, &s.Timer)
 	}
@@ -72,7 +74,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene game.Scene, err error) {
 	s.SpeedScale = 1
 	s.Cursor = float64(s.Now) * s.SpeedScale
 	s.SetSpeed()
-	s.Scorer = game.NewScorer(c.ScoreFactors)
+	s.Scorer = mode.NewScorer(c.ScoreFactors)
 	s.JudgmentCounts = make([]int, len(Judgments))
 	// s.Result.FlowMarks = make([]float64, 0, c.Duration()/1000)
 	var maxWeight float64
@@ -97,7 +99,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene game.Scene, err error) {
 		Brightness: &game.BackgroundBrightness,
 		Sprite:     game.DefaultBackground,
 	}
-	if bg := game.NewBackground(c.BackgroundPath(cpath)); bg.IsValid() {
+	if bg := game.NewBackground(fsys, c.ImageFilename); bg.IsValid() {
 		s.BackgroundDrawer.Sprite = bg
 	}
 	s.FieldDrawer = FieldDrawer{
@@ -120,26 +122,26 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene game.Scene, err error) {
 	s.HoldLightingDrawers = make([]HoldLightingDrawer, keyCount)
 	for k := 0; k < keyCount; k++ {
 		s.NoteDrawers[k] = NoteDrawer{
-			Timer:    draws.NewTimer(0, game.TimeToTick(400)), // Todo: make it BPM-dependent?
+			Timer:    draws.NewTimer(0, scene.ToTick(400)), // Todo: make it BPM-dependent?
 			Cursor:   s.Cursor,
 			Farthest: s.Staged[k],
 			Nearest:  s.Staged[k],
 			Sprites:  s.NoteSprites[k],
 		}
 		s.KeyDrawers[k] = KeyDrawer{
-			Timer:   draws.NewTimer(game.TimeToTick(30), 0),
+			Timer:   draws.NewTimer(scene.ToTick(30), 0),
 			Sprites: s.KeySprites[k],
 		}
 		s.KeyLightingDrawers[k] = KeyLightingDrawer{
-			Timer:  draws.NewTimer(game.TimeToTick(30), 0),
+			Timer:  draws.NewTimer(scene.ToTick(30), 0),
 			Sprite: s.KeyLightingSprites[k],
 		}
 		s.HitLightingDrawers[k] = HitLightingDrawer{
-			Timer:   draws.NewTimer(game.TimeToTick(150), game.TimeToTick(150)),
+			Timer:   draws.NewTimer(scene.ToTick(150), scene.ToTick(150)),
 			Sprites: s.HitLightingSprites[k],
 		}
 		s.HoldLightingDrawers[k] = HoldLightingDrawer{
-			Timer:   draws.NewTimer(0, game.TimeToTick(250)),
+			Timer:   draws.NewTimer(0, scene.ToTick(250)),
 			Sprites: s.HoldLightingSprites[k],
 		}
 	}
@@ -149,7 +151,7 @@ func NewScenePlay(cpath string, rf *osr.Format) (scene game.Scene, err error) {
 	s.JudgmentDrawer = NewJudgmentDrawer()
 	s.ScoreDrawer = game.NewScoreDrawer()
 	s.ComboDrawer = game.NumberDrawer{
-		Timer:      draws.NewTimer(game.TimeToTick(2000), 0),
+		Timer:      draws.NewTimer(scene.ToTick(2000), 0),
 		DigitWidth: s.ComboSprites[0].Size().X,
 		DigitGap:   ComboDigitGap,
 		Bounce:     0.85,
@@ -182,15 +184,15 @@ func (s *ScenePlay) SetSpeed() {
 // Todo: keep playing music when making SceneResult
 func (s *ScenePlay) Update() any {
 	defer s.Ticker()
-	if s.Done() {
+	if s.IsDone() {
 		s.MusicPlayer.Close()
-		return game.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
+		// return scene.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
 	}
 	s.MusicPlayer.Update()
 
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
-	var worst game.Judgment
+	var worst mode.Judgment
 	hits := make([]bool, s.Chart.KeyCount)
 	for _, n := range s.Staged {
 		if n == nil {
@@ -287,7 +289,7 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 			"Press ESC to select a song.\nPress TAB to pause.\n\n"+
 			"Offset (Shift+ Left/Right): %dms\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,
-		s.Scores[game.Total], s.ScoreBounds[game.Total], s.Flow*100, s.Combo,
+		s.Scores[mode.Total], s.ScoreBounds[mode.Total], s.Flow*100, s.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
 		s.SpeedScale*100, s.TransPoint.Speed, ExposureTime(s.Speed()),
 		game.MusicVolume*100, game.EffectVolume*100,

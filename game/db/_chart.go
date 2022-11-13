@@ -1,4 +1,4 @@
-package game
+package db
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 
 // ChartInfo is used at SceneSelect.
 type ChartInfo struct {
-	ChartHeader
+	Header
 	// Tags       []string // Auto-generated or User-defined
 	Path string
 	// Mods    Mods
@@ -30,7 +30,7 @@ func (c ChartInfo) Text() string {
 	return ""
 }
 func (c ChartInfo) BackgroundPath() string {
-	return c.ChartHeader.BackgroundPath(c.Path)
+	return c.Header.BackgroundPath(c.Path)
 }
 func (c ChartInfo) TimeString() string {
 	c.Duration /= 1000

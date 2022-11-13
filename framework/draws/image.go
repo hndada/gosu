@@ -1,14 +1,9 @@
 package draws
 
 import (
-	"fmt"
 	"image"
 	"image/color"
-	"os"
-	"path/filepath"
-	"sort"
-	"strconv"
-	"strings"
+	"io/fs"
 
 	"github.com/hajimehoshi/ebiten/v2"
 )
@@ -31,17 +26,17 @@ func NewImage(w, h float64) Image {
 }
 
 // LoadImage returns nil when fails to load image from the path.
-func LoadImage(path string) Image {
+func LoadImage(fsys fs.FS, name string) Image {
 	// ebiten.NewImageFromImage will panic when input is nil.
-	if i := LoadImageImage(path); i != nil {
+	if i := LoadImageImage(fsys, name); i != nil {
 		return Image{ebiten.NewImageFromImage(i)}
 	}
 	return Image{}
 }
 
 // LoadImageImage returns image.Image.
-func LoadImageImage(path string) image.Image {
-	f, err := os.Open(path)
+func LoadImageImage(fsys fs.FS, name string) image.Image {
+	f, err := fsys.Open(name)
 	if err != nil {
 		return nil
 	}
@@ -53,36 +48,6 @@ func LoadImageImage(path string) image.Image {
 	return src
 }
 
-func LoadImages(path string) (is []Image) {
-	const ext = ".png"
-	one := []Image{LoadImage(path + ext)}
-	dir, err := os.Open(path)
-	if err != nil {
-		return one
-	}
-	defer dir.Close()
-	fs, err := dir.ReadDir(-1)
-	if err != nil {
-		return one
-	}
-
-	nums := make([]int, 0, len(fs))
-	for _, f := range fs {
-		if f.IsDir() {
-			continue
-		}
-		num := strings.TrimSuffix(f.Name(), ext)
-		if num, err := strconv.Atoi(num); err == nil {
-			nums = append(nums, num)
-		}
-	}
-	sort.Ints(nums)
-	for _, num := range nums {
-		path := filepath.Join(path, fmt.Sprintf("%d.png", num))
-		is = append(is, LoadImage(path))
-	}
-	return
-}
 func NewImageXFlipped(src Image) Image {
 	size := src.Size()
 	dst := Image{ebiten.NewImage(size.XYInt())}

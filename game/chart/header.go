@@ -1,15 +1,13 @@
-package game
+package chart
 
 import (
-	"path/filepath"
-
 	"github.com/hndada/gosu/game/format/osu"
 )
 
-// ChartHeader contains non-play information.
-// Changing ChartHeader's data will not affect integrity of the chart.
+// Header contains non-play information.
+// Changing Header's data will not affect integrity of the chart.
 // Mode-specific fields are located to each Chart struct.
-type ChartHeader struct {
+type Header struct {
 	ChartSetID    int64 // Compatibility for osu.
 	ChartID       int64 // Todo: ChartID -> ID
 	MusicName     string
@@ -22,7 +20,7 @@ type ChartHeader struct {
 	HolderID      int64
 
 	PreviewTime     int64
-	MusicFilename   string
+	MusicFilename   string // Filename is fine to use (cf. Filepath)
 	ImageFilename   string
 	VideoFilename   string
 	VideoTimeOffset int64
@@ -31,10 +29,10 @@ type ChartHeader struct {
 	SubMode int
 }
 
-func NewChartHeader(f any) (c ChartHeader) {
+func NewHeader(f any) (c Header) {
 	switch f := f.(type) {
 	case *osu.Format:
-		c = ChartHeader{
+		c = Header{
 			MusicName:     f.Title,
 			MusicUnicode:  f.TitleUnicode,
 			Artist:        f.Artist,
@@ -51,30 +49,32 @@ func NewChartHeader(f any) (c ChartHeader) {
 		c.ImageFilename = e.Filename
 		e, _ = f.Video()
 		c.VideoFilename, c.VideoTimeOffset = e.Filename, int64(e.StartTime)
-
-		switch f.Mode {
-		case osu.ModeMania:
-			keyCount := int(f.CircleSize)
-			if keyCount <= 4 {
-				c.Mode = ModePiano4
-			} else {
-				c.Mode = ModePiano7
-			}
-			c.SubMode = keyCount
-		case osu.ModeTaiko:
-			c.Mode = ModeDrum
-			c.SubMode = 4
+		if c.MusicFilename == "virtual" {
+			c.MusicFilename = ""
 		}
+		// switch f.Mode {
+		// case osu.ModeMania:
+		// 	keyCount := int(f.CircleSize)
+		// 	if keyCount <= 4 {
+		// 		c.Mode = ModePiano4
+		// 	} else {
+		// 		c.Mode = ModePiano7
+		// 	}
+		// 	c.SubMode = keyCount
+		// case osu.ModeTaiko:
+		// 	c.Mode = ModeDrum
+		// 	c.SubMode = 4
+		// }
 	}
 	return c
 }
 
-func (c ChartHeader) MusicPath(cpath string) (string, bool) {
-	if name := c.MusicFilename; name == "virtual" || name == "" {
-		return "", false
-	}
-	return filepath.Join(filepath.Dir(cpath), c.MusicFilename), true
-}
-func (c ChartHeader) BackgroundPath(cpath string) string {
-	return filepath.Join(filepath.Dir(cpath), c.ImageFilename)
-}
+// func (c Header) MusicPath(cpath string) (string, bool) {
+// 	if name := c.MusicFilename; name == "virtual" || name == "" {
+// 		return "", false
+// 	}
+// 	return filepath.Join(filepath.Dir(cpath), c.MusicFilename), true
+// }
+// func (c Header) BackgroundPath(cpath string) string {
+// 	return filepath.Join(filepath.Dir(cpath), c.ImageFilename)
+// }

@@ -1,14 +1,14 @@
 package piano
 
 import (
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/framework/scene"
 	"github.com/hndada/gosu/game/format/osr"
 )
 
 // ReplayListener supposes closure function is called every 1 ms.
 // ReplayListener supposes the first the time of replay data is 0ms and no any inputs.
 // Todo: Make sure to ReplayListener time is independent of Game's update tick
-func NewReplayListener(f *osr.Format, keyCount int, timer *game.Timer) func() []bool {
+func NewReplayListener(f *osr.Format, keyCount int, timer *scene.Timer) func() []bool {
 	actions := append(f.ReplayData, osr.Action{W: 2e9})
 	for i := 0; i < 2; i++ {
 		if i < len(actions) {

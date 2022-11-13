@@ -1,33 +1,30 @@
 package audios
 
 import (
+	"io"
+	"io/fs"
+
 	"github.com/hajimehoshi/ebiten/v2/audio"
 )
 
-// var bufferSize = 100 * time.Millisecond
+// It is embedded instead of aliasing, desiring adding new feature: e.g., time rate.
+type Player struct {
+	*audio.Player
+}
 
-func NewPlayer(path string) (*audio.Player, func() error, error) {
-	s, closer, err := decode(path)
+func NewPlayer(fsys fs.FS, name string) (player Player, close func() error, err error) {
+	var streamer io.ReadSeeker
+	streamer, close, err = decode(fsys, name)
 	if err != nil {
-		return nil, nil, err
+		return
 	}
-	p, err := Context.NewPlayer(s)
+	p, err := Context.NewPlayer(streamer)
 	if err != nil {
-		return nil, closer, err
+		return
 	}
+	player = Player{p}
+	// var bufferSize = 100 * time.Millisecond
 	// p.SetBufferSize(bufferSize)
-	return p, closer, err
+	return
 }
-func PlayEffect(src []byte, vol float64) {
-	p := Context.NewPlayerFromBytes(src)
-	p.SetVolume(vol)
-	p.Play()
-}
-
-// func NewStreamer(path string) (io.ReadSeeker, func() error, error) {
-// 	s, closer, err := decode(path)
-// 	if err != nil {
-// 		return nil, nil, err
-// 	}
-// 	return s, f.Close, nil
-// }
+func (p Player) IsValid() bool { return p.Player != nil }

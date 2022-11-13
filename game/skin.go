@@ -2,18 +2,10 @@ package game
 
 import (
 	"fmt"
+	"io/fs"
 
 	"github.com/hndada/gosu/framework/audios"
 	"github.com/hndada/gosu/framework/draws"
-)
-
-// ScreenSize is a logical size of in-game screen.
-const (
-	screenSizeX = 1600
-	screenSizeY = 900
-
-	ScreenSizeX = screenSizeX
-	ScreenSizeY = screenSizeY
 )
 
 // Skin is a set of Sprites and sounds.
@@ -41,55 +33,65 @@ var (
 	TransitionSounds [2][]byte
 )
 
-func LoadGeneralSkin() {
-	DefaultBackground = NewBackground("skin/default-bg.jpg")
+// fsys = "skin"
+func LoadGeneralSkin(fsys fs.FS) {
+	DefaultBackground = NewBackground(fsys, "default-bg.jpg")
 	// Todo: cursor may have outer circle
 	names := []string{"menu-cursor", "menu-cursor-additive", "cursortrail"}
 	for i, name := range names {
-		s := draws.NewSprite(fmt.Sprintf("skin/cursor/%s.png", name))
+		s := draws.NewSprite(fsys, fmt.Sprintf("cursor/%s.png", name))
 		s.ApplyScale(CursorScale)
-		s.Locate(screenSizeX/2, screenSizeY/2, draws.CenterMiddle)
+		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 		CursorSprites[i] = s
 	}
 	{
-		s := draws.NewSprite("skin/box-mask.png")
+		s := draws.NewSprite(fsys, "box-mask.png")
 		s.SetSize(ChartInfoBoxWidth, ChartInfoBoxHeight)
-		s.Locate(screenSizeX+chartInfoBoxshrink, screenSizeY/2, draws.RightMiddle)
+		s.Locate(ScreenSizeX+chartInfoBoxshrink, ScreenSizeY/2, draws.RightMiddle)
 		ChartItemBoxSprite = s
 	}
 	// Todo: ChartLevelBoxSprite
 	for i := 0; i < 10; i++ {
-		s := draws.NewSprite(fmt.Sprintf("skin/score/%d.png", i))
+		s := draws.NewSprite(fsys, fmt.Sprintf("score/%d.png", i))
 		s.ApplyScale(ScoreScale)
 		if i == 0 {
-			s.Locate(screenSizeX, 0, draws.RightTop)
+			s.Locate(ScreenSizeX, 0, draws.RightTop)
 		} else { // Need to set same base line, since each number has different height.
-			s.Locate(screenSizeX, ScoreSprites[0].H()-s.H(), draws.RightTop)
+			s.Locate(ScreenSizeX, ScoreSprites[0].H()-s.H(), draws.RightTop)
 		}
 		ScoreSprites[i] = s
 	}
 	for i, name := range []string{"dot", "comma", "percent"} {
-		s := draws.NewSprite(fmt.Sprintf("skin/score/%s.png", name))
+		s := draws.NewSprite(fsys, fmt.Sprintf("score/%s.png", name))
 		s.ApplyScale(ScoreScale)
-		s.Locate(screenSizeX, 0, draws.RightTop)
+		s.Locate(ScreenSizeX, 0, draws.RightTop)
 		SignSprites[i] = s
 	}
-	TapSound, _ = audios.NewBytes("skin/sound/tap/0.wav")
-	SelectSound, _ = audios.NewBytes("skin/sound/old/restart.wav")
-	SwipeSound, _ = audios.NewBytes("skin/sound/swipe.wav")
+	LoadSound(fsys)
+}
+
+// Todo: need a test whether fsys is immutable
+func LoadSound(fsys fs.FS) {
+	fsys, err := fs.Sub(fsys, "sound")
+	if err != nil {
+		return
+	}
+	TapSound, _ = audios.NewBytes(fsys, "tap/0.wav")
+	SelectSound, _ = audios.NewBytes(fsys, "old/restart.wav")
+	SwipeSound, _ = audios.NewBytes(fsys, "swipe.wav")
 	for i, name := range []string{"off", "on"} {
-		path := fmt.Sprintf("skin/sound/toggle/%s.wav", name)
-		ToggleSounds[i], _ = audios.NewBytes(path)
+		name := fmt.Sprintf("toggle/%s.wav", name)
+		ToggleSounds[i], _ = audios.NewBytes(fsys, name)
 	}
 	for i, name := range []string{"down", "up"} {
-		path := fmt.Sprintf("skin/sound/transition/%s.wav", name)
-		TransitionSounds[i], _ = audios.NewBytes(path)
+		name := fmt.Sprintf("transition/%s.wav", name)
+		TransitionSounds[i], _ = audios.NewBytes(fsys, name)
 	}
 }
-func NewBackground(path string) draws.Sprite {
-	s := draws.NewSprite(path)
-	s.ApplyScale(screenSizeX / s.W())
-	s.Locate(screenSizeX/2, screenSizeY/2, draws.CenterMiddle)
+func NewBackground(fsys fs.FS, name string) draws.Sprite {
+	s := draws.NewSprite(fsys, name)
+	s.ApplyScale(ScreenSizeX / s.W())
+	s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 	return s
 }
 

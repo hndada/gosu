@@ -16,19 +16,6 @@ type SoundMap struct {
 	vol   *float64
 }
 
-// NewBytes is for short sounds: long audio file will make the game stutter.
-// No returns closer since NewPlayerFromBytes needs no Closer: no any files are open.
-func NewBytes(path string) ([]byte, error) {
-	s, _, err := decode(path)
-	if err != nil {
-		return nil, err
-	}
-	b, err := io.ReadAll(s)
-	if err != nil {
-		return nil, err
-	}
-	return b, nil
-}
 func NewSoundMap(vol *float64) SoundMap {
 	return SoundMap{
 		bytes: make(map[string][]byte),

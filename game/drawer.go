@@ -9,6 +9,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/framework/ctrl"
 	"github.com/hndada/gosu/framework/draws"
+	"github.com/hndada/gosu/framework/scene"
+	"github.com/hndada/gosu/game/mode"
 )
 
 // Order of fields of drawer: updating fields, others fields, sprites.
@@ -132,14 +134,6 @@ func (d ScoreDrawer) Draw(dst draws.Image) {
 	}
 }
 
-var (
-	ColorKool = color.NRGBA{0, 170, 242, 255}   // Blue
-	ColorCool = color.NRGBA{85, 251, 255, 255}  // Skyblue
-	ColorGood = color.NRGBA{51, 255, 40, 255}   // Lime
-	ColorBad  = color.NRGBA{244, 177, 0, 255}   // Yellow
-	ColorMiss = color.NRGBA{109, 120, 134, 255} // Gray
-)
-
 var MeterMarkColors = []color.NRGBA{
 	{255, 255, 255, 192}, // White
 	{213, 0, 242, 192},   // Purple
@@ -161,13 +155,13 @@ type MeterMark struct {
 
 // Todo: draw Meter with ebiten.Image
 // Anchor is a unit sprite constantly drawn at the middle of meter.
-func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
+func NewMeterDrawer(js []mode.Judgment, colors []color.NRGBA) (d MeterDrawer) {
 	var (
 		colorMeter = color.NRGBA{0, 0, 0, 128}       // Dark
 		colorWhite = color.NRGBA{255, 255, 255, 192} // White
 		colorRed   = color.NRGBA{255, 0, 0, 192}     // Red
 	)
-	d.MaxCountdown = TimeToTick(4000)
+	d.MaxCountdown = scene.ToTick(4000)
 	{
 		miss := js[len(js)-1]
 		w := 1 + 2*math.Ceil(MeterWidth*float64(miss.Window))
@@ -188,7 +182,7 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 		}
 		i := ebiten.NewImageFromImage(src)
 		base := draws.NewSpriteFromSource(draws.Image{Image: i})
-		base.Locate(screenSizeX/2, screenSizeY, draws.CenterBottom)
+		base.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
 		d.Meter = base
 	}
 	{
@@ -196,7 +190,7 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 		src.Fill(colorRed)
 		i := ebiten.NewImageFromImage(src)
 		anchor := draws.NewSpriteFromSource(draws.Image{Image: i})
-		anchor.Locate(screenSizeX/2, screenSizeY, draws.CenterBottom)
+		anchor.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
 		d.Anchor = anchor
 	}
 	{
@@ -204,7 +198,7 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 		src.Fill(colorWhite)
 		i := ebiten.NewImageFromImage(src)
 		unit := draws.NewSpriteFromSource(draws.Image{Image: i})
-		unit.Locate(screenSizeX/2, screenSizeY, draws.CenterBottom)
+		unit.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
 		d.Unit = unit
 	}
 	return

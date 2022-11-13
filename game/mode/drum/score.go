@@ -4,23 +4,23 @@ import (
 	"image/color"
 
 	"github.com/hndada/gosu/framework/input"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/mode"
 )
 
 // Todo: let users use custom windows
 // Todo: need to find best value for DotHitWindow
 var (
-	Cool               = game.Judgment{Flow: 0.01, Acc: 1, Window: 25}
-	Good               = game.Judgment{Flow: 0.01, Acc: 0.25, Window: 60}
-	Miss               = game.Judgment{Flow: -1, Acc: 0, Window: 100}
+	Cool               = mode.Judgment{Flow: 0.01, Acc: 1, Window: 25}
+	Good               = mode.Judgment{Flow: 0.01, Acc: 0.25, Window: 60}
+	Miss               = mode.Judgment{Flow: -1, Acc: 0, Window: 100}
 	DotHitWindow int64 = 25
 )
-var Judgments = []game.Judgment{Cool, Good, Miss}
+var Judgments = []mode.Judgment{Cool, Good, Miss}
 
 var JudgmentColors = []color.NRGBA{
-	game.ColorCool,
-	game.ColorGood,
-	game.ColorBad,
+	mode.ColorCool,
+	mode.ColorGood,
+	mode.ColorBad,
 }
 
 const (
@@ -87,7 +87,7 @@ func IsOtherColorHit(actions [2]int, color int) bool {
 	return false
 }
 
-func VerdictNote(n *Note, actions [2]int, td int64) (j game.Judgment, big bool) {
+func VerdictNote(n *Note, actions [2]int, td int64) (j mode.Judgment, big bool) {
 	if td > Miss.Window {
 		return
 	}
@@ -100,24 +100,24 @@ func VerdictNote(n *Note, actions [2]int, td int64) (j game.Judgment, big bool) 
 	if !IsColorHit(actions, n.Color) {
 		return
 	}
-	j = game.Verdict(Judgments, input.Hit, td)
+	j = mode.Verdict(Judgments, input.Hit, td)
 	if n.Size == Big && actions[n.Color] == Big {
 		big = true
 	}
 	// fmt.Println(n.Time, n.Size, n.Color, actions, j, big)
 	return
 }
-func (s *ScenePlay) MarkNote(n *Note, j game.Judgment, big bool) {
+func (s *ScenePlay) MarkNote(n *Note, j mode.Judgment, big bool) {
 	if j == Miss {
 		s.BreakCombo()
 	} else {
 		s.AddCombo()
 	}
-	s.CalcScore(game.Flow, j.Flow, n.Weight())
+	s.CalcScore(mode.Flow, j.Flow, n.Weight())
 	if n.Size == Big && !big {
 		j.Acc /= 2
 	}
-	s.CalcScore(game.Acc, j.Acc, n.Weight())
+	s.CalcScore(mode.Acc, j.Acc, n.Weight())
 	switch j.Window {
 	case Cool.Window:
 		s.JudgmentCounts[Cools]++
@@ -152,11 +152,11 @@ func (s *ScenePlay) MarkDot(dot *Dot, marked int) {
 	switch marked {
 	case DotHit:
 		s.JudgmentCounts[TickHits]++
-		s.CalcScore(game.Extra, 1, dot.Weight())
+		s.CalcScore(mode.Extra, 1, dot.Weight())
 		dot.Marked = DotHit
 	case DotMiss:
 		s.JudgmentCounts[TickDrops]++
-		s.CalcScore(game.Extra, 0, dot.Weight())
+		s.CalcScore(mode.Extra, 0, dot.Weight())
 		dot.Marked = DotMiss
 	}
 	if marked != DotReady {
@@ -182,11 +182,11 @@ func (s *ScenePlay) MarkShake(shake *Note, flush bool) {
 	if flush {
 		remained := shake.Tick - shake.HitTick
 		s.JudgmentCounts[TickDrops] += remained
-		s.CalcScore(game.Extra, 0, shake.Weight()*float64(remained)/float64(shake.Tick))
+		s.CalcScore(mode.Extra, 0, shake.Weight()*float64(remained)/float64(shake.Tick))
 	} else {
 		shake.HitTick++
 		s.JudgmentCounts[TickHits]++
-		s.CalcScore(game.Extra, 1, shake.Weight()/float64(shake.Tick))
+		s.CalcScore(mode.Extra, 1, shake.Weight()/float64(shake.Tick))
 	}
 	if flush || shake.HitTick == shake.Tick {
 		shake.Marked = true
@@ -211,21 +211,21 @@ func ExtraScoreRate(nws, ews float64) float64 {
 	return rate
 }
 func (s *ScenePlay) SetMaxScores() {
-	nws := s.MaxWeights[game.Flow]
-	ews := s.MaxWeights[game.Extra]
+	nws := s.MaxWeights[mode.Flow]
+	ews := s.MaxWeights[mode.Extra]
 
-	extraMax := game.DefaultMaxScores[game.Extra]
+	extraMax := mode.DefaultMaxScores[mode.Extra]
 	extraRate := ExtraScoreRate(nws, ews)
 	extraScore := extraMax * extraRate
 	extraRemained := extraMax * (1 - extraRate)
 
-	s.MaxScores[game.Flow] += extraRemained * 0.7
-	s.MaxScores[game.Acc] += extraRemained * 0.3
-	s.MaxScores[game.Extra] = extraScore
+	s.MaxScores[mode.Flow] += extraRemained * 0.7
+	s.MaxScores[mode.Acc] += extraRemained * 0.3
+	s.MaxScores[mode.Extra] = extraScore
 	if nws == 0 {
-		s.MaxScores[game.Extra] += s.MaxScores[game.Flow] + s.MaxScores[game.Acc]
-		s.MaxScores[game.Flow] = 0
-		s.MaxScores[game.Acc] = 0
+		s.MaxScores[mode.Extra] += s.MaxScores[mode.Flow] + s.MaxScores[mode.Acc]
+		s.MaxScores[mode.Flow] = 0
+		s.MaxScores[mode.Acc] = 0
 	}
 	s.Scorer.SetMaxScores(s.MaxScores)
 }

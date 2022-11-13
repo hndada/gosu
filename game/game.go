@@ -1,124 +1,84 @@
 package game
 
 import (
-	"runtime/debug"
+	"archive/zip"
+	"fmt"
+	"io"
+	"io/fs"
+	"log"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/framework/draws"
+	"github.com/hndada/gosu/framework/scene"
+	"github.com/hndada/gosu/game/chart"
 	"github.com/hndada/gosu/game/format/osr"
 )
 
-type Game struct {
-	Scene
-}
-type Scene interface {
-	Update() any
-	// Draw(screen *ebiten.Image)
-	Draw(screen draws.Image)
-}
-
-var (
-	modeProps     []ModeProp
-	sceneSelect   *SceneSelect
-	tailExtraTime *float64 // For cache.
+// ScreenSize is a logical size of in-game screen.
+const (
+	ScreenSizeX = 1600
+	ScreenSizeY = 900
 )
 
-// Todo: load settings
-func NewGame(props []ModeProp) *Game {
-	modeProps = props
-	tailExtraTime = modeProps[ModePiano4].Settings["TailExtraTime"]
-	g := &Game{}
-	SetKeySettings(props)
-	// 1. Load chart info and score data
-	// 2. Check removed chart
-	// 3. Check added chart
-	// Each mode scans Music root independently.
-	LoadChartInfosSet(props)
-	TidyChartInfosSet(props)
-	for i, prop := range modeProps {
-		modeProps[i].ChartInfos = prop.LoadNewChartInfos(MusicRoot)
+// Underscore is for avoiding getting same name with package game
+// while letting it be unexported struct.
+type _Game struct {
+	scene.Scene
+}
+type NewScenePlay func(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (_scene scene.Scene, err error)
+
+// Todo: should .zip be extracted throughly?
+func ZipFS(name string) fs.FS {
+	r, err := zip.OpenReader(name)
+	if err != nil {
+		panic(err)
 	}
-	SaveChartInfosSet(props) // 4. Save chart infos to local file
-	LoadGeneralSkin()
-	for _, mode := range modeProps {
-		mode.LoadSkin()
+	defer r.Close()
+	for _, f := range r.File {
+		rc, err := f.Open()
+		if err != nil {
+			log.Fatal(err)
+		}
+		// gen file then return FS
+		_, err = io.CopyN(os.Stdout, rc, 68)
+		if err != nil {
+			log.Fatal(err)
+		}
+		rc.Close()
 	}
-	LoadHandlers(props)
+	return r
+}
+func NewGame(newScenePlays []NewScenePlay) *_Game {
+	g := &_Game{}
 	ebiten.SetWindowTitle("gosu")
-	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
-	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	ebiten.SetWindowSize(ScreenSizeX, ScreenSizeY)
+	// ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 	ebiten.SetTPS(TPS)
-	modeHandler.Max = len(props)
-	sceneSelect = NewSceneSelect()
-	// ebiten.SetCursorMode(ebiten.CursorModeHidden)
+
+	var err error
+	g.Scene, err = newScenePlays[1](os.DirFS("asdf - 1223"), "asdf - 1223 (MuangMuangE) [Oni].osu", nil, nil)
+	if err != nil {
+		panic(err)
+	}
 	return g
 }
-
-// func NewGameWithEmbed(props []ModeProp, skin, music embed.FS) *Game {
-// 	modeProps = props
-// 	g := &Game{}
-// 	for i, prop := range modeProps {
-// 		modeProps[i].ChartInfos = prop.LoadNewChartInfos(music)
-// 	}
-// 	LoadGeneralSkin()
-// 	for _, mode := range modeProps {
-// 		mode.LoadSkin()
-// 	}
-// 	LoadHandlers(props)
-// 	ebiten.SetWindowTitle("gosu")
-// 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
-// 	ebiten.SetTPS(TPS)
-// 	modeHandler.Max = len(props)
-// 	sceneSelect = NewSceneSelect()
-// 	// ebiten.SetCursorMode(ebiten.CursorModeHidden)
-// 	return g
-// }
-
-func (g *Game) Update() (err error) {
-	MusicVolumeKeyHandler.Update()
-	EffectVolumeKeyHandler.Update()
-	SpeedScaleKeyHandler.Update()
-	OffsetKeyHandler.Update()
-	TailExtraTimeKeyHandler.Update()
-	if g.Scene == nil {
-		g.Scene = sceneSelect
-	}
+func (g *_Game) Update() (err error) {
 	args := g.Scene.Update()
 	switch args := args.(type) {
 	case error:
 		return args
-	case PlayToResultArgs: // Todo: SceneResult
-		// EffectVolume = 0.25 // Todo: resolve delayed effect sound playing
-		ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
-		debug.SetGCPercent(100)
-		g.Scene = sceneSelect
-		ebiten.SetWindowTitle("gosu")
-	case SelectToPlayArgs:
-		// EffectVolume = 0 // Todo: resolve delayed effect sound playing
-		ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
-		debug.SetGCPercent(0)
-		prop := modeProps[currentMode]
-		g.Scene, err = prop.NewScenePlay(args.Path, args.Replay)
-		if err != nil {
-			return
-		}
 	}
 	return
 }
-func (g *Game) Draw(screen *ebiten.Image) {
+func (g *_Game) Draw(screen *ebiten.Image) {
 	g.Scene.Draw(draws.Image{Image: screen})
 }
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return screenSizeX, screenSizeY
+func (g *_Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	return ScreenSizeX, ScreenSizeY
 }
 
-type SelectToPlayArgs struct {
-	// Mode int
-	// Mods   Mods
-	Path   string
-	Replay *osr.Format
-}
-
-type PlayToResultArgs struct {
-	Result
+func SetTitle(c chart.Header) {
+	title := fmt.Sprintf("gosu | %s - %s [%s] (%s) ", c.Artist, c.MusicName, c.ChartName, c.Charter)
+	ebiten.SetWindowTitle(title)
 }

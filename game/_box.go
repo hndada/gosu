@@ -200,7 +200,7 @@ func (c ChartInfo) NewChartBoard() draws.Box {
 	board := draws.Box{
 		Inner:   draws.NewGrid(boxs, ws, hs, draws.Point{}),
 		Pad:     draws.Pt(10, 10),
-		Point:   draws.Pt(screenSizeX/2, 150),
+		Point:   draws.Pt(ScreenSizeX/2, 150),
 		Origin2: draws.AtMid,
 		Align:   draws.AtMid,
 	}
