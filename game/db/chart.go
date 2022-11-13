@@ -27,6 +27,20 @@ type Chart struct {
 	LastUpdateTime time.Time
 	AddedTime      time.Time
 
+	Genre    int //string
+	Language int //string
+	NSFW     bool
 	// Tags can be added by user.
 	Tags []string
+	// Dropped Favorites and Played count since it
+	// needs to be checked frequently.
+
+	Pitch bool
 }
+
+// https://osu.ppy.sh/docs/index.html#beatmapsetcompact-covers
+// cover, card, list, slimcover
+
+// rnkaed status
+// graveyard, wip, pending
+// ranked, approved, qualified, loved
