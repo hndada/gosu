@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 )
 
 type Game struct {
@@ -38,6 +40,10 @@ func (g Game) Draw(screen *ebiten.Image) {
 		op.ColorM.ChangeHSV(0, 1, 1)
 	}
 	screen.DrawImage(g.field, op)
+	ebitenutil.DebugPrint(
+		screen, fmt.Sprintf("%4.2f\n%4.2f",
+			ebiten.ActualFPS(),
+			ebiten.ActualTPS()))
 }
 
 const (

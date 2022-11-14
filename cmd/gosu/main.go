@@ -1,11 +1,8 @@
 package main
 
 import (
-	"fmt"
-	"net"
 	"os"
 
-	"net/http"
 	_ "net/http/pprof"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -15,12 +12,12 @@ import (
 )
 
 func main() {
-	l, err := net.Listen("tcp", ":54125")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Listening on %s\n", l.Addr())
-	go http.Serve(l, nil)
+	// l, err := net.Listen("tcp", ":54125")
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Printf("Listening on %s\n", l.Addr())
+	// go http.Serve(l, nil)
 
 	fsys := os.DirFS("skin")
 	game.LoadGeneralSkin(fsys)
