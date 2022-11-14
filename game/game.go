@@ -3,13 +3,10 @@ package game
 import (
 	"archive/zip"
 	"fmt"
-	"io"
 	"io/fs"
-	"log"
-	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/framework/draws"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/framework/scene"
 	"github.com/hndada/gosu/game/chart"
 	"github.com/hndada/gosu/game/format/osr"
@@ -34,48 +31,48 @@ func ZipFS(name string) fs.FS {
 	if err != nil {
 		panic(err)
 	}
-	defer r.Close()
-	for _, f := range r.File {
-		rc, err := f.Open()
-		if err != nil {
-			log.Fatal(err)
-		}
-		// gen file then return FS
-		_, err = io.CopyN(os.Stdout, rc, 68)
-		if err != nil {
-			log.Fatal(err)
-		}
-		rc.Close()
-	}
 	return r
+	// defer r.Close()
+	// for _, f := range r.File {
+	// 	rc, err := f.Open()
+	// 	if err != nil {
+	// 		log.Fatal(err)
+	// 	}
+	// }
+	// return r
 }
 func NewGame(newScenePlays []NewScenePlay) *_Game {
 	g := &_Game{}
-	ebiten.SetWindowTitle("gosu")
+	// ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(ScreenSizeX, ScreenSizeY)
-	// ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
-	ebiten.SetTPS(TPS)
+	ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
+	// ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
+	// // ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
+	// ebiten.SetTPS(TPS)
 
-	var err error
-	g.Scene, err = newScenePlays[1](os.DirFS("asdf - 1223"), "asdf - 1223 (MuangMuangE) [Oni].osu", nil, nil)
-	if err != nil {
-		panic(err)
-	}
+	// var err error
+	// g.Scene, err = newScenePlays[0](ZipFS("test.osz"), "nekodex - circles! (MuangMuangE) [Hard].osu", nil, nil)
+	// // g.Scene, err = newScenePlays[1](os.DirFS("asdf - 1223"), "asdf - 1223 (MuangMuangE) [Oni].osu", nil, nil)
+	// if err != nil {
+	// 	panic(err)
+	// }
 	return g
 }
 func (g *_Game) Update() (err error) {
-	args := g.Scene.Update()
-	switch args := args.(type) {
-	case error:
-		return args
-	}
+	// args := g.Scene.Update()
+	// switch args := args.(type) {
+	// case error:
+	// 	return args
+	// }
 	return
 }
 func (g *_Game) Draw(screen *ebiten.Image) {
-	g.Scene.Draw(draws.Image{Image: screen})
+	// g.Scene.Draw(draws.Image{Image: screen})
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("%4.2f", ebiten.ActualFPS()))
 }
 func (g *_Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return ScreenSizeX, ScreenSizeY
+	// return 320, 240
 }
 
 func SetTitle(c chart.Header) {
