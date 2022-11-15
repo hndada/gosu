@@ -19,6 +19,7 @@ const (
 )
 
 type Settings struct {
+	empty      bool
 	MusicRoots []string
 	// WindowSizeIndex int
 	WindowSizeX int
@@ -28,21 +29,15 @@ type Settings struct {
 	CursorScale float64
 }
 
+// Default settings should not be directly exported.
+// It may be modified by others.
 var (
-	settings *Settings
-	// Default settings should not be directly exported.
-	// It may be modified by others.
-	defaultSettings *Settings
+	defaultSettings Settings
+	currentSettings Settings
 )
 
-func (Settings) init() {
-	// //go:embed settings.toml
-	// var data string
-	// s, err := Settings{}.Load(data)
-	// if err != nil {
-	// 	panic(err)
-	// }
-	defaultSettings = &Settings{
+func initSettings() {
+	defaultSettings = Settings{
 		MusicRoots:  []string{"music"},
 		WindowSizeX: 1600,
 		WindowSizeY: 900,
@@ -50,35 +45,21 @@ func (Settings) init() {
 		VolumeSound: 0.25,
 		CursorScale: 0.1,
 	}
+	currentSettings = defaultSettings
 }
+func DefaultSettings() Settings { return defaultSettings }
+func CurrentSettings() Settings { return currentSettings }
 
-//	func (Settings) Default() Setter {
-//		return Settings{
-//			MusicRoots:   []string{"music"},
-//			WindowSizeX:  1600,
-//			WindowSizeY:  900,
-//			VolumeMusic:  0.25,
-//			VolumeSound: 0.25,
-//			CursorScale:  0.1,
-//		}
-//	}
-func (Settings) Default() Setter { return *defaultSettings }
-func (Settings) Current() Setter { return *settings }
-func (Settings) Set(s Setter) {
-	settings = s.(*Settings)
+// Unmatched fields will not be touched, feel free to pre-fill default values.
+// Todo: alert warning message to user when some lines are failed to be decoded
+func LoadSettings(data string, base Settings) {
+	_, err := toml.Decode(data, currentSettings)
+	if err != nil && base.empty {
+		panic(err)
+	}
+	settings := currentSettings
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(settings.WindowSizeX, settings.WindowSizeY)
 	ebiten.SetTPS(TPS)
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
-}
-
-// Unmatched fields will not be touched, feel free to pre-fill default values.
-// Todo: alert warning message to user when some lines are failed to be decoded
-func (Settings) Load(data any) (Setter, error) {
-	s := Settings{}.Default()
-	_, err := toml.Decode(data.(string), &s)
-	if err != nil {
-		return nil, err
-	}
-	return s, nil
 }
