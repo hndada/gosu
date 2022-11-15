@@ -20,19 +20,8 @@
 # Go workspace file
 go.work
 
-# local test files
-/*.osu
-/*.osr
-
 # custom files
-/cmd/gosu/*
-# !/cmd/gosu/replay
-!/cmd/gosu/skin
-!/cmd/gosu/keys.txt
-~$gosu-ui.pptx
-
-# !/cmd/gosu/skin/*.*
-
-/cmd/web/*
-!/cmd/web/main.go
-!/cmd/web/keys.txt
+/replay
+/music
+/docs/~$ui.pptx
+/*.osu
