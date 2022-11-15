@@ -33,22 +33,7 @@ require (
 	golang.org/x/mobile v0.0.0-20221110043201-43a038452099 // indirect
 )
 
-retract [v1.0.1+incompatible, v1.0.4+incompatible]
-
-retract v1.0.1+incompatible // Put the version carelessly.
-
-retract v1.0.2+incompatible // For retracting v1.0.1.
-
-retract v1.0.3+incompatible // For adding suffix "+incompatible".
-
-retract v1.0.4+incompatible // pkg.go.dev rejected v1.0.3.
-
-retract [v1.0.1, v1.0.4]
-
+retract [v1.0.1, v1.0.3]
 retract v1.0.1 // Put the version carelessly.
-
 retract v1.0.2 // For retracting v1.0.1.
-
-retract v1.0.3 // For adding suffix "+incompatible"
-
-retract v1.0.4 // pkg.go.dev rejected v1.0.3.
+retract v1.0.3 // For adding suffix "+incompatible" (and failed)
