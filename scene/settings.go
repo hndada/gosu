@@ -33,7 +33,7 @@ type Settings struct {
 // It may be modified by others.
 var (
 	defaultSettings Settings
-	currentSettings Settings
+	settings        Settings
 )
 
 func initSettings() {
@@ -45,19 +45,18 @@ func initSettings() {
 		VolumeSound: 0.25,
 		CursorScale: 0.1,
 	}
-	currentSettings = defaultSettings
+	settings = defaultSettings
 }
 func DefaultSettings() Settings { return defaultSettings }
-func CurrentSettings() Settings { return currentSettings }
+func CurrentSettings() Settings { return settings }
 
 // Unmatched fields will not be touched, feel free to pre-fill default values.
 // Todo: alert warning message to user when some lines are failed to be decoded
 func LoadSettings(data string, base Settings) {
-	_, err := toml.Decode(data, currentSettings)
+	_, err := toml.Decode(data, &settings)
 	if err != nil && base.empty {
 		panic(err)
 	}
-	settings := currentSettings
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(settings.WindowSizeX, settings.WindowSizeY)
 	ebiten.SetTPS(TPS)
