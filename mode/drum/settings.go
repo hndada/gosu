@@ -1,11 +1,14 @@
 package drum
 
-import "github.com/hndada/gosu/input"
+import (
+	"github.com/hndada/gosu/input"
+	"github.com/hndada/gosu/scene"
+)
 
 // Logical size of in-game screen.
 const (
-	ScreenSizeX = mode.ScreenSizeX
-	ScreenSizeY = mode.ScreenSizeY
+	ScreenSizeX = scene.ScreenSizeX
+	ScreenSizeY = scene.ScreenSizeY
 )
 
 var SpeedScale float64 = 1.0
