@@ -1,43 +1,47 @@
 package play
 
-var (
-	scoreScale    float64
-	scoreDigitGap float64
-	meterWidth    float64 // number of pixels per 1ms
-	meterHeight   float64
-	offset        int64
+import (
+	"fmt"
+	"io/fs"
+
+	"github.com/BurntSushi/toml"
 )
 
 type Settings struct {
-	ScoreScale    float64
-	ScoreDigitGap float64
-	MeterWidth    float64
-	MeterHeight   float64
-	Offset        int64
+	MeterWidth  float64 // number of pixels per 1ms
+	MeterHeight float64
+	Offset      int64
 }
 
-func (Settings) Default() Settings {
-	return Settings{
-		ScoreScale:    0.65,
-		ScoreDigitGap: 0,
-		MeterWidth:    4,
-		MeterHeight:   50,
-		Offset:        -135, // -65
+var (
+	defaultSettings Settings
+	settings        Settings
+)
+
+func init() {
+	initSettings()
+	initSkin()
+}
+
+func initSettings() {
+	defaultSettings = Settings{
+		MeterWidth:  4,
+		MeterHeight: 50,
+		Offset:      -65,
+	}
+	settings = defaultSettings
+}
+func DefaultSettings() Settings { return defaultSettings }
+func CurrentSettings() Settings { return settings }
+func LoadSettings(data string) {
+	_, err := toml.Decode(data, &settings)
+	if err != nil {
+		fmt.Println(err)
 	}
 }
-func (Settings) Current() Settings {
-	return Settings{
-		ScoreScale:    scoreScale,
-		ScoreDigitGap: scoreDigitGap,
-		MeterWidth:    meterWidth,
-		MeterHeight:   meterHeight,
-		Offset:        offset,
-	}
-}
-func (Settings) Set(s Settings) {
-	scoreScale = s.ScoreScale
-	scoreDigitGap = s.ScoreDigitGap
-	meterWidth = s.MeterWidth
-	meterHeight = s.MeterHeight
-	offset = s.Offset
+
+func Load(fsys fs.FS) {
+	data, _ := fs.ReadFile(fsys, "settings.toml")
+	LoadSettings(string(data))
+	LoadSkin(fsys, defaultSkin)
 }

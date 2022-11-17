@@ -8,62 +8,57 @@ import (
 )
 
 type Sounds struct {
-	empty      bool
 	Select     audios.Sound
-	Swipe      audios.Sound
-	Tap        audios.Sound
+	Swipe      audios.SoundBag
+	Tap        audios.SoundBag
 	Toggle     [2]audios.Sound
 	Transition [2]audios.Sound
 }
 
-var (
-	defaultSounds Sounds
-	currentSounds Sounds
-)
-
 // Todo: need a test whether fsys is immutable
-func loadSound(fsys fs.FS, base Sounds) {
-	sounds := &currentSounds
-	if base.empty {
-		sounds = &defaultSounds
-	}
-	for i, name := range []string{"tap/0", "old/restart", "swipe"} {
-		sound, err := audios.NewSound(fsys, fmt.Sprintf("sound/%s.wav", name))
-		if err != nil {
-			if base.empty {
-				panic("fail to load default sounds")
-			}
-			sound = []audios.Sound{base.Tap, base.Select, base.Swipe}[i]
-		}
-		switch i {
-		case 0:
-			sounds.Tap = sound
-		case 1:
-			sounds.Select = sound
-		case 2:
-			sounds.Swipe = sound
-		}
+func loadSounds(fsys fs.FS, mode LoadSkinMode) {
+	const prefix = "interface/sound/"
+	var sounds Sounds
+	sounds.Select = audios.NewSound(fsys, prefix+"ringtone2_loop.wav")
+	sounds.Swipe = audios.NewSoundBag(fsys, prefix+"swipe")
+	sounds.Tap = audios.NewSoundBag(fsys, prefix+"tap")
+	for i, name := range []string{"off", "on"} {
+		name := fmt.Sprintf("%s/toggle/%s.wav", prefix, name)
+		sounds.Toggle[i] = audios.NewSound(fsys, name)
 	}
 	for i, name := range []string{"off", "on"} {
-		name := fmt.Sprintf("sound/toggle/%s.wav", name)
-		sound, err := audios.NewSound(fsys, name)
-		if err != nil {
-			if base.empty {
-				panic("fail to load default sounds")
-			}
-			sound = base.Toggle[i]
-		}
-		sounds.Toggle[i] = sound
+		name := fmt.Sprintf("%s/transition/%s.wav", prefix, name)
+		sounds.Transition[i] = audios.NewSound(fsys, name)
 	}
-	for i, name := range []string{"down", "up"} {
-		name := fmt.Sprintf("sound/transition/%s.wav", name)
-		sound, err := audios.NewSound(fsys, name)
-		if err != nil {
-			if base.empty {
-				panic("fail to load default sounds")
-			}
-			sound = base.Transition[i]
+	base := []Sounds{{}, defaultSkin.Sounds, userSkin.Sounds}[mode]
+	sounds.loadBase(base)
+}
+func (sounds *Sounds) loadBase(base Sounds) {
+	if !sounds.Select.IsValid() {
+		sounds.Select = base.Select
+	}
+	for _, s := range sounds.Swipe {
+		if !s.IsValid() {
+			sounds.Swipe = base.Swipe
+			break
 		}
-		sounds.Transition[i] = sound
+	}
+	for _, s := range sounds.Tap {
+		if !s.IsValid() {
+			sounds.Tap = base.Tap
+			break
+		}
+	}
+	for _, s := range sounds.Toggle {
+		if !s.IsValid() {
+			sounds.Toggle = base.Toggle
+			break
+		}
+	}
+	for _, s := range sounds.Transition {
+		if !s.IsValid() {
+			sounds.Transition = base.Transition
+			break
+		}
 	}
 }
