@@ -2,46 +2,40 @@ package play
 
 import (
 	"fmt"
-	"io/fs"
 
 	"github.com/BurntSushi/toml"
+	"github.com/hndada/gosu/scene"
 )
 
-type Settings struct {
-	MeterWidth  float64 // number of pixels per 1ms
-	MeterHeight float64
-	Offset      int64
+type settings struct {
+	ScoreScale           float64
+	ScoreDigitGap        float64
+	MeterWidth           float64 // number of pixels per 1ms
+	MeterHeight          float64
+	Offset               int64
+	BackgroundBrightness float64
 }
 
-var (
-	defaultSettings Settings
-	settings        Settings
-)
-
-func init() {
-	initSettings()
-	initSkin()
+var defaultSettings = settings{
+	ScoreScale:           0.65,
+	ScoreDigitGap:        0,
+	MeterWidth:           4,
+	MeterHeight:          50,
+	Offset:               -65,
+	BackgroundBrightness: scene.Settings.BackgroundBrightness,
 }
+var Settings = defaultSettings
 
-func initSettings() {
-	defaultSettings = Settings{
-		MeterWidth:  4,
-		MeterHeight: 50,
-		Offset:      -65,
-	}
-	settings = defaultSettings
-}
-func DefaultSettings() Settings { return defaultSettings }
-func CurrentSettings() Settings { return settings }
+func ResetSettings() { Settings = defaultSettings }
 func LoadSettings(data string) {
-	_, err := toml.Decode(data, &settings)
+	_, err := toml.Decode(data, &Settings)
 	if err != nil {
 		fmt.Println(err)
 	}
-}
-
-func Load(fsys fs.FS) {
-	data, _ := fs.ReadFile(fsys, "settings.toml")
-	LoadSettings(string(data))
-	LoadSkin(fsys, defaultSkin)
+	scene.Normalize(&Settings.ScoreScale, 0, 10)
+	scene.Normalize(&Settings.ScoreDigitGap, -10, 10)
+	scene.Normalize(&Settings.MeterWidth, 0, 5)
+	scene.Normalize(&Settings.MeterHeight, 0, 100)
+	scene.Normalize(&Settings.Offset, -300, 300)
+	scene.Normalize(&Settings.BackgroundBrightness, 0, 1)
 }

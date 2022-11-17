@@ -6,17 +6,23 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/scene"
+	"github.com/hndada/gosu/scene/choose"
+	"github.com/hndada/gosu/scene/play"
 )
 
 // All structs and variables in game package should be unexported
 // since the game package is for being called at main via NewGame.
 type game struct {
 	fs.FS
-	scene.Scene
+	Scene
+}
+type Scene interface {
+	Update() any
+	Draw(screen draws.Image)
 }
 
 func NewGame(fsys fs.FS) *game {
-	scene.Load(fsys)
+	load(fsys)
 	g := &game{
 		FS:    fsys,
 		Scene: nil,
@@ -24,10 +30,22 @@ func NewGame(fsys fs.FS) *game {
 	return g
 }
 func (g *game) Update() (err error) {
-	args := g.Scene.Update()
-	switch args := args.(type) {
+	if g.Scene == nil {
+		g.Scene = choose.NewScene()
+		return
+	}
+	switch r := g.Scene.Update().(type) {
+	case play.Return:
+		g.Scene = choose.NewScene()
+	case choose.Return:
+		var scene Scene
+		scene, err = play.NewScene(r.FS, r.Name, r.Mode, r.Mods, r.Replay)
+		if err != nil {
+			return
+		}
+		g.Scene = scene
 	case error:
-		err = args
+		err = r
 	}
 	return
 }

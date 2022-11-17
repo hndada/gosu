@@ -5,21 +5,29 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/audios"
+	defaultskin "github.com/hndada/gosu/skin"
 )
 
 type Sounds struct {
-	Select     audios.Sound
+	Enter      audios.Sound
 	Swipe      audios.SoundBag
 	Tap        audios.SoundBag
 	Toggle     [2]audios.Sound
 	Transition [2]audios.Sound
 }
 
-// Todo: need a test whether fsys is immutable
-func loadSounds(fsys fs.FS, mode LoadSkinMode) {
-	const prefix = "interface/sound/"
+var (
+	defaultSounds Sounds
+	userSounds    Sounds
+)
+
+func init()                 { LoadSounds(defaultskin.FS, LoadSkinDefault) }
+func DefaultSounds() Sounds { return defaultSounds }
+func UserSounds() Sounds    { return userSounds }
+func LoadSounds(fsys fs.FS, mode LoadSkinMode) {
+	const prefix = "sound/"
 	var sounds Sounds
-	sounds.Select = audios.NewSound(fsys, prefix+"ringtone2_loop.wav")
+	sounds.Enter = audios.NewSound(fsys, prefix+"ringtone2_loop.wav")
 	sounds.Swipe = audios.NewSoundBag(fsys, prefix+"swipe")
 	sounds.Tap = audios.NewSoundBag(fsys, prefix+"tap")
 	for i, name := range []string{"off", "on"} {
@@ -30,12 +38,12 @@ func loadSounds(fsys fs.FS, mode LoadSkinMode) {
 		name := fmt.Sprintf("%s/transition/%s.wav", prefix, name)
 		sounds.Transition[i] = audios.NewSound(fsys, name)
 	}
-	base := []Sounds{{}, defaultSkin.Sounds, userSkin.Sounds}[mode]
-	sounds.loadBase(base)
+	base := []Sounds{{}, defaultSounds, userSounds}[mode]
+	sounds.fillBlank(base)
 }
-func (sounds *Sounds) loadBase(base Sounds) {
-	if !sounds.Select.IsValid() {
-		sounds.Select = base.Select
+func (sounds *Sounds) fillBlank(base Sounds) {
+	if !sounds.Enter.IsValid() {
+		sounds.Enter = base.Enter
 	}
 	for _, s := range sounds.Swipe {
 		if !s.IsValid() {
