@@ -1,4 +1,4 @@
-package game
+package scene
 
 import (
 	"github.com/hndada/gosu/ctrl"
@@ -8,12 +8,6 @@ import (
 var (
 	currentMode int
 	currentSort int
-
-	VolumeMusic          float64 = 0.25
-	VolumeSound          float64 = 0.25
-	BackgroundBrightness float64 = 0.6
-
-	Offset int = -65
 )
 var (
 	modeHandler    ctrl.IntHandler

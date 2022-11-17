@@ -8,15 +8,6 @@ import (
 	"github.com/hndada/gosu/format/osr"
 )
 
-type Game struct {
-	Scene
-}
-type Scene interface {
-	Update() any
-	// Draw(screen *ebiten.Image)
-	Draw(screen draws.Image)
-}
-
 var (
 	modeProps     []ModeProp
 	sceneSelect   *SceneSelect
@@ -54,26 +45,6 @@ func NewGame(props []ModeProp) *Game {
 	return g
 }
 
-// func NewGameWithEmbed(props []ModeProp, skin, music embed.FS) *Game {
-// 	modeProps = props
-// 	g := &Game{}
-// 	for i, prop := range modeProps {
-// 		modeProps[i].ChartInfos = prop.LoadNewChartInfos(music)
-// 	}
-// 	LoadGeneralSkin()
-// 	for _, mode := range modeProps {
-// 		mode.LoadSkin()
-// 	}
-// 	LoadHandlers(props)
-// 	ebiten.SetWindowTitle("gosu")
-// 	ebiten.SetWindowSize(WindowSizeX, WindowSizeY)
-// 	ebiten.SetTPS(TPS)
-// 	modeHandler.Max = len(props)
-// 	sceneSelect = NewSceneSelect()
-// 	// ebiten.SetCursorMode(ebiten.CursorModeHidden)
-// 	return g
-// }
-
 func (g *Game) Update() (err error) {
 	VolumeMusicKeyHandler.Update()
 	VolumeSoundKeyHandler.Update()
@@ -104,21 +75,4 @@ func (g *Game) Update() (err error) {
 		}
 	}
 	return
-}
-func (g *Game) Draw(screen *ebiten.Image) {
-	g.Scene.Draw(draws.Image{Image: screen})
-}
-func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return ScreenSizeX, ScreenSizeY
-}
-
-type SelectToPlayArgs struct {
-	// Mode int
-	// Mods   Mods
-	Path   string
-	Replay *osr.Format
-}
-
-type PlayToResultArgs struct {
-	Result
 }
