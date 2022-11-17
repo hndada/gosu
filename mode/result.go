@@ -13,7 +13,7 @@ type Result struct {
 	JudgmentCounts []int
 	MaxCombo       int
 	// FlowMarks      []float64 // Length is around 100 ~ 200.
-	// KeyLogs []KeyLog // Entire timed-log key strokes.
+	// KeyLogs        []KeyLog  // Entire timed-log key strokes.
 }
 
 func (s Scorer) NewResult(md5 [16]byte) Result {

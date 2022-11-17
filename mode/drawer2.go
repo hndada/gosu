@@ -1,4 +1,4 @@
-package scene
+package mode
 
 import "github.com/hndada/gosu/draws"
 

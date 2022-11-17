@@ -43,7 +43,6 @@ type ScenePlay struct {
 	MeterDrawer         mode.MeterDrawer
 }
 
-// Todo: add Mods
 func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s *ScenePlay, err error) {
 	s = new(ScenePlay)
 	s.Chart, err = NewChart(fsys, cname)
@@ -51,7 +50,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		return
 	}
 	c := s.Chart
-	mode.SetTitle(c.Header)
+	ebiten.SetWindowTitle(c.WindowTitle())
 	keyCount := c.KeyCount & ScratchMask
 	s.Timer = audios.NewTimer(c.Duration(), &mode.Offset)
 	s.MusicPlayer, err = audios.NewMusicPlayer(fsys, c.MusicFilename, &s.Timer, &mode.VolumeMusic)

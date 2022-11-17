@@ -1,19 +1,19 @@
 package mode
 
 import (
-	"fmt"
-
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/db"
 	"github.com/hndada/gosu/format/osu"
 )
 
-type Header = db.Header
+type Chart interface {
+	WindowTitle() string
+}
+type ChartHeader = db.ChartHeader
 
-func NewHeader(f any) (c Header) {
+func NewChartHeader(f any) (c ChartHeader) {
 	switch f := f.(type) {
 	case *osu.Format:
-		c = Header{
+		c = ChartHeader{
 			MusicName:     f.Title,
 			MusicUnicode:  f.TitleUnicode,
 			Artist:        f.Artist,
@@ -33,24 +33,14 @@ func NewHeader(f any) (c Header) {
 		if c.MusicFilename == "virtual" {
 			c.MusicFilename = ""
 		}
-		// switch f.Mode {
-		// case osu.ModeMania:
-		// 	keyCount := int(f.CircleSize)
-		// 	if keyCount <= 4 {
-		// 		c.Mode = ModePiano4
-		// 	} else {
-		// 		c.Mode = ModePiano7
-		// 	}
-		// 	c.SubMode = keyCount
-		// case osu.ModeTaiko:
-		// 	c.Mode = ModeDrum
-		// 	c.SubMode = 4
-		// }
+		switch f.Mode {
+		case osu.ModeMania:
+			c.Mode = ModePiano
+			c.SubMode = int(f.CircleSize)
+		case osu.ModeTaiko:
+			c.Mode = ModeDrum
+			c.SubMode = 4
+		}
 	}
 	return c
-}
-
-func SetTitle(c Header) {
-	title := fmt.Sprintf("gosu | %s - %s [%s] (%s) ", c.Artist, c.MusicName, c.ChartName, c.Charter)
-	ebiten.SetWindowTitle(title)
 }

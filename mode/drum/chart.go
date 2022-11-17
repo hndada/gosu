@@ -20,7 +20,7 @@ func (f Floater) Position(time int64) float64 {
 }
 
 type Chart struct {
-	mode.Header
+	mode.ChartHeader
 	MD5         [16]byte
 	TransPoints []*mode.TransPoint
 	Notes       []*Note
@@ -56,7 +56,7 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 		}
 	}
 	c = new(Chart)
-	c.Header = mode.NewHeader(f)
+	c.ChartHeader = mode.NewChartHeader(f)
 	c.Mode, c.SubMode = mode.ModeDrum, 4
 
 	c.MD5 = md5.Sum(dat)
@@ -168,7 +168,7 @@ func ScaledBPM(bpm float64) float64 {
 // 	info = game.ChartInfo{
 // 		Path: cpath,
 // 		// Mods:       mods,
-// 		Header: c.Header,
+// 		ChartHeader: c.ChartHeader,
 // 		// Mode:        mode,
 // 		// SubMode:     0,
 // 		Level:      c.Level,

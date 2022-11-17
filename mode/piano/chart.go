@@ -12,7 +12,7 @@ import (
 
 // Level, ScoreFactors, MD5 will not exported to file.
 type Chart struct {
-	mode.Header
+	mode.ChartHeader
 	MD5  [16]byte
 	Mods interface{}
 
@@ -44,7 +44,7 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 		}
 	}
 	c = new(Chart)
-	c.Header = mode.NewHeader(f)
+	c.ChartHeader = mode.NewChartHeader(f)
 	c.MD5 = md5.Sum(dat)
 	switch f := f.(type) {
 	case *osu.Format:
@@ -136,7 +136,7 @@ func (c Chart) BPMs() (main, min, max float64) {
 // 	info = game.ChartInfo{
 // 		Path: cpath,
 // 		// Mods:       mods,
-// 		Header: c.Header,
+// 		ChartHeader: c.ChartHeader,
 // 		// Mode:        mode,
 // 		// SubMode:     c.KeyCount,
 // 		Level:      c.Level,

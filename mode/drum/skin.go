@@ -10,7 +10,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/game"
 )
 
 var (
@@ -196,7 +195,7 @@ func LoadSkin(fsys fs.FS) {
 			skin.DancerSprites[i][j] = sprite
 		}
 	}
-	skin.ScoreSprites = game.ScoreSprites
+	skin.ScoreSprites = mode.ScoreSprites
 	// Position of combo is dependent on widths of key sprite.
 	{
 		var comboImages [10]draws.Image

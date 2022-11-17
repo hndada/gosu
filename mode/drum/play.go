@@ -59,7 +59,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		return
 	}
 	c := s.Chart
-	mode.SetTitle(c.Header)
+	ebiten.SetWindowTitle(c.WindowTitle())
 	s.Timer = audios.NewTimer(c.Duration(), &mode.Offset)
 	s.MusicPlayer, err = audios.NewMusicPlayer(fsys, c.MusicFilename, &s.Timer, &mode.VolumeMusic)
 	if err != nil {
