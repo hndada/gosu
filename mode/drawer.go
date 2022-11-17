@@ -1,4 +1,4 @@
-package play
+package mode
 
 import (
 	"image"
@@ -9,7 +9,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/mode"
 )
 
 type ScoreDrawer struct {

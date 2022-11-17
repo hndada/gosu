@@ -1,4 +1,4 @@
-package play
+package mode
 
 import (
 	"io/fs"

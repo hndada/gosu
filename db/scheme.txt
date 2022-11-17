@@ -5,4 +5,4 @@ MD5
 Ranked (bool)
 UpdateDate
 ChartInfo
-LHeader
+LChartHeader

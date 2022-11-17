@@ -2,12 +2,13 @@ package game
 
 import (
 	"io/fs"
+	"runtime/debug"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/scene"
-	"github.com/hndada/gosu/scene/choose"
-	"github.com/hndada/gosu/scene/play"
+	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/mode/drum"
+	"github.com/hndada/gosu/mode/piano"
 )
 
 // All structs and variables in game package should be unexported
@@ -35,14 +36,21 @@ func (g *game) Update() (err error) {
 		return
 	}
 	switch r := g.Scene.Update().(type) {
-	case play.Return:
+	case mode.Result:
 		g.Scene = choose.NewScene()
 	case choose.Return:
 		var scene Scene
-		scene, err = play.NewScene(r.FS, r.Name, r.Mode, r.Mods, r.Replay)
+		switch r.Mode {
+		case mode.ModePiano:
+			scene, err = piano.NewScenePlay(r.FS, r.Name, r.Mods, r.Replay)
+		case mode.ModeDrum:
+			scene, err = drum.NewScenePlay(r.FS, r.Name, r.Mods, r.Replay)
+		}
 		if err != nil {
 			return
 		}
+		ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
+		debug.SetGCPercent(0)
 		g.Scene = scene
 	case error:
 		err = r
