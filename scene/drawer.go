@@ -14,19 +14,18 @@ func (d BackgroundDrawer) Draw(dst draws.Image) {
 	d.Sprite.Draw(dst, op)
 }
 
-// Todo: Value int -> float64
-type NumberDrawer struct {
+type IntDrawer struct {
 	draws.Timer
 	DigitWidth float64
 	DigitGap   float64
-	Value      float64
+	Value      int
 	Bounce     float64
 	Numbers    [10]draws.Sprite
-	Signs      [3]draws.Sprite
+	// Signs      [3]draws.Sprite
 }
 
 // Each number has different width. Number 0's width is used as standard.
-func (d *NumberDrawer) Update(v int) {
+func (d *IntDrawer) Update(v int) {
 	d.Ticker()
 	if d.Value != v {
 		d.Value = v
@@ -34,8 +33,8 @@ func (d *NumberDrawer) Update(v int) {
 	}
 }
 
-// NumberDrawer's Draw draws each number at constant x regardless of their widths.
-func (d NumberDrawer) Draw(dst draws.Image) {
+// IntDrawer's Draw draws each number at constant x regardless of their widths.
+func (d IntDrawer) Draw(dst draws.Image) {
 	if d.Done() {
 		return
 	}
