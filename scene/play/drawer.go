@@ -12,23 +12,24 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
-// Todo: DigitWidth -> digitWidth with ScoreSprites[0].W()
 type ScoreDrawer struct {
 	draws.Timer
-	DigitWidth float64 // Use number 0's width.
+	digitWidth float64 // Use number 0's width.
 	DigitGap   float64
 	ZeroFill   int
 	Score      ctrl.Delayed
 	Sprites    [10]draws.Sprite
 }
 
-func NewScoreDrawer() ScoreDrawer {
+func (skin skinType) NewScoreDrawer() ScoreDrawer {
+	var sprites [10]draws.Sprite
+	copy(sprites[:], skin.Score[:])
 	return ScoreDrawer{
-		DigitWidth: ScoreSprites[0].W(),
-		DigitGap:   ScoreDigitGap,
+		digitWidth: skin.Score[0].W(),
+		DigitGap:   Settings.ScoreDigitGap,
 		ZeroFill:   1,
 		Score:      ctrl.Delayed{Mode: ctrl.DelayedModeExp},
-		Sprites:    ScoreSprites,
+		Sprites:    sprites,
 	}
 }
 func (d *ScoreDrawer) Update(score float64) {
@@ -48,7 +49,7 @@ func (d ScoreDrawer) Draw(dst draws.Image) {
 	for i := len(vs); i < d.ZeroFill; i++ {
 		vs = append(vs, 0)
 	}
-	w := d.DigitWidth + d.DigitGap
+	w := d.digitWidth + d.DigitGap
 	var tx float64
 	for _, v := range vs {
 		sprite := d.Sprites[v]
@@ -78,8 +79,8 @@ type MeterMark struct {
 	ColorType int
 }
 
-// Todo: draw Meter with ebiten.Image
 // Anchor is a unit sprite constantly drawn at the middle of meter.
+// Todo: should w and h be math.Ceil()?
 func NewMeterDrawer(js []mode.Judgment, colors []color.NRGBA) (d MeterDrawer) {
 	var (
 		colorMeter = color.NRGBA{0, 0, 0, 128}       // Dark
@@ -89,21 +90,24 @@ func NewMeterDrawer(js []mode.Judgment, colors []color.NRGBA) (d MeterDrawer) {
 	d.MaxCountdown = draws.ToTick(4000)
 	{
 		miss := js[len(js)-1]
-		w := 1 + 2*math.Ceil(MeterWidth*float64(miss.Window))
-		h := MeterHeight
+		w := 1 + 2*Settings.MeterWidth*float64(miss.Window)
+		h := Settings.MeterHeight
 		src := image.NewRGBA(image.Rect(0, 0, int(w), int(h)))
 		draw.Draw(src, src.Bounds(), &image.Uniform{colorMeter}, image.Point{}, draw.Src)
-
-		// Height of colored range is 1/4 of meter's.
-		y1, y2 := math.Ceil(h*0.375), math.Ceil(h*0.625)
-		for i := range js { // In reverse order.
-			j := js[len(js)-1-i]
+		// src := draws.NewImage(w, h)
+		// src.Fill(colorMeter)
+		y1, y2 := h*(0.5-0.125), h*(0.5+0.125) // Height of inner is 1/4 of meter's.
+		for i := range js {
+			j := js[len(js)-1-i] // In reverse order.
 			clr := colors[len(js)-1-i]
-			w := 1 + 2*math.Ceil(MeterWidth*float64(j.Window))
-			x1 := math.Ceil(MeterWidth * float64(miss.Window-j.Window))
+
+			w := 1 + 2*Settings.MeterWidth*float64(j.Window)
+			x1 := Settings.MeterWidth * float64(miss.Window-j.Window)
 			x2 := x1 + w
 			rect := image.Rect(int(x1), int(y1), int(x2), int(y2))
 			draw.Draw(src, rect, &image.Uniform{clr}, image.Point{}, draw.Src)
+			// dst := src.SubImage(rect).(*ebiten.Image)
+			// ebitenutil.DrawRect(dst, 0, 0, w, h/4, clr)
 		}
 		i := ebiten.NewImageFromImage(src)
 		base := draws.NewSpriteFromSource(draws.Image{Image: i})
@@ -111,20 +115,18 @@ func NewMeterDrawer(js []mode.Judgment, colors []color.NRGBA) (d MeterDrawer) {
 		d.Meter = base
 	}
 	{
-		src := ebiten.NewImage(int(MeterWidth), int(MeterHeight))
+		src := draws.NewImage(Settings.MeterWidth, Settings.MeterHeight)
 		src.Fill(colorRed)
-		i := ebiten.NewImageFromImage(src)
-		anchor := draws.NewSpriteFromSource(draws.Image{Image: i})
-		anchor.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
-		d.Anchor = anchor
+		sprite := draws.NewSpriteFromSource(src)
+		sprite.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
+		d.Anchor = sprite
 	}
 	{
-		src := ebiten.NewImage(int(MeterWidth), int(MeterHeight))
+		src := draws.NewImage(Settings.MeterWidth, Settings.MeterHeight)
 		src.Fill(colorWhite)
-		i := ebiten.NewImageFromImage(src)
-		unit := draws.NewSpriteFromSource(draws.Image{Image: i})
-		unit.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
-		d.Unit = unit
+		sprite := draws.NewSpriteFromSource(src)
+		sprite.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
+		d.Unit = sprite
 	}
 	return
 }
@@ -159,11 +161,12 @@ func (d MeterDrawer) Draw(dst draws.Image) {
 		if age := d.MarkAge(m); age >= 0.8 {
 			op.ColorM.Scale(1, 1, 1, 1-(age-0.8)/0.2)
 		}
-		op.GeoM.Translate(-float64(m.Offset)*MeterWidth, 0)
+		op.GeoM.Translate(-float64(m.Offset)*Settings.MeterWidth, 0)
 		sprite.Draw(dst, op)
 	}
 }
 
+// Todo: remove
 func (d MeterDrawer) MarkAge(m MeterMark) float64 {
 	return 1 - float64(m.Countdown)/float64(d.MaxCountdown)
 }
