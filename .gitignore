@@ -20,9 +20,12 @@
 # Go workspace file
 go.work
 
-# custom files
-/replay
-/music
-/docs/~$ui.pptx
-/*.osu
-# /skin/*
+/cmd/gosu/music/*
+# !/cmd/gosu/music/circles
+# !/cmd/gosu/music/triangles
+
+/cmd/gosu/replay/*
+# !/cmd/gosu/replay/circles.osr
+# !/cmd/gosu/replay/triangles.osr
+
+/cmd/gosu/skin/*
