@@ -16,6 +16,8 @@ const (
 	LoadSkinPlay // refreshes every play
 )
 
+var defaultLoaded bool
+
 // Number sprites are used in Play and Result.
 const (
 	NumberDot = iota
