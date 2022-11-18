@@ -32,10 +32,10 @@ func (skin *Skin) Load(fsys fs.FS) {
 		skin.Reset()
 	}
 	// loads skin data
-	skin.fillBlank(fsys)
-}
-func (skin *Skin) fillBlank(fsys fs.FS) {
 	base := []Skin{Skin{}, DefaultSkin, UserSkin}[skin.Kind]
+	skin.fillBlank(base)
+}
+func (skin *Skin) fillBlank(base Skin) {
 	// fills blank data with base
 }
 func (skin *Skin) Reset() {
@@ -50,9 +50,4 @@ func (skin *Skin) Reset() {
 }
 func init() {
 	DefaultSkin.Load(defaultskin.FS)
-}
-
-// game.go
-func load(fsys fs.FS) {
-	mode.UserSkin.Load(fsys)
 }

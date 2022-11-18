@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 
-	"github.com/hndada/gosu/scene"
+	"github.com/hndada/gosu/mode"
 )
 
 func load(fsys fs.FS) {
@@ -12,12 +12,13 @@ func load(fsys fs.FS) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	scene.LoadSettings(string(settings))
+	mode.LoadSettings(string(settings))
 
 	skinFS, err := fs.Sub(fsys, "skin")
 	if err != nil {
 		fmt.Println(err)
 	}
+	mode.UserSkin.Load(fsys)
 	scene.LoadSkin(skinFS, scene.LoadSkinUser)
 	soundFS, err := fs.Sub(fsys, "skin/sound")
 	if err != nil {
