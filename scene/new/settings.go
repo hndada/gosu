@@ -2,7 +2,6 @@ package new
 
 import (
 	"fmt"
-	"io/fs"
 
 	"github.com/BurntSushi/toml"
 )
@@ -34,9 +33,4 @@ func (settings *Settings) Load(data string) {
 		fmt.Println(err)
 	}
 	// post-processing
-}
-
-// game.go
-func load(fsys fs.FS) {
-	mode.UserSettings.Load(fsys)
 }

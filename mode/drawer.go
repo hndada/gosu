@@ -11,24 +11,39 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
+// Order of fields of drawer: updating fields, others fields, sprites
+type BackgroundDrawer struct {
+	Brightness float64
+	Sprite     draws.Sprite
+}
+
+func (d *BackgroundDrawer) Update() {
+	if v := UserSettings.BackgroundBrightness; d.Brightness != v {
+		d.Brightness = v
+	}
+}
+func (d BackgroundDrawer) Draw(dst draws.Image) {
+	op := draws.Op{}
+	op.ColorM.ChangeHSV(0, 1, d.Brightness)
+	d.Sprite.Draw(dst, op)
+}
+
 type ScoreDrawer struct {
 	draws.Timer
 	digitWidth float64 // Use number 0's width.
 	DigitGap   float64
 	ZeroFill   int
 	Score      ctrl.Delayed
-	Sprites    [10]draws.Sprite
+	Sprites    []draws.Sprite
 }
 
-func (skin skinType) NewScoreDrawer() ScoreDrawer {
-	var sprites [10]draws.Sprite
-	copy(sprites[:], skin.Score[:])
+func NewScoreDrawer(sprites []draws.Sprite) ScoreDrawer {
 	return ScoreDrawer{
-		digitWidth: skin.Score[0].W(),
-		DigitGap:   Settings.ScoreDigitGap,
+		digitWidth: sprites[0].W(),
+		DigitGap:   UserSettings.ScoreDigitGap,
 		ZeroFill:   1,
 		Score:      ctrl.Delayed{Mode: ctrl.DelayedModeExp},
-		Sprites:    sprites,
+		Sprites:    sprites[:10],
 	}
 }
 func (d *ScoreDrawer) Update(score float64) {
@@ -59,6 +74,63 @@ func (d ScoreDrawer) Draw(dst draws.Image) {
 	}
 }
 
+type ComboDrawer struct {
+	draws.Timer
+	digitWidth float64 // Use number 0's width.
+	DigitGap   float64
+	Combo      int
+	Bounce     float64
+	Sprites    [10]draws.Sprite
+}
+
+// Each number has different width. Number 0's width is used as standard.
+func (d *ComboDrawer) Update(combo int) {
+	d.Ticker()
+	if d.Combo != combo {
+		d.Combo = combo
+		d.Timer.Reset()
+	}
+}
+
+// ComboDrawer's Draw draws each number at constant x regardless of their widths.
+func (d ComboDrawer) Draw(dst draws.Image) {
+	if d.Done() {
+		return
+	}
+	if d.Combo == 0 {
+		return
+	}
+	vs := make([]int, 0)
+	for v := d.Combo; v > 0; v /= 10 {
+		vs = append(vs, v%10) // Little endian.
+	}
+
+	// Size of the whole image is 0.5w + (n-1)(w+gap) + 0.5w.
+	// Since sprites are already at origin, no need to care of two 0.5w.
+	w := d.digitWidth + d.DigitGap
+	tx := float64(len(vs)-1) * w / 2
+	const (
+		bound0 = 0.05
+		bound1 = 0.1
+	)
+	for _, v := range vs {
+		sprite := d.Sprites[v]
+		sprite.Move(tx, 0)
+		age := d.Age()
+		if age < bound0 {
+			scale := 0.1 * d.Progress(0, bound0)
+			sprite.Move(0, d.Bounce*sprite.H()*scale)
+		}
+		if age >= bound0 && age < bound1 {
+			scale := 0.1 - 0.1*d.Progress(bound0, bound1)
+			sprite.Move(0, d.Bounce*sprite.H()*scale)
+		}
+		sprite.Draw(dst, draws.Op{})
+		tx -= w
+	}
+}
+
+// Todo: refactor MeterDrawer code
 var MeterMarkColors = []color.NRGBA{
 	{255, 255, 255, 192}, // White
 	{213, 0, 242, 192},   // Purple
@@ -80,17 +152,21 @@ type MeterMark struct {
 
 // Anchor is a unit sprite constantly drawn at the middle of meter.
 // Todo: should w and h be math.Ceil()?
-func NewMeterDrawer(js []mode.Judgment, colors []color.NRGBA) (d MeterDrawer) {
+func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 	var (
 		colorMeter = color.NRGBA{0, 0, 0, 128}       // Dark
 		colorWhite = color.NRGBA{255, 255, 255, 192} // White
 		colorRed   = color.NRGBA{255, 0, 0, 192}     // Red
 	)
+	var (
+		W = UserSettings.MeterUnit
+		H = UserSettings.MeterHeight
+	)
 	d.MaxCountdown = draws.ToTick(4000)
 	{
 		miss := js[len(js)-1]
-		w := 1 + 2*Settings.MeterWidth*float64(miss.Window)
-		h := Settings.MeterHeight
+		w := 1 + 2*W*float64(miss.Window)
+		h := H
 		src := image.NewRGBA(image.Rect(0, 0, int(w), int(h)))
 		draw.Draw(src, src.Bounds(), &image.Uniform{colorMeter}, image.Point{}, draw.Src)
 		// src := draws.NewImage(w, h)
@@ -100,8 +176,8 @@ func NewMeterDrawer(js []mode.Judgment, colors []color.NRGBA) (d MeterDrawer) {
 			j := js[len(js)-1-i] // In reverse order.
 			clr := colors[len(js)-1-i]
 
-			w := 1 + 2*Settings.MeterWidth*float64(j.Window)
-			x1 := Settings.MeterWidth * float64(miss.Window-j.Window)
+			w := 1 + 2*W*float64(j.Window)
+			x1 := W * float64(miss.Window-j.Window)
 			x2 := x1 + w
 			rect := image.Rect(int(x1), int(y1), int(x2), int(y2))
 			draw.Draw(src, rect, &image.Uniform{clr}, image.Point{}, draw.Src)
@@ -114,14 +190,14 @@ func NewMeterDrawer(js []mode.Judgment, colors []color.NRGBA) (d MeterDrawer) {
 		d.Meter = base
 	}
 	{
-		src := draws.NewImage(Settings.MeterWidth, Settings.MeterHeight)
+		src := draws.NewImage(W, H)
 		src.Fill(colorRed)
 		sprite := draws.NewSpriteFromSource(src)
 		sprite.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
 		d.Anchor = sprite
 	}
 	{
-		src := draws.NewImage(Settings.MeterWidth, Settings.MeterHeight)
+		src := draws.NewImage(W, H)
 		src.Fill(colorWhite)
 		sprite := draws.NewSpriteFromSource(src)
 		sprite.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
@@ -160,7 +236,7 @@ func (d MeterDrawer) Draw(dst draws.Image) {
 		if age := d.MarkAge(m); age >= 0.8 {
 			op.ColorM.Scale(1, 1, 1, 1-(age-0.8)/0.2)
 		}
-		op.GeoM.Translate(-float64(m.Offset)*Settings.MeterWidth, 0)
+		op.GeoM.Translate(-float64(m.Offset)*UserSettings.MeterUnit, 0)
 		sprite.Draw(dst, op)
 	}
 }

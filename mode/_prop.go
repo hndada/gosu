@@ -60,3 +60,13 @@ func ChartFileMode(fpath string) int {
 	}
 	return ModeNone
 }
+
+// Prop stands for Mode properties.
+type Prop struct {
+	LoadSkin   func()
+	SpeedScale *float64
+	Settings   map[string]*float64
+	// NewScenePlay func(cpath string, rf *osr.Format) (scene.Scene, error)
+	ExposureTime func(float64) float64
+	KeySettings  map[int][]input.Key
+}
