@@ -4,47 +4,50 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/scene"
-	defaultskin "github.com/hndada/gosu/skin"
 )
+
+const (
+	TPS         = scene.TPS
+	ScreenSizeX = scene.ScreenSizeX
+	ScreenSizeY = scene.ScreenSizeY
+)
+
+type Skin struct {
+	Type              int
+	DefaultBackground draws.Sprite
+	DefaultChartPanel draws.Sprite
+	ChartBox          draws.Sprite
+	ChartLevelBox     draws.Sprite
+}
 
 const (
 	chartBoxWidth  = 450
 	chartBoxHeight = 50
-	chartBoxshrink = 0.15 * chartBoxWidth
-	chartBoxCount  = scene.ScreenSizeY/chartBoxHeight + 2
+	chartBoxShrink = 0.15 * chartBoxWidth
+	chartBoxCount  = ScreenSizeY/chartBoxHeight + 2
 )
-
-type skinType struct {
-	DefaultBackground draws.Sprite
-	ChartBox          draws.Sprite
-	ChartLevelBox     draws.Sprite
-	DefaultChartPanel draws.Sprite
-}
 
 var (
-	defaultSkin skinType
-	Skin        skinType
+	DefaultSkin = Skin{Type: mode.Default}
+	UserSkin    = Skin{Type: mode.User}
 )
 
-func init() { LoadSkin(defaultskin.FS, scene.LoadSkinDefault) }
-func LoadSkin(fsys fs.FS, mode scene.LoadSkinMode) {
-	skin := &Skin
-	if mode == scene.LoadSkinDefault {
-		skin = &defaultSkin
-	}
-	skin.DefaultBackground = scene.Skin.DefaultBackground
+func (skin *Skin) Load(fsys fs.FS) {
+	skin.DefaultBackground = scene.UserSkin.DefaultBackground
 	{
 		s := draws.NewSprite(fsys, "interface/box-mask.png")
 		s.SetSize(chartBoxWidth, chartBoxHeight)
-		x := scene.ScreenSizeX + chartBoxshrink
-		y := float64(scene.ScreenSizeY) / 2
+		x := ScreenSizeX - chartBoxShrink
+		y := float64(ScreenSizeY) / 2
 		s.Locate(x, y, draws.RightMiddle)
 		skin.ChartBox = s
 	}
-	skin.fillBlank([]skinType{{}, defaultSkin, Skin}[mode])
+	base := []Skin{{}, DefaultSkin, UserSkin}[skin.Type]
+	skin.fillBlank(base)
 }
-func (skin *skinType) fillBlank(base skinType) {
+func (skin *Skin) fillBlank(base Skin) {
 	if !skin.DefaultBackground.IsValid() {
 		skin.DefaultBackground = base.DefaultBackground
 	}

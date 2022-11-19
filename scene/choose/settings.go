@@ -4,31 +4,37 @@ import (
 	"fmt"
 
 	"github.com/BurntSushi/toml"
-	"github.com/hndada/gosu/scene"
+	"github.com/hndada/gosu/defaultskin"
+	"github.com/hndada/gosu/mode"
 )
 
-type settings struct {
+type Settings struct {
 	// Group1               int
 	// Group2               int
 	// Sort                 int
 	// Filter               int
-	BackgroundBrightness float64
+	backgroundBrightness *float64
 }
 
-var defaultSettings = settings{
-	BackgroundBrightness: scene.Settings.BackgroundBrightness,
-}
-var Settings = defaultSettings
+var (
+	DefaultSettings = Settings{}
+	UserSettings    = DefaultSettings
+	S               = &UserSettings
+)
 
-func ResetSettings() { Settings = defaultSettings }
-func LoadSettings(data string) {
-	_, err := toml.Decode(data, &Settings)
+func init() {
+	DefaultSettings.process()
+	UserSettings.process()
+	DefaultSkin.Load(defaultskin.FS)
+}
+func (settings *Settings) Load(data string) {
+	_, err := toml.Decode(data, settings)
 	if err != nil {
 		fmt.Println(err)
 	}
-	scene.Normalize(&Settings.BackgroundBrightness, 0, 1)
+	defer settings.process()
 }
-
-// Todo: Settings -> settings, CurrentSettings() -> Settings(),
-// settings -> userSettings?
-// `toml:"BackgroundBrightness_Choose"`
+func (settings *Settings) process() {
+	MS := &mode.UserSettings
+	settings.backgroundBrightness = &MS.BackgroundBrightness
+}
