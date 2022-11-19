@@ -1,6 +1,8 @@
 package piano
 
 import (
+	"image/color"
+
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode"
 )
@@ -136,7 +138,7 @@ func (d NoteDrawer) DrawBody(dst draws.Image, tail *Note) {
 		body = d.Frame(d.Sprites[Body])
 	}
 	length := tail.Position - head.Position // + BodyGain
-	length += UserSettings.NoteHeigth       //-bodyLoss
+	length += UserSettings.NoteHeigth       // - bodyLoss
 	if length < 0 {
 		length = 0
 	}
@@ -204,6 +206,7 @@ func (d KeyLightingDrawer) Draw(dst draws.Image) {
 type HitLightingDrawer struct {
 	draws.Timer
 	Sprites draws.Animation
+	Color   color.NRGBA
 }
 
 // HitLightingDrawer draws when Normal is Hit or Tail is Release.
@@ -214,12 +217,12 @@ func (d *HitLightingDrawer) Update(hit bool) {
 	}
 }
 func (d HitLightingDrawer) Draw(dst draws.Image) {
-	if d.Done() {
+	if d.IsDone() {
 		return
 	}
 	op := draws.Op{}
-	opaque := UserSettings.HitLightingOpaque * (1 - d.Progress(0.75, 1))
-	op.ColorM.Scale(1, 1, 1, opaque)
+	// opaque := UserSettings.HitLightingOpaque * (1 - d.Progress(0.75, 1))
+	op.ColorM.ScaleWithColor(d.Color)
 	d.Frame(d.Sprites).Draw(dst, op)
 }
 
@@ -241,7 +244,7 @@ func (d HoldLightingDrawer) Draw(dst draws.Image) {
 		return
 	}
 	op := draws.Op{}
-	op.ColorM.Scale(1, 1, 1, UserSettings.HitLightingOpaque)
+	op.ColorM.Scale(1, 1, 1, UserSettings.HoldLightingOpaque)
 	d.Frame(d.Sprites).Draw(dst, op)
 }
 
@@ -256,20 +259,20 @@ func NewJudgmentDrawer(sprites []draws.Animation) (d JudgmentDrawer) {
 	count := float64(len(sprites))
 	period := int64(frameDuration * count)
 	return JudgmentDrawer{
-		Timer:   draws.NewTimer(draws.ToTick(250), draws.ToTick(period)),
+		Timer:   draws.NewTimer(draws.ToTick(250, TPS), draws.ToTick(period, TPS)),
 		Sprites: sprites,
 	}
 }
 func (d *JudgmentDrawer) Update(worst mode.Judgment) {
 	d.Ticker()
-	if worst.Valid() {
+	if worst.IsValid() {
 		d.Judgment = worst
 		d.Timer.Reset()
 	}
 }
 
 func (d JudgmentDrawer) Draw(dst draws.Image) {
-	if d.Done() {
+	if d.IsDone() {
 		return
 	}
 	var idx int

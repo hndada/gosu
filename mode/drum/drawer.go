@@ -366,7 +366,7 @@ func (d *JudgmentDrawer) Update(j mode.Judgment, big bool) {
 }
 
 func (d JudgmentDrawer) Draw(dst draws.Image) {
-	if d.Done() || d.judgment.Window == 0 {
+	if d.IsDone() || d.judgment.Window == 0 {
 		return
 	}
 	sprites := d.Sprites[Regular]

@@ -1,20 +1,9 @@
 package draws
 
-import "github.com/hajimehoshi/ebiten/v2"
-
-var tps = ebiten.TPS()
-
-func SetTPS(v int) { tps = v }
-
-// Todo: remove it
-func init() {
-	SetTPS(1000)
-}
-
 // Time is a point of time.
 // Duration a length of time.
-func ToTick(time int64) int { return int(float64(time) / 1000 * float64(tps)) }
-func ToTime(tick int) int64 { return int64(float64(tick) / float64(tps) * 1000) }
+func ToTick(time int64, tps int) int { return int(float64(time) / 1000 * float64(tps)) }
+func ToTime(tick int, tps int) int64 { return int64(float64(tick) / float64(tps) * 1000) }
 
 // MaxTick, Period == {+, +}: finite drawing with animation. e.g., Judgment.
 // MaxTick, Period == {+, 0}: finite drawing with no animation. e.g., Combo.
@@ -64,7 +53,7 @@ func (t Timer) Progress(start, end float64) float64 {
 	}
 	return float64(t.Age()-start) / float64(end-start)
 }
-func (t Timer) Done() bool { return t.MaxTick != 0 && t.Tick == t.MaxTick }
+func (t Timer) IsDone() bool { return t.MaxTick != 0 && t.Tick == t.MaxTick }
 
 // For Animation.
 func (t Timer) Frame(animation Animation) Sprite {

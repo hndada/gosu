@@ -53,7 +53,7 @@ func (d *ScoreDrawer) Update(score float64) {
 
 // NumberDrawer's Draw draws each number at the center of constant-width bound.
 func (d ScoreDrawer) Draw(dst draws.Image) {
-	if d.Done() {
+	if d.IsDone() {
 		return
 	}
 	vs := make([]int, 0)
@@ -95,7 +95,7 @@ func (d *ComboDrawer) Update(combo int) {
 
 // ComboDrawer's Draw draws each number at constant x regardless of their widths.
 func (d ComboDrawer) Draw(dst draws.Image) {
-	if d.Done() {
+	if d.IsDone() {
 		return
 	}
 	if d.Combo == 0 {
@@ -163,7 +163,7 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 		W = UserSettings.MeterUnit
 		H = UserSettings.MeterHeight
 	)
-	d.MaxCountdown = draws.ToTick(4000)
+	d.MaxCountdown = draws.ToTick(4000, TPS)
 	{
 		miss := js[len(js)-1]
 		w := 1 + 2*W*float64(miss.Window)

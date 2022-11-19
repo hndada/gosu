@@ -20,33 +20,25 @@ const (
 	ScreenSizeY = 900
 )
 
-type SkinType int
+// In narrow meaning, Skin stands for a set of Sprites.
+// In wide meaning, Skin also includes a set of sounds.
+// Package defaultskin has a set of sounds.
+type Skin struct {
+	Type              int
+	DefaultBackground draws.Sprite
+	Score             [13]draws.Sprite // number + sign(. , %)
+}
 
-const (
-	SkinTypeDefault SkinType = iota
-	SkinTypeUser
-	SkinTypePlay // refreshes every play
-)
 const (
 	ScoreDot = iota
 	ScoreComma
 	ScorePercent
 )
 
-// In narrow meaning, Skin stands for a set of Sprites.
-// In wide meaning, Skin also includes a set of sounds.
-// Package defaultskin has a set of sounds.
-type Skin struct {
-	Type              SkinType
-	DefaultBackground draws.Sprite
-	Score             [13]draws.Sprite // number + sign(. , %)
-	// Combo [10]draws.Sprite // number only
-}
-
 var (
-	DefaultSkin = Skin{Type: SkinTypeDefault}
-	UserSkin    = Skin{Type: SkinTypeUser}
-	// PlaySkin    = Skin{Type: SkinTypePlay}
+	DefaultSkin = Skin{Type: Default}
+	UserSkin    = Skin{Type: User}
+	// PlaySkin    = Skin{Type: Play}
 )
 
 // s stands for sprite.
@@ -54,7 +46,7 @@ var (
 // S stands for UserSettings.
 func (skin *Skin) Load(fsys fs.FS) {
 	S := UserSettings // abbreviation
-	if skin.Type == SkinTypePlay {
+	if skin.Type == Play {
 		skin.Reset()
 	}
 	skin.DefaultBackground = NewBackground(fsys, "interface/default-bg.jpg")
@@ -92,9 +84,9 @@ func (skin *Skin) fillBlank(base Skin) {
 func (skin *Skin) Reset() {
 	kind := skin.Type
 	switch kind {
-	case SkinTypeUser:
+	case User:
 		*skin = DefaultSkin
-	case SkinTypePlay:
+	case Play:
 		*skin = UserSkin
 	}
 	skin.Type = kind

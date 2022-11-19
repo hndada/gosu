@@ -20,6 +20,12 @@ type Settings struct {
 	ScoreDigitGap float64
 }
 
+const (
+	Default = iota
+	User
+	Play // For skin. Refreshes on every play.
+)
+
 var (
 	DefaultSettings = Settings{
 		VolumeMusic:          0.25,
@@ -37,25 +43,26 @@ var (
 
 func init() {
 	DefaultSettings.process()
+	UserSettings.process()
 	DefaultSkin.Load(defaultskin.FS)
 }
 
 func (settings *Settings) Load(data string) {
-	_, err := toml.Decode(data, &UserSettings)
+	_, err := toml.Decode(data, settings)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer settings.process()
 
-	Normalize(&UserSettings.VolumeMusic, 0, 1)
-	Normalize(&UserSettings.VolumeSound, 0, 1)
-	Normalize(&UserSettings.Offset, -300, 300)
-	Normalize(&UserSettings.BackgroundBrightness, 0, 1)
+	Normalize(&settings.VolumeMusic, 0, 1)
+	Normalize(&settings.VolumeSound, 0, 1)
+	Normalize(&settings.Offset, -300, 300)
+	Normalize(&settings.BackgroundBrightness, 0, 1)
 
-	Normalize(&UserSettings.MeterUnit, 0, 5)
-	Normalize(&UserSettings.MeterHeight, 0, 100)
-	Normalize(&UserSettings.ScoreScale, 0, 5)
-	Normalize(&UserSettings.ScoreDigitGap, -0.05, 0.05)
+	Normalize(&settings.MeterUnit, 0, 5)
+	Normalize(&settings.MeterHeight, 0, 100)
+	Normalize(&settings.ScoreScale, 0, 5)
+	Normalize(&settings.ScoreDigitGap, -0.05, 0.05)
 }
 
 // process processes from raw settings to screen size-adjusted settings.

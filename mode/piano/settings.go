@@ -10,6 +10,8 @@ import (
 )
 
 const (
+	TPS = mode.TPS
+
 	ScreenSizeX = mode.ScreenSizeX
 	ScreenSizeY = mode.ScreenSizeY
 )
@@ -20,26 +22,32 @@ const positionMargin = 100
 
 type Settings struct {
 	// Logic settings
-	KeySettings   map[int][]string
-	SpeedScale    float64
-	HitPosition   float64 // The bottom y-value of Hint,  not a middle or top.
-	maxPosition   float64
-	minPosition   float64
-	TailExtraTime float64
-	ReverseBody   bool
+	KeySettings          map[int][]string
+	SpeedScale           float64
+	HitPosition          float64 // The bottom y-value of Hint,  not a middle or top.
+	maxPosition          float64
+	minPosition          float64
+	TailExtraTime        float64
+	ReverseBody          bool
+	volumeMusic          *float64
+	volumeSound          *float64
+	offset               *int64
+	backgroundBrightness *float64
 
 	// Skin-independent settings
-	NoteWidths        map[int][4]float64 // Fourth is a Scratch note.
-	NoteHeigth        float64            // Applies to all types of notes.
-	BodyStyle         int
-	FieldPosition     float64
-	ComboPosition     float64
-	JudgmentPosition  float64
-	ScratchColor      [4]uint8
-	scratchColor      color.NRGBA
-	FieldOpaque       float64
-	KeyLightingOpaque float64
-	HitLightingOpaque float64
+	NoteWidths         map[int][4]float64 // Fourth is a Scratch note.
+	NoteHeigth         float64            // Applies to all types of notes.
+	BodyStyle          int
+	FieldPosition      float64
+	ComboPosition      float64
+	JudgmentPosition   float64
+	ScratchColor       [4]uint8
+	scratchColor       color.NRGBA
+	FieldOpaque        float64
+	KeyLightingOpaque  float64
+	HitLightingColors  [4][4]uint8
+	hitLightingColors  [4]color.NRGBA
+	HoldLightingOpaque float64
 
 	// Skin-dependent settings
 	ComboScale    float64
@@ -83,7 +91,13 @@ var (
 		ScratchColor:      [4]uint8{224, 0, 0, 255},
 		FieldOpaque:       0.8,
 		KeyLightingOpaque: 0.5,
-		HitLightingOpaque: 1,
+		HitLightingColors: [4][4]uint8{
+			{128, 224, 0, 128},
+			{64, 64, 255, 128},
+			{224, 128, 0, 128},
+			{255, 0, 0, 128},
+		},
+		HoldLightingOpaque: 0.8,
 
 		ComboScale:    0.75,
 		ComboDigitGap: -0.0008,
@@ -134,7 +148,8 @@ func (settings *Settings) Load(data string) {
 	// ScratchColor: [4]uint8
 	mode.Normalize(&settings.FieldOpaque, 0, 1)
 	mode.Normalize(&settings.KeyLightingOpaque, 0, 1)
-	mode.Normalize(&settings.HitLightingOpaque, 0, 1)
+	// HitLightingColors: [4][4]uint8
+	mode.Normalize(&settings.HoldLightingOpaque, 0, 1)
 
 	mode.Normalize(&settings.ComboScale, 0, 1.5)
 	mode.Normalize(&settings.ComboDigitGap, -0.005, 0.005)
@@ -143,8 +158,12 @@ func (settings *Settings) Load(data string) {
 	mode.Normalize(&settings.LightingScale, 0, 1.5)
 }
 
+// It is safe to use mode.UserSettings even for DefaultSettings:
+// mode.UserSettings = mode.DefaultSettings when processing default.
 func (settings *Settings) process() {
+	ms := &mode.UserSettings
 	s := settings
+
 	s.HitPosition *= ScreenSizeX
 	max := ScreenSizeY * s.HitPosition
 	s.maxPosition = max + positionMargin
@@ -154,6 +173,10 @@ func (settings *Settings) process() {
 		s.maxPosition = -min
 		s.minPosition = -max
 	}
+	s.volumeMusic = &ms.VolumeMusic
+	s.volumeSound = &ms.VolumeSound
+	s.offset = &ms.Offset
+	s.backgroundBrightness = &ms.BackgroundBrightness
 
 	for k, widths := range s.NoteWidths {
 		for kind := range widths {
@@ -165,9 +188,13 @@ func (settings *Settings) process() {
 	s.FieldPosition *= ScreenSizeX
 	s.ComboPosition *= ScreenSizeY
 	s.JudgmentPosition *= ScreenSizeY
-	s.scratchColor = color.NRGBA{
-		s.ScratchColor[0], s.ScratchColor[1],
-		s.ScratchColor[2], s.ScratchColor[3]}
+	{
+		clr := s.ScratchColor
+		s.scratchColor = color.NRGBA{clr[0], clr[1], clr[2], clr[3]}
+	}
+	for i, clr := range s.HitLightingColors {
+		s.hitLightingColors[i] = color.NRGBA{clr[0], clr[1], clr[2], clr[3]}
+	}
 	s.ComboDigitGap *= ScreenSizeX
 	s.HintHeight *= ScreenSizeY
 }

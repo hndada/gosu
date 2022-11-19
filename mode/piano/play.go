@@ -14,6 +14,7 @@ import (
 )
 
 // ScenePlay: struct, PlayScene: function
+// The skin may be applied some custom settings: on/off some sprites
 type ScenePlay struct {
 	Chart *Chart
 	audios.Timer
@@ -22,28 +23,28 @@ type ScenePlay struct {
 	input.KeyLogger
 
 	*mode.TransPoint
-	SpeedScale float64
+	speedScale float64
 	Cursor     float64
 	Staged     []*Note
 	mode.Scorer
 
-	Skin                // The skin may be applied some custom settings: on/off some sprites
-	BackgroundDrawer    mode.BackgroundDrawer
-	FieldDrawer         FieldDrawer
-	BarDrawer           BarDrawer
-	NoteDrawers         []NoteDrawer
-	KeyDrawers          []KeyDrawer
-	KeyLightingDrawers  []KeyLightingDrawer
-	HintDrawer          HintDrawer
-	HitLightingDrawers  []HitLightingDrawer
-	HoldLightingDrawers []HoldLightingDrawer
-	JudgmentDrawer      JudgmentDrawer
-	ScoreDrawer         mode.ScoreDrawer
-	ComboDrawer         mode.NumberDrawer
-	MeterDrawer         mode.MeterDrawer
+	Background    mode.BackgroundDrawer
+	Field         FieldDrawer
+	Bar           BarDrawer
+	Notes         []NoteDrawer
+	Keys          []KeyDrawer
+	KeyLightings  []KeyLightingDrawer
+	Hint          HintDrawer
+	HitLightings  []HitLightingDrawer
+	HoldLightings []HoldLightingDrawer
+	Judgment      JudgmentDrawer
+	Score         mode.ScoreDrawer
+	Combo         mode.ComboDrawer
+	Meter         mode.MeterDrawer
 }
 
 func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s *ScenePlay, err error) {
+	S := UserSettings
 	s = new(ScenePlay)
 	s.Chart, err = NewChart(fsys, cname)
 	if err != nil {
@@ -51,9 +52,8 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	}
 	c := s.Chart
 	ebiten.SetWindowTitle(c.WindowTitle())
-	keyCount := c.KeyCount & ScratchMask
-	s.Timer = audios.NewTimer(c.Duration(), &mode.Offset)
-	s.MusicPlayer, err = audios.NewMusicPlayer(fsys, c.MusicFilename, &s.Timer, &mode.VolumeMusic)
+	s.Timer = audios.NewTimer(c.Duration(), S.offset)
+	s.MusicPlayer, err = audios.NewMusicPlayer(fsys, c.MusicFilename, &s.Timer, S.volumeMusic)
 	if err != nil {
 		return
 	}
@@ -63,14 +63,14 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	// 		_ = s.Sounds.Register(path)
 	// 	}
 	// }
-	s.KeyLogger = input.NewKeyLogger(KeySettings[keyCount])
+	s.KeyLogger = input.NewKeyLogger(S.KeySettings[c.KeyCount])
 	if rf != nil {
-		s.KeyLogger.FetchPressed = NewReplayListener(rf, keyCount, &s.Timer)
+		s.KeyLogger.FetchPressed = NewReplayListener(rf, c.KeyCount, &s.Timer)
 	}
 
 	s.TransPoint = c.TransPoints[0]
-	s.SpeedScale = 1
-	s.Cursor = float64(s.Now) * s.SpeedScale
+	s.speedScale = 1
+	s.Cursor = float64(s.Now) * s.speedScale
 	s.SetSpeed()
 	s.Scorer = mode.NewScorer(c.ScoreFactors)
 	s.JudgmentCounts = make([]int, len(Judgments))
@@ -82,7 +82,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	for i := range s.MaxWeights {
 		s.MaxWeights[i] = maxWeight
 	}
-	s.Staged = make([]*Note, keyCount)
+	s.Staged = make([]*Note, c.KeyCount)
 	for k := range s.Staged {
 		for _, n := range c.Notes {
 			if k == n.Key {
@@ -91,71 +91,67 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 			}
 		}
 	}
-
-	s.Skin = Skins[keyCount]
-	s.BackgroundDrawer = mode.BackgroundDrawer{
-		Brightness: &mode.BackgroundBrightness,
-		Sprite:     mode.DefaultBackground,
+	PlaySkin.KeyMode = c.KeyMode
+	PlaySkin.Load(fsys)
+	skin := PlaySkin
+	s.Background = mode.BackgroundDrawer{
+		Sprite: mode.NewBackground(fsys, c.ImageFilename),
 	}
-	if bg := mode.NewBackground(fsys, c.ImageFilename); bg.IsValid() {
-		s.BackgroundDrawer.Sprite = bg
+	if !s.Background.Sprite.IsValid() {
+		s.Background.Sprite = skin.DefaultBackground
 	}
-	s.FieldDrawer = FieldDrawer{
-		Sprite: s.FieldSprite,
+	s.Field = FieldDrawer{
+		Sprite: skin.Field,
 	}
-	// s.StageDrawer = StageDrawer{
-	// 	FieldSprite: s.FieldSprite,
-	// 	HintSprite:  s.HintSprite,
-	// }
-	s.BarDrawer = BarDrawer{
+	s.Bar = BarDrawer{
 		Cursor:   s.Cursor,
 		Farthest: c.Bars[0],
 		Nearest:  c.Bars[0],
-		Sprite:   s.BarSprite,
+		Sprite:   skin.Bar,
 	}
-	s.NoteDrawers = make([]NoteDrawer, keyCount)
-	s.KeyDrawers = make([]KeyDrawer, keyCount)
-	s.KeyLightingDrawers = make([]KeyLightingDrawer, keyCount)
-	s.HitLightingDrawers = make([]HitLightingDrawer, keyCount)
-	s.HoldLightingDrawers = make([]HoldLightingDrawer, keyCount)
-	for k := 0; k < keyCount; k++ {
-		s.NoteDrawers[k] = NoteDrawer{
-			Timer:    draws.NewTimer(0, draws.ToTick(400)), // Todo: make it BPM-dependent?
+	s.Notes = make([]NoteDrawer, c.KeyCount)
+	s.Keys = make([]KeyDrawer, c.KeyCount)
+	s.KeyLightings = make([]KeyLightingDrawer, c.KeyCount)
+	s.HitLightings = make([]HitLightingDrawer, c.KeyCount)
+	s.HoldLightings = make([]HoldLightingDrawer, c.KeyCount)
+	for k := 0; k < c.KeyCount; k++ {
+		s.Keys[k] = KeyDrawer{
+			Timer:   draws.NewTimer(draws.ToTick(30, TPS), 0),
+			Sprites: skin.Key[k],
+		}
+		s.Notes[k] = NoteDrawer{
+			Timer:    draws.NewTimer(0, draws.ToTick(400, TPS)), // Todo: make it BPM-dependent?
 			Cursor:   s.Cursor,
 			Farthest: s.Staged[k],
 			Nearest:  s.Staged[k],
-			Sprites:  s.NoteSprites[k],
+			Sprites:  skin.Note[k],
 		}
-		s.KeyDrawers[k] = KeyDrawer{
-			Timer:   draws.NewTimer(draws.ToTick(30), 0),
-			Sprites: s.KeySprites[k],
+		s.KeyLightings[k] = KeyLightingDrawer{
+			Timer:  draws.NewTimer(draws.ToTick(30, TPS), 0),
+			Sprite: skin.KeyLighting[k],
 		}
-		s.KeyLightingDrawers[k] = KeyLightingDrawer{
-			Timer:  draws.NewTimer(draws.ToTick(30), 0),
-			Sprite: s.KeyLightingSprites[k],
+		s.HitLightings[k] = HitLightingDrawer{
+			Timer:   draws.NewTimer(draws.ToTick(150, TPS), draws.ToTick(150, TPS)),
+			Sprites: skin.HitLighting[k],
+			Color:   S.hitLightingColors[KeyTypes[c.KeyCount][k]],
 		}
-		s.HitLightingDrawers[k] = HitLightingDrawer{
-			Timer:   draws.NewTimer(draws.ToTick(150), draws.ToTick(150)),
-			Sprites: s.HitLightingSprites[k],
-		}
-		s.HoldLightingDrawers[k] = HoldLightingDrawer{
-			Timer:   draws.NewTimer(0, draws.ToTick(250)),
-			Sprites: s.HoldLightingSprites[k],
+		s.HoldLightings[k] = HoldLightingDrawer{
+			Timer:   draws.NewTimer(0, draws.ToTick(250, TPS)),
+			Sprites: skin.HoldLighting[k],
 		}
 	}
-	s.HintDrawer = HintDrawer{
-		Sprite: s.HintSprite,
+	s.Hint = HintDrawer{
+		Sprite: skin.Hint,
 	}
-	s.JudgmentDrawer = NewJudgmentDrawer()
-	s.ScoreDrawer = mode.NewScoreDrawer()
-	s.ComboDrawer = mode.NumberDrawer{
-		Timer:      draws.NewTimer(draws.ToTick(2000), 0),
-		DigitWidth: s.ComboSprites[0].Size().X,
-		DigitGap:   ComboDigitGap,
-		Bounce:     0.85,
-		Sprites:    s.ComboSprites,
+	s.Judgment = NewJudgmentDrawer(skin.Judgment[:])
+	s.Score = mode.NewScoreDrawer(skin.Score[:])
+	s.Combo = mode.ComboDrawer{
+		Timer:    draws.NewTimer(draws.ToTick(2000, TPS), 0),
+		DigitGap: S.ComboDigitGap,
+		Bounce:   0.85,
+		Sprites:  skin.Combo,
 	}
-	s.MeterDrawer = mode.NewMeterDrawer(Judgments, JudgmentColors)
+	s.Meter = mode.NewMeterDrawer(Judgments, JudgmentColors)
 	return s, nil
 }
 
@@ -163,8 +159,8 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 // Need to re-calculate positions when Speed has changed.
 func (s *ScenePlay) SetSpeed() {
 	c := s.Chart
-	old := s.SpeedScale
-	new := SpeedScale
+	old := s.speedScale
+	new := UserSettings.SpeedScale
 	s.Cursor *= new / old
 	for _, tp := range c.TransPoints {
 		tp.Position *= new / old
@@ -175,7 +171,7 @@ func (s *ScenePlay) SetSpeed() {
 	for _, b := range c.Bars {
 		b.Position *= new / old
 	}
-	s.SpeedScale = new
+	s.speedScale = new
 }
 
 // Todo: apply other values of TransPoint (Volume has finished so far)
@@ -225,59 +221,60 @@ func (s *ScenePlay) Update() any {
 			if n.Type == Tail {
 				kind = 1
 			}
-			s.MeterDrawer.AddMark(int(td), kind)
+			s.Meter.AddMark(int(td), kind)
 			if !j.Is(Miss) && n.Type != Head {
 				hits[n.Key] = true
 			}
 		}
 	}
-	s.BarDrawer.Update(s.Cursor)
+	s.Bar.Update(s.Cursor)
 	for k := 0; k < s.Chart.KeyCount; k++ {
 		holding := false
 		if s.Staged[k] != nil {
 			holding = s.Staged[k].Type == Tail && s.Pressed[k]
 		}
-		s.NoteDrawers[k].Update(s.Cursor, holding)
-		s.KeyDrawers[k].Update(s.Pressed[k])
-		s.KeyLightingDrawers[k].Update(s.Pressed[k])
-		s.HitLightingDrawers[k].Update(hits[k])
-		s.HoldLightingDrawers[k].Update(holding)
+		s.Notes[k].Update(s.Cursor, holding)
+		s.Keys[k].Update(s.Pressed[k])
+		s.KeyLightings[k].Update(s.Pressed[k])
+		s.HitLightings[k].Update(hits[k])
+		s.HoldLightings[k].Update(holding)
 	}
-	s.JudgmentDrawer.Update(worst)
-	s.ScoreDrawer.Update(s.Scores[3])
-	s.ComboDrawer.Update(s.Combo)
-	s.MeterDrawer.Update()
+	s.Judgment.Update(worst)
+	s.Score.Update(s.Scores[3])
+	s.Combo.Update(s.Scorer.Combo)
+	s.Meter.Update()
 
 	// Changed speed should be applied after positions are calculated.
 	s.UpdateTransPoint()
 	s.UpdateCursor()
-	if SpeedScale != s.SpeedScale {
+	if UserSettings.SpeedScale != s.speedScale {
 		s.SetSpeed()
 	}
 	return nil
 }
 func (s ScenePlay) Draw(screen draws.Image) {
-	s.BackgroundDrawer.Draw(screen)
-	s.FieldDrawer.Draw(screen)
-	s.BarDrawer.Draw(screen)
+	s.Background.Draw(screen)
+	s.Field.Draw(screen)
+	s.Bar.Draw(screen)
 	for k := 0; k < s.Chart.KeyCount; k++ {
-		s.NoteDrawers[k].Draw(screen)
-		s.KeyDrawers[k].Draw(screen)
-		s.KeyLightingDrawers[k].Draw(screen)
+		s.Notes[k].Draw(screen)
+		s.Keys[k].Draw(screen)
+		s.KeyLightings[k].Draw(screen)
 	}
-	s.HintDrawer.Draw(screen)
+	s.Hint.Draw(screen)
 	for k := 0; k < s.Chart.KeyCount; k++ {
-		s.HitLightingDrawers[k].Draw(screen)
-		s.HoldLightingDrawers[k].Draw(screen)
+		s.HitLightings[k].Draw(screen)
+		s.HoldLightings[k].Draw(screen)
 	}
-	s.JudgmentDrawer.Draw(screen)
-	s.ScoreDrawer.Draw(screen)
-	s.ComboDrawer.Draw(screen)
-	s.MeterDrawer.Draw(screen)
+	s.Judgment.Draw(screen)
+	s.Score.Draw(screen)
+	s.Combo.Draw(screen)
+	s.Meter.Draw(screen)
 	s.DebugPrint(screen)
 }
 
 func (s ScenePlay) DebugPrint(screen draws.Image) {
+	S := UserSettings
 	ebitenutil.DebugPrint(screen.Image, fmt.Sprintf(
 		"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
@@ -287,22 +284,24 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 			"Press ESC to select a song.\nPress TAB to pause.\n\n"+
 			"Offset (Shift+ Left/Right): %dms\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,
-		s.Scores[mode.Total], s.ScoreBounds[mode.Total], s.Flow*100, s.Combo,
+		s.Scores[mode.Total], s.ScoreBounds[mode.Total], s.Flow*100, s.Scorer.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
-		s.SpeedScale*100, s.TransPoint.Speed, ExposureTime(s.Speed()),
-		mode.VolumeMusic*100, mode.VolumeSound*100,
-		mode.Offset))
+		S.SpeedScale*100, s.TransPoint.Speed, ExposureTime(s.Speed()),
+		*S.volumeMusic*100, *S.volumeSound*100,
+		*S.offset))
 }
 
 // 1 pixel is 1 millisecond.
-func ExposureTime(speed float64) float64 { return HitPosition / speed }
-func (s ScenePlay) Speed() float64       { return s.TransPoint.Speed * s.SpeedScale }
+func ExposureTime(speed float64) float64 { return UserSettings.HitPosition / speed }
+func (s ScenePlay) Speed() float64       { return s.TransPoint.Speed * s.speedScale }
 
 // Supposes one current TransPoint can increment cursor precisely.
 func (s *ScenePlay) UpdateCursor() {
 	duration := float64(s.Now - s.TransPoint.Time)
 	s.Cursor = s.TransPoint.Position + duration*s.Speed()
 }
+
+// Todo: remove it
 func (s *ScenePlay) UpdateTransPoint() {
 	s.TransPoint = s.TransPoint.FetchByTime(s.Now)
 }

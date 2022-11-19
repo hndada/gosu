@@ -6,7 +6,10 @@ type KeyLogger struct {
 	Pressed      []bool
 }
 
-func NewKeyLogger(keySettings []Key) (k KeyLogger) {
+func NewKeyLogger(names []string) (k KeyLogger) {
+	return NewKeyLoggerFromKeys(NamesToKeys(names))
+}
+func NewKeyLoggerFromKeys(keySettings []Key) (k KeyLogger) {
 	keyCount := len(keySettings)
 	k.FetchPressed = NewListener(keySettings)
 	k.LastPressed = make([]bool, keyCount)
