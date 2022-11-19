@@ -2,6 +2,7 @@ package piano
 
 import (
 	"fmt"
+	"image/color"
 
 	"github.com/BurntSushi/toml"
 	"github.com/hndada/gosu/defaultskin"
@@ -13,11 +14,10 @@ const (
 	ScreenSizeY = mode.ScreenSizeY
 )
 
-// positionMargin should be larger than MaxSize/2 of all note sprites' width or height.
+// positionMargin should be large enough:
+// more than MaxSize/2 of all note sprites' width or height.
 const positionMargin = 100
 
-// Todo: HitLightingOpaque -> HitLightingColors
-// Todo: Should NoteHeight be separated into NoteHeight, HeadHeight, TailHeight?
 type Settings struct {
 	// Logic settings
 	KeySettings   map[int][]string
@@ -29,12 +29,14 @@ type Settings struct {
 	ReverseBody   bool
 
 	// Skin-independent settings
-	NoteWidths        map[int][4]float64 // Fourth is for Scratch note.
-	NoteHeigth        float64            // Applies to all notes.
+	NoteWidths        map[int][4]float64 // Fourth is a Scratch note.
+	NoteHeigth        float64            // Applies to all types of notes.
 	BodyStyle         int
 	FieldPosition     float64
 	ComboPosition     float64
 	JudgmentPosition  float64
+	ScratchColor      [4]uint8
+	scratchColor      color.NRGBA
 	FieldOpaque       float64
 	KeyLightingOpaque float64
 	HitLightingOpaque float64
@@ -78,6 +80,7 @@ var (
 		FieldPosition:     0.50,
 		ComboPosition:     0.40,
 		JudgmentPosition:  0.66,
+		ScratchColor:      [4]uint8{224, 0, 0, 255},
 		FieldOpaque:       0.8,
 		KeyLightingOpaque: 0.5,
 		HitLightingOpaque: 1,
@@ -99,7 +102,7 @@ const (
 
 func init() {
 	DefaultSettings.process()
-	DefaultSkin.Load(defaultskin.FS)
+	DefaultSkins.Load(defaultskin.FS)
 }
 
 func (settings *Settings) Load(data string) {
@@ -115,7 +118,7 @@ func (settings *Settings) Load(data string) {
 	mode.Normalize(&settings.SpeedScale, 0.1, 2.0)
 	mode.Normalize(&settings.HitPosition, 0, 1)
 	mode.Normalize(&settings.TailExtraTime, -150, 150)
-	// ReverseBody is a bool.
+	// ReverseBody: bool
 
 	for k, widths := range settings.NoteWidths {
 		for kind := range widths {
@@ -128,6 +131,7 @@ func (settings *Settings) Load(data string) {
 	mode.Normalize(&settings.FieldPosition, 0, 1)
 	mode.Normalize(&settings.ComboPosition, 0, 1)
 	mode.Normalize(&settings.JudgmentPosition, 0, 1)
+	// ScratchColor: [4]uint8
 	mode.Normalize(&settings.FieldOpaque, 0, 1)
 	mode.Normalize(&settings.KeyLightingOpaque, 0, 1)
 	mode.Normalize(&settings.HitLightingOpaque, 0, 1)
@@ -140,27 +144,30 @@ func (settings *Settings) Load(data string) {
 }
 
 func (settings *Settings) process() {
-	settings.HitPosition *= ScreenSizeX
-	max := ScreenSizeY * settings.HitPosition
-	settings.maxPosition = max + positionMargin
-	settings.minPosition = max - ScreenSizeY - positionMargin
-	if settings.ReverseBody {
-		max, min := settings.maxPosition, settings.minPosition
-		settings.maxPosition = -min
-		settings.minPosition = -max
+	s := settings
+	s.HitPosition *= ScreenSizeX
+	max := ScreenSizeY * s.HitPosition
+	s.maxPosition = max + positionMargin
+	s.minPosition = max - ScreenSizeY - positionMargin
+	if s.ReverseBody {
+		max, min := s.maxPosition, s.minPosition
+		s.maxPosition = -min
+		s.minPosition = -max
 	}
 
-	for k, widths := range settings.NoteWidths {
+	for k, widths := range s.NoteWidths {
 		for kind := range widths {
 			widths[kind] *= ScreenSizeX
 		}
-		settings.NoteWidths[k] = widths
+		s.NoteWidths[k] = widths
 	}
-	settings.NoteHeigth *= ScreenSizeY
-	settings.FieldPosition *= ScreenSizeX
-	settings.ComboPosition *= ScreenSizeY
-	settings.JudgmentPosition *= ScreenSizeY
-
-	settings.ComboDigitGap *= ScreenSizeX
-	settings.HintHeight *= ScreenSizeY
+	s.NoteHeigth *= ScreenSizeY
+	s.FieldPosition *= ScreenSizeX
+	s.ComboPosition *= ScreenSizeY
+	s.JudgmentPosition *= ScreenSizeY
+	s.scratchColor = color.NRGBA{
+		s.ScratchColor[0], s.ScratchColor[1],
+		s.ScratchColor[2], s.ScratchColor[3]}
+	s.ComboDigitGap *= ScreenSizeX
+	s.HintHeight *= ScreenSizeY
 }
