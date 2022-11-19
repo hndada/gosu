@@ -57,3 +57,6 @@ func LoadImages(fsys fs.FS, name string) (is []Image) {
 	}
 	return
 }
+func (a Animation) IsValid() bool {
+	return len(a) > 1 || a[0].IsValid()
+}

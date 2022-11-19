@@ -30,25 +30,26 @@ type BarDrawer struct {
 }
 
 func (d *BarDrawer) Update(cursor float64) {
+	S := UserSettings
 	d.Cursor = cursor
 	// When Farthest's prevs are still out of screen due to speed change.
 	for d.Farthest.Prev != nil &&
-		d.Farthest.Prev.Position-d.Cursor > maxPosition {
+		d.Farthest.Prev.Position-d.Cursor > S.maxPosition {
 		d.Farthest = d.Farthest.Prev
 	}
 	// When Farthest is in screen, next note goes fetched if possible.
 	for d.Farthest.Next != nil &&
-		d.Farthest.Position-d.Cursor <= maxPosition {
+		d.Farthest.Position-d.Cursor <= S.maxPosition {
 		d.Farthest = d.Farthest.Next
 	}
 	// When Nearest is still in screen due to speed change.
 	for d.Nearest.Prev != nil &&
-		d.Nearest.Position-d.Cursor > minPosition {
+		d.Nearest.Position-d.Cursor > S.minPosition {
 		d.Nearest = d.Nearest.Prev
 	}
 	// When Nearest's next is still out of screen, next note goes fetched.
 	for d.Nearest.Next != nil &&
-		d.Nearest.Next.Position-d.Cursor <= minPosition {
+		d.Nearest.Next.Position-d.Cursor <= S.minPosition {
 		d.Nearest = d.Nearest.Next
 	}
 }
@@ -78,6 +79,7 @@ type NoteDrawer struct {
 // Farthest and Nearest are borders of displaying notes.
 // All in-screen notes are confirmed to be drawn when drawing from Farthest to Nearest.
 func (d *NoteDrawer) Update(cursor float64, holding bool) {
+	S := UserSettings
 	d.Ticker()
 	d.Cursor = cursor
 	defer func() { d.holding = holding }()
@@ -86,22 +88,22 @@ func (d *NoteDrawer) Update(cursor float64, holding bool) {
 	}
 	// When Farthest's prevs are still out of screen due to speed change.
 	for d.Farthest.Prev != nil &&
-		d.Farthest.Prev.Position-d.Cursor > maxPosition {
+		d.Farthest.Prev.Position-d.Cursor > S.maxPosition {
 		d.Farthest = d.Farthest.Prev
 	}
 	// When Farthest is in screen, next note goes fetched if possible.
 	for d.Farthest.Next != nil &&
-		d.Farthest.Position-d.Cursor <= maxPosition {
+		d.Farthest.Position-d.Cursor <= S.maxPosition {
 		d.Farthest = d.Farthest.Next
 	}
 	// When Nearest is still in screen due to speed change.
 	for d.Nearest.Prev != nil &&
-		d.Nearest.Position-d.Cursor > minPosition {
+		d.Nearest.Position-d.Cursor > S.minPosition {
 		d.Nearest = d.Nearest.Prev
 	}
 	// When Nearest's next is still out of screen, next note goes fetched.
 	for d.Nearest.Next != nil &&
-		d.Nearest.Next.Position-d.Cursor <= minPosition {
+		d.Nearest.Next.Position-d.Cursor <= S.minPosition {
 		d.Nearest = d.Nearest.Next
 	}
 }
@@ -134,7 +136,7 @@ func (d NoteDrawer) DrawBody(dst draws.Image, tail *Note) {
 		body = d.Frame(d.Sprites[Body])
 	}
 	length := tail.Position - head.Position // + BodyGain
-	length += NoteHeigth                    //-bodyLoss
+	length += UserSettings.NoteHeigth       //-bodyLoss
 	if length < 0 {
 		length = 0
 	}
@@ -194,7 +196,7 @@ func (d *KeyLightingDrawer) Update(pressed bool) {
 func (d KeyLightingDrawer) Draw(dst draws.Image) {
 	if d.lastPressed || d.Tick < d.MaxTick {
 		op := draws.Op{}
-		op.ColorM.Scale(1, 1, 1, KeyLightingOpaque)
+		op.ColorM.Scale(1, 1, 1, UserSettings.KeyLightingOpaque)
 		d.Sprite.Draw(dst, op)
 	}
 }
@@ -216,7 +218,7 @@ func (d HitLightingDrawer) Draw(dst draws.Image) {
 		return
 	}
 	op := draws.Op{}
-	opaque := HitLightingOpaque * (1 - d.Progress(0.75, 1))
+	opaque := UserSettings.HitLightingOpaque * (1 - d.Progress(0.75, 1))
 	op.ColorM.Scale(1, 1, 1, opaque)
 	d.Frame(d.Sprites).Draw(dst, op)
 }
@@ -239,23 +241,23 @@ func (d HoldLightingDrawer) Draw(dst draws.Image) {
 		return
 	}
 	op := draws.Op{}
-	op.ColorM.Scale(1, 1, 1, HitLightingOpaque)
+	op.ColorM.Scale(1, 1, 1, UserSettings.HitLightingOpaque)
 	d.Frame(d.Sprites).Draw(dst, op)
 }
 
 type JudgmentDrawer struct {
 	draws.Timer
-	Sprites  [5]draws.Animation
+	Sprites  []draws.Animation
 	Judgment mode.Judgment
 }
 
-func NewJudgmentDrawer() (d JudgmentDrawer) {
+func NewJudgmentDrawer(sprites []draws.Animation) (d JudgmentDrawer) {
 	const frameDuration = 1000.0 / 60
-	count := float64(len(GeneralSkin.JudgmentSprites))
+	count := float64(len(sprites))
 	period := int64(frameDuration * count)
 	return JudgmentDrawer{
 		Timer:   draws.NewTimer(draws.ToTick(250), draws.ToTick(period)),
-		Sprites: GeneralSkin.JudgmentSprites,
+		Sprites: sprites,
 	}
 }
 func (d *JudgmentDrawer) Update(worst mode.Judgment) {

@@ -49,14 +49,18 @@ var (
 	// PlaySkin    = Skin{Kind: SkinKindPlay}
 )
 
+// s stands for sprite.
+// a stands for animation.
+// S stands for UserSettings.
 func (skin *Skin) Load(fsys fs.FS) {
+	S := UserSettings // abbreviation
 	if skin.Kind == SkinKindPlay {
 		skin.Reset()
 	}
 	skin.DefaultBackground = NewBackground(fsys, "interface/default-bg.jpg")
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fsys, fmt.Sprintf("score/%d.png", i))
-		s.ApplyScale(UserSettings.ScoreScale)
+		s.ApplyScale(S.ScoreScale)
 		// Need to set same base line, since each number has different height.
 		if i == 0 {
 			s.Locate(ScreenSizeX, 0, draws.RightTop)
@@ -67,7 +71,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	}
 	for i, name := range []string{"dot", "comma", "percent"} {
 		s := draws.NewSprite(fsys, fmt.Sprintf("score/%s.png", name))
-		s.ApplyScale(UserSettings.ScoreScale)
+		s.ApplyScale(S.ScoreScale)
 		s.Locate(ScreenSizeX, 0, draws.RightTop)
 		skin.Score[10+i] = s
 	}
@@ -86,14 +90,14 @@ func (skin *Skin) fillBlank(base Skin) {
 	}
 }
 func (skin *Skin) Reset() {
-	switch skin.Kind {
+	kind := skin.Kind
+	switch kind {
 	case SkinKindUser:
 		*skin = DefaultSkin
-		skin.Kind = SkinKindUser
 	case SkinKindPlay:
 		*skin = UserSkin
-		skin.Kind = SkinKindPlay
 	}
+	skin.Kind = kind
 }
 
 func NewBackground(fsys fs.FS, name string) draws.Sprite {
