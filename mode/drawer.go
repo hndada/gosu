@@ -7,7 +7,6 @@ import (
 	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 )
 
@@ -34,21 +33,21 @@ type ScoreDrawer struct {
 	digitWidth float64 // Use number 0's width.
 	DigitGap   float64
 	ZeroFill   int
-	Score      ctrl.Delayed
+	Score      draws.Delayed
 	Sprites    []draws.Sprite
 }
 
-func NewScoreDrawer(sprites []draws.Sprite) ScoreDrawer {
+func NewScoreDrawer(score *float64, sprites []draws.Sprite) ScoreDrawer {
 	return ScoreDrawer{
 		digitWidth: sprites[0].W(),
 		DigitGap:   UserSettings.ScoreDigitGap,
 		ZeroFill:   1,
-		Score:      ctrl.Delayed{Mode: ctrl.DelayedModeExp},
+		Score:      draws.NewDelayed(score, TPS),
 		Sprites:    sprites[:10],
 	}
 }
-func (d *ScoreDrawer) Update(score float64) {
-	d.Score.Update(score)
+func (d *ScoreDrawer) Update() {
+	d.Score.Update()
 }
 
 // NumberDrawer's Draw draws each number at the center of constant-width bound.
@@ -57,7 +56,7 @@ func (d ScoreDrawer) Draw(dst draws.Image) {
 		return
 	}
 	vs := make([]int, 0)
-	score := int(math.Floor(d.Score.Value() + 0.1))
+	score := int(math.Floor(d.Score.Delayed + 0.1))
 	for v := score; v > 0; v /= 10 {
 		vs = append(vs, v%10) // Little endian.
 	}

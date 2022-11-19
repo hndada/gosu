@@ -5,12 +5,8 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/times"
 )
-
-// Time is a point of time.
-// Duration a length of time.
-func ToTick(time int64, tps int) int { return int(float64(time) / 1000 * float64(tps)) }
-func ToTime(tick int, tps int) int64 { return int64(float64(tick) / float64(tps) * 1000) }
 
 const Wait = 1800
 
@@ -23,6 +19,11 @@ type Timer struct {
 	MaxTick   int
 	TPS       int
 }
+
+var (
+	ToTick = times.ToTick
+	ToTime = times.ToTime
+)
 
 func NewTimer(duration int64, offset *int64, tps int) Timer {
 	return Timer{
