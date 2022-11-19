@@ -9,7 +9,7 @@ import (
 )
 
 type Skin struct {
-	Kind mode.SkinKind
+	Type mode.SkinType
 	// Number1 [13]draws.Sprite // number and sign(. , %)
 	// Number2 [10]draws.Sprite // number only
 	Cursor [3]draws.Sprite
@@ -22,9 +22,9 @@ const (
 )
 
 var (
-	DefaultSkin = Skin{Kind: mode.SkinKindDefault}
-	UserSkin    = Skin{Kind: mode.SkinKindUser}
-	// PlaySkin    = Skin{Kind: SkinKindPlay}
+	DefaultSkin = Skin{Type: mode.SkinTypeDefault}
+	UserSkin    = Skin{Type: mode.SkinTypeUser}
+	// PlaySkin    = Skin{Type: SkinTypePlay}
 )
 
 func (skin *Skin) Load(fsys fs.FS) {
@@ -35,7 +35,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 		skin.Cursor[i] = s
 	}
-	base := []Skin{Skin{}, DefaultSkin, UserSkin}[skin.Kind]
+	base := []Skin{Skin{}, DefaultSkin, UserSkin}[skin.Type]
 	skin.fillBlank(base)
 }
 func (skin *Skin) fillBlank(base Skin) {
