@@ -199,3 +199,6 @@ func (settings *Settings) process() {
 	s.ComboDigitGap *= ScreenSizeX
 	s.HintHeight *= ScreenSizeY
 }
+
+// 1 pixel is 1 millisecond.
+func ExposureTime(speed float64) float64 { return S.HitPosition / speed }
