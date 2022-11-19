@@ -83,7 +83,7 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 		}
 		n.Position = tp.Position + float64(n.Time-tp.Time)*tp.Speed
 		if n.Type == Tail {
-			n.Position += float64(UserSettings.TailExtraTime) * tp.Speed
+			n.Position += float64(S.TailExtraTime) * tp.Speed
 			// It is guaranteed that Tail's Prev (which is Head)
 			// has already proceeded, since c.Notes is sorted by Time.
 			if n.Position < n.Prev.Position {

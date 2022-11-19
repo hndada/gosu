@@ -32,7 +32,6 @@ type BarDrawer struct {
 }
 
 func (d *BarDrawer) Update(cursor float64) {
-	S := UserSettings
 	d.Cursor = cursor
 	// When Farthest's prevs are still out of screen due to speed change.
 	for d.Farthest.Prev != nil &&
@@ -81,7 +80,6 @@ type NoteDrawer struct {
 // Farthest and Nearest are borders of displaying notes.
 // All in-screen notes are confirmed to be drawn when drawing from Farthest to Nearest.
 func (d *NoteDrawer) Update(cursor float64, holding bool) {
-	S := UserSettings
 	d.Ticker()
 	d.Cursor = cursor
 	defer func() { d.holding = holding }()
@@ -138,7 +136,7 @@ func (d NoteDrawer) DrawBody(dst draws.Image, tail *Note) {
 		body = d.Frame(d.Sprites[Body])
 	}
 	length := tail.Position - head.Position // + BodyGain
-	length += UserSettings.NoteHeigth       // - bodyLoss
+	length += S.NoteHeigth                  // - bodyLoss
 	if length < 0 {
 		length = 0
 	}
@@ -198,7 +196,7 @@ func (d *KeyLightingDrawer) Update(pressed bool) {
 func (d KeyLightingDrawer) Draw(dst draws.Image) {
 	if d.lastPressed || d.Tick < d.MaxTick {
 		op := draws.Op{}
-		op.ColorM.Scale(1, 1, 1, UserSettings.KeyLightingOpaque)
+		op.ColorM.Scale(1, 1, 1, S.KeyLightingOpaque)
 		d.Sprite.Draw(dst, op)
 	}
 }
@@ -244,7 +242,7 @@ func (d HoldLightingDrawer) Draw(dst draws.Image) {
 		return
 	}
 	op := draws.Op{}
-	op.ColorM.Scale(1, 1, 1, UserSettings.HoldLightingOpaque)
+	op.ColorM.Scale(1, 1, 1, S.HoldLightingOpaque)
 	d.Frame(d.Sprites).Draw(dst, op)
 }
 

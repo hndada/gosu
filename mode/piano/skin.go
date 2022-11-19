@@ -68,7 +68,6 @@ func (skin *Skin) Load(fsys fs.FS) {
 	case mode.Play:
 		skin.Reset()
 	}
-	S := UserSettings
 	skin.DefaultBackground = mode.UserSkin.DefaultBackground
 	skin.Score = mode.UserSkin.Score
 	for i := 0; i < 10; i++ {
@@ -202,7 +201,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 }
 func (skin Skin) fieldWidth() float64 {
 	var fw float64
-	widths := UserSettings.NoteWidths[skin.KeyMode]
+	widths := S.NoteWidths[skin.KeyMode]
 	for _, ktype := range KeyTypes[skin.KeyMode] {
 		fw += widths[ktype] // Todo: math.Ceil()?
 	}
