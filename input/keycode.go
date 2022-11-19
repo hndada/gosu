@@ -5,6 +5,8 @@ import "github.com/hajimehoshi/ebiten/v2"
 // type Key int
 type Key = ebiten.Key
 
+const KeyNone = -1
+
 // The order is consistent with Ebiten.
 const (
 	KeyA Key = iota
@@ -124,16 +126,6 @@ func NamesToKeys(names []string) []Key {
 		keys[i] = NameToKey(name)
 	}
 	return keys
-}
-func IsKeysValid(keys []Key) bool {
-	m := make(map[Key]bool)
-	for _, k := range keys {
-		if m[k] {
-			return false
-		}
-		m[k] = true
-	}
-	return true
 }
 
 // https://go.dev/play/p/9Lv0u4sqwKq
@@ -358,7 +350,7 @@ func NameToKey(name string) Key {
 	case "Reserved3":
 		return KeyReserved3
 	}
-	return -1
+	return KeyNone
 }
 
 // See https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes for reference.

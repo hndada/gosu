@@ -29,17 +29,17 @@ func (d StageDrawer) Draw(dst draws.Image) {
 		high
 	)
 	op := draws.Op{}
-	op.ColorM.Scale(1, 1, 1, FieldDarkness)
+	op.ColorM.Scale(1, 1, 1, FieldOpaque)
 	d.FieldSprites[idle].Draw(dst, op)
 	d.HintSprites[idle].Draw(dst, draws.Op{})
 	if d.Highlight || d.Tick < d.MaxTick {
 		var opField, opHint draws.Op
 		if d.Highlight {
-			opField.ColorM.Scale(1, 1, 1, FieldDarkness*d.Age())
-			opHint.ColorM.Scale(1, 1, 1, FieldDarkness*d.Age())
+			opField.ColorM.Scale(1, 1, 1, FieldOpaque*d.Age())
+			opHint.ColorM.Scale(1, 1, 1, FieldOpaque*d.Age())
 		} else {
-			opField.ColorM.Scale(1, 1, 1, FieldDarkness*(1-d.Age()))
-			opHint.ColorM.Scale(1, 1, 1, FieldDarkness*(1-d.Age()))
+			opField.ColorM.Scale(1, 1, 1, FieldOpaque*(1-d.Age()))
+			opHint.ColorM.Scale(1, 1, 1, FieldOpaque*(1-d.Age()))
 		}
 		opHint.ColorM.ScaleWithColor(ColorYellow)
 		d.FieldSprites[high].Draw(dst, opField)

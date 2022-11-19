@@ -176,7 +176,7 @@ func LoadSkin(fsys fs.FS) {
 	{
 
 		src := draws.NewImage(keyFieldSize.XY())
-		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
+		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldOpaque)})
 		sprite := draws.NewSpriteFromSource(src)
 		sprite.Locate(0, FieldPosition, draws.LeftMiddle)
 		skin.KeyFieldSprite = sprite
@@ -282,7 +282,7 @@ func NewShakeSprites(note draws.Image) (sprites [2]draws.Sprite) {
 // 		outer := draws.NewImageScaled(noteImage, outerScale)
 // 		pad := draws.NewImageScaled(noteImage, padScale)
 // 		inner := noteImage
-// 		a := uint8(255 * FieldDarkness)
+// 		a := uint8(255 * FieldOpaque)
 // 		img := ebiten.NewImage(outer.Size())
 // 		{
 // 			op := &ebiten.DrawImageOptions{}

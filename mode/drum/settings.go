@@ -22,7 +22,7 @@ const PositionMargin = 100
 // Default values are derived from osu!taiko.
 // Todo: generalize Dancer for all modes?
 var (
-	FieldDarkness float64 = 0.7
+	FieldOpaque   float64 = 0.7
 	FieldPosition float64 = ScreenSizeY * 0.4115
 	FieldHeight   float64 = ScreenSizeY * 0.26
 
