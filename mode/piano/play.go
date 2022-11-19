@@ -44,7 +44,6 @@ type ScenePlay struct {
 }
 
 func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s *ScenePlay, err error) {
-	S := UserSettings
 	s = new(ScenePlay)
 	s.Chart, err = NewChart(fsys, cname)
 	if err != nil {
@@ -160,7 +159,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 func (s *ScenePlay) SetSpeed() {
 	c := s.Chart
 	old := s.speedScale
-	new := UserSettings.SpeedScale
+	new := S.SpeedScale
 	s.Cursor *= new / old
 	for _, tp := range c.TransPoints {
 		tp.Position *= new / old
@@ -247,7 +246,7 @@ func (s *ScenePlay) Update() any {
 	// Changed speed should be applied after positions are calculated.
 	s.UpdateTransPoint()
 	s.UpdateCursor()
-	if UserSettings.SpeedScale != s.speedScale {
+	if S.SpeedScale != s.speedScale {
 		s.SetSpeed()
 	}
 	return nil
@@ -274,7 +273,6 @@ func (s ScenePlay) Draw(screen draws.Image) {
 }
 
 func (s ScenePlay) DebugPrint(screen draws.Image) {
-	S := UserSettings
 	ebitenutil.DebugPrint(screen.Image, fmt.Sprintf(
 		"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
@@ -292,7 +290,7 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 }
 
 // 1 pixel is 1 millisecond.
-func ExposureTime(speed float64) float64 { return UserSettings.HitPosition / speed }
+func ExposureTime(speed float64) float64 { return S.HitPosition / speed }
 func (s ScenePlay) Speed() float64       { return s.TransPoint.Speed * s.speedScale }
 
 // Supposes one current TransPoint can increment cursor precisely.

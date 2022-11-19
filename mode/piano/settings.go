@@ -106,6 +106,7 @@ var (
 		LightingScale: 1.0,
 	}
 	UserSettings = DefaultSettings
+	S            = &UserSettings
 )
 
 // Generic function seems not allow to pass named type.
@@ -161,7 +162,7 @@ func (settings *Settings) Load(data string) {
 // It is safe to use mode.UserSettings even for DefaultSettings:
 // mode.UserSettings = mode.DefaultSettings when processing default.
 func (settings *Settings) process() {
-	ms := &mode.UserSettings
+	MS := &mode.UserSettings
 	s := settings
 
 	s.HitPosition *= ScreenSizeX
@@ -173,10 +174,10 @@ func (settings *Settings) process() {
 		s.maxPosition = -min
 		s.minPosition = -max
 	}
-	s.volumeMusic = &ms.VolumeMusic
-	s.volumeSound = &ms.VolumeSound
-	s.offset = &ms.Offset
-	s.backgroundBrightness = &ms.BackgroundBrightness
+	s.volumeMusic = &MS.VolumeMusic
+	s.volumeSound = &MS.VolumeSound
+	s.offset = &MS.Offset
+	s.backgroundBrightness = &MS.BackgroundBrightness
 
 	for k, widths := range s.NoteWidths {
 		for kind := range widths {
