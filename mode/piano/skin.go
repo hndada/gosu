@@ -10,22 +10,23 @@ import (
 )
 
 type Skin struct {
-	Type    mode.SkinType
+	Type    int
 	KeyMode int // scratch mode + key count
 
 	// independent of key number
-	Score    [13]draws.Sprite
-	Combo    [10]draws.Sprite
-	Judgment [5]draws.Animation
+	DefaultBackground draws.Sprite
+	Score             [13]draws.Sprite // number + sign(. , %)
+	Combo             [10]draws.Sprite // number only
+	Judgment          [5]draws.Animation
 	// dependent of key number
-	Key          [2][]draws.Sprite
+	Bar          draws.Sprite
+	Hint         draws.Sprite
+	Field        draws.Sprite
+	Note         [][4]draws.Animation
+	Key          [][2]draws.Sprite
 	KeyLighting  []draws.Sprite
 	HitLighting  []draws.Animation
 	HoldLighting []draws.Animation
-	Note         [4][]draws.Animation
-	Field        draws.Sprite
-	Hint         draws.Sprite
-	Bar          draws.Sprite
 }
 type Skins map[int]Skin
 
@@ -36,9 +37,9 @@ func (s Skin) isBase() bool { return s.KeyMode == base }
 // Each piano's sub mode has different skin.
 // PlaySkin doesn't have to be slice, since it is one-time struct.
 var (
-	DefaultSkins = Skins{base: {Type: mode.SkinTypeDefault}}
-	UserSkins    = Skins{base: {Type: mode.SkinTypeUser}}
-	PlaySkin     = Skin{Type: mode.SkinTypePlay}
+	DefaultSkins = Skins{base: {Type: mode.Default}}
+	UserSkins    = Skins{base: {Type: mode.User}}
+	PlaySkin     = Skin{Type: mode.Play}
 )
 
 func (skins Skins) Load(fsys fs.FS) {
@@ -60,14 +61,16 @@ func (skins Skins) load(fsys fs.FS, k int) {
 func (skin *Skin) Load(fsys fs.FS) {
 	var baseSkin Skin
 	switch skin.Type {
-	case mode.SkinTypeDefault:
+	case mode.Default:
 		baseSkin = DefaultSkins[base]
-	case mode.SkinTypeUser:
+	case mode.User:
 		baseSkin = UserSkins[base]
-	case mode.SkinTypePlay:
+	case mode.Play:
 		skin.Reset()
 	}
 	S := UserSettings
+	skin.DefaultBackground = mode.UserSkin.DefaultBackground
+	skin.Score = mode.UserSkin.Score
 	for i := 0; i < 10; i++ {
 		s := baseSkin.Combo[i]
 		if skin.isBase() {
@@ -92,6 +95,35 @@ func (skin *Skin) Load(fsys fs.FS) {
 	// Each w should be integer, since it is a width of independent sprite.
 	// Todo: should Scratch be excluded from fw?
 	fw := skin.fieldWidth()
+	{
+		s := baseSkin.Bar
+		if skin.isBase() {
+			src := draws.NewImage(fw, 1)
+			src.Fill(color.White)
+			s = draws.NewSpriteFromSource(src)
+		}
+		s.Locate(S.FieldPosition, S.HitPosition, draws.CenterBottom)
+		skin.Bar = s
+	}
+	{
+		s := baseSkin.Hint
+		if skin.isBase() {
+			s = draws.NewSprite(fsys, "piano/stage/hint.png")
+		}
+		s.SetSize(fw, S.HintHeight)
+		s.Locate(S.FieldPosition, S.HitPosition-S.HintHeight, draws.CenterTop)
+		skin.Hint = s
+	}
+	{
+		s := baseSkin.Field
+		if skin.isBase() {
+			src := draws.NewImage(fw, ScreenSizeY)
+			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * S.FieldOpaque)})
+			s = draws.NewSpriteFromSource(src)
+		}
+		s.Locate(S.FieldPosition, 0, draws.CenterTop)
+		skin.Field = s
+	}
 	x := S.FieldPosition - fw/2
 	keyCount := len(KeyTypes[skin.KeyMode])
 	for k, ktype := range KeyTypes[skin.KeyMode] {
@@ -100,15 +132,36 @@ func (skin *Skin) Load(fsys fs.FS) {
 			w = 0.06 * ScreenSizeX
 		}
 		x += w / 2
+		skin.Note = make([][4]draws.Animation, keyCount)
+		for i, nTypeName := range []string{"normal", "head", "tail", "body"} {
+			a := baseSkin.Note[i][ktype]
+			if skin.isBase() {
+				kTypeName := []string{"one", "two", "mid", "tip"}[ktype]
+				name := fmt.Sprintf("piano/note/%s/%s", nTypeName, kTypeName)
+				a = draws.NewAnimation(fsys, name)
+			}
+			for frame := range a {
+				if ktype == Tip && !a.IsValid() {
+					a[frame] = skin.Note[0][k][frame]
+					op := draws.Op{}
+					op.ColorM.ScaleWithColor(S.scratchColor)
+					i := a[frame].Source.(draws.Image) // Todo: looks weird usage to me
+					skin.Note[0][k][frame].Draw(i, op)
+				}
+				a[frame].SetSize(w, S.NoteHeigth)
+				a[frame].Locate(x, S.HitPosition, draws.CenterBottom)
+			}
+			skin.Note[k][i] = a
+		}
+		skin.Key = make([][2]draws.Sprite, keyCount)
 		for i, name := range []string{"up", "down"} {
-			skin.Key[i] = make([]draws.Sprite, keyCount)
-			s := baseSkin.Key[i][0]
+			s := baseSkin.Key[0][i]
 			if skin.isBase() {
 				s = draws.NewSprite(fsys, fmt.Sprintf("piano/key/%s.png", name))
 			}
 			s.SetSize(w, ScreenSizeY-S.HitPosition)
 			s.Locate(x, S.HitPosition, draws.CenterTop)
-			skin.Key[i][k] = s
+			skin.Key[k][i] = s
 		}
 		{
 			skin.KeyLighting = make([]draws.Sprite, keyCount)
@@ -144,57 +197,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 			}
 			skin.HoldLighting[k] = a
 		}
-		for i, nTypeName := range []string{"normal", "head", "tail", "body"} {
-			skin.Note[i] = make([]draws.Animation, keyCount)
-			a := baseSkin.Note[i][ktype]
-			if skin.isBase() {
-				kTypeName := []string{"one", "two", "mid", "tip"}[ktype]
-				name := fmt.Sprintf("piano/note/%s/%s", nTypeName, kTypeName)
-				a = draws.NewAnimation(fsys, name)
-			}
-			for frame := range a {
-				if ktype == Tip && !a.IsValid() {
-					a[frame] = skin.Note[0][k][frame]
-					op := draws.Op{}
-					op.ColorM.ScaleWithColor(S.scratchColor)
-					i := a[frame].Source.(draws.Image) // Todo: looks weird usage to me
-					skin.Note[0][k][frame].Draw(i, op)
-				}
-				a[frame].SetSize(w, S.NoteHeigth)
-				a[frame].Locate(x, S.HitPosition, draws.CenterBottom)
-			}
-			skin.Note[i][k] = a
-		}
 		x += w / 2
-	}
-	{
-		s := baseSkin.Field
-		if skin.isBase() {
-			src := draws.NewImage(fw, ScreenSizeY)
-			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * S.FieldOpaque)})
-			s = draws.NewSpriteFromSource(src)
-		}
-		s.Locate(S.FieldPosition, 0, draws.CenterTop)
-		skin.Field = s
-	}
-	{
-		s := baseSkin.Hint
-		if skin.isBase() {
-			s = draws.NewSprite(fsys, "piano/stage/hint.png")
-		}
-		s.SetSize(fw, S.HintHeight)
-		s.Locate(S.FieldPosition, S.HitPosition-S.HintHeight, draws.CenterTop)
-		skin.Hint = s
-	}
-	{
-		s := baseSkin.Bar
-		if skin.isBase() {
-			src := draws.NewImage(fw, 1)
-			src.Fill(color.White)
-			s = draws.NewSpriteFromSource(src)
-		}
-		s.Locate(S.FieldPosition, S.HitPosition, draws.CenterBottom)
-		skin.Bar = s
 	}
 }
 func (skin Skin) fieldWidth() float64 {
@@ -209,9 +212,9 @@ func (skin Skin) fieldWidth() float64 {
 func (skin *Skin) Reset() {
 	kind := skin.Type
 	switch kind {
-	case mode.SkinTypeUser:
+	case mode.User:
 		*skin = DefaultSkins[skin.KeyMode]
-	case mode.SkinTypePlay:
+	case mode.Play:
 		*skin = UserSkins[skin.KeyMode]
 	}
 	skin.Type = kind

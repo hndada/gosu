@@ -25,7 +25,7 @@ type Judgment struct {
 func (j Judgment) Is(j2 Judgment) bool { return j.Window == j2.Window }
 
 // Valid returns whether j is not a blank judgment by its window size.
-func (j Judgment) Valid() bool { return j.Window != 0 }
+func (j Judgment) IsValid() bool { return j.Window != 0 }
 
 // func inRange(td int64, j Judgment) bool { return td < j.Window && td > -j.Window }
 

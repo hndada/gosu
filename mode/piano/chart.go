@@ -17,7 +17,8 @@ type Chart struct {
 	MD5  [16]byte
 	Mods interface{}
 
-	KeyCount    int
+	KeyCount    int // The number of physical keys.
+	KeyMode     int // Scratch mode value may add after applying mods.
 	TransPoints []*mode.TransPoint
 	Notes       []*Note
 	Bars        []*Bar
@@ -54,14 +55,14 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 	c.MD5 = md5.Sum(dat)
 	switch f := f.(type) {
 	case *osu.Format:
-		c.KeyCount = int(f.CircleSize)
+		c.KeyMode = int(f.CircleSize)
 	}
 	c.TransPoints = mode.NewTransPoints(f)
 	if len(c.TransPoints) == 0 {
 		err = fmt.Errorf("no TransPoints in the chart")
 		return
 	}
-	c.Notes = NewNotes(f, c.KeyCount)
+	c.Notes = NewNotes(f, c.KeyMode)
 	c.Bars = NewBars(c.TransPoints, c.Duration())
 
 	// Calculate positions. Position calculation is based on TransPoints.
