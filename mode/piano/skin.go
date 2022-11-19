@@ -10,7 +10,7 @@ import (
 )
 
 type Skin struct {
-	Kind    mode.SkinKind
+	Type    mode.SkinType
 	KeyMode int // scratch mode + key count
 
 	// independent of key number
@@ -36,9 +36,9 @@ func (s Skin) isBase() bool { return s.KeyMode == base }
 // Each piano's sub mode has different skin.
 // PlaySkin doesn't have to be slice, since it is one-time struct.
 var (
-	DefaultSkins = Skins{base: {Kind: mode.SkinKindDefault}}
-	UserSkins    = Skins{base: {Kind: mode.SkinKindUser}}
-	PlaySkin     = Skin{Kind: mode.SkinKindPlay}
+	DefaultSkins = Skins{base: {Type: mode.SkinTypeDefault}}
+	UserSkins    = Skins{base: {Type: mode.SkinTypeUser}}
+	PlaySkin     = Skin{Type: mode.SkinTypePlay}
 )
 
 func (skins Skins) Load(fsys fs.FS) {
@@ -52,19 +52,19 @@ func (skins Skins) Load(fsys fs.FS) {
 
 // load lazy loads less popular key mode.
 func (skins Skins) load(fsys fs.FS, k int) {
-	skin := Skin{Kind: skins[base].Kind, KeyMode: k}
+	skin := Skin{Type: skins[base].Type, KeyMode: k}
 	skin.Load(fsys)
 	skins[k] = skin
 }
 
 func (skin *Skin) Load(fsys fs.FS) {
 	var baseSkin Skin
-	switch skin.Kind {
-	case mode.SkinKindDefault:
+	switch skin.Type {
+	case mode.SkinTypeDefault:
 		baseSkin = DefaultSkins[base]
-	case mode.SkinKindUser:
+	case mode.SkinTypeUser:
 		baseSkin = UserSkins[base]
-	case mode.SkinKindPlay:
+	case mode.SkinTypePlay:
 		skin.Reset()
 	}
 	S := UserSettings
@@ -207,12 +207,12 @@ func (skin Skin) fieldWidth() float64 {
 }
 
 func (skin *Skin) Reset() {
-	kind := skin.Kind
+	kind := skin.Type
 	switch kind {
-	case mode.SkinKindUser:
+	case mode.SkinTypeUser:
 		*skin = DefaultSkins[skin.KeyMode]
-	case mode.SkinKindPlay:
+	case mode.SkinTypePlay:
 		*skin = UserSkins[skin.KeyMode]
 	}
-	skin.Kind = kind
+	skin.Type = kind
 }
