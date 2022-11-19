@@ -7,19 +7,6 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-const (
-	// Currently, TPS should be 1000 or greater.
-	// TPS supposed to be multiple of 1000, since only one speed value
-	// goes passed per Update, while unit of TransPoint's time is 1ms.
-	// TPS affects only on Update(), not on Draw().
-	// Todo: add lower TPS support
-	TPS = 1000
-
-	// ScreenSize is a logical size of in-game screen.
-	ScreenSizeX = 1600
-	ScreenSizeY = 900
-)
-
 // In narrow meaning, Skin stands for a set of Sprites.
 // In wide meaning, Skin also includes a set of sounds.
 // Package defaultskin has a set of sounds.

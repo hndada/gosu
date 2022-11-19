@@ -8,6 +8,22 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
+const (
+	// Currently, TPS should be 1000 or greater.
+	// TPS supposed to be multiple of 1000, since only one speed value
+	// goes passed per Update, while unit of TransPoint's time is 1ms.
+	// TPS affects only on Update(), not on Draw().
+	// Todo: add lower TPS support
+	TPS = 1000
+
+	// ScreenSize is a logical size of in-game screen.
+	ScreenSizeX = 1600
+	ScreenSizeY = 900
+)
+
+// Struct as a type of settings value is discouraged.
+// Unmatched fields will not be touched, feel free to pre-fill default values.
+// Todo: alert warning message to user when some lines are failed to be decoded
 type Settings struct {
 	VolumeMusic          float64
 	VolumeSound          float64
@@ -61,7 +77,7 @@ func (settings *Settings) Load(data string) {
 
 	Normalize(&settings.MeterUnit, 0, 5)
 	Normalize(&settings.MeterHeight, 0, 100)
-	Normalize(&settings.ScoreScale, 0, 5)
+	Normalize(&settings.ScoreScale, 0, 2)
 	Normalize(&settings.ScoreDigitGap, -0.05, 0.05)
 }
 
