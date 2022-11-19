@@ -10,6 +10,7 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
+const Mode = 0 // ModePiano
 // Level, ScoreFactors, MD5 will not exported to file.
 type Chart struct {
 	mode.ChartHeader
@@ -45,6 +46,11 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 	}
 	c = new(Chart)
 	c.ChartHeader = mode.NewChartHeader(f)
+	c.Mode = Mode
+	switch f := f.(type) {
+	case *osu.Format:
+		c.SubMode = int(f.CircleSize)
+	}
 	c.MD5 = md5.Sum(dat)
 	switch f := f.(type) {
 	case *osu.Format:
@@ -76,7 +82,7 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 		}
 		n.Position = tp.Position + float64(n.Time-tp.Time)*tp.Speed
 		if n.Type == Tail {
-			n.Position += float64(TailExtraTime) * tp.Speed
+			n.Position += float64(UserSettings.TailExtraTime) * tp.Speed
 			// It is guaranteed that Tail's Prev (which is Head)
 			// has already proceeded, since c.Notes is sorted by Time.
 			if n.Position < n.Prev.Position {
@@ -102,7 +108,6 @@ func (c Chart) Duration() int64 {
 	last := c.Notes[len(c.Notes)-1]
 	return last.Time + last.Duration
 }
-
 func (c Chart) NoteCounts() (vs []int) {
 	vs = make([]int, 2)
 	for _, n := range c.Notes {
@@ -113,15 +118,16 @@ func (c Chart) NoteCounts() (vs []int) {
 	}
 	return
 }
-func (c Chart) NoteCountString() string {
-	vs := c.NoteCounts()
-	total := vs[0] + 2*vs[1]
-	ratio := float64(vs[0]) / float64(vs[0]+vs[1])
-	return fmt.Sprintf("Notes: %d\nLN: %.0f%%", total, ratio*100)
-}
 func (c Chart) BPMs() (main, min, max float64) {
 	return mode.BPMs(c.TransPoints, c.Duration())
 }
+
+// func (c Chart) NoteCountString() string {
+// 	vs := c.NoteCounts()
+// 	total := vs[0] + 2*vs[1]
+// 	ratio := float64(vs[0]) / float64(vs[0]+vs[1])
+// 	return fmt.Sprintf("Notes: %d\nLN: %.0f%%", total, ratio*100)
+// }
 
 // func NewChartInfo(cpath string) (info game.ChartInfo, err error) {
 // 	c, err := NewChart(cpath)

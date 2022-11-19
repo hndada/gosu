@@ -182,7 +182,7 @@ func LoadSkin(fsys fs.FS) {
 		}
 		{
 			src := draws.NewImage(wsum, ScreenSizeY)
-			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldDarkness)})
+			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldOpaque)})
 			sprite := draws.NewSpriteFromSource(src)
 			sprite.Locate(FieldPosition, 0, draws.CenterTop)
 			skin.FieldSprite = sprite

@@ -33,14 +33,6 @@ func NewChartHeader(f any) (c ChartHeader) {
 		if c.MusicFilename == "virtual" {
 			c.MusicFilename = ""
 		}
-		switch f.Mode {
-		case osu.ModeMania:
-			c.Mode = ModePiano
-			c.SubMode = int(f.CircleSize)
-		case osu.ModeTaiko:
-			c.Mode = ModeDrum
-			c.SubMode = 4
-		}
 	}
 	return c
 }

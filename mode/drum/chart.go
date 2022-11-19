@@ -10,6 +10,7 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
+const Mode = 1 // ModeDrum
 type Floater struct {
 	Time  int64
 	Speed float64
@@ -57,8 +58,8 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 	}
 	c = new(Chart)
 	c.ChartHeader = mode.NewChartHeader(f)
-	c.Mode, c.SubMode = mode.ModeDrum, 4
-
+	c.Mode = Mode
+	c.SubMode = 4
 	c.MD5 = md5.Sum(dat)
 	c.TransPoints = mode.NewTransPoints(f)
 	if len(c.TransPoints) == 0 {

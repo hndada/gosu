@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/fs"
 
-	"github.com/hndada/gosu/defaultskin"
 	"github.com/hndada/gosu/draws"
 )
 
@@ -50,7 +49,6 @@ var (
 	// PlaySkin    = Skin{Kind: SkinKindPlay}
 )
 
-func init() { DefaultSkin.Load(defaultskin.FS) }
 func (skin *Skin) Load(fsys fs.FS) {
 	if skin.Kind == SkinKindPlay {
 		skin.Reset()

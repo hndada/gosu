@@ -13,18 +13,19 @@ import (
 
 // Order of fields of drawer: updating fields, others fields, sprites
 type BackgroundDrawer struct {
-	Brightness float64
-	Sprite     draws.Sprite
+	// Brightness float64
+	Sprite draws.Sprite
 }
 
-func (d *BackgroundDrawer) Update() {
-	if v := UserSettings.BackgroundBrightness; d.Brightness != v {
-		d.Brightness = v
-	}
-}
+//	func (d *BackgroundDrawer) Update() {
+//		if v := UserSettings.BackgroundBrightness; d.Brightness != v {
+//			d.Brightness = v
+//		}
+//	}
 func (d BackgroundDrawer) Draw(dst draws.Image) {
 	op := draws.Op{}
-	op.ColorM.ChangeHSV(0, 1, d.Brightness)
+	value := UserSettings.BackgroundBrightness
+	op.ColorM.ChangeHSV(0, 1, value)
 	d.Sprite.Draw(dst, op)
 }
 

@@ -1,91 +1,166 @@
 package piano
 
-import "github.com/hndada/gosu/input"
+import (
+	"fmt"
 
-// Logical size of in-game screen.
+	"github.com/BurntSushi/toml"
+	"github.com/hndada/gosu/defaultskin"
+	"github.com/hndada/gosu/mode"
+)
+
 const (
 	ScreenSizeX = mode.ScreenSizeX
 	ScreenSizeY = mode.ScreenSizeY
 )
 
-var SpeedScale float64 = 1.0
+// positionMargin should be larger than MaxSize/2 of all note sprites' width or height.
+const positionMargin = 100
 
-var KeySettings = map[int][]input.Key{
-	4:               {input.KeyD, input.KeyF, input.KeyJ, input.KeyK},
-	5:               {input.KeyD, input.KeyF, input.KeySpace, input.KeyJ, input.KeyK},
-	6:               {input.KeyS, input.KeyD, input.KeyF, input.KeyJ, input.KeyK, input.KeyL},
-	7:               {input.KeyS, input.KeyD, input.KeyF, input.KeySpace, input.KeyJ, input.KeyK, input.KeyL},
-	8 + LeftScratch: {input.KeyA, input.KeyS, input.KeyD, input.KeyF, input.KeySpace, input.KeyJ, input.KeyK, input.KeyL},
-	8:               {input.KeyA, input.KeyS, input.KeyD, input.KeyF, input.KeyJ, input.KeyK, input.KeyL, input.KeySemicolon},
-	9:               {input.KeyA, input.KeyS, input.KeyD, input.KeyF, input.KeySpace, input.KeyJ, input.KeyK, input.KeyL, input.KeySemicolon},
-	10:              {input.KeyA, input.KeyS, input.KeyD, input.KeyF, input.KeyV, input.KeyN, input.KeyJ, input.KeyK, input.KeyL, input.KeySemicolon},
-}
-var NoteWidthsMap = map[int][3]float64{
-	4:  {0.065, 0.065, 0.065},
-	5:  {0.065, 0.065, 0.065},
-	6:  {0.065, 0.065, 0.065},
-	7:  {0.06, 0.06, 0.06},
-	8:  {0.06, 0.06, 0.06},
-	9:  {0.06, 0.06, 0.06},
-	10: {0.06, 0.06, 0.06},
-}
-
-// Todo: generalize setting loading function
-func init() {
-	for k, ws := range NoteWidthsMap {
-		ws2 := ws
-		for i, w := range ws2 {
-			ws2[i] = ScreenSizeX * w
-		}
-		NoteWidthsMap[k] = ws2
-	}
-}
-
-// Todo: add note lighting color settings per kind
+// Todo: HitLightingOpaque -> HitLightingColors
 // Todo: Should NoteHeight be separated into NoteHeight, HeadHeight, TailHeight?
+type Settings struct {
+	// Logic settings
+	KeySettings   map[int][]string
+	SpeedScale    float64
+	HitPosition   float64 // The bottom y-value of Hint,  not a middle or top.
+	maxPosition   float64
+	minPosition   float64
+	TailExtraTime float64
+	ReverseBody   bool
+
+	// Skin-independent settings
+	NoteWidths        map[int][4]float64 // Fourth is for Scratch note.
+	NoteHeigth        float64            // Applies to all notes.
+	BodyStyle         int
+	FieldPosition     float64
+	ComboPosition     float64
+	JudgmentPosition  float64
+	FieldOpaque       float64
+	KeyLightingOpaque float64
+	HitLightingOpaque float64
+
+	// Skin-dependent settings
+	ComboScale    float64
+	ComboDigitGap float64
+	JudgmentScale float64
+	HintHeight    float64
+	LightingScale float64
+}
+
 var (
-	FieldDarkness float64 = 0.8 // Todo: FieldDarkness -> FieldOpaque
-	FieldPosition float64 = ScreenSizeX * 0.5
+	DefaultSettings = Settings{
+		KeySettings: map[int][]string{
+			4:               {"D", "F", "J", "K"},
+			5:               {"D", "F", "Space", "J", "K"},
+			6:               {"S", "D", "F", "J", "K", "L"},
+			7:               {"S", "D", "F", "Space", "J", "K", "L"},
+			8 + LeftScratch: {"A", "S", "D", "F", "Space", "J", "K", "L"},
+			8:               {"A", "S", "D", "F", "J", "K", "L", "Semicolon"},
+			9:               {"A", "S", "D", "F", "Space", "J", "K", "L", "Semicolon"},
+			10:              {"A", "S", "D", "F", "V", "N", "J", "K", "L", "Semicolon"},
+		},
+		SpeedScale:    1.0,
+		HitPosition:   0.90,
+		TailExtraTime: 0,
+		ReverseBody:   false,
 
-	HitPosition float64 = ScreenSizeY * 0.90 // The bottom y-value of Hint,  not a middle or top.
+		NoteWidths: map[int][4]float64{
+			4:  {0.065, 0.065, 0.065, 0.065},
+			5:  {0.065, 0.065, 0.065, 0.065},
+			6:  {0.065, 0.065, 0.065, 0.065},
+			7:  {0.06, 0.06, 0.06, 0.06},
+			8:  {0.06, 0.06, 0.06, 0.06},
+			9:  {0.06, 0.06, 0.06, 0.06},
+			10: {0.06, 0.06, 0.06, 0.06},
+		},
+		NoteHeigth:        0.05,
+		BodyStyle:         BodyStyleStretch,
+		FieldPosition:     0.50,
+		ComboPosition:     0.40,
+		JudgmentPosition:  0.66,
+		FieldOpaque:       0.8,
+		KeyLightingOpaque: 0.5,
+		HitLightingOpaque: 1,
 
-	// positionMargin should be larger than MaxSize/2 of all note sprites' width or height.
-	positionMargin float64 = 100
-	maxPosition    float64 = HitPosition + positionMargin
-	minPosition    float64 = HitPosition - ScreenSizeY - positionMargin
-
-	NoteHeigth    float64 = ScreenSizeY * 0.05 // Applies to all notes
-	TailExtraTime float64 = 0
-	// bodyLoss   float64 = NoteHeigth // Head/2 + Tail/2.
-
-	ComboPosition    float64 = ScreenSizeY * 0.40
-	JudgmentPosition float64 = ScreenSizeY * 0.66
+		ComboScale:    0.75,
+		ComboDigitGap: -0.0008,
+		JudgmentScale: 0.33,
+		HintHeight:    0.04,
+		LightingScale: 1.0,
+	}
+	UserSettings = DefaultSettings
 )
 
+// Generic function seems not allow to pass named type.
 const (
-	BodyStyleStretch = iota
+	BodyStyleStretch int = iota
 	BodyStyleAttach
 )
 
-// Skin-dependent settings.
-// Todo: make SkinScaleSettings struct?
-var (
-	BodyStyle   int  = BodyStyleStretch
-	ReverseBody bool = false
+func init() {
+	DefaultSettings.process()
+	DefaultSkin.Load(defaultskin.FS)
+}
 
-	ScoreScale        float64 = 0.65
-	ComboScale        float64 = 0.75
-	ComboDigitGap     float64 = ScreenSizeX * -0.0008
-	JudgmentScale     float64 = 0.33
-	HintHeight        float64 = ScreenSizeY * 0.04
-	LightingScale     float64 = 1.0
-	KeyLightingOpaque float64 = 0.5
-	HitLightingOpaque float64 = 1 // Todo: set color per note kind
-)
+func (settings *Settings) Load(data string) {
+	_, err := toml.Decode(data, settings)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer settings.process()
 
-func SwitchDirection() {
-	max, min := maxPosition, minPosition
-	maxPosition = -min
-	minPosition = -max
-	ReverseBody = !ReverseBody
+	for k := range settings.KeySettings {
+		mode.NormalizeKeys(settings.KeySettings[k])
+	}
+	mode.Normalize(&settings.SpeedScale, 0.1, 2.0)
+	mode.Normalize(&settings.HitPosition, 0, 1)
+	mode.Normalize(&settings.TailExtraTime, -150, 150)
+	// ReverseBody is a bool.
+
+	for k, widths := range settings.NoteWidths {
+		for kind := range widths {
+			mode.Normalize(&widths[kind], 0, 0.15)
+		}
+		settings.NoteWidths[k] = widths
+	}
+	mode.Normalize(&settings.NoteHeigth, 0, 0.15)
+	mode.Normalize(&settings.BodyStyle, 0, BodyStyleAttach)
+	mode.Normalize(&settings.FieldPosition, 0, 1)
+	mode.Normalize(&settings.ComboPosition, 0, 1)
+	mode.Normalize(&settings.JudgmentPosition, 0, 1)
+	mode.Normalize(&settings.FieldOpaque, 0, 1)
+	mode.Normalize(&settings.KeyLightingOpaque, 0, 1)
+	mode.Normalize(&settings.HitLightingOpaque, 0, 1)
+
+	mode.Normalize(&settings.ComboScale, 0, 1.5)
+	mode.Normalize(&settings.ComboDigitGap, -0.005, 0.005)
+	mode.Normalize(&settings.JudgmentScale, 0, 1.5)
+	mode.Normalize(&settings.HintHeight, 0, 0.1)
+	mode.Normalize(&settings.LightingScale, 0, 1.5)
+}
+
+func (settings *Settings) process() {
+	settings.HitPosition *= ScreenSizeX
+	max := ScreenSizeY * settings.HitPosition
+	settings.maxPosition = max + positionMargin
+	settings.minPosition = max - ScreenSizeY - positionMargin
+	if settings.ReverseBody {
+		max, min := settings.maxPosition, settings.minPosition
+		settings.maxPosition = -min
+		settings.minPosition = -max
+	}
+
+	for k, widths := range settings.NoteWidths {
+		for kind := range widths {
+			widths[kind] *= ScreenSizeX
+		}
+		settings.NoteWidths[k] = widths
+	}
+	settings.NoteHeigth *= ScreenSizeY
+	settings.FieldPosition *= ScreenSizeX
+	settings.ComboPosition *= ScreenSizeY
+	settings.JudgmentPosition *= ScreenSizeY
+
+	settings.ComboDigitGap *= ScreenSizeX
+	settings.HintHeight *= ScreenSizeY
 }
