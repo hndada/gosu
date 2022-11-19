@@ -2,6 +2,7 @@ package scene
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -48,7 +49,15 @@ func (settings *Settings) Load(data string) {
 		fmt.Println(err)
 	}
 	defer settings.process()
-	// Todo: normalize path
+
+	// Leading dot and slash is not allowed in fs.
+	for i, name := range settings.MusicRoots {
+		name = strings.TrimPrefix(name, ".")
+		name = strings.TrimPrefix(name, ".") // There might be two dots
+		name = strings.TrimPrefix(name, "/")
+		name = strings.TrimPrefix(name, "\\")
+		settings.MusicRoots[i] = name
+	}
 	if len(settings.MusicRoots) == 0 {
 		settings.MusicRoots = []string{"music"}
 	}
