@@ -19,7 +19,7 @@ type ScenePlay struct {
 	Chart *Chart
 	audios.Timer
 	audios.MusicPlayer
-	// scene.SoundPlayer
+	audios.SoundPlayer
 	input.KeyLogger
 
 	*mode.TransPoint
@@ -57,12 +57,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	if err != nil {
 		return
 	}
-	// s.SoundPlayer = scene.NewSoundPlayer(scene.VolumeSoundHandler)
-	// for _, n := range c.Notes {
-	// 	if path, ok := n.Sample.Path(cpath); ok {
-	// 		_ = s.Sounds.Register(path)
-	// 	}
-	// }
+	s.SoundPlayer = audios.NewSoundPlayer(fsys, S.volumeSound)
 	s.KeyLogger = input.NewKeyLogger(S.KeySettings[c.KeyCount])
 	if rf != nil {
 		s.KeyLogger.FetchPressed = NewReplayListener(rf, c.KeyCount, &s.Timer)
@@ -91,6 +86,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 			}
 		}
 	}
+
 	PlaySkin.KeyMode = c.KeyMode
 	PlaySkin.Load(fsys)
 	skin := PlaySkin
@@ -174,13 +170,11 @@ func (s *ScenePlay) SetSpeed() {
 	s.speedScale = new
 }
 
-// Todo: apply other values of TransPoint (Volume has finished so far)
-// Todo: keep playing music when making SceneResult
 func (s *ScenePlay) Update() any {
 	defer s.Ticker()
 	if s.IsDone() {
 		s.MusicPlayer.Close()
-		// return scene.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
+		return s.NewResult(s.Chart.MD5)
 	}
 	s.MusicPlayer.Update()
 
@@ -192,16 +186,9 @@ func (s *ScenePlay) Update() any {
 		if n == nil {
 			continue
 		}
-		// if n.Type != Tail && s.KeyAction(k) == input.Hit {
-		// 	if name := n.Sample.Name; name != "" {
-		// 		vol := n.Sample.Volume
-		// 		if vol == 0 {
-		// 			vol = s.TransPoint.Volume
-		// 		}
-		// 		// Todo: apply effect volume change
-		// 		s.Sounds.PlayWithVolume(name, vol)
-		// 	}
-		// }
+		if n.Type != Tail && s.KeyAction(n.Key) == input.Hit {
+			s.PlaySample(n)
+		}
 		td := n.Time - s.Now // Time difference. A negative value infers late hit
 		if n.Marked {
 			if n.Type != Tail {
@@ -252,6 +239,26 @@ func (s *ScenePlay) Update() any {
 	}
 	return nil
 }
+func (s *ScenePlay) UpdateCursor() {
+	duration := float64(s.Now - s.TransPoint.Time)
+	s.Cursor = s.TransPoint.Position + duration*s.Speed()
+}
+func (s ScenePlay) Speed() float64 { return s.TransPoint.Speed * s.speedScale }
+func (s *ScenePlay) UpdateTransPoint() { // Todo: remove it
+	s.TransPoint = s.TransPoint.FetchByTime(s.Now)
+}
+func (s ScenePlay) PlaySample(n *Note) {
+	name := n.Sample.Name
+	if name == "" {
+		return
+	}
+	vol2 := n.Sample.Volume
+	if vol2 == 0 {
+		vol2 = s.TransPoint.Volume
+	}
+	s.SoundPlayer.Play(name, vol2)
+}
+
 func (s ScenePlay) Draw(screen draws.Image) {
 	s.Background.Draw(screen)
 	s.Field.Draw(screen)
@@ -288,19 +295,4 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 		S.SpeedScale*100, s.TransPoint.Speed, ExposureTime(s.Speed()),
 		*S.volumeMusic*100, *S.volumeSound*100,
 		*S.offset))
-}
-
-// 1 pixel is 1 millisecond.
-func ExposureTime(speed float64) float64 { return S.HitPosition / speed }
-func (s ScenePlay) Speed() float64       { return s.TransPoint.Speed * s.speedScale }
-
-// Supposes one current TransPoint can increment cursor precisely.
-func (s *ScenePlay) UpdateCursor() {
-	duration := float64(s.Now - s.TransPoint.Time)
-	s.Cursor = s.TransPoint.Position + duration*s.Speed()
-}
-
-// Todo: remove it
-func (s *ScenePlay) UpdateTransPoint() {
-	s.TransPoint = s.TransPoint.FetchByTime(s.Now)
 }
