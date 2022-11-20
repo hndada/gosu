@@ -11,7 +11,6 @@ import (
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/drum"
-	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
 )
 
@@ -46,9 +45,15 @@ func load(fsys fs.FS) {
 	settings, err := fs.ReadFile(fsys, "settings.toml")
 	if err != nil {
 		fmt.Println("No custom setting file detected.")
+		// } else {
+		// 	mode.UserSettings.Load(string(settings))
+		// 	piano.UserSettings.Load(string(settings))
+		// 	drum.UserSettings.Load(string(settings))
+		// 	// scene.UserSettings.Load(string(settings))
+		// }
 	}
 	mode.UserSettings.Load(string(settings))
-	piano.UserSettings.Load(string(settings))
+	// piano.UserSettings.Load(string(settings))
 	drum.UserSettings.Load(string(settings))
 	// scene.UserSettings.Load(string(settings))
 
@@ -60,12 +65,12 @@ func load(fsys fs.FS) {
 	_, err = skinFS.Open(".")
 	if err != nil {
 		fmt.Println("No custom skin folder detected.")
-		return
+	} else {
+		mode.UserSkin.Load(skinFS)
+		// piano.UserSkins.Load(skinFS)
+		drum.UserSkin.Load(skinFS)
+		// scene.UserSkin.Load(skinFS)
 	}
-	mode.UserSkin.Load(skinFS)
-	piano.UserSkins.Load(skinFS)
-	drum.UserSkin.Load(skinFS)
-	// scene.UserSkin.Load(skinFS)
 }
 func (g *game) Update() (err error) {
 	// switch r := g.Scene.Update().(type) {
