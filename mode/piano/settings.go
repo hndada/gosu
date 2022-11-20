@@ -116,7 +116,16 @@ const (
 	BodyStyleAttach
 )
 
+// Fields which types are map should be explicitly make new map.
 func init() {
+	UserSettings.KeySettings = make(map[int][]string)
+	for k, v := range DefaultSettings.KeySettings {
+		UserSettings.KeySettings[k] = v
+	}
+	UserSettings.NoteWidths = make(map[int][4]float64)
+	for k, v := range DefaultSettings.NoteWidths {
+		UserSettings.NoteWidths[k] = v
+	}
 	DefaultSettings.process()
 	UserSettings.process()
 	DefaultSkins.Load(defaultskin.FS)
@@ -182,8 +191,7 @@ func (settings *Settings) process() {
 		s.maxPosition = -min
 		s.minPosition = -max
 	}
-
-	s.NoteWidths[general] = DefaultSettings.NoteWidths[4]
+	s.NoteWidths[general] = [4]float64{0.065, 0.065, 0.065, 0.065}
 	for k, widths := range s.NoteWidths {
 		for kind := range widths {
 			widths[kind] *= ScreenSizeX

@@ -77,6 +77,10 @@ var (
 func init() {
 	DefaultSettings.process()
 	UserSettings.process()
+	UserSettings.KeySettings = make(map[int][]string)
+	for k, v := range DefaultSettings.KeySettings {
+		UserSettings.KeySettings[k] = v
+	}
 	DefaultSkin.Load(defaultskin.FS)
 	UserSkin.Load(defaultskin.FS)
 }
