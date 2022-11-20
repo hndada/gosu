@@ -35,6 +35,5 @@ func (settings *Settings) Load(data string) {
 	defer settings.process()
 }
 func (settings *Settings) process() {
-	MS := &mode.UserSettings
-	settings.backgroundBrightness = &MS.BackgroundBrightness
+	settings.backgroundBrightness = &mode.S.BackgroundBrightness
 }

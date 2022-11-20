@@ -42,8 +42,8 @@ const (
 	Play // For skin. Refreshes on every play.
 )
 
-var (
-	DefaultSettings = Settings{
+func NewSettings() Settings {
+	return Settings{
 		VolumeMusic:          0.25,
 		VolumeSound:          0.25,
 		Offset:               -65,
@@ -54,7 +54,12 @@ var (
 		ScoreScale:    0.65,
 		ScoreDigitGap: 0,
 	}
-	UserSettings = DefaultSettings
+}
+
+var (
+	DefaultSettings = NewSettings()
+	UserSettings    = NewSettings()
+	S               = &UserSettings
 )
 
 func init() {
@@ -65,6 +70,7 @@ func init() {
 }
 
 func (settings *Settings) Load(data string) {
+	*settings = NewSettings()
 	_, err := toml.Decode(data, settings)
 	if err != nil {
 		fmt.Println(err)
