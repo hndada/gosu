@@ -53,7 +53,7 @@ func (settings *Settings) Load(data string) {
 	// Leading dot and slash is not allowed in fs.
 	for i, name := range settings.MusicRoots {
 		name = strings.TrimPrefix(name, ".")
-		name = strings.TrimPrefix(name, ".") // There might be two dots
+		name = strings.TrimPrefix(name, ".") // There might be two dots.
 		name = strings.TrimPrefix(name, "/")
 		name = strings.TrimPrefix(name, "\\")
 		settings.MusicRoots[i] = name

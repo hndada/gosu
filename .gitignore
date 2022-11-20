@@ -29,3 +29,7 @@ go.work
 # !/cmd/gosu/replay/triangles.osr
 
 /cmd/gosu/skin/*
+
+# Test files
+/asdf - 1223/*
+test.osz

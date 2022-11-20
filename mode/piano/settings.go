@@ -117,6 +117,7 @@ const (
 
 func init() {
 	DefaultSettings.process()
+	UserSettings.process()
 	DefaultSkins.Load(defaultskin.FS)
 }
 
@@ -137,7 +138,7 @@ func (settings *Settings) Load(data string) {
 
 	for k, widths := range settings.NoteWidths {
 		for kind := range widths {
-			mode.Normalize(&widths[kind], 0, 0.15)
+			mode.Normalize(&widths[kind], 0.01, 0.15)
 		}
 		settings.NoteWidths[k] = widths
 	}
@@ -179,6 +180,7 @@ func (settings *Settings) process() {
 	s.offset = &MS.Offset
 	s.backgroundBrightness = &MS.BackgroundBrightness
 
+	s.NoteWidths[general] = DefaultSettings.NoteWidths[4]
 	for k, widths := range s.NoteWidths {
 		for kind := range widths {
 			widths[kind] *= ScreenSizeX
