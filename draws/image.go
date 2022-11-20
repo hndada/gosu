@@ -5,6 +5,10 @@ import (
 	"image/color"
 	"io/fs"
 
+	// Following imports are required.
+	_ "image/jpeg"
+	_ "image/png"
+
 	"github.com/hajimehoshi/ebiten/v2"
 )
 

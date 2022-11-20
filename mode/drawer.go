@@ -29,7 +29,7 @@ func (d BackgroundDrawer) Draw(dst draws.Image) {
 }
 
 type ScoreDrawer struct {
-	draws.Timer
+	// draws.Timer
 	digitWidth float64 // Use number 0's width.
 	DigitGap   float64
 	ZeroFill   int
@@ -52,9 +52,9 @@ func (d *ScoreDrawer) Update() {
 
 // NumberDrawer's Draw draws each number at the center of constant-width bound.
 func (d ScoreDrawer) Draw(dst draws.Image) {
-	if d.IsDone() {
-		return
-	}
+	// if d.IsDone() {
+	// 	return
+	// }
 	vs := make([]int, 0)
 	score := int(math.Floor(d.Score.Delayed + 0.1))
 	for v := score; v > 0; v /= 10 {
@@ -77,7 +77,7 @@ func (d ScoreDrawer) Draw(dst draws.Image) {
 // Todo: add combo *int and skip passing combo value?
 type ComboDrawer struct {
 	draws.Timer
-	digitWidth float64 // Use number 0's width.
+	DigitWidth float64 // Use number 0's width.
 	DigitGap   float64
 	Combo      int
 	Bounce     float64
@@ -108,7 +108,7 @@ func (d ComboDrawer) Draw(dst draws.Image) {
 
 	// Size of the whole image is 0.5w + (n-1)(w+gap) + 0.5w.
 	// Since sprites are already at origin, no need to care of two 0.5w.
-	w := d.digitWidth + d.DigitGap
+	w := d.DigitWidth + d.DigitGap
 	tx := float64(len(vs)-1) * w / 2
 	const (
 		bound0 = 0.05
