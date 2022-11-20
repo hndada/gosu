@@ -28,7 +28,7 @@ type Skin struct {
 	HitLighting  []draws.Animation
 	HoldLighting []draws.Animation
 }
-type Skins map[int]Skin
+type Skins map[int]Skin // Todo: map[int]*Skin for performance?
 
 const general = 0
 
@@ -45,6 +45,7 @@ var (
 func (skins Skins) Load(fsys fs.FS) {
 	keyCount := len(KeyTypes[general])
 	generalSkin := Skin{
+		Type:         skins[general].Type,
 		KeyMode:      general,
 		Note:         make([][4]draws.Animation, keyCount),
 		Key:          make([][2]draws.Sprite, keyCount),
@@ -52,16 +53,15 @@ func (skins Skins) Load(fsys fs.FS) {
 		HitLighting:  make([]draws.Animation, keyCount),
 		HoldLighting: make([]draws.Animation, keyCount),
 	}
-	// fmt.Printf("before: %+v\n", generalSkin)
-	generalSkin.Load(fsys)
 	skins[general] = generalSkin
+	generalSkin.Load(fsys)
 	for k := 4; k <= 9; k++ {
-		skins.load(fsys, k)
+		skins.LoadKeyMode(fsys, k)
 	}
 }
 
-// load lazy loads less popular key mode.
-func (skins Skins) load(fsys fs.FS, k int) {
+// LoadKeyMode loads particular key mode.
+func (skins Skins) LoadKeyMode(fsys fs.FS, k int) {
 	skin := Skin{Type: skins[general].Type, KeyMode: k}
 	skin.Load(fsys)
 	skins[k] = skin
@@ -72,26 +72,32 @@ func (skin *Skin) Load(fsys fs.FS) {
 	switch skin.Type {
 	case mode.Default:
 		generalSkin = DefaultSkins[general]
+		defer func() { DefaultSkins[skin.KeyMode] = *skin }()
 	case mode.User:
 		generalSkin = UserSkins[general]
+		defer func() { UserSkins[skin.KeyMode] = *skin }()
 	case mode.Play:
 		skin.Reset()
 	}
 	skin.DefaultBackground = mode.UserSkin.DefaultBackground
 	skin.Score = mode.UserSkin.Score
 	for i := 0; i < 10; i++ {
-		s := generalSkin.Combo[i]
+		var s draws.Sprite
 		if skin.isGeneral() {
 			s = draws.NewSprite(fsys, fmt.Sprintf("combo/%d.png", i))
+		} else {
+			s = generalSkin.Combo[i]
 		}
 		s.ApplyScale(S.ComboScale)
 		s.Locate(S.FieldPosition, S.ComboPosition, draws.CenterMiddle)
 		skin.Combo[i] = s
 	}
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
-		a := generalSkin.Judgment[i]
+		var a draws.Animation
 		if skin.isGeneral() {
 			a = draws.NewAnimation(fsys, fmt.Sprintf("piano/judgment/%s", name))
+		} else {
+			a = generalSkin.Judgment[i]
 		}
 		for i := range a {
 			a[i].ApplyScale(S.JudgmentScale)
@@ -104,31 +110,27 @@ func (skin *Skin) Load(fsys fs.FS) {
 	// Todo: should Scratch be excluded from fw?
 	fw := skin.fieldWidth()
 	{
-		s := generalSkin.Bar
-		if skin.isGeneral() {
-			src := draws.NewImage(fw, 1)
-			src.Fill(color.White)
-			s = draws.NewSpriteFromSource(src)
-		}
+		src := draws.NewImage(fw, 1)
+		src.Fill(color.White)
+		s := draws.NewSpriteFromSource(src)
 		s.Locate(S.FieldPosition, S.HitPosition, draws.CenterBottom)
 		skin.Bar = s
 	}
 	{
-		s := generalSkin.Hint
+		var s draws.Sprite
 		if skin.isGeneral() {
 			s = draws.NewSprite(fsys, "piano/stage/hint.png")
+		} else {
+			s = generalSkin.Hint
 		}
 		s.SetSize(fw, S.HintHeight)
 		s.Locate(S.FieldPosition, S.HitPosition-S.HintHeight, draws.CenterTop)
 		skin.Hint = s
 	}
 	{
-		s := generalSkin.Field
-		if skin.isGeneral() {
-			src := draws.NewImage(fw, ScreenSizeY)
-			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * S.FieldOpaque)})
-			s = draws.NewSpriteFromSource(src)
-		}
+		src := draws.NewImage(fw, ScreenSizeY)
+		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * S.FieldOpaque)})
+		s := draws.NewSpriteFromSource(src)
 		s.Locate(S.FieldPosition, 0, draws.CenterTop)
 		skin.Field = s
 	}
@@ -139,32 +141,36 @@ func (skin *Skin) Load(fsys fs.FS) {
 		x += w / 2
 		skin.Note = make([][4]draws.Animation, keyCount)
 		for i, nTypeName := range []string{"normal", "head", "tail", "body"} {
-			// fmt.Println(generalSkin.KeyMode, generalSkin.Note)
-			fmt.Printf("%+v\n", generalSkin)
-			a := generalSkin.Note[i][ktype]
+			var a draws.Animation
 			if skin.isGeneral() {
 				kTypeName := []string{"one", "two", "mid", "tip"}[ktype]
 				name := fmt.Sprintf("piano/note/%s/%s", nTypeName, kTypeName)
 				a = draws.NewAnimation(fsys, name)
+			} else {
+				a = generalSkin.Note[ktype][i]
 			}
-			for frame := range a {
-				if !skin.isGeneral() && ktype == Tip && !a.IsValid() {
+			if !skin.isGeneral() && ktype == Tip && !a.IsValid() {
+				for frame := range a {
 					a[frame] = skin.Note[k][0][frame]
 					op := draws.Op{}
 					op.ColorM.ScaleWithColor(S.scratchColor)
 					i := a[frame].Source.(draws.Image) // Todo: looks weird usage to me
 					skin.Note[k][0][frame].Draw(i, op)
+					a[frame].SetSize(w, S.NoteHeigth)
+					a[frame].Locate(x, S.HitPosition, draws.CenterBottom)
 				}
-				a[frame].SetSize(w, S.NoteHeigth)
-				a[frame].Locate(x, S.HitPosition, draws.CenterBottom)
 			}
 			skin.Note[k][i] = a
 		}
 		skin.Key = make([][2]draws.Sprite, keyCount)
 		for i, name := range []string{"up", "down"} {
-			s := generalSkin.Key[0][i]
+			// fmt.Printf("%d (%d): %+v\n", skin.KeyMode, len(DefaultSkins), generalSkin.Key)
+			var s draws.Sprite
 			if skin.isGeneral() {
 				s = draws.NewSprite(fsys, fmt.Sprintf("piano/key/%s.png", name))
+			} else {
+				s = generalSkin.Key[0][i]
+				fmt.Println(generalSkin.Key, len(generalSkin.Key))
 			}
 			s.SetSize(w, ScreenSizeY-S.HitPosition)
 			s.Locate(x, S.HitPosition, draws.CenterTop)
@@ -172,9 +178,11 @@ func (skin *Skin) Load(fsys fs.FS) {
 		}
 		{
 			skin.KeyLighting = make([]draws.Sprite, keyCount)
-			s := generalSkin.KeyLighting[ktype]
+			var s draws.Sprite
 			if skin.isGeneral() {
 				s = draws.NewSprite(fsys, "piano/key/lighting.png")
+			} else {
+				s = generalSkin.KeyLighting[ktype]
 			}
 			s.SetScaleToW(w)
 			s.Locate(x, S.HitPosition, draws.CenterBottom) // -HintHeight
@@ -182,9 +190,11 @@ func (skin *Skin) Load(fsys fs.FS) {
 		}
 		{
 			skin.HitLighting = make([]draws.Animation, keyCount)
-			a := generalSkin.HitLighting[ktype]
+			var a draws.Animation
 			if skin.isGeneral() {
 				a = draws.NewAnimation(fsys, "piano/lighting/hit")
+			} else {
+				a = generalSkin.HitLighting[ktype]
 			}
 			for i := range a {
 				a[i].ApplyScale(S.LightingScale)
@@ -194,9 +204,11 @@ func (skin *Skin) Load(fsys fs.FS) {
 		}
 		{
 			skin.HoldLighting = make([]draws.Animation, keyCount)
-			a := generalSkin.HoldLighting[ktype]
+			var a draws.Animation
 			if skin.isGeneral() {
 				a = draws.NewAnimation(fsys, "piano/lighting/hold")
+			} else {
+				a = generalSkin.HoldLighting[ktype]
 			}
 			for i := range a {
 				a[i].ApplyScale(S.LightingScale)
