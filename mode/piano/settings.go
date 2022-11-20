@@ -171,13 +171,12 @@ func (settings *Settings) Load(data string) {
 // It is safe to use mode.UserSettings even for DefaultSettings:
 // mode.UserSettings = mode.DefaultSettings when processing default.
 func (settings *Settings) process() {
-	MS := &mode.UserSettings
 	s := settings
 
-	s.volumeMusic = &MS.VolumeMusic
-	s.volumeSound = &MS.VolumeSound
-	s.offset = &MS.Offset
-	s.backgroundBrightness = &MS.BackgroundBrightness
+	s.volumeMusic = &mode.S.VolumeMusic
+	s.volumeSound = &mode.S.VolumeSound
+	s.offset = &mode.S.Offset
+	s.backgroundBrightness = &mode.S.BackgroundBrightness
 
 	s.HitPosition *= ScreenSizeX
 	max := ScreenSizeY * s.HitPosition
