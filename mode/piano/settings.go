@@ -120,6 +120,7 @@ func init() {
 	DefaultSettings.process()
 	UserSettings.process()
 	DefaultSkins.Load(defaultskin.FS)
+	UserSkins.Load(defaultskin.FS)
 }
 
 func (settings *Settings) Load(data string) {

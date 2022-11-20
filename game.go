@@ -40,6 +40,12 @@ func load(fsys fs.FS) {
 	skinFS, err := fs.Sub(fsys, "skin")
 	if err != nil {
 		fmt.Println(err)
+		return
+	}
+	_, err = skinFS.Open(".")
+	if err != nil {
+		fmt.Println("No custom skin folder detected.")
+		return
 	}
 	mode.UserSkin.Load(skinFS)
 	piano.UserSkins.Load(skinFS)
