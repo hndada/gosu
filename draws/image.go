@@ -26,8 +26,8 @@ func NewImage(w, h float64) Image {
 }
 
 // LoadImage returns nil when fails to load image from the path.
+// ebiten.NewImageFromImage will panic when input is nil.
 func LoadImage(fsys fs.FS, name string) Image {
-	// ebiten.NewImageFromImage will panic when input is nil.
 	if i := LoadImageImage(fsys, name); i != nil {
 		return Image{ebiten.NewImageFromImage(i)}
 	}

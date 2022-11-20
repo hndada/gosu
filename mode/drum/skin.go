@@ -3,8 +3,6 @@ package drum
 import (
 	"fmt"
 	"image/color"
-	_ "image/jpeg"
-	_ "image/png"
 	"io/fs"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -56,7 +54,7 @@ const (
 var (
 	DefaultSkin = Skin{Type: mode.Default}
 	UserSkin    = Skin{Type: mode.User}
-	PlaySkin    = Skin{Type: mode.Play}
+	// PlaySkin    = Skin{Type: mode.Play}
 )
 
 // Todo: embed default skins to code for preventing panic when files are missing

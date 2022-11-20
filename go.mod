@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/BurntSushi/toml v1.2.1
-	github.com/hajimehoshi/ebiten/v2 v2.4.12
+	github.com/hajimehoshi/ebiten/v2 v2.4.13
 	github.com/ulikunitz/xz v0.5.10
 	golang.org/x/image v0.1.0
 	golang.org/x/sys v0.2.0
@@ -29,7 +29,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
-	golang.org/x/exp/shiny v0.0.0-20221106115401-f9659909a136 // indirect
+	golang.org/x/exp/shiny v0.0.0-20221114191408-850992195362 // indirect
 	golang.org/x/mobile v0.0.0-20221110043201-43a038452099 // indirect
 )
 
