@@ -55,7 +55,8 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 	c.MD5 = md5.Sum(dat)
 	switch f := f.(type) {
 	case *osu.Format:
-		c.KeyMode = int(f.CircleSize)
+		c.KeyCount = int(f.CircleSize)
+		c.KeyMode = c.KeyCount
 	}
 	c.TransPoints = mode.NewTransPoints(f)
 	if len(c.TransPoints) == 0 {
