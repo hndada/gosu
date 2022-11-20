@@ -142,17 +142,7 @@ func (settings *Settings) process() {
 
 	s.FieldInnerHeight *= s.FieldHeight
 	s.ComboDigitGap *= ScreenSizeX
-	// fmt.Println("process has called")
-	// fmt.Printf("%+v\n", UserSettings)
 }
-
-//	func (settings *Settings) Reset() {
-//		*settings = rawDefaultSettings
-//		UserSettings.KeySettings = make(map[int][]string)
-//		for k, v := range DefaultSettings.KeySettings {
-//			UserSettings.KeySettings[k] = v
-//		}
-//	}
 func ExposureTime(speed float64) float64 {
 	return (ScreenSizeX - S.HitPosition) / speed
 }
