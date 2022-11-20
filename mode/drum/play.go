@@ -94,8 +94,11 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		s.StagedShake = c.Shakes[0]
 	}
 
-	PlaySkin.Load(fsys)
-	skin := PlaySkin
+	{
+		// PlaySkin.Load(fsys)
+		// skin := PlaySkin
+	}
+	skin := UserSkin
 	s.DrumSound = skin.DrumSound
 	s.Background = mode.BackgroundDrawer{
 		Sprite: mode.NewBackground(fsys, c.ImageFilename),

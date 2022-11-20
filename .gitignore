@@ -31,5 +31,5 @@ go.work
 /cmd/gosu/skin/*
 
 # Test files
-/asdf - 1223/*
-test.osz
+/cmd/gosu/asdf - 1223/*
+/cmd/gosu/test.osz
