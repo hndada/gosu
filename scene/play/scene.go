@@ -7,7 +7,8 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
-	"github.com/hndada/gosu/mode/drum"
+
+	// "github.com/hndada/gosu/mode/drum"
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
 )
@@ -24,8 +25,8 @@ func NewScene(fsys fs.FS, cname string, mode int, mods interface{}, rf *osr.Form
 	switch mode {
 	case piano.Mode:
 		scene, err = piano.NewScenePlay(fsys, cname, mods, rf)
-	case drum.Mode:
-		scene, err = drum.NewScenePlay(fsys, cname, mods, rf)
+		// case drum.Mode:
+		// 	scene, err = drum.NewScenePlay(fsys, cname, mods, rf)
 	}
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
 	debug.SetGCPercent(0)

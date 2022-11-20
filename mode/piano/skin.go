@@ -30,22 +30,31 @@ type Skin struct {
 }
 type Skins map[int]Skin
 
-const base = 0
+const general = 0
 
-func (s Skin) isBase() bool { return s.KeyMode == base }
+func (s Skin) isGeneral() bool { return s.KeyMode == general }
 
 // Each piano's sub mode has different skin.
 // PlaySkin doesn't have to be slice, since it is one-time struct.
 var (
-	DefaultSkins = Skins{base: {Type: mode.Default}}
-	UserSkins    = Skins{base: {Type: mode.User}}
+	DefaultSkins = Skins{general: {Type: mode.Default}}
+	UserSkins    = Skins{general: {Type: mode.User}}
 	PlaySkin     = Skin{Type: mode.Play}
 )
 
 func (skins Skins) Load(fsys fs.FS) {
-	baseSkin := skins[base]
-	baseSkin.Load(fsys)
-	skins[base] = baseSkin
+	keyCount := len(KeyTypes[general])
+	generalSkin := Skin{
+		KeyMode:      general,
+		Note:         make([][4]draws.Animation, keyCount),
+		Key:          make([][2]draws.Sprite, keyCount),
+		KeyLighting:  make([]draws.Sprite, keyCount),
+		HitLighting:  make([]draws.Animation, keyCount),
+		HoldLighting: make([]draws.Animation, keyCount),
+	}
+	// fmt.Printf("before: %+v\n", generalSkin)
+	generalSkin.Load(fsys)
+	skins[general] = generalSkin
 	for k := 4; k <= 9; k++ {
 		skins.load(fsys, k)
 	}
@@ -53,26 +62,26 @@ func (skins Skins) Load(fsys fs.FS) {
 
 // load lazy loads less popular key mode.
 func (skins Skins) load(fsys fs.FS, k int) {
-	skin := Skin{Type: skins[base].Type, KeyMode: k}
+	skin := Skin{Type: skins[general].Type, KeyMode: k}
 	skin.Load(fsys)
 	skins[k] = skin
 }
 
 func (skin *Skin) Load(fsys fs.FS) {
-	var baseSkin Skin
+	var generalSkin Skin
 	switch skin.Type {
 	case mode.Default:
-		baseSkin = DefaultSkins[base]
+		generalSkin = DefaultSkins[general]
 	case mode.User:
-		baseSkin = UserSkins[base]
+		generalSkin = UserSkins[general]
 	case mode.Play:
 		skin.Reset()
 	}
 	skin.DefaultBackground = mode.UserSkin.DefaultBackground
 	skin.Score = mode.UserSkin.Score
 	for i := 0; i < 10; i++ {
-		s := baseSkin.Combo[i]
-		if skin.isBase() {
+		s := generalSkin.Combo[i]
+		if skin.isGeneral() {
 			s = draws.NewSprite(fsys, fmt.Sprintf("combo/%d.png", i))
 		}
 		s.ApplyScale(S.ComboScale)
@@ -80,8 +89,8 @@ func (skin *Skin) Load(fsys fs.FS) {
 		skin.Combo[i] = s
 	}
 	for i, name := range []string{"kool", "cool", "good", "bad", "miss"} {
-		a := baseSkin.Judgment[i]
-		if skin.isBase() {
+		a := generalSkin.Judgment[i]
+		if skin.isGeneral() {
 			a = draws.NewAnimation(fsys, fmt.Sprintf("piano/judgment/%s", name))
 		}
 		for i := range a {
@@ -95,8 +104,8 @@ func (skin *Skin) Load(fsys fs.FS) {
 	// Todo: should Scratch be excluded from fw?
 	fw := skin.fieldWidth()
 	{
-		s := baseSkin.Bar
-		if skin.isBase() {
+		s := generalSkin.Bar
+		if skin.isGeneral() {
 			src := draws.NewImage(fw, 1)
 			src.Fill(color.White)
 			s = draws.NewSpriteFromSource(src)
@@ -105,8 +114,8 @@ func (skin *Skin) Load(fsys fs.FS) {
 		skin.Bar = s
 	}
 	{
-		s := baseSkin.Hint
-		if skin.isBase() {
+		s := generalSkin.Hint
+		if skin.isGeneral() {
 			s = draws.NewSprite(fsys, "piano/stage/hint.png")
 		}
 		s.SetSize(fw, S.HintHeight)
@@ -114,8 +123,8 @@ func (skin *Skin) Load(fsys fs.FS) {
 		skin.Hint = s
 	}
 	{
-		s := baseSkin.Field
-		if skin.isBase() {
+		s := generalSkin.Field
+		if skin.isGeneral() {
 			src := draws.NewImage(fw, ScreenSizeY)
 			src.Fill(color.NRGBA{0, 0, 0, uint8(255 * S.FieldOpaque)})
 			s = draws.NewSpriteFromSource(src)
@@ -127,25 +136,24 @@ func (skin *Skin) Load(fsys fs.FS) {
 	keyCount := len(KeyTypes[skin.KeyMode])
 	for k, ktype := range KeyTypes[skin.KeyMode] {
 		w := S.NoteWidths[skin.KeyMode][ktype] // Todo: math.Ceil()?
-		if skin.isBase() {
-			w = 0.06 * ScreenSizeX
-		}
 		x += w / 2
 		skin.Note = make([][4]draws.Animation, keyCount)
 		for i, nTypeName := range []string{"normal", "head", "tail", "body"} {
-			a := baseSkin.Note[i][ktype]
-			if skin.isBase() {
+			// fmt.Println(generalSkin.KeyMode, generalSkin.Note)
+			fmt.Printf("%+v\n", generalSkin)
+			a := generalSkin.Note[i][ktype]
+			if skin.isGeneral() {
 				kTypeName := []string{"one", "two", "mid", "tip"}[ktype]
 				name := fmt.Sprintf("piano/note/%s/%s", nTypeName, kTypeName)
 				a = draws.NewAnimation(fsys, name)
 			}
 			for frame := range a {
-				if ktype == Tip && !a.IsValid() {
-					a[frame] = skin.Note[0][k][frame]
+				if !skin.isGeneral() && ktype == Tip && !a.IsValid() {
+					a[frame] = skin.Note[k][0][frame]
 					op := draws.Op{}
 					op.ColorM.ScaleWithColor(S.scratchColor)
 					i := a[frame].Source.(draws.Image) // Todo: looks weird usage to me
-					skin.Note[0][k][frame].Draw(i, op)
+					skin.Note[k][0][frame].Draw(i, op)
 				}
 				a[frame].SetSize(w, S.NoteHeigth)
 				a[frame].Locate(x, S.HitPosition, draws.CenterBottom)
@@ -154,8 +162,8 @@ func (skin *Skin) Load(fsys fs.FS) {
 		}
 		skin.Key = make([][2]draws.Sprite, keyCount)
 		for i, name := range []string{"up", "down"} {
-			s := baseSkin.Key[0][i]
-			if skin.isBase() {
+			s := generalSkin.Key[0][i]
+			if skin.isGeneral() {
 				s = draws.NewSprite(fsys, fmt.Sprintf("piano/key/%s.png", name))
 			}
 			s.SetSize(w, ScreenSizeY-S.HitPosition)
@@ -164,8 +172,8 @@ func (skin *Skin) Load(fsys fs.FS) {
 		}
 		{
 			skin.KeyLighting = make([]draws.Sprite, keyCount)
-			s := baseSkin.KeyLighting[ktype]
-			if skin.isBase() {
+			s := generalSkin.KeyLighting[ktype]
+			if skin.isGeneral() {
 				s = draws.NewSprite(fsys, "piano/key/lighting.png")
 			}
 			s.SetScaleToW(w)
@@ -174,8 +182,8 @@ func (skin *Skin) Load(fsys fs.FS) {
 		}
 		{
 			skin.HitLighting = make([]draws.Animation, keyCount)
-			a := baseSkin.HitLighting[ktype]
-			if skin.isBase() {
+			a := generalSkin.HitLighting[ktype]
+			if skin.isGeneral() {
 				a = draws.NewAnimation(fsys, "piano/lighting/hit")
 			}
 			for i := range a {
@@ -186,8 +194,8 @@ func (skin *Skin) Load(fsys fs.FS) {
 		}
 		{
 			skin.HoldLighting = make([]draws.Animation, keyCount)
-			a := baseSkin.HoldLighting[ktype]
-			if skin.isBase() {
+			a := generalSkin.HoldLighting[ktype]
+			if skin.isGeneral() {
 				a = draws.NewAnimation(fsys, "piano/lighting/hold")
 			}
 			for i := range a {
