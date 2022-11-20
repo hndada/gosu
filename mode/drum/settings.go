@@ -14,6 +14,7 @@ const (
 	ScreenSizeX = mode.ScreenSizeX
 	ScreenSizeY = mode.ScreenSizeY
 )
+
 const positionMargin = 100
 
 type Settings struct {
@@ -49,8 +50,8 @@ type Settings struct {
 	ComboDigitGap    float64
 }
 
-var (
-	rawDefaultSettings = Settings{
+func NewSettings() Settings {
+	return Settings{
 		KeySettings: map[int][]string{4: {"D", "F", "J", "K"}},
 		SpeedScale:  1.0,
 		HitPosition: 0.1875,
@@ -70,8 +71,11 @@ var (
 		ComboScale:       0.75,
 		ComboDigitGap:    -0.001,
 	}
-	DefaultSettings = rawDefaultSettings
-	UserSettings    = rawDefaultSettings
+}
+
+var (
+	DefaultSettings = NewSettings()
+	UserSettings    = NewSettings()
 	S               = &UserSettings
 )
 
@@ -82,7 +86,7 @@ func init() {
 	UserSkin.Load(defaultskin.FS)
 }
 func (settings *Settings) Load(data string) {
-	settings.Reset()
+	*settings = NewSettings()
 	_, err := toml.Decode(data, settings)
 	if err != nil {
 		fmt.Println(err)
@@ -138,14 +142,17 @@ func (settings *Settings) process() {
 
 	s.FieldInnerHeight *= s.FieldHeight
 	s.ComboDigitGap *= ScreenSizeX
+	// fmt.Println("process has called")
+	// fmt.Printf("%+v\n", UserSettings)
 }
-func (settings *Settings) Reset() {
-	*settings = rawDefaultSettings
-	UserSettings.KeySettings = make(map[int][]string)
-	for k, v := range DefaultSettings.KeySettings {
-		UserSettings.KeySettings[k] = v
-	}
-}
+
+//	func (settings *Settings) Reset() {
+//		*settings = rawDefaultSettings
+//		UserSettings.KeySettings = make(map[int][]string)
+//		for k, v := range DefaultSettings.KeySettings {
+//			UserSettings.KeySettings[k] = v
+//		}
+//	}
 func ExposureTime(speed float64) float64 {
 	return (ScreenSizeX - S.HitPosition) / speed
 }
