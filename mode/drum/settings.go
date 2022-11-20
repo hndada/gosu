@@ -1,55 +1,142 @@
 package drum
 
 import (
-	"github.com/hndada/gosu/input"
-	"github.com/hndada/gosu/scene"
+	"fmt"
+
+	"github.com/BurntSushi/toml"
+	"github.com/hndada/gosu/defaultskin"
+	"github.com/hndada/gosu/mode"
 )
 
-// Logical size of in-game screen.
 const (
-	ScreenSizeX = scene.ScreenSizeX
-	ScreenSizeY = scene.ScreenSizeY
+	TPS = mode.TPS
+
+	ScreenSizeX = mode.ScreenSizeX
+	ScreenSizeY = mode.ScreenSizeY
 )
+const positionMargin = 100
 
-var SpeedScale float64 = 1.0
+type Settings struct {
+	volumeMusic          *float64
+	volumeSound          *float64
+	offset               *int64
+	backgroundBrightness *float64
 
-var KeySettings = map[int][]input.Key{
-	4: input.NamesToKeys([]string{"D", "F", "J", "K"}),
+	// Logic settings
+	KeySettings map[int][]string
+	SpeedScale  float64
+	HitPosition float64
+	maxPosition float64
+	minPosition float64
+	Reverse     bool
+
+	// Skin-independent settings
+	FieldOpaque       float64
+	FieldPosition     float64
+	FieldHeight       float64
+	bigNoteHeight     float64
+	regularNoteHeight float64
+	DancerPositionX   float64
+	DancerPositionY   float64
+
+	// Skin-dependent settings
+	FieldInnerHeight float64
+	JudgmentScale    float64
+	DotScale         float64
+	ShakeScale       float64
+	DancerScale      float64
+	ComboScale       float64
+	ComboDigitGap    float64
 }
 
-const PositionMargin = 100
-
-// Default values are derived from osu!taiko.
-// Todo: generalize Dancer for all modes?
 var (
-	FieldOpaque   float64 = 0.7
-	FieldPosition float64 = ScreenSizeY * 0.4115
-	FieldHeight   float64 = ScreenSizeY * 0.26
+	DefaultSettings = Settings{
+		KeySettings: map[int][]string{4: {"D", "F", "J", "K"}},
+		SpeedScale:  1.0,
+		HitPosition: 0.1875,
+		Reverse:     false,
 
-	// Height of notes are dependent of FieldHeight.
-	bigNoteHeight     float64 = FieldHeight * 0.725
-	regularNoteHeight float64 = bigNoteHeight * 0.65
+		FieldOpaque:     0.7,
+		FieldPosition:   0.4115,
+		FieldHeight:     0.26,
+		DancerPositionX: 0.1,
+		DancerPositionY: 0.175,
 
-	HitPosition     float64 = ScreenSizeX * 0.1875
-	minPosition     float64 = -HitPosition - PositionMargin
-	maxPosition     float64 = -HitPosition + ScreenSizeX + PositionMargin
-	DancerPositionX float64 = ScreenSizeX * 0.1
-	DancerPositionY float64 = ScreenSizeY * 0.175
+		FieldInnerHeight: 0.95,
+		JudgmentScale:    0.75,
+		DotScale:         0.5,
+		ShakeScale:       1,
+		DancerScale:      0.75,
+		ComboScale:       0.75,
+		ComboDigitGap:    -0.001,
+	}
+	UserSettings = DefaultSettings
+	S            = &UserSettings
 )
 
-// Skin-dependent settings.
-var (
-	FieldInnerHeight float64 = FieldHeight * 0.95
-	JudgmentScale    float64 = 0.75 // 1.25
-	DotScale         float64 = 0.5
-	ShakeScale       float64 = 1
-	DancerScale      float64 = 0.75 // 0.6
-	ComboScale       float64 = 0.75 // 1.25
-	ComboDigitGap    float64 = ScreenSizeX * -0.001
-)
+func init() {
+	DefaultSettings.process()
+	UserSettings.process()
+	DefaultSkin.Load(defaultskin.FS)
+}
+func (settings *Settings) Load(data string) {
+	_, err := toml.Decode(data, settings)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer settings.process()
 
-func SwitchDirection() {
-	max, min := maxPosition, minPosition
-	maxPosition = -min
-	minPosition = -max
+	for k := range settings.KeySettings {
+		mode.NormalizeKeys(settings.KeySettings[k])
+	}
+	mode.Normalize(&settings.SpeedScale, 0.1, 2.0)
+	mode.Normalize(&settings.HitPosition, 0, 1)
+	// Reverse: bool
+
+	mode.Normalize(&settings.FieldOpaque, 0, 1)
+	mode.Normalize(&settings.FieldPosition, 0, 1)
+	mode.Normalize(&settings.FieldHeight, 0, 1)
+	mode.Normalize(&settings.DancerPositionX, 0, 1)
+	mode.Normalize(&settings.DancerPositionY, 0, 1)
+
+	mode.Normalize(&settings.FieldInnerHeight, 0, 1)
+	mode.Normalize(&settings.JudgmentScale, 0, 2)
+	mode.Normalize(&settings.DotScale, 0, 2)
+	mode.Normalize(&settings.ShakeScale, 0, 2)
+	mode.Normalize(&settings.DancerScale, 0, 2)
+	mode.Normalize(&settings.ComboScale, 0, 2)
+	mode.Normalize(&settings.ComboDigitGap, -0.005, 0.005)
+}
+
+func (settings *Settings) process() {
+	MS := &mode.UserSettings
+	s := settings
+
+	s.volumeMusic = &MS.VolumeMusic
+	s.volumeSound = &MS.VolumeSound
+	s.offset = &MS.Offset
+	s.backgroundBrightness = &MS.BackgroundBrightness
+
+	s.HitPosition *= ScreenSizeX
+	s.minPosition = -s.HitPosition - positionMargin
+	s.maxPosition = -s.HitPosition + ScreenSizeX + positionMargin
+	if s.Reverse {
+		max, min := s.maxPosition, s.minPosition
+		s.maxPosition = -min
+		s.minPosition = -max
+	}
+
+	s.FieldPosition *= ScreenSizeY
+	s.FieldHeight *= ScreenSizeY
+	s.bigNoteHeight = s.FieldHeight * 0.725
+	s.regularNoteHeight = s.bigNoteHeight * 0.65
+	s.DancerPositionX *= ScreenSizeX
+	s.DancerPositionY *= ScreenSizeY
+
+	s.FieldInnerHeight *= s.FieldHeight
+	s.ComboDigitGap *= ScreenSizeX
+}
+
+func ExposureTime(speed float64) float64 {
+	return (ScreenSizeX - S.HitPosition) / speed
 }

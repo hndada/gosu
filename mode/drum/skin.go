@@ -10,7 +10,34 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/mode"
 )
+
+// Order of fields of Skin is roughly consistent with drawing order.
+type Skin struct {
+	Type int
+
+	DrumSound         [2][2][]byte // First 2 is color, next 2 is size.
+	DefaultBackground draws.Sprite
+	Field             [2]draws.Sprite
+	Hint              [2]draws.Sprite
+	Bar               draws.Sprite
+	Judgment          [2][3]draws.Animation
+
+	Note    [2][4]draws.Sprite
+	Overlay [2]draws.Animation
+	Head    [2]draws.Sprite
+	Tail    [2]draws.Sprite
+	Body    [2]draws.Sprite
+	Dot     draws.Sprite
+	Shake   [2]draws.Sprite
+
+	Key      [4]draws.Sprite
+	KeyField draws.Sprite
+	Dancer   [4]draws.Animation
+	Score    [13]draws.Sprite
+	Combo    [10]draws.Sprite
+}
 
 var (
 	ColorRed    = color.NRGBA{235, 69, 44, 255}
@@ -26,125 +53,110 @@ const (
 	DancerHigh
 )
 
-var DefaultSkin Skin
-
-// Order of fields of Skin is roughly consistent with drawing order.
-type Skin struct {
-	FieldSprites    [2]draws.Sprite
-	HintSprites     [2]draws.Sprite
-	BarSprite       draws.Sprite
-	JudgmentSprites [2][3]draws.Animation
-
-	NoteSprites    [2][4]draws.Sprite
-	OverlaySprites [2]draws.Animation
-	HeadSprites    [2]draws.Sprite
-	TailSprites    [2]draws.Sprite
-	BodySprites    [2]draws.Sprite
-	DotSprite      draws.Sprite
-	ShakeSprites   [2]draws.Sprite
-
-	KeySprites     [4]draws.Sprite
-	KeyFieldSprite draws.Sprite
-	DancerSprites  [4]draws.Animation
-	ScoreSprites   [10]draws.Sprite
-	ComboSprites   [10]draws.Sprite
-
-	SoundSoundBytes [2][2][]byte
-}
+var (
+	DefaultSkin = Skin{Type: mode.Default}
+	UserSkin    = Skin{Type: mode.User}
+	PlaySkin    = Skin{Type: mode.Play}
+)
 
 // Todo: embed default skins to code for preventing panic when files are missing
-func LoadSkin(fsys fs.FS) {
-	var skin Skin
-	defer func() { DefaultSkin = skin }()
-	var note = draws.LoadImage(fsys, "drum/note/note.png")
+func (skin *Skin) Load(fsys fs.FS) {
+	for i, cname := range []string{"red", "blue"} {
+		for j, sname := range []string{"", "-big"} {
+			name := fmt.Sprintf("drum/sound/%s%s.wav", cname, sname)
+			skin.DrumSound[i][j] = audios.NewSound(fsys, name)
+		}
+	}
+	skin.DefaultBackground = mode.UserSkin.DefaultBackground
 	for i, name := range []string{"idle", "high"} {
-		sprite := draws.NewSprite(fsys, fmt.Sprintf("drum/field/%s.png", name))
-		sprite.SetSize(ScreenSizeX, FieldHeight)
-		sprite.Locate(0, FieldPosition, draws.LeftMiddle)
-		skin.FieldSprites[i] = sprite
+		sprite := draws.NewSprite(fsys, fmt.Sprintf("drum/stage/field-%s.png", name))
+		sprite.SetSize(ScreenSizeX, S.FieldHeight)
+		sprite.Locate(0, S.FieldPosition, draws.LeftMiddle)
+		skin.Field[i] = sprite
 	}
 	var hintScale float64
 	for i, name := range []string{"idle", "high"} {
-		sprite := draws.NewSprite(fsys, fmt.Sprintf("drum/hint/%s.png", name))
+		sprite := draws.NewSprite(fsys, fmt.Sprintf("drum/stage/hint-%s.png", name))
 		if name == "idle" {
-			hintScale = 1.2 * regularNoteHeight / sprite.H()
+			hintScale = 1.2 * S.regularNoteHeight / sprite.H()
 		}
 		sprite.ApplyScale(hintScale)
-		sprite.Locate(HitPosition, FieldPosition, draws.CenterMiddle)
-		skin.HintSprites[i] = sprite
+		sprite.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
+		skin.Hint[i] = sprite
 	}
 	{
-		src := draws.NewImage(1, FieldInnerHeight)
+		src := draws.NewImage(1, S.FieldInnerHeight)
 		src.Fill(color.White)
 		sprite := draws.NewSpriteFromSource(src)
-		sprite.Locate(HitPosition, FieldPosition, draws.CenterMiddle)
-		skin.BarSprite = sprite
+		sprite.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
+		skin.Bar = sprite
 	}
 	var (
-		end  = draws.LoadImage(fsys, "drum/note/roll/end.png")
+		note = draws.LoadImage(fsys, "drum/note/note.png")
+		end  = draws.LoadImage(fsys, "drum/note/end.png")
 		head = draws.NewImageXFlipped(end)
 		tail = end
-		body = draws.LoadImage(fsys, "drum/note/roll/mid.png")
+		body = draws.LoadImage(fsys, "drum/note/mid.png")
 	)
-	for size, sizeName := range []string{"regular", "big"} {
-		noteHeight := regularNoteHeight
+	for size, sizeName := range []string{"", "-big"} {
+		noteHeight := S.regularNoteHeight
 		if size == Big {
-			noteHeight = bigNoteHeight
+			noteHeight = S.bigNoteHeight
 		}
 		for kind, kindName := range []string{"cool", "good", "miss"} {
 			var name string
 			if kindName == "miss" {
 				name = "drum/judgment/miss"
 			} else {
-				name = fmt.Sprintf("drum/judgment/%s/%s", sizeName, kindName)
+				name = fmt.Sprintf("drum/judgment/%s%s", sizeName, kindName)
 			}
 			animation := draws.NewAnimation(fsys, name)
 			for i := range animation {
-				animation[i].ApplyScale(JudgmentScale)
-				animation[i].Locate(HitPosition, FieldPosition, draws.CenterMiddle)
+				animation[i].ApplyScale(S.JudgmentScale)
+				animation[i].Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 			}
-			skin.JudgmentSprites[size][kind] = animation
+			skin.Judgment[size][kind] = animation
 		}
 		for kind, color := range []color.NRGBA{ColorRed, ColorBlue, ColorYellow, ColorPurple} {
 			image := draws.NewImageColored(note, color)
 			sprite := draws.NewSpriteFromSource(image)
 			sprite.SetScaleToH(noteHeight)
-			sprite.Locate(HitPosition, FieldPosition, draws.CenterMiddle)
-			skin.NoteSprites[size][kind] = sprite
+			sprite.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
+			skin.Note[size][kind] = sprite
 		}
-		animation := draws.NewAnimation(fsys, fmt.Sprintf("drum/note/overlay/%s", sizeName))
+		animation := draws.NewAnimation(fsys, fmt.Sprintf("drum/note/overlay%s", sizeName))
 		for i := range animation {
 			animation[i].SetScaleToH(noteHeight)
-			animation[i].Locate(HitPosition, FieldPosition, draws.CenterMiddle)
+			animation[i].Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		}
-		skin.OverlaySprites[size] = animation
+		skin.Overlay[size] = animation
 		{
 			sprite := draws.NewSpriteFromSource(head)
 			sprite.SetScaleToH(noteHeight)
-			sprite.Locate(HitPosition, FieldPosition, draws.RightMiddle)
-			skin.HeadSprites[size] = sprite
+			sprite.Locate(S.HitPosition, S.FieldPosition, draws.RightMiddle)
+			skin.Head[size] = sprite
 		}
 		{
 			sprite := draws.NewSpriteFromSource(tail)
 			sprite.SetScaleToH(noteHeight)
-			sprite.Locate(HitPosition, FieldPosition, draws.LeftMiddle)
-			skin.TailSprites[size] = sprite
+			sprite.Locate(S.HitPosition, S.FieldPosition, draws.LeftMiddle)
+			skin.Tail[size] = sprite
 		}
 		{
 			sprite := draws.NewSpriteFromSource(body)
 			sprite.SetScaleToH(noteHeight)
-			sprite.Locate(HitPosition, FieldPosition, draws.LeftMiddle)
+			sprite.Locate(S.HitPosition, S.FieldPosition, draws.LeftMiddle)
 			sprite.Filter = ebiten.FilterNearest
-			skin.BodySprites[size] = sprite
+			skin.Body[size] = sprite
 		}
 	}
 	{
-		sprite := draws.NewSprite(fsys, "drum/note/roll/dot.png")
-		sprite.ApplyScale(DotScale)
-		sprite.Locate(HitPosition, FieldPosition, draws.CenterMiddle)
-		skin.DotSprite = sprite
+		sprite := draws.NewSprite(fsys, "drum/note/dot.png")
+		sprite.ApplyScale(S.DotScale)
+		sprite.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
+		skin.Dot = sprite
 	}
-	skin.ShakeSprites = NewShakeSprites(note)
+	skin.Shake = NewShake(note)
 	// Key sprites are overlapped at each side.
 	var (
 		in        = draws.LoadImage(fsys, "drum/key/in.png")
@@ -159,9 +171,9 @@ func LoadSkin(fsys fs.FS) {
 	)
 	for k, image := range keyImages {
 		sprite := draws.NewSpriteFromSource(image)
-		sprite.SetScaleToH(FieldInnerHeight)
+		sprite.SetScaleToH(S.FieldInnerHeight)
 		if k < 2 { // Includes determining key field size.
-			sprite.Locate(0, FieldPosition, draws.LeftMiddle)
+			sprite.Locate(0, S.FieldPosition, draws.LeftMiddle)
 			if w := sprite.W(); keyFieldSize.X < w*2 {
 				keyFieldSize.X = w * 2
 			}
@@ -169,33 +181,33 @@ func LoadSkin(fsys fs.FS) {
 				keyFieldSize.Y = h
 			}
 		} else {
-			sprite.Locate(keyFieldSize.X/2, FieldPosition, draws.LeftMiddle)
+			sprite.Locate(keyFieldSize.X/2, S.FieldPosition, draws.LeftMiddle)
 		}
-		skin.KeySprites[k] = sprite
+		skin.Key[k] = sprite
 	}
 	{
 
 		src := draws.NewImage(keyFieldSize.XY())
-		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * FieldOpaque)})
+		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * S.FieldOpaque)})
 		sprite := draws.NewSpriteFromSource(src)
-		sprite.Locate(0, FieldPosition, draws.LeftMiddle)
-		skin.KeyFieldSprite = sprite
+		sprite.Locate(0, S.FieldPosition, draws.LeftMiddle)
+		skin.KeyField = sprite
 	}
 	for i, name := range []string{"idle", "yes", "no", "high"} {
 		fs, err := fs.ReadDir(fsys, fmt.Sprintf("drum/dancer/%s", name))
 		if err != nil {
 			continue
 		}
-		skin.DancerSprites[i] = make(draws.Animation, len(fs))
+		skin.Dancer[i] = make(draws.Animation, len(fs))
 		for j := range fs {
 			name := fmt.Sprintf("drum/dancer/%s/%d.png", name, j)
 			sprite := draws.NewSprite(fsys, name)
-			sprite.ApplyScale(DancerScale)
-			sprite.Locate(DancerPositionX, DancerPositionY, draws.CenterMiddle)
-			skin.DancerSprites[i][j] = sprite
+			sprite.ApplyScale(S.DancerScale)
+			sprite.Locate(S.DancerPositionX, S.DancerPositionY, draws.CenterMiddle)
+			skin.Dancer[i][j] = sprite
 		}
 	}
-	skin.ScoreSprites = mode.ScoreSprites
+	skin.Score = mode.UserSkin.Score
 	// Position of combo is dependent on widths of key sprite.
 	{
 		var comboImages [10]draws.Image
@@ -204,23 +216,13 @@ func LoadSkin(fsys fs.FS) {
 		}
 		for i := 0; i < 10; i++ {
 			sprite := draws.NewSpriteFromSource(comboImages[i])
-			sprite.ApplyScale(ComboScale)
-			sprite.Locate(keyFieldSize.X/2, FieldPosition, draws.CenterMiddle)
-			skin.ComboSprites[i] = sprite
-		}
-	}
-	for i, colorName := range []string{"regular", "big"} {
-		for j, sizeName := range []string{"red", "blue"} {
-			name := fmt.Sprintf("drum/sound/%s/%s.wav", colorName, sizeName)
-			b, err := audios.NewSound(fsys, name)
-			if err != nil {
-				panic(err)
-			}
-			skin.SoundSoundBytes[i][j] = b
+			sprite.ApplyScale(S.ComboScale)
+			sprite.Locate(keyFieldSize.X/2, S.FieldPosition, draws.CenterMiddle)
+			skin.Combo[i] = sprite
 		}
 	}
 }
-func NewShakeSprites(note draws.Image) (sprites [2]draws.Sprite) {
+func NewShake(note draws.Image) (sprites [2]draws.Sprite) {
 	const (
 		outer = iota
 		inner
@@ -258,58 +260,26 @@ func NewShakeSprites(note draws.Image) (sprites [2]draws.Sprite) {
 	}
 	{
 		sprite := draws.NewSpriteFromSource(outerImage)
-		sprite.SetScaleToH(scale * regularNoteHeight)
-		sprite.Locate(HitPosition, FieldPosition, draws.CenterMiddle)
+		sprite.SetScaleToH(scale * S.regularNoteHeight)
+		sprite.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		sprites[outer] = sprite
 	}
 	{
 		sprite := draws.NewSpriteFromSource(innerImage)
-		sprite.SetScaleToH((scale + thickness) * regularNoteHeight)
-		sprite.Locate(HitPosition, FieldPosition, draws.CenterMiddle)
+		sprite.SetScaleToH((scale + thickness) * S.regularNoteHeight)
+		sprite.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		sprites[inner] = sprite
 	}
 	return
 }
 
-// Deprecated.
-// func NewHintGlowImage(skin Skin, noteImage draws.Image) {
-// 	for i := range skin.HintSprites {
-// 		const (
-// 			padScale   = 1.1
-// 			outerScale = 1.2
-// 		)
-// 		sw, sh := noteImage.Size()
-// 		outer := draws.NewImageScaled(noteImage, outerScale)
-// 		pad := draws.NewImageScaled(noteImage, padScale)
-// 		inner := noteImage
-// 		a := uint8(255 * FieldOpaque)
-// 		img := ebiten.NewImage(outer.Size())
-// 		{
-// 			op := &ebiten.DrawImageOptions{}
-// 			op.ColorM.ScaleWithColor(color.NRGBA{128, 128, 128, a})
-// 			op.GeoM.Translate(0, 0)
-// 			img.DrawImage(outer, op)
-// 		}
-// 		{
-// 			op := &ebiten.DrawImageOptions{}
-// 			op.ColorM.ScaleWithColor(color.NRGBA{255, 255, 0, a})
-// 			if i == 0 { // Blank for idle, Yellow for highlight.
-// 				op.CompositeMode = ebiten.CompositeModeDestinationOut
-// 			}
-// 			sd := outerScale - padScale // Size difference.
-// 			op.GeoM.Translate(sd/2*float64(sw), sd/2*float64(sh))
-// 			img.DrawImage(pad, op)
-// 		}
-// 		{
-// 			op := &ebiten.DrawImageOptions{}
-// 			op.ColorM.ScaleWithColor(color.NRGBA{60, 60, 60, a})
-// 			sd := outerScale - 1 // Size difference.
-// 			op.GeoM.Translate(sd/2*float64(sw), sd/2*float64(sh))
-// 			img.DrawImage(inner, op)
-// 		}
-// 		sprite := draws.NewSpriteFromSource(img)
-// 		sprite.SetScaleToH(1.2 * regularNoteHeight)
-// 		sprite.Locate(HitPosition, FieldPosition, draws.CenterMiddle)
-// 		skin.HintSprites[i] = sprite
-// 	}
-// }
+func (skin *Skin) Reset() {
+	kind := skin.Type
+	switch kind {
+	case mode.User:
+		*skin = DefaultSkin
+	case mode.Play:
+		*skin = UserSkin
+	}
+	skin.Type = kind
+}

@@ -21,18 +21,19 @@ const (
 const positionMargin = 100
 
 type Settings struct {
-	// Logic settings
-	KeySettings          map[int][]string
-	SpeedScale           float64
-	HitPosition          float64 // The bottom y-value of Hint,  not a middle or top.
-	maxPosition          float64
-	minPosition          float64
-	TailExtraTime        float64
-	ReverseBody          bool
 	volumeMusic          *float64
 	volumeSound          *float64
 	offset               *int64
 	backgroundBrightness *float64
+
+	// Logic settings
+	KeySettings   map[int][]string
+	SpeedScale    float64
+	HitPosition   float64 // The bottom y-value of Hint,  not a middle or top.
+	maxPosition   float64
+	minPosition   float64
+	TailExtraTime float64
+	ReverseBody   bool
 
 	// Skin-independent settings
 	NoteWidths         map[int][4]float64 // Fourth is a Scratch note.
@@ -166,6 +167,11 @@ func (settings *Settings) process() {
 	MS := &mode.UserSettings
 	s := settings
 
+	s.volumeMusic = &MS.VolumeMusic
+	s.volumeSound = &MS.VolumeSound
+	s.offset = &MS.Offset
+	s.backgroundBrightness = &MS.BackgroundBrightness
+
 	s.HitPosition *= ScreenSizeX
 	max := ScreenSizeY * s.HitPosition
 	s.maxPosition = max + positionMargin
@@ -175,10 +181,6 @@ func (settings *Settings) process() {
 		s.maxPosition = -min
 		s.minPosition = -max
 	}
-	s.volumeMusic = &MS.VolumeMusic
-	s.volumeSound = &MS.VolumeSound
-	s.offset = &MS.Offset
-	s.backgroundBrightness = &MS.BackgroundBrightness
 
 	s.NoteWidths[general] = DefaultSettings.NoteWidths[4]
 	for k, widths := range s.NoteWidths {
