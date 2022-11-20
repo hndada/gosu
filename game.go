@@ -3,6 +3,9 @@ package gosu
 import (
 	"fmt"
 	"io/fs"
+	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
@@ -19,14 +22,26 @@ type game struct {
 	scene.Scene
 }
 
-//	func NewGame(fsys fs.FS) *game {
-//		load(fsys)
-//		g := &game{
-//			FS:    fsys,
-//			Scene: choose.NewScene(),
-//		}
-//		return g
-//	}
+func NewGame(fsys fs.FS) *game {
+	load(fsys)
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// scene := choose.NewScene()
+	scene, err := piano.NewScenePlay(ZipFS(filepath.Join(dir, "test.osz")),
+		"nekodex - circles! (MuangMuangE) [Hard].osu", nil, nil)
+	// scene, err := drum.NewScenePlay(os.DirFS(path.Join(dir, "asdf - 1223")),
+	// "asdf - 1223 (MuangMuangE) [Oni].osu", nil, nil)
+	if err != nil {
+		panic(err)
+	}
+	g := &game{
+		FS:    fsys,
+		Scene: scene,
+	}
+	return g
+}
 func load(fsys fs.FS) {
 	settings, err := fs.ReadFile(fsys, "settings.toml")
 	if err != nil {
