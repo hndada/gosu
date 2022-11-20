@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/BurntSushi/toml"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode"
@@ -28,11 +29,12 @@ func NewGame(fsys fs.FS) *game {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	// scene := choose.NewScene()
 	scene, err := piano.NewScenePlay(ZipFS(filepath.Join(dir, "test.osz")),
 		"nekodex - circles! (MuangMuangE) [Hard].osu", nil, nil)
 	// scene, err := drum.NewScenePlay(os.DirFS(path.Join(dir, "asdf - 1223")),
-	// 	"asdf - 1223 (MuangMuangE) [Oni].osu", nil, nil)
+	// "asdf - 1223 (MuangMuangE) [Oni].osu", nil, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -42,16 +44,26 @@ func NewGame(fsys fs.FS) *game {
 	}
 	return g
 }
+
+type Settings struct {
+	General mode.Settings
+	Piano   piano.Settings
+	Drum    drum.Settings
+	// Scene scene.Settings
+}
+
+var UserSettings Settings
+
 func load(fsys fs.FS) {
-	settings, err := fs.ReadFile(fsys, "settings.toml")
+	data, err := fs.ReadFile(fsys, "settings.toml")
 	if err != nil {
 		fmt.Println("Settings: default")
 	} else {
 		fmt.Println("Settings: custom")
-		mode.UserSettings.Load(string(settings))
-		// piano.UserSettings.Load(string(settings))
-		drum.UserSettings.Load(string(settings))
-		// scene.UserSettings.Load(string(settings))
+		_, err := toml.Decode(string(data), &UserSettings)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
 	skinFS, err := fs.Sub(fsys, "skin")
@@ -65,7 +77,7 @@ func load(fsys fs.FS) {
 	} else {
 		fmt.Println("Skin: custom")
 		mode.UserSkin.Load(skinFS)
-		// piano.UserSkins.Load(skinFS)
+		piano.UserSkins.Load(skinFS)
 		drum.UserSkin.Load(skinFS)
 		// scene.UserSkin.Load(skinFS)
 	}

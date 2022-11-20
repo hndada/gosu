@@ -59,13 +59,13 @@ func (skins Skins) Load(fsys fs.FS) {
 	for k := 4; k <= 9; k++ {
 		skins.loadKeyMode(fsys, k)
 	}
-	// fmt.Printf("%+v\n", skins[7])
 }
 
 // LoadKeyMode loads particular key mode. Useful for lazy load.
 func (skins Skins) loadKeyMode(fsys fs.FS, k int) {
 	skins[k] = NewSkin(skins[general].Type, k)
 	skins[k].Load(fsys)
+	// fmt.Printf("%d: %+v\n", k, skins[k].KeyLighting)
 }
 
 func (skin *Skin) Load(fsys fs.FS) {
@@ -105,6 +105,9 @@ func (skin *Skin) Load(fsys fs.FS) {
 			a[i].Locate(S.FieldPosition, S.JudgmentPosition, draws.CenterMiddle)
 		}
 		skin.Judgment[i] = a
+		if skin.KeyMode == 7 {
+			fmt.Printf("%+v\n", skin.Judgment)
+		}
 	}
 	// Keys are drawn below Hint, which bottom is along with HitPosition.
 	// Each w should be integer, since it is a width of independent sprite.
