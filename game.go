@@ -5,12 +5,13 @@ import (
 	"io/fs"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/drum"
+	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
 )
 
@@ -28,10 +29,10 @@ func NewGame(fsys fs.FS) *game {
 		log.Fatal(err)
 	}
 	// scene := choose.NewScene()
-	// scene, err := piano.NewScenePlay(ZipFS(filepath.Join(dir, "test.osz")),
-	// 	"nekodex - circles! (MuangMuangE) [Hard].osu", nil, nil)
-	scene, err := drum.NewScenePlay(os.DirFS(path.Join(dir, "asdf - 1223")),
-		"asdf - 1223 (MuangMuangE) [Oni].osu", nil, nil)
+	scene, err := piano.NewScenePlay(ZipFS(filepath.Join(dir, "test.osz")),
+		"nekodex - circles! (MuangMuangE) [Hard].osu", nil, nil)
+	// scene, err := drum.NewScenePlay(os.DirFS(path.Join(dir, "asdf - 1223")),
+	// 	"asdf - 1223 (MuangMuangE) [Oni].osu", nil, nil)
 	if err != nil {
 		panic(err)
 	}
@@ -44,18 +45,14 @@ func NewGame(fsys fs.FS) *game {
 func load(fsys fs.FS) {
 	settings, err := fs.ReadFile(fsys, "settings.toml")
 	if err != nil {
-		fmt.Println("No custom setting file detected.")
-		// } else {
-		// 	mode.UserSettings.Load(string(settings))
-		// 	piano.UserSettings.Load(string(settings))
-		// 	drum.UserSettings.Load(string(settings))
-		// 	// scene.UserSettings.Load(string(settings))
-		// }
+		fmt.Println("Settings: default")
+	} else {
+		fmt.Println("Settings: custom")
+		mode.UserSettings.Load(string(settings))
+		// piano.UserSettings.Load(string(settings))
+		drum.UserSettings.Load(string(settings))
+		// scene.UserSettings.Load(string(settings))
 	}
-	mode.UserSettings.Load(string(settings))
-	// piano.UserSettings.Load(string(settings))
-	drum.UserSettings.Load(string(settings))
-	// scene.UserSettings.Load(string(settings))
 
 	skinFS, err := fs.Sub(fsys, "skin")
 	if err != nil {
@@ -64,8 +61,9 @@ func load(fsys fs.FS) {
 	}
 	_, err = skinFS.Open(".")
 	if err != nil {
-		fmt.Println("No custom skin folder detected.")
+		fmt.Println("Skin: default")
 	} else {
+		fmt.Println("Skin: custom")
 		mode.UserSkin.Load(skinFS)
 		// piano.UserSkins.Load(skinFS)
 		drum.UserSkin.Load(skinFS)
