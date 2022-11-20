@@ -28,19 +28,19 @@ type ScenePlay struct {
 	Staged     []*Note
 	mode.Scorer
 
-	Background    mode.BackgroundDrawer
-	Field         FieldDrawer
-	Bar           BarDrawer
-	Notes         []NoteDrawer
-	Keys          []KeyDrawer
-	KeyLightings  []KeyLightingDrawer
-	Hint          HintDrawer
-	HitLightings  []HitLightingDrawer
-	HoldLightings []HoldLightingDrawer
-	Judgment      JudgmentDrawer
-	Score         mode.ScoreDrawer
-	Combo         mode.ComboDrawer
-	Meter         mode.MeterDrawer
+	Background   mode.BackgroundDrawer
+	Field        FieldDrawer
+	Bar          BarDrawer
+	Note         []NoteDrawer
+	Keys         []KeyDrawer
+	KeyLighting  []KeyLightingDrawer
+	Hint         HintDrawer
+	HitLighting  []HitLightingDrawer
+	HoldLighting []HoldLightingDrawer
+	Judgment     JudgmentDrawer
+	Score        mode.ScoreDrawer
+	Combo        mode.ComboDrawer
+	Meter        mode.MeterDrawer
 }
 
 func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s *ScenePlay, err error) {
@@ -111,33 +111,33 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		Nearest:  c.Bars[0],
 		Sprite:   skin.Bar,
 	}
-	s.Notes = make([]NoteDrawer, c.KeyCount)
+	s.Note = make([]NoteDrawer, c.KeyCount)
 	s.Keys = make([]KeyDrawer, c.KeyCount)
-	s.KeyLightings = make([]KeyLightingDrawer, c.KeyCount)
-	s.HitLightings = make([]HitLightingDrawer, c.KeyCount)
-	s.HoldLightings = make([]HoldLightingDrawer, c.KeyCount)
+	s.KeyLighting = make([]KeyLightingDrawer, c.KeyCount)
+	s.HitLighting = make([]HitLightingDrawer, c.KeyCount)
+	s.HoldLighting = make([]HoldLightingDrawer, c.KeyCount)
 	for k := 0; k < c.KeyCount; k++ {
 		s.Keys[k] = KeyDrawer{
 			Timer:   draws.NewTimer(draws.ToTick(30, TPS), 0),
 			Sprites: skin.Key[k],
 		}
-		s.Notes[k] = NoteDrawer{
+		s.Note[k] = NoteDrawer{
 			Timer:    draws.NewTimer(0, draws.ToTick(400, TPS)), // Todo: make it BPM-dependent?
 			Cursor:   s.Cursor,
 			Farthest: s.Staged[k],
 			Nearest:  s.Staged[k],
 			Sprites:  skin.Note[k],
 		}
-		s.KeyLightings[k] = KeyLightingDrawer{
+		s.KeyLighting[k] = KeyLightingDrawer{
 			Timer:  draws.NewTimer(draws.ToTick(30, TPS), 0),
 			Sprite: skin.KeyLighting[k],
 		}
-		s.HitLightings[k] = HitLightingDrawer{
+		s.HitLighting[k] = HitLightingDrawer{
 			Timer:   draws.NewTimer(draws.ToTick(150, TPS), draws.ToTick(150, TPS)),
 			Sprites: skin.HitLighting[k],
 			Color:   S.hitLightingColors[KeyTypes[c.KeyCount][k]],
 		}
-		s.HoldLightings[k] = HoldLightingDrawer{
+		s.HoldLighting[k] = HoldLightingDrawer{
 			Timer:   draws.NewTimer(0, draws.ToTick(250, TPS)),
 			Sprites: skin.HoldLighting[k],
 		}
@@ -227,11 +227,11 @@ func (s *ScenePlay) Update() any {
 		if s.Staged[k] != nil {
 			holding = s.Staged[k].Type == Tail && s.Pressed[k]
 		}
-		s.Notes[k].Update(s.Cursor, holding)
+		s.Note[k].Update(s.Cursor, holding)
 		s.Keys[k].Update(s.Pressed[k])
-		s.KeyLightings[k].Update(s.Pressed[k])
-		s.HitLightings[k].Update(hits[k])
-		s.HoldLightings[k].Update(holding)
+		s.KeyLighting[k].Update(s.Pressed[k])
+		s.HitLighting[k].Update(hits[k])
+		s.HoldLighting[k].Update(holding)
 	}
 	s.Judgment.Update(worst)
 	s.Score.Update()
@@ -271,14 +271,14 @@ func (s ScenePlay) Draw(screen draws.Image) {
 	s.Field.Draw(screen)
 	s.Bar.Draw(screen)
 	for k := 0; k < s.Chart.KeyCount; k++ {
-		s.Notes[k].Draw(screen)
+		s.Note[k].Draw(screen)
 		s.Keys[k].Draw(screen)
-		s.KeyLightings[k].Draw(screen)
+		s.KeyLighting[k].Draw(screen)
 	}
 	s.Hint.Draw(screen)
 	for k := 0; k < s.Chart.KeyCount; k++ {
-		s.HitLightings[k].Draw(screen)
-		s.HoldLightings[k].Draw(screen)
+		s.HitLighting[k].Draw(screen)
+		s.HoldLighting[k].Draw(screen)
 	}
 	s.Judgment.Draw(screen)
 	s.Score.Draw(screen)

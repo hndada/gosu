@@ -59,6 +59,7 @@ func (skins Skins) Load(fsys fs.FS) {
 	for k := 4; k <= 9; k++ {
 		skins.loadKeyMode(fsys, k)
 	}
+	// fmt.Printf("%+v\n", skins[7])
 }
 
 // LoadKeyMode loads particular key mode. Useful for lazy load.
@@ -140,11 +141,11 @@ func (skin *Skin) Load(fsys fs.FS) {
 		w := S.NoteWidths[skin.KeyMode][ktype] // Todo: math.Ceil()?
 		x += w / 2
 		// skin.Note = make([][4]draws.Animation, keyCount)
-		for i, nTypeName := range []string{"normal", "head", "tail", "body"} {
+		for i, ntype := range []string{"normal", "head", "tail", "body"} {
 			var a draws.Animation
 			if skin.isGeneral() {
-				kTypeName := []string{"one", "two", "mid", "tip"}[ktype]
-				name := fmt.Sprintf("piano/note/%s/%s", nTypeName, kTypeName)
+				ktype := []string{"one", "two", "mid", "mid"}[ktype] // Todo: "tip"
+				name := fmt.Sprintf("piano/note/%s/%s", ntype, ktype)
 				a = draws.NewAnimation(fsys, name)
 			} else {
 				a = generalSkin.Note[ktype][i]
