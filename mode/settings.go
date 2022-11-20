@@ -61,6 +61,7 @@ func init() {
 	DefaultSettings.process()
 	UserSettings.process()
 	DefaultSkin.Load(defaultskin.FS)
+	UserSkin.Load(defaultskin.FS)
 }
 
 func (settings *Settings) Load(data string) {

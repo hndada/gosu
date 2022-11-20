@@ -146,7 +146,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		Sprite: skin.Hint,
 	}
 	s.Judgment = NewJudgmentDrawer(skin.Judgment[:])
-	s.Score = mode.NewScoreDrawer(&s.Scores[3], skin.Score[:])
+	s.Score = mode.NewScoreDrawer(&s.Scores[mode.Total], skin.Score[:])
 	s.Combo = mode.ComboDrawer{
 		Timer:    draws.NewTimer(draws.ToTick(2000, TPS), 0),
 		DigitGap: S.ComboDigitGap,
