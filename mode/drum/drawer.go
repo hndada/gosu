@@ -29,17 +29,17 @@ func (d StageDrawer) Draw(dst draws.Image) {
 		high
 	)
 	op := draws.Op{}
-	op.ColorM.Scale(1, 1, 1, FieldOpaque)
+	op.ColorM.Scale(1, 1, 1, S.FieldOpaque)
 	d.FieldSprites[idle].Draw(dst, op)
 	d.HintSprites[idle].Draw(dst, draws.Op{})
 	if d.Highlight || d.Tick < d.MaxTick {
 		var opField, opHint draws.Op
 		if d.Highlight {
-			opField.ColorM.Scale(1, 1, 1, FieldOpaque*d.Age())
-			opHint.ColorM.Scale(1, 1, 1, FieldOpaque*d.Age())
+			opField.ColorM.Scale(1, 1, 1, S.FieldOpaque*d.Age())
+			opHint.ColorM.Scale(1, 1, 1, S.FieldOpaque*d.Age())
 		} else {
-			opField.ColorM.Scale(1, 1, 1, FieldOpaque*(1-d.Age()))
-			opHint.ColorM.Scale(1, 1, 1, FieldOpaque*(1-d.Age()))
+			opField.ColorM.Scale(1, 1, 1, S.FieldOpaque*(1-d.Age()))
+			opHint.ColorM.Scale(1, 1, 1, S.FieldOpaque*(1-d.Age()))
 		}
 		opHint.ColorM.ScaleWithColor(ColorYellow)
 		d.FieldSprites[high].Draw(dst, opField)
@@ -60,7 +60,7 @@ func (d *BarDrawer) Update(time int64) {
 func (d BarDrawer) Draw(dst draws.Image) {
 	for _, b := range d.Bars {
 		pos := b.Speed * float64(b.Time-d.Time)
-		if pos <= maxPosition && pos >= minPosition {
+		if pos <= S.maxPosition && pos >= S.minPosition {
 			sprite := d.Sprite
 			sprite.Move(pos, 0)
 			sprite.Draw(dst, draws.Op{})
@@ -157,12 +157,12 @@ func (d RollDrawer) Draw(dst draws.Image) {
 	max := len(d.Rolls) - 1
 	for i := range d.Rolls {
 		head := d.Rolls[max-i]
-		if head.Position(d.Time) > maxPosition {
+		if head.Position(d.Time) > S.maxPosition {
 			continue
 		}
 		tail := *head
 		tail.Time += head.Duration
-		if tail.Position(d.Time) < minPosition {
+		if tail.Position(d.Time) < S.minPosition {
 			continue
 		}
 		op := draws.Op{}
@@ -189,7 +189,7 @@ func (d RollDrawer) Draw(dst draws.Image) {
 	for i := range d.Dots {
 		dot := d.Dots[max-i]
 		pos := dot.Position(d.Time)
-		if pos > maxPosition || pos < minPosition {
+		if pos > S.maxPosition || pos < S.minPosition {
 			continue
 		}
 		op := draws.Op{}
@@ -235,7 +235,7 @@ func (d NoteDrawer) Draw(dst draws.Image) {
 		for i := range notes {
 			n := notes[max-i]
 			pos := n.Position(d.Time)
-			if pos > maxPosition || pos < minPosition {
+			if pos > S.maxPosition || pos < S.minPosition {
 				continue
 			}
 			note := d.NoteSprites[n.Size][n.Color]
@@ -353,7 +353,7 @@ type JudgmentDrawer struct {
 
 func (d *JudgmentDrawer) Update(j mode.Judgment, big bool) {
 	d.Ticker()
-	if !j.Valid() {
+	if !j.IsValid() {
 		return
 	}
 	d.Timer.Reset()

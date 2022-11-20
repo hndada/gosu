@@ -74,6 +74,7 @@ func (d ScoreDrawer) Draw(dst draws.Image) {
 	}
 }
 
+// Todo: add combo *int and skip passing combo value?
 type ComboDrawer struct {
 	draws.Timer
 	digitWidth float64 // Use number 0's width.

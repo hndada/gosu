@@ -13,16 +13,16 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
+// Todo: support custom hitsound?
 type ScenePlay struct {
-	Chart        *Chart
-	audios.Timer // Todo: MusicPlayer has it
+	Chart *Chart
+	audios.Timer
 	audios.MusicPlayer
-	SoundSoundBytes [2][2][]byte // No custom hitsound at Drum mode.
 	input.KeyLogger
 	KeyActions [2]int
 
 	*mode.TransPoint
-	SpeedScale         float64
+	speedScale         float64
 	StagedNote         *Note
 	StagedDot          *Dot
 	StagedShake        *Note
@@ -32,22 +32,19 @@ type ScenePlay struct {
 	ShakeWaitingColor  int
 	mode.Scorer
 
-	// Skin may be applied some custom settings: on/off some sprites
-	Skin
-	BackgroundDrawer mode.BackgroundDrawer
-	StageDrawer      StageDrawer
-	BarDrawer        BarDrawer
-	JudgmentDrawer   JudgmentDrawer
-
-	ShakeDrawer ShakeDrawer
-	RollDrawer  RollDrawer
-	NoteDrawer  NoteDrawer
-
-	KeyDrawer    KeyDrawer
-	DancerDrawer DancerDrawer
-	ScoreDrawer  mode.ScoreDrawer
-	ComboDrawer  mode.NumberDrawer
-	MeterDrawer  mode.MeterDrawer
+	DrumSound  [2][2][]byte
+	Background mode.BackgroundDrawer
+	Stage      StageDrawer
+	Bar        BarDrawer
+	Judgment   JudgmentDrawer
+	Shake      ShakeDrawer
+	Roll       RollDrawer
+	Note       NoteDrawer
+	Key        KeyDrawer
+	Dancer     DancerDrawer
+	Score      mode.ScoreDrawer
+	Combo      mode.ComboDrawer
+	Meter      mode.MeterDrawer
 }
 
 // Todo: actual auto replay generator for gimmick charts
@@ -60,18 +57,18 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	}
 	c := s.Chart
 	ebiten.SetWindowTitle(c.WindowTitle())
-	s.Timer = audios.NewTimer(c.Duration(), &mode.Offset)
-	s.MusicPlayer, err = audios.NewMusicPlayer(fsys, c.MusicFilename, &s.Timer, &mode.VolumeMusic)
+	s.Timer = audios.NewTimer(c.Duration(), S.offset, TPS)
+	s.MusicPlayer, err = audios.NewMusicPlayer(fsys, c.MusicFilename, &s.Timer, S.volumeMusic, ebiten.KeyTab)
 	if err != nil {
 		return
 	}
-	s.KeyLogger = input.NewKeyLogger(KeySettings[4][:])
+	s.KeyLogger = input.NewKeyLogger(S.KeySettings[4][:])
 	if rf != nil {
 		s.KeyLogger.FetchPressed = NewReplayListener(rf, &s.Timer)
 	}
 
 	s.TransPoint = c.TransPoints[0]
-	s.SpeedScale = 1
+	s.speedScale = 1
 	s.SetSpeed()
 	s.Scorer = mode.NewScorer(c.ScoreFactors)
 	s.JudgmentCounts = make([]int, len(JudgmentCountKinds))
@@ -97,76 +94,75 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		s.StagedShake = c.Shakes[0]
 	}
 
-	s.Skin = DefaultSkin
-	s.SoundSoundBytes = s.Skin.SoundSoundBytes
-	s.BackgroundDrawer = mode.BackgroundDrawer{
-		Brightness: &mode.BackgroundBrightness,
-		Sprite:     mode.DefaultBackground,
+	PlaySkin.Load(fsys)
+	skin := PlaySkin
+	s.DrumSound = skin.DrumSound
+	s.Background = mode.BackgroundDrawer{
+		Sprite: mode.NewBackground(fsys, c.ImageFilename),
 	}
-	if bg := mode.NewBackground(fsys, c.ImageFilename); bg.IsValid() {
-		s.BackgroundDrawer.Sprite = bg
+	if !s.Background.Sprite.IsValid() {
+		s.Background.Sprite = skin.DefaultBackground
 	}
-	s.StageDrawer = StageDrawer{
-		Timer:        draws.NewTimer(draws.ToTick(150), 0),
+	s.Stage = StageDrawer{
+		Timer:        draws.NewTimer(draws.ToTick(150, TPS), 0),
 		Highlight:    false, //s.Highlight,
-		FieldSprites: s.FieldSprites,
-		HintSprites:  s.HintSprites,
+		FieldSprites: skin.Field,
+		HintSprites:  skin.Hint,
 	}
-	s.BarDrawer = BarDrawer{
+	s.Bar = BarDrawer{
 		Time:   s.Now,
 		Bars:   c.Bars,
-		Sprite: s.BarSprite,
+		Sprite: skin.Bar,
 	}
-	s.JudgmentDrawer = JudgmentDrawer{
-		Timer:   draws.NewTimer(draws.ToTick(250), draws.ToTick(250)),
-		Sprites: s.JudgmentSprites,
+	s.Judgment = JudgmentDrawer{
+		Timer:   draws.NewTimer(draws.ToTick(250, TPS), draws.ToTick(250, TPS)),
+		Sprites: skin.Judgment,
 	}
-	s.ShakeDrawer = ShakeDrawer{
+	s.Shake = ShakeDrawer{
 		Timer:   draws.NewTimer(200, 0),
 		Time:    s.Now,
 		Staged:  s.StagedShake,
-		Sprites: s.ShakeSprites,
+		Sprites: skin.Shake,
 	}
-	s.RollDrawer = RollDrawer{
+	s.Roll = RollDrawer{
 		Time:        s.Now,
 		Rolls:       c.Rolls,
 		Dots:        c.Dots,
-		HeadSprites: s.HeadSprites,
-		TailSprites: s.TailSprites,
-		BodySprites: s.BodySprites,
-		DotSprite:   s.DotSprite,
+		HeadSprites: skin.Head,
+		TailSprites: skin.Tail,
+		BodySprites: skin.Body,
+		DotSprite:   skin.Dot,
 	}
 	period := int(60000 / ScaledBPM(s.BPM))
-	s.NoteDrawer = NoteDrawer{
+	s.Note = NoteDrawer{
 		Timer:          draws.NewTimer(0, period),
 		Time:           s.Now,
 		Notes:          c.Notes,
 		Rolls:          c.Rolls,
 		Shakes:         c.Shakes,
-		NoteSprites:    s.NoteSprites,
-		OverlaySprites: s.OverlaySprites,
+		NoteSprites:    skin.Note,
+		OverlaySprites: skin.Overlay,
 	}
-	s.KeyDrawer = KeyDrawer{
-		MaxCountdown: draws.ToTick(75),
-		Field:        s.KeyFieldSprite,
-		Keys:         s.KeySprites,
+	s.Key = KeyDrawer{
+		MaxCountdown: draws.ToTick(75, TPS),
+		Field:        skin.KeyField,
+		Keys:         skin.Key,
 	}
-	s.DancerDrawer = DancerDrawer{
+	s.Dancer = DancerDrawer{
 		Timer:       draws.NewTimer(0, period),
 		Time:        s.Now,
-		Sprites:     s.DancerSprites,
+		Sprites:     skin.Dancer,
 		Mode:        DancerIdle,
 		ModeEndTime: s.Now,
 	}
-	s.ScoreDrawer = mode.NewScoreDrawer()
-	s.ComboDrawer = mode.NumberDrawer{
-		Timer:      draws.NewTimer(draws.ToTick(2000), 0),
-		Sprites:    s.ComboSprites,
-		DigitWidth: s.ComboSprites[0].W(),
-		DigitGap:   ComboDigitGap,
-		Bounce:     1.25,
+	s.Score = mode.NewScoreDrawer(&s.Scores[mode.Total], skin.Score[:])
+	s.Combo = mode.ComboDrawer{
+		Timer:    draws.NewTimer(draws.ToTick(2000, TPS), 0),
+		DigitGap: S.ComboDigitGap,
+		Bounce:   1.25,
+		Sprites:  skin.Combo,
 	}
-	s.MeterDrawer = mode.NewMeterDrawer(Judgments, JudgmentColors)
+	s.Meter = mode.NewMeterDrawer(Judgments, JudgmentColors)
 	return s, nil
 }
 
@@ -174,8 +170,8 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 // Need to re-calculate positions when Speed has changed.
 func (s *ScenePlay) SetSpeed() {
 	c := s.Chart
-	old := s.SpeedScale
-	new := SpeedScale
+	old := s.speedScale
+	new := S.SpeedScale
 	for _, tp := range c.TransPoints {
 		tp.Speed *= new / old
 	}
@@ -190,7 +186,7 @@ func (s *ScenePlay) SetSpeed() {
 	for _, n := range c.Dots { // Not a Note type.
 		n.Speed *= new / old
 	}
-	s.SpeedScale = new
+	s.speedScale = new
 }
 
 func (s *ScenePlay) Update() any {
@@ -209,7 +205,7 @@ func (s *ScenePlay) Update() any {
 		judgment mode.Judgment
 		big      bool
 	)
-	if s.StagedJudgment.Valid() {
+	if s.StagedJudgment.IsValid() {
 		n := s.StagedNote
 		j := s.StagedJudgment
 		jTime := s.StagedJudgmentTime
@@ -230,7 +226,7 @@ func (s *ScenePlay) Update() any {
 			}
 			td := n.Time - jTime
 			s.MarkNote(n, j, false)
-			s.MeterDrawer.AddMark(int(td), 0)
+			s.Meter.AddMark(int(td), 0)
 			judgment = j
 			big = false
 			s.StagedJudgment = mode.Judgment{}
@@ -244,10 +240,10 @@ func (s *ScenePlay) Update() any {
 				s.StagedJudgmentTime = s.Now
 			} else {
 				s.MarkNote(n, j, b)
-				s.MeterDrawer.AddMark(int(td), 0)
+				s.Meter.AddMark(int(td), 0)
 				judgment = j
 				big = b
-				if s.StagedJudgment.Valid() {
+				if s.StagedJudgment.IsValid() {
 					s.StagedJudgment = mode.Judgment{}
 				}
 			}
@@ -257,7 +253,7 @@ func (s *ScenePlay) Update() any {
 		td := n.Time - s.Now
 		if marked := VerdictDot(n, s.KeyActions, td); marked != DotReady {
 			s.MarkDot(n, marked)
-			s.MeterDrawer.AddMark(int(td), 1)
+			s.Meter.AddMark(int(td), 1)
 		}
 	}
 	func() {
@@ -280,54 +276,56 @@ func (s *ScenePlay) Update() any {
 	}()
 
 	// Todo: apply effect volume change from changer
-	for i, size := range s.KeyActions {
+	for color, size := range s.KeyActions {
 		if size == SizeNone {
 			continue
 		}
-		vol := s.TransPoint.Volume
-		p := audios.Context.NewPlayerFromBytes(s.SoundSoundBytes[i][size])
-		p.SetVolume(vol * mode.VolumeSound)
+		vol2 := s.TransPoint.Volume
+		p := audios.Context.NewPlayerFromBytes(s.DrumSound[color][size])
+		p.SetVolume((*S.volumeSound) * vol2)
 		p.Play()
 	}
 	if s.Now >= 0 {
-		s.StageDrawer.Update(s.Highlight)
+		s.Stage.Update(s.Highlight)
 	}
-	s.BarDrawer.Update(s.Now)
-	s.JudgmentDrawer.Update(judgment, big)
-	s.ShakeDrawer.Update(s.Now, s.StagedShake)
-	s.RollDrawer.Update(s.Now)
-	s.NoteDrawer.Update(s.Now, s.BPM)
+	s.Bar.Update(s.Now)
+	s.Judgment.Update(judgment, big)
+	s.Shake.Update(s.Now, s.StagedShake)
+	s.Roll.Update(s.Now)
+	s.Note.Update(s.Now, s.BPM)
 
-	s.KeyDrawer.Update(s.LastPressed, s.Pressed)
-	s.DancerDrawer.Update(s.Now, s.BPM, s.Combo, judgment.Is(Miss),
-		!judgment.Is(Miss) && judgment.Valid(), s.Highlight)
-	s.ScoreDrawer.Update(s.Scores[mode.Total])
-	s.ComboDrawer.Update(s.Combo)
-	s.MeterDrawer.Update()
+	s.Key.Update(s.LastPressed, s.Pressed)
+	s.Dancer.Update(s.Now, s.BPM, s.Scorer.Combo, judgment.Is(Miss),
+		!judgment.Is(Miss) && judgment.IsValid(), s.Highlight)
+	s.Score.Update()
+	s.Combo.Update(s.Scorer.Combo)
+	s.Meter.Update()
 
 	// Changed speed should be applied after positions are calculated.
 	s.UpdateTransPoint()
-	if SpeedScale != s.SpeedScale {
+	if s.speedScale != S.SpeedScale {
 		s.SetSpeed()
 	}
 	return nil
 }
+func (s ScenePlay) Speed() float64 { return s.TransPoint.Speed * s.speedScale }
+func (s *ScenePlay) UpdateTransPoint() {
+	s.TransPoint = s.TransPoint.FetchByTime(s.Now)
+}
 func (s ScenePlay) Draw(screen draws.Image) {
 	// screen.Fill(color.NRGBA{0, 255, 0, 255}) // Chroma-key
-	s.BackgroundDrawer.Draw(screen)
-	s.StageDrawer.Draw(screen)
-	s.BarDrawer.Draw(screen)
-	s.JudgmentDrawer.Draw(screen)
-
-	s.ShakeDrawer.Draw(screen)
-	s.RollDrawer.Draw(screen)
-	s.NoteDrawer.Draw(screen)
-
-	s.KeyDrawer.Draw(screen)
-	s.DancerDrawer.Draw(screen)
-	s.ScoreDrawer.Draw(screen)
-	s.ComboDrawer.Draw(screen)
-	s.MeterDrawer.Draw(screen)
+	s.Background.Draw(screen)
+	s.Stage.Draw(screen)
+	s.Bar.Draw(screen)
+	s.Judgment.Draw(screen)
+	s.Shake.Draw(screen)
+	s.Roll.Draw(screen)
+	s.Note.Draw(screen)
+	s.Key.Draw(screen)
+	s.Dancer.Draw(screen)
+	s.Score.Draw(screen)
+	s.Combo.Draw(screen)
+	s.Meter.Draw(screen)
 	s.DebugPrint(screen)
 }
 
@@ -343,24 +341,12 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 			"Music volume (Alt+ Left/Right): %.0f%%\nSound volume (Ctrl+ Left/Right): %.0f%%\n\n"+
 			"Offset (Shift+ Left/Right): %dms\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,
-		s.Scores[mode.Total], s.ScoreBounds[mode.Total], s.Flow*100, s.Combo,
+		s.Scores[mode.Total], s.ScoreBounds[mode.Total], s.Flow*100, s.Scorer.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100,
 		s.JudgmentCounts[:3], s.JudgmentCounts[3:5], s.JudgmentCounts[5:],
-		s.SpeedScale*100, s.SpeedScale/s.TransPoint.Speed, ExposureTime(s.Speed()),
-		mode.VolumeMusic*100, mode.VolumeSound*100,
-		mode.Offset))
+		s.speedScale*100, s.speedScale/s.TransPoint.Speed, ExposureTime(s.Speed()),
+		*S.volumeMusic*100, *S.volumeSound*100,
+		*S.offset))
 }
 
-// 1 pixel is 1 millisecond.
-// Todo: Separate NoteHeight / 2 at piano mode
-func ExposureTime(speedScale float64) float64 {
-	return (ScreenSizeX - HitPosition) / speedScale
-}
-func (s *ScenePlay) UpdateTransPoint() {
-	s.TransPoint = s.TransPoint.FetchByTime(s.Now)
-}
-func (s ScenePlay) Speed() float64 { return s.TransPoint.Speed * s.SpeedScale }
-
-var DefaultSampleNames = [2][2]string{
-	{"red-regular", "red-big"}, {"blue-regular", "blue-big"},
-}
+var DefaultSampleNames = [2][2]string{{"red", "red-big"}, {"blue", "blue-big"}}
