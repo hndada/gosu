@@ -96,17 +96,17 @@ func (skin *Skin) Load(fsys fs.FS) {
 		tail = end
 		body = draws.LoadImage(fsys, "drum/note/mid.png")
 	)
-	for size, sizeName := range []string{"", "-big"} {
+	for size, sname := range []string{"", "-big"} {
 		noteHeight := S.regularNoteHeight
 		if size == Big {
 			noteHeight = S.bigNoteHeight
 		}
-		for kind, kindName := range []string{"cool", "good", "miss"} {
+		for kind, kname := range []string{"cool", "good", "miss"} {
 			var name string
-			if kindName == "miss" {
+			if kname == "miss" {
 				name = "drum/judgment/miss"
 			} else {
-				name = fmt.Sprintf("drum/judgment/%s%s", sizeName, kindName)
+				name = fmt.Sprintf("drum/judgment/%s%s", kname, sname)
 			}
 			animation := draws.NewAnimation(fsys, name)
 			for i := range animation {
@@ -122,7 +122,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 			sprite.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 			skin.Note[size][kind] = sprite
 		}
-		animation := draws.NewAnimation(fsys, fmt.Sprintf("drum/note/overlay%s", sizeName))
+		animation := draws.NewAnimation(fsys, fmt.Sprintf("drum/note/overlay%s", sname))
 		for i := range animation {
 			animation[i].SetScaleToH(noteHeight)
 			animation[i].Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)

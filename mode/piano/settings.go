@@ -59,7 +59,7 @@ type Settings struct {
 }
 
 var (
-	DefaultSettings = Settings{
+	rawDefaultSettings = Settings{
 		KeySettings: map[int][]string{
 			4:               {"D", "F", "J", "K"},
 			5:               {"D", "F", "Space", "J", "K"},
@@ -106,8 +106,9 @@ var (
 		HintHeight:    0.04,
 		LightingScale: 1.0,
 	}
-	UserSettings = DefaultSettings
-	S            = &UserSettings
+	DefaultSettings = rawDefaultSettings
+	UserSettings    = rawDefaultSettings
+	S               = &UserSettings
 )
 
 // Generic function seems not allow to pass named type.
@@ -118,14 +119,6 @@ const (
 
 // Fields which types are map should be explicitly make new map.
 func init() {
-	UserSettings.KeySettings = make(map[int][]string)
-	for k, v := range DefaultSettings.KeySettings {
-		UserSettings.KeySettings[k] = v
-	}
-	UserSettings.NoteWidths = make(map[int][4]float64)
-	for k, v := range DefaultSettings.NoteWidths {
-		UserSettings.NoteWidths[k] = v
-	}
 	DefaultSettings.process()
 	UserSettings.process()
 	DefaultSkins.Load(defaultskin.FS)
@@ -133,6 +126,7 @@ func init() {
 }
 
 func (settings *Settings) Load(data string) {
+	settings.Reset()
 	_, err := toml.Decode(data, settings)
 	if err != nil {
 		fmt.Println(err)
@@ -211,6 +205,17 @@ func (settings *Settings) process() {
 	}
 	s.ComboDigitGap *= ScreenSizeX
 	s.HintHeight *= ScreenSizeY
+}
+func (settings *Settings) Reset() {
+	*settings = rawDefaultSettings
+	UserSettings.KeySettings = make(map[int][]string)
+	for k, v := range DefaultSettings.KeySettings {
+		UserSettings.KeySettings[k] = v
+	}
+	UserSettings.NoteWidths = make(map[int][4]float64)
+	for k, v := range DefaultSettings.NoteWidths {
+		UserSettings.NoteWidths[k] = v
+	}
 }
 
 // 1 pixel is 1 millisecond.

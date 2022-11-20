@@ -3,8 +3,6 @@ package piano
 import (
 	"fmt"
 	"image/color"
-	_ "image/jpeg"
-	_ "image/png"
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"

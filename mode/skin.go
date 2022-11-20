@@ -2,8 +2,6 @@ package mode
 
 import (
 	"fmt"
-	_ "image/jpeg"
-	_ "image/png"
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
