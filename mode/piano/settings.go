@@ -19,6 +19,7 @@ const (
 const positionMargin = 100
 
 type Settings struct {
+	// processed            bool // Todo: remove it?
 	volumeMusic          *float64
 	volumeSound          *float64
 	offset               *int64
@@ -113,60 +114,63 @@ const (
 )
 
 var (
-	DefaultSettings = NewSettings()
-	UserSettings    = NewSettings()
-	S               = &UserSettings
+	// DefaultSettings = NewSettings()
+	UserSettings = NewSettings()
+	S            = &UserSettings
 )
 
 // Fields which types are map should be explicitly make new map.
 func init() {
-	DefaultSettings.process()
-	UserSettings.process()
+	// DefaultSettings.process()
+	S.process()
 	DefaultSkins.Load(defaultskin.FS)
 	UserSkins.Load(defaultskin.FS)
 }
 
-func (settings *Settings) Load(src Settings) {
-	*settings = src
-	defer settings.process()
+func (s *Settings) Load(src Settings) {
+	*S = src
+	defer S.process()
 
-	for k := range settings.KeySettings {
-		mode.NormalizeKeys(settings.KeySettings[k])
+	for k := range S.KeySettings {
+		mode.NormalizeKeys(S.KeySettings[k])
 	}
-	mode.Normalize(&settings.SpeedScale, 0.1, 2.0)
-	mode.Normalize(&settings.HitPosition, 0, 1)
-	mode.Normalize(&settings.TailExtraTime, -150, 150)
+	mode.Normalize(&S.SpeedScale, 0.1, 2.0)
+	mode.Normalize(&S.HitPosition, 0, 1)
+	mode.Normalize(&S.TailExtraTime, -150, 150)
 	// ReverseBody: bool
 
-	for k, widths := range settings.NoteWidths {
+	for k, widths := range S.NoteWidths {
 		for kind := range widths {
 			mode.Normalize(&widths[kind], 0.01, 0.15)
 		}
-		settings.NoteWidths[k] = widths
+		S.NoteWidths[k] = widths
 	}
-	mode.Normalize(&settings.NoteHeigth, 0, 0.15)
-	mode.Normalize(&settings.BodyStyle, 0, BodyStyleAttach)
-	mode.Normalize(&settings.FieldPosition, 0, 1)
-	mode.Normalize(&settings.ComboPosition, 0, 1)
-	mode.Normalize(&settings.JudgmentPosition, 0, 1)
+	mode.Normalize(&S.NoteHeigth, 0, 0.15)
+	mode.Normalize(&S.BodyStyle, 0, BodyStyleAttach)
+	mode.Normalize(&S.FieldPosition, 0, 1)
+	mode.Normalize(&S.ComboPosition, 0, 1)
+	mode.Normalize(&S.JudgmentPosition, 0, 1)
 	// ScratchColor: [4]uint8
-	mode.Normalize(&settings.FieldOpaque, 0, 1)
-	mode.Normalize(&settings.KeyLightingOpaque, 0, 1)
+	mode.Normalize(&S.FieldOpaque, 0, 1)
+	mode.Normalize(&S.KeyLightingOpaque, 0, 1)
 	// HitLightingColors: [4][4]uint8
-	mode.Normalize(&settings.HoldLightingOpaque, 0, 1)
+	mode.Normalize(&S.HoldLightingOpaque, 0, 1)
 
-	mode.Normalize(&settings.ComboScale, 0, 1.5)
-	mode.Normalize(&settings.ComboDigitGap, -0.005, 0.005)
-	mode.Normalize(&settings.JudgmentScale, 0, 1.5)
-	mode.Normalize(&settings.HintHeight, 0, 0.1)
-	mode.Normalize(&settings.LightingScale, 0, 1.5)
+	mode.Normalize(&S.ComboScale, 0, 2)
+	mode.Normalize(&S.ComboDigitGap, -0.005, 0.005)
+	mode.Normalize(&S.JudgmentScale, 0, 2)
+	mode.Normalize(&S.HintHeight, 0, 0.1)
+	mode.Normalize(&S.LightingScale, 0, 2)
 }
 
 // It is safe to use mode.UserSettings even for DefaultSettings:
 // mode.UserSettings = mode.DefaultSettings when processing default.
-func (settings *Settings) process() {
-	s := settings
-
+func (s *Settings) process() {
+	// if s.processed {
+	// 	return
+	// }
+	// defer func() { s.processed = true }()
+	*s = NewSettings()
 	s.volumeMusic = &mode.S.VolumeMusic
 	s.volumeSound = &mode.S.VolumeSound
 	s.offset = &mode.S.Offset

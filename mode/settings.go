@@ -24,6 +24,7 @@ const (
 // Unmatched fields will not be touched, feel free to pre-fill default values.
 // Todo: alert warning message to user when some lines are failed to be decoded
 type Settings struct {
+	// processed            bool
 	VolumeMusic          float64
 	VolumeSound          float64
 	Offset               int64
@@ -45,7 +46,7 @@ func NewSettings() Settings {
 	return Settings{
 		VolumeMusic:          0.25,
 		VolumeSound:          0.25,
-		Offset:               -65,
+		Offset:               -110,
 		BackgroundBrightness: 0.6,
 
 		MeterUnit:     4,
@@ -55,37 +56,41 @@ func NewSettings() Settings {
 	}
 }
 
+// Todo: UserSettings -> settings?
 var (
-	DefaultSettings = NewSettings()
-	UserSettings    = NewSettings()
-	S               = &UserSettings
+	UserSettings = NewSettings()
+	S            = &UserSettings
 )
 
 func init() {
-	DefaultSettings.process()
-	UserSettings.process()
+	S.process()
 	DefaultSkin.Load(defaultskin.FS)
 	UserSkin.Load(defaultskin.FS)
 }
 
-func (settings *Settings) Load(src Settings) {
-	*settings = src
-	defer settings.process()
+func (s *Settings) Load(src Settings) {
+	*S = src
+	defer S.process()
 
-	Normalize(&settings.VolumeMusic, 0, 1)
-	Normalize(&settings.VolumeSound, 0, 1)
-	Normalize(&settings.Offset, -300, 300)
-	Normalize(&settings.BackgroundBrightness, 0, 1)
+	Normalize(&S.VolumeMusic, 0, 1)
+	Normalize(&S.VolumeSound, 0, 1)
+	Normalize(&S.Offset, -300, 300)
+	Normalize(&S.BackgroundBrightness, 0, 1)
 
-	Normalize(&settings.MeterUnit, 0, 5)
-	Normalize(&settings.MeterHeight, 0, 100)
-	Normalize(&settings.ScoreScale, 0, 2)
-	Normalize(&settings.ScoreDigitGap, -0.05, 0.05)
+	Normalize(&S.MeterUnit, 0, 5)
+	Normalize(&S.MeterHeight, 0, 100)
+	Normalize(&S.ScoreScale, 0, 2)
+	Normalize(&S.ScoreDigitGap, -0.05, 0.05)
 }
 
 // process processes from raw settings to screen size-adjusted settings.
-func (settings *Settings) process() {
-	settings.ScoreDigitGap *= ScreenSizeX
+// process is supposed to be called only by Load once.
+func (s *Settings) process() {
+	// if s.processed {
+	// 	return
+	// }
+	// defer func() { s.processed = true }()
+	s.ScoreDigitGap *= ScreenSizeX
 }
 
 type Number interface{ int | int64 | float64 }
