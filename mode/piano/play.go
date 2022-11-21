@@ -133,7 +133,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 			Sprites: skin.HitLighting[k],
 		}
 		s.HoldLighting[k] = HoldLightingDrawer{
-			Timer:   draws.NewTimer(0, draws.ToTick(250, TPS)),
+			Timer:   draws.NewTimer(0, draws.ToTick(300, TPS)),
 			Sprites: skin.HoldLighting[k],
 		}
 	}
