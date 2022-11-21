@@ -177,7 +177,7 @@ func (s *Settings) process() {
 	s.backgroundBrightness = &mode.S.BackgroundBrightness
 
 	s.HitPosition *= ScreenSizeY
-	max := ScreenSizeY * s.HitPosition
+	max := s.HitPosition
 	s.maxPosition = max + positionMargin
 	s.minPosition = max - ScreenSizeY - positionMargin
 	if s.ReverseBody {
