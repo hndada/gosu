@@ -32,6 +32,7 @@ type BarDrawer struct {
 }
 
 func (d *BarDrawer) Update(cursor float64) {
+	// fmt.Println(d.Cursor, d.Farthest.Position, d.Nearest.Position)
 	d.Cursor = cursor
 	// When Farthest's prevs are still out of screen due to speed change.
 	for d.Farthest.Prev != nil &&
@@ -59,6 +60,7 @@ func (d BarDrawer) Draw(dst draws.Image) {
 	if d.Farthest == nil || d.Nearest == nil {
 		return
 	}
+	// fmt.Println(d.Farthest.Position, d.Nearest.Position)
 	for b := d.Farthest; b != d.Nearest.Prev; b = b.Prev {
 		pos := b.Position - d.Cursor
 		sprite := d.Sprite
