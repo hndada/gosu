@@ -5,7 +5,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
-	"path/filepath"
+	"path"
 
 	"github.com/BurntSushi/toml"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -31,10 +31,10 @@ func NewGame(fsys fs.FS) *game {
 	}
 
 	// scene := choose.NewScene()
-	scene, err := piano.NewScenePlay(ZipFS(filepath.Join(dir, "test.osz")),
-		"nekodex - circles! (MuangMuangE) [Hard].osu", nil, nil)
-	// scene, err := drum.NewScenePlay(os.DirFS(path.Join(dir, "asdf - 1223")),
-	// "asdf - 1223 (MuangMuangE) [Oni].osu", nil, nil)
+	// scene, err := piano.NewScenePlay(ZipFS(filepath.Join(dir, "test.osz")),
+	// "nekodex - circles! (MuangMuangE) [Hard].osu", nil, nil)
+	scene, err := drum.NewScenePlay(os.DirFS(path.Join(dir, "asdf - 1223")),
+		"asdf - 1223 (MuangMuangE) [Oni].osu", nil, nil)
 	if err != nil {
 		panic(err)
 	}

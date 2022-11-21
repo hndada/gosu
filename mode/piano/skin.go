@@ -111,6 +111,7 @@ func (skins *Skins) loadSkin(keyMode int) {
 		skin.Judgment[i] = a
 	}
 
+	// Note, Bar, Hint are at bottom of HitPosition.
 	var fieldWidth float64
 	widths := S.NoteWidths[keyMode]
 	for _, ktype := range KeyTypes[keyMode] {
@@ -126,7 +127,7 @@ func (skins *Skins) loadSkin(keyMode int) {
 	{
 		s := draws.NewSpriteFromSource(skins.Hint)
 		s.SetSize(fieldWidth, S.HintHeight)
-		s.Locate(S.FieldPosition, S.HitPosition-S.HintHeight, draws.CenterTop)
+		s.Locate(S.FieldPosition, S.HitPosition, draws.CenterBottom)
 		skin.Hint = s
 	}
 	{
