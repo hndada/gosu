@@ -24,7 +24,6 @@ const (
 // Unmatched fields will not be touched, feel free to pre-fill default values.
 // Todo: alert warning message to user when some lines are failed to be decoded
 type Settings struct {
-	// processed            bool
 	VolumeMusic          float64
 	VolumeSound          float64
 	Offset               int64
@@ -56,7 +55,6 @@ func NewSettings() Settings {
 	}
 }
 
-// Todo: UserSettings -> settings?
 var (
 	UserSettings = NewSettings()
 	S            = &UserSettings
@@ -86,10 +84,6 @@ func (s *Settings) Load(src Settings) {
 // process processes from raw settings to screen size-adjusted settings.
 // process is supposed to be called only by Load once.
 func (s *Settings) process() {
-	// if s.processed {
-	// 	return
-	// }
-	// defer func() { s.processed = true }()
 	s.ScoreDigitGap *= ScreenSizeX
 }
 

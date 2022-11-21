@@ -30,7 +30,6 @@ type Skin struct {
 // Each piano's sub mode has different skin.
 // Fields starting with lowercase are derived from mode package.
 type Skins struct {
-	Type  int
 	Skins map[int]*Skin
 
 	defaultBackground draws.Sprite
@@ -40,19 +39,21 @@ type Skins struct {
 	// Bar: generated per skin
 	Hint draws.Image
 	// Field: generated per skin
-	Note         [][4][]draws.Image
-	Key          [][2]draws.Image
-	KeyLighting  []draws.Image
-	HitLighting  [][]draws.Image
-	HoldLighting [][]draws.Image
+
+	Note         [4][4][]draws.Image
+	Key          [2]draws.Image
+	KeyLighting  draws.Image
+	HitLighting  []draws.Image
+	HoldLighting []draws.Image
 }
 
 var (
-	DefaultSkins = Skins{Type: mode.Default, Skins: make(map[int]*Skin)}
-	UserSkins    = Skins{Type: mode.User, Skins: make(map[int]*Skin)}
+	DefaultSkins = &Skins{Skins: make(map[int]*Skin)}
+	UserSkins    = &Skins{Skins: make(map[int]*Skin)}
 )
 
 func (skins *Skins) Load(fsys fs.FS) {
+	defer skins.fillBlank(DefaultSkins)
 	skins.defaultBackground = mode.UserSkin.DefaultBackground
 	skins.score = mode.UserSkin.Score
 	for i := 0; i < 10; i++ {
@@ -64,28 +65,21 @@ func (skins *Skins) Load(fsys fs.FS) {
 	skins.Hint = draws.LoadImage(fsys, "piano/stage/hint.png")
 
 	keyTypes := []KeyType{One, Two, Mid, Tip}
-	keyCount := len(keyTypes)
-	skins.Note = make([][4][]draws.Image, keyCount)
-	skins.Key = make([][2]draws.Image, keyCount)
-	skins.KeyLighting = make([]draws.Image, keyCount)
-	skins.HitLighting = make([][]draws.Image, keyCount)
-	skins.HoldLighting = make([][]draws.Image, keyCount)
 	for k, ktype := range keyTypes {
-		for i, ntype := range []string{"normal", "head", "tail", "body"} {
+		for n, ntype := range []string{"normal", "head", "tail", "body"} {
 			ktype := []string{"one", "two", "mid", "mid"}[ktype] // Todo: "tip"
-			name := fmt.Sprintf("piano/note/%s/%s", ntype, ktype)
-			skins.Note[k][i] = draws.LoadImages(fsys, name)
+			name := fmt.Sprintf("piano/note/%s/%s", ktype, ntype)
+			skins.Note[k][n] = draws.LoadImages(fsys, name)
 		}
-		for i, name := range []string{"up", "down"} {
-			skins.Key[k][i] = draws.LoadImage(fsys, fmt.Sprintf("piano/key/%s.png", name))
-		}
-		skins.KeyLighting[k] = draws.LoadImage(fsys, "piano/key/lighting.png")
-		skins.HitLighting[k] = draws.LoadImages(fsys, "piano/lighting/hit")
-		skins.HoldLighting[k] = draws.LoadImages(fsys, "piano/lighting/hold")
 	}
-	// for keyMode := 4; keyMode <= 9; keyMode++ {
-	// 	skins.loadSkin(keyMode)
-	// }
+	for i, name := range []string{"up", "down"} {
+		skins.Key[i] = draws.LoadImage(fsys, fmt.Sprintf("piano/key/%s.png", name))
+	}
+	skins.KeyLighting = draws.LoadImage(fsys, "piano/key/lighting.png")
+	skins.HitLighting = draws.LoadImages(fsys, "piano/lighting/hit")
+	skins.HoldLighting = draws.LoadImages(fsys, "piano/lighting/hold")
+
+	skins.loadSkin(4)
 	skins.loadSkin(7)
 }
 
@@ -156,20 +150,20 @@ func (skins *Skins) loadSkin(keyMode int) {
 			skin.Note[k][i] = a
 		}
 		// Keys are drawn below Hint, which bottom is along with HitPosition.
-		for i, image := range skins.Key[ktype] {
+		for i, image := range skins.Key {
 			s := draws.NewSpriteFromSource(image)
 			s.SetSize(w, ScreenSizeY-S.HitPosition)
 			s.Locate(x, S.HitPosition, draws.CenterTop)
 			skin.Key[k][i] = s
 		}
 		{
-			s := draws.NewSpriteFromSource(skins.KeyLighting[ktype])
+			s := draws.NewSpriteFromSource(skins.KeyLighting)
 			s.SetScaleToW(w)
 			s.Locate(x, S.HitPosition, draws.CenterBottom) // -HintHeight
 			skin.KeyLighting[k] = s
 		}
 		{
-			a := draws.NewAnimationFromImages(skins.HitLighting[ktype])
+			a := draws.NewAnimationFromImages(skins.HitLighting)
 			for i := range a {
 				a[i].ApplyScale(S.LightingScale)
 				a[i].Locate(x, S.HitPosition, draws.CenterMiddle) // -HintHeight
@@ -177,7 +171,7 @@ func (skins *Skins) loadSkin(keyMode int) {
 			skin.HitLighting[k] = a
 		}
 		{
-			a := draws.NewAnimationFromImages(skins.HoldLighting[ktype])
+			a := draws.NewAnimationFromImages(skins.HoldLighting)
 			for frame := range a {
 				a[frame].ApplyScale(S.LightingScale)
 				a[frame].Locate(x, S.HitPosition-S.HintHeight/2, draws.CenterMiddle)
@@ -185,5 +179,64 @@ func (skins *Skins) loadSkin(keyMode int) {
 			skin.HoldLighting[k] = a
 		}
 		x += w / 2
+	}
+}
+func (skins *Skins) fillBlank(base *Skins) {
+	for _, img := range skins.Combo {
+		if !img.IsValid() {
+			skins.Combo = base.Combo
+			break
+		}
+	}
+	for i, imgs := range skins.Judgment {
+		for _, img := range imgs {
+			if !img.IsValid() {
+				skins.Judgment[i] = base.Judgment[i]
+				break
+			}
+		}
+	}
+	if !skins.Hint.IsValid() {
+		skins.Hint = base.Hint
+	}
+	for k, ktypes := range skins.Note {
+		for n := range ktypes {
+			switch n {
+			case Normal: // Use default's.
+				for _, img := range skins.Note[k][n] {
+					if !img.IsValid() {
+						skins.Note[k][n] = base.Note[k][n]
+						break
+					}
+				}
+			case Head: // Use user's.
+				skins.Note[k][n] = skins.Note[k][Normal]
+			case Tail: // Skip validation for tail.
+				continue
+			case Body: // Use user's.
+				skins.Note[k][n] = skins.Note[k][Normal]
+			}
+		}
+	}
+	for _, img := range skins.Key {
+		if !img.IsValid() {
+			skins.Key = base.Key
+			break
+		}
+	}
+	if !skins.KeyLighting.IsValid() {
+		skins.KeyLighting = base.KeyLighting
+	}
+	for _, img := range skins.HitLighting {
+		if !img.IsValid() {
+			skins.HitLighting = base.HitLighting
+			break
+		}
+	}
+	for _, img := range skins.HoldLighting {
+		if !img.IsValid() {
+			skins.HoldLighting = base.HoldLighting
+			break
+		}
 	}
 }

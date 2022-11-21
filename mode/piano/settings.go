@@ -88,10 +88,10 @@ func NewSettings() Settings {
 		ScratchColor:     [4]uint8{224, 0, 0, 255},
 		FieldOpaque:      0.8,
 		KeyLightingColors: [4][4]uint8{
-			{128, 224, 0, 64},
-			{64, 64, 255, 64},
-			{224, 128, 0, 64},
-			{255, 0, 0, 64},
+			{224, 224, 224, 64}, // white
+			{255, 170, 204, 64}, // pink
+			{224, 224, 0, 64},   // yellow
+			{255, 0, 0, 64},     // red
 		},
 		HitLightingOpaque:  0.5,
 		HoldLightingOpaque: 0.8,

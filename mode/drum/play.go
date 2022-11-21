@@ -107,10 +107,10 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		s.Background.Sprite = skin.DefaultBackground
 	}
 	s.Stage = StageDrawer{
-		Timer:        draws.NewTimer(draws.ToTick(150, TPS), 0),
-		Highlight:    false, //s.Highlight,
-		FieldSprites: skin.Field,
-		HintSprites:  skin.Hint,
+		Timer:     draws.NewTimer(draws.ToTick(150, TPS), 0),
+		Highlight: false, //s.Highlight,
+		Field:     skin.Field,
+		Hint:      skin.Hint,
 	}
 	s.Bar = BarDrawer{
 		Time:   s.Now,
@@ -118,33 +118,33 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		Sprite: skin.Bar,
 	}
 	s.Judgment = JudgmentDrawer{
-		Timer:   draws.NewTimer(draws.ToTick(250, TPS), draws.ToTick(250, TPS)),
-		Sprites: skin.Judgment,
+		Timer:      draws.NewTimer(draws.ToTick(250, TPS), draws.ToTick(250, TPS)),
+		Animations: skin.Judgment,
 	}
 	s.Shake = ShakeDrawer{
-		Timer:   draws.NewTimer(200, 0),
-		Time:    s.Now,
-		Staged:  s.StagedShake,
-		Sprites: skin.Shake,
+		Timer:  draws.NewTimer(200, 0),
+		Time:   s.Now,
+		Staged: s.StagedShake,
+		Shake:  skin.Shake,
 	}
 	s.Roll = RollDrawer{
-		Time:        s.Now,
-		Rolls:       c.Rolls,
-		Dots:        c.Dots,
-		HeadSprites: skin.Head,
-		TailSprites: skin.Tail,
-		BodySprites: skin.Body,
-		DotSprite:   skin.Dot,
+		Time:      s.Now,
+		Rolls:     c.Rolls,
+		Dots:      c.Dots,
+		Head:      skin.Head,
+		Tail:      skin.Tail,
+		Body:      skin.Body,
+		DotSprite: skin.Dot,
 	}
 	period := int(60000 / ScaledBPM(s.BPM))
 	s.Note = NoteDrawer{
-		Timer:          draws.NewTimer(0, period),
-		Time:           s.Now,
-		Notes:          c.Notes,
-		Rolls:          c.Rolls,
-		Shakes:         c.Shakes,
-		NoteSprites:    skin.Note,
-		OverlaySprites: skin.Overlay,
+		Timer:   draws.NewTimer(0, period),
+		Time:    s.Now,
+		Notes:   c.Notes,
+		Rolls:   c.Rolls,
+		Shakes:  c.Shakes,
+		Note:    skin.Note,
+		Overlay: skin.Overlay,
 	}
 	s.Key = KeyDrawer{
 		MaxCountdown: draws.ToTick(75, TPS),
@@ -154,7 +154,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	s.Dancer = DancerDrawer{
 		Timer:       draws.NewTimer(0, period),
 		Time:        s.Now,
-		Sprites:     skin.Dancer,
+		Dancer:      skin.Dancer,
 		Mode:        DancerIdle,
 		ModeEndTime: s.Now,
 	}
