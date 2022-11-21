@@ -1,9 +1,6 @@
 package drum
 
 import (
-	"fmt"
-
-	"github.com/BurntSushi/toml"
 	"github.com/hndada/gosu/defaultskin"
 	"github.com/hndada/gosu/mode"
 )
@@ -85,12 +82,8 @@ func init() {
 	DefaultSkin.Load(defaultskin.FS)
 	UserSkin.Load(defaultskin.FS)
 }
-func (settings *Settings) Load(data string) {
-	*settings = NewSettings()
-	_, err := toml.Decode(data, settings)
-	if err != nil {
-		fmt.Println(err)
-	}
+func (settings *Settings) Load(src Settings) {
+	*settings = src
 	defer settings.process()
 
 	for k := range settings.KeySettings {

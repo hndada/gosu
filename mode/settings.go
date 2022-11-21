@@ -3,7 +3,6 @@ package mode
 import (
 	"fmt"
 
-	"github.com/BurntSushi/toml"
 	"github.com/hndada/gosu/defaultskin"
 	"github.com/hndada/gosu/input"
 )
@@ -69,12 +68,8 @@ func init() {
 	UserSkin.Load(defaultskin.FS)
 }
 
-func (settings *Settings) Load(data string) {
-	*settings = NewSettings()
-	_, err := toml.Decode(data, settings)
-	if err != nil {
-		fmt.Println(err)
-	}
+func (settings *Settings) Load(src Settings) {
+	*settings = src
 	defer settings.process()
 
 	Normalize(&settings.VolumeMusic, 0, 1)
