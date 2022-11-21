@@ -98,11 +98,13 @@ func (skin *Skin) Load(fsys fs.FS) {
 		if skin.isGeneral() {
 			a = draws.NewAnimation(fsys, fmt.Sprintf("piano/judgment/%s", name))
 		} else {
-			a = generalSkin.Judgment[i]
-		}
-		for i := range a {
-			a[i].ApplyScale(S.JudgmentScale)
-			a[i].Locate(S.FieldPosition, S.JudgmentPosition, draws.CenterMiddle)
+			a = make(draws.Animation, len(generalSkin.Judgment[i]))
+			copy(a, generalSkin.Judgment[i])
+			for i := range a {
+				a[i].ApplyScale(S.JudgmentScale)
+				a[i].Locate(S.FieldPosition, S.JudgmentPosition, draws.CenterMiddle)
+				fmt.Println(a[i].Scale)
+			}
 		}
 		skin.Judgment[i] = a
 		if skin.KeyMode == 7 {
