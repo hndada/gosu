@@ -87,7 +87,6 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		}
 	}
 	skin := UserSkins.Skins[c.KeyMode]
-	// fmt.Printf("%+v\n", skin)
 	s.Background = mode.BackgroundDrawer{
 		Sprite: mode.NewBackground(fsys, c.ImageFilename),
 	}
@@ -123,11 +122,11 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		s.KeyLighting[k] = KeyLightingDrawer{
 			Timer:  draws.NewTimer(draws.ToTick(30, TPS), 0),
 			Sprite: skin.KeyLighting[k],
+			Color:  S.keyLightingColors[KeyTypes[c.KeyCount][k]],
 		}
 		s.HitLighting[k] = HitLightingDrawer{
 			Timer:   draws.NewTimer(draws.ToTick(150, TPS), draws.ToTick(150, TPS)),
 			Sprites: skin.HitLighting[k],
-			Color:   S.hitLightingColors[KeyTypes[c.KeyCount][k]],
 		}
 		s.HoldLighting[k] = HoldLightingDrawer{
 			Timer:   draws.NewTimer(0, draws.ToTick(250, TPS)),
@@ -261,9 +260,9 @@ func (s ScenePlay) PlaySample(n *Note) {
 func (s ScenePlay) Draw(screen draws.Image) {
 	s.Background.Draw(screen)
 	s.Field.Draw(screen)
-	s.Bar.Draw(screen)
+	s.Bar.Draw(screen) // NOT WORKS
 	for k := 0; k < s.Chart.KeyCount; k++ {
-		s.Note[k].Draw(screen)
+		s.Note[k].Draw(screen) // NOT WORKS
 		s.Keys[k].Draw(screen)
 		s.KeyLighting[k].Draw(screen)
 	}

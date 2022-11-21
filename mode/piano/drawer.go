@@ -181,6 +181,7 @@ func (d KeyDrawer) Draw(dst draws.Image) {
 type KeyLightingDrawer struct {
 	draws.Timer
 	Sprite      draws.Sprite
+	Color       color.NRGBA
 	lastPressed bool
 }
 
@@ -196,7 +197,7 @@ func (d *KeyLightingDrawer) Update(pressed bool) {
 func (d KeyLightingDrawer) Draw(dst draws.Image) {
 	if d.lastPressed || d.Tick < d.MaxTick {
 		op := draws.Op{}
-		op.ColorM.Scale(1, 1, 1, S.KeyLightingOpaque)
+		op.ColorM.ScaleWithColor(d.Color)
 		d.Sprite.Draw(dst, op)
 	}
 }
@@ -204,7 +205,6 @@ func (d KeyLightingDrawer) Draw(dst draws.Image) {
 type HitLightingDrawer struct {
 	draws.Timer
 	Sprites draws.Animation
-	Color   color.NRGBA
 }
 
 // HitLightingDrawer draws when Normal is Hit or Tail is Release.
@@ -220,7 +220,7 @@ func (d HitLightingDrawer) Draw(dst draws.Image) {
 	}
 	op := draws.Op{}
 	// opaque := UserSettings.HitLightingOpaque * (1 - d.Progress(0.75, 1))
-	op.ColorM.ScaleWithColor(d.Color)
+	op.ColorM.Scale(1, 1, 1, S.HitLightingOpaque)
 	d.Frame(d.Sprites).Draw(dst, op)
 }
 

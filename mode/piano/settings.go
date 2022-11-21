@@ -44,9 +44,9 @@ type Settings struct {
 	ScratchColor       [4]uint8
 	scratchColor       color.NRGBA
 	FieldOpaque        float64
-	KeyLightingOpaque  float64
-	HitLightingColors  [4][4]uint8
-	hitLightingColors  [4]color.NRGBA
+	KeyLightingColors  [4][4]uint8
+	keyLightingColors  [4]color.NRGBA
+	HitLightingOpaque  float64
 	HoldLightingOpaque float64
 
 	// Skin-dependent settings
@@ -83,26 +83,26 @@ func NewSettings() Settings {
 			9:  {0.06, 0.06, 0.06, 0.06},
 			10: {0.06, 0.06, 0.06, 0.06},
 		},
-		NoteHeigth:        0.05,
-		BodyStyle:         BodyStyleStretch,
-		FieldPosition:     0.50,
-		ComboPosition:     0.40,
-		JudgmentPosition:  0.66,
-		ScratchColor:      [4]uint8{224, 0, 0, 255},
-		FieldOpaque:       0.8,
-		KeyLightingOpaque: 0.5,
-		HitLightingColors: [4][4]uint8{
-			{128, 224, 0, 128},
-			{64, 64, 255, 128},
-			{224, 128, 0, 128},
-			{255, 0, 0, 128},
+		NoteHeigth:       0.05,
+		BodyStyle:        BodyStyleStretch,
+		FieldPosition:    0.50,
+		ComboPosition:    0.40,
+		JudgmentPosition: 0.66,
+		ScratchColor:     [4]uint8{224, 0, 0, 255},
+		FieldOpaque:      0.8,
+		KeyLightingColors: [4][4]uint8{
+			{128, 224, 0, 64},
+			{64, 64, 255, 64},
+			{224, 128, 0, 64},
+			{255, 0, 0, 64},
 		},
+		HitLightingOpaque:  0.5,
 		HoldLightingOpaque: 0.8,
 
 		ComboScale:    0.75,
 		ComboDigitGap: -0.0008,
 		JudgmentScale: 0.33,
-		HintHeight:    0.04,
+		HintHeight:    0.055,
 		LightingScale: 1.0,
 	}
 }
@@ -152,8 +152,8 @@ func (s *Settings) Load(src Settings) {
 	mode.Normalize(&S.JudgmentPosition, 0, 1)
 	// ScratchColor: [4]uint8
 	mode.Normalize(&S.FieldOpaque, 0, 1)
-	mode.Normalize(&S.KeyLightingOpaque, 0, 1)
-	// HitLightingColors: [4][4]uint8
+	// KeyLightingColors: [4][4]uint8
+	mode.Normalize(&S.HitLightingOpaque, 0, 1)
 	mode.Normalize(&S.HoldLightingOpaque, 0, 1)
 
 	mode.Normalize(&S.ComboScale, 0, 2)
@@ -176,7 +176,7 @@ func (s *Settings) process() {
 	s.offset = &mode.S.Offset
 	s.backgroundBrightness = &mode.S.BackgroundBrightness
 
-	s.HitPosition *= ScreenSizeX
+	s.HitPosition *= ScreenSizeY
 	max := ScreenSizeY * s.HitPosition
 	s.maxPosition = max + positionMargin
 	s.minPosition = max - ScreenSizeY - positionMargin
@@ -200,8 +200,8 @@ func (s *Settings) process() {
 		clr := s.ScratchColor
 		s.scratchColor = color.NRGBA{clr[0], clr[1], clr[2], clr[3]}
 	}
-	for i, clr := range s.HitLightingColors {
-		s.hitLightingColors[i] = color.NRGBA{clr[0], clr[1], clr[2], clr[3]}
+	for i, clr := range s.KeyLightingColors {
+		s.keyLightingColors[i] = color.NRGBA{clr[0], clr[1], clr[2], clr[3]}
 	}
 	s.ComboDigitGap *= ScreenSizeX
 	s.HintHeight *= ScreenSizeY
