@@ -104,7 +104,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		Sprite: mode.NewBackground(fsys, c.ImageFilename),
 	}
 	if !s.Background.Sprite.IsValid() {
-		s.Background.Sprite = skin.DefaultBackground
+		s.Background.Sprite = skin.defaultBackground
 	}
 	s.Stage = StageDrawer{
 		Timer:     draws.NewTimer(draws.ToTick(150, TPS), 0),
@@ -158,7 +158,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		Mode:        DancerIdle,
 		ModeEndTime: s.Now,
 	}
-	s.Score = mode.NewScoreDrawer(&s.Scores[mode.Total], skin.Score[:])
+	s.Score = mode.NewScoreDrawer(&s.Scores[mode.Total], skin.score[:])
 	s.Combo = mode.ComboDrawer{
 		Timer:      draws.NewTimer(draws.ToTick(2000, TPS), 0),
 		DigitWidth: skin.Combo[0].W(),

@@ -24,7 +24,7 @@ type Settings struct {
 	// Logic settings
 	KeySettings   map[int][]string
 	SpeedScale    float64
-	HitPosition   float64 // The bottom y-value of Hint,  not a middle or top.
+	HitPosition   float64
 	maxPosition   float64
 	minPosition   float64
 	TailExtraTime float64
@@ -159,7 +159,6 @@ func (s *Settings) Load(src Settings) {
 // It is safe to use mode.UserSettings even for DefaultSettings:
 // mode.UserSettings = mode.DefaultSettings when processing default.
 func (s *Settings) process() {
-	*s = NewSettings()
 	s.volumeMusic = &mode.S.VolumeMusic
 	s.volumeSound = &mode.S.VolumeSound
 	s.offset = &mode.S.Offset
@@ -196,4 +195,6 @@ func (s *Settings) process() {
 }
 
 // 1 pixel is 1 millisecond.
-func ExposureTime(speed float64) float64 { return S.HitPosition / speed }
+func ExposureTime(speed float64) float64 {
+	return S.HitPosition / speed
+}

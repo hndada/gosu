@@ -11,29 +11,40 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
+// Todo: resolve ambiguity between image and derived sprites
 // Order of fields of Skin is roughly consistent with drawing order.
 type Skin struct {
-	Type int
+	field   [2]draws.Image
+	hint    [2]draws.Image
+	note    draws.Image
+	end     draws.Image
+	mid     draws.Image
+	dot     draws.Image
+	overlay [2][]draws.Image
+	key     [2]draws.Image
+	dancer  [4][]draws.Image
+	combo   [10]draws.Image
 
-	DrumSound         [2][2][]byte // First 2 is color, next 2 is size.
-	DefaultBackground draws.Sprite
+	defaultBackground draws.Sprite
 	Field             [2]draws.Sprite
 	Hint              [2]draws.Sprite
 	Bar               draws.Sprite
-	Judgment          [2][3]draws.Animation
 
-	Note    [2][4]draws.Sprite
-	Overlay [2]draws.Animation
-	Head    [2]draws.Sprite
-	Tail    [2]draws.Sprite
-	Body    [2]draws.Sprite
-	Dot     draws.Sprite
-	Shake   [2]draws.Sprite
+	// [2] at last element stands for a size.
+	DrumSound [2][2][]byte // color, size
+	Judgment  [3][2]draws.Animation
+	Note      [4][2]draws.Sprite
+	Head      [2]draws.Sprite
+	Tail      [2]draws.Sprite
+	Body      [2]draws.Sprite
+	Dot       draws.Sprite
+	Shake     [2]draws.Sprite
+	Overlay   [2]draws.Animation
 
 	Key      [4]draws.Sprite
 	KeyField draws.Sprite
 	Dancer   [4]draws.Animation
-	Score    [13]draws.Sprite
+	score    [13]draws.Sprite
 	Combo    [10]draws.Sprite
 }
 
@@ -45,6 +56,10 @@ var (
 )
 
 const (
+	Idle = iota
+	High
+)
+const (
 	DancerIdle = iota
 	DancerYes
 	DancerNo
@@ -52,35 +67,49 @@ const (
 )
 
 var (
-	DefaultSkin = Skin{Type: mode.Default}
-	UserSkin    = Skin{Type: mode.User}
-	// PlaySkin    = Skin{Type: mode.Play}
+	DefaultSkin = &Skin{}
+	UserSkin    = &Skin{}
 )
 
-// Todo: embed default skins to code for preventing panic when files are missing
+// Calling fillBlank() right after returning Load won't apply User settings.
 func (skin *Skin) Load(fsys fs.FS) {
-	for i, cname := range []string{"red", "blue"} {
-		for j, sname := range []string{"", "-big"} {
-			name := fmt.Sprintf("drum/sound/%s%s.wav", cname, sname)
-			skin.DrumSound[i][j] = audios.NewSound(fsys, name)
+	// defer skin.fillBlank(DefaultSkin)
+	skin.defaultBackground = mode.UserSkin.DefaultBackground
+	for state, name := range []string{"idle", "high"} {
+		img := draws.LoadImage(fsys, fmt.Sprintf("drum/stage/field-%s.png", name))
+		if !img.IsValid() {
+			switch state {
+			case Idle:
+				img = DefaultSkin.field[state]
+			case High: // Use user's idle one.
+				img = skin.field[0]
+			}
 		}
-	}
-	skin.DefaultBackground = mode.UserSkin.DefaultBackground
-	for i, name := range []string{"idle", "high"} {
-		s := draws.NewSprite(fsys, fmt.Sprintf("drum/stage/field-%s.png", name))
+		skin.field[state] = img
+		s := draws.NewSpriteFromSource(img)
 		s.SetSize(ScreenSizeX, S.FieldHeight)
 		s.Locate(0, S.FieldPosition, draws.LeftMiddle)
-		skin.Field[i] = s
+		skin.Field[state] = s
 	}
-	var hintScale float64
-	for i, name := range []string{"idle", "high"} {
-		s := draws.NewSprite(fsys, fmt.Sprintf("drum/stage/hint-%s.png", name))
+	var hintScale float64 // For using idle image's size.
+	for state, name := range []string{"idle", "high"} {
+		img := draws.LoadImage(fsys, fmt.Sprintf("drum/stage/hint-%s.png", name))
+		if !img.IsValid() {
+			switch state {
+			case Idle:
+				img = DefaultSkin.field[state]
+			case High: // Use user's idle one.
+				img = skin.field[0]
+			}
+		}
+		skin.hint[state] = img
+		s := draws.NewSpriteFromSource(img)
 		if name == "idle" {
 			hintScale = 1.2 * S.regularNoteHeight / s.H()
 		}
 		s.ApplyScale(hintScale)
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
-		skin.Hint[i] = s
+		skin.Hint[state] = s
 	}
 	{
 		src := draws.NewImage(1, S.FieldInnerHeight)
@@ -89,14 +118,46 @@ func (skin *Skin) Load(fsys fs.FS) {
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		skin.Bar = s
 	}
+
+	skin.note = draws.LoadImage(fsys, "drum/note/note.png")
+	if !skin.note.IsValid() {
+		skin.note = DefaultSkin.note
+	}
+	skin.end = draws.LoadImage(fsys, "drum/note/end.png")
+	if !skin.end.IsValid() {
+		skin.end = DefaultSkin.end
+	}
+	skin.mid = draws.LoadImage(fsys, "drum/note/mid.png")
+	if !skin.mid.IsValid() {
+		skin.mid = DefaultSkin.mid
+	}
+	skin.dot = draws.LoadImage(fsys, "drum/note/dot.png")
+	if !skin.dot.IsValid() {
+		skin.dot = DefaultSkin.dot
+	}
+	for i, sname := range []string{"", "-big"} {
+		name := fmt.Sprintf("drum/note/overlay%s", sname)
+		imgs := draws.LoadImages(fsys, name)
+		if len(imgs) == 1 && !imgs[0].IsValid() {
+			skin.overlay = DefaultSkin.overlay
+			break
+		}
+		skin.overlay[i] = imgs
+	}
 	var (
-		note = draws.LoadImage(fsys, "drum/note/note.png")
-		end  = draws.LoadImage(fsys, "drum/note/end.png")
-		head = draws.NewImageXFlipped(end)
-		tail = end
-		body = draws.LoadImage(fsys, "drum/note/mid.png")
+		head = draws.NewImageXFlipped(skin.end)
+		tail = skin.end
+		body = skin.mid
 	)
 	for size, sname := range []string{"", "-big"} {
+		for i, cname := range []string{"red", "blue"} {
+			name := fmt.Sprintf("drum/sound/%s%s.wav", cname, sname)
+			s := audios.NewSound(fsys, name)
+			if !s.IsValid() {
+				s = DefaultSkin.DrumSound[i][size]
+			}
+			skin.DrumSound[i][size] = s
+		}
 		noteHeight := S.regularNoteHeight
 		if size == Big {
 			noteHeight = S.bigNoteHeight
@@ -108,26 +169,26 @@ func (skin *Skin) Load(fsys fs.FS) {
 			} else {
 				name = fmt.Sprintf("drum/judgment/%s%s", kname, sname)
 			}
-			animation := draws.NewAnimation(fsys, name)
-			for i := range animation {
-				animation[i].ApplyScale(S.JudgmentScale)
-				animation[i].Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
+			a := draws.NewAnimation(fsys, name)
+			for frame := range a {
+				a[frame].ApplyScale(S.JudgmentScale)
+				a[frame].Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 			}
-			skin.Judgment[size][kind] = animation
+			skin.Judgment[kind][size] = a
 		}
 		for kind, color := range []color.NRGBA{ColorRed, ColorBlue, ColorYellow, ColorPurple} {
-			image := draws.NewImageColored(note, color)
-			s := draws.NewSpriteFromSource(image)
+			img := draws.NewImageColored(skin.note, color)
+			s := draws.NewSpriteFromSource(img)
 			s.SetScaleToH(noteHeight)
 			s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
-			skin.Note[size][kind] = s
+			skin.Note[kind][size] = s
 		}
-		animation := draws.NewAnimation(fsys, fmt.Sprintf("drum/note/overlay%s", sname))
-		for i := range animation {
-			animation[i].SetScaleToH(noteHeight)
-			animation[i].Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
+		a := draws.NewAnimationFromImages(skin.overlay[size])
+		for frame := range a {
+			a[frame].SetScaleToH(noteHeight)
+			a[frame].Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		}
-		skin.Overlay[size] = animation
+		skin.Overlay[size] = a
 		{
 			s := draws.NewSpriteFromSource(head)
 			s.SetScaleToH(noteHeight)
@@ -149,26 +210,38 @@ func (skin *Skin) Load(fsys fs.FS) {
 		}
 	}
 	{
-		s := draws.NewSprite(fsys, "drum/note/dot.png")
+		s := draws.NewSpriteFromSource(skin.dot)
 		s.ApplyScale(S.DotScale)
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		skin.Dot = s
 	}
-	skin.Shake = NewShake(note)
+	skin.Shake = NewShakeSprites(skin.note)
+
 	// Key sprites are overlapped at each side.
+	for i, kname := range []string{"in", "out"} {
+		name := fmt.Sprintf("drum/key/%s.png", kname)
+		img := draws.LoadImage(fsys, name)
+		if !img.IsValid() {
+			skin.key = DefaultSkin.key
+			break
+		}
+		skin.key[i] = img
+	}
+	const (
+		in = iota
+		out
+	)
 	var (
-		in        = draws.LoadImage(fsys, "drum/key/in.png")
-		out       = draws.LoadImage(fsys, "drum/key/out.png")
-		keyImages = []draws.Image{
-			draws.NewImageXFlipped(out),
-			in,
-			draws.NewImageXFlipped(in),
-			out,
+		key = []draws.Image{
+			draws.NewImageXFlipped(skin.key[out]),
+			skin.key[in],
+			draws.NewImageXFlipped(skin.key[in]),
+			skin.key[out],
 		}
 		keyFieldSize draws.Vector2
 	)
-	for k, image := range keyImages {
-		s := draws.NewSpriteFromSource(image)
+	for k, img := range key {
+		s := draws.NewSpriteFromSource(img)
 		s.SetScaleToH(S.FieldInnerHeight)
 		if k < 2 { // Includes determining key field size.
 			s.Locate(0, S.FieldPosition, draws.LeftMiddle)
@@ -184,43 +257,50 @@ func (skin *Skin) Load(fsys fs.FS) {
 		skin.Key[k] = s
 	}
 	{
-
 		src := draws.NewImage(keyFieldSize.XY())
 		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * S.FieldOpaque)})
 		s := draws.NewSpriteFromSource(src)
 		s.Locate(0, S.FieldPosition, draws.LeftMiddle)
 		skin.KeyField = s
 	}
-	for i, name := range []string{"idle", "yes", "no", "high"} {
-		fs, err := fs.ReadDir(fsys, fmt.Sprintf("drum/dancer/%s", name))
-		if err != nil {
-			continue
+	for i, kname := range []string{"idle", "yes", "no", "high"} {
+		name := fmt.Sprintf("drum/dancer/%s", kname)
+		imgs := draws.LoadImages(fsys, name)
+		if len(imgs) == 1 && !imgs[0].IsValid() {
+			skin.dancer = DefaultSkin.dancer
+			break
 		}
-		skin.Dancer[i] = make(draws.Animation, len(fs))
-		for j := range fs {
-			name := fmt.Sprintf("drum/dancer/%s/%d.png", name, j)
-			s := draws.NewSprite(fsys, name)
-			s.ApplyScale(S.DancerScale)
-			s.Locate(S.DancerPositionX, S.DancerPositionY, draws.CenterMiddle)
-			skin.Dancer[i][j] = s
-		}
+		skin.dancer[i] = imgs
 	}
-	skin.Score = mode.UserSkin.Score
-	// Position of combo is dependent on widths of key sprite.
-	{
-		var comboImages [10]draws.Image
-		for i := 0; i < 10; i++ {
-			comboImages[i] = draws.LoadImage(fsys, fmt.Sprintf("combo/%d.png", i))
+	for i, imgs := range skin.dancer {
+		a := draws.NewAnimationFromImages(imgs)
+		for frame := range a {
+			a[frame].ApplyScale(S.DancerScale)
+			a[frame].Locate(S.DancerPositionX, S.DancerPositionY, draws.CenterMiddle)
 		}
+		skin.Dancer[i] = a
+	}
+	skin.score = mode.UserSkin.Score
+	{ // Position of combo is dependent on widths of key sprite.
+		var imgs [10]draws.Image
 		for i := 0; i < 10; i++ {
-			s := draws.NewSpriteFromSource(comboImages[i])
+			img := draws.LoadImage(fsys, fmt.Sprintf("combo/%d.png", i))
+			if !img.IsValid() {
+				skin.combo = DefaultSkin.combo
+				break
+			}
+			imgs[i] = img
+		}
+		skin.combo = imgs
+		for i := 0; i < 10; i++ {
+			s := draws.NewSpriteFromSource(imgs[i])
 			s.ApplyScale(S.ComboScale)
 			s.Locate(keyFieldSize.X/2, S.FieldPosition, draws.CenterMiddle)
 			skin.Combo[i] = s
 		}
 	}
 }
-func NewShake(note draws.Image) (sprites [2]draws.Sprite) {
+func NewShakeSprites(note draws.Image) (sprites [2]draws.Sprite) {
 	const (
 		outer = iota
 		inner
@@ -269,15 +349,4 @@ func NewShake(note draws.Image) (sprites [2]draws.Sprite) {
 		sprites[inner] = s
 	}
 	return
-}
-
-func (skin *Skin) Reset() {
-	kind := skin.Type
-	switch kind {
-	case mode.User:
-		*skin = DefaultSkin
-	case mode.Play:
-		*skin = UserSkin
-	}
-	skin.Type = kind
 }

@@ -24,14 +24,10 @@ func (d *StageDrawer) Update(highlight bool) {
 }
 
 func (d StageDrawer) Draw(dst draws.Image) {
-	const (
-		idle = iota
-		high
-	)
 	op := draws.Op{}
 	op.ColorM.Scale(1, 1, 1, S.FieldOpaque)
-	d.Field[idle].Draw(dst, op)
-	d.Hint[idle].Draw(dst, draws.Op{})
+	d.Field[Idle].Draw(dst, op)
+	d.Hint[Idle].Draw(dst, draws.Op{})
 	if d.Highlight || d.Tick < d.MaxTick {
 		var opField, opHint draws.Op
 		if d.Highlight {
@@ -42,8 +38,8 @@ func (d StageDrawer) Draw(dst draws.Image) {
 			opHint.ColorM.Scale(1, 1, 1, S.FieldOpaque*(1-d.Age()))
 		}
 		opHint.ColorM.ScaleWithColor(ColorYellow)
-		d.Field[high].Draw(dst, opField)
-		d.Hint[high].Draw(dst, opHint)
+		d.Field[High].Draw(dst, opField)
+		d.Hint[High].Draw(dst, opHint)
 	}
 }
 
@@ -214,7 +210,7 @@ type NoteDrawer struct {
 	Notes   []*Note
 	Rolls   []*Note
 	Shakes  []*Note
-	Note    [2][4]draws.Sprite
+	Note    [4][2]draws.Sprite
 	Overlay [2]draws.Animation
 }
 
@@ -238,7 +234,7 @@ func (d NoteDrawer) Draw(dst draws.Image) {
 			if pos > S.maxPosition || pos < S.minPosition {
 				continue
 			}
-			note := d.Note[n.Size][n.Color]
+			note := d.Note[n.Color][n.Size]
 			op := draws.Op{}
 			switch mode {
 			case modeShake:
@@ -344,7 +340,7 @@ func (d DancerDrawer) Draw(dst draws.Image) {
 
 type JudgmentDrawer struct {
 	draws.Timer
-	Animations  [2][3]draws.Animation
+	Animations  [3][2]draws.Animation
 	judgment    mode.Judgment
 	big         bool
 	startRadian float64
@@ -369,14 +365,14 @@ func (d JudgmentDrawer) Draw(dst draws.Image) {
 	if d.IsDone() || d.judgment.Window == 0 {
 		return
 	}
-	a := d.Animations[Regular]
-	if d.big {
-		a = d.Animations[Big]
-	}
 	var s draws.Sprite
 	for i, j := range Judgments {
 		if d.judgment.Is(j) {
-			s = d.Frame(a[i])
+			if d.big {
+				s = d.Frame(d.Animations[i][Big])
+			} else {
+				s = d.Frame(d.Animations[i][Regular])
+			}
 			break
 		}
 	}
