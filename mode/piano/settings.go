@@ -8,18 +8,14 @@ import (
 )
 
 const (
-	TPS = mode.TPS
-
+	TPS         = mode.TPS
 	ScreenSizeX = mode.ScreenSizeX
 	ScreenSizeY = mode.ScreenSizeY
 )
 
-// positionMargin should be large enough:
-// more than MaxSize/2 of all note sprites' width or height.
 const positionMargin = 100
 
 type Settings struct {
-	// processed            bool // Todo: remove it?
 	volumeMusic          *float64
 	volumeSound          *float64
 	offset               *int64
@@ -57,6 +53,7 @@ type Settings struct {
 	LightingScale float64
 }
 
+// Fields which types are map should be explicitly make new map.
 func NewSettings() Settings {
 	return Settings{
 		KeySettings: map[int][]string{
@@ -114,19 +111,15 @@ const (
 )
 
 var (
-	// DefaultSettings = NewSettings()
 	UserSettings = NewSettings()
 	S            = &UserSettings
 )
 
-// Fields which types are map should be explicitly make new map.
 func init() {
-	// DefaultSettings.process()
 	S.process()
 	DefaultSkins.Load(defaultskin.FS)
 	UserSkins.Load(defaultskin.FS)
 }
-
 func (s *Settings) Load(src Settings) {
 	*S = src
 	defer S.process()
@@ -166,10 +159,6 @@ func (s *Settings) Load(src Settings) {
 // It is safe to use mode.UserSettings even for DefaultSettings:
 // mode.UserSettings = mode.DefaultSettings when processing default.
 func (s *Settings) process() {
-	// if s.processed {
-	// 	return
-	// }
-	// defer func() { s.processed = true }()
 	*s = NewSettings()
 	s.volumeMusic = &mode.S.VolumeMusic
 	s.volumeSound = &mode.S.VolumeSound
@@ -185,7 +174,6 @@ func (s *Settings) process() {
 		s.maxPosition = -min
 		s.minPosition = -max
 	}
-	// s.NoteWidths[general] = [4]float64{0.065, 0.065, 0.065, 0.065}
 	for k, widths := range s.NoteWidths {
 		for kind := range widths {
 			widths[kind] *= ScreenSizeX
@@ -206,18 +194,6 @@ func (s *Settings) process() {
 	s.ComboDigitGap *= ScreenSizeX
 	s.HintHeight *= ScreenSizeY
 }
-
-// func (settings *Settings) Reset() {
-// 	*settings = rawDefaultSettings
-// 	UserSettings.KeySettings = make(map[int][]string)
-// 	for k, v := range DefaultSettings.KeySettings {
-// 		UserSettings.KeySettings[k] = v
-// 	}
-// 	UserSettings.NoteWidths = make(map[int][4]float64)
-// 	for k, v := range DefaultSettings.NoteWidths {
-// 		UserSettings.NoteWidths[k] = v
-// 	}
-// }
 
 // 1 pixel is 1 millisecond.
 func ExposureTime(speed float64) float64 { return S.HitPosition / speed }
