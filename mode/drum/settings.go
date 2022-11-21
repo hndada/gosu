@@ -70,46 +70,42 @@ func NewSettings() Settings {
 }
 
 var (
-	DefaultSettings = NewSettings()
-	UserSettings    = NewSettings()
-	S               = &UserSettings
+	UserSettings = NewSettings()
+	S            = &UserSettings
 )
 
 func init() {
-	DefaultSettings.process()
-	UserSettings.process()
+	S.process()
 	DefaultSkin.Load(defaultskin.FS)
 	UserSkin.Load(defaultskin.FS)
 }
-func (settings *Settings) Load(src Settings) {
-	*settings = src
-	defer settings.process()
+func (s *Settings) Load(src Settings) {
+	*s = src
+	defer s.process()
 
-	for k := range settings.KeySettings {
-		mode.NormalizeKeys(settings.KeySettings[k])
+	for k := range s.KeySettings {
+		mode.NormalizeKeys(s.KeySettings[k])
 	}
-	mode.Normalize(&settings.SpeedScale, 0.1, 2.0)
-	mode.Normalize(&settings.HitPosition, 0, 1)
+	mode.Normalize(&s.SpeedScale, 0.1, 2.0)
+	mode.Normalize(&s.HitPosition, 0, 1)
 	// Reverse: bool
 
-	mode.Normalize(&settings.FieldOpaque, 0, 1)
-	mode.Normalize(&settings.FieldPosition, 0, 1)
-	mode.Normalize(&settings.FieldHeight, 0, 1)
-	mode.Normalize(&settings.DancerPositionX, 0, 1)
-	mode.Normalize(&settings.DancerPositionY, 0, 1)
+	mode.Normalize(&s.FieldOpaque, 0, 1)
+	mode.Normalize(&s.FieldPosition, 0, 1)
+	mode.Normalize(&s.FieldHeight, 0, 1)
+	mode.Normalize(&s.DancerPositionX, 0, 1)
+	mode.Normalize(&s.DancerPositionY, 0, 1)
 
-	mode.Normalize(&settings.FieldInnerHeight, 0, 1)
-	mode.Normalize(&settings.JudgmentScale, 0, 2)
-	mode.Normalize(&settings.DotScale, 0, 2)
-	mode.Normalize(&settings.ShakeScale, 0, 2)
-	mode.Normalize(&settings.DancerScale, 0, 2)
-	mode.Normalize(&settings.ComboScale, 0, 2)
-	mode.Normalize(&settings.ComboDigitGap, -0.005, 0.005)
+	mode.Normalize(&s.FieldInnerHeight, 0, 1)
+	mode.Normalize(&s.JudgmentScale, 0, 2)
+	mode.Normalize(&s.DotScale, 0, 2)
+	mode.Normalize(&s.ShakeScale, 0, 2)
+	mode.Normalize(&s.DancerScale, 0, 2)
+	mode.Normalize(&s.ComboScale, 0, 2)
+	mode.Normalize(&s.ComboDigitGap, -0.005, 0.005)
 }
 
-func (settings *Settings) process() {
-	s := settings
-
+func (s *Settings) process() {
 	s.volumeMusic = &mode.S.VolumeMusic
 	s.volumeSound = &mode.S.VolumeSound
 	s.offset = &mode.S.Offset
@@ -134,6 +130,7 @@ func (settings *Settings) process() {
 	s.FieldInnerHeight *= s.FieldHeight
 	s.ComboDigitGap *= ScreenSizeX
 }
+
 func ExposureTime(speed float64) float64 {
 	return (ScreenSizeX - S.HitPosition) / speed
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
-// KeyMode int // scratch mode + key count
 type Skin struct {
 	// Independent of key number
 	DefaultBackground draws.Sprite
@@ -30,7 +29,7 @@ type Skin struct {
 // Each piano's sub mode has different skin.
 // Fields starting with lowercase are derived from mode package.
 type Skins struct {
-	Skins map[int]*Skin
+	Skins map[int]*Skin // Key is KeyMode: scratch mode + key count
 
 	defaultBackground draws.Sprite
 	score             [13]draws.Sprite // number + sign(. , %)
@@ -40,7 +39,7 @@ type Skins struct {
 	Hint draws.Image
 	// Field: generated per skin
 
-	Note         [4][4][]draws.Image
+	Note         [4][4][]draws.Image // Key type, note type
 	Key          [2]draws.Image
 	KeyLighting  draws.Image
 	HitLighting  []draws.Image
