@@ -77,7 +77,7 @@ go build .
 Will also post details at [wiki](https://github.com/hndada/gosu/wiki).
 
 # Community
-[Discord server](https://discord.gg/4TztgpaC)
+~~[Discord server](https://discord.gg/4TztgpaC)~~ Will be open after stable version has been release.
 
 # License
 Codebase: Apache License 2.0
