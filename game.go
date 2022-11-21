@@ -57,11 +57,15 @@ var (
 	S            = &UserSettings
 )
 
+// Todo: tidy NewSettings() and *Settings.Load()?
 func load(fsys fs.FS) {
 	data, err := fs.ReadFile(fsys, "settings.toml")
 	if err != nil {
 		fmt.Println("no settings.toml detected")
 	} else {
+		S.General = mode.NewSettings()
+		S.Piano = piano.NewSettings()
+		S.Drum = drum.NewSettings()
 		_, err := toml.Decode(string(data), &UserSettings)
 		if err != nil {
 			fmt.Println(err)

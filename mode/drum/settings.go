@@ -6,8 +6,7 @@ import (
 )
 
 const (
-	TPS = mode.TPS
-
+	TPS         = mode.TPS
 	ScreenSizeX = mode.ScreenSizeX
 	ScreenSizeY = mode.ScreenSizeY
 )

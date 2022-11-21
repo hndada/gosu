@@ -260,9 +260,9 @@ func (s ScenePlay) PlaySample(n *Note) {
 func (s ScenePlay) Draw(screen draws.Image) {
 	s.Background.Draw(screen)
 	s.Field.Draw(screen)
-	s.Bar.Draw(screen) // NOT WORKS
+	s.Bar.Draw(screen)
 	for k := 0; k < s.Chart.KeyCount; k++ {
-		s.Note[k].Draw(screen) // NOT WORKS
+		s.Note[k].Draw(screen)
 		s.Keys[k].Draw(screen)
 		s.KeyLighting[k].Draw(screen)
 	}

@@ -153,17 +153,6 @@ func (skins *Skins) loadSkin(keyMode int) {
 				a[frame].SetSize(w, S.NoteHeigth)
 				a[frame].Locate(x, S.HitPosition, draws.CenterBottom)
 			}
-			// if !skin.isGeneral() && ktype == Tip && !a.IsValid() {
-			// 	for frame := range a {
-			// 		a[frame] = skin.Note[k][0][frame]
-			// 		op := draws.Op{}
-			// 		op.ColorM.ScaleWithColor(S.scratchColor)
-			// 		i := a[frame].Source.(draws.Image) // Todo: looks weird usage to me
-			// 		skin.Note[k][0][frame].Draw(i, op)
-			// 		a[frame].SetSize(w, S.NoteHeigth)
-			// 		a[frame].Locate(x, S.HitPosition, draws.CenterBottom)
-			// 	}
-			// }
 			skin.Note[k][i] = a
 		}
 		// Keys are drawn below Hint, which bottom is along with HitPosition.
