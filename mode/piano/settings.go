@@ -185,7 +185,7 @@ func (s *Settings) process() {
 		s.maxPosition = -min
 		s.minPosition = -max
 	}
-	s.NoteWidths[general] = [4]float64{0.065, 0.065, 0.065, 0.065}
+	// s.NoteWidths[general] = [4]float64{0.065, 0.065, 0.065, 0.065}
 	for k, widths := range s.NoteWidths {
 		for kind := range widths {
 			widths[kind] *= ScreenSizeX

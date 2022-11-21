@@ -26,15 +26,14 @@ type Position = Vector2
 // Sprite is an image or a text drawn in a screen based on its position and scale.
 // DrawImageOptions is not commutative. Do Translate at the final stage.
 type Sprite struct {
-	Outer  *Sprite
-	Inners []Sprite
-
 	Source
 	Scale  Vector2
 	Filter ebiten.Filter
 	Position
 	Origin       Origin
 	AxisReversed [2]bool
+	Outer        *Sprite
+	Inners       []Sprite
 }
 
 func NewSprite(fsys fs.FS, name string) Sprite {
