@@ -1,10 +1,8 @@
 package scene
 
 import (
-	"fmt"
 	"strings"
 
-	"github.com/BurntSushi/toml"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/defaultskin"
 	"github.com/hndada/gosu/mode"
@@ -43,11 +41,8 @@ func init() {
 	DefaultSkin.Load(defaultskin.FS)
 }
 
-func (settings *Settings) Load(data string) {
-	_, err := toml.Decode(data, settings)
-	if err != nil {
-		fmt.Println(err)
-	}
+func (settings *Settings) Load(src Settings) {
+	*settings = src
 	defer settings.process()
 
 	// Leading dot and slash is not allowed in fs.

@@ -52,7 +52,10 @@ type Settings struct {
 	// Scene scene.Settings
 }
 
-var UserSettings Settings
+var (
+	UserSettings Settings
+	S            = &UserSettings
+)
 
 func load(fsys fs.FS) {
 	data, err := fs.ReadFile(fsys, "settings.toml")
@@ -64,6 +67,9 @@ func load(fsys fs.FS) {
 		if err != nil {
 			fmt.Println(err)
 		}
+		mode.UserSettings.Load(S.General)
+		piano.UserSettings.Load(S.Piano)
+		drum.UserSettings.Load(S.Drum)
 	}
 
 	skinFS, err := fs.Sub(fsys, "skin")
