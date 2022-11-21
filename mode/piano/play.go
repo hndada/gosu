@@ -86,16 +86,8 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 			}
 		}
 	}
-	{
-		// skin := NewSkin(mode.Play, c.KeyMode)
-		// skin.Load(fsys)
-	}
-	{
-		// PlaySkin = NewSkin(mode.Play, c.KeyMode)
-		// PlaySkin.Load(fsys)
-		// skin := PlaySkin
-	}
-	skin := UserSkins[c.KeyMode]
+	skin := UserSkins.Skins[c.KeyMode]
+	// fmt.Printf("%+v\n", skin)
 	s.Background = mode.BackgroundDrawer{
 		Sprite: mode.NewBackground(fsys, c.ImageFilename),
 	}

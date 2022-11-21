@@ -60,16 +60,16 @@ var (
 func load(fsys fs.FS) {
 	data, err := fs.ReadFile(fsys, "settings.toml")
 	if err != nil {
-		fmt.Println("Settings: default")
+		fmt.Println("no settings.toml detected")
 	} else {
-		fmt.Println("Settings: custom")
 		_, err := toml.Decode(string(data), &UserSettings)
 		if err != nil {
 			fmt.Println(err)
+		} else {
+			mode.UserSettings.Load(S.General)
+			piano.UserSettings.Load(S.Piano)
+			drum.UserSettings.Load(S.Drum)
 		}
-		mode.UserSettings.Load(S.General)
-		piano.UserSettings.Load(S.Piano)
-		drum.UserSettings.Load(S.Drum)
 	}
 
 	skinFS, err := fs.Sub(fsys, "skin")
@@ -79,9 +79,8 @@ func load(fsys fs.FS) {
 	}
 	_, err = skinFS.Open(".")
 	if err != nil {
-		fmt.Println("Skin: default")
+		fmt.Println("no /skin detected")
 	} else {
-		fmt.Println("Skin: custom")
 		mode.UserSkin.Load(skinFS)
 		piano.UserSkins.Load(skinFS)
 		drum.UserSkin.Load(skinFS)
