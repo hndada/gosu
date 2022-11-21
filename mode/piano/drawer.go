@@ -61,9 +61,9 @@ func (d BarDrawer) Draw(dst draws.Image) {
 	}
 	for b := d.Farthest; b != d.Nearest.Prev; b = b.Prev {
 		pos := b.Position - d.Cursor
-		sprite := d.Sprite
-		sprite.Move(0, -pos)
-		sprite.Draw(dst, draws.Op{})
+		s := d.Sprite
+		s.Move(0, -pos)
+		s.Draw(dst, draws.Op{})
 	}
 }
 
@@ -117,14 +117,14 @@ func (d NoteDrawer) Draw(dst draws.Image) {
 		if n.Type == Tail {
 			d.DrawBody(dst, n)
 		}
-		sprite := d.Frame(d.Sprites[n.Type])
+		s := d.Frame(d.Sprites[n.Type])
 		pos := n.Position - d.Cursor
-		sprite.Move(0, -pos)
+		s.Move(0, -pos)
 		op := draws.Op{}
 		if n.Marked {
 			op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		}
-		sprite.Draw(dst, op)
+		s.Draw(dst, op)
 	}
 }
 
@@ -171,11 +171,11 @@ func (d KeyDrawer) Draw(dst draws.Image) {
 		up = iota
 		down
 	)
-	sprite := d.Sprites[up]
+	s := d.Sprites[up]
 	if d.lastPressed || d.Tick < d.MaxTick {
-		sprite = d.Sprites[down]
+		s = d.Sprites[down]
 	}
-	sprite.Draw(dst, draws.Op{})
+	s.Draw(dst, draws.Op{})
 }
 
 type KeyLightingDrawer struct {
@@ -281,7 +281,7 @@ func (d JudgmentDrawer) Draw(dst draws.Image) {
 		}
 	}
 	age := d.Age()
-	sprite := d.Frame(d.Sprites[idx])
+	s := d.Frame(d.Sprites[idx])
 	const (
 		bound0 = 0.1
 		bound1 = 0.2
@@ -297,6 +297,6 @@ func (d JudgmentDrawer) Draw(dst draws.Image) {
 	if age >= bound2 {
 		scale = 1 - 0.25*d.Progress(bound2, 1)
 	}
-	sprite.ApplyScale(scale)
-	sprite.Draw(dst, draws.Op{})
+	s.ApplyScale(scale)
+	s.Draw(dst, draws.Op{})
 }

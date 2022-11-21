@@ -11,7 +11,6 @@ import (
 // In wide meaning, Skin also includes a set of sounds.
 // Package defaultskin has a set of sounds.
 type Skin struct {
-	Type              int
 	DefaultBackground draws.Sprite
 	Score             [13]draws.Sprite // number + sign(. , %)
 }
@@ -23,19 +22,12 @@ const (
 )
 
 var (
-	DefaultSkin = Skin{Type: Default}
-	UserSkin    = Skin{Type: User}
-	// PlaySkin    = Skin{Type: Play}
+	DefaultSkin = &Skin{}
+	UserSkin    = &Skin{}
 )
 
-// s stands for sprite.
-// a stands for animation.
-// S stands for UserSettings.
 func (skin *Skin) Load(fsys fs.FS) {
-	S := UserSettings // abbreviation
-	if skin.Type == Play {
-		skin.Reset()
-	}
+	defer skin.fillBlank(DefaultSkin)
 	skin.DefaultBackground = NewBackground(fsys, "interface/default-bg.jpg")
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fsys, fmt.Sprintf("score/%d.png", i))
@@ -54,10 +46,10 @@ func (skin *Skin) Load(fsys fs.FS) {
 		s.Locate(ScreenSizeX, 0, draws.RightTop)
 		skin.Score[10+i] = s
 	}
-	base := []Skin{{}, DefaultSkin, UserSkin}[skin.Type]
-	skin.fillBlank(base)
+	// base := []Skin{{}, DefaultSkin, UserSkin}[skin.Type]
+	// skin.fillBlank(base)
 }
-func (skin *Skin) fillBlank(base Skin) {
+func (skin *Skin) fillBlank(base *Skin) {
 	if !skin.DefaultBackground.IsValid() {
 		skin.DefaultBackground = base.DefaultBackground
 	}
@@ -67,16 +59,6 @@ func (skin *Skin) fillBlank(base Skin) {
 			break
 		}
 	}
-}
-func (skin *Skin) Reset() {
-	kind := skin.Type
-	switch kind {
-	case User:
-		*skin = DefaultSkin
-	case Play:
-		*skin = UserSkin
-	}
-	skin.Type = kind
 }
 
 func NewBackground(fsys fs.FS, name string) draws.Sprite {

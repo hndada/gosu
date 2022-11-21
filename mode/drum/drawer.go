@@ -10,9 +10,9 @@ import (
 
 type StageDrawer struct {
 	draws.Timer
-	Highlight    bool
-	FieldSprites [2]draws.Sprite
-	HintSprites  [2]draws.Sprite
+	Highlight bool
+	Field     [2]draws.Sprite
+	Hint      [2]draws.Sprite
 }
 
 func (d *StageDrawer) Update(highlight bool) {
@@ -30,8 +30,8 @@ func (d StageDrawer) Draw(dst draws.Image) {
 	)
 	op := draws.Op{}
 	op.ColorM.Scale(1, 1, 1, S.FieldOpaque)
-	d.FieldSprites[idle].Draw(dst, op)
-	d.HintSprites[idle].Draw(dst, draws.Op{})
+	d.Field[idle].Draw(dst, op)
+	d.Hint[idle].Draw(dst, draws.Op{})
 	if d.Highlight || d.Tick < d.MaxTick {
 		var opField, opHint draws.Op
 		if d.Highlight {
@@ -42,8 +42,8 @@ func (d StageDrawer) Draw(dst draws.Image) {
 			opHint.ColorM.Scale(1, 1, 1, S.FieldOpaque*(1-d.Age()))
 		}
 		opHint.ColorM.ScaleWithColor(ColorYellow)
-		d.FieldSprites[high].Draw(dst, opField)
-		d.HintSprites[high].Draw(dst, opHint)
+		d.Field[high].Draw(dst, opField)
+		d.Hint[high].Draw(dst, opHint)
 	}
 }
 
@@ -61,18 +61,18 @@ func (d BarDrawer) Draw(dst draws.Image) {
 	for _, b := range d.Bars {
 		pos := b.Speed * float64(b.Time-d.Time)
 		if pos <= S.maxPosition && pos >= S.minPosition {
-			sprite := d.Sprite
-			sprite.Move(pos, 0)
-			sprite.Draw(dst, draws.Op{})
+			s := d.Sprite
+			s.Move(pos, 0)
+			s.Draw(dst, draws.Op{})
 		}
 	}
 }
 
 type ShakeDrawer struct {
 	draws.Timer
-	Time    int64
-	Staged  *Note
-	Sprites [2]draws.Sprite
+	Time   int64
+	Staged *Note
+	Shake  [2]draws.Sprite
 }
 
 func (d *ShakeDrawer) Update(time int64, staged *Note) {
@@ -96,14 +96,14 @@ func (d ShakeDrawer) Draw(dst draws.Image) {
 		op := draws.Op{}
 		op.ColorM.Scale(1, 1, 1, alpha)
 		{
-			sprite := d.Sprites[outer]
-			sprite.ApplyScale(scale)
-			sprite.Draw(dst, op)
+			s := d.Shake[outer]
+			s.ApplyScale(scale)
+			s.Draw(dst, op)
 		}
 		{
-			sprite := d.Sprites[inner]
-			sprite.ApplyScale(scale)
-			sprite.Draw(dst, op)
+			s := d.Shake[inner]
+			s.ApplyScale(scale)
+			s.Draw(dst, op)
 		}
 	}
 	if d.Staged == nil {
@@ -119,18 +119,18 @@ func (d ShakeDrawer) Draw(dst draws.Image) {
 			scale = 1
 		}
 		op.ColorM.Scale(1, 1, 1, scale)
-		sprite := d.Sprites[outer]
-		sprite.ApplyScale(scale)
-		sprite.Draw(dst, op)
+		s := d.Shake[outer]
+		s.ApplyScale(scale)
+		s.Draw(dst, op)
 	}
 	{
 		scale := 1.0
 		if d.Staged.Tick > 0 {
 			scale = float64(d.Staged.HitTick) / float64(d.Staged.Tick)
 		}
-		sprite := d.Sprites[inner]
-		sprite.ApplyScale(scale)
-		sprite.Draw(dst, draws.Op{})
+		s := d.Shake[inner]
+		s.ApplyScale(scale)
+		s.Draw(dst, draws.Op{})
 	}
 }
 
@@ -141,13 +141,13 @@ var (
 )
 
 type RollDrawer struct {
-	Time        int64
-	Rolls       []*Note
-	Dots        []*Dot
-	HeadSprites [2]draws.Sprite
-	TailSprites [2]draws.Sprite
-	BodySprites [2]draws.Sprite
-	DotSprite   draws.Sprite
+	Time      int64
+	Rolls     []*Note
+	Dots      []*Dot
+	Head      [2]draws.Sprite
+	Tail      [2]draws.Sprite
+	Body      [2]draws.Sprite
+	DotSprite draws.Sprite
 }
 
 func (d *RollDrawer) Update(time int64) {
@@ -168,21 +168,21 @@ func (d RollDrawer) Draw(dst draws.Image) {
 		op := draws.Op{}
 		op.ColorM.ScaleWithColor(ColorYellow)
 		{
-			sprite := d.BodySprites[head.Size]
+			s := d.Body[head.Size]
 			length := tail.Position(d.Time) - head.Position(d.Time)
-			sprite.SetSize(length, sprite.H())
-			sprite.Move(head.Position(d.Time), 0)
-			sprite.Draw(dst, op)
+			s.SetSize(length, s.H())
+			s.Move(head.Position(d.Time), 0)
+			s.Draw(dst, op)
 		}
 		{
-			sprite := d.HeadSprites[head.Size]
-			sprite.Move(head.Position(d.Time), 0)
-			sprite.Draw(dst, op)
+			s := d.Head[head.Size]
+			s.Move(head.Position(d.Time), 0)
+			s.Draw(dst, op)
 		}
 		{
-			sprite := d.TailSprites[tail.Size]
-			sprite.Move(tail.Position(d.Time), 0)
-			sprite.Draw(dst, op)
+			s := d.Tail[tail.Size]
+			s.Move(tail.Position(d.Time), 0)
+			s.Draw(dst, op)
 		}
 	}
 	max = len(d.Dots) - 1
@@ -202,20 +202,20 @@ func (d RollDrawer) Draw(dst draws.Image) {
 			op.ColorM.ScaleWithColor(DotColorMiss)
 			op.GeoM.Scale(1.5, 1.5)
 		}
-		sprite := d.DotSprite
-		sprite.Move(dot.Position(d.Time), 0)
-		sprite.Draw(dst, op)
+		s := d.DotSprite
+		s.Move(dot.Position(d.Time), 0)
+		s.Draw(dst, op)
 	}
 }
 
 type NoteDrawer struct {
 	draws.Timer
-	Time           int64
-	Notes          []*Note
-	Rolls          []*Note
-	Shakes         []*Note
-	NoteSprites    [2][4]draws.Sprite
-	OverlaySprites [2]draws.Animation
+	Time    int64
+	Notes   []*Note
+	Rolls   []*Note
+	Shakes  []*Note
+	Note    [2][4]draws.Sprite
+	Overlay [2]draws.Animation
 }
 
 func (d *NoteDrawer) Update(time int64, bpm float64) {
@@ -238,7 +238,7 @@ func (d NoteDrawer) Draw(dst draws.Image) {
 			if pos > S.maxPosition || pos < S.minPosition {
 				continue
 			}
-			note := d.NoteSprites[n.Size][n.Color]
+			note := d.Note[n.Size][n.Color]
 			op := draws.Op{}
 			switch mode {
 			case modeShake:
@@ -261,7 +261,7 @@ func (d NoteDrawer) Draw(dst draws.Image) {
 			}
 			note.Move(pos, 0)
 			note.Draw(dst, op)
-			overlay := d.Frame(d.OverlaySprites[n.Size])
+			overlay := d.Frame(d.Overlay[n.Size])
 			overlay.Move(pos, 0)
 			overlay.Draw(dst, op)
 		}
@@ -304,7 +304,7 @@ func (d KeyDrawer) Draw(dst draws.Image) {
 type DancerDrawer struct {
 	draws.Timer
 	Time        int64
-	Sprites     [4]draws.Animation
+	Dancer      [4]draws.Animation
 	Mode        int
 	ModeEndTime int64 // It extends when notes are continuously missed.
 }
@@ -339,12 +339,12 @@ func (d *DancerDrawer) Update(time int64, bpm float64, combo int, miss, hit, hig
 	}
 }
 func (d DancerDrawer) Draw(dst draws.Image) {
-	d.Frame(d.Sprites[d.Mode]).Draw(dst, draws.Op{})
+	d.Frame(d.Dancer[d.Mode]).Draw(dst, draws.Op{})
 }
 
 type JudgmentDrawer struct {
 	draws.Timer
-	Sprites     [2][3]draws.Animation
+	Animations  [2][3]draws.Animation
 	judgment    mode.Judgment
 	big         bool
 	startRadian float64
@@ -369,21 +369,21 @@ func (d JudgmentDrawer) Draw(dst draws.Image) {
 	if d.IsDone() || d.judgment.Window == 0 {
 		return
 	}
-	sprites := d.Sprites[Regular]
+	a := d.Animations[Regular]
 	if d.big {
-		sprites = d.Sprites[Big]
+		a = d.Animations[Big]
 	}
-	var sprite draws.Sprite
+	var s draws.Sprite
 	for i, j := range Judgments {
 		if d.judgment.Is(j) {
-			sprite = d.Frame(sprites[i])
+			s = d.Frame(a[i])
 			break
 		}
 	}
 	op := draws.Op{}
 	age := d.Age()
 	if bound := 0.25; age < bound {
-		sprite.ApplyScale(1.2 - 0.2*d.Progress(0, bound))
+		s.ApplyScale(1.2 - 0.2*d.Progress(0, bound))
 		alpha := 0.5 + 0.5*d.Progress(0, bound)
 		op.ColorM.Scale(1, 1, 1, alpha)
 	}
@@ -396,10 +396,10 @@ func (d JudgmentDrawer) Draw(dst draws.Image) {
 			scale := 1 + 0.6*d.Progress(bound, 1)
 			d.radian = d.startRadian * scale
 		}
-		sw, sh := sprite.SrcSize().XY()
+		sw, sh := s.SrcSize().XY()
 		op.GeoM.Translate(-sw/2, -sh/2)
 		op.GeoM.Rotate(d.radian)
 		op.GeoM.Translate(sw/2, sh/2)
 	}
-	sprite.Draw(dst, op)
+	s.Draw(dst, op)
 }
