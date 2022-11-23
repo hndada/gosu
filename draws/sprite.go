@@ -32,8 +32,8 @@ type Sprite struct {
 	Position
 	Origin       Origin
 	AxisReversed [2]bool
-	Outer        *Sprite
-	Inners       []Sprite
+	// Outer        *Sprite
+	// Inners       []Sprite
 }
 
 func NewSprite(fsys fs.FS, name string) Sprite {
@@ -46,18 +46,19 @@ func NewSpriteFromSource(src Source) Sprite {
 		Filter: ebiten.FilterLinear, // FilterNearest is the default in ebiten.
 	}
 }
-func (s *Sprite) Append(src Source, loc Location) {
-	outer := s
-	inner := NewSpriteFromSource(src)
-	inner.Outer = outer
-	if ratio := loc.X; ratio <= 1 {
-		inner.X += (outer.W() - inner.W()) * ratio
-	}
-	if ratio := loc.Y; ratio <= 1 {
-		inner.Y += (outer.H() - inner.H()) * ratio
-	}
-	s.Inners = append(s.Inners, inner)
-}
+
+// func (s *Sprite) Append(src Source, loc Location) {
+// 	outer := s
+// 	inner := NewSpriteFromSource(src)
+// 	inner.Outer = outer
+// 	if ratio := loc.X; ratio <= 1 {
+// 		inner.X += (outer.W() - inner.W()) * ratio
+// 	}
+// 	if ratio := loc.Y; ratio <= 1 {
+// 		inner.Y += (outer.H() - inner.H()) * ratio
+// 	}
+// 	s.Inners = append(s.Inners, inner)
+// }
 
 // func (s *Sprite) SetRelativePosition(outer Sprite, location Vector2) {}
 func (s Sprite) SrcSize() Vector2          { return s.Source.Size() }
@@ -99,16 +100,16 @@ func (s Sprite) Draw(dst Image, op Op) {
 		return
 	}
 	op.GeoM.Scale(s.Scale.XY())
-	if s.Outer != nil {
-		s.Add(s.Outer.Position)
-	}
+	// if s.Outer != nil {
+	// 	s.Add(s.Outer.Position)
+	// }
 	leftTop := s.LeftTop(dst.Size())
 	op.GeoM.Translate(leftTop.XY())
 	op.Filter = s.Filter
 	s.Source.Draw(dst, op)
-	for _, inner := range s.Inners {
-		inner.Draw(dst, op)
-	}
+	// for _, inner := range s.Inners {
+	// 	inner.Draw(dst, op)
+	// }
 }
 func (s Sprite) LeftTop(screenSize Vector2) (v Vector2) {
 	v = s.Min()

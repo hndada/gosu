@@ -1,4 +1,4 @@
-package game
+package choose
 
 import (
 	"github.com/golang/freetype/truetype"

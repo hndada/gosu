@@ -1,4 +1,4 @@
-package gosu
+package choose
 
 import (
 	"archive/zip"
@@ -6,10 +6,10 @@ import (
 )
 
 // Todo: should .zip be extracted throughly?
-func ZipFS(name string) fs.FS {
+func ZipFS(name string) (fs.FS, error) {
 	r, err := zip.OpenReader(name)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return r
+	return r, nil
 }
