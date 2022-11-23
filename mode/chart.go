@@ -1,14 +1,44 @@
 package mode
 
 import (
-	"github.com/hndada/gosu/db"
+	"fmt"
+
 	"github.com/hndada/gosu/format/osu"
 )
 
 type Chart interface {
 	WindowTitle() string
 }
-type ChartHeader = db.ChartHeader
+
+// ChartHeader contains non-play information.
+// Changing ChartHeader's data will not affect integrity of the chart.
+// Mode-specific fields are located to each Chart struct.
+type ChartHeader struct {
+	SetID         int64 // Compatibility for osu.
+	ID            int64
+	MusicName     string
+	MusicUnicode  string
+	Artist        string
+	ArtistUnicode string
+	MusicSource   string
+	ChartName     string
+	Charter       string
+	HolderID      int64
+
+	PreviewTime     int64
+	MusicFilename   string // Filename is fine to use (cf. Filepath)
+	ImageFilename   string
+	VideoFilename   string
+	VideoTimeOffset int64
+
+	Mode    int
+	SubMode int
+}
+
+func (c ChartHeader) WindowTitle() string {
+	return fmt.Sprintf("gosu | %s - %s [%s] (%s) ",
+		c.Artist, c.MusicName, c.ChartName, c.Charter)
+}
 
 func NewChartHeader(f any) (c ChartHeader) {
 	switch f := f.(type) {
