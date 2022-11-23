@@ -9,6 +9,17 @@ import (
 	"github.com/hndada/gosu/format/osr"
 )
 
+const (
+	TPS         = scene.TPS
+	ScreenSizeX = scene.ScreenSizeX
+	ScreenSizeY = scene.ScreenSizeY
+)
+
+// Group1               int
+// Group2               int
+// Sort                 int
+// Filter               int
+
 // Background brightness at Song select: 60% (153 / 255), confirmed.
 // Score box color: Gray128 with 50% transparent
 // Hovered Score box color: Gray96 with 50% transparent
