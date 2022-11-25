@@ -33,11 +33,6 @@ const (
 	Qualified
 	Loved
 )
-const (
-	API         = "https://api.chimu.moe/v1/"
-	APISearch   = API + "search"
-	APIDownload = API + "download/"
-)
 
 type SearchParam struct {
 	Query   string
@@ -85,12 +80,10 @@ type Chart struct {
 	DownloadPath     string
 }
 
-// https://osu.ppy.sh/docs/index.html#beatmapsetcompact-covers
-// cover, card, list, slimcover
 const amount = 25
 
 func (p SearchParam) URL() *url.URL {
-	u, err := url.Parse(APISearch)
+	u, err := url.Parse("https://api.chimu.moe/search")
 	if err != nil {
 		fmt.Println(err)
 		return nil
@@ -139,7 +132,7 @@ func (p *SearchParam) Search() (sets []ChartSet, err error) {
 func (c Chart) Select() (fsys fs.FS, name string, err error) {
 	// const noVideo = 1
 	// u := fmt.Sprintf("%s%d?n=%d", APIDownload, c.ParentSetId, noVideo)
-	u := fmt.Sprintf("%s%s", API, c.DownloadPath)
+	u := c.URLDownload()
 	fmt.Printf("download URL: %s\n", u)
 	// err will be assigned to return value 'err'.
 	resp, err := http.Get(u)
@@ -156,4 +149,25 @@ func (c Chart) Select() (fsys fs.FS, name string, err error) {
 		return
 	}
 	return fsys, c.OsuFile, err
+}
+
+// https://osu.ppy.sh/docs/index.html#beatmapsetcompact-covers
+// slimcover: 1920x360
+// cover: 900x250
+// card: 400x140
+// list: 150x150
+const APIBeatmap = "https://assets.ppy.sh/beatmaps"
+const Large = "@2x"
+
+func (c ChartSet) URLCover(kind, suffix string) string {
+	return fmt.Sprintf("%s/%d/covers/%s%s.jpg", APIBeatmap, c.SetId, kind, suffix)
+}
+func (c ChartSet) URLPreview() string {
+	return fmt.Sprintf("b.ppy.sh/preview/%d.mp3", c.SetId)
+}
+func (c ChartSet) URLDownload() string {
+	return fmt.Sprintf("https://api.chimu.moe/v1/d/%d", c.SetId)
+}
+func (c Chart) URLDownload() string {
+	return fmt.Sprintf("https://api.chimu.moe/v1/%s", c.DownloadPath)
 }
