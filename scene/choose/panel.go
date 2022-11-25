@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/scene"
 )
 
 type ChartSetPanel struct {
@@ -35,19 +36,19 @@ func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 		close(p.bgCh)
 	}()
 	{
-		src := draws.NewText(cs.Title, Face24)
+		src := draws.NewText(cs.Title, scene.Face24)
 		s := draws.NewSpriteFromSource(src)
 		s.Locate(0, 0, draws.LeftTop)
 		p.MusicName = s
 	}
 	{
-		src := draws.NewText(cs.Artist, Face20)
+		src := draws.NewText(cs.Artist, scene.Face20)
 		s := draws.NewSpriteFromSource(src)
 		s.Locate(0, 25, draws.LeftTop)
 		p.Artist = s
 	}
 	{
-		src := draws.NewText(cs.Creator, Face16)
+		src := draws.NewText(cs.Creator, scene.Face16)
 		s := draws.NewSpriteFromSource(src)
 		s.Locate(0, 100, draws.LeftTop)
 		p.Charter = s
@@ -57,7 +58,7 @@ func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 		if cs.RankedStatus >= 1 {
 			format = "ranked at %s"
 		}
-		src := draws.NewText(fmt.Sprintf(format, p.UpdateDate), Face16)
+		src := draws.NewText(fmt.Sprintf(format, p.UpdateDate), scene.Face16)
 		s := draws.NewSpriteFromSource(src)
 		s.Locate(0, 125, draws.LeftTop)
 		p.UpdateDate = s
@@ -65,14 +66,14 @@ func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 	{
 		second := cs.ChildrenBeatmaps[0].HitLength
 		t := fmt.Sprintf("%02d:%02d", second/60, second%60)
-		src := draws.NewText(t, Face12)
+		src := draws.NewText(t, scene.Face12)
 		s := draws.NewSpriteFromSource(src)
 		s.Locate(450, 0, draws.RightTop)
 		p.Duration = s
 	}
 	{
 		bpm := cs.ChildrenBeatmaps[0].BPM
-		src := draws.NewText(fmt.Sprintf("%.0f", bpm), Face12)
+		src := draws.NewText(fmt.Sprintf("%.0f", bpm), scene.Face12)
 		s := draws.NewSpriteFromSource(src)
 		s.Locate(450, 50, draws.LeftTop)
 		p.BPM = s
@@ -115,27 +116,27 @@ func NewChartPanel(csp *ChartSetPanel, c *Chart) *ChartPanel {
 	{
 		second := c.HitLength
 		t := fmt.Sprintf("%02d:%02d", second/60, second%60)
-		src := draws.NewText(t, Face16)
+		src := draws.NewText(t, scene.Face16)
 		s := draws.NewSpriteFromSource(src)
 		s.Locate(450, 0, draws.RightTop)
 		p.Duration = s
 	}
 	{
 		bpm := c.BPM
-		src := draws.NewText(fmt.Sprintf("%.0f", bpm), Face16)
+		src := draws.NewText(fmt.Sprintf("%.0f", bpm), scene.Face16)
 		s := draws.NewSpriteFromSource(src)
 		s.Locate(450, 50, draws.LeftTop)
 		p.BPM = s
 	}
 	{
-		src := draws.NewText(c.DiffName, Face20)
+		src := draws.NewText(c.DiffName, scene.Face20)
 		s := draws.NewSpriteFromSource(src)
 		s.Locate(0, 80, draws.LeftTop)
 		p.ChartName = s
 	}
 	{ // Todo: use gosu's own level system
 		lv := strconv.Itoa(int(c.DifficultyRating * 4))
-		src := draws.NewText(fmt.Sprintf("Level: %2d", lv), Face16)
+		src := draws.NewText(fmt.Sprintf("Level: %2d", lv), scene.Face16)
 		s := draws.NewSpriteFromSource(src)
 		s.Locate(450, 100, draws.RightTop)
 		p.Level = s

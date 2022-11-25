@@ -9,6 +9,9 @@ import (
 	"strings"
 )
 
+type Sounder interface {
+	Play(vol float64)
+}
 type Sound []byte
 
 // NewSound is for effect sounds, which is short.

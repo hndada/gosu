@@ -8,12 +8,17 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/audios"
+	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/mode/drum"
+	"github.com/hndada/gosu/mode/piano"
+	scene "github.com/hndada/gosu/scene"
 )
 
+// s.UpdateBackground()
 const (
 	TPS         = scene.TPS
 	ScreenSizeX = scene.ScreenSizeX
@@ -31,26 +36,64 @@ const (
 // Todo: Rewind after preview has finished.
 // Group1, Group2, Sort, Filter int
 type Scene struct {
-	Mode    int
-	SubMode int
-	Sort    int
+	volumeMusic   *float64
+	volumeSound   *float64
+	brightness    *float64
+	offset        *int64
+	speedFactors  []*float64
+	exposureTimes []func(float64) float64
 
-	volumeMusic          *float64
-	volumeSound          *float64
-	offset               *int64
-	backgroundBrightness *float64
-	speedFactors         []*float64
-	exposureTimes        []func(float64) float64
+	choose     audios.Sound
+	Music      audios.MusicPlayer
+	Background mode.BackgroundDrawer
 
-	choose        audios.Sound
-	Music         audios.MusicPlayer
-	Background    mode.BackgroundDrawer
-	ChartSetPanel Panel
-	ChartPanel    Panel
-	List
+	mode        int
+	subMode     int
+	Mode        ctrl.KeyHandler
+	SubMode     ctrl.KeyHandler
+	TypeWriter  TypeWriter // Query here
+	SetSelected bool
+	// ChartSetPanel *ChartSetPanel
+	ChartSetList List
+	// ChartPanel    *ChartPanel
+	ChartList List
 }
 
 func NewScene() *Scene {
+	s := &Scene{}
+	s.volumeMusic = &mode.S.VolumeMusic
+	s.volumeSound = &mode.S.VolumeSound
+	s.brightness = &mode.S.BackgroundBrightness
+	s.offset = &mode.S.Offset
+	s.speedFactors = []*float64{
+		&piano.S.SpeedScale, &drum.S.SpeedScale}
+	s.exposureTimes = []func(float64) float64{
+		piano.ExposureTime, drum.ExposureTime}
+	s.Mode = ctrl.KeyHandler{
+		Handler: ctrl.IntHandler{
+			Value: &s.mode,
+			Min:   0,
+			Max:   2 - 1, // There are two modes.
+			Loop:  true,
+		},
+		Modifiers: []input.Key{},
+		Keys:      [2]input.Key{-1, input.KeyF1},
+		Sounds:    [2]audios.Sounder{scene.UserSkin.Swipe, scene.UserSkin.Swipe},
+		Volume:    &mode.S.VolumeSound,
+	}
+	s.SubMode = ctrl.KeyHandler{
+		Handler: ctrl.IntHandler{
+			Value: &s.subMode,
+			Min:   4,
+			Max:   9,
+			Loop:  true,
+		},
+		Modifiers: []input.Key{},
+		Keys:      [2]input.Key{input.KeyF2, input.KeyF3},
+		Sounds:    [2]audios.Sounder{scene.UserSkin.Swipe, scene.UserSkin.Swipe},
+		Volume:    &mode.S.VolumeSound,
+	}
+	s.Background.Sprite = mode.NewBackground()
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 	debug.SetGCPercent(100)
 	ebiten.SetWindowTitle("gosu")
@@ -60,44 +103,69 @@ func isEnter() bool {
 	return ebiten.IsKeyPressed(input.KeyEnter) ||
 		ebiten.IsKeyPressed(input.KeyNumpadEnter)
 }
+func isBack() bool {
+	return ebiten.IsKeyPressed(input.KeyEscape)
+}
 func (s *Scene) Update() any {
-	if ModeKeyHandler.Update() {
+	scene.VolumeMusic.Update()
+	scene.VolumeSound.Update()
+
+	scene.Offset.Update()
+	scene.SpeedScales[s.mode].Update()
+
+	if isEnter() {
+		if s.SetSelected {
+			s.choose.Play(*s.volumeSound)
+			var c Chart
+			fs, name, err := c.Select()
+			if err != nil {
+				return err
+			}
+			return Return{
+				FS:     fs,
+				Name:   name,
+				Mode:   s.mode,
+				Mods:   nil,
+				Replay: nil,
+			}
+		} else {
+			s.SetSelected = true
+		}
+	}
+	if isBack() {
+		if s.SetSelected {
+			s.SetSelected = false
+		} else {
+			s.Query = ""
+		}
+	}
+	if s.Mode.Update() || s.SubMode.Update() {
 		s.UpdateMode()
 	}
-	if s.CursorKeyHandler.Update() {
-		s.UpdateBackground()
-	}
-	s.Background.Sprite = mode.NewBackground()
-	if isEnter() {
-		s.choose.Play(*s.volumeSound)
-		var c Chart
-		fs, name, err := c.Select()
-		if err != nil {
-			return err
-		}
-		return Return{
-			FS:     fs,
-			Name:   name,
-			Mode:   s.Mode,
-			Mods:   nil,
-			Replay: nil,
-		}
+	if s.SetSelected {
+		s.ChartList.Update()
+	} else {
+		s.ChartSetList.Update()
 	}
 	return nil
 }
 func (s Scene) Draw(screen draws.Image) {
 	s.Background.Draw(screen)
-	s.Panel.Draw(screen)
-	s.List.Draw(screen)
+	if s.SetSelected {
+		s.ChartPanel.Draw(screen)
+		s.ChartList.Draw(screen)
+	} else {
+		s.ChartSetPanel.Draw(screen)
+		s.ChartSetList.Draw(screen)
+	}
 	s.DebugPrint(screen)
 }
 func (s Scene) DebugPrint(screen draws.Image) {
-	speed := *s.speedFactors[s.Mode]
+	speed := *s.speedFactors[s.mode]
 	ebitenutil.DebugPrint(screen.Image,
 		fmt.Sprintf(
 			"Mode (F1): %s\n"+
-				"Sub mode (F2): %s\n"+
-				"Sort (F3): %s\n"+
+				"Sub mode (F2/F3): %s\n"+
 				"\n"+
 				"Music volume (Alt+ Left/Right): %.0f%%\n"+
 				"Sound volume (Ctrl+ Left/Right): %.0f%%\n"+
@@ -105,16 +173,15 @@ func (s Scene) DebugPrint(screen draws.Image) {
 				"Brightness (Ctrl+ O/P): %.0f%%\n"+
 				"\n"+
 				"Speed (PageUp/Down): %.0f (Exposure time: %.0fms)\n"+
-				[]string{"Piano", "Drum"}[s.Mode],
+				[]string{"Piano", "Drum"}[s.mode],
 			fmt.Sprintf("%d Key", s.SubMode),
-			[]string{"by name", "by level"}[s.Sort],
 
 			*s.volumeMusic*100,
 			*s.volumeSound*100,
 			*s.offset,
-			*s.backgroundBrightness*100,
+			*s.brightness*100,
 
-			speed*100, s.exposureTimes[s.Mode](speed)))
+			speed*100, s.exposureTimes[s.mode](speed)))
 }
 
 type Return struct {

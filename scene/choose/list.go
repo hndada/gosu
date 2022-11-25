@@ -2,67 +2,26 @@ package choose
 
 import (
 	"fmt"
-	"image/color"
 	"sort"
 
-	"github.com/hajimehoshi/ebiten/v2/text"
+	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/input"
+	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/scene"
 )
 
 const (
-	BoxWidth  float64 = 450
-	BoxHeight float64 = 50
-	BoxShrink float64 = 0.15 * BoxWidth
-	BoxCount  int     = ScreenSizeY/BoxHeight + 2
+	RowWidth  float64 = 450
+	RowHeight float64 = 50
+	RowShrink float64 = 0.15 * RowWidth
+	RowCount  int     = int(ScreenSizeY/RowHeight) + 2
 )
 
-type List struct {
-	ChartSets      []ChartSet
-	ChartSetCursor ctrl.KeyHandler
-	chartSetCursor int
-	Charts         []Chart
-	ChartCursor    ctrl.KeyHandler
-	chartCursor    int
-	Inner          bool // Whether current list exposes inner list.
-}
-
-func NewCursorKeyHandler(cursor *int, len int) ctrl.KeyHandler {
-	return ctrl.KeyHandler{
-		Handler: &ctrl.IntHandler{
-			Value: cursor,
-			Min:   0,
-			Max:   len - 1,
-			Loop:  true,
-		},
-		Modifiers: []input.Key{},
-		Keys:      [2]input.Key{input.KeyArrowUp, input.KeyArrowDown},
-		Sounds:    [2][]byte{SwipeSound, SwipeSound},
-		Volume:    &VolumeSound,
-	}
-}
-func NewList() {
-
-}
-
-// s.UpdateBackground()
-func (l *List) Update() {
-
-}
-func (l *List) updateOuter() {
-	sort.Slice(l.ChartSets, func(i, j int) bool {
-		return l.ChartSets[i].LastUpdate < l.ChartSets[j].LastUpdate
-	})
-}
-func (l *List) updateInner() {
-	sort.Slice(l.Charts, func(i, j int) bool {
-		return l.Charts[i].DifficultyRating < l.Charts[j].DifficultyRating
-	})
-}
-
 type Row struct {
-	draws.Sprite // base
+	// base
+	draws.Sprite
 
 	// Thumb stands for thumbnail.
 	// Inner does not have Thumb.
@@ -76,99 +35,97 @@ type Row struct {
 	Second draws.Sprite
 }
 
-func NewOuterRow(cs ChartSet) (rs Row) {
-	const thumbSize = 300
+type List struct {
+	Rows   []Row
+	Cursor ctrl.KeyHandler
+	cursor int
 }
-func NewInnerRows(cs ChartSet) (rs []Row) {
-	rs = make([]Row, len(cs.ChildrenBeatmaps))
-	for i, c := range cs.ChildrenBeatmaps {
+
+func NewChartSetRows(css []ChartSet) []Row {
+	const thumbSize = 300
+	rows := make([]Row, len(css))
+	sort.Slice(rows, func(i, j int) bool {
+		return css[i].LastUpdate < css[j].LastUpdate
+	})
+	return rows
+}
+func NewChartRows(css ChartSet, cs []Chart) []Row {
+	rows := make([]Row, len(cs))
+	for i, c := range cs {
 		var r Row
 		{
-			t := draws.NewText(cs.Title, Face16)
+			t := draws.NewText(css.Title, scene.Face16)
 			r.First = draws.NewSpriteFromSource(t)
 		}
 		{
 			lv := int(c.DifficultyRating) * 4
 			src := fmt.Sprintf("(Level: %d) %s", lv, c.DiffName)
-			t := draws.NewText(src, Face16)
+			t := draws.NewText(src, scene.Face16)
 			r.Second = draws.NewSpriteFromSource(t)
 		}
-		rs[i] = r
+		rows[i] = r
 	}
-	return
+	sort.Slice(rows, func(i, j int) bool {
+		return cs[i].DifficultyRating < cs[j].DifficultyRating
+	})
+	return rows
+}
+func NewList(rows []Row) (l *List) {
+	return &List{
+		Rows: rows,
+		Cursor: ctrl.KeyHandler{
+			Handler: &ctrl.IntHandler{
+				Value: &l.cursor,
+				Min:   0,
+				Max:   len(rows) - 1,
+				Loop:  true,
+			},
+			Modifiers: []input.Key{},
+			Keys:      [2]input.Key{input.KeyArrowUp, input.KeyArrowDown},
+			Sounds:    [2]audios.Sounder{scene.UserSkin.Swipe, scene.UserSkin.Swipe},
+			Volume:    &mode.S.VolumeSound,
+		},
+	}
 }
 
-// Currently Chart infos are not in loop.
-// May add extra effect to box arrangement. e.g., x -= y / 5
-func (s SceneSelect) Draw(screen draws.Image) {
-	s.BackgroundDrawer.Draw(screen)
-	viewport, cursor := s.Viewport()
-	for i := range viewport {
-		sprite := ChartItemBoxSprite
-		var tx float64
-		if i == cursor {
-			tx -= chartInfoBoxshrink
-		}
-		ty := float64(i-cursor) * ChartInfoBoxHeight
-		sprite.Move(tx, ty)
-		sprite.Draw(screen, draws.Op{})
-	}
+type List0 struct {
+	ChartSets      []ChartSet
+	ChartSetCursor ctrl.KeyHandler
+	chartSetCursor int
+	Charts         []Chart
+	ChartCursor    ctrl.KeyHandler
+	chartCursor    int
+	Inner          bool // Whether current list exposes inner list.
+}
 
+func (l *List) Update() {
+	l.Cursor.Update()
+}
+
+// May add extra effect to box arrangement. e.g., x -= y / 5
+func (l List) Draw(dst draws.Image) {
+	for i := range l.Rows[:l.cursor] {
+		r := l.Rows[l.cursor-i-1]
+		if i > RowCount/2 {
+			break
+		}
+		r.Move(0, -float64(i+1)*RowHeight)
+		r.Draw(dst)
+	}
+	for i, r := range l.Rows[l.cursor:] {
+		if i > RowCount/2 {
+			break
+		}
+		r.Move(0, float64(i)*RowHeight)
+		if i == 0 {
+			r.Move(-RowShrink, 0)
+		}
+		r.Draw(dst)
+	}
+}
+func (r Row) Draw(dst draws.Image) {
 	const (
 		dx = 20 // Padding left.
 		dy = 30 // Padding bottom.
 	)
-	for i, info := range viewport {
-		sprite := ChartItemBoxSprite
-		t := info.Text()
-		offset := float64(i-cursor) * ChartInfoBoxHeight
-		x := int(sprite.X-sprite.W()) + dx   //+ rect.Dx()
-		y := int(sprite.Y-sprite.H()/2) + dy //+ rect.Dy()
-		if i == cursor {
-			x -= int(chartInfoBoxshrink)
-		}
-		text.Draw(screen.Image, t, Face12, x, y+int(offset), color.Black)
-	}
-}
-func (l List) Draw(dst draws.Image) {
-	var rs []Row
-	cursor := l.chartSetCursor
-	if l.Inner {
-		cursor = l.chartCursor
-	}
-	for i := range rs[:cursor] {
-		r := rs[cursor-i-1]
-		if i > BoxCount/2 {
-			break
-		}
-		r.Move(0, -float64(i+1)*BoxHeight)
-		r.Draw(dst, draws.Op{})
-	}
-	for i, r := range rs[cursor:] {
-		if i > BoxCount/2 {
-			break
-		}
-		r.Move(0, float64(i)*BoxHeight)
-		r.Draw(dst, draws.Op{})
-	}
-}
-func (s SceneSelect) Viewport() ([]ChartInfo, int) {
-	count := chartItemBoxCount
-	var viewport []ChartInfo
-	var cursor int
-	if s.Cursor <= count/2 {
-		viewport = append(viewport, s.View[0:s.Cursor]...)
-		cursor = s.Cursor
-	} else {
-		bound := s.Cursor - count/2
-		viewport = append(viewport, s.View[bound:s.Cursor]...)
-		cursor = count / 2
-	}
-	if s.Cursor >= len(s.View)-count/2 {
-		viewport = append(viewport, s.View[s.Cursor:len(s.View)]...)
-	} else {
-		bound := s.Cursor + count/2
-		viewport = append(viewport, s.View[s.Cursor:bound]...)
-	}
-	return viewport, cursor
 }
