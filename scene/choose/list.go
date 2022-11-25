@@ -1,9 +1,6 @@
 package choose
 
 import (
-	"fmt"
-	"sort"
-
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
@@ -35,41 +32,32 @@ type Row struct {
 	Second draws.Sprite
 }
 
+func NewChartSetRow(cs *ChartSet) {
+	const thumbSize = 300
+	const (
+		dx = 20 // Padding left.
+		dy = 30 // Padding bottom.
+	)
+}
+func NewChartRow(cs *ChartSet, c Chart) {
+
+}
+func (r Row) Draw(dst draws.Image) {
+	r.Thumb.Position = r.Thumb.Add(r.Position)
+	r.First.Position = r.First.Add(r.Position)
+	r.Second.Position = r.Second.Add(r.Position)
+	r.Sprite.Draw(dst, draws.Op{})
+	r.Thumb.Draw(dst, draws.Op{})
+	r.First.Draw(dst, draws.Op{})
+	r.Second.Draw(dst, draws.Op{})
+}
+
 type List struct {
 	Rows   []Row
 	Cursor ctrl.KeyHandler
 	cursor int
 }
 
-func NewChartSetRows(css []ChartSet) []Row {
-	const thumbSize = 300
-	rows := make([]Row, len(css))
-	sort.Slice(rows, func(i, j int) bool {
-		return css[i].LastUpdate < css[j].LastUpdate
-	})
-	return rows
-}
-func NewChartRows(css ChartSet, cs []Chart) []Row {
-	rows := make([]Row, len(cs))
-	for i, c := range cs {
-		var r Row
-		{
-			t := draws.NewText(css.Title, scene.Face16)
-			r.First = draws.NewSpriteFromSource(t)
-		}
-		{
-			lv := int(c.DifficultyRating) * 4
-			src := fmt.Sprintf("(Level: %d) %s", lv, c.DiffName)
-			t := draws.NewText(src, scene.Face16)
-			r.Second = draws.NewSpriteFromSource(t)
-		}
-		rows[i] = r
-	}
-	sort.Slice(rows, func(i, j int) bool {
-		return cs[i].DifficultyRating < cs[j].DifficultyRating
-	})
-	return rows
-}
 func NewList(rows []Row) (l *List) {
 	return &List{
 		Rows: rows,
@@ -87,17 +75,6 @@ func NewList(rows []Row) (l *List) {
 		},
 	}
 }
-
-type List0 struct {
-	ChartSets      []ChartSet
-	ChartSetCursor ctrl.KeyHandler
-	chartSetCursor int
-	Charts         []Chart
-	ChartCursor    ctrl.KeyHandler
-	chartCursor    int
-	Inner          bool // Whether current list exposes inner list.
-}
-
 func (l *List) Update() {
 	l.Cursor.Update()
 }
@@ -122,10 +99,4 @@ func (l List) Draw(dst draws.Image) {
 		}
 		r.Draw(dst)
 	}
-}
-func (r Row) Draw(dst draws.Image) {
-	const (
-		dx = 20 // Padding left.
-		dy = 30 // Padding bottom.
-	)
 }

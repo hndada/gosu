@@ -1,64 +1,13 @@
 package choose
 
 import (
-	"archive/zip"
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
-	"io/fs"
-	"net/http"
-	"net/url"
-	"strconv"
+	"sort"
+
+	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/scene"
 )
 
-const (
-	ModePiano = 3 // osu!mania
-	ModeDrum  = 1 // osu!taiko
-)
-
-const (
-	StatusGraveyard = -2
-	StatusWIP       = -1
-	StatusPending   = iota
-	StatusRanked
-	StatusApproved
-	StatusQualified
-	StatusLoved
-)
-const (
-	Unranked = iota
-	Ranked
-	Approved
-	Qualified
-	Loved
-)
-
-type SearchParam struct {
-	Query   string
-	Mode    int
-	SubMode int
-
-	page int
-}
-type ChartSet struct {
-	SetId            int
-	ChildrenBeatmaps []Chart
-	RankedStatus     int
-	ApprovedDate     string
-	LastUpdate       string
-	LastChecked      string
-	Artist           string
-	Title            string
-	Creator          string
-	Source           string
-	Tags             string
-	HasVideo         bool
-	Genre            int
-	Language         int
-	Favourites       int
-	Disabled         int
-}
 type Chart struct {
 	BeatmapId        int
 	ParentSetId      int
@@ -79,76 +28,57 @@ type Chart struct {
 	OsuFile          string
 	DownloadPath     string
 }
-
-const amount = 25
-
-func (p SearchParam) URL() *url.URL {
-	u, err := url.Parse("https://api.chimu.moe/search")
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-	vs := url.Values{}
-	vs.Add("query", p.Query)
-	vs.Add("mode", strconv.Itoa(p.Mode))
-	vs.Add("min_cs", strconv.Itoa(p.SubMode))
-	vs.Add("max_cs", strconv.Itoa(p.SubMode))
-	vs.Add("amount", strconv.Itoa(amount))
-	vs.Add("offset", strconv.Itoa(p.page*amount))
-	u.RawQuery = vs.Encode()
-	return u
+type ChartList struct {
+	*List
+	Charts []*Chart
+	Panel  *ChartPanel
 }
-func (p *SearchParam) Search() (sets []ChartSet, err error) {
-	u := p.URL()
-	fmt.Printf("Search page %d\n", p.page)
-	resp, err := http.Get(u.String())
-	if err != nil || resp.StatusCode == 404 {
-		return sets, err
-	}
-	j, err := io.ReadAll(resp.Body)
-	resp.Body.Close()
-	if err != nil {
-		return sets, err
-	}
-	result := struct {
-		Code    int        `json:"code"`
-		Message string     `json:"message"`
-		Data    []ChartSet `json:"data"`
-	}{
-		Data: make([]ChartSet, 0, amount),
-	}
-	err = json.Unmarshal(j, &result)
-	if err != nil {
-		return sets, err
-	}
-	if len(result.Data) == 0 {
-		return sets, err
-	}
-	sets = append(sets, result.Data...)
-	p.page++
+
+func (sl ChartSetList) NewChartList() (l ChartList) {
+	cs := sl.Current().ChildrenBeatmaps
+	rows := make([]Row, len(cs))
+	sort.Slice(rows, func(i, j int) bool {
+		return cs[i].DifficultyRating < cs[j].DifficultyRating
+	})
+	l.List = NewList(rows)
+	l.Charts = cs
+	l.Panel = NewChartPanel(sl.Panel, cs[0])
 	return
 }
+func (l *ChartList) Update() {
+	if l.Panel != nil {
+		l.Panel.Update()
+	}
+	if l.Cursor.Update() {
+		// Update Background
+		l.Panel = NewChartPanel(l.Panel.ChartSetPanel, l.Charts[l.cursor])
+	}
+}
+func (l ChartList) Current() *Chart {
+	if len(l.Charts) == 0 {
+		return nil
+	}
+	return l.Charts[l.cursor]
+}
 
-func (c Chart) Select() (fsys fs.FS, name string, err error) {
-	// const noVideo = 1
-	// u := fmt.Sprintf("%s%d?n=%d", APIDownload, c.ParentSetId, noVideo)
-	u := c.URLDownload()
-	fmt.Printf("download URL: %s\n", u)
-	// err will be assigned to return value 'err'.
-	resp, err := http.Get(u)
-	if err != nil {
-		return
+func NewChartRows(css ChartSet, cs []*Chart) []Row {
+	rows := make([]Row, len(cs))
+	for i, c := range cs {
+		var r Row
+		{
+			t := draws.NewText(css.Title, scene.Face16)
+			r.First = draws.NewSpriteFromSource(t)
+		}
+		{
+			lv := int(c.DifficultyRating) * 4
+			src := fmt.Sprintf("(Level: %d) %s", lv, c.DiffName)
+			t := draws.NewText(src, scene.Face16)
+			r.Second = draws.NewSpriteFromSource(t)
+		}
+		rows[i] = r
 	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return
-	}
-	fsys, err = zip.NewReader(bytes.NewReader(body), int64(len(body)))
-	if err != nil {
-		return
-	}
-	return fsys, c.OsuFile, err
+
+	return rows
 }
 
 // https://osu.ppy.sh/docs/index.html#beatmapsetcompact-covers
@@ -159,15 +89,71 @@ func (c Chart) Select() (fsys fs.FS, name string, err error) {
 const APIBeatmap = "https://assets.ppy.sh/beatmaps"
 const Large = "@2x"
 
-func (c ChartSet) URLCover(kind, suffix string) string {
-	return fmt.Sprintf("%s/%d/covers/%s%s.jpg", APIBeatmap, c.SetId, kind, suffix)
-}
-func (c ChartSet) URLPreview() string {
-	return fmt.Sprintf("b.ppy.sh/preview/%d.mp3", c.SetId)
-}
-func (c ChartSet) URLDownload() string {
-	return fmt.Sprintf("https://api.chimu.moe/v1/d/%d", c.SetId)
-}
 func (c Chart) URLDownload() string {
 	return fmt.Sprintf("https://api.chimu.moe/v1/%s", c.DownloadPath)
+}
+
+// ChartPanel has own Duration and BPM.
+// Todo: chart channel
+type ChartPanel struct {
+	*ChartSetPanel
+	Duration draws.Sprite // in seconds.
+	BPM      draws.Sprite
+
+	ChartName draws.Sprite
+	Level     draws.Sprite
+	NoteCount draws.Sprite
+}
+
+func NewChartPanel(sp *ChartSetPanel, c *Chart) *ChartPanel {
+	p := &ChartPanel{
+		ChartSetPanel: sp,
+	}
+	{
+		second := c.HitLength
+		t := fmt.Sprintf("%02d:%02d", second/60, second%60)
+		src := draws.NewText(t, scene.Face16)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(450, 0, draws.RightTop)
+		p.Duration = s
+	}
+	{
+		bpm := c.BPM
+		src := draws.NewText(fmt.Sprintf("%.0f", bpm), scene.Face16)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(450, 50, draws.LeftTop)
+		p.BPM = s
+	}
+	{
+		src := draws.NewText(c.DiffName, scene.Face20)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(0, 80, draws.LeftTop)
+		p.ChartName = s
+	}
+	{ // Todo: use gosu's own level system
+		lv := int(c.DifficultyRating * 4)
+		src := draws.NewText(fmt.Sprintf("Level: %2d", lv), scene.Face16)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(450, 100, draws.RightTop)
+		p.Level = s
+	}
+	// Todo: NoteCount
+	// Due to different logic, MaxCombo tells nothing.
+	return p
+}
+func (p *ChartPanel) Update() {
+	p.ChartSetPanel.Update()
+}
+func (p ChartPanel) Draw(dst draws.Image) {
+	p.Sprite.Draw(dst, draws.Op{})
+	p.MusicName.Draw(dst, draws.Op{})
+	p.Artist.Draw(dst, draws.Op{})
+	p.ChartName.Draw(dst, draws.Op{})
+	p.Charter.Draw(dst, draws.Op{})
+	p.UpdateDate.Draw(dst, draws.Op{})
+
+	p.Duration.Draw(dst, draws.Op{})
+	p.BPM.Draw(dst, draws.Op{})
+	p.Level.Draw(dst, draws.Op{})
+	// p.NoteCount.Draw(dst, draws.Op{})
 }
