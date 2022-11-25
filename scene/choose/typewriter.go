@@ -53,3 +53,7 @@ func (w TypeWriter) isKeyPressed(k input.Key) bool {
 func (w TypeWriter) Draw(dst draws.Image) {
 	text.Draw(dst.Image, w.Text, scene.Face16, 1200, 100, color.Black)
 }
+func (w *TypeWriter) Reset() {
+	w.Text = ""
+	w.runes = []rune{}
+}

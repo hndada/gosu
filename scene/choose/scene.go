@@ -1,12 +1,17 @@
 package choose
 
 import (
+	"archive/zip"
+	"bytes"
 	"fmt"
+	"io"
 	"io/fs"
+	"net/http"
 	"runtime/debug"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
@@ -15,10 +20,9 @@ import (
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/drum"
 	"github.com/hndada/gosu/mode/piano"
-	scene "github.com/hndada/gosu/scene"
+	"github.com/hndada/gosu/scene"
 )
 
-// s.UpdateBackground()
 const (
 	TPS         = scene.TPS
 	ScreenSizeX = scene.ScreenSizeX
@@ -29,11 +33,8 @@ const (
 // Score box color: Gray128 with 50% transparent
 // Hovered Score box color: Gray96 with 50% transparent
 
-// View             []ChartInfo // Todo: ChartInfo -> *ChartInfo?
-
 // Todo: fetch Score with Replay
-// Todo: preview music. Start at PreviewTime, keeps playing until end.
-// Todo: Rewind after preview has finished.
+// Todo: preview music. Rewind after preview has finished.
 // Group1, Group2, Sort, Filter int
 type Scene struct {
 	volumeMusic   *float64
@@ -47,17 +48,24 @@ type Scene struct {
 	Music      audios.MusicPlayer
 	Background mode.BackgroundDrawer
 
-	mode        int
-	subMode     int
-	Mode        ctrl.KeyHandler
-	SubMode     ctrl.KeyHandler
-	TypeWriter  TypeWriter // Query here
-	SetSelected bool
-	// ChartSetPanel *ChartSetPanel
-	ChartSetList List
-	// ChartPanel    *ChartPanel
-	ChartList List
+	mode    int
+	Mode    ctrl.KeyHandler
+	subMode int
+	SubMode ctrl.KeyHandler
+	query   string
+	Query   TypeWriter
+	page    int
+
+	Focus     int
+	ChartSets ChartSetList
+	Charts    ChartList
 }
+
+const (
+	FocusSearch = iota
+	FocusChartSet
+	FocusChart
+)
 
 func NewScene() *Scene {
 	s := &Scene{}
@@ -93,70 +101,115 @@ func NewScene() *Scene {
 		Sounds:    [2]audios.Sounder{scene.UserSkin.Swipe, scene.UserSkin.Swipe},
 		Volume:    &mode.S.VolumeSound,
 	}
-	s.Background.Sprite = mode.NewBackground()
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 	debug.SetGCPercent(100)
 	ebiten.SetWindowTitle("gosu")
 	return &Scene{}
 }
 func isEnter() bool {
-	return ebiten.IsKeyPressed(input.KeyEnter) ||
-		ebiten.IsKeyPressed(input.KeyNumpadEnter)
+	return inpututil.IsKeyJustPressed(input.KeyEnter) ||
+		inpututil.IsKeyJustPressed(input.KeyNumpadEnter)
 }
 func isBack() bool {
-	return ebiten.IsKeyPressed(input.KeyEscape)
+	return inpututil.IsKeyJustPressed(input.KeyEscape)
 }
+
+// Todo: resolve nested blocks
 func (s *Scene) Update() any {
 	scene.VolumeMusic.Update()
 	scene.VolumeSound.Update()
-
+	scene.Brightness.Update()
 	scene.Offset.Update()
 	scene.SpeedScales[s.mode].Update()
-
 	if isEnter() {
-		if s.SetSelected {
-			s.choose.Play(*s.volumeSound)
-			var c Chart
-			fs, name, err := c.Select()
+		switch s.Focus {
+		case FocusSearch:
+			css, err := s.Search()
 			if err != nil {
-				return err
+				fmt.Println(err)
 			}
-			return Return{
-				FS:     fs,
-				Name:   name,
-				Mode:   s.mode,
-				Mods:   nil,
-				Replay: nil,
+			s.ChartSets = NewChartSetList(css)
+		case FocusChartSet:
+			if len(s.ChartSets.ChartSets) > 0 {
+				s.Charts = s.ChartSets.NewChartList()
+				s.Focus = FocusChart
 			}
-		} else {
-			s.SetSelected = true
+		case FocusChart:
+			c := s.Charts.Current()
+			if c != nil {
+				fs, name, err := c.Choose()
+				if err != nil {
+					fmt.Println(err)
+				} else {
+					s.choose.Play(*s.volumeSound)
+					return Return{
+						FS:     fs,
+						Name:   name,
+						Mode:   s.mode,
+						Mods:   nil,
+						Replay: nil,
+					}
+				}
+			}
 		}
 	}
 	if isBack() {
-		if s.SetSelected {
-			s.SetSelected = false
-		} else {
-			s.Query = ""
+		switch s.Focus {
+		case FocusSearch:
+			s.Query.Reset()
+		case FocusChartSet:
+			s.Query.Reset()
+			s.Focus = FocusSearch
+		case FocusChart:
+			s.Focus = FocusChartSet
 		}
 	}
 	if s.Mode.Update() || s.SubMode.Update() {
-		s.UpdateMode()
+		css, err := s.Search()
+		if err != nil {
+			fmt.Println(err)
+		}
+		s.ChartSets = NewChartSetList(css)
+		// Background
 	}
-	if s.SetSelected {
-		s.ChartList.Update()
-	} else {
-		s.ChartSetList.Update()
+	switch s.Focus {
+	case FocusChartSet:
+		s.ChartSets.Update()
+	case FocusChart:
+		s.Charts.Update()
 	}
 	return nil
 }
+
+// err will be assigned to return value 'err'.
+func (c Chart) Choose() (fsys fs.FS, name string, err error) {
+	// const noVideo = 1
+	// u := fmt.Sprintf("%s%d?n=%d", APIDownload, c.ParentSetId, noVideo)
+	u := c.URLDownload()
+	fmt.Printf("download URL: %s\n", u)
+	resp, err := http.Get(u)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+	fsys, err = zip.NewReader(bytes.NewReader(body), int64(len(body)))
+	if err != nil {
+		return
+	}
+	return fsys, c.OsuFile, err
+}
+
 func (s Scene) Draw(screen draws.Image) {
 	s.Background.Draw(screen)
-	if s.SetSelected {
-		s.ChartPanel.Draw(screen)
-		s.ChartList.Draw(screen)
-	} else {
-		s.ChartSetPanel.Draw(screen)
-		s.ChartSetList.Draw(screen)
+	switch s.Focus {
+	case FocusChartSet:
+		s.ChartSets.Draw(screen)
+	case FocusChart:
+		s.Charts.Draw(screen)
 	}
 	s.DebugPrint(screen)
 }
@@ -174,7 +227,7 @@ func (s Scene) DebugPrint(screen draws.Image) {
 				"\n"+
 				"Speed (PageUp/Down): %.0f (Exposure time: %.0fms)\n"+
 				[]string{"Piano", "Drum"}[s.mode],
-			fmt.Sprintf("%d Key", s.SubMode),
+			fmt.Sprintf("%d Key", s.subMode),
 
 			*s.volumeMusic*100,
 			*s.volumeSound*100,
