@@ -42,10 +42,11 @@ type Scene struct {
 	speedFactors         []*float64
 	exposureTimes        []func(float64) float64
 
-	choose     audios.Sound
-	Music      audios.MusicPlayer
-	Background mode.BackgroundDrawer
-	Panel      Panel
+	choose        audios.Sound
+	Music         audios.MusicPlayer
+	Background    mode.BackgroundDrawer
+	ChartSetPanel Panel
+	ChartPanel    Panel
 	List
 }
 

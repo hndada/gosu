@@ -8,32 +8,24 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-// Duration is in seconds.
-// Todo: make UpdateDate time.Time?
-type Panel struct {
+type ChartSetPanel struct {
 	bgCh chan draws.Sprite
 	draws.Sprite
-	// chCh chan mode.Chart
-	// mode.Chart
 
 	MusicName  draws.Sprite
 	Artist     draws.Sprite
-	ChartName  draws.Sprite // Chart-specific
 	Charter    draws.Sprite
 	UpdateDate draws.Sprite
-	Duration   draws.Sprite
+	Duration   draws.Sprite // in seconds.
 	BPM        draws.Sprite
-	Level      draws.Sprite // Chart-specific
-	// NoteCount  draws.Sprite // Chart-specific
-
-	Inner bool // Enable writing Chart-specific info.
 }
 
-func NewPanel(c ChartSet) (p Panel) {
+func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
+	p := &ChartSetPanel{}
 	// Load the image asynchronously.
 	p.bgCh = make(chan draws.Sprite)
 	go func() {
-		i, err := ebitenutil.NewImageFromURL()
+		i, err := ebitenutil.NewImageFromURL(cs.URLCover("cover", Large))
 		if err != nil {
 			return
 		}
@@ -43,71 +35,126 @@ func NewPanel(c ChartSet) (p Panel) {
 		close(p.bgCh)
 	}()
 	{
-		t := draws.NewText(c.Title, Face24)
-		p.MusicName = draws.NewSpriteFromSource(t)
+		src := draws.NewText(cs.Title, Face24)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(0, 0, draws.LeftTop)
+		p.MusicName = s
 	}
 	{
-		t := draws.NewText(c.Title, Face20)
-		p.Artist = draws.NewSpriteFromSource(t)
+		src := draws.NewText(cs.Artist, Face20)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(0, 25, draws.LeftTop)
+		p.Artist = s
 	}
 	{
-		t := draws.NewText(c.Creator, Face16)
-		p.Charter = draws.NewSpriteFromSource(t)
+		src := draws.NewText(cs.Creator, Face16)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(0, 100, draws.LeftTop)
+		p.Charter = s
 	}
 	{
-		if c.RankedStatus >= 1 {
-			p.Ranked = true
+		format := "Last updated at %s"
+		if cs.RankedStatus >= 1 {
+			format = "ranked at %s"
 		}
-		t := fmt.Sprintf("last updated at %s", p.UpdateDate)
-		if p.Ranked {
-			t = fmt.Sprintf("ranked at %s", p.UpdateDate)
-		}
+		src := draws.NewText(fmt.Sprintf(format, p.UpdateDate), Face16)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(0, 125, draws.LeftTop)
+		p.UpdateDate = s
 	}
 	{
-		c.ChildrenBeatmaps[0].HitLength
-		src := fmt.Sprintf("%02d:%02d", p.Duration/60, p.Duration%60)
-		p.Duration = draws.NewSpriteFromSource(t)
+		second := cs.ChildrenBeatmaps[0].HitLength
+		t := fmt.Sprintf("%02d:%02d", second/60, second%60)
+		src := draws.NewText(t, Face12)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(450, 0, draws.RightTop)
+		p.Duration = s
 	}
-	return
+	{
+		bpm := cs.ChildrenBeatmaps[0].BPM
+		src := draws.NewText(fmt.Sprintf("%.0f", bpm), Face12)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(450, 50, draws.LeftTop)
+		p.BPM = s
+	}
+	return p
 }
-
-func (p *Panel) Update(c *Chart) {
-	if c != nil {
-		if !p.Inner {
-			p.updateChart(c)
-		}
-		p.Inner = true
-	} else {
-		p.Inner = false
-	}
+func (p *ChartSetPanel) Update() {
 	select {
 	case s := <-p.bgCh:
 		p.Sprite = s
 	default:
 	}
 }
-func (p *Panel) updateChart(c *Chart) {
+func (p ChartSetPanel) Draw(dst draws.Image) {
+	p.Sprite.Draw(dst, draws.Op{})
+	p.MusicName.Draw(dst, draws.Op{})
+	p.Artist.Draw(dst, draws.Op{})
+	p.Charter.Draw(dst, draws.Op{})
+	p.UpdateDate.Draw(dst, draws.Op{})
+	p.Duration.Draw(dst, draws.Op{})
+	p.BPM.Draw(dst, draws.Op{})
+}
+
+// ChartPanel has own Duration and BPM.
+// Todo: chart channel
+type ChartPanel struct {
+	*ChartSetPanel
+	Duration draws.Sprite // in seconds.
+	BPM      draws.Sprite
+
+	ChartName draws.Sprite
+	Level     draws.Sprite
+	NoteCount draws.Sprite
+}
+
+func NewChartPanel(csp *ChartSetPanel, c *Chart) *ChartPanel {
+	p := &ChartPanel{
+		ChartSetPanel: csp,
+	}
 	{
-		t := draws.NewText(c.DiffName, Face20)
-		p.ChartName = draws.NewSpriteFromSource(t)
+		second := c.HitLength
+		t := fmt.Sprintf("%02d:%02d", second/60, second%60)
+		src := draws.NewText(t, Face16)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(450, 0, draws.RightTop)
+		p.Duration = s
+	}
+	{
+		bpm := c.BPM
+		src := draws.NewText(fmt.Sprintf("%.0f", bpm), Face16)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(450, 50, draws.LeftTop)
+		p.BPM = s
+	}
+	{
+		src := draws.NewText(c.DiffName, Face20)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(0, 80, draws.LeftTop)
+		p.ChartName = s
 	}
 	{ // Todo: use gosu's own level system
 		lv := strconv.Itoa(int(c.DifficultyRating * 4))
-		t := draws.NewText(fmt.Sprintf("Level: %2d", lv), Face16)
-		p.Level = draws.NewSpriteFromSource(t)
+		src := draws.NewText(fmt.Sprintf("Level: %2d", lv), Face16)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(450, 100, draws.RightTop)
+		p.Level = s
 	}
+	// Todo: NoteCount
 	// Due to different logic, MaxCombo tells nothing.
-	// Todo: add NoteCount
+	return p
 }
-func (p Panel) Draw(dst draws.Image) {
-	if p.Sprite.IsValid() {
-		p.Sprite.Draw(dst, draws.Op{})
-	}
+func (p *ChartPanel) Update(cs *ChartSet, c *Chart) {
+	p.ChartSetPanel.Update()
+}
+func (p ChartPanel) Draw(dst draws.Image) {
+	p.Sprite.Draw(dst, draws.Op{})
 	p.MusicName.Draw(dst, draws.Op{})
 	p.Artist.Draw(dst, draws.Op{})
 	p.ChartName.Draw(dst, draws.Op{})
 	p.Charter.Draw(dst, draws.Op{})
 	p.UpdateDate.Draw(dst, draws.Op{})
+
 	p.Duration.Draw(dst, draws.Op{})
 	p.BPM.Draw(dst, draws.Op{})
 	p.Level.Draw(dst, draws.Op{})
