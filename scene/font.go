@@ -1,4 +1,4 @@
-package choose
+package scene
 
 import (
 	"github.com/golang/freetype/truetype"

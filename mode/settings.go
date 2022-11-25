@@ -23,6 +23,8 @@ const (
 // Struct as a type of settings value is discouraged.
 // Unmatched fields will not be touched, feel free to pre-fill default values.
 // Todo: alert warning message to user when some lines are failed to be decoded
+// Todo: BackgroundBrightness -> Brightness
+// Todo: Brightness first, then Offset
 type Settings struct {
 	VolumeMusic          float64
 	VolumeSound          float64
