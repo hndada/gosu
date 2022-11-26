@@ -17,7 +17,7 @@ var (
 	SpeedScales []ctrl.KeyHandler
 )
 
-func init() {
+func loadHandler() {
 	VolumeMusic = ctrl.KeyHandler{
 		Handler: ctrl.FloatHandler{
 			Value: &mode.S.VolumeMusic,
