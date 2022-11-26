@@ -25,20 +25,23 @@ const (
 	WindowSizeFull
 )
 
-var (
-	DefaultSettings = Settings{
+func NewSettings() Settings {
+	return Settings{
 		MusicRoots:  []string{"music"},
 		WindowSize:  WindowSizeStandard,
 		CursorScale: 0.1,
 	}
-	UserSettings = DefaultSettings
+}
+
+var (
+	UserSettings = NewSettings()
 	S            = &UserSettings
 )
 
 func init() {
-	DefaultSettings.process()
-	UserSettings.process()
+	S.process()
 	DefaultSkin.Load(defaultskin.FS)
+	UserSkin.Load(defaultskin.FS)
 }
 
 func (settings *Settings) Load(src Settings) {

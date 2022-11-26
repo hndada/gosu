@@ -9,8 +9,9 @@ import (
 )
 
 const (
-	ModePiano = 3 // osu!mania
-	ModeDrum  = 1 // osu!taiko
+	ModePiano4 = iota
+	ModePiano7
+	ModeDrum
 )
 
 const (
@@ -32,17 +33,40 @@ const (
 const amount = 25
 
 func (s *Scene) LoadChartSetList() (err error) {
+	css, err := search(s.query, s.mode, s.page)
+	if err != nil {
+		return
+	}
+	s.ChartSets = NewChartSetList(css)
+	s.Focus = FocusChartSet
+	s.page++
+	return
+}
+func search(query string, mode int, page int) (css []*ChartSet, err error) {
+	const (
+		modeMania = 3
+		modeTaiko = 1
+	)
 	u, err := url.Parse("https://api.chimu.moe/search")
 	if err != nil {
 		return
 	}
 	vs := url.Values{}
-	vs.Add("query", s.Query.Text)
-	vs.Add("mode", strconv.Itoa(s.mode))
-	vs.Add("min_cs", strconv.Itoa(s.subMode))
-	vs.Add("max_cs", strconv.Itoa(s.subMode))
+	vs.Add("query", query)
+	switch mode {
+	case ModePiano4:
+		vs.Add("mode", strconv.Itoa(modeMania))
+		vs.Add("min_cs", strconv.Itoa(4))
+		vs.Add("max_cs", strconv.Itoa(4))
+	case ModePiano7:
+		vs.Add("mode", strconv.Itoa(modeMania))
+		vs.Add("min_cs", strconv.Itoa(7))
+		vs.Add("max_cs", strconv.Itoa(7))
+	case ModeDrum:
+		vs.Add("mode", strconv.Itoa(modeTaiko))
+	}
 	vs.Add("amount", strconv.Itoa(amount))
-	vs.Add("offset", strconv.Itoa(s.page*amount))
+	vs.Add("offset", strconv.Itoa(page*amount))
 	u.RawQuery = vs.Encode()
 	resp, err := http.Get(u.String())
 	if err != nil || resp.StatusCode == 404 {
@@ -64,9 +88,6 @@ func (s *Scene) LoadChartSetList() (err error) {
 	if err != nil {
 		return
 	}
-	css := result.Data
-	s.ChartSets = NewChartSetList(css)
-	s.Focus = FocusChartSet
-	s.page++
+	css = result.Data
 	return
 }

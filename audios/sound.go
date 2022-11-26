@@ -60,6 +60,9 @@ func NewSoundBag(fsys fs.FS, name string) SoundBag {
 	return sb
 }
 func (sb SoundBag) Play(vol float64) {
+	if len(sb) == 0 {
+		return
+	}
 	i := rand.Intn(len(sb))
 	sb[i].Play(vol)
 }

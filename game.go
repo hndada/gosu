@@ -3,9 +3,6 @@ package gosu
 import (
 	"fmt"
 	"io/fs"
-	"log"
-	"os"
-	"path"
 
 	"github.com/BurntSushi/toml"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -14,6 +11,8 @@ import (
 	"github.com/hndada/gosu/mode/drum"
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
+	"github.com/hndada/gosu/scene/choose"
+	"github.com/hndada/gosu/scene/play"
 )
 
 // All structs and variables in game package should be unexported
@@ -21,35 +20,13 @@ import (
 type game struct {
 	fs.FS
 	scene.Scene
+	choose scene.Scene
 }
-
-func NewGame(fsys fs.FS) *game {
-	load(fsys)
-	dir, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// scene := choose.NewScene()
-	// scene, err := piano.NewScenePlay(ZipFS(filepath.Join(dir, "test.osz")),
-	// "nekodex - circles! (MuangMuangE) [Hard].osu", nil, nil)
-	scene, err := drum.NewScenePlay(os.DirFS(path.Join(dir, "asdf - 1223")),
-		"asdf - 1223 (MuangMuangE) [Oni].osu", nil, nil)
-	if err != nil {
-		panic(err)
-	}
-	g := &game{
-		FS:    fsys,
-		Scene: scene,
-	}
-	return g
-}
-
 type Settings struct {
 	General mode.Settings
 	Piano   piano.Settings
 	Drum    drum.Settings
-	// Scene scene.Settings
+	Scene   scene.Settings
 }
 
 var (
@@ -73,6 +50,7 @@ func load(fsys fs.FS) {
 			mode.UserSettings.Load(S.General)
 			piano.UserSettings.Load(S.Piano)
 			drum.UserSettings.Load(S.Drum)
+			scene.UserSettings.Load(S.Scene)
 		}
 	}
 
@@ -88,27 +66,55 @@ func load(fsys fs.FS) {
 		mode.UserSkin.Load(skinFS)
 		piano.UserSkins.Load(skinFS)
 		drum.UserSkin.Load(skinFS)
-		// scene.UserSkin.Load(skinFS)
+		scene.UserSkin.Load(skinFS)
 	}
 }
-func (g *game) Update() (err error) {
-	// switch r := g.Scene.Update().(type) {
-	// case error:
-	// 	err = r
-	// case choose.Return:
-	// 	var scene scene.Scene
-	// 	scene, err = play.NewScene(r.FS, r.Name, r.Mode, r.Mods, r.Replay)
-	// 	if err != nil {
-	// 		return
-	// 	}
-	// 	g.Scene = scene
-	// case mode.Result:
-	// 	g.Scene = choose.NewScene()
+
+func NewGame(fsys fs.FS) *game {
+	load(fsys)
+	// dir, err := os.Getwd()
+	// if err != nil {
+	// log.Fatal(err)
 	// }
-	g.Scene.Update()
+	// scene, err := piano.NewScenePlay(ZipFS(filepath.Join(dir, "test.osz")),
+	// "nekodex - circles! (MuangMuangE) [Hard].osu", nil, nil)
+	// scene, err := drum.NewScenePlay(os.DirFS(path.Join(dir, "asdf - 1223")),
+	// 	"asdf - 1223 (MuangMuangE) [Oni].osu", nil, nil)
+	// if err != nil {
+	// 	panic(err)
+	// }
+	g := &game{
+		FS:     fsys,
+		Scene:  nil,
+		choose: choose.NewScene(),
+	}
+	return g
+}
+
+func (g *game) Update() (err error) {
+	if g.Scene == nil {
+		g.Scene = g.choose
+	}
+	switch r := g.Scene.Update().(type) {
+	case error:
+		err = r
+	case choose.Return:
+		var scene scene.Scene
+		scene, err = play.NewScene(r.FS, r.Name, r.Mode, r.Mods, r.Replay)
+		if err != nil {
+			return
+		}
+		g.Scene = scene
+	case mode.Result:
+		g.Scene = choose.NewScene()
+	}
+	// g.Scene.Update()
 	return
 }
 func (g *game) Draw(screen *ebiten.Image) {
+	if g.Scene == nil {
+		return
+	}
 	g.Scene.Draw(draws.Image{Image: screen})
 }
 func (g *game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
