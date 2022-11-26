@@ -105,8 +105,9 @@ func (g *game) Update() (err error) {
 			return
 		}
 		g.Scene = scene
+
 	case mode.Result:
-		g.Scene = choose.NewScene()
+		g.Scene = g.choose
 	}
 	// g.Scene.Update()
 	return

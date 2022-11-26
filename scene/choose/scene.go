@@ -117,6 +117,7 @@ func NewScene() *Scene {
 	// 	}
 	// 	s.lastChartSets[i] = css
 	// }
+	s.handleEnter()
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 	debug.SetGCPercent(100)
 	ebiten.SetWindowTitle("gosu")
@@ -158,10 +159,7 @@ func (s *Scene) Update() any {
 		}
 	}
 	if isEnter() {
-		err := s.handleEnter()
-		if err != nil {
-			fmt.Println(err)
-		}
+		return s.handleEnter()
 	}
 	if isBack() {
 		switch s.Focus {
@@ -199,11 +197,13 @@ func (s *Scene) handleEnter() any {
 	case FocusSearch:
 		s.LoadChartSetList()
 	case FocusChartSet:
+		fmt.Println("Load chart list")
 		s.LoadChartList()
 	case FocusChart:
+		fmt.Println("Play chart")
 		c := s.Charts.Current()
 		if c == nil {
-			return errors.New("no chart loade")
+			return errors.New("no chart loaded")
 		}
 		fs, name, err := c.Choose()
 		if err != nil {

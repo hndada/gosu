@@ -31,7 +31,7 @@ type Chart struct {
 type ChartList struct {
 	*List
 	Charts []*Chart
-	Panel  *ChartPanel
+	// Panel  *ChartPanel
 }
 
 // Todo: these codes are kinda messy
@@ -47,7 +47,7 @@ func (s *Scene) LoadChartList() {
 	})
 	s.Charts.List = NewList(rows)
 	s.Charts.Charts = cs
-	s.Charts.Panel = NewChartPanel(s.ChartSets.Panel, cs[0])
+	// s.Charts.Panel = NewChartPanel(s.ChartSets.Panel, cs[0])
 	s.Focus = FocusChart
 }
 func (cset ChartSet) NewChartRow(i int) (r *Row) {
@@ -59,13 +59,14 @@ func (cset ChartSet) NewChartRow(i int) (r *Row) {
 	return NewRow(card, thumb, cset.Title, second)
 }
 func (l *ChartList) Update() {
-	if l.Panel != nil {
-		l.Panel.Update()
-	}
-	if l.Cursor.Update() {
-		// Update Background
-		l.Panel = NewChartPanel(l.Panel.ChartSetPanel, l.Charts[l.cursor])
-	}
+	// if l.Panel != nil {
+	// 	l.Panel.Update()
+	// }
+	// if l.Cursor.Update() {
+	// 	// Update Background
+	// 	l.Panel = NewChartPanel(l.Panel.ChartSetPanel, l.Charts[l.cursor])
+	// }
+	l.Cursor.Update()
 }
 func (l ChartList) Current() *Chart {
 	if len(l.Charts) == 0 {
