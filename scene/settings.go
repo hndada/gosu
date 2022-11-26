@@ -42,6 +42,7 @@ func init() {
 	S.process()
 	DefaultSkin.Load(defaultskin.FS)
 	UserSkin.Load(defaultskin.FS)
+	loadHandler()
 }
 
 func (settings *Settings) Load(src Settings) {
