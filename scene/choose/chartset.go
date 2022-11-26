@@ -45,7 +45,7 @@ type ChartSetList struct {
 }
 
 func NewChartSetList(css []*ChartSet) (l ChartSetList) {
-	rows := make([]*Row, len(css))
+	rows := make([]Row, len(css))
 	for i, cs := range css {
 		card := cs.URLCover("card", "")
 		thumb := cs.URLCover("list", "")

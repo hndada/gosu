@@ -246,7 +246,7 @@ func (c Chart) Choose() (fsys fs.FS, name string, err error) {
 func (s Scene) Draw(screen draws.Image) {
 	s.Background.Draw(screen)
 	switch s.Focus {
-	case FocusChartSet:
+	case FocusSearch, FocusChartSet:
 		s.ChartSets.Draw(screen)
 	case FocusChart:
 		s.Charts.Draw(screen)
@@ -256,14 +256,14 @@ func (s Scene) Draw(screen draws.Image) {
 func (s Scene) DebugPrint(screen draws.Image) {
 	{
 		const (
-			x = 1200
-			y = 100
+			x = ScreenSizeX - RowWidth
+			y = 25
 		)
 		t := s.query
 		if t == "" {
 			t = "Type for search..."
 		}
-		text.Draw(screen.Image, t, scene.Face16, x, y, color.Black)
+		text.Draw(screen.Image, t, scene.Face16, int(x), y, color.White)
 	}
 	speed := *s.speedFactors[s.mode]
 	ebitenutil.DebugPrint(screen.Image, fmt.Sprintf("FPS: %.2f\n"+

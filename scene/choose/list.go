@@ -23,6 +23,7 @@ type Row struct {
 	cardCh  chan draws.Image
 
 	draws.Sprite // Thumbnail
+	Thumb        draws.Sprite
 	Card         draws.Sprite
 	Mask         draws.Sprite
 	First        draws.Sprite
@@ -34,9 +35,14 @@ var defaultThumb = draws.Image{
 var defaultCard = draws.Image{
 	Image: ebiten.NewImage(int(RowWidth-RowHeight), int(RowHeight))}
 
-func NewRow(cardURL, thumbURL, first, second string) *Row {
-	const dx = RowHeight // Thumbnail is a square.
-	r := &Row{}
+func NewRow(cardURL, thumbURL, first, second string) Row {
+	const thumbWidth = RowHeight // Thumbnail is a square.
+	const (
+		px = 5
+		py = 30
+	)
+	r := Row{}
+	r.Locate(ScreenSizeX-RowWidth, ScreenSizeY/2, draws.LeftMiddle)
 	go func() {
 		i, err := ebitenutil.NewImageFromURL(thumbURL)
 		if err != nil {
@@ -55,31 +61,31 @@ func NewRow(cardURL, thumbURL, first, second string) *Row {
 	}()
 	{
 		s := draws.NewSpriteFromSource(defaultThumb)
-		s.SetScaleToH(RowHeight)
-		r.Sprite = s
+		s.SetSize(RowWidth, RowHeight)
+		r.Thumb = s
 	}
 	{
 		s := draws.NewSpriteFromSource(defaultCard)
-		s.SetScaleToH(RowHeight)
-		s.Locate(dx, 0, draws.LeftTop)
+		s.SetSize(RowWidth, RowHeight)
+		s.Locate(thumbWidth, 0, draws.LeftTop)
 		r.Card = s
 	}
 	{
 		s := scene.UserSkin.BoxMask
-		s.SetScaleToH(RowHeight)
-		s.Locate(dx, 0, draws.LeftTop)
+		s.SetSize(RowWidth, RowHeight)
+		s.Locate(thumbWidth, 0, draws.LeftTop)
 		r.Mask = s
 	}
 	{
 		src := draws.NewText(first, scene.Face20)
 		s := draws.NewSpriteFromSource(src)
-		s.Locate(dx, 0, draws.LeftTop)
+		s.Locate(px+thumbWidth, py, draws.LeftTop)
 		r.First = s
 	}
 	{
 		src := draws.NewText(second, scene.Face20)
 		s := draws.NewSpriteFromSource(src)
-		s.Locate(dx, RowHeight/2, draws.LeftTop)
+		s.Locate(px+thumbWidth, py-5+RowHeight/2, draws.LeftTop)
 		r.Second = s
 	}
 	return r
@@ -94,8 +100,8 @@ func (r *Row) Update() {
 	}
 }
 func (r Row) Draw(dst draws.Image) {
-	// r.Sprite.Position
-	r.Sprite.Draw(dst, draws.Op{})
+	r.Thumb.Position = r.Thumb.Add(r.Position)
+	r.Thumb.Draw(dst, draws.Op{})
 	r.Card.Position = r.Card.Add(r.Position)
 	r.Card.Draw(dst, draws.Op{})
 	r.Mask.Position = r.Mask.Add(r.Position)
@@ -107,12 +113,12 @@ func (r Row) Draw(dst draws.Image) {
 }
 
 type List struct {
-	Rows   []*Row
+	Rows   []Row
 	Cursor ctrl.KeyHandler
 	cursor int
 }
 
-func NewList(rows []*Row) *List {
+func NewList(rows []Row) *List {
 	l := &List{}
 	l.Rows = rows
 	l.Cursor = ctrl.KeyHandler{
@@ -149,7 +155,7 @@ func (l List) Draw(dst draws.Image) {
 		}
 		r.Move(0, float64(i)*RowHeight)
 		if i == 0 {
-			r.Move(-RowShrink, 0)
+			r.Move(-RowShrink+10, 0)
 		}
 		r.Draw(dst)
 	}

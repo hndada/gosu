@@ -43,7 +43,7 @@ func (s *Scene) LoadChartSetList() (err error) {
 	return
 }
 func Search(query string, mode int, page int) (css []*ChartSet, err error) {
-	const amount = 20
+	const amount = 1 //20
 	const (
 		modeMania = 3
 		modeTaiko = 1
