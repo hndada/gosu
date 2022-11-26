@@ -41,7 +41,7 @@ func (c ChartSet) URLDownload() string {
 type ChartSetList struct {
 	*List
 	ChartSets []*ChartSet
-	Panel     *ChartSetPanel
+	// Panel     *ChartSetPanel
 }
 
 func NewChartSetList(css []*ChartSet) (l ChartSetList) {
@@ -59,13 +59,14 @@ func NewChartSetList(css []*ChartSet) (l ChartSetList) {
 	return
 }
 func (l *ChartSetList) Update() (fired bool) {
-	if l.Panel != nil {
-		l.Panel.Update()
-	}
-	if fired = l.Cursor.Update(); fired {
-		cs := l.ChartSets[l.cursor]
-		l.Panel = NewChartSetPanel(cs)
-	}
+	// if l.Panel != nil {
+	// 	l.Panel.Update()
+	// }
+	// if fired = l.Cursor.Update(); fired {
+	// 	cs := l.ChartSets[l.cursor]
+	// 	l.Panel = NewChartSetPanel(cs)
+	// }
+	l.Cursor.Update()
 	return
 }
 func (l ChartSetList) Current() *ChartSet {

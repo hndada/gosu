@@ -112,22 +112,22 @@ type List struct {
 	cursor int
 }
 
-func NewList(rows []*Row) (l *List) {
-	return &List{
-		Rows: rows,
-		Cursor: ctrl.KeyHandler{
-			Handler: &ctrl.IntHandler{
-				Value: &l.cursor,
-				Min:   0,
-				Max:   len(rows) - 1,
-				Loop:  true,
-			},
-			Modifiers: []input.Key{},
-			Keys:      [2]input.Key{input.KeyArrowUp, input.KeyArrowDown},
-			Sounds:    [2]audios.Sounder{scene.UserSkin.Swipe, scene.UserSkin.Swipe},
-			Volume:    &mode.S.VolumeSound,
+func NewList(rows []*Row) *List {
+	l := &List{}
+	l.Rows = rows
+	l.Cursor = ctrl.KeyHandler{
+		Handler: &ctrl.IntHandler{
+			Value: &l.cursor,
+			Min:   0,
+			Max:   len(rows) - 1,
+			Loop:  true,
 		},
+		Modifiers: []input.Key{},
+		Keys:      [2]input.Key{input.KeyArrowUp, input.KeyArrowDown},
+		Sounds:    [2]audios.Sounder{scene.UserSkin.Swipe, scene.UserSkin.Swipe},
+		Volume:    &mode.S.VolumeSound,
 	}
+	return l
 }
 func (l *List) Update() {
 	l.Cursor.Update()

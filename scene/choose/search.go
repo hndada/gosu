@@ -2,6 +2,7 @@ package choose
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -30,10 +31,9 @@ const (
 	Qualified
 	Loved
 )
-const amount = 25
 
 func (s *Scene) LoadChartSetList() (err error) {
-	css, err := search(s.query, s.mode, s.page)
+	css, err := Search(s.query, s.mode, s.page)
 	if err != nil {
 		return
 	}
@@ -42,12 +42,13 @@ func (s *Scene) LoadChartSetList() (err error) {
 	s.page++
 	return
 }
-func search(query string, mode int, page int) (css []*ChartSet, err error) {
+func Search(query string, mode int, page int) (css []*ChartSet, err error) {
+	const amount = 20
 	const (
 		modeMania = 3
 		modeTaiko = 1
 	)
-	u, err := url.Parse("https://api.chimu.moe/search")
+	u, err := url.Parse("https://api.chimu.moe/v1/search")
 	if err != nil {
 		return
 	}
@@ -68,6 +69,7 @@ func search(query string, mode int, page int) (css []*ChartSet, err error) {
 	vs.Add("amount", strconv.Itoa(amount))
 	vs.Add("offset", strconv.Itoa(page*amount))
 	u.RawQuery = vs.Encode()
+	fmt.Println("URL:", u.String())
 	resp, err := http.Get(u.String())
 	if err != nil || resp.StatusCode == 404 {
 		return
@@ -89,5 +91,6 @@ func search(query string, mode int, page int) (css []*ChartSet, err error) {
 		return
 	}
 	css = result.Data
+	fmt.Println("data length:", len(css))
 	return
 }

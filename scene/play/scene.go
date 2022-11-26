@@ -2,9 +2,7 @@ package play
 
 import (
 	"io/fs"
-	"runtime/debug"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
 
@@ -14,6 +12,7 @@ import (
 )
 
 type Scene struct {
+	mode int
 	scene.Scene
 }
 
@@ -28,11 +27,16 @@ func NewScene(fsys fs.FS, cname string, mode int, mods interface{}, rf *osr.Form
 	case drum.Mode:
 		scene, err = drum.NewScenePlay(fsys, cname, mods, rf)
 	}
-	ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
-	debug.SetGCPercent(0)
-	return &Scene{scene}, err
+	// ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
+	// debug.SetGCPercent(0)
+	return &Scene{mode: mode, Scene: scene}, err
 }
 func (s *Scene) Update() any {
+	scene.VolumeMusic.Update()
+	scene.VolumeSound.Update()
+	scene.Brightness.Update()
+	scene.Offset.Update()
+	scene.SpeedScales[s.mode].Update()
 	return s.Scene.Update()
 }
 func (s Scene) Draw(screen draws.Image) {
