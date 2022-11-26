@@ -288,7 +288,7 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\nExtra: %.2f%%\nJudgment counts: %v\n\n"+
 			"Speed scale (Z/X): %.0f (x%.2f)\n(Exposure time: %.fms)\n\n"+
-			"Music volume (Alt+ Left/Right): %.0f%%\nSound volume (Ctrl+ Left/Right): %.0f%%\n\n"+
+			"Music volume (Ctrl+ Left/Right): %.0f%%\nSound volume (Alt+ Left/Right): %.0f%%\n\n"+
 			"Press ESC to select a song.\nPress TAB to pause.\n\n"+
 			"Offset (Shift+ Left/Right): %dms\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,

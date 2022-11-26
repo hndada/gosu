@@ -53,17 +53,18 @@ type Scene struct {
 	bgCh       chan draws.Image
 	Background mode.BackgroundDrawer
 
-	mode    int
-	Mode    ctrl.KeyHandler
-	subMode int
-	SubMode ctrl.KeyHandler
-	query   string
-	Query   input.TypeWriter
-	page    int
+	mode int
+	Mode ctrl.KeyHandler
+	// subMode int
+	// SubMode ctrl.KeyHandler
+	query string
+	Query input.TypeWriter
+	page  int
 
 	Focus     int
 	ChartSets ChartSetList
 	Charts    ChartList
+	// lastChartSets [][]*ChartSet
 }
 
 const (
@@ -79,37 +80,47 @@ func NewScene() *Scene {
 	s.brightness = &mode.S.BackgroundBrightness
 	s.offset = &mode.S.Offset
 	s.speedFactors = []*float64{
-		&piano.S.SpeedScale, &drum.S.SpeedScale}
+		&piano.S.SpeedScale, &piano.S.SpeedScale, &drum.S.SpeedScale}
 	s.exposureTimes = []func(float64) float64{
-		piano.ExposureTime, drum.ExposureTime}
-	s.Mode = ctrl.KeyHandler{
-		Handler: ctrl.IntHandler{
-			Value: &s.mode,
-			Min:   0,
-			Max:   2 - 1, // There are two modes.
-			Loop:  true,
-		},
-		Modifiers: []input.Key{},
-		Keys:      [2]input.Key{-1, input.KeyF1},
-		Sounds:    [2]audios.Sounder{scene.UserSkin.Swipe, scene.UserSkin.Swipe},
-		Volume:    &mode.S.VolumeSound,
-	}
-	s.SubMode = ctrl.KeyHandler{
-		Handler: ctrl.IntHandler{
-			Value: &s.subMode,
-			Min:   4,
-			Max:   9,
-			Loop:  true,
-		},
-		Modifiers: []input.Key{},
-		Keys:      [2]input.Key{input.KeyF2, input.KeyF3},
-		Sounds:    [2]audios.Sounder{scene.UserSkin.Swipe, scene.UserSkin.Swipe},
-		Volume:    &mode.S.VolumeSound,
-	}
+		piano.ExposureTime, piano.ExposureTime, drum.ExposureTime}
+	// s.Mode = ctrl.KeyHandler{
+	// 	Handler: ctrl.IntHandler{
+	// 		Value: &s.mode,
+	// 		Min:   0,
+	// 		Max:   3 - 1, // There are 3 modes.
+	// 		Loop:  true,
+	// 	},
+	// 	Modifiers: []input.Key{},
+	// 	Keys:      [2]input.Key{-1, input.KeyF1},
+	// 	Sounds:    [2]audios.Sounder{scene.UserSkin.Swipe, scene.UserSkin.Swipe},
+	// 	Volume:    &mode.S.VolumeSound,
+	// }
+	// s.subMode = 4
+	// s.SubMode = ctrl.KeyHandler{
+	// 	Handler: ctrl.IntHandler{
+	// 		Value: &s.subMode,
+	// 		Min:   4,
+	// 		Max:   9,
+	// 		Loop:  true,
+	// 	},
+	// 	Modifiers: []input.Key{},
+	// 	Keys:      [2]input.Key{input.KeyF2, input.KeyF3},
+	// 	Sounds:    [2]audios.Sounder{scene.UserSkin.Swipe, scene.UserSkin.Swipe},
+	// 	Volume:    &mode.S.VolumeSound,
+	// }
+
+	// s.lastChartSets = make([][]*ChartSet, 3)
+	// for i := range s.lastChartSets {
+	// 	css, err := search("", i, 0)
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 	}
+	// 	s.lastChartSets[i] = css
+	// }
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 	debug.SetGCPercent(100)
 	ebiten.SetWindowTitle("gosu")
-	return &Scene{}
+	return s
 }
 func isEnter() bool {
 	return inpututil.IsKeyJustPressed(input.KeyEnter) ||
@@ -137,6 +148,15 @@ func (s *Scene) Update() any {
 		s.query = s.Query.Text
 		s.Focus = FocusSearch
 	}
+	if inpututil.IsKeyJustPressed(input.KeyF1) {
+		s.mode++
+		s.mode %= 3
+		s.choose.Play(*s.volumeSound)
+		err := s.handleEnter()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}
 	if isEnter() {
 		err := s.handleEnter()
 		if err != nil {
@@ -152,8 +172,8 @@ func (s *Scene) Update() any {
 			s.Focus = FocusChartSet
 		}
 	}
-	if s.Mode.Update() || s.SubMode.Update() {
-		s.LoadChartSetList()
+	if s.Mode.Update() { // || s.SubMode.Update()
+		go s.LoadChartSetList()
 	}
 	switch s.Focus {
 	case FocusSearch:
@@ -206,7 +226,7 @@ func (c Chart) Choose() (fsys fs.FS, name string, err error) {
 	// const noVideo = 1
 	// u := fmt.Sprintf("%s%d?n=%d", APIDownload, c.ParentSetId, noVideo)
 	u := c.URLDownload()
-	fmt.Printf("download URL: %s\n", u)
+	// fmt.Printf("download URL: %s\n", u)
 	resp, err := http.Get(u)
 	if err != nil {
 		return
@@ -246,26 +266,28 @@ func (s Scene) DebugPrint(screen draws.Image) {
 		text.Draw(screen.Image, t, scene.Face16, x, y, color.Black)
 	}
 	speed := *s.speedFactors[s.mode]
-	ebitenutil.DebugPrint(screen.Image,
-		fmt.Sprintf(
-			"Mode (F1): %s\n"+
-				"Sub mode (F2/F3): %s\n"+
-				"\n"+
-				"Music volume (Alt+ Left/Right): %.0f%%\n"+
-				"Sound volume (Ctrl+ Left/Right): %.0f%%\n"+
-				"Offset (Shift+ Left/Right): %dms\n"+
-				"Brightness (Ctrl+ O/P): %.0f%%\n"+
-				"\n"+
-				"Speed (PageUp/Down): %.0f (Exposure time: %.0fms)\n"+
-				[]string{"Piano", "Drum"}[s.mode],
-			fmt.Sprintf("%d Key", s.subMode),
+	ebitenutil.DebugPrint(screen.Image, fmt.Sprintf("FPS: %.2f\n"+
+		"TPS: %.2f\n"+
+		"Mode (F1): %s\n"+
+		// "Sub mode (F2/F3): %s\n"+
+		"\n"+
+		"Music volume (Ctrl+ Left/Right): %.0f%%\n"+
+		"Sound volume (Alt+ Left/Right): %.0f%%\n"+
+		"Brightness (Ctrl+ O/P): %.0f%%\n"+
+		"Offset (Shift+ Left/Right): %dms\n"+
+		"\n"+
+		"Speed (PageUp/Down): %.0f (Exposure time: %.0fms)\n",
+		ebiten.ActualFPS(),
+		ebiten.ActualTPS(),
+		[]string{"Piano4", "Piano7", "Drum"}[s.mode],
+		// fmt.Sprintf("%d Key", s.subMode),
 
-			*s.volumeMusic*100,
-			*s.volumeSound*100,
-			*s.offset,
-			*s.brightness*100,
+		*s.volumeMusic*100,
+		*s.volumeSound*100,
+		*s.brightness*100,
+		*s.offset,
 
-			speed*100, s.exposureTimes[s.mode](speed)))
+		speed*100, s.exposureTimes[s.mode](speed)))
 }
 
 type Return struct {

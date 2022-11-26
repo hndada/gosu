@@ -17,17 +17,17 @@ type KeyHandler struct {
 	// holdKey   input.Key
 	active bool
 
-	countdown    int // Require to hold for a while to move a cursor.
-	MaxCountdown [2]int
+	countdown int // Require to hold for a while to move a cursor.
+	// MaxCountdown [2]int
 	// TPS          int
 }
 
-func NewKeyHandler(tps int) (h KeyHandler) {
-	for i, max := range []int64{200, 80} {
-		h.MaxCountdown[i] = ToTick(max, tps)
-	}
-	return
-}
+// func NewKeyHandler(tps int) (h KeyHandler) {
+// 	for i, max := range []int64{200, 80} {
+// 		h.MaxCountdown[i] = ToTick(max, tps)
+// 	}
+// 	return
+// }
 
 // Update returns whether the handler has set off (triggered) or not.
 // Todo: set off the stricter handler only
@@ -57,14 +57,23 @@ func (h *KeyHandler) Update() (set bool) {
 	[]func(){h.Decrease, h.Increase}[h.holdIndex]()
 	h.Sounds[h.holdIndex].Play(*h.Volume)
 
+	// const (
+	// 	long = iota
+	// 	short
+	// )
+	// if h.active {
+	// 	h.countdown = h.MaxCountdown[short]
+	// } else {
+	// 	h.countdown = h.MaxCountdown[long]
+	// }
 	const (
-		long = iota
-		short
+		short = 80
+		long  = 200
 	)
 	if h.active {
-		h.countdown = h.MaxCountdown[short]
+		h.countdown = short
 	} else {
-		h.countdown = h.MaxCountdown[long]
+		h.countdown = long
 	}
 	h.active = true
 	return true

@@ -34,6 +34,7 @@ var (
 )
 
 func (skin *Skin) Load(fsys fs.FS) {
+	defer skin.fillBlank(&DefaultSkin)
 	skin.DefaultBackground = mode.UserSkin.DefaultBackground
 	for i, name := range []string{"base", "additive", "trail"} {
 		s := draws.NewSprite(fsys, fmt.Sprintf("cursor/%s.png", name))
@@ -44,20 +45,18 @@ func (skin *Skin) Load(fsys fs.FS) {
 	}
 	skin.BoxMask = draws.NewSprite(fsys, "interface/box-mask.png")
 	skin.Enter = audios.NewSound(fsys, "sound/ringtone2_loop.wav")
-	skin.Swipe = audios.NewSoundBag(fsys, "sound/swipe")
-	skin.Tap = audios.NewSoundBag(fsys, "sound/tap")
+	skin.Swipe = audios.NewSoundBag(fsys, "sound/swipe.wav")
+	skin.Tap = audios.NewSoundBag(fsys, "sound/tap.wav")
 	for i, name := range []string{"off", "on"} {
 		name := fmt.Sprintf("sound/toggle/%s.wav", name)
 		skin.Toggle[i] = audios.NewSound(fsys, name)
 	}
-	for i, name := range []string{"off", "on"} {
+	for i, name := range []string{"down", "up"} {
 		name := fmt.Sprintf("sound/transition/%s.wav", name)
 		skin.Transition[i] = audios.NewSound(fsys, name)
 	}
-	base := []Skin{{}, DefaultSkin, UserSkin}[skin.Type]
-	skin.fillBlank(base)
 }
-func (skin *Skin) fillBlank(base Skin) {
+func (skin *Skin) fillBlank(base *Skin) {
 	for _, s := range skin.Cursor {
 		if !s.IsValid() {
 			skin.Cursor = base.Cursor

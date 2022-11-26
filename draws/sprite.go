@@ -96,7 +96,7 @@ func (s Sprite) In(p Vector2) bool {
 	return p.X >= 0 && p.X <= max.X && p.Y >= 0 && p.Y <= max.Y
 }
 func (s Sprite) Draw(dst Image, op Op) {
-	if !s.IsValid() {
+	if s.Source == nil || !s.IsValid() {
 		return
 	}
 	op.GeoM.Scale(s.Scale.XY())
