@@ -58,15 +58,15 @@ func NewChartSetList(css []*ChartSet) (l ChartSetList) {
 	l.ChartSets = css
 	return
 }
-func (l *ChartSetList) Update() {
+func (l *ChartSetList) Update() (fired bool) {
 	if l.Panel != nil {
 		l.Panel.Update()
 	}
-	if l.Cursor.Update() {
+	if fired = l.Cursor.Update(); fired {
 		cs := l.ChartSets[l.cursor]
-		// Update Background
 		l.Panel = NewChartSetPanel(cs)
 	}
+	return
 }
 func (l ChartSetList) Current() *ChartSet {
 	if len(l.ChartSets) == 0 {
@@ -76,7 +76,7 @@ func (l ChartSetList) Current() *ChartSet {
 }
 
 type ChartSetPanel struct {
-	bgCh chan draws.Sprite
+	bgCh chan draws.Image
 	draws.Sprite
 
 	MusicName  draws.Sprite
@@ -89,16 +89,13 @@ type ChartSetPanel struct {
 
 func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 	p := &ChartSetPanel{}
-	// Load the image asynchronously.
-	p.bgCh = make(chan draws.Sprite)
+	p.bgCh = make(chan draws.Image)
 	go func() {
 		i, err := ebitenutil.NewImageFromURL(cs.URLCover("cover", Large))
 		if err != nil {
 			return
 		}
-		s := draws.NewSpriteFromSource(draws.Image{Image: i})
-		p.Locate(100, 100, draws.CenterMiddle)
-		p.bgCh <- s
+		p.bgCh <- draws.Image{Image: i}
 		close(p.bgCh)
 	}()
 	{
@@ -148,7 +145,9 @@ func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 }
 func (p *ChartSetPanel) Update() {
 	select {
-	case s := <-p.bgCh:
+	case i := <-p.bgCh:
+		s := draws.NewSpriteFromSource(i)
+		s.Locate(100, 100, draws.CenterMiddle)
 		p.Sprite = s
 	default:
 	}

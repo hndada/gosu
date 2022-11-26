@@ -35,8 +35,8 @@ type ChartList struct {
 }
 
 // Todo: these codes are kinda messy
-func (csl ChartSetList) NewChartList() (cl ChartList) {
-	cset := csl.Current()
+func (s *Scene) LoadChartList() {
+	cset := s.ChartSets.Current()
 	cs := cset.ChildrenBeatmaps
 	rows := make([]*Row, len(cs))
 	for i := range rows {
@@ -45,10 +45,10 @@ func (csl ChartSetList) NewChartList() (cl ChartList) {
 	sort.Slice(rows, func(i, j int) bool {
 		return cs[i].DifficultyRating < cs[j].DifficultyRating
 	})
-	cl.List = NewList(rows)
-	cl.Charts = cs
-	cl.Panel = NewChartPanel(csl.Panel, cs[0])
-	return
+	s.Charts.List = NewList(rows)
+	s.Charts.Charts = cs
+	s.Charts.Panel = NewChartPanel(s.ChartSets.Panel, cs[0])
+	s.Focus = FocusChart
 }
 func (cset ChartSet) NewChartRow(i int) (r *Row) {
 	card := cset.URLCover("card", "")
