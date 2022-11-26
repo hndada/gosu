@@ -3,7 +3,9 @@ package choose
 import (
 	"archive/zip"
 	"bytes"
+	"errors"
 	"fmt"
+	"image/color"
 	"io"
 	"io/fs"
 	"net/http"
@@ -12,6 +14,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
@@ -53,7 +56,7 @@ type Scene struct {
 	subMode int
 	SubMode ctrl.KeyHandler
 	query   string
-	Query   TypeWriter
+	Query   input.TypeWriter
 	page    int
 
 	Focus     int
@@ -121,43 +124,19 @@ func (s *Scene) Update() any {
 	scene.Brightness.Update()
 	scene.Offset.Update()
 	scene.SpeedScales[s.mode].Update()
+	if s.query != s.Query.Text {
+		s.query = s.Query.Text
+		s.Focus = FocusSearch
+	}
 	if isEnter() {
-		switch s.Focus {
-		case FocusSearch:
-			css, err := s.Search()
-			if err != nil {
-				fmt.Println(err)
-			}
-			s.ChartSets = NewChartSetList(css)
-		case FocusChartSet:
-			if len(s.ChartSets.ChartSets) > 0 {
-				s.Charts = s.ChartSets.NewChartList()
-				s.Focus = FocusChart
-			}
-		case FocusChart:
-			c := s.Charts.Current()
-			if c != nil {
-				fs, name, err := c.Choose()
-				if err != nil {
-					fmt.Println(err)
-				} else {
-					s.choose.Play(*s.volumeSound)
-					return Return{
-						FS:     fs,
-						Name:   name,
-						Mode:   s.mode,
-						Mods:   nil,
-						Replay: nil,
-					}
-				}
-			}
+		err := s.handleEnter()
+		if err != nil {
+			fmt.Println(err)
 		}
 	}
 	if isBack() {
 		switch s.Focus {
-		case FocusSearch:
-			s.Query.Reset()
-		case FocusChartSet:
+		case FocusSearch, FocusChartSet:
 			s.Query.Reset()
 			s.Focus = FocusSearch
 		case FocusChart:
@@ -177,6 +156,40 @@ func (s *Scene) Update() any {
 		s.ChartSets.Update()
 	case FocusChart:
 		s.Charts.Update()
+	}
+	return nil
+}
+func (s *Scene) handleEnter() any {
+	switch s.Focus {
+	case FocusSearch:
+		css, err := s.Search()
+		if err != nil {
+			return err
+		}
+		s.ChartSets = NewChartSetList(css)
+		s.Focus = FocusChartSet
+	case FocusChartSet:
+		if len(s.ChartSets.ChartSets) > 0 {
+			s.Charts = s.ChartSets.NewChartList()
+			s.Focus = FocusChart
+		}
+	case FocusChart:
+		c := s.Charts.Current()
+		if c == nil {
+			return errors.New("no chart loade")
+		}
+		fs, name, err := c.Choose()
+		if err != nil {
+			return err
+		}
+		s.choose.Play(*s.volumeSound)
+		return Return{
+			FS:     fs,
+			Name:   name,
+			Mode:   s.mode,
+			Mods:   nil,
+			Replay: nil,
+		}
 	}
 	return nil
 }
@@ -214,6 +227,17 @@ func (s Scene) Draw(screen draws.Image) {
 	s.DebugPrint(screen)
 }
 func (s Scene) DebugPrint(screen draws.Image) {
+	{
+		const (
+			x = 1200
+			y = 100
+		)
+		t := s.query
+		if t == "" {
+			t = "Type for search..."
+		}
+		text.Draw(screen.Image, t, scene.Face16, x, y, color.Black)
+	}
 	speed := *s.speedFactors[s.mode]
 	ebitenutil.DebugPrint(screen.Image,
 		fmt.Sprintf(

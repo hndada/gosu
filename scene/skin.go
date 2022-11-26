@@ -13,6 +13,7 @@ type Skin struct {
 	Type              int
 	DefaultBackground draws.Sprite
 	Cursor            [3]draws.Sprite
+	BoxMask           draws.Sprite
 
 	Enter      audios.Sound
 	Swipe      audios.SoundBag
@@ -41,6 +42,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 		skin.Cursor[i] = s
 	}
+	skin.BoxMask = draws.NewSprite(fsys, "interface/box-mask.png")
 	skin.Enter = audios.NewSound(fsys, "sound/ringtone2_loop.wav")
 	skin.Swipe = audios.NewSoundBag(fsys, "sound/swipe")
 	skin.Tap = audios.NewSoundBag(fsys, "sound/tap")

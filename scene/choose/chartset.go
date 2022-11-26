@@ -45,7 +45,12 @@ type ChartSetList struct {
 }
 
 func NewChartSetList(css []*ChartSet) (l ChartSetList) {
-	rows := make([]Row, len(css))
+	rows := make([]*Row, len(css))
+	for i, cs := range css {
+		card := cs.URLCover("card", "")
+		thumb := cs.URLCover("list", "")
+		rows[i] = NewRow(card, thumb, cs.Title, cs.Artist)
+	}
 	sort.Slice(rows, func(i, j int) bool {
 		return css[i].LastUpdate > css[j].LastUpdate
 	})

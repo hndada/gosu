@@ -1,6 +1,8 @@
 package choose
 
 import (
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
@@ -10,55 +12,107 @@ import (
 )
 
 const (
-	RowWidth  float64 = 450
-	RowHeight float64 = 50
+	RowWidth  float64 = 550 // 400(card) + 150(list)
+	RowHeight float64 = 75  // 50
 	RowShrink float64 = 0.15 * RowWidth
-	RowCount  int     = int(ScreenSizeY/RowHeight) + 2
+	RowCount  int     = 20 // int(ScreenSizeY/RowHeight) + 2
 )
 
 type Row struct {
-	// base
-	draws.Sprite
+	thumbCh chan draws.Image
+	cardCh  chan draws.Image
 
-	// Thumb stands for thumbnail.
-	// Inner does not have Thumb.
-	Thumb draws.Sprite
-
-	// First contains music name for both outer and inner.
-	First draws.Sprite
-
-	// outer: Artist
-	// inner: (Level) ChartName
-	Second draws.Sprite
+	draws.Sprite // Thumbnail
+	Card         draws.Sprite
+	Mask         draws.Sprite
+	First        draws.Sprite
+	Second       draws.Sprite
 }
 
-func NewChartSetRow(cs *ChartSet) {
-	const thumbSize = 300
-	const (
-		dx = 20 // Padding left.
-		dy = 30 // Padding bottom.
-	)
-}
-func NewChartRow(cs *ChartSet, c Chart) {
+var defaultThumb = draws.Image{
+	Image: ebiten.NewImage(int(RowHeight), int(RowHeight))}
+var defaultCard = draws.Image{
+	Image: ebiten.NewImage(int(RowWidth-RowHeight), int(RowHeight))}
 
+func NewRow(cardURL, thumbURL, first, second string) *Row {
+	const dx = RowHeight // Thumbnail is a square.
+	r := &Row{}
+	go func() {
+		i, err := ebitenutil.NewImageFromURL(thumbURL)
+		if err != nil {
+			return
+		}
+		r.thumbCh <- draws.Image{Image: i}
+		close(r.thumbCh)
+	}()
+	go func() {
+		i, err := ebitenutil.NewImageFromURL(cardURL)
+		if err != nil {
+			return
+		}
+		r.cardCh <- draws.Image{Image: i}
+		close(r.cardCh)
+	}()
+	{
+		s := draws.NewSpriteFromSource(defaultThumb)
+		s.SetScaleToH(RowHeight)
+		r.Sprite = s
+	}
+	{
+		s := draws.NewSpriteFromSource(defaultCard)
+		s.SetScaleToH(RowHeight)
+		s.Locate(dx, 0, draws.LeftTop)
+		r.Card = s
+	}
+	{
+		s := scene.UserSkin.BoxMask
+		s.SetScaleToH(RowHeight)
+		s.Locate(dx, 0, draws.LeftTop)
+		r.Mask = s
+	}
+	{
+		src := draws.NewText(first, scene.Face20)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(dx, 0, draws.LeftTop)
+		r.First = s
+	}
+	{
+		src := draws.NewText(second, scene.Face20)
+		s := draws.NewSpriteFromSource(src)
+		s.Locate(dx, RowHeight/2, draws.LeftTop)
+		r.Second = s
+	}
+	return r
+}
+func (r *Row) Update() {
+	select {
+	case i := <-r.thumbCh:
+		r.Sprite.Source = i
+	case i := <-r.cardCh:
+		r.Card.Source = i
+	default:
+	}
 }
 func (r Row) Draw(dst draws.Image) {
-	r.Thumb.Position = r.Thumb.Add(r.Position)
-	r.First.Position = r.First.Add(r.Position)
-	r.Second.Position = r.Second.Add(r.Position)
+	// r.Sprite.Position
 	r.Sprite.Draw(dst, draws.Op{})
-	r.Thumb.Draw(dst, draws.Op{})
+	r.Card.Position = r.Card.Add(r.Position)
+	r.Card.Draw(dst, draws.Op{})
+	r.Mask.Position = r.Mask.Add(r.Position)
+	r.Mask.Draw(dst, draws.Op{})
+	r.First.Position = r.First.Add(r.Position)
 	r.First.Draw(dst, draws.Op{})
+	r.Second.Position = r.Second.Add(r.Position)
 	r.Second.Draw(dst, draws.Op{})
 }
 
 type List struct {
-	Rows   []Row
+	Rows   []*Row
 	Cursor ctrl.KeyHandler
 	cursor int
 }
 
-func NewList(rows []Row) (l *List) {
+func NewList(rows []*Row) (l *List) {
 	return &List{
 		Rows: rows,
 		Cursor: ctrl.KeyHandler{

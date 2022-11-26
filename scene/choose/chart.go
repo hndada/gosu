@@ -34,16 +34,29 @@ type ChartList struct {
 	Panel  *ChartPanel
 }
 
-func (sl ChartSetList) NewChartList() (l ChartList) {
-	cs := sl.Current().ChildrenBeatmaps
-	rows := make([]Row, len(cs))
+// Todo: these codes are kinda messy
+func (csl ChartSetList) NewChartList() (cl ChartList) {
+	cset := csl.Current()
+	cs := cset.ChildrenBeatmaps
+	rows := make([]*Row, len(cs))
+	for i := range rows {
+		rows[i] = cset.NewChartRow(i)
+	}
 	sort.Slice(rows, func(i, j int) bool {
 		return cs[i].DifficultyRating < cs[j].DifficultyRating
 	})
-	l.List = NewList(rows)
-	l.Charts = cs
-	l.Panel = NewChartPanel(sl.Panel, cs[0])
+	cl.List = NewList(rows)
+	cl.Charts = cs
+	cl.Panel = NewChartPanel(csl.Panel, cs[0])
 	return
+}
+func (cset ChartSet) NewChartRow(i int) (r *Row) {
+	card := cset.URLCover("card", "")
+	thumb := cset.URLCover("list", "")
+	c := cset.ChildrenBeatmaps[i]
+	lv := int(c.DifficultyRating * 4)
+	second := fmt.Sprintf("(Level %2d) %s", lv, c.DiffName)
+	return NewRow(card, thumb, cset.Title, second)
 }
 func (l *ChartList) Update() {
 	if l.Panel != nil {
@@ -61,31 +74,12 @@ func (l ChartList) Current() *Chart {
 	return l.Charts[l.cursor]
 }
 
-func NewChartRows(css ChartSet, cs []*Chart) []Row {
-	rows := make([]Row, len(cs))
-	for i, c := range cs {
-		var r Row
-		{
-			t := draws.NewText(css.Title, scene.Face16)
-			r.First = draws.NewSpriteFromSource(t)
-		}
-		{
-			lv := int(c.DifficultyRating) * 4
-			src := fmt.Sprintf("(Level: %d) %s", lv, c.DiffName)
-			t := draws.NewText(src, scene.Face16)
-			r.Second = draws.NewSpriteFromSource(t)
-		}
-		rows[i] = r
-	}
-
-	return rows
-}
-
-// https://osu.ppy.sh/docs/index.html#beatmapsetcompact-covers
-// slimcover: 1920x360
-// cover: 900x250
-// card: 400x140
 // list: 150x150
+// card: 400x140
+// cover: 900x250
+// slimcover: 1920x360
+// Example: https://assets.ppy.sh/beatmaps/784354/covers/slimcover@2x.jpg
+// Reference: https://osu.ppy.sh/docs/index.html#beatmapsetcompact-covers
 const APIBeatmap = "https://assets.ppy.sh/beatmaps"
 const Large = "@2x"
 
