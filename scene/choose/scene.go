@@ -47,8 +47,10 @@ type Scene struct {
 	speedFactors  []*float64
 	exposureTimes []func(float64) float64
 
-	choose     audios.Sound
-	Music      audios.MusicPlayer
+	choose audios.Sound
+	// musicCh      chan []byte
+	// Music      audios.MusicPlayer
+	bgCh       chan draws.Image
 	Background mode.BackgroundDrawer
 
 	mode    int
@@ -117,13 +119,20 @@ func isBack() bool {
 	return inpututil.IsKeyJustPressed(input.KeyEscape)
 }
 
-// Todo: resolve nested blocks
 func (s *Scene) Update() any {
 	scene.VolumeMusic.Update()
 	scene.VolumeSound.Update()
 	scene.Brightness.Update()
 	scene.Offset.Update()
 	scene.SpeedScales[s.mode].Update()
+	select {
+	case i := <-s.bgCh:
+		sprite := draws.NewSpriteFromSource(i)
+		sprite.SetScaleToW(ScreenSizeX)
+		sprite.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
+		s.Background.Sprite = sprite
+	default:
+	}
 	if s.query != s.Query.Text {
 		s.query = s.Query.Text
 		s.Focus = FocusSearch
@@ -144,16 +153,22 @@ func (s *Scene) Update() any {
 		}
 	}
 	if s.Mode.Update() || s.SubMode.Update() {
-		css, err := s.Search()
-		if err != nil {
-			fmt.Println(err)
-		}
-		s.ChartSets = NewChartSetList(css)
-		// Background
+		s.LoadChartSetList()
 	}
 	switch s.Focus {
+	case FocusSearch:
+		s.Query.Update()
 	case FocusChartSet:
-		s.ChartSets.Update()
+		if s.ChartSets.Update() {
+			cset := s.ChartSets.Current()
+			go func() {
+				i, err := ebitenutil.NewImageFromURL(cset.URLCover("cover", Large))
+				if err != nil {
+					return
+				}
+				s.bgCh <- draws.Image{Image: i}
+			}()
+		}
 	case FocusChart:
 		s.Charts.Update()
 	}
@@ -162,17 +177,9 @@ func (s *Scene) Update() any {
 func (s *Scene) handleEnter() any {
 	switch s.Focus {
 	case FocusSearch:
-		css, err := s.Search()
-		if err != nil {
-			return err
-		}
-		s.ChartSets = NewChartSetList(css)
-		s.Focus = FocusChartSet
+		s.LoadChartSetList()
 	case FocusChartSet:
-		if len(s.ChartSets.ChartSets) > 0 {
-			s.Charts = s.ChartSets.NewChartList()
-			s.Focus = FocusChart
-		}
+		s.LoadChartList()
 	case FocusChart:
 		c := s.Charts.Current()
 		if c == nil {

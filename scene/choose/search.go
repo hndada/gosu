@@ -31,7 +31,7 @@ const (
 )
 const amount = 25
 
-func (s *Scene) Search() (css []*ChartSet, err error) {
+func (s *Scene) LoadChartSetList() (err error) {
 	u, err := url.Parse("https://api.chimu.moe/search")
 	if err != nil {
 		return
@@ -64,7 +64,9 @@ func (s *Scene) Search() (css []*ChartSet, err error) {
 	if err != nil {
 		return
 	}
-	css = append(css, result.Data...)
+	css := result.Data
+	s.ChartSets = NewChartSetList(css)
+	s.Focus = FocusChartSet
 	s.page++
 	return
 }

@@ -39,3 +39,11 @@ func decode(fsys fs.FS, name string) (streamer io.ReadSeeker, close func() error
 	}
 	return
 }
+
+// func readFromFS(fsys fs.FS, name string) io.Reader {
+// 	dat, err := fs.ReadFile(fsys, name)
+// 	if err != nil {
+// 		return nil
+// 	}
+// 	return bytes.NewReader(dat)
+// }
