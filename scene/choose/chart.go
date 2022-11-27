@@ -9,6 +9,7 @@ import (
 )
 
 type Chart struct {
+	*ChartSet
 	BeatmapId        int
 	ParentSetId      int
 	DiffName         string
@@ -43,7 +44,7 @@ func (s *Scene) LoadChartList() {
 	})
 	rows := make([]Row, 0, len(cs))
 	for i := range cs {
-		if s.levelLimit && cs[i].DifficultyRating < 4 {
+		if s.levelLimit && cs[i].DifficultyRating > 4 {
 			continue
 		}
 		rows = append(rows, cset.NewChartRow(i))

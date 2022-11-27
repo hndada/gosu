@@ -16,6 +16,7 @@ const (
 const positionMargin = 100
 
 type Settings struct {
+	VolumeMusic          float64
 	volumeMusic          *float64
 	volumeSound          *float64
 	offset               *int64

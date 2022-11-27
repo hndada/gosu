@@ -5,18 +5,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"image/color"
 	"io"
 	"io/fs"
 	"math"
 	"net/http"
-	"runtime/debug"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/hajimehoshi/ebiten/v2/text"
-	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
@@ -50,7 +46,7 @@ type Scene struct {
 	speedFactors  []*float64
 	exposureTimes []func(float64) float64
 
-	choose audios.Sound
+	// choose audios.Sound
 	// musicCh      chan []byte
 	// Music      audios.MusicPlayer
 	bgCh       chan draws.Image
@@ -124,8 +120,8 @@ func NewScene() *Scene {
 	// }
 	s.levelLimit = true
 	s.handleEnter()
-	ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
-	debug.SetGCPercent(100)
+	// ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
+	// debug.SetGCPercent(100)
 	ebiten.SetWindowTitle("gosu")
 	return s
 }
@@ -158,7 +154,7 @@ func (s *Scene) Update() any {
 	if inpututil.IsKeyJustPressed(input.KeyF1) {
 		s.mode++
 		s.mode %= 3
-		s.choose.Play(*s.volumeSound)
+		scene.UserSkin.Enter.Play(*s.volumeSound)
 		s.Focus = FocusSearch
 		err := s.handleEnter()
 		if err != nil {
@@ -167,7 +163,7 @@ func (s *Scene) Update() any {
 	}
 	if inpututil.IsKeyJustPressed(input.KeyF4) {
 		s.levelLimit = !s.levelLimit
-		s.choose.Play(*s.volumeSound)
+		scene.UserSkin.Swipe.Play(*s.volumeSound)
 	}
 	if isEnter() {
 		return s.handleEnter()
@@ -188,16 +184,36 @@ func (s *Scene) Update() any {
 	case FocusSearch:
 		s.Query.Update()
 	case FocusChartSet:
-		if s.ChartSets.Update() {
-			cset := s.ChartSets.Current()
-			go func() {
-				i, err := ebitenutil.NewImageFromURL(cset.URLCover("cover", Large))
-				if err != nil {
-					return
-				}
-				s.bgCh <- draws.Image{Image: i}
-			}()
+		fired, state := s.ChartSets.Update()
+		if !fired {
+			break
 		}
+		switch state {
+		case prev:
+			if s.page == 0 {
+				break
+			}
+			s.page--
+			go s.LoadChartSetList()
+		case next:
+			css := s.ChartSets
+			s.page++
+			go s.LoadChartSetList()
+			if len(s.ChartSets.ChartSets) == 0 {
+				s.ChartSets = css
+				s.page--
+			}
+		case stay:
+		}
+		cset := s.ChartSets.Current()
+		go func() {
+			i, err := ebitenutil.NewImageFromURL(cset.URLCover("cover", Large))
+			if err != nil {
+				return
+			}
+			s.bgCh <- draws.Image{Image: i}
+		}()
+
 	case FocusChart:
 		s.Charts.Update()
 	}
@@ -206,13 +222,15 @@ func (s *Scene) Update() any {
 func (s *Scene) handleEnter() any {
 	switch s.Focus {
 	case FocusSearch:
+		fmt.Println("Load chart sets")
 		s.query = s.Query.Text
 		s.LoadChartSetList()
 	case FocusChartSet:
-		fmt.Println("Load chart list")
+		fmt.Println("Load chart")
 		s.LoadChartList()
 	case FocusChart:
 		fmt.Println("Play chart")
+		scene.UserSkin.Enter.Play(*s.volumeSound)
 		c := s.Charts.Current()
 		if c == nil {
 			return errors.New("no chart loaded")
@@ -221,7 +239,6 @@ func (s *Scene) handleEnter() any {
 		if err != nil {
 			return err
 		}
-		s.choose.Play(*s.volumeSound)
 		return Return{
 			FS:     fs,
 			Name:   name,
@@ -265,21 +282,6 @@ func (s Scene) Draw(screen draws.Image) {
 	s.DebugPrint(screen)
 }
 func (s Scene) DebugPrint(screen draws.Image) {
-	{
-		const (
-			x = ScreenSizeX - RowWidth
-			y = 25
-		)
-		t := s.query
-		if t == "" {
-			t = "Type for search..."
-		}
-		text.Draw(screen.Image, t, scene.Face16, int(x), y, color.White)
-	}
-	// query := s.query
-	// if len(query) == 0 {
-	// 	query = "(Default)"
-	// }
 	speed := *s.speedFactors[modes[s.mode]]
 	ebitenutil.DebugPrint(screen.Image, fmt.Sprintf("FPS: %.2f\n"+
 		"TPS: %.2f\n"+
