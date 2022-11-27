@@ -15,7 +15,7 @@ const (
 	RowWidth  float64 = 550 // 400(card) + 150(list)
 	RowHeight float64 = 75  // 50
 	RowShrink float64 = 0.15 * RowWidth
-	RowCount  int     = 20 // int(ScreenSizeY/RowHeight) + 2
+	RowCount  int     = 15 // int(ScreenSizeY/RowHeight) + 2
 )
 
 type Row struct {

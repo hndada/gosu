@@ -33,17 +33,17 @@ const (
 )
 
 func (s *Scene) LoadChartSetList() (err error) {
-	css, err := Search(s.query, s.mode, s.page)
+	const rankedOnly = true
+	css, err := Search(s.query, s.mode, s.page, s.levelLimit, rankedOnly)
 	if err != nil {
 		return
 	}
 	s.ChartSets = NewChartSetList(css)
 	s.Focus = FocusChartSet
-	s.page++
 	return
 }
-func Search(query string, mode int, page int) (css []*ChartSet, err error) {
-	const amount = 20
+func Search(query string, mode, page int, lvLimit, rankedOnly bool) (css []*ChartSet, err error) {
+	const amount = RowCount // = 20
 	const (
 		modeMania = 3
 		modeTaiko = 1
@@ -68,6 +68,12 @@ func Search(query string, mode int, page int) (css []*ChartSet, err error) {
 	}
 	vs.Add("amount", strconv.Itoa(amount))
 	vs.Add("offset", strconv.Itoa(page*amount))
+	if lvLimit {
+		vs.Add("max_diff", "4")
+	}
+	if rankedOnly {
+		vs.Add("status", "1,2,3")
+	}
 	u.RawQuery = vs.Encode()
 	fmt.Println("URL:", u.String())
 	resp, err := http.Get(u.String())
@@ -91,6 +97,11 @@ func Search(query string, mode int, page int) (css []*ChartSet, err error) {
 		return
 	}
 	css = result.Data
-	fmt.Println("data length:", len(css))
+	if len(css) < amount {
+		css2, _ := Search(query, mode, page, lvLimit, false)
+		css = append(css, css2...)
+		css = css[:amount]
+	}
+	// fmt.Println("data length:", len(css))
 	return
 }
