@@ -66,6 +66,9 @@ type Scene struct {
 	// lastChartSets [][]*ChartSet
 	levelLimit bool
 	LevelLimit ctrl.KeyHandler
+
+	loading bool
+	Loading LoadingDrawer
 }
 
 const (
@@ -119,6 +122,7 @@ func NewScene() *Scene {
 	// 	s.lastChartSets[i] = css
 	// }
 	s.levelLimit = true
+	s.Loading = NewLoadingDrawer()
 	s.handleEnter()
 	// ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 	// debug.SetGCPercent(100)
@@ -134,6 +138,10 @@ func isBack() bool {
 }
 
 func (s *Scene) Update() any {
+	if s.loading {
+		s.Loading.Update()
+		return nil
+	}
 	scene.VolumeMusic.Update()
 	scene.VolumeSound.Update()
 	scene.Brightness.Update()
@@ -194,15 +202,20 @@ func (s *Scene) Update() any {
 				break
 			}
 			s.page--
-			go s.LoadChartSetList()
+			go func() {
+				s.LoadChartSetList()
+				s.ChartSets.cursor = RowCount - 1
+			}()
 		case next:
 			css := s.ChartSets
 			s.page++
-			go s.LoadChartSetList()
-			if len(s.ChartSets.ChartSets) == 0 {
-				s.ChartSets = css
-				s.page--
-			}
+			go func() {
+				s.LoadChartSetList()
+				if len(s.ChartSets.ChartSets) == 0 {
+					s.ChartSets = css
+					s.page--
+				}
+			}()
 		case stay:
 		}
 		cset := s.ChartSets.Current()
@@ -272,6 +285,9 @@ func (c Chart) Choose() (fsys fs.FS, name string, err error) {
 	return fsys, c.OsuFile, err
 }
 func (s Scene) Draw(screen draws.Image) {
+	if s.loading {
+		s.Loading.Draw(screen)
+	}
 	s.Background.Draw(screen)
 	switch s.Focus {
 	case FocusSearch, FocusChartSet:

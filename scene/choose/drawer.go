@@ -58,7 +58,7 @@ func NewLoadingDrawer() LoadingDrawer {
 	i := draws.NewImage(ScreenSizeX, ScreenSizeY)
 	i.Fill(color.NRGBA{128, 128, 128, 128})
 	return LoadingDrawer{
-		Timer: draws.NewTimer(0, draws.ToTick(1000, TPS)),
+		Timer: draws.NewTimer(0, draws.ToTick(600, TPS)),
 	}
 }
 func (d *LoadingDrawer) Update() {
@@ -71,7 +71,8 @@ func (d LoadingDrawer) Draw(dst draws.Image) {
 	)
 	grayCover.Draw(dst, draws.Op{})
 	t := "Loading"
-	c := int(3*d.Age() + 1)
+	age := float64(d.Tick) / float64(d.Period) // Todo: generalize at draws package
+	c := int(3*age + 1)
 	t += strings.Repeat(".", c)
 	text.Draw(dst.Image, t, scene.Face24, x, y, color.White)
 }

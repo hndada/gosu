@@ -36,6 +36,7 @@ const (
 )
 
 func (s *Scene) LoadChartSetList() (err error) {
+	s.loading = true
 	const rankedOnly = true
 	css, err := Search(s.query, s.mode, s.page, s.levelLimit, rankedOnly)
 	if err != nil {
@@ -43,6 +44,7 @@ func (s *Scene) LoadChartSetList() (err error) {
 	}
 	s.ChartSets = NewChartSetList(css)
 	s.Focus = FocusChartSet
+	s.loading = false
 	return
 }
 func Search(query string, mode, page int, lvLimit, rankedOnly bool) (css []*ChartSet, err error) {
