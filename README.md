@@ -82,4 +82,4 @@ Will also post details at [wiki](https://github.com/hndada/gosu/wiki).
 # License
 Codebase: Apache License 2.0
 
-Skin images and music tracks are from [osu-resources](https://github.com/ppy/osu-resources), licensed under [CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode).
+Most skin images and music tracks are from [osu-resources](https://github.com/ppy/osu-resources), licensed under [CC-BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/legalcode).
