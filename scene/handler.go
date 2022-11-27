@@ -66,8 +66,8 @@ func loadHandler() {
 		Sounds:    [2]audios.Sounder{UserSkin.Tap, UserSkin.Tap},
 		Volume:    &mode.S.VolumeSound,
 	}
-	SpeedScales = make([]ctrl.KeyHandler, 3)
-	for i, v := range []*float64{&piano.S.SpeedScale, &piano.S.SpeedScale, &drum.S.SpeedScale} {
+	SpeedScales = make([]ctrl.KeyHandler, 2)
+	for i, v := range []*float64{&piano.S.SpeedScale, &drum.S.SpeedScale} {
 		SpeedScales[i] = ctrl.KeyHandler{
 			Handler: ctrl.FloatHandler{
 				Value: v,

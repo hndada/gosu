@@ -171,12 +171,10 @@ func (s *ScenePlay) SetSpeed() {
 	}
 	s.speedScale = new
 }
-
 func (s *ScenePlay) Update() any {
 	defer s.Ticker()
 	if s.IsDone() {
-		s.MusicPlayer.Close()
-		return s.NewResult(s.Chart.MD5)
+		return s.Finish()
 	}
 	s.MusicPlayer.Update()
 
@@ -240,6 +238,10 @@ func (s *ScenePlay) Update() any {
 		s.SetSpeed()
 	}
 	return nil
+}
+func (s ScenePlay) Finish() any {
+	s.MusicPlayer.Close()
+	return s.NewResult(s.Chart.MD5)
 }
 func (s *ScenePlay) UpdateCursor() {
 	duration := float64(s.Now - s.TransPoint.Time)

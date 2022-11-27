@@ -20,6 +20,10 @@ type Skin struct {
 	Tap        audios.SoundBag
 	Toggle     [2]audios.Sound
 	Transition [2]audios.Sound
+
+	Intro   draws.Sprite
+	Loading draws.Sprite
+	Clear   draws.Sprite
 }
 
 const (
@@ -33,6 +37,7 @@ var (
 	UserSkin    = Skin{Type: mode.User}
 )
 
+// Todo: fillBlank should fill draws.Image, not Sprite.
 func (skin *Skin) Load(fsys fs.FS) {
 	defer skin.fillBlank(&DefaultSkin)
 	skin.DefaultBackground = mode.UserSkin.DefaultBackground
@@ -54,6 +59,23 @@ func (skin *Skin) Load(fsys fs.FS) {
 	for i, name := range []string{"down", "up"} {
 		name := fmt.Sprintf("sound/transition/%s.wav", name)
 		skin.Transition[i] = audios.NewSound(fsys, name)
+	}
+
+	// Todo: fillBlank
+	{
+		s := draws.NewSprite(fsys, "interface/intro.png")
+		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
+		skin.Intro = s
+	}
+	{
+		s := draws.NewSprite(fsys, "interface/loading.png")
+		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
+		skin.Loading = s
+	}
+	{
+		s := draws.NewSprite(fsys, "interface/clear.png")
+		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
+		skin.Clear = s
 	}
 }
 func (skin *Skin) fillBlank(base *Skin) {
