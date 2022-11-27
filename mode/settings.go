@@ -45,13 +45,13 @@ const (
 
 func NewSettings() Settings {
 	return Settings{
-		VolumeMusic:          0.25,
-		VolumeSound:          0.25,
-		Offset:               -110,
+		VolumeMusic:          0.50,
+		VolumeSound:          0.50,
+		Offset:               -90,
 		BackgroundBrightness: 0.6,
 
 		MeterUnit:     4,
-		MeterHeight:   50,
+		MeterHeight:   75,
 		ScoreScale:    0.65,
 		ScoreDigitGap: 0,
 	}
