@@ -95,10 +95,6 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		s.StagedShake = c.Shakes[0]
 	}
 
-	{
-		// PlaySkin.Load(fsys)
-		// skin := PlaySkin
-	}
 	skin := UserSkin
 	s.DrumSound = skin.DrumSound
 	s.Background = mode.BackgroundDrawer{
@@ -159,7 +155,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		Mode:        DancerIdle,
 		ModeEndTime: s.Now,
 	}
-	s.Score = mode.NewScoreDrawer(&s.Scores[mode.Total], skin.score[:])
+	s.Score = mode.NewScoreDrawer(skin.score[:])
 	s.Combo = mode.ComboDrawer{
 		Timer:      draws.NewTimer(draws.ToTick(2000, TPS), 0),
 		DigitWidth: skin.Combo[0].W(),
@@ -314,7 +310,7 @@ func (s *ScenePlay) Update() any {
 	s.Key.Update(s.LastPressed, s.Pressed)
 	s.Dancer.Update(s.Now, s.BPM, s.Scorer.Combo, judgment.Is(Miss),
 		!judgment.Is(Miss) && judgment.IsValid(), s.Highlight)
-	s.Score.Update()
+	s.Score.Update(s.Scores[mode.Total])
 	s.Combo.Update(s.Scorer.Combo)
 	s.Meter.Update()
 

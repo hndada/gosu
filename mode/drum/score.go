@@ -229,3 +229,12 @@ func (s *ScenePlay) SetMaxScores() {
 	}
 	s.Scorer.SetMaxScores(s.MaxScores)
 }
+
+// func (s ScenePlay) LinearScore() float64 {
+// 	var sum float64
+// 	for i, c := range s.NoteCount{
+// 		max:=float64(s.MaxNoteCount[i])
+// 		sum+=
+// 	}
+// 	return s.ScoreBounds[mode.Total] * float64(s.NoteCount) / float64(s.MaxNoteCount)
+// }

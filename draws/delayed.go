@@ -11,19 +11,19 @@ const (
 )
 
 type Delayed struct {
-	Delayed      float64
-	Source       float64
-	source       *float64
+	Delayed float64
+	Source  float64
+	// source       *float64
 	Mode         int // Todo: custom type?
 	Feedback     float64
 	countdown    int
 	maxCountdown int
 }
 
-func NewDelayed(src *float64, tps int) Delayed {
+func NewDelayed(tps int) Delayed {
 	return Delayed{
-		Delayed:      *src,
-		source:       src,
+		// Delayed:      *src,
+		// source:       src,
 		Mode:         DelayedModeExp,
 		Feedback:     0,
 		countdown:    ToTick(400, tps),
@@ -31,9 +31,9 @@ func NewDelayed(src *float64, tps int) Delayed {
 	}
 }
 
-func (d *Delayed) Update() {
-	if d.Source != *d.source {
-		d.Source = *d.source
+func (d *Delayed) Update(src float64) {
+	if d.Source != src {
+		d.Source = src
 		d.countdown = d.maxCountdown
 		diff := d.Source - d.Delayed
 		if diff < 0.1 {

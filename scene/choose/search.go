@@ -77,7 +77,7 @@ func Search(query string, mode, page int, lvLimit, rankedOnly bool) (css []*Char
 		vs.Add("max_diff", "4")
 	}
 	if rankedOnly {
-		vs.Add("status", "1,2,3")
+		vs.Add("status", "1")
 	}
 	u.RawQuery = vs.Encode()
 	fmt.Println("URL:", u.String())
@@ -107,6 +107,5 @@ func Search(query string, mode, page int, lvLimit, rankedOnly bool) (css []*Char
 		css = append(css, css2...)
 		css = css[:amount]
 	}
-	// fmt.Println("data length:", len(css))
 	return
 }

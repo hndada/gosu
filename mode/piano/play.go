@@ -28,6 +28,9 @@ type ScenePlay struct {
 	Cursor     float64
 	Staged     []*Note
 	mode.Scorer
+	// Todo: merge into mode.Scorer
+	NoteCount    int
+	MaxNoteCount int
 
 	Background   mode.BackgroundDrawer
 	Field        FieldDrawer
@@ -68,6 +71,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	s.Cursor = float64(s.Now) * s.speedScale
 	s.SetSpeed()
 	s.Scorer = mode.NewScorer(c.ScoreFactors)
+	s.MaxNoteCount = len(c.Notes)
 	s.JudgmentCounts = make([]int, len(Judgments))
 	// s.Result.FlowMarks = make([]float64, 0, c.Duration()/1000)
 	var maxWeight float64
@@ -141,7 +145,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		Sprite: skin.Hint,
 	}
 	s.Judgment = NewJudgmentDrawer(skin.Judgment[:])
-	s.Score = mode.NewScoreDrawer(&s.Scores[mode.Total], skin.Score[:])
+	s.Score = mode.NewScoreDrawer(skin.Score[:])
 	s.Combo = mode.ComboDrawer{
 		Timer:      draws.NewTimer(draws.ToTick(2000, TPS), 0),
 		DigitWidth: skin.Combo[0].W(),
@@ -243,7 +247,7 @@ func (s *ScenePlay) Update() any {
 		s.HoldLighting[k].Update(holding)
 	}
 	s.Judgment.Update(worst)
-	s.Score.Update()
+	s.Score.Update(s.LinearScore())
 	s.Combo.Update(s.Scorer.Combo)
 	s.Meter.Update()
 

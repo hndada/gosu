@@ -110,16 +110,17 @@ func (c Chart) Duration() int64 {
 	last := c.Notes[len(c.Notes)-1]
 	return last.Time + last.Duration
 }
-func (c Chart) NoteCounts() (vs []int) {
-	vs = make([]int, 2)
-	for _, n := range c.Notes {
-		if n.Type == Tail {
-			continue
-		}
-		vs[n.Type]++
-	}
-	return
-}
+
+//	func (c Chart) NoteCounts() (vs []int) {
+//		vs = make([]int, 2)
+//		for _, n := range c.Notes {
+//			if n.Type == Tail {
+//				continue
+//			}
+//			vs[n.Type]++
+//		}
+//		return
+//	}
 func (c Chart) BPMs() (main, min, max float64) {
 	return mode.BPMs(c.TransPoints, c.Duration())
 }

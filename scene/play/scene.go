@@ -58,10 +58,10 @@ func (s *Scene) Update() any {
 	return s.ScenePlay.Update()
 }
 func (s Scene) Draw(screen draws.Image) {
+	s.ScenePlay.Draw(screen)
 	if s.IsDone() {
 		scene.UserSkin.Clear.Draw(screen, draws.Op{})
 	}
-	s.ScenePlay.Draw(screen)
 }
 
 // type Return struct {
