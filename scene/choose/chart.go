@@ -37,6 +37,7 @@ type ChartList struct {
 
 // Todo: these codes are kinda messy
 func (s *Scene) LoadChartList() {
+	s.loading = true
 	cset := s.ChartSets.Current()
 	cs := cset.ChildrenBeatmaps
 	sort.Slice(cs, func(i, j int) bool {
@@ -53,6 +54,7 @@ func (s *Scene) LoadChartList() {
 	s.Charts.Charts = cs
 	// s.Charts.Panel = NewChartPanel(s.ChartSets.Panel, cs[0])
 	s.Focus = FocusChart
+	s.loading = false
 }
 func (cset ChartSet) NewChartRow(i int) (r Row) {
 	card := cset.URLCover("card", "")
