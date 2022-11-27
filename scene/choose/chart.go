@@ -38,13 +38,16 @@ type ChartList struct {
 func (s *Scene) LoadChartList() {
 	cset := s.ChartSets.Current()
 	cs := cset.ChildrenBeatmaps
-	rows := make([]Row, len(cs))
-	for i := range rows {
-		rows[i] = cset.NewChartRow(i)
-	}
-	sort.Slice(rows, func(i, j int) bool {
+	sort.Slice(cs, func(i, j int) bool {
 		return cs[i].DifficultyRating < cs[j].DifficultyRating
 	})
+	rows := make([]Row, 0, len(cs))
+	for i := range cs {
+		if s.levelLimit && cs[i].DifficultyRating < 4 {
+			continue
+		}
+		rows = append(rows, cset.NewChartRow(i))
+	}
 	s.Charts.List = NewList(rows)
 	s.Charts.Charts = cs
 	// s.Charts.Panel = NewChartPanel(s.ChartSets.Panel, cs[0])
@@ -54,7 +57,7 @@ func (cset ChartSet) NewChartRow(i int) (r Row) {
 	card := cset.URLCover("card", "")
 	thumb := cset.URLCover("list", "")
 	c := cset.ChildrenBeatmaps[i]
-	lv := int(c.DifficultyRating * 4)
+	lv := Level(c.DifficultyRating)
 	second := fmt.Sprintf("(Level %2d) %s", lv, c.DiffName)
 	return NewRow(card, thumb, cset.Title, second)
 }
@@ -126,7 +129,7 @@ func NewChartPanel(sp *ChartSetPanel, c *Chart) *ChartPanel {
 		p.ChartName = s
 	}
 	{ // Todo: use gosu's own level system
-		lv := int(c.DifficultyRating * 4)
+		lv := Level(c.DifficultyRating)
 		src := draws.NewText(fmt.Sprintf("Level: %2d", lv), scene.Face16)
 		s := draws.NewSpriteFromSource(src)
 		s.Locate(450, 100, draws.RightTop)

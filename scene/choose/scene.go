@@ -8,6 +8,7 @@ import (
 	"image/color"
 	"io"
 	"io/fs"
+	"math"
 	"net/http"
 	"runtime/debug"
 
@@ -67,6 +68,8 @@ type Scene struct {
 	ChartSets ChartSetList
 	Charts    ChartList
 	// lastChartSets [][]*ChartSet
+	levelLimit bool
+	LevelLimit ctrl.KeyHandler
 }
 
 const (
@@ -119,6 +122,7 @@ func NewScene() *Scene {
 	// 	}
 	// 	s.lastChartSets[i] = css
 	// }
+	s.levelLimit = true
 	s.handleEnter()
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 	debug.SetGCPercent(100)
@@ -161,6 +165,10 @@ func (s *Scene) Update() any {
 			fmt.Println(err)
 		}
 	}
+	if inpututil.IsKeyJustPressed(input.KeyF4) {
+		s.levelLimit = !s.levelLimit
+		s.choose.Play(*s.volumeSound)
+	}
 	if isEnter() {
 		return s.handleEnter()
 	}
@@ -198,6 +206,7 @@ func (s *Scene) Update() any {
 func (s *Scene) handleEnter() any {
 	switch s.Focus {
 	case FocusSearch:
+		s.query = s.Query.Text
 		s.LoadChartSetList()
 	case FocusChartSet:
 		fmt.Println("Load chart list")
@@ -245,7 +254,6 @@ func (c Chart) Choose() (fsys fs.FS, name string, err error) {
 	}
 	return fsys, c.OsuFile, err
 }
-
 func (s Scene) Draw(screen draws.Image) {
 	s.Background.Draw(screen)
 	switch s.Focus {
@@ -268,6 +276,10 @@ func (s Scene) DebugPrint(screen draws.Image) {
 		}
 		text.Draw(screen.Image, t, scene.Face16, int(x), y, color.White)
 	}
+	// query := s.query
+	// if len(query) == 0 {
+	// 	query = "(Default)"
+	// }
 	speed := *s.speedFactors[modes[s.mode]]
 	ebitenutil.DebugPrint(screen.Image, fmt.Sprintf("FPS: %.2f\n"+
 		"TPS: %.2f\n"+
@@ -279,7 +291,11 @@ func (s Scene) DebugPrint(screen draws.Image) {
 		"Brightness (Ctrl+ O/P): %.0f%%\n"+
 		"Offset (Shift+ Left/Right): %dms\n"+
 		"\n"+
-		"Speed (PageUp/Down): %.0f (Exposure time: %.0fms)\n",
+		"Speed (PageUp/Down): %.0f (Exposure time: %.0fms)\n"+
+		"\n"+
+		"Query: %s\n"+
+		"No: %d (Page: %d)\n"+
+		"Level limit to 10 (F4): %v\n",
 		ebiten.ActualFPS(),
 		ebiten.ActualTPS(),
 		[]string{"Piano4", "Piano7", "Drum"}[s.mode],
@@ -290,7 +306,11 @@ func (s Scene) DebugPrint(screen draws.Image) {
 		*s.brightness*100,
 		*s.offset,
 
-		speed*100, s.exposureTimes[modes[s.mode]](speed)))
+		speed*100, s.exposureTimes[modes[s.mode]](speed),
+		s.query,
+		s.page*RowCount+s.ChartSets.cursor, s.page,
+		s.levelLimit,
+	))
 }
 
 type Return struct {
@@ -300,3 +320,6 @@ type Return struct {
 	Mods   interface{}
 	Replay *osr.Format
 }
+
+// It goes roughly triangular number.
+func Level(sr float64) int { return int(math.Pow(sr, 1.7)) }
