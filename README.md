@@ -27,7 +27,6 @@ Click thumbnails to watch at YouTube.
 
 [![cillia - Ringo Uri no Utakata Shoujo [Ringo Oni]](https://i.imgur.com/0Ven6Oa.png)](https://youtu.be/8VgzAlc4SJ0)
 
-
 # Feature
 * osu! files supported
   * .osu (osu! beatmap file)
@@ -72,7 +71,12 @@ go build .
 ```
 
 # Flow of game logic
-[Powerpoint and SlideShare.](https://www.slideshare.net/MuangMuangE/gosupresentpptx-253675145)
+![Game logic](https://i.imgur.com/g5G6XLI.png)
+
+### [Powerpoint and SlideShare (preview below)](https://www.slideshare.net/MuangMuangE/gosupresentpptx-253675145)
+[![gosu-present](https://i.imgur.com/rtq5n9p.png)](https://www.slideshare.net/MuangMuangE/gosupresentpptx-253675145)
+
+
 
 Will also post details at [wiki](https://github.com/hndada/gosu/wiki).
 

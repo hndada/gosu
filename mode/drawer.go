@@ -37,17 +37,17 @@ type ScoreDrawer struct {
 	Sprites    []draws.Sprite
 }
 
-func NewScoreDrawer(score *float64, sprites []draws.Sprite) ScoreDrawer {
+func NewScoreDrawer(sprites []draws.Sprite) ScoreDrawer {
 	return ScoreDrawer{
 		digitWidth: sprites[0].W(),
 		DigitGap:   UserSettings.ScoreDigitGap,
 		ZeroFill:   1,
-		Score:      draws.NewDelayed(score, TPS),
+		Score:      draws.NewDelayed(TPS),
 		Sprites:    sprites[:10],
 	}
 }
-func (d *ScoreDrawer) Update() {
-	d.Score.Update()
+func (d *ScoreDrawer) Update(score float64) {
+	d.Score.Update(score)
 }
 
 // NumberDrawer's Draw draws each number at the center of constant-width bound.

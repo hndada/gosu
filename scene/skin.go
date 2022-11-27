@@ -62,6 +62,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	}
 
 	// Todo: fillBlank
+	const ClearScale = 0.65
 	{
 		s := draws.NewSprite(fsys, "interface/intro.png")
 		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
@@ -75,6 +76,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	{
 		s := draws.NewSprite(fsys, "interface/clear.png")
 		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
+		s.ApplyScale(ClearScale)
 		skin.Clear = s
 	}
 }
