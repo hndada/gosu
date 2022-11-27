@@ -69,6 +69,7 @@ type Scene struct {
 
 	loading bool
 	Loading LoadingDrawer
+	// inited  bool
 }
 
 const (
