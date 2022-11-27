@@ -14,8 +14,8 @@ type MusicPlayer struct {
 	*Timer
 	Volume   *float64
 	volume   float64
-	Pause    bool
-	PauseKey input.Key
+	pause    bool
+	pauseKey input.Key
 	Closer   func() error
 }
 
@@ -31,8 +31,8 @@ func NewMusicPlayer(fsys fs.FS, name string, t *Timer, vol *float64, k input.Key
 		Timer:    t,
 		Volume:   vol,
 		volume:   *vol,
-		Pause:    false,
-		PauseKey: k,
+		pause:    false,
+		pauseKey: k,
 		Closer:   close,
 	}, nil
 }
@@ -53,15 +53,15 @@ func (p *MusicPlayer) Update() {
 	if !p.IsValid() {
 		return
 	}
-	if inpututil.IsKeyJustPressed(p.PauseKey) {
-		if p.Pause {
+	if inpututil.IsKeyJustPressed(p.pauseKey) {
+		if p.pause {
 			p.Player.Play()
 		} else {
 			p.Player.Pause()
 		}
-		p.Pause = !p.Pause
+		p.pause = !p.pause
 	}
-	if p.Pause {
+	if p.pause {
 		return
 	}
 	if vol := *p.Volume; p.volume != vol {

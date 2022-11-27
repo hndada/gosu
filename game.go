@@ -6,6 +6,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/drum"
@@ -15,12 +16,20 @@ import (
 	"github.com/hndada/gosu/scene/play"
 )
 
+const (
+	TPS         = scene.TPS
+	ScreenSizeX = scene.ScreenSizeX
+	ScreenSizeY = scene.ScreenSizeY
+)
+
 // All structs and variables in game package should be unexported
 // since the game package is for being called at main via NewGame.
 type game struct {
 	fs.FS
 	scene.Scene
-	choose scene.Scene
+	choose    scene.Scene
+	err       error
+	countdown int
 }
 type Settings struct {
 	General mode.Settings
@@ -91,32 +100,39 @@ func NewGame(fsys fs.FS) *game {
 	return g
 }
 
-func (g *game) Update() (err error) {
+func (g *game) Update() error {
+	if g.countdown > 0 {
+		g.countdown--
+	}
 	if g.Scene == nil {
 		g.Scene = g.choose
 	}
 	switch r := g.Scene.Update().(type) {
 	case error:
-		err = r
-	case choose.Return:
-		var scene scene.Scene
-		scene, err = play.NewScene(r.FS, r.Name, r.Mode, r.Mods, r.Replay)
-		if err != nil {
-			return
+		if r != nil {
+			fmt.Println(r)
 		}
-		g.Scene = scene
-
+	case choose.Return:
+		scene, err := play.NewScene(r.FS, r.Name, r.Mode, r.Mods, r.Replay)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			g.Scene = scene
+		}
 	case mode.Result:
 		g.Scene = g.choose
 	}
 	// g.Scene.Update()
-	return
+	return nil
 }
 func (g *game) Draw(screen *ebiten.Image) {
 	if g.Scene == nil {
 		return
 	}
 	g.Scene.Draw(draws.Image{Image: screen})
+	if g.err != nil && g.countdown > 0 {
+		ebitenutil.DebugPrintAt(screen, g.err.Error(), ScreenSizeX/2, ScreenSizeY/2)
+	}
 }
 func (g *game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return mode.ScreenSizeX, mode.ScreenSizeY

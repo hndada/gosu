@@ -32,6 +32,8 @@ const (
 	ScreenSizeY = scene.ScreenSizeY
 )
 
+var modes = []int{piano.Mode, piano.Mode, drum.Mode}
+
 // Background brightness at Song select: 60% (153 / 255), confirmed.
 // Score box color: Gray128 with 50% transparent
 // Hovered Score box color: Gray96 with 50% transparent
@@ -80,9 +82,9 @@ func NewScene() *Scene {
 	s.brightness = &mode.S.BackgroundBrightness
 	s.offset = &mode.S.Offset
 	s.speedFactors = []*float64{
-		&piano.S.SpeedScale, &piano.S.SpeedScale, &drum.S.SpeedScale}
+		&piano.S.SpeedScale, &drum.S.SpeedScale}
 	s.exposureTimes = []func(float64) float64{
-		piano.ExposureTime, piano.ExposureTime, drum.ExposureTime}
+		piano.ExposureTime, drum.ExposureTime}
 	// s.Mode = ctrl.KeyHandler{
 	// 	Handler: ctrl.IntHandler{
 	// 		Value: &s.mode,
@@ -136,7 +138,7 @@ func (s *Scene) Update() any {
 	scene.VolumeSound.Update()
 	scene.Brightness.Update()
 	scene.Offset.Update()
-	scene.SpeedScales[s.mode].Update()
+	scene.SpeedScales[modes[s.mode]].Update()
 	select {
 	case i := <-s.bgCh:
 		sprite := draws.NewSpriteFromSource(i)
@@ -153,6 +155,7 @@ func (s *Scene) Update() any {
 		s.mode++
 		s.mode %= 3
 		s.choose.Play(*s.volumeSound)
+		s.Focus = FocusSearch
 		err := s.handleEnter()
 		if err != nil {
 			fmt.Println(err)
@@ -213,7 +216,7 @@ func (s *Scene) handleEnter() any {
 		return Return{
 			FS:     fs,
 			Name:   name,
-			Mode:   s.mode,
+			Mode:   modes[s.mode],
 			Mods:   nil,
 			Replay: nil,
 		}
@@ -265,7 +268,7 @@ func (s Scene) DebugPrint(screen draws.Image) {
 		}
 		text.Draw(screen.Image, t, scene.Face16, int(x), y, color.White)
 	}
-	speed := *s.speedFactors[s.mode]
+	speed := *s.speedFactors[modes[s.mode]]
 	ebitenutil.DebugPrint(screen.Image, fmt.Sprintf("FPS: %.2f\n"+
 		"TPS: %.2f\n"+
 		"Mode (F1): %s\n"+
@@ -287,7 +290,7 @@ func (s Scene) DebugPrint(screen draws.Image) {
 		*s.brightness*100,
 		*s.offset,
 
-		speed*100, s.exposureTimes[s.mode](speed)))
+		speed*100, s.exposureTimes[modes[s.mode]](speed)))
 }
 
 type Return struct {

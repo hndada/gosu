@@ -1,35 +1,48 @@
 package play
 
 import (
+	"fmt"
 	"io/fs"
 
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
+	"github.com/hndada/gosu/input"
 
 	"github.com/hndada/gosu/mode/drum"
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
 )
 
+type ScenePlay interface {
+	scene.Scene
+	// Pause()
+	// Resume()
+	IsDone() bool
+	Finish() any
+}
 type Scene struct {
 	mode int
-	scene.Scene
+	ScenePlay
 }
 
 func NewScene(fsys fs.FS, cname string, mode int, mods interface{}, rf *osr.Format) (*Scene, error) {
 	var (
-		scene scene.Scene
-		err   error
+		play ScenePlay
+		err  error
 	)
 	switch mode {
 	case piano.Mode:
-		scene, err = piano.NewScenePlay(fsys, cname, mods, rf)
+		play, err = piano.NewScenePlay(fsys, cname, mods, rf)
 	case drum.Mode:
-		scene, err = drum.NewScenePlay(fsys, cname, mods, rf)
+		play, err = drum.NewScenePlay(fsys, cname, mods, rf)
 	}
 	// ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
 	// debug.SetGCPercent(0)
-	return &Scene{mode: mode, Scene: scene}, err
+	if err != nil {
+		return nil, err
+	}
+	return &Scene{mode: mode, ScenePlay: play}, err
 }
 func (s *Scene) Update() any {
 	scene.VolumeMusic.Update()
@@ -37,16 +50,20 @@ func (s *Scene) Update() any {
 	scene.Brightness.Update()
 	scene.Offset.Update()
 	scene.SpeedScales[s.mode].Update()
-	return s.Scene.Update()
+	if inpututil.IsKeyJustPressed(input.KeyEscape) {
+		fmt.Println("end the song")
+		s.ScenePlay.Finish()
+	}
+	return s.ScenePlay.Update()
 }
 func (s Scene) Draw(screen draws.Image) {
-	s.Scene.Draw(screen)
+	s.ScenePlay.Draw(screen)
 }
 
-type Return struct {
-	FS     fs.FS
-	Name   string
-	Mode   int
-	Mods   interface{}
-	Replay *osr.Format
-}
+// type Return struct {
+// 	FS     fs.FS
+// 	Name   string
+// 	Mode   int
+// 	Mods   interface{}
+// 	Replay *osr.Format
+// }

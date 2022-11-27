@@ -197,8 +197,7 @@ func (s *ScenePlay) SetSpeed() {
 func (s *ScenePlay) Update() any {
 	defer s.Ticker()
 	if s.IsDone() {
-		s.MusicPlayer.Close()
-		// return scene.PlayToResultArgs{Result: s.NewResult(s.Chart.MD5)}
+		s.Finish()
 	}
 	s.MusicPlayer.Update()
 
@@ -313,6 +312,10 @@ func (s *ScenePlay) Update() any {
 	}
 	return nil
 }
+func (s ScenePlay) Finish() any {
+	s.MusicPlayer.Close()
+	return s.NewResult(s.Chart.MD5)
+}
 func (s ScenePlay) Speed() float64 { return s.TransPoint.Speed * s.speedScale }
 func (s *ScenePlay) UpdateTransPoint() {
 	s.TransPoint = s.TransPoint.FetchByTime(s.Now)
@@ -335,9 +338,10 @@ func (s ScenePlay) Draw(screen draws.Image) {
 }
 
 func (s ScenePlay) DebugPrint(screen draws.Image) {
-	ebitenutil.DebugPrint(screen.Image, fmt.Sprintf(
-		"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"+
-			"Press ESC to select a song.\nPress TAB to pause.\n\n"+
+	y := S.FieldPosition + S.FieldHeight/2
+	ebitenutil.DebugPrintAt(screen.Image, fmt.Sprintf(
+		// "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"+
+		"Press ESC to select a song.\nPress TAB to pause.\n\n"+
 			"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
 			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
 			"Flow rate: %.2f%%\nAccuracy: %.2f%%\nExtra: %.2f%%\n"+
@@ -351,7 +355,7 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 		s.JudgmentCounts[:3], s.JudgmentCounts[3:5], s.JudgmentCounts[5:],
 		s.speedScale*100, s.speedScale/s.TransPoint.Speed, ExposureTime(s.Speed()),
 		*S.volumeMusic*100, *S.volumeSound*100,
-		*S.offset))
+		*S.offset), 0, int(y))
 }
 
 var DefaultSampleNames = [2][2]string{{"red", "red-big"}, {"blue", "blue-big"}}
