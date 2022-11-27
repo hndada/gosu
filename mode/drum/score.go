@@ -13,7 +13,7 @@ var (
 	Cool               = mode.Judgment{Flow: 0.01, Acc: 1, Window: 25}
 	Good               = mode.Judgment{Flow: 0.01, Acc: 0.25, Window: 60}
 	Miss               = mode.Judgment{Flow: -1, Acc: 0, Window: 100}
-	DotHitWindow int64 = 25
+	DotHitWindow int64 = 35 // 25
 )
 var Judgments = []mode.Judgment{Cool, Good, Miss}
 
@@ -108,12 +108,15 @@ func VerdictNote(n *Note, actions [2]int, td int64) (j mode.Judgment, big bool) 
 	return
 }
 func (s *ScenePlay) MarkNote(n *Note, j mode.Judgment, big bool) {
+	const (
+		flowBonus = 2
+	)
 	if j == Miss {
 		s.BreakCombo()
 	} else {
 		s.AddCombo()
 	}
-	s.CalcScore(mode.Flow, j.Flow, n.Weight())
+	s.CalcScore(mode.Flow, j.Flow, flowBonus*n.Weight())
 	if n.Size == Big && !big {
 		j.Acc /= 2
 	}
