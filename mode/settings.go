@@ -51,7 +51,7 @@ func NewSettings() Settings {
 		BackgroundBrightness: 0.6,
 
 		MeterUnit:     4,
-		MeterHeight:   75,
+		MeterHeight:   65,
 		ScoreScale:    0.65,
 		ScoreDigitGap: 0,
 	}

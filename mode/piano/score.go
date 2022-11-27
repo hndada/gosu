@@ -67,8 +67,9 @@ func (s *ScenePlay) MarkNote(n *Note, j mode.Judgment) {
 	if n.Type != Tail {
 		s.Staged[n.Key] = n.Next
 	}
-	s.NoteCount++
+	// s.NoteCount++
 }
-func (s ScenePlay) LinearScore() float64 {
-	return s.ScoreBounds[mode.Total] * float64(s.NoteCount) / float64(s.MaxNoteCount)
-}
+
+// func (s ScenePlay) LinearScore() float64 {
+// 	return s.ScoreBounds[mode.Total] * float64(s.NoteCount) / float64(s.MaxNoteCount)
+// }

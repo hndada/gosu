@@ -28,9 +28,9 @@ type ScenePlay struct {
 	Cursor     float64
 	Staged     []*Note
 	mode.Scorer
-	// Todo: merge into mode.Scorer
-	NoteCount    int
-	MaxNoteCount int
+	// // Todo: merge into mode.Scorer
+	// NoteCount    int
+	// MaxNoteCount int
 
 	Background   mode.BackgroundDrawer
 	Field        FieldDrawer
@@ -71,7 +71,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	s.Cursor = float64(s.Now) * s.speedScale
 	s.SetSpeed()
 	s.Scorer = mode.NewScorer(c.ScoreFactors)
-	s.MaxNoteCount = len(c.Notes)
+	// s.MaxNoteCount = len(c.Notes)
 	s.JudgmentCounts = make([]int, len(Judgments))
 	// s.Result.FlowMarks = make([]float64, 0, c.Duration()/1000)
 	var maxWeight float64
@@ -247,7 +247,8 @@ func (s *ScenePlay) Update() any {
 		s.HoldLighting[k].Update(holding)
 	}
 	s.Judgment.Update(worst)
-	s.Score.Update(s.LinearScore())
+	// s.Score.Update(s.LinearScore())
+	s.Score.Update(s.Scores[mode.Total])
 	s.Combo.Update(s.Scorer.Combo)
 	s.Meter.Update()
 
