@@ -127,6 +127,13 @@ func NamesToKeys(names []string) []Key {
 	}
 	return keys
 }
+func KeysToNames(keys []Key) []string {
+	names := make([]string, len(keys))
+	for i, key := range keys {
+		names[i] = KeyToName(key)
+	}
+	return names
+}
 
 // https://go.dev/play/p/9Lv0u4sqwKq
 func NameToKey(name string) Key {
@@ -351,6 +358,231 @@ func NameToKey(name string) Key {
 		return KeyReserved3
 	}
 	return KeyNone
+}
+
+// https://go.dev/play/p/H8IQTm5BEBp
+func KeyToName(k Key) string {
+	switch k {
+	case KeyA:
+		return "A"
+	case KeyB:
+		return "B"
+	case KeyC:
+		return "C"
+	case KeyD:
+		return "D"
+	case KeyE:
+		return "E"
+	case KeyF:
+		return "F"
+	case KeyG:
+		return "G"
+	case KeyH:
+		return "H"
+	case KeyI:
+		return "I"
+	case KeyJ:
+		return "J"
+	case KeyK:
+		return "K"
+	case KeyL:
+		return "L"
+	case KeyM:
+		return "M"
+	case KeyN:
+		return "N"
+	case KeyO:
+		return "O"
+	case KeyP:
+		return "P"
+	case KeyQ:
+		return "Q"
+	case KeyR:
+		return "R"
+	case KeyS:
+		return "S"
+	case KeyT:
+		return "T"
+	case KeyU:
+		return "U"
+	case KeyV:
+		return "V"
+	case KeyW:
+		return "W"
+	case KeyX:
+		return "X"
+	case KeyY:
+		return "Y"
+	case KeyZ:
+		return "Z"
+	case KeyAltLeft:
+		return "AltLeft"
+	case KeyAltRight:
+		return "AltRight"
+	case KeyArrowDown:
+		return "ArrowDown"
+	case KeyArrowLeft:
+		return "ArrowLeft"
+	case KeyArrowRight:
+		return "ArrowRight"
+	case KeyArrowUp:
+		return "ArrowUp"
+	case KeyBackquote:
+		return "Backquote"
+	case KeyBackslash:
+		return "Backslash"
+	case KeyBackspace:
+		return "Backspace"
+	case KeyBracketLeft:
+		return "BracketLeft"
+	case KeyBracketRight:
+		return "BracketRight"
+	case KeyCapsLock:
+		return "CapsLock"
+	case KeyComma:
+		return "Comma"
+	case KeyContextMenu:
+		return "ContextMenu"
+	case KeyControlLeft:
+		return "ControlLeft"
+	case KeyControlRight:
+		return "ControlRight"
+	case KeyDelete:
+		return "Delete"
+	case KeyDigit0:
+		return "Digit0"
+	case KeyDigit1:
+		return "Digit1"
+	case KeyDigit2:
+		return "Digit2"
+	case KeyDigit3:
+		return "Digit3"
+	case KeyDigit4:
+		return "Digit4"
+	case KeyDigit5:
+		return "Digit5"
+	case KeyDigit6:
+		return "Digit6"
+	case KeyDigit7:
+		return "Digit7"
+	case KeyDigit8:
+		return "Digit8"
+	case KeyDigit9:
+		return "Digit9"
+	case KeyEnd:
+		return "End"
+	case KeyEnter:
+		return "Enter"
+	case KeyEqual:
+		return "Equal"
+	case KeyEscape:
+		return "Escape"
+	case KeyF1:
+		return "F1"
+	case KeyF2:
+		return "F2"
+	case KeyF3:
+		return "F3"
+	case KeyF4:
+		return "F4"
+	case KeyF5:
+		return "F5"
+	case KeyF6:
+		return "F6"
+	case KeyF7:
+		return "F7"
+	case KeyF8:
+		return "F8"
+	case KeyF9:
+		return "F9"
+	case KeyF10:
+		return "F10"
+	case KeyF11:
+		return "F11"
+	case KeyF12:
+		return "F12"
+	case KeyHome:
+		return "Home"
+	case KeyInsert:
+		return "Insert"
+	case KeyMetaLeft:
+		return "MetaLeft"
+	case KeyMetaRight:
+		return "MetaRight"
+	case KeyMinus:
+		return "Minus"
+	case KeyNumLock:
+		return "NumLock"
+	case KeyNumpad0:
+		return "Numpad0"
+	case KeyNumpad1:
+		return "Numpad1"
+	case KeyNumpad2:
+		return "Numpad2"
+	case KeyNumpad3:
+		return "Numpad3"
+	case KeyNumpad4:
+		return "Numpad4"
+	case KeyNumpad5:
+		return "Numpad5"
+	case KeyNumpad6:
+		return "Numpad6"
+	case KeyNumpad7:
+		return "Numpad7"
+	case KeyNumpad8:
+		return "Numpad8"
+	case KeyNumpad9:
+		return "Numpad9"
+	case KeyNumpadAdd:
+		return "NumpadAdd"
+	case KeyNumpadDecimal:
+		return "NumpadDecimal"
+	case KeyNumpadDivide:
+		return "NumpadDivide"
+	case KeyNumpadEnter:
+		return "NumpadEnter"
+	case KeyNumpadEqual:
+		return "NumpadEqual"
+	case KeyNumpadMultiply:
+		return "NumpadMultiply"
+	case KeyNumpadSubtract:
+		return "NumpadSubtract"
+	case KeyPageDown:
+		return "PageDown"
+	case KeyPageUp:
+		return "PageUp"
+	case KeyPause:
+		return "Pause"
+	case KeyPeriod:
+		return "Period"
+	case KeyPrintScreen:
+		return "PrintScreen"
+	case KeyQuote:
+		return "Quote"
+	case KeyScrollLock:
+		return "ScrollLock"
+	case KeySemicolon:
+		return "Semicolon"
+	case KeyShiftLeft:
+		return "ShiftLeft"
+	case KeyShiftRight:
+		return "ShiftRight"
+	case KeySlash:
+		return "Slash"
+	case KeySpace:
+		return "Space"
+	case KeyTab:
+		return "Tab"
+	case KeyReserved0:
+		return "Reserved0"
+	case KeyReserved1:
+		return "Reserved1"
+	case KeyReserved2:
+		return "Reserved2"
+	case KeyReserved3:
+		return "Reserved3"
+	}
+	return "(None)"
 }
 
 // See https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes for reference.

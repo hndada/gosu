@@ -58,7 +58,7 @@ func NewChartSetList(css []*ChartSet) (l ChartSetList) {
 	l.ChartSets = css
 	return
 }
-func (l *ChartSetList) Update() (fired bool) {
+func (l *ChartSetList) Update() (bool, int) {
 	// if l.Panel != nil {
 	// 	l.Panel.Update()
 	// }
@@ -66,8 +66,7 @@ func (l *ChartSetList) Update() (fired bool) {
 	// 	cs := l.ChartSets[l.cursor]
 	// 	l.Panel = NewChartSetPanel(cs)
 	// }
-	l.Cursor.Update()
-	return
+	return l.List.Update()
 }
 func (l ChartSetList) Current() *ChartSet {
 	if len(l.ChartSets) == 0 {

@@ -12,10 +12,10 @@ import (
 )
 
 const (
-	RowWidth  float64 = 550 // 400(card) + 150(list)
-	RowHeight float64 = 75  // 50
-	RowShrink float64 = 0.15 * RowWidth
-	RowCount  int     = 15 // int(ScreenSizeY/RowHeight) + 2
+	RowWidth  = 550 // 400(card) + 150(list)
+	RowHeight = 75  // 50
+	RowShrink = 0.15 * RowWidth
+	RowCount  = 15 // int(ScreenSizeY/RowHeight) + 2
 )
 
 type Row struct {
@@ -126,7 +126,7 @@ func NewList(rows []Row) *List {
 			Value: &l.cursor,
 			Min:   0,
 			Max:   len(rows) - 1,
-			Loop:  true,
+			Loop:  false,
 		},
 		Modifiers: []input.Key{},
 		Keys:      [2]input.Key{input.KeyArrowUp, input.KeyArrowDown},
@@ -135,8 +135,26 @@ func NewList(rows []Row) *List {
 	}
 	return l
 }
-func (l *List) Update() {
-	l.Cursor.Update()
+
+const (
+	prev = iota - 1
+	stay
+	next
+)
+
+func (l *List) Update() (bool, int) {
+	last := l.cursor
+	fired := l.Cursor.Update()
+	now := l.cursor
+	if fired && now == last {
+		switch now {
+		case 0:
+			return fired, prev
+		case RowCount - 1:
+			return fired, next
+		}
+	}
+	return fired, stay
 }
 
 // May add extra effect to box arrangement. e.g., x -= y / 5

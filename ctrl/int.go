@@ -31,15 +31,16 @@ func (h IntHandler) Increase() {
 }
 
 // Todo: merge with IntHandler into one
+// Todo: add Unit to IntHandler?
 type Int64Handler struct {
 	Value    *int64
 	Min, Max int64
 	Loop     bool
-	// Unit     int
+	Unit     int64
 }
 
 func (h Int64Handler) Decrease() {
-	*h.Value--
+	*h.Value -= h.Unit
 	if *h.Value < h.Min {
 		if h.Loop {
 			*h.Value = h.Max
@@ -49,7 +50,7 @@ func (h Int64Handler) Decrease() {
 	}
 }
 func (h Int64Handler) Increase() {
-	*h.Value++
+	*h.Value += h.Unit
 	if *h.Value > h.Max {
 		if h.Loop {
 			*h.Value = h.Min

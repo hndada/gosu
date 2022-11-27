@@ -1,7 +1,6 @@
 package play
 
 import (
-	"fmt"
 	"io/fs"
 
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -16,10 +15,9 @@ import (
 
 type ScenePlay interface {
 	scene.Scene
-	// Pause()
-	// Resume()
-	IsDone() bool
-	Finish() any
+	PlayPause()
+	IsDone() bool // Draw clear mark.
+	Finish() any  // Return Scene.
 }
 type Scene struct {
 	mode int
@@ -51,12 +49,18 @@ func (s *Scene) Update() any {
 	scene.Offset.Update()
 	scene.SpeedScales[s.mode].Update()
 	if inpututil.IsKeyJustPressed(input.KeyEscape) {
-		fmt.Println("end the song")
-		s.ScenePlay.Finish()
+		// fmt.Println("finish play")
+		return s.ScenePlay.Finish()
+	}
+	if inpututil.IsKeyJustPressed(input.KeyTab) {
+		s.PlayPause()
 	}
 	return s.ScenePlay.Update()
 }
 func (s Scene) Draw(screen draws.Image) {
+	if s.IsDone() {
+		scene.UserSkin.Clear.Draw(screen, draws.Op{})
+	}
 	s.ScenePlay.Draw(screen)
 }
 

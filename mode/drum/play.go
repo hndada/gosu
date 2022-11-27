@@ -16,10 +16,11 @@ import (
 // Todo: support custom hitsound?
 type ScenePlay struct {
 	Chart *Chart
-	audios.Timer
+	mode.Timer
 	audios.MusicPlayer
 	input.KeyLogger
 	KeyActions [2]int
+	paused     bool
 
 	*mode.TransPoint
 	speedScale         float64
@@ -57,8 +58,8 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	}
 	c := s.Chart
 	ebiten.SetWindowTitle(c.WindowTitle())
-	s.Timer = audios.NewTimer(c.Duration(), S.offset, TPS)
-	s.MusicPlayer, err = audios.NewMusicPlayer(fsys, c.MusicFilename, &s.Timer, S.volumeMusic, ebiten.KeyTab)
+	s.Timer = mode.NewTimer(c.Duration(), S.offset, TPS)
+	s.MusicPlayer, err = audios.NewMusicPlayer(fsys, c.MusicFilename)
 	if err != nil {
 		return
 	}
@@ -193,13 +194,25 @@ func (s *ScenePlay) SetSpeed() {
 	}
 	s.speedScale = new
 }
-
-func (s *ScenePlay) Update() any {
-	defer s.Ticker()
-	if s.IsDone() {
-		s.Finish()
+func (s *ScenePlay) PlayPause() {
+	if s.paused {
+		s.MusicPlayer.Play()
+	} else {
+		s.MusicPlayer.Pause()
 	}
-	s.MusicPlayer.Update()
+	s.paused = !s.paused
+}
+func (s *ScenePlay) Update() any {
+	if !s.paused {
+		defer s.Ticker()
+	}
+	if s.Now == 0+s.Offset {
+		s.MusicPlayer.Play()
+	}
+	if vol := *S.volumeMusic; S.VolumeMusic != vol {
+		S.VolumeMusic = vol
+		s.MusicPlayer.SetVolume(vol)
+	}
 
 	s.LastPressed = s.Pressed
 	s.Pressed = s.FetchPressed()
@@ -226,7 +239,7 @@ func (s *ScenePlay) Update() any {
 		}
 		if flush {
 			for _, key := range [][]int{{1, 2}, {0, 3}}[n.Color] {
-				s.LastHitTimes[key] = -audios.Wait
+				s.LastHitTimes[key] = -mode.Wait
 			}
 			td := n.Time - jTime
 			s.MarkNote(n, j, false)

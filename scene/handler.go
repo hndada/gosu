@@ -60,6 +60,7 @@ func loadHandler() {
 			Min:   -300,
 			Max:   300,
 			Loop:  false,
+			Unit:  5,
 		},
 		Modifiers: []input.Key{input.KeyShiftLeft},
 		Keys:      [2]input.Key{input.KeyArrowLeft, input.KeyArrowRight},
