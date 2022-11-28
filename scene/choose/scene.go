@@ -53,7 +53,7 @@ type Scene struct {
 	Background mode.BackgroundDrawer
 
 	mode int
-	Mode ctrl.KeyHandler
+	// Mode ctrl.KeyHandler
 	// subMode int
 	// SubMode ctrl.KeyHandler
 	query string
@@ -72,12 +72,17 @@ type Scene struct {
 	// inited  bool
 
 	Preview PreviewPlayer
+
+	lastFocus   int
+	keySettings []string //[]input.Key
+	// KeySettings KeySettingsDrawer
 }
 
 const (
 	FocusSearch = iota
 	FocusChartSet
 	FocusChart
+	FocusKeySettings
 )
 
 func NewScene() *Scene {
@@ -177,6 +182,14 @@ func (s *Scene) Update() any {
 		s.levelLimit = !s.levelLimit
 		scene.UserSkin.Swipe.Play(*s.volumeSound)
 	}
+	if inpututil.IsKeyJustPressed(input.KeyF5) {
+		if s.Focus != FocusKeySettings {
+			s.lastFocus = s.Focus
+		}
+		s.keySettings = make([]string, 0)
+		s.Focus = FocusKeySettings
+		scene.UserSkin.Swipe.Play(*s.volumeSound)
+	}
 	if isEnter() {
 		return s.handleEnter()
 	}
@@ -187,11 +200,13 @@ func (s *Scene) Update() any {
 			s.Focus = FocusSearch
 		case FocusChart:
 			s.Focus = FocusChartSet
+		case FocusKeySettings:
+			s.Focus = s.lastFocus
 		}
 	}
-	if s.Mode.Update() { // || s.SubMode.Update()
-		go s.LoadChartSetList()
-	}
+	// if s.Mode.Update() { // || s.SubMode.Update()
+	// 	go s.LoadChartSetList()
+	// }
 	switch s.Focus {
 	case FocusSearch:
 		s.Query.Update()
@@ -246,9 +261,41 @@ func (s *Scene) Update() any {
 			}
 			s.bgCh <- draws.Image{Image: i}
 		}()
-
 	case FocusChart:
 		s.Charts.Update()
+	case FocusKeySettings:
+		for k := input.Key(0); k < input.KeyReserved0; k++ {
+			if inpututil.IsKeyJustPressed(k) {
+				name := input.KeyToName(k)
+				if name[0] == 'F' && name != "F" {
+					continue
+				}
+				s.keySettings = append(s.keySettings, name)
+			}
+		}
+		switch s.mode {
+		case 0:
+			if len(s.keySettings) >= 4 {
+				s.keySettings = s.keySettings[:4]
+				s.keySettings = mode.NormalizeKeys(s.keySettings)
+				piano.S.KeySettings[4] = s.keySettings
+				s.Focus = s.lastFocus
+			}
+		case 1:
+			if len(s.keySettings) >= 7 {
+				s.keySettings = s.keySettings[:7]
+				s.keySettings = mode.NormalizeKeys(s.keySettings)
+				piano.S.KeySettings[7] = s.keySettings
+				s.Focus = s.lastFocus
+			}
+		case 2:
+			if len(s.keySettings) >= 4 {
+				s.keySettings = s.keySettings[:4]
+				s.keySettings = mode.NormalizeKeys(s.keySettings)
+				drum.S.KeySettings[4] = s.keySettings
+				s.Focus = s.lastFocus
+			}
+		}
 	}
 	return nil
 }
@@ -272,6 +319,7 @@ func (s *Scene) handleEnter() any {
 		if err != nil {
 			return err
 		}
+		s.Preview.Close()
 		return Return{
 			FS:     fs,
 			Name:   name,
@@ -309,6 +357,9 @@ func (s Scene) Draw(screen draws.Image) {
 		s.Loading.Draw(screen)
 	}
 	s.Background.Draw(screen)
+	// if s.Focus == FocusKeySettings {
+	// 	s.Focus = s.lastFocus
+	// }
 	switch s.Focus {
 	case FocusSearch, FocusChartSet:
 		s.ChartSets.Draw(screen)
@@ -319,6 +370,10 @@ func (s Scene) Draw(screen draws.Image) {
 }
 func (s Scene) DebugPrint(screen draws.Image) {
 	speed := *s.speedFactors[modes[s.mode]]
+	keySettings := [][]string{piano.S.KeySettings[4], piano.S.KeySettings[7], drum.S.KeySettings[4]}[s.mode]
+	if s.Focus == FocusKeySettings {
+		keySettings = s.keySettings
+	}
 	ebitenutil.DebugPrint(screen.Image, fmt.Sprintf("FPS: %.2f\n"+
 		"TPS: %.2f\n"+
 		"Mode (F1): %s\n"+
@@ -333,7 +388,9 @@ func (s Scene) DebugPrint(screen draws.Image) {
 		"\n"+
 		"Query: %s\n"+
 		"No: %d (Page: %d)\n"+
-		"Level limit to 10 (F4): %v\n",
+		"Level limit to 10 (F4): %v\n"+
+		"\n"+
+		"Key settings: %v (F5) listening: %v)\n",
 		ebiten.ActualFPS(),
 		ebiten.ActualTPS(),
 		[]string{"Piano4", "Piano7", "Drum"}[s.mode],
@@ -348,6 +405,8 @@ func (s Scene) DebugPrint(screen draws.Image) {
 		s.query,
 		s.page*RowCount+s.ChartSets.cursor, s.page,
 		s.levelLimit,
+
+		keySettings, s.Focus == FocusKeySettings,
 	))
 }
 

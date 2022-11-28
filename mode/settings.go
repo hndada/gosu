@@ -99,7 +99,7 @@ func Normalize[V Number](v *V, min, max V) {
 		*v = min
 	}
 }
-func NormalizeKeys(names []string) {
+func NormalizeKeys(names []string) []string {
 	keys := input.NamesToKeys(names)
 	m := make(map[input.Key]bool)
 	for i, k := range keys {
@@ -109,4 +109,5 @@ func NormalizeKeys(names []string) {
 		}
 		m[k] = true
 	}
+	return input.KeysToNames(keys)
 }
