@@ -39,7 +39,7 @@ func NewTimer(duration int64, offset *int64, tps int) Timer {
 func (t *Timer) Ticker() {
 	t.Tick++
 	// Adjusting offset in real-time.
-	if td := t.Offset - *t.offset; td != 0 {
+	if td := *t.offset - t.Offset; td != 0 {
 		t.Offset += td
 		t.Tick += ToTick(td, t.TPS)
 	}
