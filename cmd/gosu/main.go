@@ -13,7 +13,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	g := gosu.NewGame(os.DirFS(dir))
+	gosu.Load(os.DirFS(dir))
+	g := gosu.NewGame()
 	if err := ebiten.RunGame(g); err != nil {
 		panic(err)
 	}

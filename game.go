@@ -44,7 +44,7 @@ var (
 )
 
 // Todo: tidy NewSettings() and *Settings.Load()?
-func load(fsys fs.FS) {
+func Load(fsys fs.FS) {
 	data, err := fs.ReadFile(fsys, "settings.toml")
 	if err != nil {
 		fmt.Println("no settings.toml detected")
@@ -79,8 +79,8 @@ func load(fsys fs.FS) {
 	}
 }
 
-func NewGame(fsys fs.FS) *game {
-	load(fsys)
+func NewGame() *game {
+	// load(fsys)
 	// dir, err := os.Getwd()
 	// if err != nil {
 	// log.Fatal(err)
@@ -93,7 +93,7 @@ func NewGame(fsys fs.FS) *game {
 	// 	panic(err)
 	// }
 	g := &game{
-		FS:     fsys,
+		// FS:     fsys,
 		Scene:  nil,
 		choose: choose.NewScene(),
 	}
