@@ -80,6 +80,10 @@ func (l ChartList) Current() *Chart {
 	}
 	return l.Charts[l.cursor]
 }
+func (l ChartList) Draw(dst draws.Image) {
+	l.List.Draw(dst)
+	// l.Panel.Draw(dst)
+}
 
 // list: 150x150
 // card: 400x140

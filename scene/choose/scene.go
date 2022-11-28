@@ -49,7 +49,7 @@ type Scene struct {
 	// choose audios.Sound
 	// musicCh      chan []byte
 	// Music      audios.MusicPlayer
-	bgCh       chan draws.Image
+	// bgCh       chan draws.Image
 	Background mode.BackgroundDrawer
 
 	mode int
@@ -84,6 +84,8 @@ const (
 	FocusChart
 	FocusKeySettings
 )
+
+var DefaultBackground = draws.NewImage(ScreenSizeX, 444)
 
 func NewScene() *Scene {
 	s := &Scene{}
@@ -129,6 +131,12 @@ func NewScene() *Scene {
 	// 	}
 	// 	s.lastChartSets[i] = css
 	// }
+	{
+		sprite := draws.NewSpriteFromSource(DefaultBackground)
+		sprite.SetScaleToW(ScreenSizeX)
+		sprite.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
+		s.Background.Sprite = sprite
+	}
 	s.levelLimit = true
 	s.Loading = NewLoadingDrawer()
 	s.handleEnter()
@@ -156,14 +164,14 @@ func (s *Scene) Update() any {
 	scene.Offset.Update()
 	scene.SpeedScales[modes[s.mode]].Update()
 	s.Preview.Update()
-	select {
-	case i := <-s.bgCh:
-		sprite := draws.NewSpriteFromSource(i)
-		sprite.SetScaleToW(ScreenSizeX)
-		sprite.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
-		s.Background.Sprite = sprite
-	default:
-	}
+	// select {
+	// case i := <-s.bgCh:
+	// 	sprite := draws.NewSpriteFromSource(i)
+	// 	sprite.SetScaleToW(ScreenSizeX)
+	// 	sprite.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
+	// 	s.Background.Sprite = sprite
+	// default:
+	// }
 	if s.query != s.Query.Text {
 		s.query = s.Query.Text
 		s.Focus = FocusSearch
@@ -259,7 +267,8 @@ func (s *Scene) Update() any {
 			if err != nil {
 				return
 			}
-			s.bgCh <- draws.Image{Image: i}
+			s.Background.Sprite.Source = draws.Image{Image: i}
+			// s.bgCh <- draws.Image{Image: i}
 		}()
 	case FocusChart:
 		s.Charts.Update()

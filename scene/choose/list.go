@@ -19,8 +19,8 @@ const (
 )
 
 type Row struct {
-	thumbCh chan draws.Image
-	cardCh  chan draws.Image
+	// thumbCh chan draws.Image
+	// cardCh  chan draws.Image
 
 	draws.Sprite // Thumbnail
 	Thumb        draws.Sprite
@@ -43,33 +43,35 @@ func NewRow(cardURL, thumbURL, first, second string) Row {
 	)
 	r := Row{}
 	r.Locate(ScreenSizeX-RowWidth, ScreenSizeY/2, draws.LeftMiddle)
+	{
+		s := draws.NewSpriteFromSource(defaultThumb)
+		s.SetSize(thumbWidth, RowHeight)
+		r.Thumb = s
+	}
 	go func() {
 		i, err := ebitenutil.NewImageFromURL(thumbURL)
 		if err != nil {
 			return
 		}
-		r.thumbCh <- draws.Image{Image: i}
-		close(r.thumbCh)
+		r.Thumb.Source = draws.Image{Image: i}
+		// r.thumbCh <- draws.Image{Image: i}
+		// close(r.thumbCh)
 	}()
+	{
+		s := draws.NewSpriteFromSource(defaultCard)
+		s.SetSize(400, RowHeight)
+		s.Locate(thumbWidth, 0, draws.LeftTop)
+		r.Card = s
+	}
 	go func() {
 		i, err := ebitenutil.NewImageFromURL(cardURL)
 		if err != nil {
 			return
 		}
-		r.cardCh <- draws.Image{Image: i}
-		close(r.cardCh)
+		r.Card.Source = draws.Image{Image: i}
+		// r.cardCh <- draws.Image{Image: i}
+		// close(r.cardCh)
 	}()
-	{
-		s := draws.NewSpriteFromSource(defaultThumb)
-		s.SetSize(RowWidth, RowHeight)
-		r.Thumb = s
-	}
-	{
-		s := draws.NewSpriteFromSource(defaultCard)
-		s.SetSize(RowWidth, RowHeight)
-		s.Locate(thumbWidth, 0, draws.LeftTop)
-		r.Card = s
-	}
 	{
 		s := scene.UserSkin.BoxMask
 		s.SetSize(RowWidth, RowHeight)
@@ -91,13 +93,13 @@ func NewRow(cardURL, thumbURL, first, second string) Row {
 	return r
 }
 func (r *Row) Update() {
-	select {
-	case i := <-r.thumbCh:
-		r.Sprite.Source = i
-	case i := <-r.cardCh:
-		r.Card.Source = i
-	default:
-	}
+	// select {
+	// case i := <-r.thumbCh:
+	// 	r.Sprite.Source = i
+	// case i := <-r.cardCh:
+	// 	r.Card.Source = i
+	// default:
+	// }
 }
 func (r Row) Draw(dst draws.Image) {
 	r.Thumb.Position = r.Thumb.Add(r.Position)
