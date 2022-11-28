@@ -126,7 +126,7 @@ func (s *Settings) Load(src Settings) {
 	defer S.process()
 
 	for k := range S.KeySettings {
-		mode.NormalizeKeys(S.KeySettings[k])
+		S.KeySettings[k] = mode.NormalizeKeys(S.KeySettings[k])
 	}
 	mode.Normalize(&S.SpeedScale, 0.1, 2.0)
 	mode.Normalize(&S.HitPosition, 0, 1)
