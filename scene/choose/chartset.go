@@ -32,7 +32,7 @@ func (c ChartSet) URLCover(kind, suffix string) string {
 	return fmt.Sprintf("%s/%d/covers/%s%s.jpg", APIBeatmap, c.SetId, kind, suffix)
 }
 func (c ChartSet) URLPreview() string {
-	return fmt.Sprintf("b.ppy.sh/preview/%d.mp3", c.SetId)
+	return fmt.Sprintf("https://b.ppy.sh/preview/%d.mp3", c.SetId)
 }
 func (c ChartSet) URLDownload() string {
 	return fmt.Sprintf("https://api.chimu.moe/v1/d/%d", c.SetId)
@@ -58,7 +58,8 @@ func NewChartSetList(css []*ChartSet) (l ChartSetList) {
 	l.ChartSets = css
 	return
 }
-func (l *ChartSetList) Update() (bool, int) {
+func (l *ChartSetList) Update() (fired bool, state int) {
+	fired, state = l.List.Update()
 	// if l.Panel != nil {
 	// 	l.Panel.Update()
 	// }
@@ -66,7 +67,7 @@ func (l *ChartSetList) Update() (bool, int) {
 	// 	cs := l.ChartSets[l.cursor]
 	// 	l.Panel = NewChartSetPanel(cs)
 	// }
-	return l.List.Update()
+	return
 }
 func (l ChartSetList) Current() *ChartSet {
 	if len(l.ChartSets) == 0 {

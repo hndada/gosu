@@ -70,6 +70,8 @@ type Scene struct {
 	loading bool
 	Loading LoadingDrawer
 	// inited  bool
+
+	Preview PreviewPlayer
 }
 
 const (
@@ -148,6 +150,7 @@ func (s *Scene) Update() any {
 	scene.Brightness.Update()
 	scene.Offset.Update()
 	scene.SpeedScales[modes[s.mode]].Update()
+	s.Preview.Update()
 	select {
 	case i := <-s.bgCh:
 		sprite := draws.NewSpriteFromSource(i)
@@ -220,6 +223,22 @@ func (s *Scene) Update() any {
 		case stay:
 		}
 		cset := s.ChartSets.Current()
+		go func() {
+			resp, err := http.Get(cset.URLPreview())
+			if err != nil || resp.StatusCode == 404 {
+				fmt.Println(err)
+				return
+			}
+			defer resp.Body.Close()
+			if s.Preview.IsValid() {
+				s.Preview.Close()
+			}
+			s.Preview, err = NewPreviewPlayer(resp.Body)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}()
 		go func() {
 			i, err := ebitenutil.NewImageFromURL(cset.URLCover("cover", Large))
 			if err != nil {
