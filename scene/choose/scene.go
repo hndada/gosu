@@ -76,6 +76,8 @@ type Scene struct {
 	lastFocus   int
 	keySettings []string //[]input.Key
 	// KeySettings KeySettingsDrawer
+	// returnCh chan Return
+	r *Return
 }
 
 const (
@@ -154,6 +156,16 @@ func isBack() bool {
 }
 
 func (s *Scene) Update() any {
+	if s.r != nil {
+		r := s.r
+		s.r = nil
+		return *r
+	}
+	// select {
+	// case r := <-s.returnCh:
+	// 	return r
+	// default:
+	// }
 	if s.loading {
 		s.Loading.Update()
 		return nil
@@ -319,23 +331,28 @@ func (s *Scene) handleEnter() any {
 		s.LoadChartList()
 	case FocusChart:
 		fmt.Println("Play chart")
-		scene.UserSkin.Enter.Play(*s.volumeSound)
-		c := s.Charts.Current()
-		if c == nil {
-			return errors.New("no chart loaded")
-		}
-		fs, name, err := c.Choose()
-		if err != nil {
-			return err
-		}
-		s.Preview.Close()
-		return Return{
-			FS:     fs,
-			Name:   name,
-			Mode:   modes[s.mode],
-			Mods:   nil,
-			Replay: nil,
-		}
+		go func() {
+			s.loading = true
+			scene.UserSkin.Enter.Play(*s.volumeSound)
+			c := s.Charts.Current()
+			if c == nil {
+				fmt.Println(errors.New("no chart loaded"))
+				return
+			}
+			fs, name, err := c.Choose()
+			if err != nil {
+				fmt.Println(err)
+			}
+			s.Preview.Close()
+			s.r = &Return{
+				FS:     fs,
+				Name:   name,
+				Mode:   modes[s.mode],
+				Mods:   nil,
+				Replay: nil,
+			}
+			s.loading = false
+		}()
 	}
 	return nil
 }
@@ -362,9 +379,6 @@ func (c Chart) Choose() (fsys fs.FS, name string, err error) {
 	return fsys, c.OsuFile, err
 }
 func (s Scene) Draw(screen draws.Image) {
-	if s.loading {
-		s.Loading.Draw(screen)
-	}
 	s.Background.Draw(screen)
 	// if s.Focus == FocusKeySettings {
 	// 	s.Focus = s.lastFocus
@@ -374,6 +388,9 @@ func (s Scene) Draw(screen draws.Image) {
 		s.ChartSets.Draw(screen)
 	case FocusChart:
 		s.Charts.Draw(screen)
+	}
+	if s.loading {
+		s.Loading.Draw(screen)
 	}
 	s.DebugPrint(screen)
 }
