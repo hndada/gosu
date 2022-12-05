@@ -2,6 +2,7 @@ package choose
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 
 	"github.com/hajimehoshi/ebiten/v2/audio"
@@ -27,12 +28,13 @@ func NewPreviewPlayer(rc io.ReadCloser) (p PreviewPlayer, err error) {
 	}
 	r := bytes.NewReader(b)
 	streamer, err := mp3.DecodeWithSampleRate(audios.SampleRate, r)
-	if err != nil {
-		// fmt.Println("decode:", err)
+	if err != nil { // && err.Error() != "EOF" {
+		fmt.Println("decode:", err)
 		return
 	}
 	_p, err := audios.Context.NewPlayer(streamer)
-	if err != nil {
+	if err != nil { //&& err.Error() != "EOF" {
+		fmt.Println("NewPlayer: ", err)
 		return
 	}
 	return PreviewPlayer{

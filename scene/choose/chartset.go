@@ -1,10 +1,10 @@
 package choose
 
 import (
+	_ "embed"
 	"fmt"
 	"sort"
 
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/scene"
 )
@@ -28,14 +28,17 @@ type ChartSet struct {
 	Disabled         int
 }
 
+//go:embed proxy.txt
+var proxy string
+
 func (c ChartSet) URLCover(kind, suffix string) string {
-	return fmt.Sprintf("%s/%d/covers/%s%s.jpg", APIBeatmap, c.SetId, kind, suffix)
+	return fmt.Sprintf("%s%s/%d/covers/%s%s.jpg", proxy, APIBeatmap, c.SetId, kind, suffix) // https://proxy.cors.sh/
 }
 func (c ChartSet) URLPreview() string {
-	return fmt.Sprintf("https://b.ppy.sh/preview/%d.mp3", c.SetId)
+	return fmt.Sprintf("%shttps://b.ppy.sh/preview/%d.mp3", proxy, c.SetId) // https://proxy.cors.sh/
 }
 func (c ChartSet) URLDownload() string {
-	return fmt.Sprintf("https://api.chimu.moe/v1/d/%d", c.SetId)
+	return fmt.Sprintf("%shttps://api.chimu.moe/v1/d/%d", proxy, c.SetId) // https://proxy.cors.sh/
 }
 
 type ChartSetList struct {
@@ -104,11 +107,11 @@ func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 		p.Sprite = s
 	}
 	go func() {
-		i, err := ebitenutil.NewImageFromURL(cs.URLCover("cover", Large))
+		i, err := draws.LoadImageFromURL(cs.URLCover("cover", Large))
 		if err != nil {
 			fmt.Println("chart set cover: ", err)
 		}
-		s := draws.NewSpriteFromSource(draws.Image{Image: i})
+		s := draws.NewSpriteFromSource(i)
 		p.Sprite.Source = s
 		// p.bgCh <- draws.Image{Image: i}
 		// close(p.bgCh)

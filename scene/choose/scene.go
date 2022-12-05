@@ -259,10 +259,36 @@ func (s *Scene) Update() any {
 		}
 		cset := s.ChartSets.Current()
 		go func() {
-			resp, err := http.Get(cset.URLPreview())
+			// var req *http.Request
+			// var resp *http.Response
+			// var err error
+			u := cset.URLPreview()
+			resp, err := http.Get(u)
+			if err != nil {
+				return
+			}
+			// if runtime.GOARCH == "wasm" {
+			// 	client := &http.Client{}
+			// 	req, err = http.NewRequest("GET", u, nil)
+			// 	if err != nil {
+			// 		return
+			// 	}
+			// 	req.Header.Add("js.fetch:mode", "no-cors")
+			// 	resp, err = client.Do(req)
+			// 	if err != nil {
+			// 		return
+			// 	}
+			// } else {
+			// 	resp, err = http.Get(u)
+			// 	if err != nil {
+			// 		return
+			// 	}
+			// }
 			if err != nil || resp.StatusCode == 404 {
 				fmt.Println(err)
-				return
+				// if runtime.GOARCH != "wasm" {
+				// 	return
+				// }
 			}
 			defer resp.Body.Close()
 			if s.Preview.IsValid() {
@@ -270,16 +296,19 @@ func (s *Scene) Update() any {
 			}
 			s.Preview, err = NewPreviewPlayer(resp.Body)
 			if err != nil {
-				fmt.Println(err)
-				return
+				fmt.Println("preview:", err)
+				// if runtime.GOARCH != "wasm" {
+				// 	return
+				// }
 			}
 		}()
 		go func() {
-			i, err := ebitenutil.NewImageFromURL(cset.URLCover("cover", Large))
+			// i, err := draws.LoadImageFromURL("https://upload.wikimedia.org/wikipedia/commons/1/1f/As08-16-2593.jpg")
+			i, err := draws.LoadImageFromURL(cset.URLCover("cover", Large))
 			if err != nil {
 				return
 			}
-			s.Background.Sprite.Source = draws.Image{Image: i}
+			s.Background.Sprite.Source = i
 			// s.bgCh <- draws.Image{Image: i}
 		}()
 	case FocusChart:
@@ -362,11 +391,30 @@ func (c Chart) Choose() (fsys fs.FS, name string, err error) {
 	// const noVideo = 1
 	// u := fmt.Sprintf("%s%d?n=%d", APIDownload, c.ParentSetId, noVideo)
 	u := c.URLDownload()
-	// fmt.Printf("download URL: %s\n", u)
 	resp, err := http.Get(u)
 	if err != nil {
 		return
 	}
+	// fmt.Printf("download URL: %s\n", u)
+	// var req *http.Request
+	// var resp *http.Response
+	// if runtime.GOARCH == "wasm" {
+	// 	client := &http.Client{}
+	// 	req, err = http.NewRequest("GET", u, nil)
+	// 	if err != nil {
+	// 		return
+	// 	}
+	// 	req.Header.Add("js.fetch:mode", "no-cors")
+	// 	resp, err = client.Do(req)
+	// 	if err != nil {
+	// 		return
+	// 	}
+	// } else {
+	// 	resp, err = http.Get(u)
+	// 	if err != nil {
+	// 		return
+	// 	}
+	// }
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
