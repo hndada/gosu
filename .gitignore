@@ -33,3 +33,8 @@ go.work
 # Test files
 /cmd/gosu/asdf - 1223/*
 /cmd/gosu/test.osz
+
+# Extra binaries for programs and plugins
+*.wasm
+
+proxy.txt

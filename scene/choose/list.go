@@ -2,7 +2,6 @@ package choose
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
@@ -49,11 +48,11 @@ func NewRow(cardURL, thumbURL, first, second string) Row {
 		r.Thumb = s
 	}
 	go func() {
-		i, err := ebitenutil.NewImageFromURL(thumbURL)
+		i, err := draws.LoadImageFromURL(thumbURL)
 		if err != nil {
 			return
 		}
-		r.Thumb.Source = draws.Image{Image: i}
+		r.Thumb.Source = i
 		// r.thumbCh <- draws.Image{Image: i}
 		// close(r.thumbCh)
 	}()
@@ -64,11 +63,11 @@ func NewRow(cardURL, thumbURL, first, second string) Row {
 		r.Card = s
 	}
 	go func() {
-		i, err := ebitenutil.NewImageFromURL(cardURL)
+		i, err := draws.LoadImageFromURL(cardURL)
 		if err != nil {
 			return
 		}
-		r.Card.Source = draws.Image{Image: i}
+		r.Card.Source = i
 		// r.cardCh <- draws.Image{Image: i}
 		// close(r.cardCh)
 	}()
