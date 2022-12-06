@@ -37,4 +37,4 @@ go.work
 # Extra binaries for programs and plugins
 *.wasm
 
-# proxy.txt
+proxy.txt
