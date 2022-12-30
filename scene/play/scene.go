@@ -24,11 +24,24 @@ type Scene struct {
 	ScenePlay
 }
 
-func NewScene(fsys fs.FS, cname string, mode int, mods interface{}, rf *osr.Format) (*Scene, error) {
+func NewScene(fsys fs.FS, cname string, mode int, mods interface{}, rf *osr.Format, ks []string) (*Scene, error) {
 	var (
 		play ScenePlay
 		err  error
 	)
+	const (
+		piano4 = iota
+		piano7
+		drum4
+	)
+	switch mode {
+	case piano4:
+		piano.S.KeySettings[4] = ks
+	case piano7:
+		piano.S.KeySettings[7] = ks
+	case drum4:
+		drum.S.KeySettings[4] = ks
+	}
 	switch mode {
 	case piano.Mode:
 		play, err = piano.NewScenePlay(fsys, cname, mods, rf)

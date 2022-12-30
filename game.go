@@ -13,7 +13,6 @@ import (
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/scene/choose"
-	"github.com/hndada/gosu/scene/play"
 )
 
 const (
@@ -112,13 +111,13 @@ func (g *game) Update() error {
 		if r != nil {
 			fmt.Println(r)
 		}
-	case choose.Return:
-		scene, err := play.NewScene(r.FS, r.Name, r.Mode, r.Mods, r.Replay)
-		if err != nil {
-			fmt.Println(err)
-		} else {
-			g.Scene = scene
-		}
+	// case choose.Return:
+	// 	scene, err := play.NewScene(r.FS, r.Name, r.Mode, r.Mods, r.Replay)
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 	} else {
+	// 		g.Scene = scene
+	// 	}
 	case mode.Result:
 		g.Scene = g.choose
 	}
