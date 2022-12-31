@@ -71,5 +71,5 @@ func (settings *Settings) process() {
 		ebiten.SetFullscreen(true)
 	}
 	ebiten.SetTPS(TPS)
-	ebiten.SetCursorMode(ebiten.CursorModeHidden)
+	// ebiten.SetCursorMode(ebiten.CursorModeHidden)
 }

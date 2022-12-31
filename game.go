@@ -23,7 +23,9 @@ const (
 
 // All structs and variables in game package should be unexported
 // since the game package is for being called at main via NewGame.
-type game struct {
+type Game struct {
+	IsWeb bool
+
 	fs.FS
 	scene.Scene
 	choose    scene.Scene
@@ -77,8 +79,7 @@ func Load(fsys fs.FS) {
 		scene.UserSkin.Load(skinFS)
 	}
 }
-
-func NewGame() *game {
+func NewGame() *Game {
 	// load(fsys)
 	// dir, err := os.Getwd()
 	// if err != nil {
@@ -91,7 +92,7 @@ func NewGame() *game {
 	// if err != nil {
 	// 	panic(err)
 	// }
-	g := &game{
+	g := &Game{
 		// FS:     fsys,
 		Scene:  nil,
 		choose: choose.NewScene(),
@@ -99,10 +100,18 @@ func NewGame() *game {
 	return g
 }
 
-func (g *game) Update() error {
+func (g *Game) Update() error {
 	if g.countdown > 0 {
 		g.countdown--
 	}
+
+	if g.IsWeb {
+		if g.Scene == nil || g.Scene.Update() == nil {
+			return nil
+		}
+		return g.Scene.Update().(error)
+	}
+
 	if g.Scene == nil {
 		g.Scene = g.choose
 	}
@@ -124,7 +133,7 @@ func (g *game) Update() error {
 	// g.Scene.Update()
 	return nil
 }
-func (g *game) Draw(screen *ebiten.Image) {
+func (g *Game) Draw(screen *ebiten.Image) {
 	if g.Scene == nil {
 		return
 	}
@@ -133,6 +142,6 @@ func (g *game) Draw(screen *ebiten.Image) {
 		ebitenutil.DebugPrintAt(screen, g.err.Error(), ScreenSizeX/2, ScreenSizeY/2)
 	}
 }
-func (g *game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return mode.ScreenSizeX, mode.ScreenSizeY
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
+	"strings"
 
 	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/mode"
@@ -35,7 +36,31 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 	var dat []byte
 	dat, err = fs.ReadFile(fsys, name)
 	if err != nil {
-		return
+		// name = strings.Replace(name, "[[4K] ", "[", 1)
+		// name = strings.Replace(name, "[[7K] ", "[", 1)
+		// dat, err = fs.ReadFile(fsys, name)
+		// if err != nil {
+		// 	return
+		// }
+		err = fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
+			if err != nil {
+				return err
+			}
+			name = fmt.Sprintf("[%s].osu", name)
+			if strings.HasSuffix(d.Name(), name) {
+				dat, err = fs.ReadFile(fsys, name)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			fmt.Println("omggggggg")
+			fmt.Println(name, fsys)
+			fmt.Println(err)
+			return
+		}
 	}
 	var f any // f stands for Format. // Todo: f -> _type?
 	switch filepath.Ext(name) {
