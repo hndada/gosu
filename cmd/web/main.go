@@ -85,34 +85,16 @@ func main() {
 			}
 		}
 	}()
-
 	c := play.Chart{
 		ParentSetId:  loadInt("setID"),
-		OsuMode:      loadInt("mode"),
+		OsuMode:      loadInt("osuMode"),
 		CS:           loadInt("cs"),
 		OsuFile:      loadString("osuFile"),
 		ChartName:    loadString("chartName"),
 		DownloadPath: loadString("downloadPath"),
 	}
 	fmt.Printf("%+v\n", c)
-	// c = play.Chart{
-	// 	ParentSetId:  1699001,
-	// 	OsuMode:      3,
-	// 	CS:           4,
-	// 	OsuFile:      "Pecorine (CV M.A.O), Kokkoro (CV Ito Miku), Karyl (CV Tachibana Rika) - Yes! Precious Harmony! (ML-ysg) [Easy].osu",
-	// 	DownloadPath: "/d/1699001",
-	// }
-	// fmt.Printf("%+v\n", c)
 
-	// c := play.Chart{
-	// 	ParentSetId:  320687,
-	// 	Mode:         3,
-	// 	CS:           4,
-	// 	OsuFile:      "Jason Hayes - War (Feerum) [Easy].osu",
-	// 	DownloadPath: "/d/677891",
-	// }
-	// ks = []string{"D", "F", "J", "K"}
-	// s, err := play.NewScene(c, ks) // c play.Chart, ks []string
 	s, err := play.NewScene(c)
 	if err != nil {
 		js.Global().Call("alert", err.Error())
@@ -125,3 +107,20 @@ func main() {
 		js.Global().Call("alert", err.Error())
 	}
 }
+
+// c = play.Chart{
+// 	ParentSetId:  1699001,
+// 	OsuMode:      3,
+// 	CS:           4,
+// 	OsuFile:      "Pecorine (CV M.A.O), Kokkoro (CV Ito Miku), Karyl (CV Tachibana Rika) - Yes! Precious Harmony! (ML-ysg) [Easy].osu",
+// 	DownloadPath: "/d/1699001",
+// }
+// fmt.Printf("%+v\n", c)
+
+// c := play.Chart{
+// 	ParentSetId:  320687,
+// 	Mode:         3,
+// 	CS:           4,
+// 	OsuFile:      "Jason Hayes - War (Feerum) [Easy].osu",
+// 	DownloadPath: "/d/677891",
+// }
