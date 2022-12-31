@@ -13,6 +13,7 @@ import (
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/scene/choose"
+	"github.com/hndada/gosu/scene/play"
 )
 
 const (
@@ -104,12 +105,14 @@ func (g *Game) Update() error {
 	if g.countdown > 0 {
 		g.countdown--
 	}
-
 	if g.IsWeb {
-		if g.Scene == nil || g.Scene.Update() == nil {
+		if g.Scene == (*play.Scene)(nil) { // type of nil should be asserted
 			return nil
 		}
-		return g.Scene.Update().(error)
+		if v := g.Scene.Update(); v != nil {
+			return g.Scene.Update().(error)
+		}
+		return nil
 	}
 
 	if g.Scene == nil {
@@ -135,6 +138,9 @@ func (g *Game) Update() error {
 }
 func (g *Game) Draw(screen *ebiten.Image) {
 	if g.Scene == nil {
+		return
+	}
+	if g.Scene == (*play.Scene)(nil) {
 		return
 	}
 	g.Scene.Draw(draws.Image{Image: screen})

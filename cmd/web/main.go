@@ -19,7 +19,7 @@ var ls = js.Global().Get("localStorage")
 
 func loadString(k string) string {
 	v := ls.Call("getItem", k).String()
-	fmt.Printf("%s: %s\n", k, v)
+	// fmt.Printf("%s: %s\n", k, v)
 	return v
 }
 func loadFloat(k string) float64 {
@@ -54,11 +54,10 @@ func loadSettings() {
 	}
 
 	if v := loadStrings("keyPiano4"); len(v) != 0 {
-
 		piano.S.KeySettings[4] = mode.NormalizeKeys(v)
-		for i, k := range piano.S.KeySettings[4] {
-			fmt.Printf("index: %d key: %s\n", i, k)
-		}
+		// for i, k := range piano.S.KeySettings[4] {
+		// 	fmt.Printf("index: %d key: %s\n", i, k)
+		// }
 	}
 	if v := loadStrings("keyPiano7"); len(v) != 0 {
 		piano.S.KeySettings[7] = mode.NormalizeKeys(v)
