@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.2.1
 	github.com/hajimehoshi/ebiten/v2 v2.4.13
 	github.com/ulikunitz/xz v0.5.10
-	golang.org/x/image v0.1.0
+	golang.org/x/image v0.5.0
 	golang.org/x/sys v0.2.0
 )
 
@@ -15,6 +15,7 @@ require (
 	github.com/hajimehoshi/file2byteslice v1.0.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/stretchr/testify v1.6.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
@@ -27,8 +28,6 @@ require (
 	github.com/jfreymuth/oggvorbis v1.0.4 // indirect
 	github.com/jfreymuth/vorbis v1.0.2 // indirect
 	github.com/json-iterator/go v1.1.12
-	github.com/vmihailenco/msgpack/v5 v5.3.5
-	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	golang.org/x/exp/shiny v0.0.0-20221114191408-850992195362 // indirect
 	golang.org/x/mobile v0.0.0-20221110043201-43a038452099 // indirect
 )
