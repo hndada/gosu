@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"math"
 	"os"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -46,8 +47,8 @@ type Scene struct {
 
 	mode       int
 	Focus      int
-	ChartSets  List
-	Charts     List
+	ChartSets  *List
+	Charts     *List
 	levelLimit bool
 	LevelLimit ctrl.KeyHandler
 
@@ -115,8 +116,20 @@ func NewScene() *Scene {
 	// }
 
 	// read music FS from ./music
-	s.MusicFS = os.DirFS("./music")
+	// s.MusicFS = os.DirFS("./music")
+	chartSets := make([]string, 0)
+	dirs, err := os.ReadDir("./music")
+	if err != nil {
+		fmt.Println(err)
+	}
+	for _, dir := range dirs {
+		if dir.IsDir() {
+			chartSets = append(chartSets, dir.Name())
+		}
+	}
+	s.ChartSets = NewList(chartSets)
 	s.Focus = FocusChartSet
+	s.lastFocus = s.Focus
 	{
 		sprite := draws.NewSpriteFromSource(DefaultBackground)
 		sprite.SetScaleToW(ScreenSizeX)
@@ -124,7 +137,7 @@ func NewScene() *Scene {
 		s.Background.Sprite = sprite
 	}
 	s.levelLimit = true
-	s.handleEnter()
+	// s.handleEnter()
 	// ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
 	// debug.SetGCPercent(100)
 	ebiten.SetWindowTitle("gosu")
@@ -269,7 +282,24 @@ func (s *Scene) handleEnter() any {
 	switch s.Focus {
 	case FocusChartSet:
 		fmt.Println("Load chart")
-		// s.LoadChartList()
+		base := s.ChartSets.Current()
+		charts := make([]string, 0)
+		files, err := os.ReadDir("./music/" + s.ChartSets.Current())
+		if err != nil {
+			fmt.Println("uhh")
+			return err
+		}
+		for _, file := range files {
+			if file.IsDir() {
+				continue
+			}
+			// check whether file is a chart
+			if !strings.HasSuffix(file.Name(), ".osu") {
+				continue
+			}
+			charts = append(charts, base+file.Name())
+		}
+		s.Charts = NewList(charts)
 		s.Focus = FocusChart
 	case FocusChart:
 		fmt.Println("Play chart")
