@@ -66,16 +66,16 @@ func Load(fsys fs.FS) {
 	skinFS, err := fs.Sub(fsys, "skin")
 	if err != nil {
 		fmt.Println(err)
-		return
-	}
-	_, err = skinFS.Open(".")
-	if err != nil {
-		fmt.Println("no /skin detected")
 	} else {
-		mode.UserSkin.Load(skinFS)
-		piano.UserSkins.Load(skinFS)
-		drum.UserSkin.Load(skinFS)
-		scene.UserSkin.Load(skinFS)
+		_, err = skinFS.Open(".")
+		if err != nil {
+			fmt.Println("no /skin detected")
+		} else {
+			mode.UserSkin.Load(skinFS)
+			piano.UserSkins.Load(skinFS)
+			drum.UserSkin.Load(skinFS)
+			scene.UserSkin.Load(skinFS)
+		}
 	}
 }
 
