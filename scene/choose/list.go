@@ -64,7 +64,7 @@ func (l List) Draw(dst draws.Image) {
 		}
 		row := boxMask
 		op := draws.Op{}
-		op.GeoM.Translate(0, -float64(i+1)*RowHeight)
+		op.GeoM.Translate(ScreenSizeX-RowWidth, ScreenSizeY/2-RowHeight/2-float64(i+1)*RowHeight)
 		// row.Move(0, -float64(i+1)*RowHeight)
 		row.Draw(dst, op)
 
@@ -78,7 +78,7 @@ func (l List) Draw(dst draws.Image) {
 		}
 		row := boxMask
 		op := draws.Op{}
-		op.GeoM.Translate(0, float64(i)*RowHeight)
+		op.GeoM.Translate(ScreenSizeX-RowWidth, ScreenSizeY/2-RowHeight/2+float64(i)*RowHeight)
 		// row.Move(0, -float64(i+1)*RowHeight)
 		row.Draw(dst, op)
 		if i == 0 {
