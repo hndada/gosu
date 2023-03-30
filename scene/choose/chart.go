@@ -25,6 +25,8 @@ type ChartSet struct {
 	Language         int
 	Favourites       int
 	Disabled         int
+
+	Path string
 }
 
 type Chart struct {
@@ -62,6 +64,8 @@ func LoadChartSets() (sets []ChartSet) {
 		}
 		set := ChartSet{
 			ChildrenBeatmaps: make([]*Chart, 0, 4),
+			Path:             dir.Name(),
+			// Path:             filepath.Join("./", dir.Name()),
 		}
 		dpath := filepath.Join(root, dir.Name())
 		osuFiles, err := os.ReadDir(dpath)
@@ -98,7 +102,8 @@ func LoadChartSets() (sets []ChartSet) {
 				DiffName: f.Version,
 				Mode:     f.Mode,
 				CS:       f.CircleSize,
-				OsuFile:  fpath,
+				OsuFile:  file.Name(),
+				// OsuFile:  filepath.Join("./", dir.Name(), file.Name()),
 				// DownloadPath: fpath,
 			}
 			set.ChildrenBeatmaps = append(set.ChildrenBeatmaps, &chart)

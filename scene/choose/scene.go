@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 	"math"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -118,7 +119,7 @@ func NewScene() *Scene {
 	// }
 
 	// read music FS from ./music
-	// s.MusicFS = os.DirFS("./music")
+	s.MusicFS = os.DirFS("./music")
 	// chartSets := make([]string, 0)
 	// dirs, err := os.ReadDir("./music")
 	// if err != nil {
@@ -326,10 +327,6 @@ func (s *Scene) handleEnter() any {
 		go func() {
 			s.loading = true
 			scene.UserSkin.Enter.Play(*s.volumeSound)
-			// csi := s.ChartSets.Current()
-			// cs:= s.chartSets[csi]
-			idx := s.Charts.Current()
-			name := s.charts[idx].OsuFile
 			// if c == nil {
 			// 	fmt.Println(errors.New("no chart loaded"))
 			// 	return
@@ -339,10 +336,18 @@ func (s *Scene) handleEnter() any {
 			// 	fmt.Println(err)
 			// }
 			// s.Preview.Close()
+			sub, err := fs.Sub(s.MusicFS, s.chartSets[s.ChartSets.Current()].Path)
+			if err != nil {
+				fmt.Println(err)
+			}
+			// csi := s.ChartSets.Current()
+			// cs:= s.chartSets[csi]
+			idx := s.Charts.Current()
+			name := s.charts[idx].OsuFile
 			s.r = &Return{
 				// FS:     fs,
 				// Name:   name,
-				FS:     s.MusicFS,
+				FS:     sub,
 				Name:   name, // suppose it contains a whole path
 				Mode:   modes[s.mode],
 				Mods:   nil,
