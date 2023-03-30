@@ -35,11 +35,6 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 	var dat []byte
 	dat, err = fs.ReadFile(fsys, name)
 	if err != nil {
-		fmt.Println("fsys:", fsys)
-		fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
-			fmt.Println(path)
-			return nil
-		})
 		return
 	}
 	var f any // f stands for Format. // Todo: f -> _type?
