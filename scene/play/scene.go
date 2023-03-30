@@ -1,6 +1,7 @@
 package play
 
 import (
+	"fmt"
 	"io/fs"
 
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -25,6 +26,8 @@ type Scene struct {
 }
 
 func NewScene(fsys fs.FS, cname string, mode int, mods interface{}, rf *osr.Format) (*Scene, error) {
+	fmt.Println("NewScene", fsys, cname)
+	// fmt.Println(cname, mode)
 	var (
 		play ScenePlay
 		err  error

@@ -38,14 +38,14 @@ func (l *List) Update() bool { return l.Cursor.Update() }
 func (l List) Current() int  { return l.cursor }
 
 const (
-	RowWidth  = 550 // 400(card) + 150(list)
-	RowHeight = 75  // 50
+	RowWidth  = 750 // 400(card) + 150(list)
+	RowHeight = 50  // 75
 	RowShrink = 0.15 * RowWidth
-	RowCount  = 15 // int(ScreenSizeY/RowHeight) + 2
+	RowCount  = int(ScreenSizeY/RowHeight) + 2
 )
 
 // Load box-mask.png from defaultskin
-var boxMask = draws.NewSprite(defaultskin.FS, "box-mask.png")
+var boxMask = draws.NewSprite(defaultskin.FS, "box-mask.png") // interface/
 
 // May add extra effect to box arrangement. e.g., x -= y / 5
 func (l List) Draw(dst draws.Image) {
@@ -59,7 +59,7 @@ func (l List) Draw(dst draws.Image) {
 		}
 		row := boxMask
 		op := draws.Op{}
-		op.GeoM.Translate(ScreenSizeX-2*RowWidth, ScreenSizeY/2-RowHeight/2-float64(i+1)*RowHeight)
+		op.GeoM.Translate(ScreenSizeX-1*RowWidth, ScreenSizeY/2-RowHeight/2-float64(i+1)*RowHeight)
 		// row.Move(0, -float64(i+1)*RowHeight)
 		row.Draw(dst, op)
 
@@ -73,7 +73,7 @@ func (l List) Draw(dst draws.Image) {
 		}
 		row := boxMask
 		op := draws.Op{}
-		op.GeoM.Translate(ScreenSizeX-2*RowWidth, ScreenSizeY/2-RowHeight/2+float64(i)*RowHeight)
+		op.GeoM.Translate(ScreenSizeX-1*RowWidth, ScreenSizeY/2-RowHeight/2+float64(i)*RowHeight)
 		// row.Move(0, -float64(i+1)*RowHeight)
 		row.Draw(dst, op)
 		if i == 0 {
