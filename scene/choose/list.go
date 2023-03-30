@@ -35,12 +35,7 @@ func NewList(ts []string) *List {
 }
 
 func (l *List) Update() bool { return l.Cursor.Update() }
-func (l List) Current() string {
-	if len(l.Texts) == 0 {
-		return ""
-	}
-	return l.Texts[l.cursor]
-}
+func (l List) Current() int  { return l.cursor }
 
 const (
 	RowWidth  = 550 // 400(card) + 150(list)
@@ -64,7 +59,7 @@ func (l List) Draw(dst draws.Image) {
 		}
 		row := boxMask
 		op := draws.Op{}
-		op.GeoM.Translate(ScreenSizeX-RowWidth, ScreenSizeY/2-RowHeight/2-float64(i+1)*RowHeight)
+		op.GeoM.Translate(ScreenSizeX-2*RowWidth, ScreenSizeY/2-RowHeight/2-float64(i+1)*RowHeight)
 		// row.Move(0, -float64(i+1)*RowHeight)
 		row.Draw(dst, op)
 
@@ -78,7 +73,7 @@ func (l List) Draw(dst draws.Image) {
 		}
 		row := boxMask
 		op := draws.Op{}
-		op.GeoM.Translate(ScreenSizeX-RowWidth, ScreenSizeY/2-RowHeight/2+float64(i)*RowHeight)
+		op.GeoM.Translate(ScreenSizeX-2*RowWidth, ScreenSizeY/2-RowHeight/2+float64(i)*RowHeight)
 		// row.Move(0, -float64(i+1)*RowHeight)
 		row.Draw(dst, op)
 		if i == 0 {

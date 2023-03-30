@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io/fs"
 	"math"
-	"os"
-	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -45,10 +43,9 @@ type Scene struct {
 
 	Background mode.BackgroundDrawer
 
-	mode       int
-	Focus      int
-	ChartSets  *List
-	Charts     *List
+	mode  int
+	Focus int
+
 	levelLimit bool
 	LevelLimit ctrl.KeyHandler
 
@@ -59,6 +56,11 @@ type Scene struct {
 	r           *Return
 
 	MusicFS fs.FS
+
+	chartSets []ChartSet
+	charts    []*Chart
+	ChartSets *List
+	Charts    *List
 }
 
 const (
@@ -117,17 +119,25 @@ func NewScene() *Scene {
 
 	// read music FS from ./music
 	// s.MusicFS = os.DirFS("./music")
-	chartSets := make([]string, 0)
-	dirs, err := os.ReadDir("./music")
-	if err != nil {
-		fmt.Println(err)
-	}
-	for _, dir := range dirs {
-		if dir.IsDir() {
-			chartSets = append(chartSets, dir.Name())
+	// chartSets := make([]string, 0)
+	// dirs, err := os.ReadDir("./music")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+	// for _, dir := range dirs {
+	// 	if dir.IsDir() {
+	// 		chartSets = append(chartSets, dir.Name())
+	// 	}
+	// }
+	s.chartSets = LoadChartSets()
+	{
+		rows := make([]string, 0, len(s.chartSets))
+		for _, cs := range s.chartSets {
+			row := fmt.Sprintf("%s - %s", cs.Artist, cs.Title)
+			rows = append(rows, row)
 		}
+		s.ChartSets = NewList(rows)
 	}
-	s.ChartSets = NewList(chartSets)
 	s.Focus = FocusChartSet
 	s.lastFocus = s.Focus
 	{
@@ -282,31 +292,44 @@ func (s *Scene) handleEnter() any {
 	switch s.Focus {
 	case FocusChartSet:
 		fmt.Println("Load chart")
-		base := s.ChartSets.Current()
-		charts := make([]string, 0)
-		files, err := os.ReadDir("./music/" + s.ChartSets.Current())
-		if err != nil {
-			fmt.Println("uhh")
-			return err
-		}
-		for _, file := range files {
-			if file.IsDir() {
-				continue
+		idx := s.ChartSets.Current()
+		s.charts = s.chartSets[idx].ChildrenBeatmaps
+		{
+			rows := make([]string, 0, len(s.charts))
+			for _, cs := range s.charts {
+				row := fmt.Sprintf("%s [%s]", cs.Title, cs.DiffName)
+				rows = append(rows, row)
 			}
-			// check whether file is a chart
-			if !strings.HasSuffix(file.Name(), ".osu") {
-				continue
-			}
-			charts = append(charts, base+file.Name())
+			s.Charts = NewList(rows)
 		}
-		s.Charts = NewList(charts)
+		// base := s.ChartSets.Current()
+		// charts := make([]string, 0)
+		// files, err := os.ReadDir("./music/" + s.ChartSets.Current())
+		// if err != nil {
+		// 	fmt.Println("uhh")
+		// 	return err
+		// }
+		// for _, file := range files {
+		// 	if file.IsDir() {
+		// 		continue
+		// 	}
+		// 	// check whether file is a chart
+		// 	if !strings.HasSuffix(file.Name(), ".osu") {
+		// 		continue
+		// 	}
+		// 	charts = append(charts, base+file.Name())
+		// }
+		// s.Charts = NewList(charts)
 		s.Focus = FocusChart
 	case FocusChart:
 		fmt.Println("Play chart")
 		go func() {
 			s.loading = true
 			scene.UserSkin.Enter.Play(*s.volumeSound)
-			c := s.Charts.Current()
+			// csi := s.ChartSets.Current()
+			// cs:= s.chartSets[csi]
+			idx := s.Charts.Current()
+			name := s.charts[idx].OsuFile
 			// if c == nil {
 			// 	fmt.Println(errors.New("no chart loaded"))
 			// 	return
@@ -320,7 +343,7 @@ func (s *Scene) handleEnter() any {
 				// FS:     fs,
 				// Name:   name,
 				FS:     s.MusicFS,
-				Name:   c, // suppose it contains a whole path
+				Name:   name, // suppose it contains a whole path
 				Mode:   modes[s.mode],
 				Mods:   nil,
 				Replay: nil,
