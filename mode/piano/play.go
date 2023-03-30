@@ -1,8 +1,12 @@
 package piano
 
 import (
+	"encoding/csv"
 	"fmt"
 	"io/fs"
+	"os"
+	"strconv"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -45,6 +49,14 @@ type ScenePlay struct {
 	Score        mode.ScoreDrawer
 	Combo        mode.ComboDrawer
 	Meter        mode.MeterDrawer
+
+	// For HCI experiments
+	Logs []Log
+}
+type Log struct {
+	Time   int64
+	Key    int
+	Offset int64
 }
 
 func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s *ScenePlay, err error) {
@@ -232,6 +244,13 @@ func (s *ScenePlay) Update() any {
 			if !j.Is(Miss) && n.Type != Head {
 				hits[n.Key] = true
 			}
+
+			// For HCI experiments
+			s.Logs = append(s.Logs, Log{
+				Time:   n.Time,
+				Key:    n.Key,
+				Offset: td,
+			})
 		}
 	}
 	s.Bar.Update(s.Cursor)
@@ -262,7 +281,35 @@ func (s *ScenePlay) Update() any {
 }
 func (s ScenePlay) Finish() any {
 	s.MusicPlayer.Close()
+	s.outputLog()
 	return s.NewResult(s.Chart.MD5)
+}
+
+// For HCI experiments
+func (s ScenePlay) outputLog() {
+	// Create a file where the CSV data can be saved
+	fname := fmt.Sprintf("log/%s[%s]_sp%3d_hp%3d_of%3d_%s.csv",
+		s.Chart.MusicName, s.Chart.ChartName, int(S.SpeedScale*100), int(S.HitPosition), s.Offset,
+		time.Now().Format("2006-01-02_15-04-05"))
+	// create log directory if not exists
+	if _, err := os.Stat("log"); os.IsNotExist(err) {
+		os.Mkdir("log", 0744)
+	}
+	file, err := os.Create(fname)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	writer.Write([]string{"Time", "Key", "Offset"})
+	for _, n := range s.Logs {
+		t := strconv.Itoa(int(n.Time))
+		k := strconv.Itoa(int(n.Key))
+		o := strconv.Itoa(int(n.Offset))
+		writer.Write([]string{t, k, o})
+	}
+	writer.Flush()
 }
 func (s *ScenePlay) UpdateCursor() {
 	duration := float64(s.Now - s.TransPoint.Time)
