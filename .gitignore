@@ -38,3 +38,6 @@ go.work
 *.wasm
 
 proxy.txt
+
+# Test files for HCI experiments
+/cmd/gosu/log
