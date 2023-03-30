@@ -1,5 +1,13 @@
 package choose
 
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+
+	"github.com/hndada/gosu/format/osu"
+)
+
 type ChartSet struct {
 	SetId            int
 	ChildrenBeatmaps []*Chart
@@ -39,4 +47,63 @@ type Chart struct {
 	DifficultyRating float64
 	OsuFile          string
 	DownloadPath     string
+}
+
+func LoadChartSets() (sets []ChartSet) {
+	// read music dir
+	const root = "./music"
+	dirs, err := os.ReadDir(root)
+	if err != nil {
+		panic(err)
+	}
+	for _, dir := range dirs {
+		if !dir.IsDir() {
+			continue
+		}
+		set := ChartSet{
+			ChildrenBeatmaps: make([]*Chart, 0, 4),
+		}
+		dpath := filepath.Join(root, dir.Name())
+		osuFiles, err := os.ReadDir(dpath)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+		for _, file := range osuFiles {
+			if file.IsDir() {
+				continue
+			}
+			if filepath.Ext(file.Name()) != ".osu" {
+				continue
+			}
+			fpath := filepath.Join(root, dir.Name(), file.Name())
+			b, err := os.ReadFile(fpath)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			f, err := osu.Parse(b)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			if set.Title == "" {
+				set.Title = f.Title
+			}
+			if set.Artist == "" {
+				set.Artist = f.Artist
+			}
+			chart := Chart{
+				ChartSet: &set,
+				DiffName: f.Version,
+				Mode:     f.Mode,
+				CS:       f.CircleSize,
+				OsuFile:  fpath,
+				// DownloadPath: fpath,
+			}
+			set.ChildrenBeatmaps = append(set.ChildrenBeatmaps, &chart)
+		}
+		sets = append(sets, set)
+	}
+	return
 }
