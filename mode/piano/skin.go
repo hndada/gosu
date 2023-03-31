@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"io/fs"
 
+	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode"
 )
@@ -15,6 +16,7 @@ type Skin struct {
 	Score             [13]draws.Sprite // number + sign(. , %)
 	Combo             [10]draws.Sprite // number only
 	Judgment          [5]draws.Animation
+	Sound             []byte
 	// Dependent of key number
 	Bar          draws.Sprite
 	Hint         draws.Sprite
@@ -38,6 +40,7 @@ type Skins struct {
 	// Bar: generated per skin
 	Hint draws.Image
 	// Field: generated per skin
+	Sound []byte
 
 	Note         [4][4][]draws.Image // Key type, note type
 	Key          [2]draws.Image
@@ -62,6 +65,14 @@ func (skins *Skins) Load(fsys fs.FS) {
 		skins.Judgment[i] = draws.LoadImages(fsys, fmt.Sprintf("piano/judgment/%s", name))
 	}
 	skins.Hint = draws.LoadImage(fsys, "piano/stage/hint.png")
+	{
+		name := "piano/sound.wav"
+		s := audios.NewSound(fsys, name)
+		if !s.IsValid() {
+			s = skins.Sound
+		}
+		skins.Sound = s
+	}
 
 	keyTypes := []KeyType{One, Two, Mid, Tip}
 	for k, ktype := range keyTypes {
@@ -110,6 +121,7 @@ func (skins *Skins) loadSkin(keyMode int) {
 		}
 		skin.Judgment[i] = a
 	}
+	skin.Sound = skins.Sound
 
 	// Note, Bar, Hint are at bottom of HitPosition.
 	var fieldWidth float64
