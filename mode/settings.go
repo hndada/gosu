@@ -47,7 +47,7 @@ func NewSettings() Settings {
 	return Settings{
 		VolumeMusic:          0.50,
 		VolumeSound:          0.50,
-		Offset:               -90,
+		Offset:               -20,
 		BackgroundBrightness: 0.6,
 
 		MeterUnit:     4,

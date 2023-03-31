@@ -36,6 +36,7 @@ type ScenePlay struct {
 	// NoteCount    int
 	// MaxNoteCount int
 
+	Sound        []byte
 	Background   mode.BackgroundDrawer
 	Field        FieldDrawer
 	Bar          BarDrawer
@@ -107,6 +108,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		UserSkins.loadSkin(c.KeyMode)
 		skin = UserSkins.Skins[c.KeyMode]
 	}
+	s.Sound = skin.Sound
 	s.Background = mode.BackgroundDrawer{
 		Sprite: mode.NewBackground(fsys, c.ImageFilename),
 	}
@@ -214,6 +216,7 @@ func (s *ScenePlay) Update() any {
 	s.Pressed = s.FetchPressed()
 	var worst mode.Judgment
 	hits := make([]bool, s.Chart.KeyCount)
+
 	for _, n := range s.Staged {
 		if n == nil {
 			continue
@@ -253,6 +256,15 @@ func (s *ScenePlay) Update() any {
 			})
 		}
 	}
+	for k := 0; k < s.Chart.KeyCount; k++ {
+		if s.KeyAction(k) == input.Hit {
+			vol2 := s.TransPoint.Volume
+			p := audios.Context.NewPlayerFromBytes(s.Sound)
+			p.SetVolume((*S.volumeSound) * vol2)
+			p.Play()
+		}
+	}
+
 	s.Bar.Update(s.Cursor)
 	for k := 0; k < s.Chart.KeyCount; k++ {
 		holding := false
