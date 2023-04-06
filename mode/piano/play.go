@@ -300,8 +300,10 @@ func (s ScenePlay) Finish() any {
 // For HCI experiments
 func (s ScenePlay) outputLog() {
 	// Create a file where the CSV data can be saved
-	fname := fmt.Sprintf("log/%s[%s]_sp%3d_hp%3d_of%3d_%s.csv",
+
+	fname := fmt.Sprintf("log/%s[%s]_sp%3d_hp%3d_of%3d_ks%3d_%s.csv",
 		s.Chart.MusicName, s.Chart.ChartName, int(S.SpeedScale*100), int(S.HitPosition), s.Offset,
+		int(mode.S.VolumeSound*100),
 		time.Now().Format("2006-01-02_15-04-05"))
 	// create log directory if not exists
 	if _, err := os.Stat("log"); os.IsNotExist(err) {
