@@ -17,6 +17,14 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
+var noFeedback = false
+
+func init() {
+	if noFeedback {
+		mode.S.VolumeSound = 0
+	}
+}
+
 // ScenePlay: struct, PlayScene: function
 // The skin may be applied some custom settings: on/off some sprites
 type ScenePlay struct {
@@ -352,9 +360,15 @@ func (s ScenePlay) Draw(screen draws.Image) {
 	for k := 0; k < s.Chart.KeyCount; k++ {
 		s.Note[k].Draw(screen)
 		s.Keys[k].Draw(screen)
-		s.KeyLighting[k].Draw(screen)
+		if !noFeedback {
+			s.KeyLighting[k].Draw(screen)
+		}
 	}
 	s.Hint.Draw(screen)
+	s.DebugPrint(screen)
+	if noFeedback {
+		return
+	}
 	for k := 0; k < s.Chart.KeyCount; k++ {
 		s.HitLighting[k].Draw(screen)
 		s.HoldLighting[k].Draw(screen)
@@ -363,7 +377,6 @@ func (s ScenePlay) Draw(screen draws.Image) {
 	s.Score.Draw(screen)
 	s.Combo.Draw(screen)
 	s.Meter.Draw(screen)
-	s.DebugPrint(screen)
 }
 
 func (s ScenePlay) DebugPrint(screen draws.Image) {
