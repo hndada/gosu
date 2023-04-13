@@ -199,11 +199,12 @@ func (s *Scene) Update() any {
 		s.mode++
 		s.mode %= 3
 		scene.UserSkin.Enter.Play(*s.volumeSound)
-		s.Focus = FocusSearch
-		err := s.handleEnter()
-		if err != nil {
-			fmt.Println(err)
-		}
+		s.Focus = FocusChartSet
+		// s.Focus = FocusSearch
+		// err := s.handleEnter()
+		// if err != nil {
+		// 	fmt.Println(err)
+		// }
 	}
 	if inpututil.IsKeyJustPressed(input.KeyF4) {
 		s.levelLimit = !s.levelLimit
