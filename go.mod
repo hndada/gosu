@@ -13,10 +13,6 @@ require (
 require (
 	github.com/ebitengine/purego v0.2.0-alpha.0.20221107040104-382f4c69b854 // indirect
 	github.com/hajimehoshi/file2byteslice v1.0.0 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.2 // indirect
-	github.com/stretchr/testify v1.6.1 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
 require (
@@ -27,7 +23,6 @@ require (
 	github.com/jezek/xgb v1.1.0 // indirect
 	github.com/jfreymuth/oggvorbis v1.0.4 // indirect
 	github.com/jfreymuth/vorbis v1.0.2 // indirect
-	github.com/json-iterator/go v1.1.12
 	golang.org/x/exp/shiny v0.0.0-20221114191408-850992195362 // indirect
 	golang.org/x/mobile v0.0.0-20221110043201-43a038452099 // indirect
 )
