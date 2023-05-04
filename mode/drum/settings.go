@@ -19,6 +19,7 @@ type Settings struct {
 	volumeSound          *float64
 	offset               *int64
 	backgroundBrightness *float64
+	debugPrint           *bool
 
 	// Logic settings
 	KeySettings map[int][]string
@@ -111,6 +112,7 @@ func (s *Settings) process() {
 	s.volumeSound = &mode.S.VolumeSound
 	s.offset = &mode.S.Offset
 	s.backgroundBrightness = &mode.S.BackgroundBrightness
+	s.debugPrint = &mode.S.DebugPrint
 
 	s.HitPosition *= ScreenSizeX
 	s.minPosition = -s.HitPosition - positionMargin

@@ -39,6 +39,7 @@ type Scene struct {
 	volumeSound   *float64
 	brightness    *float64
 	offset        *int64
+	debugPrint    *bool
 	speedFactors  []*float64
 	exposureTimes []func(float64) float64
 
@@ -79,6 +80,7 @@ func NewScene() *Scene {
 	s.volumeSound = &mode.S.VolumeSound
 	s.brightness = &mode.S.BackgroundBrightness
 	s.offset = &mode.S.Offset
+	s.debugPrint = &mode.S.DebugPrint
 	s.speedFactors = []*float64{
 		&piano.S.SpeedScale, &drum.S.SpeedScale}
 	s.exposureTimes = []func(float64) float64{
@@ -181,6 +183,7 @@ func (s *Scene) Update() any {
 	scene.VolumeSound.Update()
 	scene.Brightness.Update()
 	scene.Offset.Update()
+	scene.DebugPrint.Update()
 	scene.SpeedScales[modes[s.mode]].Update()
 	// s.Preview.Update()
 	// select {
@@ -391,6 +394,7 @@ func (s Scene) DebugPrint(screen draws.Image) {
 		"Sound volume (Alt+ Left/Right): %.0f%%\n"+
 		"Brightness (Ctrl+ O/P): %.0f%%\n"+
 		"Offset (Shift+ Left/Right): %dms\n"+
+		"Debug print (F12): %v\n"+
 		"\n"+
 		"Speed (PageUp/Down): %.0f (Exposure time: %.0fms)\n"+
 		"\n"+
@@ -408,6 +412,7 @@ func (s Scene) DebugPrint(screen draws.Image) {
 		*s.volumeSound*100,
 		*s.brightness*100,
 		*s.offset,
+		*s.debugPrint,
 
 		speed*100, s.exposureTimes[modes[s.mode]](speed),
 		// s.query,

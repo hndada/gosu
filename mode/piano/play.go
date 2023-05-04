@@ -17,10 +17,10 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
-var noFeedback = false
+var silent = false
 
 func init() {
-	if noFeedback {
+	if silent {
 		mode.S.VolumeSound = 0
 	}
 }
@@ -359,14 +359,18 @@ func (s ScenePlay) Draw(screen draws.Image) {
 	s.Bar.Draw(screen)
 	for k := 0; k < s.Chart.KeyCount; k++ {
 		s.Note[k].Draw(screen)
-		s.Keys[k].Draw(screen)
-		if !noFeedback {
+		if silent {
+			s.Keys[k].Sprites[0].Draw(screen, draws.Op{})
+		} else {
+			s.Keys[k].Draw(screen)
 			s.KeyLighting[k].Draw(screen)
 		}
 	}
 	s.Hint.Draw(screen)
-	s.DebugPrint(screen)
-	if noFeedback {
+	if *S.debugPrint {
+		s.DebugPrint(screen)
+	}
+	if silent {
 		return
 	}
 	for k := 0; k < s.Chart.KeyCount; k++ {
@@ -387,11 +391,13 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 			"Speed scale (Z/X): %.0f (x%.2f)\n(Exposure time: %.fms)\n\n"+
 			"Music volume (Ctrl+ Left/Right): %.0f%%\nSound volume (Alt+ Left/Right): %.0f%%\n\n"+
 			"Press ESC to select a song.\nPress TAB to pause.\n\n"+
-			"Offset (Shift+ Left/Right): %dms\n",
+			"Offset (Shift+ Left/Right): %dms\n"+
+			"Debug print (Ctrl+D): %v\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[mode.Total], s.ScoreBounds[mode.Total], s.Flow*100, s.Scorer.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
 		S.SpeedScale*100, s.TransPoint.Speed, ExposureTime(s.Speed()),
 		*S.volumeMusic*100, *S.volumeSound*100,
-		*S.offset))
+		*S.offset,
+		*S.debugPrint))
 }
