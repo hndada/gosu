@@ -70,13 +70,14 @@ go build .
 ./gosu
 ```
 
+# Web version
+[https://gosu-web-orcin.vercel.app](https://gosu-web-orcin.vercel.app)
+
 # Flow of game logic
 ![Game logic](https://i.imgur.com/g5G6XLI.png)
 
 ### [Powerpoint and SlideShare (preview below)](https://www.slideshare.net/MuangMuangE/gosupresentpptx-253675145)
 [![gosu-present](https://i.imgur.com/rtq5n9p.png)](https://www.slideshare.net/MuangMuangE/gosupresentpptx-253675145)
-
-
 
 Will also post details at [wiki](https://github.com/hndada/gosu/wiki).
 
