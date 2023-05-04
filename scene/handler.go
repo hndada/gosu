@@ -14,6 +14,7 @@ var (
 	VolumeSound ctrl.KeyHandler
 	Brightness  ctrl.KeyHandler
 	Offset      ctrl.KeyHandler
+	DebugPrint  ctrl.KeyHandler // added
 	SpeedScales []ctrl.KeyHandler
 )
 
@@ -66,6 +67,15 @@ func loadHandler() {
 		Keys:      [2]input.Key{input.KeyArrowLeft, input.KeyArrowRight},
 		Sounds:    [2]audios.Sounder{UserSkin.Tap, UserSkin.Tap},
 		Volume:    &mode.S.VolumeSound,
+	}
+	DebugPrint = ctrl.KeyHandler{
+		Handler: ctrl.BoolHandler{
+			Value: &mode.S.DebugPrint,
+		},
+		// Modifiers: []input.Key{input.KeyF12},
+		Keys:   [2]input.Key{input.KeyF12, input.KeyF12},
+		Sounds: [2]audios.Sounder{UserSkin.Tap, UserSkin.Tap},
+		Volume: &mode.S.VolumeSound,
 	}
 	SpeedScales = make([]ctrl.KeyHandler, 2)
 	for i, v := range []*float64{&piano.S.SpeedScale, &drum.S.SpeedScale} {

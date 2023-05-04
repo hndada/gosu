@@ -30,6 +30,7 @@ type Settings struct {
 	VolumeSound          float64
 	Offset               int64
 	BackgroundBrightness float64
+	DebugPrint           bool
 
 	MeterUnit     float64 // number of pixels per 1ms
 	MeterHeight   float64
@@ -49,6 +50,7 @@ func NewSettings() Settings {
 		VolumeSound:          0.50,
 		Offset:               -20,
 		BackgroundBrightness: 0.6,
+		DebugPrint:           true,
 
 		MeterUnit:     4,
 		MeterHeight:   65,
