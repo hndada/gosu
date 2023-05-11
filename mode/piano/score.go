@@ -11,8 +11,8 @@ var (
 	Kool = mode.Judgment{Flow: 0.01, Acc: 1, Window: 20}
 	Cool = mode.Judgment{Flow: 0.01, Acc: 1, Window: 45}
 	Good = mode.Judgment{Flow: 0.01, Acc: 0.25, Window: 75}
-	Bad  = mode.Judgment{Flow: 0.01, Acc: 0, Window: 110} // Todo: Flow 0.01 -> 0?
-	Miss = mode.Judgment{Flow: -1, Acc: 0, Window: 150}
+	Bad  = mode.Judgment{Flow: 0.01, Acc: 0, Window: 210} // For HCI experiment: 110 -> 210
+	Miss = mode.Judgment{Flow: -1, Acc: 0, Window: 250}   // For HCI experiment: 150 -> 250
 )
 
 var Judgments = []mode.Judgment{Kool, Cool, Good, Bad, Miss}

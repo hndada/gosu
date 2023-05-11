@@ -19,6 +19,7 @@ type Settings struct {
 	volumeSound          *float64
 	offset               *int64
 	backgroundBrightness *float64
+	delayedJudge         *int64 // for HCI experiment
 	debugPrint           *bool
 
 	// Logic settings
@@ -112,6 +113,7 @@ func (s *Settings) process() {
 	s.volumeSound = &mode.S.VolumeSound
 	s.offset = &mode.S.Offset
 	s.backgroundBrightness = &mode.S.BackgroundBrightness
+	s.delayedJudge = &mode.S.DelayedJudge
 	s.debugPrint = &mode.S.DebugPrint
 
 	s.HitPosition *= ScreenSizeX

@@ -47,6 +47,7 @@ func (s *Scene) Update() any {
 	scene.VolumeSound.Update()
 	scene.Brightness.Update()
 	scene.Offset.Update()
+	scene.DelayedJudge.Update()
 	scene.DebugPrint.Update()
 	scene.SpeedScales[s.mode].Update()
 	if inpututil.IsKeyJustPressed(input.KeyEscape) {

@@ -30,6 +30,7 @@ type Settings struct {
 	VolumeSound          float64
 	Offset               int64
 	BackgroundBrightness float64
+	DelayedJudge         int64 // for HCI experiment
 	DebugPrint           bool
 
 	MeterUnit     float64 // number of pixels per 1ms
@@ -50,6 +51,7 @@ func NewSettings() Settings {
 		VolumeSound:          0.50,
 		Offset:               -20,
 		BackgroundBrightness: 0.6,
+		DelayedJudge:         0,
 		DebugPrint:           true,
 
 		MeterUnit:     4,
@@ -78,6 +80,7 @@ func (s *Settings) Load(src Settings) {
 	Normalize(&S.VolumeSound, 0, 1)
 	Normalize(&S.Offset, -300, 300)
 	Normalize(&S.BackgroundBrightness, 0, 1)
+	Normalize(&S.DelayedJudge, -250, 250)
 
 	Normalize(&S.MeterUnit, 0, 5)
 	Normalize(&S.MeterHeight, 0, 100)
