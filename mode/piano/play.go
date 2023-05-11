@@ -232,7 +232,8 @@ func (s *ScenePlay) Update() any {
 		if n.Type != Tail && s.KeyAction(n.Key) == input.Hit {
 			s.PlaySample(n)
 		}
-		td := n.Time - s.Now // Time difference. A negative value infers late hit
+		td := n.Time - s.Now      // Time difference. A negative value infers late hit
+		td += mode.S.DelayedJudge // For HCI experiment
 		if n.Marked {
 			if n.Type != Tail {
 				return fmt.Errorf("non-Tail note has not flushed")
@@ -309,8 +310,8 @@ func (s ScenePlay) Finish() any {
 func (s ScenePlay) outputLog() {
 	// Create a file where the CSV data can be saved
 
-	fname := fmt.Sprintf("log/%s[%s]_sp%3d_hp%3d_of%3d_ks%3d_%s.csv",
-		s.Chart.MusicName, s.Chart.ChartName, int(S.SpeedScale*100), int(S.HitPosition), s.Offset,
+	fname := fmt.Sprintf("log/%s[%s]_sp%3d_hp%3d_of%3d_ks%3d_dj%3d_%s.csv",
+		s.Chart.MusicName, s.Chart.ChartName, int(S.SpeedScale*100), int(S.HitPosition), s.Offset, mode.S.DelayedJudge,
 		int(mode.S.VolumeSound*100),
 		time.Now().Format("2006-01-02_15-04-05"))
 	// create log directory if not exists
@@ -392,6 +393,7 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 			"Music volume (Ctrl+ Left/Right): %.0f%%\nSound volume (Alt+ Left/Right): %.0f%%\n\n"+
 			"Press ESC to select a song.\nPress TAB to pause.\n\n"+
 			"Offset (Shift+ Left/Right): %dms\n"+
+			"Delayed judge (F9/F10): %vms\n"+ // for HCI experiment
 			"Debug print (Ctrl+D): %v\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[mode.Total], s.ScoreBounds[mode.Total], s.Flow*100, s.Scorer.Combo,
@@ -399,5 +401,6 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 		S.SpeedScale*100, s.TransPoint.Speed, ExposureTime(s.Speed()),
 		*S.volumeMusic*100, *S.volumeSound*100,
 		*S.offset,
+		*S.delayedJudge,
 		*S.debugPrint))
 }

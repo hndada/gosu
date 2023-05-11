@@ -10,12 +10,13 @@ import (
 )
 
 var (
-	VolumeMusic ctrl.KeyHandler
-	VolumeSound ctrl.KeyHandler
-	Brightness  ctrl.KeyHandler
-	Offset      ctrl.KeyHandler
-	DebugPrint  ctrl.KeyHandler // added
-	SpeedScales []ctrl.KeyHandler
+	VolumeMusic  ctrl.KeyHandler
+	VolumeSound  ctrl.KeyHandler
+	Brightness   ctrl.KeyHandler
+	Offset       ctrl.KeyHandler
+	DelayedJudge ctrl.KeyHandler
+	DebugPrint   ctrl.KeyHandler // added
+	SpeedScales  []ctrl.KeyHandler
 )
 
 func loadHandler() {
@@ -61,10 +62,23 @@ func loadHandler() {
 			Min:   -300,
 			Max:   300,
 			Loop:  false,
-			Unit:  5,
+			Unit:  1,
 		},
 		Modifiers: []input.Key{input.KeyShiftLeft},
 		Keys:      [2]input.Key{input.KeyArrowLeft, input.KeyArrowRight},
+		Sounds:    [2]audios.Sounder{UserSkin.Tap, UserSkin.Tap},
+		Volume:    &mode.S.VolumeSound,
+	}
+	DelayedJudge = ctrl.KeyHandler{
+		Handler: ctrl.Int64Handler{
+			Value: &mode.S.DelayedJudge,
+			Min:   -250,
+			Max:   250,
+			Loop:  false,
+			Unit:  1,
+		},
+		Modifiers: []input.Key{},
+		Keys:      [2]input.Key{input.KeyF9, input.KeyF10},
 		Sounds:    [2]audios.Sounder{UserSkin.Tap, UserSkin.Tap},
 		Volume:    &mode.S.VolumeSound,
 	}
