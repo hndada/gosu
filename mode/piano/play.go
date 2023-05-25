@@ -358,6 +358,7 @@ func (s ScenePlay) Draw(screen draws.Image) {
 	s.Background.Draw(screen)
 	s.Field.Draw(screen)
 	s.Bar.Draw(screen)
+	s.Hint.Draw(screen)
 	for k := 0; k < s.Chart.KeyCount; k++ {
 		s.Note[k].Draw(screen)
 		if silent {
@@ -367,7 +368,6 @@ func (s ScenePlay) Draw(screen draws.Image) {
 			s.KeyLighting[k].Draw(screen)
 		}
 	}
-	s.Hint.Draw(screen)
 	if *S.debugPrint {
 		s.DebugPrint(screen)
 	}

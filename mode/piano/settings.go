@@ -83,7 +83,7 @@ func NewSettings() Settings {
 			9:  {0.06, 0.06, 0.06, 0.06},
 			10: {0.06, 0.06, 0.06, 0.06},
 		},
-		NoteHeigth:       0.05,
+		NoteHeigth:       0.025, // 0.05
 		BodyStyle:        BodyStyleStretch,
 		FieldPosition:    0.50,
 		ComboPosition:    0.40,
@@ -102,7 +102,7 @@ func NewSettings() Settings {
 		ComboScale:    0.75,
 		ComboDigitGap: -0.0008,
 		JudgmentScale: 0.33,
-		HintHeight:    0.055,
+		HintHeight:    0.025, // 0.055
 		LightingScale: 1.0,
 	}
 }
