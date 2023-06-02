@@ -60,7 +60,8 @@ type ScenePlay struct {
 	Meter        mode.MeterDrawer
 
 	// For HCI experiments
-	Logs []Log
+	Logs       []Log
+	offsetMode bool
 }
 type Log struct {
 	Time   int64
@@ -176,6 +177,11 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		Sprites:    skin.Combo,
 	}
 	s.Meter = mode.NewMeterDrawer(Judgments, JudgmentColors)
+
+	// HCI
+	if len(s.Chart.Notes) < 20 {
+		s.offsetMode = true
+	}
 	return s, nil
 }
 
@@ -215,6 +221,12 @@ func (s *ScenePlay) Update() any {
 	// if p.Now == 150+p.Offset {
 	// 	p.Player.Seek(time.Duration(150) * time.Millisecond)
 	// }
+
+	// HCI
+	if s.offsetMode && s.Staged[3] != nil && s.Now > s.Staged[3].Time {
+		s.Staged[3].passed = true
+	}
+
 	if vol := *S.volumeMusic; S.VolumeMusic != vol {
 		S.VolumeMusic = vol
 		s.MusicPlayer.SetVolume(vol)
@@ -362,8 +374,8 @@ func (s ScenePlay) Draw(screen draws.Image) {
 	for k := 0; k < s.Chart.KeyCount; k++ {
 		s.Note[k].Draw(screen)
 		if silent {
-			s.Keys[k].Sprites[0].Draw(screen, draws.Op{})
 		} else {
+			s.Keys[k].Sprites[0].Draw(screen, draws.Op{})
 			s.Keys[k].Draw(screen)
 			s.KeyLighting[k].Draw(screen)
 		}

@@ -24,6 +24,8 @@ type Note struct {
 	Marked bool
 	Next   *Note
 	Prev   *Note // For accessing to Head from Tail.
+
+	passed bool // HCI
 }
 
 func NewNote(f any, keyCount int) (ns []*Note) {

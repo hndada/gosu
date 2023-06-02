@@ -66,7 +66,7 @@ func loadHandler() {
 		},
 		Modifiers: []input.Key{input.KeyShiftLeft},
 		Keys:      [2]input.Key{input.KeyArrowLeft, input.KeyArrowRight},
-		Sounds:    [2]audios.Sounder{UserSkin.Tap, UserSkin.Tap},
+		Sounds:    [2]audios.Sounder{UserSkin.Transition[0], UserSkin.Transition[1]},
 		Volume:    &mode.S.VolumeSound,
 	}
 	DelayedJudge = ctrl.KeyHandler{
@@ -75,11 +75,11 @@ func loadHandler() {
 			Min:   -250,
 			Max:   250,
 			Loop:  false,
-			Unit:  1,
+			Unit:  5,
 		},
 		Modifiers: []input.Key{},
 		Keys:      [2]input.Key{input.KeyF9, input.KeyF10},
-		Sounds:    [2]audios.Sounder{UserSkin.Tap, UserSkin.Tap},
+		Sounds:    [2]audios.Sounder{UserSkin.Transition[0], UserSkin.Transition[1]},
 		Volume:    &mode.S.VolumeSound,
 	}
 	DebugPrint = ctrl.KeyHandler{

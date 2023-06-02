@@ -124,6 +124,10 @@ func (d NoteDrawer) Draw(dst draws.Image) {
 		if n.Marked {
 			op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		}
+		// HCI
+		if n.passed {
+			op.ColorM.ScaleWithColor(color.NRGBA{235, 69, 44, 255}) // Red
+		}
 		s.Draw(dst, op)
 	}
 }
