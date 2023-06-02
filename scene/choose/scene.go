@@ -188,6 +188,9 @@ func (s *Scene) Update() any {
 	scene.DelayedJudge.Update()
 	scene.DebugPrint.Update()
 	scene.SpeedScales[modes[s.mode]].Update()
+	if ebiten.IsKeyPressed(ebiten.KeyF6) { // HCI
+		*s.offset = 0
+	}
 	// s.Preview.Update()
 	// select {
 	// case i := <-s.bgCh:
@@ -406,7 +409,8 @@ func (s Scene) DebugPrint(screen draws.Image) {
 		// "No: %d (Page: %d)\n"+
 		"Level limit to 10 (F4): %v\n"+
 		"\n"+
-		"Key settings: %v (F5) listening: %v)\n",
+		"Key settings: %v (F5) listening: %v)\n"+
+		"Press F6 to reset offset\n",
 		ebiten.ActualFPS(),
 		ebiten.ActualTPS(),
 		[]string{"Piano4", "Piano7", "Drum"}[s.mode],
