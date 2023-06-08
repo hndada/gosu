@@ -17,7 +17,7 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
-var silent = false
+var silent = true
 
 func init() {
 	if silent {
@@ -179,9 +179,10 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	s.Meter = mode.NewMeterDrawer(Judgments, JudgmentColors)
 
 	// HCI
-	if len(s.Chart.Notes) < 20 {
-		s.offsetMode = true
-	}
+	s.offsetMode = true
+	//if len(s.Chart.Notes) < 20 {
+		// s.offsetMode = true
+	// }
 	return s, nil
 }
 
@@ -223,9 +224,17 @@ func (s *ScenePlay) Update() any {
 	// }
 
 	// HCI
-	if s.offsetMode && s.Staged[3] != nil && s.Now > s.Staged[3].Time {
-		s.Staged[3].passed = true
+	for k, staged := range s.Staged {
+		if staged == nil {
+			continue
+		}
+		if s.Now > staged.Time {
+			s.Staged[k].passed = true
+		} 
 	}
+	// if s.offsetMode && s.Staged[3] != nil && s.Now > s.Staged[3].Time {
+		// s.Staged[3].passed = true
+	// }
 
 	if vol := *S.volumeMusic; S.VolumeMusic != vol {
 		S.VolumeMusic = vol
