@@ -18,6 +18,7 @@ import (
 )
 
 var silent = true
+var backgroundRedMode = true
 
 func init() {
 	if silent {
@@ -44,20 +45,21 @@ type ScenePlay struct {
 	// NoteCount    int
 	// MaxNoteCount int
 
-	Sound        []byte
-	Background   mode.BackgroundDrawer
-	Field        FieldDrawer
-	Bar          BarDrawer
-	Note         []NoteDrawer
-	Keys         []KeyDrawer
-	KeyLighting  []KeyLightingDrawer
-	Hint         HintDrawer
-	HitLighting  []HitLightingDrawer
-	HoldLighting []HoldLightingDrawer
-	Judgment     JudgmentDrawer
-	Score        mode.ScoreDrawer
-	Combo        mode.ComboDrawer
-	Meter        mode.MeterDrawer
+	Sound         []byte
+	Background    mode.BackgroundDrawer
+	BackgroundRed BackgroundRedDrawer
+	Field         FieldDrawer
+	Bar           BarDrawer
+	Note          []NoteDrawer
+	Keys          []KeyDrawer
+	KeyLighting   []KeyLightingDrawer
+	Hint          HintDrawer
+	HitLighting   []HitLightingDrawer
+	HoldLighting  []HoldLightingDrawer
+	Judgment      JudgmentDrawer
+	Score         mode.ScoreDrawer
+	Combo         mode.ComboDrawer
+	Meter         mode.MeterDrawer
 
 	// For HCI experiments
 	Logs       []Log
@@ -124,6 +126,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	if !s.Background.Sprite.IsValid() {
 		s.Background.Sprite = skin.DefaultBackground
 	}
+	s.BackgroundRed = NewBackgroundRedDrawer() // HCI
 	s.Field = FieldDrawer{
 		Sprite: skin.Field,
 	}
@@ -181,7 +184,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	// HCI
 	s.offsetMode = true
 	//if len(s.Chart.Notes) < 20 {
-		// s.offsetMode = true
+	// s.offsetMode = true
 	// }
 	return s, nil
 }
@@ -224,17 +227,36 @@ func (s *ScenePlay) Update() any {
 	// }
 
 	// HCI
+	// if s.offsetMode && s.Staged[3] != nil && s.Now > s.Staged[3].Time {
+	// s.Staged[3].passed = true
+	// }
+	var passed bool
 	for k, staged := range s.Staged {
 		if staged == nil {
 			continue
 		}
 		if s.Now > staged.Time {
 			s.Staged[k].passed = true
-		} 
+		}
+		if s.Now-staged.Time < 3 && s.Now-staged.Time > -3 {
+			passed = true
+		}
 	}
-	// if s.offsetMode && s.Staged[3] != nil && s.Now > s.Staged[3].Time {
-		// s.Staged[3].passed = true
-	// }
+	// HCI
+	if passed {
+		s.BackgroundRed.Update(true)
+	} else {
+		s.BackgroundRed.Update(false)
+	}
+	// HCI
+	// It might take several tries since Update tick is too short.
+	if ebiten.IsKeyPressed(ebiten.KeyHome) {
+		if backgroundRedMode {
+			backgroundRedMode = false
+		} else {
+			backgroundRedMode = true
+		}
+	}
 
 	if vol := *S.volumeMusic; S.VolumeMusic != vol {
 		S.VolumeMusic = vol
@@ -377,6 +399,9 @@ func (s ScenePlay) PlaySample(n *Note) {
 
 func (s ScenePlay) Draw(screen draws.Image) {
 	s.Background.Draw(screen)
+	if backgroundRedMode {
+		s.BackgroundRed.Draw(screen)
+	}
 	s.Field.Draw(screen)
 	s.Bar.Draw(screen)
 	s.Hint.Draw(screen)
