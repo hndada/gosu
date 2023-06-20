@@ -7,6 +7,40 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
+// HCI: BackgroundRedDrawer
+type BackgroundRedDrawer struct {
+	draws.Timer
+	Sprite draws.Sprite
+}
+
+func NewBackgroundRedDrawer() (d BackgroundRedDrawer) {
+	image := draws.NewImage(ScreenSizeX, ScreenSizeX)
+	image.Fill(color.RGBA{255, 128, 128, 255})
+	sprite := draws.NewSpriteFromSource(image)
+	// timer := draws.NewTimer(draws.ToTick(100, TPS), draws.ToTick(100, TPS))
+	// timer.Tick = timer.MaxTick
+	return BackgroundRedDrawer{
+		Timer:  draws.NewTimer(draws.ToTick(300, TPS), draws.ToTick(300, TPS)),
+		Sprite: sprite,
+	}
+}
+func (d *BackgroundRedDrawer) Update(passed bool) {
+	d.Ticker()
+	if passed {
+		d.Timer.Reset()
+	}
+}
+
+func (d BackgroundRedDrawer) Draw(dst draws.Image) {
+	if d.Tick >= d.MaxTick {
+		return
+	}
+	op := draws.Op{}
+	value := 1 - d.Age()
+	op.ColorM.ChangeHSV(0, 1, value)
+	d.Sprite.Draw(dst, op)
+}
+
 type FieldDrawer struct {
 	Sprite draws.Sprite
 }
