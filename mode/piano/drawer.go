@@ -36,8 +36,8 @@ func (d BackgroundRedDrawer) Draw(dst draws.Image) {
 		return
 	}
 	op := draws.Op{}
-	value := 1 - d.Age()
-	op.ColorM.ChangeHSV(0, 1, value)
+	// value := 1 - d.Age()
+	// op.ColorM.ChangeHSV(0, 1, value)
 	d.Sprite.Draw(dst, op)
 }
 
