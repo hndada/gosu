@@ -21,33 +21,33 @@ const (
 )
 
 func NewKeyInputListener(ks []Key) *KeyInputListener {
-	const defaultPollingRate = 1 * time.Millisecond
+	const pollingRate = 1 * time.Millisecond
 
 	vkcodes := make([]uint32, len(ks))
 	for k, ek := range ks {
 		vkcodes[k] = ToVirtualKey(ek)
 	}
 
-	listen := func() KeyInputLog {
+	listen := func() KeyPressedLog {
 		now := time.Now()
-		pressed := make([]bool, len(vkcodes))
+		pressedList := make([]bool, len(vkcodes))
 		for k, vk := range vkcodes {
 			v, _, _ := procGetKeyState.Call(uintptr(vk))
-			pressed[k] = v&isPressed != 0
+			pressedList[k] = v&isPressed != 0
 		}
-		return KeyInputLog{
-			Time:    now,
-			Pressed: pressed,
+		return KeyPressedLog{
+			Time:        now,
+			PressedList: pressedList,
 		}
 	}
 
 	listener := &KeyInputListener{
 		KeySettings: ks,
 		vkcodes:     vkcodes,
-		PollingRate: defaultPollingRate,
+		PollingRate: pollingRate,
 		Listen:      listen,
 
-		Logs: make([]KeyInputLog, 0, 1000),
+		Logs: make([]KeyPressedLog, 0, 1000),
 	}
 	return listener
 }

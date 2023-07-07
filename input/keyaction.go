@@ -1,14 +1,5 @@
 package input
 
-type KeyAction int
-
-const (
-	Idle KeyAction = iota
-	Hit
-	Release
-	Hold
-)
-
 func CurrentKeyAction(last, now bool) KeyAction {
 	switch {
 	case !last && !now:
@@ -23,3 +14,5 @@ func CurrentKeyAction(last, now bool) KeyAction {
 		panic("not reach")
 	}
 }
+
+// remove soon
