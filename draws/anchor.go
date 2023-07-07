@@ -12,7 +12,7 @@ const (
 	Bottom
 )
 
-type Origin struct{ X, Y int }
+type Anchor struct{ X, Y int }
 
 // https://go.dev/play/p/6FsxRuznEtE
 var (
@@ -26,5 +26,3 @@ var (
 	RightMiddle  = struct{ X, Y int }{Right, Middle}
 	RightBottom  = struct{ X, Y int }{Right, Bottom}
 )
-
-// type Align struct{ X, Y int }
