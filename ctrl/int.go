@@ -2,15 +2,17 @@ package ctrl
 
 type Int interface{ int | int64 }
 
+// Todo: merge with Int64Handler into one
 type IntHandler struct {
-	Value    *int
-	Min, Max int
-	Loop     bool
-	// Unit     int
+	Value *int
+	Min   int
+	Max   int
+	Unit  int
+	Loop  bool
 }
 
 func (h IntHandler) Decrease() {
-	*h.Value--
+	*h.Value -= h.Unit
 	if *h.Value < h.Min {
 		if h.Loop {
 			*h.Value = h.Max
@@ -20,7 +22,7 @@ func (h IntHandler) Decrease() {
 	}
 }
 func (h IntHandler) Increase() {
-	*h.Value++
+	*h.Value += h.Unit
 	if *h.Value > h.Max {
 		if h.Loop {
 			*h.Value = h.Min
@@ -30,13 +32,12 @@ func (h IntHandler) Increase() {
 	}
 }
 
-// Todo: merge with IntHandler into one
-// Todo: add Unit to IntHandler?
 type Int64Handler struct {
-	Value    *int64
-	Min, Max int64
-	Loop     bool
-	Unit     int64
+	Value *int64
+	Min   int64
+	Max   int64
+	Unit  int64
+	Loop  bool
 }
 
 func (h Int64Handler) Decrease() {

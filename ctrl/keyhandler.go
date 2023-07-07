@@ -6,6 +6,11 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
+const (
+	short = 80
+	long  = 200
+)
+
 type KeyHandler struct {
 	Handler
 	Modifiers []input.Key // Handler works only when all Modifier are pressed.
@@ -14,20 +19,9 @@ type KeyHandler struct {
 	Volume    *float64
 
 	holdIndex int
-	// holdKey   input.Key
-	active bool
-
-	countdown int // Require to hold for a while to move a cursor.
-	// MaxCountdown [2]int
-	// TPS          int
+	active    bool
+	countdown int // User needs to hold for a while to activate.
 }
-
-// func NewKeyHandler(tps int) (h KeyHandler) {
-// 	for i, max := range []int64{200, 80} {
-// 		h.MaxCountdown[i] = ToTick(max, tps)
-// 	}
-// 	return
-// }
 
 // Update returns whether the handler has set off (triggered) or not.
 // Todo: set off the stricter handler only
@@ -57,19 +51,6 @@ func (h *KeyHandler) Update() (set bool) {
 	[]func(){h.Decrease, h.Increase}[h.holdIndex]()
 	h.Sounds[h.holdIndex].Play(*h.Volume)
 
-	// const (
-	// 	long = iota
-	// 	short
-	// )
-	// if h.active {
-	// 	h.countdown = h.MaxCountdown[short]
-	// } else {
-	// 	h.countdown = h.MaxCountdown[long]
-	// }
-	const (
-		short = 80
-		long  = 200
-	)
 	if h.active {
 		h.countdown = short
 	} else {
@@ -78,6 +59,7 @@ func (h *KeyHandler) Update() (set bool) {
 	h.active = true
 	return true
 }
+
 func (h *KeyHandler) reset() {
 	h.active = false
 	h.holdIndex = none
