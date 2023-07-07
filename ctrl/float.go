@@ -1,9 +1,10 @@
 package ctrl
 
 type FloatHandler struct {
-	Value    *float64
-	Min, Max float64
-	Unit     float64
+	Value *float64
+	Min   float64
+	Max   float64
+	Unit  float64
 }
 
 func (h FloatHandler) Decrease() {
