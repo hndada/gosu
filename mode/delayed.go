@@ -1,4 +1,4 @@
-package draws
+package mode
 
 import "math"
 

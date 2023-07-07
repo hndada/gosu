@@ -29,12 +29,6 @@ func LoadImages(fsys fs.FS, name string) (is []Image) {
 	name = strings.TrimSuffix(name, filepath.Ext(name))
 
 	one := []Image{LoadImage(fsys, name+ext)}
-	// dir, err := fsys.Open(name)
-	// if err != nil {
-	// 	return one
-	// }
-	// defer dir.Close()
-	// fs, err := dir.ReadDir(-1)
 	fs, err := fs.ReadDir(fsys, name)
 	if err != nil {
 		return one
@@ -57,6 +51,4 @@ func LoadImages(fsys fs.FS, name string) (is []Image) {
 	}
 	return
 }
-func (a Animation) IsValid() bool {
-	return len(a) > 1 || a[0].IsValid()
-}
+func (a Animation) IsValid() bool { return len(a) > 1 || a[0].IsValid() }

@@ -68,7 +68,7 @@ func (d ScoreDrawer) Draw(dst draws.Image) {
 	for _, v := range vs {
 		sprite := d.Sprites[v]
 		sprite.Move(tx, 0)
-		sprite.Move(-w/2+sprite.W()/2, 0) // Need to set at center since origin is RightTop.
+		sprite.Move(-w/2+sprite.W()/2, 0) // Need to set at center since anchor is RightTop.
 		sprite.Draw(dst, draws.Op{})
 		tx -= w
 	}
@@ -107,7 +107,7 @@ func (d ComboDrawer) Draw(dst draws.Image) {
 	}
 
 	// Size of the whole image is 0.5w + (n-1)(w+gap) + 0.5w.
-	// Since sprites are already at origin, no need to care of two 0.5w.
+	// Since sprites are already at anchor, no need to care of two 0.5w.
 	w := d.DigitWidth + d.DigitGap
 	tx := float64(len(vs)-1) * w / 2
 	const (

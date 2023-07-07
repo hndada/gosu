@@ -1,12 +1,5 @@
 package draws
 
-import "github.com/hndada/gosu/times"
-
-var (
-	ToTick = times.ToTick
-	ToTime = times.ToTime
-)
-
 // MaxTick, Period == {+, +}: finite drawing with animation. e.g., Judgment.
 // MaxTick, Period == {+, 0}: finite drawing with no animation. e.g., Combo.
 // MaxTick, Period == {0, +}: infinite drawing with animation. e.g., Dancer.
