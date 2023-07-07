@@ -3,11 +3,12 @@ package scene
 import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hndada/gosu/input"
 )
 
 // Original source code is written by Hajimehoshi, the Author of Ebitengine.
 // https://ebitengine.org/en/examples/typewriter.html
-func IsRepeatKeyPressed(k Key) bool {
+func IsRepeatKeyPressed(k input.Key) bool {
 	const (
 		delay    = 30
 		interval = 3
@@ -30,12 +31,12 @@ type TypeWriter struct {
 func (w *TypeWriter) Update() error {
 	w.runes = ebiten.AppendInputChars(w.runes[:0])
 	w.Text += string(w.runes)
-	if IsRepeatKeyPressed(KeyBackspace) {
+	if IsRepeatKeyPressed(input.KeyBackspace) {
 		if len(w.Text) >= 1 {
 			w.Text = w.Text[:len(w.Text)-1]
 		}
 	}
-	if ebiten.IsKeyPressed(KeyEscape) {
+	if ebiten.IsKeyPressed(input.KeyEscape) {
 		w.Text = ""
 	}
 	return nil
