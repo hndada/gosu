@@ -353,7 +353,7 @@ const (
 	ModeCatch
 	ModeMania
 )
-
+const ModeOsu = ModeStandard
 const ModeDefault = ModeStandard
 
 func Mode(path string) (int, int) {
