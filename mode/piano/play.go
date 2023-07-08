@@ -382,8 +382,12 @@ func (s *ScenePlay) UpdateCursor() {
 	s.Cursor = s.TransPoint.Position + duration*s.Speed()
 }
 func (s ScenePlay) Speed() float64 { return s.TransPoint.Speed * s.speedScale }
-func (s *ScenePlay) UpdateTransPoint() { // Todo: remove it
-	s.TransPoint = s.TransPoint.FetchByTime(s.Now)
+func (s *ScenePlay) UpdateTransPoint() {
+	tp := s.TransPoint
+	for tp.Next != nil && s.Now().Milliseconds() >= tp.Next.Time {
+		tp = tp.Next
+	}
+	s.TransPoint = tp
 }
 func (s ScenePlay) PlaySample(n *Note) {
 	name := n.Sample.Name

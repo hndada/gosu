@@ -7,31 +7,26 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-// In narrow meaning, Skin stands for a set of Sprites.
-// In wide meaning, Skin also includes a set of sounds.
-// Package defaultskin has a set of sounds.
-type Skin struct {
-	DefaultBackground draws.Sprite
-	Score             [13]draws.Sprite // number + sign(. , %)
-}
-
 const (
-	ScoreDot = iota
+	ScoreDot = iota + 10
 	ScoreComma
 	ScorePercent
 )
 
-var (
-	DefaultSkin = &Skin{}
-	UserSkin    = &Skin{}
-)
+// Skin has not only a set of Sprites, but also a set of sounds.
+type SkinType struct {
+	DefaultBackground draws.Sprite
+	Score             [13]draws.Sprite
+}
 
-func (skin *Skin) Load(fsys fs.FS) {
-	defer skin.fillBlank(DefaultSkin)
+var Skin SkinType
+
+func (skin *SkinType) Load(fsys fs.FS) {
 	skin.DefaultBackground = NewBackground(fsys, "interface/default-bg.jpg")
 	for i := 0; i < 10; i++ {
 		s := draws.NewSprite(fsys, fmt.Sprintf("score/%d.png", i))
-		s.ApplyScale(S.ScoreScale)
+		s.MultiplyScale(Settings.ScoreScale)
+
 		// Need to set same base line, since each number has different height.
 		if i == 0 {
 			s.Locate(ScreenSizeX, 0, draws.RightTop)
@@ -42,28 +37,8 @@ func (skin *Skin) Load(fsys fs.FS) {
 	}
 	for i, name := range []string{"dot", "comma", "percent"} {
 		s := draws.NewSprite(fsys, fmt.Sprintf("score/%s.png", name))
-		s.ApplyScale(S.ScoreScale)
+		s.MultiplyScale(Settings.ScoreScale)
 		s.Locate(ScreenSizeX, 0, draws.RightTop)
-		skin.Score[10+i] = s
+		skin.Score[i+10] = s
 	}
-	// base := []Skin{{}, DefaultSkin, UserSkin}[skin.Type]
-	// skin.fillBlank(base)
-}
-func (skin *Skin) fillBlank(base *Skin) {
-	if !skin.DefaultBackground.IsValid() {
-		skin.DefaultBackground = base.DefaultBackground
-	}
-	for _, s := range skin.Score {
-		if !s.IsValid() {
-			skin.Score = base.Score
-			break
-		}
-	}
-}
-
-func NewBackground(fsys fs.FS, name string) draws.Sprite {
-	s := draws.NewSprite(fsys, name)
-	s.ApplyScale(ScreenSizeX / s.W())
-	s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
-	return s
 }

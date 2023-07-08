@@ -4,45 +4,46 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"io/fs"
 	"math"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
 )
 
-// Order of fields of drawer: updating fields, others fields, sprites
+func NewBackground(fsys fs.FS, name string) draws.Sprite {
+	s := draws.NewSprite(fsys, name)
+	s.MultiplyScale(ScreenSizeX / s.W())
+	s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
+	return s
+}
+
 type BackgroundDrawer struct {
-	// Brightness float64
 	Sprite draws.Sprite
 }
 
-//	func (d *BackgroundDrawer) Update() {
-//		if v := UserSettings.BackgroundBrightness; d.Brightness != v {
-//			d.Brightness = v
-//		}
-//	}
 func (d BackgroundDrawer) Draw(dst draws.Image) {
 	op := draws.Op{}
-	value := UserSettings.BackgroundBrightness
+	value := Settings.BackgroundBrightness
 	op.ColorM.ChangeHSV(0, 1, value)
 	d.Sprite.Draw(dst, op)
 }
 
 type ScoreDrawer struct {
-	// draws.Timer
 	digitWidth float64 // Use number 0's width.
 	DigitGap   float64
 	ZeroFill   int
-	Score      draws.Delayed
+	Score      Delayed
 	Sprites    []draws.Sprite
 }
 
 func NewScoreDrawer(sprites []draws.Sprite) ScoreDrawer {
 	return ScoreDrawer{
 		digitWidth: sprites[0].W(),
-		DigitGap:   UserSettings.ScoreDigitGap,
+		DigitGap:   Settings.ScoreDigitGap,
 		ZeroFill:   1,
-		Score:      draws.NewDelayed(TPS),
+		Score:      NewDelayed(),
 		Sprites:    sprites[:10],
 	}
 }
@@ -50,11 +51,7 @@ func (d *ScoreDrawer) Update(score float64) {
 	d.Score.Update(score)
 }
 
-// NumberDrawer's Draw draws each number at the center of constant-width bound.
 func (d ScoreDrawer) Draw(dst draws.Image) {
-	// if d.IsDone() {
-	// 	return
-	// }
 	vs := make([]int, 0)
 	score := int(math.Floor(d.Score.Delayed + 0.1))
 	for v := score; v > 0; v /= 10 {
@@ -160,10 +157,10 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 		colorRed   = color.NRGBA{255, 0, 0, 192}     // Red
 	)
 	var (
-		W = UserSettings.MeterUnit
-		H = UserSettings.MeterHeight
+		W = Settings.MeterUnit
+		H = Settings.MeterHeight
 	)
-	d.MaxCountdown = draws.ToTick(4000, TPS)
+	d.MaxCountdown = ToTick(4 * time.Second)
 	{
 		miss := js[len(js)-1]
 		w := 1 + 2*W*float64(miss.Window)
@@ -237,7 +234,7 @@ func (d MeterDrawer) Draw(dst draws.Image) {
 		if age := d.MarkAge(m); age >= 0.8 {
 			op.ColorM.Scale(1, 1, 1, 1-(age-0.8)/0.2)
 		}
-		op.GeoM.Translate(-float64(m.Offset)*UserSettings.MeterUnit, 0)
+		op.GeoM.Translate(-float64(m.Offset)*Settings.MeterUnit, 0)
 		sprite.Draw(dst, op)
 	}
 }

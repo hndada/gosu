@@ -107,7 +107,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 		if name == "idle" {
 			hintScale = 1.2 * S.regularNoteHeight / s.H()
 		}
-		s.ApplyScale(hintScale)
+		s.MultiplyScale(hintScale)
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		skin.Hint[state] = s
 	}
@@ -171,7 +171,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 			}
 			a := draws.NewAnimation(fsys, name)
 			for frame := range a {
-				a[frame].ApplyScale(S.JudgmentScale)
+				a[frame].MultiplyScale(S.JudgmentScale)
 				a[frame].Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 			}
 			skin.Judgment[kind][size] = a
@@ -211,7 +211,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	}
 	{
 		s := draws.NewSpriteFromSource(skin.dot)
-		s.ApplyScale(S.DotScale)
+		s.MultiplyScale(S.DotScale)
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		skin.Dot = s
 	}
@@ -275,7 +275,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	for i, imgs := range skin.dancer {
 		a := draws.NewAnimationFromImages(imgs)
 		for frame := range a {
-			a[frame].ApplyScale(S.DancerScale)
+			a[frame].MultiplyScale(S.DancerScale)
 			a[frame].Locate(S.DancerPositionX, S.DancerPositionY, draws.CenterMiddle)
 		}
 		skin.Dancer[i] = a
@@ -294,7 +294,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 		skin.combo = imgs
 		for i := 0; i < 10; i++ {
 			s := draws.NewSpriteFromSource(imgs[i])
-			s.ApplyScale(S.ComboScale)
+			s.MultiplyScale(S.ComboScale)
 			s.Locate(keyFieldSize.X/2, S.FieldPosition, draws.CenterMiddle)
 			skin.Combo[i] = s
 		}
