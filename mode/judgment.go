@@ -1,58 +1,51 @@
 package mode
 
-import (
-	"image/color"
-
-	"github.com/hndada/gosu/input"
-)
-
-var (
-	ColorKool = color.NRGBA{0, 170, 242, 255}   // Blue
-	ColorCool = color.NRGBA{85, 251, 255, 255}  // Skyblue
-	ColorGood = color.NRGBA{51, 255, 40, 255}   // Lime
-	ColorBad  = color.NRGBA{244, 177, 0, 255}   // Yellow
-	ColorMiss = color.NRGBA{109, 120, 134, 255} // Gray
-)
+import "github.com/hndada/gosu/input"
 
 type Judgment struct {
-	Flow   float64
-	Acc    float64
 	Window int64
-	// Extra  bool // For distinguishing Big note at Drum mode.
+	Weight float64
 }
 
-// Is returns whether j and j2 are equal by its window size.
+var blank = Judgment{}
+
+// the ideal number of Judgments is: 3 + 1
+const (
+	Kool = iota
+	Cool
+	Good
+	Miss // Its window is used for judging too early hit.
+)
+
+// Is returns whether two Judgments are equal.
 func (j Judgment) Is(j2 Judgment) bool { return j.Window == j2.Window }
+func (j Judgment) IsBlank() bool       { return j.Window == 0 }
 
-// Valid returns whether j is not a blank judgment by its window size.
-func (j Judgment) IsValid() bool { return j.Window != 0 }
-
-// func inRange(td int64, j Judgment) bool { return td < j.Window && td > -j.Window }
-
-// Verdict for normal notes, e.g., Note, Head at Piano mode.
-func Verdict(js []Judgment, a input.KeyAction, td int64) Judgment {
-	Miss := js[len(js)-1]
+// Judge judges in normal style: Whether a player hits a key in time.
+func Judge(js []Judgment, timeError int64, a input.KeyAction) Judgment {
+	miss := js[len(js)-1]
 	switch {
-	case td > Miss.Window:
-		// Does nothing.
-	case td < -Miss.Window:
-		return Miss
+	case timeError > miss.Window:
+		return blank
+	case timeError < -miss.Window:
+		return miss
 	default: // In range
 		if a == input.Hit {
-			return Judge(js, td)
+			return Evaluate(js, timeError)
 		}
 	}
-	return Judgment{}
+	return blank
 }
 
-func Judge(js []Judgment, td int64) Judgment {
-	if td < 0 {
-		td *= -1
+func Evaluate(js []Judgment, timeError int64) Judgment {
+	if timeError < 0 {
+		timeError *= -1
 	}
 	for _, j := range js {
-		if td <= j.Window {
+		if timeError <= j.Window {
 			return j
 		}
 	}
-	return Judgment{} // Returns None when the input is out of widest range
+	// Returns blank when the input is out of widest range.
+	return blank
 }

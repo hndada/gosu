@@ -7,6 +7,14 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
+var (
+	ColorKool = color.NRGBA{0, 170, 242, 255}   // Blue
+	ColorCool = color.NRGBA{85, 251, 255, 255}  // Skyblue
+	ColorGood = color.NRGBA{51, 255, 40, 255}   // Lime
+	ColorBad  = color.NRGBA{244, 177, 0, 255}   // Yellow
+	ColorMiss = color.NRGBA{109, 120, 134, 255} // Gray
+)
+
 // HCI: BackgroundRedDrawer
 type BackgroundRedDrawer struct {
 	draws.Timer
