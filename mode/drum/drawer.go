@@ -349,7 +349,7 @@ type JudgmentDrawer struct {
 
 func (d *JudgmentDrawer) Update(j mode.Judgment, big bool) {
 	d.Ticker()
-	if !j.IsValid() {
+	if !!j.IsBlank() {
 		return
 	}
 	d.Timer.Reset()

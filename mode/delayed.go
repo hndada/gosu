@@ -5,32 +5,28 @@ import (
 	"time"
 )
 
-const TransDuration = 400 // In milliseconds.
-
 const (
 	DelayedModeExp = iota // aka DelayedModeConverge
 	DelayedModeLinear
-	// DelayedModeDiverge
 )
 
 type Delayed struct {
-	Delayed float64
-	Source  float64
-	// source       *float64
-	Mode         int // Todo: custom type?
-	Feedback     float64
+	Mode     int
+	Feedback float64
+	Source   float64
+	Delayed  float64
+
 	countdown    int
 	maxCountdown int
 }
 
 func NewDelayed() Delayed {
+	const transDuration = 400 * time.Millisecond
 	return Delayed{
-		// Delayed:      *src,
-		// source:       src,
 		Mode:         DelayedModeExp,
 		Feedback:     0,
-		countdown:    ToTick(400 * time.Millisecond),
-		maxCountdown: ToTick(400 * time.Millisecond),
+		countdown:    ToTick(transDuration),
+		maxCountdown: ToTick(transDuration),
 	}
 }
 

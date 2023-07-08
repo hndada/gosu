@@ -100,7 +100,7 @@ func VerdictNote(n *Note, actions [2]int, td int64) (j mode.Judgment, big bool) 
 	if !IsColorHit(actions, n.Color) {
 		return
 	}
-	j = mode.Verdict(Judgments, input.Hit, td)
+	j = mode.Judge(Judgments, input.Hit, td)
 	if n.Size == Big && actions[n.Color] == Big {
 		big = true
 	}

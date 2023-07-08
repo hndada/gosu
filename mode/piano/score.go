@@ -19,7 +19,7 @@ var Judgments = []mode.Judgment{Kool, Cool, Good, Bad, Miss}
 var JudgmentColors = []color.NRGBA{
 	mode.ColorKool, mode.ColorCool, mode.ColorGood, mode.ColorBad, mode.ColorMiss}
 
-func Verdict(noteType int, a input.KeyAction, td int64) mode.Judgment {
+func Judge(noteType int, a input.KeyAction, td int64) mode.Judgment {
 	if noteType == Tail { // Either Hold or Release when Tail is not scored
 		switch {
 		case td > Miss.Window:
@@ -30,11 +30,11 @@ func Verdict(noteType int, a input.KeyAction, td int64) mode.Judgment {
 			return Miss
 		default: // In range
 			if a == input.Release { // a != Hold
-				return mode.Judge(Judgments, td)
+				return mode.Evaluate(Judgments, td)
 			}
 		}
 	} else { // Head, Normal
-		return mode.Verdict(Judgments, a, td)
+		return mode.Judge(Judgments, a, td)
 	}
 	return mode.Judgment{}
 }

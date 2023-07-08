@@ -3,16 +3,23 @@ package mode
 import (
 	"fmt"
 	"math"
+	"sort"
 
 	"github.com/hndada/gosu/format/osu"
 )
 
+type Chart interface {
+	Difficulties() []float64
+}
+
 // ChartHeader contains non-play information.
 // Changing ChartHeader's data will not affect integrity of the chart.
 // Mode-specific fields are located to each Chart struct.
+// Todo: add AudioHash
 type ChartHeader struct {
-	SetID         int64 // Compatibility for osu.
-	ID            int64
+	SetID int64 // Compatibility for osu.
+	ID    int64 // Compatibility for osu.
+
 	MusicName     string
 	MusicUnicode  string
 	Artist        string
@@ -20,10 +27,12 @@ type ChartHeader struct {
 	MusicSource   string
 	ChartName     string
 	Charter       string
-	HolderID      int64
+	CharterID     int64
+	HolderID      int64 // When the chart is uploaded by non-charter.
+	Tags          []string
 
 	PreviewTime     int64
-	MusicFilename   string // Filename is fine to use (cf. Filepath)
+	MusicFilename   string // Filename is fine to use. (cf. FileName; Filepath)
 	ImageFilename   string
 	VideoFilename   string
 	VideoTimeOffset int64
@@ -32,35 +41,59 @@ type ChartHeader struct {
 	SubMode int
 }
 
-func (c ChartHeader) WindowTitle() string {
-	return fmt.Sprintf("gosu | %s - %s [%s] (%s) ", c.Artist, c.MusicName, c.ChartName, c.Charter)
-}
-
 func NewChartHeader(f any) (c ChartHeader) {
 	switch f := f.(type) {
 	case *osu.Format:
-		c = ChartHeader{
-			MusicName:     f.Title,
-			MusicUnicode:  f.TitleUnicode,
-			Artist:        f.Artist,
-			ArtistUnicode: f.ArtistUnicode,
-			MusicSource:   f.Source,
-			ChartName:     f.Version,
-			Charter:       f.Creator,
-
-			PreviewTime:   int64(f.PreviewTime),
-			MusicFilename: f.AudioFilename,
-		}
-		var e osu.Event
-		e, _ = f.Background()
-		c.ImageFilename = e.Filename
-		e, _ = f.Video()
-		c.VideoFilename, c.VideoTimeOffset = e.Filename, int64(e.StartTime)
-		if c.MusicFilename == "virtual" {
-			c.MusicFilename = ""
-		}
+		return newChartHeaderFromOsu(f)
 	}
-	return c
+	return
+}
+func newChartHeaderFromOsu(f *osu.Format) (c ChartHeader) {
+	const unknownID = -1
+	c = ChartHeader{
+		SetID: int64(f.BeatmapSetID),
+		ID:    int64(f.BeatmapID),
+
+		MusicName:     f.Title,
+		MusicUnicode:  f.TitleUnicode,
+		Artist:        f.Artist,
+		ArtistUnicode: f.ArtistUnicode,
+		MusicSource:   f.Source,
+		ChartName:     f.Version,
+		Charter:       f.Creator,
+		CharterID:     unknownID,
+		HolderID:      unknownID,
+		Tags:          f.Tags,
+
+		PreviewTime:   int64(f.PreviewTime),
+		MusicFilename: f.AudioFilename,
+	}
+
+	var e osu.Event
+	e, _ = f.Background()
+	c.ImageFilename = e.Filename
+	e, _ = f.Video()
+	c.VideoFilename = e.Filename
+	c.VideoTimeOffset = int64(e.StartTime)
+	if c.MusicFilename == "virtual" {
+		c.MusicFilename = ""
+	}
+
+	c.Mode = -1
+	switch f.Mode {
+	case osu.ModeStandard:
+	case osu.ModeTaiko:
+		c.Mode = 1
+	case osu.ModeCatch:
+	case osu.ModeMania:
+		c.Mode = 0
+		c.SubMode = int(f.CircleSize)
+	}
+	return
+}
+
+func (c ChartHeader) WindowTitle() string {
+	return fmt.Sprintf("gosu | %s - %s [%s] (%s) ", c.Artist, c.MusicName, c.ChartName, c.Charter)
 }
 
 // BPM with longest duration will be main BPM.
@@ -96,8 +129,32 @@ func BPMs(transPoints []*TransPoint, duration int64) (main, min, max float64) {
 	return
 }
 
-type Chart struct{}
+func Level(c Chart) float64 {
+	const decayFactor = 0.95
 
-func (c Chart) FirstBeatNote() {
+	ds := c.Difficulties()
+	sort.Slice(ds, func(i, j int) bool { return ds[i] > ds[j] })
 
+	sum, weight := 0.0, 1.0
+	for _, term := range ds {
+		sum += weight * term
+		weight *= decayFactor
+	}
+
+	// No additional Math.Pow; it would make a little change.
+	return sum
+}
+
+// 오프셋 부터
+// Bar 그리는 것을 체크
+func BeatDurations(tps []*TransPoint) []float64 {
+	durations := make([]float64, 0, 10)
+	for i, tp := range tps {
+		if i < len(tps)-1 {
+			durations[i] = tps[i+1].Time - tp.Time
+		} else {
+			durations[i] = 0
+		}
+	}
+	return durations
 }

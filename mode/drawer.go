@@ -108,19 +108,19 @@ func (d ComboDrawer) Draw(dst draws.Image) {
 	w := d.DigitWidth + d.DigitGap
 	tx := float64(len(vs)-1) * w / 2
 	const (
-		bound0 = 0.05
-		bound1 = 0.1
+		boundary1 = 0.05
+		boundary2 = 0.1
 	)
 	for _, v := range vs {
 		sprite := d.Sprites[v]
 		sprite.Move(tx, 0)
 		age := d.Age()
-		if age < bound0 {
-			scale := 0.1 * d.Progress(0, bound0)
+		if age < boundary1 {
+			scale := 0.1 * d.Progress(0, boundary1)
 			sprite.Move(0, d.Bounce*sprite.H()*scale)
 		}
-		if age >= bound0 && age < bound1 {
-			scale := 0.1 - 0.1*d.Progress(bound0, bound1)
+		if age >= boundary1 && age < boundary2 {
+			scale := 0.1 - 0.1*d.Progress(boundary1, boundary2)
 			sprite.Move(0, d.Bounce*sprite.H()*scale)
 		}
 		sprite.Draw(dst, draws.Op{})

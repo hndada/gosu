@@ -286,7 +286,7 @@ func (s *ScenePlay) Update() any {
 			}
 			continue
 		}
-		if j := Verdict(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
+		if j := Judge(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
 			s.MarkNote(n, j)
 			if worst.Window < j.Window {
 				worst = j
