@@ -15,7 +15,7 @@ var grayCover draws.Sprite
 func init() {
 	i := draws.NewImage(ScreenSizeX, ScreenSizeY)
 	i.Fill(color.NRGBA{128, 128, 128, 128})
-	grayCover = draws.NewSpriteFromSource(i)
+	grayCover = draws.NewSprite(i)
 }
 
 type SearchDrawer struct {
@@ -31,7 +31,7 @@ func NewSearchDrawer(query *string) SearchDrawer {
 	)
 	i := draws.NewImage(RowWidth, 50)
 	i.Fill(color.NRGBA{153, 217, 234, 192})
-	s := draws.NewSpriteFromSource(i)
+	s := draws.NewSprite(i)
 	s.Locate(x, y, draws.LeftTop)
 	return SearchDrawer{
 		Timer:  draws.NewTimer(0, draws.ToTick(1000, TPS)),

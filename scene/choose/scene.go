@@ -146,7 +146,7 @@ func NewScene() *Scene {
 	s.Focus = FocusChartSet
 	s.lastFocus = s.Focus
 	{
-		sprite := draws.NewSpriteFromSource(DefaultBackground)
+		sprite := draws.NewSprite(DefaultBackground)
 		sprite.SetScaleToW(ScreenSizeX)
 		sprite.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 		s.Background.Sprite = sprite
@@ -194,7 +194,7 @@ func (s *Scene) Update() any {
 	// s.Preview.Update()
 	// select {
 	// case i := <-s.bgCh:
-	// 	sprite := draws.NewSpriteFromSource(i)
+	// 	sprite := draws.NewSprite(i)
 	// 	sprite.SetScaleToW(ScreenSizeX)
 	// 	sprite.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 	// 	s.Background.Sprite = sprite

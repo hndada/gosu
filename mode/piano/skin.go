@@ -108,7 +108,7 @@ func (skins *Skins) loadSkin(keyMode int) {
 	skin.DefaultBackground = skins.defaultBackground
 	skin.Score = skins.score
 	for i := 0; i < 10; i++ {
-		s := draws.NewSpriteFromSource(skins.Combo[i])
+		s := draws.NewSprite(skins.Combo[i])
 		s.MultiplyScale(S.ComboScale)
 		s.Locate(S.FieldPosition, S.ComboPosition, draws.CenterMiddle)
 		skin.Combo[i] = s
@@ -132,12 +132,12 @@ func (skins *Skins) loadSkin(keyMode int) {
 	{
 		src := draws.NewImage(fieldWidth, 1)
 		src.Fill(color.White)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(S.FieldPosition, S.HitPosition, draws.CenterBottom)
 		skin.Bar = s
 	}
 	{
-		s := draws.NewSpriteFromSource(skins.Hint)
+		s := draws.NewSprite(skins.Hint)
 		s.SetSize(fieldWidth, S.HintHeight)
 		s.Locate(S.FieldPosition, S.HitPosition, draws.CenterBottom)
 		skin.Hint = s
@@ -145,7 +145,7 @@ func (skins *Skins) loadSkin(keyMode int) {
 	{
 		src := draws.NewImage(fieldWidth, ScreenSizeY)
 		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * S.FieldOpaque)})
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(S.FieldPosition, 0, draws.CenterTop)
 		skin.Field = s
 	}
@@ -163,13 +163,13 @@ func (skins *Skins) loadSkin(keyMode int) {
 		}
 		// Keys are drawn below Hint, which bottom is along with HitPosition.
 		for i, image := range skins.Key {
-			s := draws.NewSpriteFromSource(image)
+			s := draws.NewSprite(image)
 			s.SetSize(w, ScreenSizeY-S.HitPosition)
 			s.Locate(x, S.HitPosition, draws.CenterTop)
 			skin.Key[k][i] = s
 		}
 		{
-			s := draws.NewSpriteFromSource(skins.KeyLighting)
+			s := draws.NewSprite(skins.KeyLighting)
 			s.SetScaleToW(w)
 			s.Locate(x, S.HitPosition, draws.CenterBottom) // -HintHeight
 			skin.KeyLighting[k] = s

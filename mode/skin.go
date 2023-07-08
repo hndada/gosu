@@ -24,7 +24,7 @@ var Skin SkinType
 func (skin *SkinType) Load(fsys fs.FS) {
 	skin.DefaultBackground = NewBackground(fsys, "interface/default-bg.jpg")
 	for i := 0; i < 10; i++ {
-		s := draws.NewSprite(fsys, fmt.Sprintf("score/%d.png", i))
+		s := draws.LoadSprite(fsys, fmt.Sprintf("score/%d.png", i))
 		s.MultiplyScale(Settings.ScoreScale)
 
 		// Need to set same base line, since each number has different height.
@@ -36,7 +36,7 @@ func (skin *SkinType) Load(fsys fs.FS) {
 		skin.Score[i] = s
 	}
 	for i, name := range []string{"dot", "comma", "percent"} {
-		s := draws.NewSprite(fsys, fmt.Sprintf("score/%s.png", name))
+		s := draws.LoadSprite(fsys, fmt.Sprintf("score/%s.png", name))
 		s.MultiplyScale(Settings.ScoreScale)
 		s.Locate(ScreenSizeX, 0, draws.RightTop)
 		skin.Score[i+10] = s

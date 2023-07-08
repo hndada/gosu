@@ -43,7 +43,7 @@ func NewRow(cardURL, thumbURL, first, second string) Row {
 	r := Row{}
 	r.Locate(ScreenSizeX-RowWidth, ScreenSizeY/2, draws.LeftMiddle)
 	{
-		s := draws.NewSpriteFromSource(defaultThumb)
+		s := draws.NewSprite(defaultThumb)
 		s.SetSize(thumbWidth, RowHeight)
 		r.Thumb = s
 	}
@@ -57,7 +57,7 @@ func NewRow(cardURL, thumbURL, first, second string) Row {
 		// close(r.thumbCh)
 	}()
 	{
-		s := draws.NewSpriteFromSource(defaultCard)
+		s := draws.NewSprite(defaultCard)
 		s.SetSize(400, RowHeight)
 		s.Locate(thumbWidth, 0, draws.LeftTop)
 		r.Card = s
@@ -79,13 +79,13 @@ func NewRow(cardURL, thumbURL, first, second string) Row {
 	}
 	{
 		src := draws.NewText(first, scene.Face20)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(px+thumbWidth, py, draws.LeftTop)
 		r.First = s
 	}
 	{
 		src := draws.NewText(second, scene.Face20)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(px+thumbWidth, py-5+RowHeight/2, draws.LeftTop)
 		r.Second = s
 	}

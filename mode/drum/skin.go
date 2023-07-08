@@ -86,7 +86,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 			}
 		}
 		skin.field[state] = img
-		s := draws.NewSpriteFromSource(img)
+		s := draws.NewSprite(img)
 		s.SetSize(ScreenSizeX, S.FieldHeight)
 		s.Locate(0, S.FieldPosition, draws.LeftMiddle)
 		skin.Field[state] = s
@@ -103,7 +103,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 			}
 		}
 		skin.hint[state] = img
-		s := draws.NewSpriteFromSource(img)
+		s := draws.NewSprite(img)
 		if name == "idle" {
 			hintScale = 1.2 * S.regularNoteHeight / s.H()
 		}
@@ -114,7 +114,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	{
 		src := draws.NewImage(1, S.FieldInnerHeight)
 		src.Fill(color.White)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		skin.Bar = s
 	}
@@ -178,7 +178,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 		}
 		for kind, color := range []color.NRGBA{ColorRed, ColorBlue, ColorYellow, ColorPurple} {
 			img := draws.NewImageColored(skin.note, color)
-			s := draws.NewSpriteFromSource(img)
+			s := draws.NewSprite(img)
 			s.SetScaleToH(noteHeight)
 			s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 			skin.Note[kind][size] = s
@@ -190,19 +190,19 @@ func (skin *Skin) Load(fsys fs.FS) {
 		}
 		skin.Overlay[size] = a
 		{
-			s := draws.NewSpriteFromSource(head)
+			s := draws.NewSprite(head)
 			s.SetScaleToH(noteHeight)
 			s.Locate(S.HitPosition, S.FieldPosition, draws.RightMiddle)
 			skin.Head[size] = s
 		}
 		{
-			s := draws.NewSpriteFromSource(tail)
+			s := draws.NewSprite(tail)
 			s.SetScaleToH(noteHeight)
 			s.Locate(S.HitPosition, S.FieldPosition, draws.LeftMiddle)
 			skin.Tail[size] = s
 		}
 		{
-			s := draws.NewSpriteFromSource(body)
+			s := draws.NewSprite(body)
 			s.SetScaleToH(noteHeight)
 			s.Locate(S.HitPosition, S.FieldPosition, draws.LeftMiddle)
 			s.Filter = ebiten.FilterNearest
@@ -210,7 +210,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 		}
 	}
 	{
-		s := draws.NewSpriteFromSource(skin.dot)
+		s := draws.NewSprite(skin.dot)
 		s.MultiplyScale(S.DotScale)
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		skin.Dot = s
@@ -241,7 +241,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 		keyFieldSize draws.Vector2
 	)
 	for k, img := range key {
-		s := draws.NewSpriteFromSource(img)
+		s := draws.NewSprite(img)
 		s.SetScaleToH(S.FieldInnerHeight)
 		if k < 2 { // Includes determining key field size.
 			s.Locate(0, S.FieldPosition, draws.LeftMiddle)
@@ -259,7 +259,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	{
 		src := draws.NewImage(keyFieldSize.XY())
 		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * S.FieldOpaque)})
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(0, S.FieldPosition, draws.LeftMiddle)
 		skin.KeyField = s
 	}
@@ -293,7 +293,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 		}
 		skin.combo = imgs
 		for i := 0; i < 10; i++ {
-			s := draws.NewSpriteFromSource(imgs[i])
+			s := draws.NewSprite(imgs[i])
 			s.MultiplyScale(S.ComboScale)
 			s.Locate(keyFieldSize.X/2, S.FieldPosition, draws.CenterMiddle)
 			skin.Combo[i] = s
@@ -337,13 +337,13 @@ func NewShakeSprites(note draws.Image) (sprites [2]draws.Sprite) {
 		innerImage.Draw(outerImage, op)
 	}
 	{
-		s := draws.NewSpriteFromSource(outerImage)
+		s := draws.NewSprite(outerImage)
 		s.SetScaleToH(scale * S.regularNoteHeight)
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		sprites[outer] = s
 	}
 	{
-		s := draws.NewSpriteFromSource(innerImage)
+		s := draws.NewSprite(innerImage)
 		s.SetScaleToH((scale + thickness) * S.regularNoteHeight)
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		sprites[inner] = s

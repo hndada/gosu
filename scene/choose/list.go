@@ -45,7 +45,7 @@ const (
 )
 
 // Load box-mask.png from defaultskin
-var boxMask = draws.NewSprite(defaultskin.FS, "box-mask.png") // interface/
+var boxMask = draws.LoadSprite(defaultskin.FS, "box-mask.png") // interface/
 
 // May add extra effect to box arrangement. e.g., x -= y / 5
 func (l List) Draw(dst draws.Image) {

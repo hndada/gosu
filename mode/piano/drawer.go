@@ -16,7 +16,7 @@ type BackgroundRedDrawer struct {
 func NewBackgroundRedDrawer() (d BackgroundRedDrawer) {
 	image := draws.NewImage(ScreenSizeX, ScreenSizeX)
 	image.Fill(color.RGBA{255, 128, 128, 255})
-	sprite := draws.NewSpriteFromSource(image)
+	sprite := draws.NewSprite(image)
 	// timer := draws.NewTimer(draws.ToTick(100, TPS), draws.ToTick(100, TPS))
 	// timer.Tick = timer.MaxTick
 	return BackgroundRedDrawer{

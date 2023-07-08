@@ -20,26 +20,22 @@ type Sprite struct {
 	Anchor Anchor
 }
 
+func NewSprite(src Source) Sprite {
+	return Sprite{
+		Source: src,
+		Scale:  Vector2{1, 1},
+		Filter: ebiten.FilterLinear, // FilterNearest is the default in ebiten.
+	}
+}
 func LoadSprite(fsys fs.FS, name string) Sprite {
-	return NewSprite(fsys, name)
+	return NewSprite(LoadImage(fsys, name))
 }
 func LoadSpriteFromURL(url string) (Sprite, error) {
 	img, err := LoadImageFromURL(url)
 	if err != nil {
 		return Sprite{}, err
 	}
-	return NewSpriteFromSource(img), nil
-}
-
-func NewSprite(fsys fs.FS, name string) Sprite {
-	return NewSpriteFromSource(LoadImage(fsys, name))
-}
-func NewSpriteFromSource(src Source) Sprite {
-	return Sprite{
-		Source: src,
-		Scale:  Vector2{1, 1},
-		Filter: ebiten.FilterLinear, // FilterNearest is the default in ebiten.
-	}
+	return NewSprite(img), nil
 }
 
 func (s Sprite) SrcSize() Vector2             { return s.Source.Size() }
@@ -47,9 +43,9 @@ func (s Sprite) Size() Vector2                { return s.SrcSize().Mul(s.Scale) 
 func (s Sprite) W() float64                   { return s.Size().X }
 func (s Sprite) H() float64                   { return s.Size().Y }
 func (s *Sprite) SetSize(w, h float64)        { s.Scale = Vec2(w, h).Div(s.SrcSize()) }
-func (s *Sprite) MultiplyScale(scale float64) { s.Scale = s.Scale.Mul(Scalar(scale)) }
 func (s *Sprite) SetScaleToW(w float64)       { s.Scale = Scalar(w / s.W()) }
 func (s *Sprite) SetScaleToH(h float64)       { s.Scale = Scalar(h / s.H()) }
+func (s *Sprite) MultiplyScale(scale float64) { s.Scale = s.Scale.Mul(Scalar(scale)) }
 func (s *Sprite) Locate(x, y float64, anchor Anchor) {
 	s.X = x
 	s.Y = y
@@ -70,6 +66,7 @@ func (s Sprite) In(p Vector2) bool {
 	p = p.Sub(min)
 	return p.X >= 0 && p.X <= max.X && p.Y >= 0 && p.Y <= max.Y
 }
+func (s Sprite) LeftTop(screenSize Vector2) (v Vector2) { return s.Min() }
 func (s Sprite) Draw(dst Image, op Op) {
 	if s.Source == nil || !s.IsValid() {
 		return
@@ -80,20 +77,3 @@ func (s Sprite) Draw(dst Image, op Op) {
 	op.Filter = s.Filter
 	s.Source.Draw(dst, op)
 }
-func (s Sprite) LeftTop(screenSize Vector2) (v Vector2) {
-	v = s.Min()
-	return
-}
-
-//	func (s Sprite) Op(screen *ebiten.Image, op Op) Op {
-//		op.GeoM.Scale(s.Scale.XY())
-//		leftTop := s.LeftTop(ImageSize(screen))
-//		op.GeoM.Translate(leftTop.XY())
-//		op.Filter = s.Filter
-//		return op
-//	}
-// func NewSprite(path string) Sprite { return NewSprite(NewImage(path)) }
-//
-//	func NewSpriteFromImage(i *ebiten.Image) Sprite {
-//		return Sprite{Source: Image{i}}
-//	}

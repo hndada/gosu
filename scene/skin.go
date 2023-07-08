@@ -42,13 +42,13 @@ func (skin *Skin) Load(fsys fs.FS) {
 	defer skin.fillBlank(&DefaultSkin)
 	skin.DefaultBackground = mode.UserSkin.DefaultBackground
 	for i, name := range []string{"base", "additive", "trail"} {
-		s := draws.NewSprite(fsys, fmt.Sprintf("cursor/%s.png", name))
+		s := draws.LoadSprite(fsys, fmt.Sprintf("cursor/%s.png", name))
 		s.MultiplyScale(S.CursorScale)
 		// Cursor should be at CenterMiddle in circle mode (in far future)
 		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 		skin.Cursor[i] = s
 	}
-	skin.BoxMask = draws.NewSprite(fsys, "interface/box-mask.png")
+	skin.BoxMask = draws.LoadSprite(fsys, "interface/box-mask.png")
 	skin.Enter = audios.NewSound(fsys, "sound/ringtone2_loop.wav")
 	skin.Swipe = audios.NewSoundBag(fsys, "sound/swipe.wav")
 	skin.Tap = audios.NewSoundBag(fsys, "sound/tap.wav")
@@ -64,17 +64,17 @@ func (skin *Skin) Load(fsys fs.FS) {
 	// Todo: fillBlank
 	const ClearScale = 0.5
 	{
-		s := draws.NewSprite(fsys, "interface/intro.png")
+		s := draws.LoadSprite(fsys, "interface/intro.png")
 		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 		skin.Intro = s
 	}
 	{
-		s := draws.NewSprite(fsys, "interface/loading.png")
+		s := draws.LoadSprite(fsys, "interface/loading.png")
 		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 		skin.Loading = s
 	}
 	{
-		s := draws.NewSprite(fsys, "interface/clear.png")
+		s := draws.LoadSprite(fsys, "interface/clear.png")
 		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 		s.MultiplyScale(ClearScale)
 		skin.Clear = s

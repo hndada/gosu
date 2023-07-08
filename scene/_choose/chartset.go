@@ -102,7 +102,7 @@ func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 	p := &ChartSetPanel{}
 	// p.bgCh = make(chan draws.Image)
 	{
-		s := draws.NewSpriteFromSource(DefaultCover)
+		s := draws.NewSprite(DefaultCover)
 		s.Locate(100, 100, draws.CenterMiddle)
 		p.Sprite = s
 	}
@@ -111,26 +111,26 @@ func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 		if err != nil {
 			fmt.Println("chart set cover: ", err)
 		}
-		s := draws.NewSpriteFromSource(i)
+		s := draws.NewSprite(i)
 		p.Sprite.Source = s
 		// p.bgCh <- draws.Image{Image: i}
 		// close(p.bgCh)
 	}()
 	{
 		src := draws.NewText(cs.Title, scene.Face24)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(0, 0, draws.LeftTop)
 		p.MusicName = s
 	}
 	{
 		src := draws.NewText(cs.Artist, scene.Face20)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(0, 25, draws.LeftTop)
 		p.Artist = s
 	}
 	{
 		src := draws.NewText(cs.Creator, scene.Face16)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(0, 100, draws.LeftTop)
 		p.Charter = s
 	}
@@ -140,7 +140,7 @@ func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 			format = "ranked at %s"
 		}
 		src := draws.NewText(fmt.Sprintf(format, p.UpdateDate), scene.Face16)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(0, 125, draws.LeftTop)
 		p.UpdateDate = s
 	}
@@ -148,14 +148,14 @@ func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 		second := cs.ChildrenBeatmaps[0].HitLength
 		t := fmt.Sprintf("%02d:%02d", second/60, second%60)
 		src := draws.NewText(t, scene.Face12)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(450, 0, draws.RightTop)
 		p.Duration = s
 	}
 	{
 		bpm := cs.ChildrenBeatmaps[0].BPM
 		src := draws.NewText(fmt.Sprintf("%.0f", bpm), scene.Face12)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(450, 50, draws.LeftTop)
 		p.BPM = s
 	}
@@ -164,7 +164,7 @@ func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 func (p *ChartSetPanel) Update() {
 	// select {
 	// case i := <-p.bgCh:
-	// 	s := draws.NewSpriteFromSource(i)
+	// 	s := draws.NewSprite(i)
 	// 	s.Locate(100, 100, draws.CenterMiddle)
 	// 	p.Sprite = s
 	// default:
