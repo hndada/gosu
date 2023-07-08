@@ -1,11 +1,9 @@
 package osu
 
-import (
-	"image/color"
-)
+import "image/color"
 
 type Format struct {
-	FormatVersion int `json:"formatVersion"`
+	FormatVersion int // delimiter:(space)
 	General
 	Editor
 	Metadata
@@ -17,58 +15,65 @@ type Format struct {
 }
 
 type General struct { // delimiter:(space)
-	AudioFilename            string  `json:"audioFilename"`
-	AudioLeadIn              int     `json:"audioLeadIn"`
-	AudioHash                string  `json:"audioHash"` // deprecated
-	PreviewTime              int     `json:"previewTime"`
-	Countdown                int     `json:"countdown"` // nofloat
-	SampleSet                string  `json:"sampleSet"`
-	StackLeniency            float64 `json:"stackLeniency"`
-	Mode                     int     `json:"mode"` // nofloat
-	LetterboxInBreaks        bool    `json:"letterboxInBreaks"`
-	StoryFireInFront         bool    `json:"storyFireInFront"` // deprecated
-	UseSkinSprites           bool    `json:"useSkinSprites"`
-	AlwaysShowPlayfield      bool    `json:"alwaysShowPlayfield"` // deprecated
-	OverlayPosition          string  `json:"overlayPosition"`
-	SkinPreference           string  `json:"skinPreference"`
-	EpilepsyWarning          bool    `json:"epilepsyWarning"`
-	CountdownOffset          int     `json:"countdownOffset"`
-	SpecialStyle             bool    `json:"specialStyle"`
-	WidescreenStoryboard     bool    `json:"widescreenStoryboard"`
-	SamplesMatchPlaybackRate bool    `json:"samplesMatchPlaybackRate"`
+	AudioFilename            string
+	AudioLeadIn              int
+	AudioHash                string // deprecated
+	PreviewTime              int
+	Countdown                int // nofloat
+	SampleSet                string
+	StackLeniency            float64
+	Mode                     int // nofloat
+	LetterboxInBreaks        bool
+	StoryFireInFront         bool // deprecated
+	UseSkinSprites           bool
+	AlwaysShowPlayfield      bool // deprecated
+	OverlayPosition          string
+	SkinPreference           string
+	EpilepsyWarning          bool
+	CountdownOffset          int
+	SpecialStyle             bool
+	WidescreenStoryboard     bool
+	SamplesMatchPlaybackRate bool
 }
+
 type Editor struct { // delimiter:(space)
-	Bookmarks       []int   // delimiter,
-	DistanceSpacing float64 `json:"distanceSpacing"`
-	BeatDivisor     float64 `json:"beatDivisor"`
-	GridSize        int     `json:"gridSize"`
-	TimelineZoom    float64 `json:"timelineZoom"`
+	Bookmarks       []int // delimiter,
+	DistanceSpacing float64
+	BeatDivisor     float64
+	GridSize        int
+	TimelineZoom    float64
 }
+
 type Metadata struct { // delimiter:
-	Title         string   `json:"title"`
-	TitleUnicode  string   `json:"titleUnicode"`
-	Artist        string   `json:"artist"`
-	ArtistUnicode string   `json:"artistUnicode"`
-	Creator       string   `json:"creator"`
-	Version       string   `json:"version"`
-	Source        string   `json:"source"`
+	Title         string
+	TitleUnicode  string
+	Artist        string
+	ArtistUnicode string
+	Creator       string
+	Version       string
+	Source        string
 	Tags          []string // delimiter(space)
-	BeatmapID     int      `json:"beatmapID"`    // nofloat
-	BeatmapSetID  int      `json:"beatmapSetID"` // nofloat
+	BeatmapID     int      // nofloat
+	BeatmapSetID  int      // nofloat
 }
+
 type Difficulty struct { // delimiter:
-	HPDrainRate       float64 `json:"hpDrainRate"`
-	CircleSize        float64 `json:"circleSize"`
-	OverallDifficulty float64 `json:"overallDifficulty"`
-	ApproachRate      float64 `json:"approachRate"`
-	SliderMultiplier  float64 `json:"sliderMultiplier"`
-	SliderTickRate    float64 `json:"sliderTickRate"`
+	HPDrainRate       float64
+	CircleSize        float64
+	OverallDifficulty float64
+	ApproachRate      float64
+	SliderMultiplier  float64
+	SliderTickRate    float64
 }
+
 type Events []Event
+
 type TimingPoints []TimingPoint
+
 type Colours struct { // manual
 	Combos              [8]color.RGBA
 	SliderTrackOverride color.RGBA
 	SliderBorder        color.RGBA
 }
+
 type HitObjects []HitObject
