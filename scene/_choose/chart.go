@@ -118,27 +118,27 @@ func NewChartPanel(sp *ChartSetPanel, c *Chart) *ChartPanel {
 		second := c.HitLength
 		t := fmt.Sprintf("%02d:%02d", second/60, second%60)
 		src := draws.NewText(t, scene.Face16)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(450, 0, draws.RightTop)
 		p.Duration = s
 	}
 	{
 		bpm := c.BPM
 		src := draws.NewText(fmt.Sprintf("%.0f", bpm), scene.Face16)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(450, 50, draws.LeftTop)
 		p.BPM = s
 	}
 	{
 		src := draws.NewText(c.DiffName, scene.Face20)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(0, 80, draws.LeftTop)
 		p.ChartName = s
 	}
 	{ // Todo: use gosu's own level system
 		lv := Level(c.DifficultyRating)
 		src := draws.NewText(fmt.Sprintf("Level: %2d", lv), scene.Face16)
-		s := draws.NewSpriteFromSource(src)
+		s := draws.NewSprite(src)
 		s.Locate(450, 100, draws.RightTop)
 		p.Level = s
 	}

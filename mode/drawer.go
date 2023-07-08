@@ -13,7 +13,7 @@ import (
 )
 
 func NewBackground(fsys fs.FS, name string) draws.Sprite {
-	s := draws.NewSprite(fsys, name)
+	s := draws.LoadSprite(fsys, name)
 	s.MultiplyScale(ScreenSizeX / s.W())
 	s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 	return s
@@ -183,21 +183,21 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 			// ebitenutil.DrawRect(dst, 0, 0, w, h/4, clr)
 		}
 		i := ebiten.NewImageFromImage(src)
-		base := draws.NewSpriteFromSource(draws.Image{Image: i})
+		base := draws.NewSprite(draws.Image{Image: i})
 		base.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
 		d.Meter = base
 	}
 	{
 		src := draws.NewImage(W, H)
 		src.Fill(colorRed)
-		sprite := draws.NewSpriteFromSource(src)
+		sprite := draws.NewSprite(src)
 		sprite.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
 		d.Anchor = sprite
 	}
 	{
 		src := draws.NewImage(W, H)
 		src.Fill(colorWhite)
-		sprite := draws.NewSpriteFromSource(src)
+		sprite := draws.NewSprite(src)
 		sprite.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
 		d.Unit = sprite
 	}

@@ -18,7 +18,7 @@ func NewAnimation(fsys fs.FS, name string) Animation {
 func NewAnimationFromImages(images []Image) (a Animation) {
 	a = make(Animation, len(images))
 	for i, image := range images {
-		a[i] = NewSpriteFromSource(image)
+		a[i] = NewSprite(image)
 	}
 	return
 }
