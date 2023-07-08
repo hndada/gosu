@@ -335,6 +335,6 @@ func (d JudgmentDrawer) Draw(dst draws.Image) {
 	if age >= bound2 {
 		scale = 1 - 0.25*d.Progress(bound2, 1)
 	}
-	s.ApplyScale(scale)
+	s.MultiplyScale(scale)
 	s.Draw(dst, draws.Op{})
 }

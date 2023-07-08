@@ -109,14 +109,14 @@ func (skins *Skins) loadSkin(keyMode int) {
 	skin.Score = skins.score
 	for i := 0; i < 10; i++ {
 		s := draws.NewSpriteFromSource(skins.Combo[i])
-		s.ApplyScale(S.ComboScale)
+		s.MultiplyScale(S.ComboScale)
 		s.Locate(S.FieldPosition, S.ComboPosition, draws.CenterMiddle)
 		skin.Combo[i] = s
 	}
 	for i, images := range skins.Judgment {
 		a := draws.NewAnimationFromImages(images)
 		for frame := range a {
-			a[frame].ApplyScale(S.JudgmentScale)
+			a[frame].MultiplyScale(S.JudgmentScale)
 			a[frame].Locate(S.FieldPosition, S.JudgmentPosition, draws.CenterMiddle)
 		}
 		skin.Judgment[i] = a
@@ -177,7 +177,7 @@ func (skins *Skins) loadSkin(keyMode int) {
 		{
 			a := draws.NewAnimationFromImages(skins.HitLighting)
 			for i := range a {
-				a[i].ApplyScale(S.LightingScale)
+				a[i].MultiplyScale(S.LightingScale)
 				a[i].Locate(x, S.HitPosition, draws.CenterMiddle) // -HintHeight
 			}
 			skin.HitLighting[k] = a
@@ -185,7 +185,7 @@ func (skins *Skins) loadSkin(keyMode int) {
 		{
 			a := draws.NewAnimationFromImages(skins.HoldLighting)
 			for frame := range a {
-				a[frame].ApplyScale(S.LightingScale)
+				a[frame].MultiplyScale(S.LightingScale)
 				a[frame].Locate(x, S.HitPosition-S.HintHeight/2, draws.CenterMiddle)
 			}
 			skin.HoldLighting[k] = a

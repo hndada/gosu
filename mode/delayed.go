@@ -1,6 +1,9 @@
 package mode
 
-import "math"
+import (
+	"math"
+	"time"
+)
 
 const TransDuration = 400 // In milliseconds.
 
@@ -20,14 +23,14 @@ type Delayed struct {
 	maxCountdown int
 }
 
-func NewDelayed(tps int) Delayed {
+func NewDelayed() Delayed {
 	return Delayed{
 		// Delayed:      *src,
 		// source:       src,
 		Mode:         DelayedModeExp,
 		Feedback:     0,
-		countdown:    ToTick(400, tps),
-		maxCountdown: ToTick(400, tps),
+		countdown:    ToTick(400 * time.Millisecond),
+		maxCountdown: ToTick(400 * time.Millisecond),
 	}
 }
 

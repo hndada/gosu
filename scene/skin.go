@@ -43,7 +43,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	skin.DefaultBackground = mode.UserSkin.DefaultBackground
 	for i, name := range []string{"base", "additive", "trail"} {
 		s := draws.NewSprite(fsys, fmt.Sprintf("cursor/%s.png", name))
-		s.ApplyScale(S.CursorScale)
+		s.MultiplyScale(S.CursorScale)
 		// Cursor should be at CenterMiddle in circle mode (in far future)
 		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 		skin.Cursor[i] = s
@@ -76,7 +76,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	{
 		s := draws.NewSprite(fsys, "interface/clear.png")
 		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
-		s.ApplyScale(ClearScale)
+		s.MultiplyScale(ClearScale)
 		skin.Clear = s
 	}
 }

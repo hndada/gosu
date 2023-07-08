@@ -1,4 +1,4 @@
-package mode
+package choose
 
 import (
 	"fmt"

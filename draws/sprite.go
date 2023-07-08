@@ -20,6 +20,17 @@ type Sprite struct {
 	Anchor Anchor
 }
 
+func LoadSprite(fsys fs.FS, name string) Sprite {
+	return NewSprite(fsys, name)
+}
+func LoadSpriteFromURL(url string) (Sprite, error) {
+	img, err := LoadImageFromURL(url)
+	if err != nil {
+		return Sprite{}, err
+	}
+	return NewSpriteFromSource(img), nil
+}
+
 func NewSprite(fsys fs.FS, name string) Sprite {
 	return NewSpriteFromSource(LoadImage(fsys, name))
 }
@@ -31,14 +42,14 @@ func NewSpriteFromSource(src Source) Sprite {
 	}
 }
 
-func (s Sprite) SrcSize() Vector2          { return s.Source.Size() }
-func (s Sprite) Size() Vector2             { return s.SrcSize().Mul(s.Scale) }
-func (s Sprite) W() float64                { return s.Size().X }
-func (s Sprite) H() float64                { return s.Size().Y }
-func (s *Sprite) SetSize(w, h float64)     { s.Scale = Vec2(w, h).Div(s.SrcSize()) }
-func (s *Sprite) ApplyScale(scale float64) { s.Scale = s.Scale.Mul(Scalar(scale)) }
-func (s *Sprite) SetScaleToW(w float64)    { s.Scale = Scalar(w / s.W()) }
-func (s *Sprite) SetScaleToH(h float64)    { s.Scale = Scalar(h / s.H()) }
+func (s Sprite) SrcSize() Vector2             { return s.Source.Size() }
+func (s Sprite) Size() Vector2                { return s.SrcSize().Mul(s.Scale) }
+func (s Sprite) W() float64                   { return s.Size().X }
+func (s Sprite) H() float64                   { return s.Size().Y }
+func (s *Sprite) SetSize(w, h float64)        { s.Scale = Vec2(w, h).Div(s.SrcSize()) }
+func (s *Sprite) MultiplyScale(scale float64) { s.Scale = s.Scale.Mul(Scalar(scale)) }
+func (s *Sprite) SetScaleToW(w float64)       { s.Scale = Scalar(w / s.W()) }
+func (s *Sprite) SetScaleToH(h float64)       { s.Scale = Scalar(h / s.H()) }
 func (s *Sprite) Locate(x, y float64, anchor Anchor) {
 	s.X = x
 	s.Y = y

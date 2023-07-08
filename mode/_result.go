@@ -2,8 +2,7 @@ package mode
 
 import "time"
 
-// Todo: SceneResult. keep playing music when at SceneResult.
-// Todo: implement Replay
+// Todo: SceneResult and keep playing music when at SceneResult.
 type Result struct {
 	MD5        [16]byte  // MD5 for raw chart file. md5.Size = 16
 	PlayedTime time.Time // Finish time of playing.

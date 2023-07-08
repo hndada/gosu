@@ -10,13 +10,12 @@ import (
 )
 
 var (
-	VolumeMusic  ctrl.KeyHandler
-	VolumeSound  ctrl.KeyHandler
-	Brightness   ctrl.KeyHandler
-	Offset       ctrl.KeyHandler
-	DelayedJudge ctrl.KeyHandler
-	DebugPrint   ctrl.KeyHandler // added
-	SpeedScales  []ctrl.KeyHandler
+	VolumeMusic          ctrl.KeyHandler
+	VolumeSound          ctrl.KeyHandler
+	BackgroundBrightness ctrl.KeyHandler
+	Offset               ctrl.KeyHandler
+	DebugPrint           ctrl.KeyHandler
+	SpeedScales          []ctrl.KeyHandler
 )
 
 func loadHandler() {
@@ -44,7 +43,7 @@ func loadHandler() {
 		Sounds:    [2]audios.Sounder{UserSkin.Toggle[0], UserSkin.Toggle[1]},
 		Volume:    &mode.S.VolumeSound,
 	}
-	Brightness = ctrl.KeyHandler{
+	BackgroundBrightness = ctrl.KeyHandler{
 		Handler: ctrl.FloatHandler{
 			Value: &mode.S.BackgroundBrightness,
 			Min:   0,
@@ -66,19 +65,6 @@ func loadHandler() {
 		},
 		Modifiers: []input.Key{input.KeyShiftLeft},
 		Keys:      [2]input.Key{input.KeyArrowLeft, input.KeyArrowRight},
-		Sounds:    [2]audios.Sounder{UserSkin.Transition[0], UserSkin.Transition[1]},
-		Volume:    &mode.S.VolumeSound,
-	}
-	DelayedJudge = ctrl.KeyHandler{
-		Handler: ctrl.Int64Handler{
-			Value: &mode.S.DelayedJudge,
-			Min:   -250,
-			Max:   250,
-			Loop:  false,
-			Unit:  5,
-		},
-		Modifiers: []input.Key{},
-		Keys:      [2]input.Key{input.KeyF9, input.KeyF10},
 		Sounds:    [2]audios.Sounder{UserSkin.Transition[0], UserSkin.Transition[1]},
 		Volume:    &mode.S.VolumeSound,
 	}

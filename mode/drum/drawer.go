@@ -93,12 +93,12 @@ func (d ShakeDrawer) Draw(dst draws.Image) {
 		op.ColorM.Scale(1, 1, 1, alpha)
 		{
 			s := d.Shake[outer]
-			s.ApplyScale(scale)
+			s.MultiplyScale(scale)
 			s.Draw(dst, op)
 		}
 		{
 			s := d.Shake[inner]
-			s.ApplyScale(scale)
+			s.MultiplyScale(scale)
 			s.Draw(dst, op)
 		}
 	}
@@ -116,7 +116,7 @@ func (d ShakeDrawer) Draw(dst draws.Image) {
 		}
 		op.ColorM.Scale(1, 1, 1, scale)
 		s := d.Shake[outer]
-		s.ApplyScale(scale)
+		s.MultiplyScale(scale)
 		s.Draw(dst, op)
 	}
 	{
@@ -125,7 +125,7 @@ func (d ShakeDrawer) Draw(dst draws.Image) {
 			scale = float64(d.Staged.HitTick) / float64(d.Staged.Tick)
 		}
 		s := d.Shake[inner]
-		s.ApplyScale(scale)
+		s.MultiplyScale(scale)
 		s.Draw(dst, draws.Op{})
 	}
 }
@@ -379,7 +379,7 @@ func (d JudgmentDrawer) Draw(dst draws.Image) {
 	op := draws.Op{}
 	age := d.Age()
 	if bound := 0.25; age < bound {
-		s.ApplyScale(1.2 - 0.2*d.Progress(0, bound))
+		s.MultiplyScale(1.2 - 0.2*d.Progress(0, bound))
 		alpha := 0.5 + 0.5*d.Progress(0, bound)
 		op.ColorM.Scale(1, 1, 1, alpha)
 	}
