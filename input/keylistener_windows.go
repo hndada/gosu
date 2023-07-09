@@ -20,7 +20,7 @@ const (
 	isPressed  = 0x8000
 )
 
-func NewKeyInputListener(ks []Key) *KeyInputListener {
+func NewKeyListener(ks []Key) *KeyListener {
 	const pollingRate = 1 * time.Millisecond
 
 	vkcodes := make([]uint32, len(ks))
@@ -41,7 +41,7 @@ func NewKeyInputListener(ks []Key) *KeyInputListener {
 		}
 	}
 
-	listener := &KeyInputListener{
+	listener := &KeyListener{
 		KeySettings: ks,
 		vkcodes:     vkcodes,
 		PollingRate: pollingRate,

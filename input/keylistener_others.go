@@ -8,7 +8,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-func NewKeyInputListenerA(ks []Key) *KeyInputListener {
+func NewKeyListener(ks []Key) *KeyListener {
 	const pollingRate = 12 * time.Millisecond
 
 	listen := func() KeyPressedLog {
@@ -23,7 +23,7 @@ func NewKeyInputListenerA(ks []Key) *KeyInputListener {
 		}
 	}
 
-	listener := &KeyInputListener{
+	listener := &KeyListener{
 		KeySettings: ks,
 		PollingRate: pollingRate,
 		Listen:      listen,

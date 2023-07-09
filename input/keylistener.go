@@ -2,17 +2,17 @@ package input
 
 import "time"
 
-// KeyInputListener is a listener for key input.
+// KeyListener is a listener for key input.
 // Can output a replay data.
-type KeyInputListener struct {
+type KeyListener struct {
 	KeySettings []Key
-	vkcodes     []uint32
+	vkcodes     []uint32 // used for windows
 	PollingRate time.Duration
 	Listen      func() KeyPressedLog
 	// StartTime   time.Time
 
 	Logs   []KeyPressedLog
-	Index  int
+	index  int
 	Paused bool
 }
 
@@ -21,36 +21,7 @@ type KeyPressedLog struct {
 	PressedList []bool
 }
 
-type KeyAction int
-
-const (
-	Idle KeyAction = iota
-	Hit
-	Release
-	Hold
-)
-
-func keyAction(last, current bool) KeyAction {
-	switch {
-	case !last && !current:
-		return Idle
-	case !last && current:
-		return Hit
-	case last && !current:
-		return Release
-	case last && current:
-		return Hold
-	default:
-		panic("not reach")
-	}
-}
-
-type KeyActionLog struct {
-	Time   time.Time
-	Action []KeyAction
-}
-
-func (kl *KeyInputListener) Poll() {
+func (kl *KeyListener) Poll() {
 	if kl.Paused {
 		return
 	}
@@ -59,7 +30,7 @@ func (kl *KeyInputListener) Poll() {
 		kl.Logs = append(kl.Logs, log)
 	}
 }
-func (kl KeyInputListener) isLogSame(log KeyPressedLog) bool {
+func (kl KeyListener) isLogSame(log KeyPressedLog) bool {
 	lastPressed := kl.Logs[len(kl.Logs)-1].PressedList
 	for i, p := range log.PressedList {
 		if p != lastPressed[i] {
@@ -69,13 +40,18 @@ func (kl KeyInputListener) isLogSame(log KeyPressedLog) bool {
 	return true
 }
 
-func (kl *KeyInputListener) Fetch() ([]KeyPressedLog, []KeyActionLog) {
+type KeyActionLog struct {
+	Time   time.Time
+	Action []KeyAction
+}
+
+func (kl *KeyListener) Fetch() ([]KeyPressedLog, []KeyActionLog) {
 	if len(kl.Logs) == 0 {
 		return nil, nil
 	}
 
 	// pressedLogs
-	rawLogs := kl.Logs[kl.Index:]
+	rawLogs := kl.Logs[kl.index:]
 	pressedLogs := make([]KeyPressedLog, 0, 10)
 	// now := time.Now().UnixNano()/int64(time.Millisecond) + 1
 	// now := time.Now().Add(50 * time.Microsecond)
@@ -95,8 +71,8 @@ func (kl *KeyInputListener) Fetch() ([]KeyPressedLog, []KeyActionLog) {
 	// actionLogs
 	actionLogs := make([]KeyActionLog, 0, len(pressedLogs))
 	lastPressedList := make([]bool, len(kl.KeySettings))
-	if kl.Index > 0 {
-		lastPressedList = kl.Logs[kl.Index-1].PressedList
+	if kl.index > 0 {
+		lastPressedList = kl.Logs[kl.index-1].PressedList
 	}
 	for _, log := range pressedLogs {
 		actions := make([]KeyAction, len(log.PressedList))
@@ -107,7 +83,7 @@ func (kl *KeyInputListener) Fetch() ([]KeyPressedLog, []KeyActionLog) {
 		actionLogs = append(actionLogs, KeyActionLog{log.Time, actions})
 	}
 
-	// Update Index
-	kl.Index = len(kl.Logs)
+	// Update index
+	kl.index = len(kl.Logs)
 	return pressedLogs, actionLogs
 }
