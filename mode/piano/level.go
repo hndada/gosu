@@ -1,51 +1,32 @@
 package piano
 
-const DifficultyDuration int64 = 800
+import "github.com/hndada/gosu/mode"
 
-// Mods may change the duration of chart.
-// Todo: implement actual calculating chart difficulties
-func (c Chart) Difficulties() []float64 {
-	if len(c.Notes) == 0 {
-		return make([]float64, 0)
-	}
-	ds := make([]float64, 0, 1+c.Duration()/DifficultyDuration)
-	t := c.Notes[0].Time
-	var d float64
-	for _, n := range c.Notes {
-		for n.Time > t+DifficultyDuration {
-			ds = append(ds, d)
-			d = 0
-			t += DifficultyDuration
-		}
-		switch n.Type {
-		case Tail:
-			d += 0.15
-		default:
-			d += 1
-		}
-	}
-	return ds
+var fingersList = [][]int{
+	{},
+	{0},
+	{1, 1},
+	{1, 0, 1},
+	{2, 1, 1, 2},
+	{2, 1, 0, 1, 2},
+	{3, 2, 1, 1, 2, 3},
+	{3, 2, 1, 0, 1, 2, 3},
+	{4, 3, 2, 1, 1, 2, 3, 4},
+	{4, 3, 2, 1, 0, 1, 2, 3, 4},
+	{4, 3, 2, 1, 0, 0, 1, 2, 3, 4},
 }
 
-var FingerMap = map[int][]int{
-	0:  {},
-	1:  {0},
-	2:  {1, 1},
-	3:  {1, 0, 1},
-	4:  {2, 1, 1, 2},
-	5:  {2, 1, 0, 1, 2},
-	6:  {3, 2, 1, 1, 2, 3},
-	7:  {3, 2, 1, 0, 1, 2, 3},
-	8:  {4, 3, 2, 1, 1, 2, 3, 4},
-	9:  {4, 3, 2, 1, 0, 1, 2, 3, 4},
-	10: {4, 3, 2, 1, 0, 0, 1, 2, 3, 4},
-}
-
-func init() {
-	for k := 2; k <= 8; k++ {
-		FingerMap[k|LeftScratch] = append([]int{FingerMap[k-1][0] + 1}, FingerMap[k-1]...)
-		FingerMap[k|RightScratch] = append(FingerMap[k-1], FingerMap[k-1][k-2]+1)
+func Fingers(keyCount int, scratchMode ScratchMode) []int {
+	maxFinger := fingersList[keyCount-1][0] + 1
+	switch scratchMode {
+	case NoScratch:
+		return fingersList[keyCount]
+	case LeftScratch:
+		return append([]int{maxFinger}, fingersList[keyCount-1]...)
+	case RightScratch:
+		return append(fingersList[keyCount-1], maxFinger)
 	}
+	return nil
 }
 
 // Weight is for Tail's variadic weight based on its length.
@@ -69,4 +50,27 @@ func (n Note) Weight() float64 {
 	default:
 		return 1
 	}
+}
+
+func (c Chart) Difficulties() (ds []float64) {
+	if len(c.Notes) == 0 {
+		return
+	}
+
+	const standardDuration = 800 // 800ms. 2 beats with 150 BPM
+	times, durations := mode.DifficultyPieceTimes(c.Dynamics, c.Duration())
+	ds = make([]float64, 0, len(times))
+
+	var i int
+	var d float64
+	for _, n := range c.Notes {
+		for n.Time > times[i] {
+			scale := standardDuration / float64(durations[i])
+			ds = append(ds, d*scale)
+			d = 0
+			i++
+		}
+		d += n.Strain
+	}
+	return ds
 }

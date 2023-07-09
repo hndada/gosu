@@ -49,6 +49,7 @@ func LoadChart(fsys fs.FS, name string, mods interface{}) (c *Chart, err error) 
 // are drawn based on the difference between their positions and cursor's.
 // Position calculation is based on Dynamics.
 func (c *Chart) setDynamicPositions() {
+	// Brilliant idea: Make SpeedScale scaled by MainBPM.
 	mainBPM, _, _ := mode.BPMs(c.Dynamics, c.Duration())
 	bpmScale := c.Dynamics[0].BPM / mainBPM
 	for _, dy := range c.Dynamics {
@@ -68,7 +69,7 @@ func (c *Chart) setNotePositions() {
 		}
 		n.Position = dy.Position + float64(n.Time-dy.Time)*dy.Speed
 		if n.Type == Tail {
-			n.Position += float64(S.TailExtraTime) * dy.Speed
+			n.Position += float64(TheSettings.TailExtraTime) * dy.Speed
 
 			// Tail notes should be drawn after their heads.
 			if n.Position < n.Prev.Position {
@@ -92,5 +93,5 @@ func (c Chart) Duration() int64 {
 		return 0
 	}
 	last := c.Notes[len(c.Notes)-1]
-	return last.Time + last.Duration
+	return last.Time // + last.Duration
 }

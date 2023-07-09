@@ -5,10 +5,11 @@ import (
 )
 
 type Settings struct {
-	MusicVolume          float64
-	SoundVolume          float64
+	MusicVolume float64
+	SoundVolume float64
+	Offset      int64
+
 	BackgroundBrightness float64
-	Offset               int64
 	DebugPrint           bool
 
 	MusicRoots  []string
@@ -17,10 +18,11 @@ type Settings struct {
 }
 
 var TheSettings = Settings{
-	MusicVolume:          0.50,
-	SoundVolume:          0.50,
+	MusicVolume: 0.50,
+	SoundVolume: 0.50,
+	Offset:      -20,
+
 	BackgroundBrightness: 0.6,
-	Offset:               -20,
 	DebugPrint:           true,
 
 	MusicRoots:  []string{"music"},
