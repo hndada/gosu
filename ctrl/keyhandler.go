@@ -11,6 +11,7 @@ const (
 	long  = 200
 )
 
+// Todo: Modifiers work strangely when there are plural modifiers.
 type KeyHandler struct {
 	Handler
 	Modifiers []input.Key // Handler works only when all Modifier are pressed.

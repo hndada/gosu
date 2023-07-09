@@ -132,7 +132,7 @@ func NewList(rows []Row) *List {
 		Modifiers: []input.Key{},
 		Keys:      [2]input.Key{input.KeyArrowUp, input.KeyArrowDown},
 		Sounds:    [2]audios.Sounder{scene.UserSkin.Swipe, scene.UserSkin.Swipe},
-		Volume:    &mode.S.VolumeSound,
+		Volume:    &mode.S.SoundVolume,
 	}
 	return l
 }

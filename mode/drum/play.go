@@ -205,8 +205,8 @@ func (s *ScenePlay) Update() any {
 	if s.Now == 0+s.Offset {
 		s.MusicPlayer.Play()
 	}
-	if vol := *S.volumeMusic; S.VolumeMusic != vol {
-		S.VolumeMusic = vol
+	if vol := *S.musicVolume; S.MusicVolume != vol {
+		S.MusicVolume = vol
 		s.MusicPlayer.SetVolume(vol)
 	}
 
@@ -363,7 +363,7 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100,
 		s.JudgmentCounts[:3], s.JudgmentCounts[3:5], s.JudgmentCounts[5:],
 		s.speedScale*100, s.speedScale/s.TransPoint.Speed, ExposureTime(s.Speed()),
-		*S.volumeMusic*100, *S.volumeSound*100,
+		*S.musicVolume*100, *S.volumeSound*100,
 		*S.offset), 0, int(y))
 }
 

@@ -17,15 +17,6 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
-var silent = true
-var backgroundRedMode = true
-
-func init() {
-	if silent {
-		mode.S.VolumeSound = 0
-	}
-}
-
 // ScenePlay: struct, PlayScene: function
 // The skin may be applied some custom settings: on/off some sprites
 type ScenePlay struct {
@@ -258,8 +249,8 @@ func (s *ScenePlay) Update() any {
 		}
 	}
 
-	if vol := *S.volumeMusic; S.VolumeMusic != vol {
-		S.VolumeMusic = vol
+	if vol := *S.musicVolume; S.MusicVolume != vol {
+		S.MusicVolume = vol
 		s.MusicPlayer.SetVolume(vol)
 	}
 
@@ -355,7 +346,7 @@ func (s ScenePlay) outputLog() {
 
 	fname := fmt.Sprintf("log/%s[%s]_sp%3d_hp%3d_of%3d_ks%3d_dj%3d_%s.csv",
 		s.Chart.MusicName, s.Chart.ChartName, int(S.SpeedScale*100), int(S.HitPosition), s.Offset, mode.S.DelayedJudge,
-		int(mode.S.VolumeSound*100),
+		int(mode.S.SoundVolume*100),
 		time.Now().Format("2006-01-02_15-04-05"))
 	// create log directory if not exists
 	if _, err := os.Stat("log"); os.IsNotExist(err) {
@@ -449,7 +440,7 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 		s.Scores[mode.Total], s.ScoreBounds[mode.Total], s.Flow*100, s.Scorer.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
 		S.SpeedScale*100, s.TransPoint.Speed, ExposureTime(s.Speed()),
-		*S.volumeMusic*100, *S.volumeSound*100,
+		*S.musicVolume*100, *S.volumeSound*100,
 		*S.offset,
 		*S.delayedJudge,
 		*S.debugPrint))

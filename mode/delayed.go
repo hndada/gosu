@@ -10,6 +10,7 @@ const (
 	DelayedModeLinear
 )
 
+// For displaying score with scrolling effect.
 type Delayed struct {
 	Mode     int
 	Feedback float64

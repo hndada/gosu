@@ -1,75 +1,85 @@
 package play
 
 import (
-	"io/fs"
-
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
+	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
+	"github.com/hndada/gosu/mode"
 
 	"github.com/hndada/gosu/mode/drum"
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
 )
 
-type ScenePlay interface {
-	scene.Scene
-	PlayPause()
-	IsDone() bool // Draw clear mark.
-	Finish() any  // Return Scene.
+// Interface should be declared at downstream package.
+type ScenePlay struct {
+	SceneModePlay
+	SpeedScaleKeyHandler *ctrl.KeyHandler
 }
-type Scene struct {
-	mode int
-	ScenePlay
+type SceneModePlay interface {
+	scene.Scene
+
+	PlayPause()
+	Finish() any // Return Scene.
+	// IsDone() bool // Draw clear mark.
+
+	SetMusicVolume(float64)
+	SetSoundVolume(float64)
+	SetOffset(int64)
+	SetSpeedScale() // Each mode has its own variable for speed scale.
 }
 
-func NewScene(fsys fs.FS, cname string, mode int, mods interface{}, rf *osr.Format) (*Scene, error) {
+func NewScene(mode int, args mode.ScenePlayArgs) (*ScenePlay, error) {
 	var (
-		play ScenePlay
+		play SceneModePlay
 		err  error
 	)
 	switch mode {
 	case piano.Mode:
-		play, err = piano.NewScenePlay(fsys, cname, mods, rf)
+		play, err = piano.NewSceneModePlay(args)
 	case drum.Mode:
-		play, err = drum.NewScenePlay(fsys, cname, mods, rf)
+		play, err = drum.NewSceneModePlay(args)
 	}
-	// ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMaximum)
+	s := &ScenePlay{
+		SceneModePlay:        play,
+		SpeedScaleKeyHandler: &scene.SpeedScaleKeyHandlers[mode],
+	}
 	// debug.SetGCPercent(0)
-	if err != nil {
-		return nil, err
-	}
-	return &Scene{mode: mode, ScenePlay: play}, err
+	return s, err
 }
-func (s *Scene) Update() any {
-	scene.VolumeMusic.Update()
-	scene.VolumeSound.Update()
-	scene.Brightness.Update()
-	scene.Offset.Update()
-	scene.DelayedJudge.Update()
-	scene.DebugPrint.Update()
-	scene.SpeedScales[s.mode].Update()
-	if inpututil.IsKeyJustPressed(input.KeyEscape) {
-		// fmt.Println("finish play")
-		return s.ScenePlay.Finish()
-	}
+
+func (s *ScenePlay) Update() any {
+	r := s.SceneModePlay.Update()
+
+	// Settings which affect scene flow.
 	if inpututil.IsKeyJustPressed(input.KeyTab) {
 		s.PlayPause()
 	}
-	return s.ScenePlay.Update()
-}
-func (s Scene) Draw(screen draws.Image) {
-	s.ScenePlay.Draw(screen)
-	if s.IsDone() {
-		scene.UserSkin.Clear.Draw(screen, draws.Op{})
+	if inpututil.IsKeyJustPressed(input.KeyEscape) {
+		return s.SceneModePlay.Finish()
 	}
-}
 
-// type Return struct {
-// 	FS     fs.FS
-// 	Name   string
-// 	Mode   int
-// 	Mods   interface{}
-// 	Replay *osr.Format
-// }
+	// Settings which affect SceneModePlay.
+	if fired := scene.MusicVolumeKeyHandler.Update(); fired {
+		s.SetMusicVolume(scene.TheSettings.MusicVolume)
+	}
+	if fired := scene.SoundVolumeKeyHandler.Update(); fired {
+		s.SetSoundVolume(scene.TheSettings.SoundVolume)
+	}
+	if fired := scene.OffsetKeyHandler.Update(); fired {
+		s.SetOffset(scene.TheSettings.Offset)
+	}
+	if fired := s.SpeedScaleKeyHandler.Update(); fired {
+		s.SetSpeedScale()
+	}
+
+	// Settings which don't affect SceneModePlay.
+	scene.BackgroundBrightnessKeyHandler.Update()
+	scene.DebugPrintKeyHandler.Update()
+
+	return r
+}
+func (s ScenePlay) Draw(screen draws.Image) {
+	s.SceneModePlay.Draw(screen)
+}

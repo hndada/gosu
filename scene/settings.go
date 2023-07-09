@@ -2,74 +2,44 @@ package scene
 
 import (
 	"strings"
-
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/defaultskin"
-	"github.com/hndada/gosu/mode"
-)
-
-const (
-	TPS         = mode.TPS
-	ScreenSizeX = mode.ScreenSizeX
-	ScreenSizeY = mode.ScreenSizeY
 )
 
 type Settings struct {
+	MusicVolume          float64
+	SoundVolume          float64
+	BackgroundBrightness float64
+	Offset               int64
+	DebugPrint           bool
+
 	MusicRoots  []string
-	WindowSize  int
 	CursorScale float64
+	ClearScale  float64
 }
 
-const (
-	WindowSizeStandard = iota
-	WindowSizeFull
-)
+var TheSettings = Settings{
+	MusicVolume:          0.50,
+	SoundVolume:          0.50,
+	BackgroundBrightness: 0.6,
+	Offset:               -20,
+	DebugPrint:           true,
 
-func NewSettings() Settings {
-	return Settings{
-		MusicRoots:  []string{"music"},
-		WindowSize:  WindowSizeStandard,
-		CursorScale: 0.1,
+	MusicRoots:  []string{"music"},
+	CursorScale: 0.1,
+	ClearScale:  0.5,
+}
+
+func NormalizeMusicRoots(roots []string) []string {
+	if len(roots) == 0 {
+		return []string{"music"}
 	}
-}
-
-var (
-	UserSettings = NewSettings()
-	S            = &UserSettings
-)
-
-func init() {
-	S.process()
-	DefaultSkin.Load(defaultskin.FS)
-	UserSkin.Load(defaultskin.FS)
-	loadHandler()
-}
-
-func (settings *Settings) Load(src Settings) {
-	*settings = src
-	defer settings.process()
 
 	// Leading dot and slash is not allowed in fs.
-	for i, name := range settings.MusicRoots {
+	for i, name := range roots {
+		name = strings.TrimPrefix(name, "..")
 		name = strings.TrimPrefix(name, ".")
-		name = strings.TrimPrefix(name, ".") // There might be two dots.
 		name = strings.TrimPrefix(name, "/")
 		name = strings.TrimPrefix(name, "\\")
-		settings.MusicRoots[i] = name
+		roots[i] = name
 	}
-	if len(settings.MusicRoots) == 0 {
-		settings.MusicRoots = []string{"music"}
-	}
-	mode.Normalize(&settings.WindowSize, 0, WindowSizeFull)
-	mode.Normalize(&settings.CursorScale, 0, 2)
-}
-func (settings *Settings) process() {
-	switch settings.WindowSize {
-	case WindowSizeStandard:
-		ebiten.SetWindowSize(1600, 900)
-	case WindowSizeFull:
-		ebiten.SetFullscreen(true)
-	}
-	ebiten.SetTPS(TPS)
-	ebiten.SetCursorMode(ebiten.CursorModeHidden)
+	return roots
 }
