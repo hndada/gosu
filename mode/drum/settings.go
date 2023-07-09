@@ -14,8 +14,8 @@ const (
 const positionMargin = 100
 
 type Settings struct {
-	VolumeMusic          float64
-	volumeMusic          *float64
+	MusicVolume          float64
+	musicVolume          *float64
 	volumeSound          *float64
 	offset               *int64
 	backgroundBrightness *float64
@@ -109,8 +109,8 @@ func (s *Settings) Load(src Settings) {
 }
 
 func (s *Settings) process() {
-	s.volumeMusic = &mode.S.VolumeMusic
-	s.volumeSound = &mode.S.VolumeSound
+	s.musicVolume = &mode.S.MusicVolume
+	s.volumeSound = &mode.S.SoundVolume
 	s.offset = &mode.S.Offset
 	s.backgroundBrightness = &mode.S.BackgroundBrightness
 	s.delayedJudge = &mode.S.DelayedJudge

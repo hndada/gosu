@@ -39,7 +39,7 @@ var modes = []int{piano.Mode, piano.Mode, drum.Mode}
 // Todo: preview music. Rewind after preview has finished.
 // Group1, Group2, Sort, Filter int
 type Scene struct {
-	volumeMusic   *float64
+	musicVolume   *float64
 	volumeSound   *float64
 	brightness    *float64
 	offset        *int64
@@ -91,8 +91,8 @@ var DefaultBackground = draws.NewImage(ScreenSizeX, 444)
 
 func NewScene() *Scene {
 	s := &Scene{}
-	s.volumeMusic = &mode.S.VolumeMusic
-	s.volumeSound = &mode.S.VolumeSound
+	s.musicVolume = &mode.S.MusicVolume
+	s.volumeSound = &mode.S.SoundVolume
 	s.brightness = &mode.S.BackgroundBrightness
 	s.offset = &mode.S.Offset
 	s.speedFactors = []*float64{
@@ -109,7 +109,7 @@ func NewScene() *Scene {
 	// 	Modifiers: []input.Key{},
 	// 	Keys:      [2]input.Key{-1, input.KeyF1},
 	// 	Sounds:    [2]audios.Sounder{scene.UserSkin.Swipe, scene.UserSkin.Swipe},
-	// 	Volume:    &mode.S.VolumeSound,
+	// 	Volume:    &mode.S.SoundVolume,
 	// }
 	// s.subMode = 4
 	// s.SubMode = ctrl.KeyHandler{
@@ -122,7 +122,7 @@ func NewScene() *Scene {
 	// 	Modifiers: []input.Key{},
 	// 	Keys:      [2]input.Key{input.KeyF2, input.KeyF3},
 	// 	Sounds:    [2]audios.Sounder{scene.UserSkin.Swipe, scene.UserSkin.Swipe},
-	// 	Volume:    &mode.S.VolumeSound,
+	// 	Volume:    &mode.S.SoundVolume,
 	// }
 
 	// s.lastChartSets = make([][]*ChartSet, 3)
@@ -170,8 +170,8 @@ func (s *Scene) Update() any {
 		s.Loading.Update()
 		return nil
 	}
-	scene.VolumeMusic.Update()
-	scene.VolumeSound.Update()
+	scene.MusicVolume.Update()
+	scene.SoundVolume.Update()
 	scene.Brightness.Update()
 	scene.Offset.Update()
 	scene.SpeedScales[modes[s.mode]].Update()
@@ -470,7 +470,7 @@ func (s Scene) DebugPrint(screen draws.Image) {
 		[]string{"Piano4", "Piano7", "Drum"}[s.mode],
 		// fmt.Sprintf("%d Key", s.subMode),
 
-		*s.volumeMusic*100,
+		*s.musicVolume*100,
 		*s.volumeSound*100,
 		*s.brightness*100,
 		*s.offset,

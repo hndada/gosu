@@ -7,21 +7,20 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
+// ScreenSize is a logical size of in-game screen.
 const (
-	TPS         = mode.TPS
-	ScreenSizeX = mode.ScreenSizeX
-	ScreenSizeY = mode.ScreenSizeY
+	ScreenSizeX = 1600
+	ScreenSizeY = 900
 )
 
 const positionMargin = 100
 
 type Settings struct {
-	VolumeMusic          float64
-	volumeMusic          *float64
+	MusicVolume          float64
+	musicVolume          *float64
 	volumeSound          *float64
 	offset               *int64
 	backgroundBrightness *float64
-	delayedJudge         *int64 // for HCI experiment
 	debugPrint           *bool
 
 	// Logic settings
@@ -162,8 +161,8 @@ func (s *Settings) Load(src Settings) {
 // It is safe to use mode.UserSettings even for DefaultSettings:
 // mode.UserSettings = mode.DefaultSettings when processing default.
 func (s *Settings) process() {
-	s.volumeMusic = &mode.S.VolumeMusic
-	s.volumeSound = &mode.S.VolumeSound
+	s.musicVolume = &mode.S.MusicVolume
+	s.volumeSound = &mode.S.SoundVolume
 	s.offset = &mode.S.Offset
 	s.backgroundBrightness = &mode.S.BackgroundBrightness
 	s.delayedJudge = &mode.S.DelayedJudge

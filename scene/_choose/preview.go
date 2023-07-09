@@ -41,8 +41,8 @@ func NewPreviewPlayer(rc io.ReadCloser) (p PreviewPlayer, err error) {
 		Player: _p,
 		Closer: rc.Close,
 		Tick:   wait,
-		Volume: mode.S.VolumeMusic,
-		volume: &mode.S.VolumeMusic,
+		Volume: mode.S.MusicVolume,
+		volume: &mode.S.MusicVolume,
 	}, nil
 }
 func (p *PreviewPlayer) Update() {

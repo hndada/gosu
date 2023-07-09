@@ -7,8 +7,8 @@ const (
 )
 
 type SettingsType struct {
-	VolumeMusic          float64
-	VolumeSound          float64
+	MusicVolume          float64
+	SoundVolume          float64
 	BackgroundBrightness float64
 	Offset               int64
 	DebugPrint           bool
@@ -21,8 +21,8 @@ type SettingsType struct {
 }
 
 var Settings = SettingsType{
-	VolumeMusic:          0.50,
-	VolumeSound:          0.50,
+	MusicVolume:          0.50,
+	SoundVolume:          0.50,
 	BackgroundBrightness: 0.6,
 	Offset:               -20,
 	DebugPrint:           true,
