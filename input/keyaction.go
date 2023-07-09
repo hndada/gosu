@@ -1,18 +1,25 @@
 package input
 
-func CurrentKeyAction(last, now bool) KeyAction {
+type KeyAction int
+
+const (
+	Idle KeyAction = iota
+	Hit
+	Release
+	Hold
+)
+
+func keyAction(last, current bool) KeyAction {
 	switch {
-	case !last && !now:
+	case !last && !current:
 		return Idle
-	case !last && now:
+	case !last && current:
 		return Hit
-	case last && !now:
+	case last && !current:
 		return Release
-	case last && now:
+	case last && current:
 		return Hold
 	default:
 		panic("not reach")
 	}
 }
-
-// remove soon
