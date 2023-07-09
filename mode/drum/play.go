@@ -22,7 +22,7 @@ type ScenePlay struct {
 	KeyActions [2]int
 	paused     bool
 
-	*mode.TransPoint
+	*mode.Dynamic
 	speedScale         float64
 	StagedNote         *Note
 	StagedDot          *Dot
@@ -52,7 +52,7 @@ type ScenePlay struct {
 // Todo: support mods: show Piano's ScenePlay during Drum's ScenePlay
 func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s *ScenePlay, err error) {
 	s = new(ScenePlay)
-	s.Chart, err = NewChart(fsys, cname)
+	s.Chart, err = LoadChart(fsys, cname)
 	if err != nil {
 		return
 	}
@@ -68,7 +68,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		s.KeyLogger.FetchPressed = NewReplayListener(rf, &s.Timer)
 	}
 
-	s.TransPoint = c.TransPoints[0]
+	s.Dynamic = c.Dynamics[0]
 	s.speedScale = 1
 	s.SetSpeed()
 	s.Scorer = mode.NewScorer(c.ScoreFactors)
@@ -174,8 +174,8 @@ func (s *ScenePlay) SetSpeed() {
 	c := s.Chart
 	old := s.speedScale
 	new := S.SpeedScale
-	for _, tp := range c.TransPoints {
-		tp.Speed *= new / old
+	for _, dy := range c.Dynamics {
+		dy.Speed *= new / old
 	}
 	for _, b := range c.Bars {
 		b.Speed *= new / old
@@ -293,7 +293,7 @@ func (s *ScenePlay) Update() any {
 		if size == SizeNone {
 			continue
 		}
-		vol2 := s.TransPoint.Volume
+		vol2 := s.Dynamic.Volume
 		p := audios.Context.NewPlayerFromBytes(s.DrumSound[color][size])
 		p.SetVolume((*S.volumeSound) * vol2)
 		p.Play()
@@ -315,7 +315,7 @@ func (s *ScenePlay) Update() any {
 	s.Meter.Update()
 
 	// Changed speed should be applied after positions are calculated.
-	s.UpdateTransPoint()
+	s.UpdateDynamic()
 	if s.speedScale != S.SpeedScale {
 		s.SetSpeed()
 	}
@@ -325,9 +325,9 @@ func (s ScenePlay) Finish() any {
 	s.MusicPlayer.Close()
 	return s.NewResult(s.Chart.MD5)
 }
-func (s ScenePlay) Speed() float64 { return s.TransPoint.Speed * s.speedScale }
-func (s *ScenePlay) UpdateTransPoint() {
-	s.TransPoint = s.TransPoint.FetchByTime(s.Now)
+func (s ScenePlay) Speed() float64 { return s.Dynamic.Speed * s.speedScale }
+func (s *ScenePlay) UpdateDynamic() {
+	s.Dynamic = s.Dynamic.FetchByTime(s.Now)
 }
 func (s ScenePlay) Draw(screen draws.Image) {
 	// screen.Fill(color.NRGBA{0, 255, 0, 255}) // Chroma-key
@@ -362,7 +362,7 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 		s.Scores[mode.Total], s.ScoreBounds[mode.Total], s.Flow*100, s.Scorer.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100,
 		s.JudgmentCounts[:3], s.JudgmentCounts[3:5], s.JudgmentCounts[5:],
-		s.speedScale*100, s.speedScale/s.TransPoint.Speed, ExposureTime(s.Speed()),
+		s.speedScale*100, s.speedScale/s.Dynamic.Speed, ExposureTime(s.Speed()),
 		*S.musicVolume*100, *S.volumeSound*100,
 		*S.offset), 0, int(y))
 }

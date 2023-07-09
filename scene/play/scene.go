@@ -12,7 +12,7 @@ import (
 	"github.com/hndada/gosu/scene"
 )
 
-// Interface should be declared at downstream package.
+// Interface declares at 'user' package.
 type ScenePlay struct {
 	SceneModePlay
 	SpeedScaleKeyHandler *ctrl.KeyHandler
@@ -30,20 +30,20 @@ type SceneModePlay interface {
 	SetSpeedScale() // Each mode has its own variable for speed scale.
 }
 
-func NewScene(mode int, args mode.ScenePlayArgs) (*ScenePlay, error) {
+func NewScene(m int, args mode.ScenePlayArgs) (*ScenePlay, error) {
 	var (
 		play SceneModePlay
 		err  error
 	)
-	switch mode {
-	case piano.Mode:
+	switch m {
+	case mode.ModePiano:
 		play, err = piano.NewSceneModePlay(args)
-	case drum.Mode:
+	case mode.ModeDrum:
 		play, err = drum.NewSceneModePlay(args)
 	}
 	s := &ScenePlay{
 		SceneModePlay:        play,
-		SpeedScaleKeyHandler: &scene.SpeedScaleKeyHandlers[mode],
+		SpeedScaleKeyHandler: &scene.SpeedScaleKeyHandlers[m],
 	}
 	// debug.SetGCPercent(0)
 	return s, err

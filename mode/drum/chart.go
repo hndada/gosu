@@ -22,13 +22,13 @@ func (f Floater) Position(time int64) float64 {
 
 type Chart struct {
 	mode.ChartHeader
-	MD5         [16]byte
-	TransPoints []*mode.TransPoint
-	Notes       []*Note
-	Rolls       []*Note
-	Shakes      []*Note
-	Dots        []*Dot // Ticks in a Roll note.
-	Bars        []*Bar
+	MD5      [16]byte
+	Dynamics []*mode.Dynamic
+	Notes    []*Note
+	Rolls    []*Note
+	Shakes   []*Note
+	Dots     []*Dot // Ticks in a Roll note.
+	Bars     []*Bar
 
 	Level        float64
 	ScoreFactors [3]float64
@@ -40,9 +40,9 @@ var (
 	ShakeDensity float64 = 3 // Infers how many shakes per beat in Shake note.
 )
 
-// NewChart takes file path as input for starting with parsing.
+// LoadChart takes file path as input for starting with parsing.
 // Chart data should not rely on the ChartInfo; users may have modified it.
-func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
+func LoadChart(fsys fs.FS, name string) (c *Chart, err error) {
 	var dat []byte
 	dat, err = fs.ReadFile(fsys, name)
 	if err != nil {
@@ -57,36 +57,36 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 		}
 	}
 	c = new(Chart)
-	c.ChartHeader = mode.NewChartHeader(f)
+	c.ChartHeader = mode.LoadChartHeader(f)
 	c.Mode = Mode
 	c.SubMode = 4
 	c.MD5 = md5.Sum(dat)
-	c.TransPoints = mode.NewTransPoints(f)
-	if len(c.TransPoints) == 0 {
-		err = fmt.Errorf("no TransPoints in the chart")
+	c.Dynamics = mode.NewDynamics(f)
+	if len(c.Dynamics) == 0 {
+		err = fmt.Errorf("no Dynamics in the chart")
 		return
 	}
 	mainBPM, _, _ := c.BPMs()
-	bpmScale := c.TransPoints[0].BPM / mainBPM
-	for _, tp := range c.TransPoints {
-		tp.Speed *= bpmScale
+	bpmScale := c.Dynamics[0].BPM / mainBPM
+	for _, dy := range c.Dynamics {
+		dy.Speed *= bpmScale
 	}
 
 	c.Notes, c.Rolls, c.Shakes = NewNotes(f)
-	var tp *mode.TransPoint
+	var dy *mode.Dynamic
 	for _, ns := range [][]*Note{c.Notes, c.Rolls, c.Shakes} {
-		tp = c.TransPoints[0]
+		dy = c.Dynamics[0]
 		for _, n := range ns {
-			for tp.Next != nil && n.Time >= tp.Next.Time {
-				tp = tp.Next
+			for dy.Next != nil && n.Time >= dy.Next.Time {
+				dy = dy.Next
 			}
-			n.Speed = tp.Speed
-			bpm := ScaledBPM(tp.BPM)
+			n.Speed = dy.Speed
+			bpm := ScaledBPM(dy.BPM)
 			if n.Type == Roll {
 				switch f := f.(type) {
 				case *osu.Format:
-					// speedFactor := c.TransPoints[0].BPM / 60000 * (f.SliderMultiplier * 100)
-					speed := tp.BPM * (tp.Speed / bpmScale) / 60000 * f.SliderMultiplier * 100 // Unit is osupixel / 100ms.
+					// speedFactor := c.Dynamics[0].BPM / 60000 * (f.SliderMultiplier * 100)
+					speed := dy.BPM * (dy.Speed / bpmScale) / 60000 * f.SliderMultiplier * 100 // Unit is osupixel / 100ms.
 					n.Duration = int64(n.length / speed)
 				}
 			}
@@ -99,13 +99,13 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 		}
 	}
 	c.Dots = NewDots(c.Rolls)
-	c.Bars = NewBars(c.TransPoints, c.Duration())
-	tp = c.TransPoints[0]
+	c.Bars = NewBars(c.Dynamics, c.Duration())
+	dy = c.Dynamics[0]
 	for _, b := range c.Bars {
-		for tp.Next != nil && b.Time >= tp.Next.Time {
-			tp = tp.Next
+		for dy.Next != nil && b.Time >= dy.Next.Time {
+			dy = dy.Next
 		}
-		b.Speed = tp.Speed
+		b.Speed = dy.Speed
 	}
 	c.Level, c.ScoreFactors = mode.Level(c)
 	return
@@ -136,7 +136,7 @@ func (c Chart) NoteCounts() (vs []int) {
 	return
 }
 func (c Chart) BPMs() (main, min, max float64) {
-	return mode.BPMs(c.TransPoints, c.Duration())
+	return mode.BPMs(c.Dynamics, c.Duration())
 }
 
 // It is proved that all BPMs are set into [min, max) by v*2 or v/2 if 2 * min >= max.
@@ -159,8 +159,8 @@ func ScaledBPM(bpm float64) float64 {
 	return bpm
 }
 
-// func NewChartInfo(cpath string) (info game.ChartInfo, err error) {
-// 	c, err := NewChart(cpath)
+// func LoadChartInfo(cpath string) (info game.ChartInfo, err error) {
+// 	c, err := LoadChart(cpath)
 // 	if err != nil {
 // 		return
 // 	}
