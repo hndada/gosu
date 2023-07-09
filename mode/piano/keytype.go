@@ -23,14 +23,6 @@ var keyTypesList = [][]KeyType{
 	{Tip, One, Two, One, Mid, Mid, One, Two, One, Tip},
 }
 
-type ScratchMode int
-
-const (
-	NoScratch ScratchMode = iota
-	LeftScratch
-	RightScratch
-)
-
 // I'm personally proud of this code.
 func KeyTypes(keyCount int, scratchMode ScratchMode) []KeyType {
 	switch scratchMode {

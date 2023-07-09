@@ -2,52 +2,11 @@ package piano
 
 import (
 	"image/color"
+	"time"
 
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode"
 )
-
-var (
-	ColorKool = color.NRGBA{0, 170, 242, 255}   // Blue
-	ColorCool = color.NRGBA{85, 251, 255, 255}  // Skyblue
-	ColorGood = color.NRGBA{51, 255, 40, 255}   // Lime
-	ColorBad  = color.NRGBA{244, 177, 0, 255}   // Yellow
-	ColorMiss = color.NRGBA{109, 120, 134, 255} // Gray
-)
-
-// HCI: BackgroundRedDrawer
-type BackgroundRedDrawer struct {
-	draws.Timer
-	Sprite draws.Sprite
-}
-
-func NewBackgroundRedDrawer() (d BackgroundRedDrawer) {
-	image := draws.NewImage(ScreenSizeX, ScreenSizeX)
-	image.Fill(color.RGBA{255, 128, 128, 255})
-	sprite := draws.NewSprite(image)
-	// timer := draws.NewTimer(draws.ToTick(100, TPS), draws.ToTick(100, TPS))
-	// timer.Tick = timer.MaxTick
-	return BackgroundRedDrawer{
-		Timer:  draws.NewTimer(draws.ToTick(300, TPS), draws.ToTick(300, TPS)),
-		Sprite: sprite,
-	}
-}
-func (d *BackgroundRedDrawer) Update(passed bool) {
-	d.Ticker()
-	if passed {
-		d.Timer.Reset()
-	}
-}
-
-func (d BackgroundRedDrawer) Draw(dst draws.Image) {
-	if d.Tick >= d.MaxTick {
-		return
-	}
-	op := draws.Op{}
-	// value := 1 - d.Age()
-	// op.ColorM.ChangeHSV(0, 1, value)
-	d.Sprite.Draw(dst, op)
-}
 
 type FieldDrawer struct {
 	Sprite draws.Sprite
@@ -77,22 +36,22 @@ func (d *BarDrawer) Update(cursor float64) {
 	d.Cursor = cursor
 	// When Farthest's prevs are still out of screen due to speed change.
 	for d.Farthest.Prev != nil &&
-		d.Farthest.Prev.Position-d.Cursor > S.maxPosition {
+		d.Farthest.Prev.Position-d.Cursor > ScreenSizeY+100 {
 		d.Farthest = d.Farthest.Prev
 	}
 	// When Farthest is in screen, next note goes fetched if possible.
 	for d.Farthest.Next != nil &&
-		d.Farthest.Position-d.Cursor <= S.maxPosition {
+		d.Farthest.Position-d.Cursor <= ScreenSizeY+100 {
 		d.Farthest = d.Farthest.Next
 	}
 	// When Nearest is still in screen due to speed change.
 	for d.Nearest.Prev != nil &&
-		d.Nearest.Position-d.Cursor > S.minPosition {
+		d.Nearest.Position-d.Cursor > -100 {
 		d.Nearest = d.Nearest.Prev
 	}
 	// When Nearest's next is still out of screen, next note goes fetched.
 	for d.Nearest.Next != nil &&
-		d.Nearest.Next.Position-d.Cursor <= S.minPosition {
+		d.Nearest.Next.Position-d.Cursor <= -100 {
 		d.Nearest = d.Nearest.Next
 	}
 }
@@ -115,8 +74,8 @@ type NoteDrawer struct {
 	Cursor   float64
 	Farthest *Note
 	Nearest  *Note
-	Sprites  [4]draws.Animation
 	holding  bool
+	Sprites  [4]draws.Animation
 }
 
 // Farthest and Nearest are borders of displaying notes.
@@ -130,22 +89,22 @@ func (d *NoteDrawer) Update(cursor float64, holding bool) {
 	}
 	// When Farthest's prevs are still out of screen due to speed change.
 	for d.Farthest.Prev != nil &&
-		d.Farthest.Prev.Position-d.Cursor > S.maxPosition {
+		d.Farthest.Prev.Position-d.Cursor > ScreenSizeY+100 {
 		d.Farthest = d.Farthest.Prev
 	}
 	// When Farthest is in screen, next note goes fetched if possible.
 	for d.Farthest.Next != nil &&
-		d.Farthest.Position-d.Cursor <= S.maxPosition {
+		d.Farthest.Position-d.Cursor <= ScreenSizeY+100 {
 		d.Farthest = d.Farthest.Next
 	}
 	// When Nearest is still in screen due to speed change.
 	for d.Nearest.Prev != nil &&
-		d.Nearest.Position-d.Cursor > S.minPosition {
+		d.Nearest.Position-d.Cursor > -100 {
 		d.Nearest = d.Nearest.Prev
 	}
 	// When Nearest's next is still out of screen, next note goes fetched.
 	for d.Nearest.Next != nil &&
-		d.Nearest.Next.Position-d.Cursor <= S.minPosition {
+		d.Nearest.Next.Position-d.Cursor <= -100 {
 		d.Nearest = d.Nearest.Next
 	}
 }
@@ -166,10 +125,6 @@ func (d NoteDrawer) Draw(dst draws.Image) {
 		if n.Marked {
 			op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		}
-		// HCI
-		if n.passed {
-			op.ColorM.ScaleWithColor(color.NRGBA{235, 69, 44, 255}) // Red
-		}
 		s.Draw(dst, op)
 	}
 }
@@ -182,7 +137,7 @@ func (d NoteDrawer) DrawBody(dst draws.Image, tail *Note) {
 		body = d.Frame(d.Sprites[Body])
 	}
 	length := tail.Position - head.Position // + BodyGain
-	length += S.NoteHeigth                  // - bodyLoss
+	length += TheSettings.NoteHeigth        // - bodyLoss
 	if length < 0 {
 		length = 0
 	}
@@ -266,7 +221,7 @@ func (d HitLightingDrawer) Draw(dst draws.Image) {
 	}
 	op := draws.Op{}
 	// opaque := UserSettings.HitLightingOpaque * (1 - d.Progress(0.75, 1))
-	op.ColorM.Scale(1, 1, 1, S.HitLightingOpaque)
+	op.ColorM.Scale(1, 1, 1, TheSettings.HitLightingOpaque)
 	d.Frame(d.Sprites).Draw(dst, op)
 }
 
@@ -288,7 +243,7 @@ func (d HoldLightingDrawer) Draw(dst draws.Image) {
 		return
 	}
 	op := draws.Op{}
-	op.ColorM.Scale(1, 1, 1, S.HoldLightingOpaque)
+	op.ColorM.Scale(1, 1, 1, TheSettings.HoldLightingOpaque)
 	d.Frame(d.Sprites).Draw(dst, op)
 }
 
@@ -301,15 +256,18 @@ type JudgmentDrawer struct {
 func NewJudgmentDrawer(sprites []draws.Animation) (d JudgmentDrawer) {
 	const frameDuration = 1000.0 / 60
 	count := float64(len(sprites))
-	period := int64(frameDuration * count)
+	period := time.Duration(frameDuration * count)
 	return JudgmentDrawer{
-		Timer:   draws.NewTimer(draws.ToTick(250, TPS), draws.ToTick(period, TPS)),
+		Timer: draws.NewTimer(
+			mode.ToTick(250*time.Millisecond),
+			mode.ToTick(period*time.Millisecond),
+		),
 		Sprites: sprites,
 	}
 }
 func (d *JudgmentDrawer) Update(worst mode.Judgment) {
 	d.Ticker()
-	if worst.IsValid() {
+	if !worst.IsBlank() {
 		d.Judgment = worst
 		d.Timer.Reset()
 	}
@@ -346,3 +304,12 @@ func (d JudgmentDrawer) Draw(dst draws.Image) {
 	s.MultiplyScale(scale)
 	s.Draw(dst, draws.Op{})
 }
+
+// TimeErrorMeter
+// var (
+// 	ColorKool = color.NRGBA{0, 170, 242, 255}   // Blue
+// 	ColorCool = color.NRGBA{85, 251, 255, 255}  // Skyblue
+// 	ColorGood = color.NRGBA{51, 255, 40, 255}   // Lime
+// 	ColorBad  = color.NRGBA{244, 177, 0, 255}   // Yellow
+// 	ColorMiss = color.NRGBA{109, 120, 134, 255} // Gray
+// )

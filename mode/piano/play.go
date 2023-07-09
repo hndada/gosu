@@ -1,12 +1,8 @@
 package piano
 
 import (
-	"encoding/csv"
 	"fmt"
 	"io/fs"
-	"os"
-	"strconv"
-	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -32,25 +28,22 @@ type ScenePlay struct {
 	Cursor     float64
 	Staged     []*Note
 	mode.Scorer
-	// // Todo: merge into mode.Scorer
-	// NoteCount    int
-	// MaxNoteCount int
+	// Todo: merge into mode.Scorer
 
-	Sound         []byte
-	Background    mode.BackgroundDrawer
-	BackgroundRed BackgroundRedDrawer
-	Field         FieldDrawer
-	Bar           BarDrawer
-	Note          []NoteDrawer
-	Keys          []KeyDrawer
-	KeyLighting   []KeyLightingDrawer
-	Hint          HintDrawer
-	HitLighting   []HitLightingDrawer
-	HoldLighting  []HoldLightingDrawer
-	Judgment      JudgmentDrawer
-	Score         mode.ScoreDrawer
-	Combo         mode.ComboDrawer
-	Meter         mode.MeterDrawer
+	Sound        []byte
+	Background   mode.BackgroundDrawer
+	Field        FieldDrawer
+	Bar          BarDrawer
+	Note         []NoteDrawer
+	Keys         []KeyDrawer
+	KeyLighting  []KeyLightingDrawer
+	Hint         HintDrawer
+	HitLighting  []HitLightingDrawer
+	HoldLighting []HoldLightingDrawer
+	Judgment     JudgmentDrawer
+	Score        mode.ScoreDrawer
+	Combo        mode.ComboDrawer
+	Meter        mode.MeterDrawer
 
 	// For HCI experiments
 	Logs       []Log
@@ -336,38 +329,9 @@ func (s *ScenePlay) Update() any {
 }
 func (s ScenePlay) Finish() any {
 	s.MusicPlayer.Close()
-	s.outputLog()
 	return s.NewResult(s.Chart.MD5)
 }
 
-// For HCI experiments
-func (s ScenePlay) outputLog() {
-	// Create a file where the CSV data can be saved
-
-	fname := fmt.Sprintf("log/%s[%s]_sp%3d_hp%3d_of%3d_ks%3d_dj%3d_%s.csv",
-		s.Chart.MusicName, s.Chart.ChartName, int(S.SpeedScale*100), int(S.HitPosition), s.Offset, mode.S.DelayedJudge,
-		int(mode.S.SoundVolume*100),
-		time.Now().Format("2006-01-02_15-04-05"))
-	// create log directory if not exists
-	if _, err := os.Stat("log"); os.IsNotExist(err) {
-		os.Mkdir("log", 0744)
-	}
-	file, err := os.Create(fname)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer file.Close()
-
-	writer := csv.NewWriter(file)
-	writer.Write([]string{"Time", "Key", "Offset"})
-	for _, n := range s.Logs {
-		t := strconv.Itoa(int(n.Time))
-		k := strconv.Itoa(int(n.Key))
-		o := strconv.Itoa(int(n.Offset))
-		writer.Write([]string{t, k, o})
-	}
-	writer.Flush()
-}
 func (s *ScenePlay) UpdateCursor() {
 	duration := float64(s.Now - s.Dynamic.Time)
 	s.Cursor = s.Dynamic.Position + duration*s.Speed()
@@ -378,7 +342,7 @@ func (s *ScenePlay) UpdateDynamic() {
 	for dy.Next != nil && s.Now().Milliseconds() >= dy.Next.Time {
 		dy = dy.Next
 	}
-	s.Dynamic = tp
+	s.Dynamic = dy
 }
 func (s ScenePlay) PlaySample(n *Note) {
 	name := n.Sample.Name
@@ -394,9 +358,6 @@ func (s ScenePlay) PlaySample(n *Note) {
 
 func (s ScenePlay) Draw(screen draws.Image) {
 	s.Background.Draw(screen)
-	if backgroundRedMode {
-		s.BackgroundRed.Draw(screen)
-	}
 	s.Field.Draw(screen)
 	s.Bar.Draw(screen)
 	s.Hint.Draw(screen)
@@ -444,4 +405,9 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 		*S.offset,
 		*S.delayedJudge,
 		*S.debugPrint))
+}
+
+// 1 pixel is 1 millisecond.
+func ExposureTime(speed float64) float64 {
+	return TheSettings.HitPosition / speed
 }
