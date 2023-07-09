@@ -19,13 +19,12 @@ type Note struct {
 	Duration int64
 	Type     int
 	Key      int
-	Position float64 // Scaled x or y value.
 	mode.Sample
 	Marked bool
-	Next   *Note
-	Prev   *Note // For accessing to Head from Tail.
 
-	passed bool // HCI
+	Position float64 // Scaled x or y value.
+	Next     *Note
+	Prev     *Note // For accessing to Head from Tail.
 }
 
 func NewNote(f any, keyCount int) (ns []*Note) {

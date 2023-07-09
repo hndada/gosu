@@ -27,7 +27,7 @@ type ScenePlay struct {
 	input.KeyLogger
 	paused bool
 
-	*mode.TransPoint
+	*mode.Dynamic
 	speedScale float64
 	Cursor     float64
 	Staged     []*Note
@@ -64,7 +64,7 @@ type Log struct {
 
 func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s *ScenePlay, err error) {
 	s = new(ScenePlay)
-	s.Chart, err = NewChart(fsys, cname)
+	s.Chart, err = LoadChart(fsys, cname)
 	if err != nil {
 		return
 	}
@@ -81,7 +81,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 		s.KeyLogger.FetchPressed = NewReplayListener(rf, c.KeyCount, &s.Timer)
 	}
 
-	s.TransPoint = c.TransPoints[0]
+	s.Dynamic = c.Dynamics[0]
 	s.speedScale = 1
 	s.Cursor = float64(s.Now) * s.speedScale
 	s.SetSpeed()
@@ -187,8 +187,8 @@ func (s *ScenePlay) SetSpeed() {
 	old := s.speedScale
 	new := S.SpeedScale
 	s.Cursor *= new / old
-	for _, tp := range c.TransPoints {
-		tp.Position *= new / old
+	for _, dy := range c.Dynamics {
+		dy.Position *= new / old
 	}
 	for _, n := range c.Notes {
 		n.Position *= new / old
@@ -301,7 +301,7 @@ func (s *ScenePlay) Update() any {
 	}
 	for k := 0; k < s.Chart.KeyCount; k++ {
 		if s.KeyAction(k) == input.Hit {
-			vol2 := s.TransPoint.Volume
+			vol2 := s.Dynamic.Volume
 			p := audios.Context.NewPlayerFromBytes(s.Sound)
 			p.SetVolume((*S.volumeSound) * vol2)
 			p.Play()
@@ -327,7 +327,7 @@ func (s *ScenePlay) Update() any {
 	s.Meter.Update()
 
 	// Changed speed should be applied after positions are calculated.
-	s.UpdateTransPoint()
+	s.UpdateDynamic()
 	s.UpdateCursor()
 	if S.SpeedScale != s.speedScale {
 		s.SetSpeed()
@@ -369,16 +369,16 @@ func (s ScenePlay) outputLog() {
 	writer.Flush()
 }
 func (s *ScenePlay) UpdateCursor() {
-	duration := float64(s.Now - s.TransPoint.Time)
-	s.Cursor = s.TransPoint.Position + duration*s.Speed()
+	duration := float64(s.Now - s.Dynamic.Time)
+	s.Cursor = s.Dynamic.Position + duration*s.Speed()
 }
-func (s ScenePlay) Speed() float64 { return s.TransPoint.Speed * s.speedScale }
-func (s *ScenePlay) UpdateTransPoint() {
-	tp := s.TransPoint
-	for tp.Next != nil && s.Now().Milliseconds() >= tp.Next.Time {
-		tp = tp.Next
+func (s ScenePlay) Speed() float64 { return s.Dynamic.Speed * s.speedScale }
+func (s *ScenePlay) UpdateDynamic() {
+	dy := s.Dynamic
+	for dy.Next != nil && s.Now().Milliseconds() >= dy.Next.Time {
+		dy = dy.Next
 	}
-	s.TransPoint = tp
+	s.Dynamic = tp
 }
 func (s ScenePlay) PlaySample(n *Note) {
 	name := n.Sample.Name
@@ -387,7 +387,7 @@ func (s ScenePlay) PlaySample(n *Note) {
 	}
 	vol2 := n.Sample.Volume
 	if vol2 == 0 {
-		vol2 = s.TransPoint.Volume
+		vol2 = s.Dynamic.Volume
 	}
 	s.SoundPlayer.Play(name, vol2)
 }
@@ -439,7 +439,7 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[mode.Total], s.ScoreBounds[mode.Total], s.Flow*100, s.Scorer.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
-		S.SpeedScale*100, s.TransPoint.Speed, ExposureTime(s.Speed()),
+		S.SpeedScale*100, s.Dynamic.Speed, ExposureTime(s.Speed()),
 		*S.musicVolume*100, *S.volumeSound*100,
 		*S.offset,
 		*S.delayedJudge,

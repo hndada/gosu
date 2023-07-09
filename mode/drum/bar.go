@@ -8,10 +8,10 @@ type Bar struct {
 	Prev *Bar
 }
 
-func NewBars(transPoints []*mode.TransPoint, duration int64) (bs []*Bar) {
+func NewBars(transPoints []*mode.Dynamic, duration int64) (bs []*Bar) {
 	var start, end, step float64 // Next time.
 
-	// Bar positions before first TransPoint.
+	// Bar positions before first Dynamic.
 	start = float64(transPoints[0].Time)
 	end = start
 	if end > -5000 {
@@ -27,22 +27,22 @@ func NewBars(transPoints []*mode.TransPoint, duration int64) (bs []*Bar) {
 		bs = append([]*Bar{&b}, bs...)
 	}
 
-	// Bar positions after first TransPoint.
+	// Bar positions after first Dynamic.
 	bs = bs[:len(bs)-1] // Drop for avoiding duplicattion
-	newBeatPoints := make([]*mode.TransPoint, 0)
-	for _, tp := range transPoints {
-		if tp.NewBeat {
+	newBeatPoints := make([]*mode.Dynamic, 0)
+	for _, dy := range transPoints {
+		if dy.NewBeat {
 			newBeatPoints = append(newBeatPoints, tp)
 		}
 	}
-	for i, tp := range newBeatPoints {
-		start = float64(tp.Time)
+	for i, dy := range newBeatPoints {
+		start = float64(dy.Time)
 		if i == len(newBeatPoints)-1 {
 			end = float64(duration + 5000)
 		} else {
 			end = float64(newBeatPoints[i+1].Time)
 		}
-		step = tp.BeatDuration()
+		step = dy.BeatDuration()
 		for t := start; t < end; t += step {
 			b := Bar{
 				Floater: Floater{
