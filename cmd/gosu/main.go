@@ -17,7 +17,7 @@ type game struct {
 
 func main() {
 	// Todo: input fs.FS by os.Getwd()
-	scenes["choose"] = choose.NewScene()
+	// scenes["choose"] = choose.NewScene()
 	g := &game{
 		Scene: scenes["choose"],
 	}

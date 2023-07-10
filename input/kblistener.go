@@ -7,7 +7,7 @@ import (
 
 type KeyboardListener struct {
 	KeySettings  []Key
-	StartTime    time.Time // It is used for replaying.
+	StartTime    time.Time
 	getKeyStates func() []bool
 	PollingRate  time.Duration
 
@@ -36,7 +36,7 @@ func NewKeyboardListener(keys []Key, bufferTime time.Duration) *KeyboardListener
 		resumeChannel: make(chan struct{}),
 		pauseMutex:    &sync.Mutex{},
 		States:        []KeyboardState{blank},
-		index:         1, // Suppose blank has already fetched.
+		// index:         1, // Suppose blank has already fetched.
 	}
 }
 
@@ -45,11 +45,12 @@ func (kl *KeyboardListener) Now() int32 {
 }
 
 func (kl *KeyboardListener) Fetch() (kas []KeyboardAction) {
-	last := kl.States[kl.index-1]
+	// last := kl.States[kl.index-1]
+	last := kl.States[kl.index]
 
 	// From last fetched state to latest state
-	for _, current := range kl.States[kl.index:] {
-		as := keyActions(last.Pressed, current.Pressed)
+	for _, current := range kl.States[kl.index+1:] {
+		as := KeyActions(last.Pressed, current.Pressed)
 		for t := last.Time; t < current.Time; t++ {
 			ka := KeyboardAction{t, as}
 			kas = append(kas, ka)
@@ -58,14 +59,14 @@ func (kl *KeyboardListener) Fetch() (kas []KeyboardAction) {
 	}
 
 	// From latest state to now
-	las := keyActions(last.Pressed, last.Pressed)
+	las := KeyActions(last.Pressed, last.Pressed)
 	for t := last.Time; t < kl.Now(); t++ {
 		ka := KeyboardAction{t, las}
 		kas = append(kas, ka)
 	}
 
 	// Update index
-	kl.index = len(kl.States)
+	kl.index = len(kl.States) - 1
 	return nil
 }
 func (kl KeyboardListener) isStateChanged(state KeyboardState) bool {

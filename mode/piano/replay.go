@@ -1,18 +1,28 @@
 package piano
 
 import (
+	"time"
+
 	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
-	"github.com/hndada/gosu/mode"
 )
 
-// ReplayListener supposes closure function is called every 1 ms.
-// ReplayListener supposes the first the time of replay data is 0ms and no any inputs.
-// Todo: Make sure to ReplayListener time is independent of Game's update tick
+type ReplayListener struct {
+	States []input.KeyboardState
+	index  int
 
-// Fetch() ([]KeyPressedLog, []KeyActionLog)
-func NewReplayListener(f *osr.Format, keyCount int, timer *mode.Timer) func() []bool {
-	actions := append(f.ReplayData, osr.Action{W: 2e9})
+	StartTime time.Time
+	PauseTime time.Time
+	paused    bool
+}
+
+// ReplayListener supposes the time of first state is 0 ms with no any inputs.
+func NewReplayListener(f *osr.Format, keyCount int, bufferTime time.Duration) *ReplayListener {
+	actions := f.ReplayData
+	// actions := append(f.ReplayData, osr.Action{W: 2e9})
+
+	// clean replay data
+	// Osu replay data uses X for storing key count.
 	for i := 0; i < 2; i++ {
 		if i < len(actions) {
 			break
@@ -22,43 +32,84 @@ func NewReplayListener(f *osr.Format, keyCount int, timer *mode.Timer) func() []
 		}
 	}
 
-	var i int                                    // Index of current replay action
-	var next int64 = actions[0].W + actions[1].W // +1
-	return func() []bool {
-		for timer.Now >= next { // There might be negative values on actions in a row.
-			i++
-			next += actions[i+1].W
-		}
-		pressed := make([]bool, keyCount)
+	getKeyStates := func(a osr.Action) []bool {
+		ps := make([]bool, keyCount)
 		var k int
-		for x := int(actions[i].X); x > 0; x /= 2 {
+		for x := int(a.X); x > 0; x /= 2 {
 			if x%2 == 1 {
-				pressed[k] = true
+				ps[k] = true
 			}
 			k++
 		}
-		return pressed
+		return ps
+	}
+
+	states := make([]input.KeyboardState, 0, len(actions)+1)
+	var t int32
+	for _, a := range actions {
+		t += int32(a.W)
+		s := input.KeyboardState{Time: t, Pressed: getKeyStates(a)}
+		states = append(states, s)
+	}
+
+	return &ReplayListener{
+		States: states,
+		index:  1,
+
+		StartTime: time.Now().Add(bufferTime),
 	}
 }
-func loadReplayFromOsu(f *osr.Format, keyCount int) *input.KeyListener {
-	actions := append(f.ReplayData, osr.Action{W: 2e9})
 
-	for i := 0; i < 2; i++ {
-		if i < len(actions) {
+func (rl *ReplayListener) Now() int32 {
+	return int32(time.Since(rl.StartTime).Milliseconds())
+}
+
+func (rl *ReplayListener) Fetch() (kas []input.KeyboardAction) {
+	end := rl.index
+	now := rl.Now()
+	for ; end < len(rl.States)-1; end++ {
+		if rl.States[end+1].Time > now {
 			break
 		}
-		if a := actions[i]; a.Y == -500 {
-			a.X = 0
-		}
 	}
 
-	var (
-		i   int // Index of current replay action
-		now int64
-	)
-	now = actions[0].W + actions[1].W // +1
-	return &input.KeyListener{
-		PollingRate: 1000,
-		Listen:      func() input.KeyPressedLog {},
+	last := rl.States[rl.index-1]
+	// From last fetched state to latest state
+	for _, current := range rl.States[rl.index : end+1] {
+		as := input.KeyActions(last.Pressed, current.Pressed)
+		for t := last.Time; t < current.Time; t++ {
+			ka := input.KeyboardAction{Time: t, Action: as}
+			kas = append(kas, ka)
+		}
+		last = current
 	}
+
+	// From latest state to now
+	las := input.KeyActions(last.Pressed, last.Pressed)
+	for t := last.Time; t < rl.Now(); t++ {
+		ka := input.KeyboardAction{Time: t, Action: las}
+		kas = append(kas, ka)
+	}
+
+	// Update index
+	rl.index = end
+	return nil
 }
+
+// Poll does nothing on ReplayListener.
+func (rl *ReplayListener) Poll() {}
+
+func (rl *ReplayListener) Pause() {
+	rl.PauseTime = time.Now()
+	rl.paused = true
+}
+
+func (rl *ReplayListener) Resume() {
+	pauseDuration := time.Since(rl.PauseTime)
+	rl.StartTime = rl.StartTime.Add(pauseDuration)
+	rl.paused = false
+}
+
+func (rl *ReplayListener) IsPaused() bool { return rl.paused }
+
+func (rl *ReplayListener) Output() []input.KeyboardState { return rl.States }

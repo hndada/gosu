@@ -1,15 +1,15 @@
 package input
 
-type KeyAction int
+type KeyActionType int
 
 const (
-	Idle KeyAction = iota
+	Idle KeyActionType = iota
 	Hit
 	Release
 	Hold
 )
 
-func keyAction(last, current bool) KeyAction {
+func KeyAction(last, current bool) KeyActionType {
 	switch {
 	case !last && !current:
 		return Idle
@@ -24,11 +24,11 @@ func keyAction(last, current bool) KeyAction {
 	}
 }
 
-func keyActions(last, current []bool) []KeyAction {
-	a := make([]KeyAction, len(current))
+func KeyActions(last, current []bool) []KeyActionType {
+	a := make([]KeyActionType, len(current))
 	for k, p := range current {
 		lp := last[k]
-		a[k] = keyAction(lp, p)
+		a[k] = KeyAction(lp, p)
 	}
 	return a
 }
