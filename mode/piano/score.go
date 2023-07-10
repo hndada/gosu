@@ -45,10 +45,14 @@ type Scorer struct {
 
 	notes  []*Note
 	Staged []*Note
+
+	// Todo: FlowPoint
+
+	worstJudgment mode.Judgment
+	isHits        []bool
 }
 
-func (c Chart) NewScorer() Scorer {
-	// Todo: staged
+func NewScorer(c *Chart) Scorer {
 	unit := 1e6 / float64(len(c.Notes))
 	unitScores := [3]float64{unit * 0.7, unit * 0.3, unit * 0.1}
 	js := Judgments
@@ -63,30 +67,56 @@ func (c Chart) NewScorer() Scorer {
 		Flow: MaxFlow,
 		Acc:  MaxAcc,
 
-		notes: c.Notes,
-		// staged:         ,
+		notes:  c.Notes,
+		Staged: newStaged(c),
 	}
+}
+func newStaged(c *Chart) []*Note {
+	staged := make([]*Note, c.KeyCount)
+	for k := range staged {
+		for _, n := range c.Notes {
+			if k == n.Key {
+				staged[n.Key] = n
+				break
+			}
+		}
+	}
+	return staged
 }
 
 func (s *Scorer) Check(ka input.KeyboardAction) {
+	s.worstJudgment = blank
+	s.isHits = make([]bool, len(s.Staged)) // for drawing hit lighting
 	for k, n := range s.Staged {
 		if n == nil {
 			continue
 		}
 
+		timeError := n.Time - ka.Time
+
 		// Flush marked tail notes.
 		if n.Marked {
-			if n.Type == Tail {
-				s.Staged[k] = n.Next
-			} else {
-				panic("marked unflushed note is not tail")
+			if n.Type != Tail {
+				panic("marked yet remained note is not Tail")
 			}
+			// Keep Tail staged until near ends.
+			if timeError < Miss.Window {
+				s.Staged[k] = n.Next
+			}
+			// continue // I think no continue is right.
 		}
 
-		timeError := n.Time - ka.Time
 		j := Judge(n.Type, timeError, ka.Action[k])
-		if j != blank {
+		if j != blank { // Comparison between two structs is possible.
 			s.Mark(n, j)
+			if s.worstJudgment.Window < j.Window {
+				s.worstJudgment = j
+			}
+			if !j.Is(Miss) { // && n.Type != Head
+				s.isHits[k] = true
+			}
+			// Todo: Add time error meter mark
+			// Todo: Use different color for error meter of Tail
 		}
 	}
 }

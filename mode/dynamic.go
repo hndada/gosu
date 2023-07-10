@@ -13,8 +13,8 @@ type Dynamic struct {
 	BPM       float64
 	Speed     float64
 	Meter     int
-	NewBeat   bool    // NewBeat draws a bar.
-	Volume    float64 // Range is [0, 1].
+	NewBeat   bool // NewBeat draws a bar.
+	Volume    float64
 	Highlight bool
 
 	Position float64

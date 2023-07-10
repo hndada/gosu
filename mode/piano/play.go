@@ -13,9 +13,7 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
-// ScenePlay: struct, PlayScene: function
-// The skin may be applied some custom settings: on/off some sprites
-type ScenePlay struct {
+type SceneModePlay struct {
 	Chart *Chart
 	mode.Timer
 	audios.MusicPlayer
@@ -23,15 +21,12 @@ type ScenePlay struct {
 	input.KeyLogger
 	paused bool
 
-	*mode.Dynamic
-	speedScale float64
+	Dynamic    *mode.Dynamic
+	SpeedScale float64
 	Cursor     float64
-	Staged     []*Note
-	mode.Scorer
-	// Todo: merge into mode.Scorer
+	Scorer
 
 	Sound        []byte
-	Background   mode.BackgroundDrawer
 	Field        FieldDrawer
 	Bar          BarDrawer
 	Note         []NoteDrawer
@@ -43,26 +38,16 @@ type ScenePlay struct {
 	Judgment     JudgmentDrawer
 	Score        mode.ScoreDrawer
 	Combo        mode.ComboDrawer
-	Meter        mode.MeterDrawer
-
-	// For HCI experiments
-	Logs       []Log
-	offsetMode bool
-}
-type Log struct {
-	Time   int32
-	Key    int
-	Offset int32
+	// Meter        mode.MeterDrawer
 }
 
-func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s *ScenePlay, err error) {
-	s = new(ScenePlay)
+func NewSceneModePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s *SceneModePlay, err error) {
+	s = new(SceneModePlay)
 	s.Chart, err = LoadChart(fsys, cname)
 	if err != nil {
 		return
 	}
 	c := s.Chart
-	ebiten.SetWindowTitle(c.WindowTitle())
 	s.Timer = mode.NewTimer(c.Duration(), S.offset, TPS)
 	s.MusicPlayer, err = audios.NewMusicPlayer(fsys, c.MusicFilename)
 	if err != nil {
@@ -75,42 +60,17 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	}
 
 	s.Dynamic = c.Dynamics[0]
-	s.speedScale = 1
-	s.Cursor = float64(s.Now) * s.speedScale
-	s.SetSpeed()
-	s.Scorer = mode.NewScorer(c.ScoreFactors)
-	// s.MaxNoteCount = len(c.Notes)
-	s.JudgmentCounts = make([]int, len(Judgments))
-	// s.Result.FlowMarks = make([]float64, 0, c.Duration()/1000)
-	var maxWeight float64
-	for _, n := range c.Notes {
-		maxWeight += n.Weight()
-	}
-	for i := range s.MaxWeights {
-		s.MaxWeights[i] = maxWeight
-	}
-	s.Staged = make([]*Note, c.KeyCount)
-	for k := range s.Staged {
-		for _, n := range c.Notes {
-			if k == n.Key {
-				s.Staged[n.Key] = n
-				break
-			}
-		}
-	}
-	skin, ok := UserSkins.Skins[c.KeyMode]
+	s.SpeedScale = 1
+	s.Cursor = float64(s.Now) * s.SpeedScale
+	s.Scorer = NewScorer(c)
+
+	skin, ok := UserSkins.Skins[c.KeyCount]
 	if !ok {
-		UserSkins.loadSkin(c.KeyMode)
-		skin = UserSkins.Skins[c.KeyMode]
+		UserSkins.loadSkin(c.KeyCount)
+		skin = UserSkins.Skins[c.KeyCount]
 	}
 	s.Sound = skin.Sound
-	s.Background = mode.BackgroundDrawer{
-		Sprite: mode.NewBackground(fsys, c.ImageFilename),
-	}
-	if !s.Background.Sprite.IsValid() {
-		s.Background.Sprite = skin.DefaultBackground
-	}
-	s.BackgroundRed = NewBackgroundRedDrawer() // HCI
+
 	s.Field = FieldDrawer{
 		Sprite: skin.Field,
 	}
@@ -159,39 +119,15 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	s.Combo = mode.ComboDrawer{
 		Timer:      draws.NewTimer(draws.ToTick(2000, TPS), 0),
 		DigitWidth: skin.Combo[0].W(),
-		DigitGap:   S.ComboDigitGap,
+		DigitGap:   TheSettings.ComboDigitGap,
 		Bounce:     0.85,
 		Sprites:    skin.Combo,
 	}
-	s.Meter = mode.NewMeterDrawer(Judgments, JudgmentColors)
-
-	// HCI
-	s.offsetMode = true
-	//if len(s.Chart.Notes) < 20 {
-	// s.offsetMode = true
-	// }
+	// s.Meter = mode.NewMeterDrawer(Judgments, JudgmentColors)
 	return s, nil
 }
 
-// Farther note has larger position. Tail's Position is always larger than Head's.
-// Need to re-calculate positions when Speed has changed.
-func (s *ScenePlay) SetSpeed() {
-	c := s.Chart
-	old := s.speedScale
-	new := S.SpeedScale
-	s.Cursor *= new / old
-	for _, dy := range c.Dynamics {
-		dy.Position *= new / old
-	}
-	for _, n := range c.Notes {
-		n.Position *= new / old
-	}
-	for _, b := range c.Bars {
-		b.Position *= new / old
-	}
-	s.speedScale = new
-}
-func (s *ScenePlay) PlayPause() {
+func (s *SceneModePlay) PlayPause() {
 	if s.paused {
 		s.MusicPlayer.Play()
 	} else {
@@ -199,105 +135,25 @@ func (s *ScenePlay) PlayPause() {
 	}
 	s.paused = !s.paused
 }
-func (s *ScenePlay) Update() any {
+func (s *SceneModePlay) Update() any {
 	if !s.paused {
 		defer s.Ticker()
 	}
+
 	if s.Now == 0+s.Offset {
 		s.MusicPlayer.Play()
 	}
-	// if p.Now == 150+p.Offset {
-	// 	p.Player.Seek(time.Duration(150) * time.Millisecond)
-	// }
 
-	// HCI
-	// if s.offsetMode && s.Staged[3] != nil && s.Now > s.Staged[3].Time {
-	// s.Staged[3].passed = true
-	// }
-	var passed bool
-	for k, staged := range s.Staged {
-		if staged == nil {
-			continue
-		}
-		if s.Now > staged.Time {
-			s.Staged[k].passed = true
-		}
-		if s.Now-staged.Time < 3 && s.Now-staged.Time > -3 {
-			passed = true
-		}
-	}
-	// HCI
-	if passed {
-		s.BackgroundRed.Update(true)
-	} else {
-		s.BackgroundRed.Update(false)
-	}
-	// HCI
-	// It might take several tries since Update tick is too short.
-	if ebiten.IsKeyPressed(ebiten.KeyHome) {
-		if backgroundRedMode {
-			backgroundRedMode = false
-		} else {
-			backgroundRedMode = true
-		}
-	}
-
-	if vol := *S.musicVolume; S.MusicVolume != vol {
-		S.MusicVolume = vol
-		s.MusicPlayer.SetVolume(vol)
-	}
-
-	s.LastPressed = s.Pressed
-	s.Pressed = s.FetchPressed()
-	var worst mode.Judgment
-	hits := make([]bool, s.Chart.KeyCount)
-
-	for _, n := range s.Staged {
-		if n == nil {
-			continue
-		}
-		if n.Type != Tail && s.KeyAction(n.Key) == input.Hit {
-			s.PlaySample(n)
-		}
-		td := n.Time - s.Now      // Time difference. A negative value infers late hit
-		td += mode.S.DelayedJudge // For HCI experiment
-		if n.Marked {
-			if n.Type != Tail {
-				return fmt.Errorf("non-Tail note has not flushed")
+	var kas []input.KeyboardAction
+	for _, ka := range kas {
+		s.Scorer.Check(ka)
+		for k, n := range s.Staged {
+			a := ka.Action[k]
+			if n.Type != Tail && a == input.Hit {
+				vol := s.Dynamic.Volume
+				scale := TheSettings.SoundVolume
+				n.Sample.Play(vol, scale)
 			}
-			if td < Miss.Window { // Keep Tail staged until near ends.
-				s.Staged[n.Key] = n.Next
-			}
-			continue
-		}
-		if j := Judge(n.Type, s.KeyAction(n.Key), td); j.Window != 0 {
-			s.MarkNote(n, j)
-			if worst.Window < j.Window {
-				worst = j
-			}
-			var kind int = 0
-			if n.Type == Tail {
-				kind = 1
-			}
-			s.Meter.AddMark(int(td), kind)
-			if !j.Is(Miss) && n.Type != Head {
-				hits[n.Key] = true
-			}
-
-			// For HCI experiments
-			s.Logs = append(s.Logs, Log{
-				Time:   n.Time,
-				Key:    n.Key,
-				Offset: td,
-			})
-		}
-	}
-	for k := 0; k < s.Chart.KeyCount; k++ {
-		if s.KeyAction(k) == input.Hit {
-			vol2 := s.Dynamic.Volume
-			p := audios.Context.NewPlayerFromBytes(s.Sound)
-			p.SetVolume((*S.volumeSound) * vol2)
-			p.Play()
 		}
 	}
 
@@ -313,68 +169,38 @@ func (s *ScenePlay) Update() any {
 		s.HitLighting[k].Update(hits[k])
 		s.HoldLighting[k].Update(holding)
 	}
-	s.Judgment.Update(worst)
-	// s.Score.Update(s.LinearScore())
-	s.Score.Update(s.Scores[mode.Total])
+	s.Judgment.Update(s.Scorer.worstJudgment)
+	s.Score.Update(s.Scorer.Score)
 	s.Combo.Update(s.Scorer.Combo)
-	s.Meter.Update()
+	// s.Meter.Update()
 
 	// Changed speed should be applied after positions are calculated.
 	s.UpdateDynamic()
 	s.UpdateCursor()
-	if S.SpeedScale != s.speedScale {
-		s.SetSpeed()
-	}
 	return nil
 }
-func (s ScenePlay) Finish() any {
-	s.MusicPlayer.Close()
-	return s.NewResult(s.Chart.MD5)
-}
-
-func (s *ScenePlay) UpdateCursor() {
+func (s SceneModePlay) Speed() float64 { return s.Dynamic.Speed * s.speedScale }
+func (s *SceneModePlay) UpdateCursor() {
 	duration := float64(s.Now - s.Dynamic.Time)
 	s.Cursor = s.Dynamic.Position + duration*s.Speed()
 }
-func (s ScenePlay) Speed() float64 { return s.Dynamic.Speed * s.speedScale }
-func (s *ScenePlay) UpdateDynamic() {
+func (s *SceneModePlay) UpdateDynamic() {
 	dy := s.Dynamic
 	for dy.Next != nil && s.Now().Milliseconds() >= dy.Next.Time {
 		dy = dy.Next
 	}
 	s.Dynamic = dy
 }
-func (s ScenePlay) PlaySample(n *Note) {
-	name := n.Sample.Name
-	if name == "" {
-		return
-	}
-	vol2 := n.Sample.Volume
-	if vol2 == 0 {
-		vol2 = s.Dynamic.Volume
-	}
-	s.SoundPlayer.Play(name, vol2)
-}
 
-func (s ScenePlay) Draw(screen draws.Image) {
-	s.Background.Draw(screen)
+func (s SceneModePlay) Draw(screen draws.Image) {
 	s.Field.Draw(screen)
 	s.Bar.Draw(screen)
 	s.Hint.Draw(screen)
 	for k := 0; k < s.Chart.KeyCount; k++ {
 		s.Note[k].Draw(screen)
-		if silent {
-		} else {
-			s.Keys[k].Sprites[0].Draw(screen, draws.Op{})
-			s.Keys[k].Draw(screen)
-			s.KeyLighting[k].Draw(screen)
-		}
-	}
-	if *S.debugPrint {
-		s.DebugPrint(screen)
-	}
-	if silent {
-		return
+		s.Keys[k].Sprites[0].Draw(screen, draws.Op{})
+		s.Keys[k].Draw(screen)
+		s.KeyLighting[k].Draw(screen)
 	}
 	for k := 0; k < s.Chart.KeyCount; k++ {
 		s.HitLighting[k].Draw(screen)
@@ -383,28 +209,72 @@ func (s ScenePlay) Draw(screen draws.Image) {
 	s.Judgment.Draw(screen)
 	s.Score.Draw(screen)
 	s.Combo.Draw(screen)
-	s.Meter.Draw(screen)
+	// s.Meter.Draw(screen)
 }
 
-func (s ScenePlay) DebugPrint(screen draws.Image) {
-	ebitenutil.DebugPrint(screen.Image, fmt.Sprintf(
-		"FPS: %.2f\nTPS: %.2f\nTime: %.3fs/%.0fs\n\n"+
-			"Score: %.0f | %.0f \nFlow: %.0f/100\nCombo: %d\n\n"+
-			"Flow rate: %.2f%%\nAccuracy: %.2f%%\nExtra: %.2f%%\nJudgment counts: %v\n\n"+
-			"Speed scale (Z/X): %.0f (x%.2f)\n(Exposure time: %.fms)\n\n"+
-			"Music volume (Ctrl+ Left/Right): %.0f%%\nSound volume (Alt+ Left/Right): %.0f%%\n\n"+
-			"Press ESC to select a song.\nPress TAB to pause.\n\n"+
-			"Offset (Shift+ Left/Right): %dms\n"+
-			"Delayed judge (F9/F10): %vms\n"+ // for HCI experiment
-			"Debug print (Ctrl+D): %v\n",
-		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,
-		s.Scores[mode.Total], s.ScoreBounds[mode.Total], s.Flow*100, s.Scorer.Combo,
-		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100, s.JudgmentCounts,
-		S.SpeedScale*100, s.Dynamic.Speed, ExposureTime(s.Speed()),
-		*S.musicVolume*100, *S.volumeSound*100,
-		*S.offset,
-		*S.delayedJudge,
-		*S.debugPrint))
+func (s SceneModePlay) Finish() any {
+	s.MusicPlayer.Close()
+	s.Scorer.Score += 0.01 // To make sure max score is reachable.
+	return s.Scorer
+}
+
+func (s SceneModePlay) SetMusicVolume(v float64) {
+	TheSettings.MusicVolume = v
+	s.MusicPlayer.SetVolume(vol)
+}
+func (s SceneModePlay) SetSoundVolume(v float64) {
+	TheSettings.SoundVolume = v
+}
+
+// SetOffset(int64)
+
+// Need to re-calculate positions when Speed has changed.
+func (s *SceneModePlay) SetSpeedScale() {
+	c := s.Chart
+	old := s.SpeedScale
+	new := TheSettings.SpeedScale
+	s.Cursor *= new / old
+	for _, dy := range c.Dynamics {
+		dy.Position *= new / old
+	}
+	for _, n := range c.Notes {
+		n.Position *= new / old
+	}
+	for _, b := range c.Bars {
+		b.Position *= new / old
+	}
+	s.SpeedScale = new
+}
+
+func (s SceneModePlay) DebugPrint(screen draws.Image) {
+	var scorer Scorer
+
+	fps := fmt.Sprintf("FPS: %.2f\n", ebiten.ActualFPS())
+	tps := fmt.Sprintf("TPS: %.2f\n", ebiten.ActualTPS())
+	time := fmt.Sprintf("Time: %.3fs/%.0fs\n", float64(s.Now)/1000, float64(s.Chart.Duration())/1000)
+
+	score := fmt.Sprintf("Score: %.0f \n", scorer.Score)
+	combo := fmt.Sprintf("Combo: %d\n", scorer.Combo)
+	flow := fmt.Sprintf("Flow: %.2f%%\n", scorer.Flow/MaxFlow*100)
+	acc := fmt.Sprintf("Acc: %.2f%%\n", scorer.Acc/MaxAcc*100)
+	judgmentCount := fmt.Sprintf("Judgment counts: %v\n", scorer.JudgmentCounts)
+
+	speedScale := fmt.Sprintf("Speed scale (Z/X): %.0f (x%.2f)\n", s.SpeedScale, s.Dynamic.Speed)
+	exposureTime := fmt.Sprintf("(Exposure time: %.fms)\n", ExposureTime(s.Speed()))
+
+	musicVolume := fmt.Sprintf("Music volume (Ctrl+ Left/Right): %.0f%%\n", TheSettings.MusicVolume*100)
+	soundVolume := fmt.Sprintf("Sound volume (Alt+ Left/Right): %.0f%%\n", TheSettings.SoundVolume*100)
+	offset := fmt.Sprintf("Offset (Shift+ Left/Right): %dms\n", s.Offset)
+
+	exit := "Press ESC to back to choose a song.\n"
+	pause := "Press TAB to pause.\n"
+
+	ebitenutil.DebugPrint(screen.Image, fps+tps+time+"\n"+
+		score+combo+flow+acc+judgmentCount+"\n"+
+		speedScale+exposureTime+"\n"+
+		musicVolume+soundVolume+offset+"\n"+
+		exit+pause,
+	)
 }
 
 // 1 pixel is 1 millisecond.
