@@ -47,7 +47,7 @@ func NewKeyListener(ks []Key) *KeyListener {
 		PollingRate: pollingRate,
 		Listen:      listen,
 
-		Logs: make([]KeyPressedLog, 0, 1000),
+		PressedLogs: make([]KeyPressedLog, 0, 1000),
 	}
 	return listener
 }

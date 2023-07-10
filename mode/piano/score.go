@@ -1,25 +1,20 @@
 package piano
 
 import (
-	"image/color"
-
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
 )
 
 var (
-	Kool = mode.Judgment{Flow: 0.01, Acc: 1, Window: 20}
-	Cool = mode.Judgment{Flow: 0.01, Acc: 1, Window: 45}
-	Good = mode.Judgment{Flow: 0.01, Acc: 0.25, Window: 75}
-	Bad  = mode.Judgment{Flow: 0.01, Acc: 0, Window: 210} // For HCI experiment: 110 -> 210
-	Miss = mode.Judgment{Flow: -1, Acc: 0, Window: 250}   // For HCI experiment: 150 -> 250
+	Kool = mode.Judgment{Window: 20, Weight: 1}
+	Cool = mode.Judgment{Window: 40, Weight: 1}
+	Good = mode.Judgment{Window: 80, Weight: 0.5}
+	Miss = mode.Judgment{Window: 120, Weight: 0}
 )
 
-var Judgments = []mode.Judgment{Kool, Cool, Good, Bad, Miss}
-var JudgmentColors = []color.NRGBA{
-	mode.ColorKool, mode.ColorCool, mode.ColorGood, mode.ColorBad, mode.ColorMiss}
+var Judgments = []mode.Judgment{Kool, Cool, Good, Miss}
 
-func Judge(noteType int, a input.KeyAction, td int64) mode.Judgment {
+func Judge(noteType int, a input.KeyActionType, td int64) mode.Judgment {
 	if noteType == Tail { // Either Hold or Release when Tail is not scored
 		switch {
 		case td > Miss.Window:
@@ -67,9 +62,4 @@ func (s *ScenePlay) MarkNote(n *Note, j mode.Judgment) {
 	if n.Type != Tail {
 		s.Staged[n.Key] = n.Next
 	}
-	// s.NoteCount++
 }
-
-// func (s ScenePlay) LinearScore() float64 {
-// 	return s.ScoreBounds[mode.Total] * float64(s.NoteCount) / float64(s.MaxNoteCount)
-// }
