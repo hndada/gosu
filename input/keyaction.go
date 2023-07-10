@@ -2,16 +2,16 @@ package input
 
 import "time"
 
-type KeyActionType int
+type KeyAction int
 
 const (
-	Idle KeyActionType = iota
+	Idle KeyAction = iota
 	Hit
 	Release
 	Hold
 )
 
-func KeyAction(last, current bool) KeyActionType {
+func keyAction(last, current bool) KeyAction {
 	switch {
 	case !last && !current:
 		return Idle
@@ -28,5 +28,5 @@ func KeyAction(last, current bool) KeyActionType {
 
 type KeyActionLog struct {
 	Time   time.Time
-	Action []KeyActionType
+	Action []KeyAction
 }
