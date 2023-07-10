@@ -88,7 +88,7 @@ func (c *Chart) setBarPositions() {
 	}
 }
 
-func (c Chart) Duration() int64 {
+func (c Chart) Duration() int32 {
 	if len(c.Notes) == 0 {
 		return 0
 	}

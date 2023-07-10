@@ -50,9 +50,9 @@ type ScenePlay struct {
 	offsetMode bool
 }
 type Log struct {
-	Time   int64
+	Time   int32
 	Key    int
-	Offset int64
+	Offset int32
 }
 
 func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s *ScenePlay, err error) {

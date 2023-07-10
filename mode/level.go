@@ -18,19 +18,19 @@ func Level(c Chart) float64 {
 	return sum
 }
 
-func DifficultyPieceTimes(dys []*Dynamic, chartDuration int64) (times []int64, durations []int64) {
+func DifficultyPieceTimes(dys []*Dynamic, chartDuration int32) (times []int32, durations []int32) {
 	const (
 		minDuration = 400  // 400ms. 2 beats with 300 BPM
 		maxDuration = 1000 // 1000ms. 2 beats with 120 BPM
 	)
-	times = make([]int64, 0, 300)
+	times = make([]int32, 0, 300)
 
 	const meter = 2
 	beatTimes := BeatTimes(dys, chartDuration, meter)
 
-	var accDuration int64 // accumulated duration
+	var accDuration int32 // accumulated duration
 	for i, time := range beatTimes[1:] {
-		var prevTime int64
+		var prevTime int32
 		if i == 0 {
 			prevTime = beatTimes[0]
 		} else {
@@ -47,14 +47,14 @@ func DifficultyPieceTimes(dys []*Dynamic, chartDuration int64) (times []int64, d
 		case accDuration > maxDuration:
 			accDuration -= duration // go back
 			unit := float64(duration)
-			for accDuration+int64(unit) > maxDuration {
+			for accDuration+int32(unit) > maxDuration {
 				unit /= 2
 			}
-			for t := float64(prevTime) + unit; int64(t+0.1) < time; t += unit {
-				times = append(times, int64(t))
+			for t := float64(prevTime) + unit; int32(t+0.1) < time; t += unit {
+				times = append(times, int32(t))
 			}
 			// for d := float64(accDuration) + unit; d+unit < maxDuration; d += unit {
-			// 	times = append(times, prevTime+int64(d))
+			// 	times = append(times, prevTime+int32(d))
 			// }
 			accDuration = 0
 		default:
@@ -63,9 +63,9 @@ func DifficultyPieceTimes(dys []*Dynamic, chartDuration int64) (times []int64, d
 		}
 	}
 
-	durations = make([]int64, 0, len(times))
+	durations = make([]int32, 0, len(times))
 	for i, time := range times {
-		var d int64
+		var d int32
 		if i == 0 {
 			d = beatTimes[0] - time
 		} else {

@@ -9,7 +9,7 @@ import (
 // First BPM is used as temporary main BPM.
 // No two Dynamics have same Time.
 type Dynamic struct {
-	Time      int64
+	Time      int32
 	BPM       float64
 	Speed     float64
 	Meter     int
@@ -62,7 +62,7 @@ func newDynamicsFromOsu(f *osu.Format) []*Dynamic {
 	prevBPM := tempMainBPM
 	for _, timingPoint := range f.TimingPoints {
 		dy := &Dynamic{
-			Time:      int64(timingPoint.Time),
+			Time:      int32(timingPoint.Time),
 			BPM:       prevBPM,
 			Speed:     prevBPM / tempMainBPM,
 			Meter:     timingPoint.Meter,
@@ -97,7 +97,7 @@ func (dy Dynamic) BeatDuration(meter int) float64 {
 	return m * (60000 / dy.BPM)
 }
 
-func BeatTimes(dys []*Dynamic, duration int64, meter int) (times []int64) {
+func BeatTimes(dys []*Dynamic, duration int32, meter int) (times []int32) {
 	// These variables are for iterating over the Time.
 	var start, end, step float64
 	const bufferTime = 5000
@@ -110,7 +110,7 @@ func BeatTimes(dys []*Dynamic, duration int64, meter int) (times []int64) {
 	}
 	step = dys[0].BeatDuration(meter)
 	for t := start; t >= end; t -= step {
-		times = append([]int64{int64(t)}, times...)
+		times = append([]int32{int32(t)}, times...)
 	}
 	// Need to drop a last element because it will be duplicated.
 	times = times[:len(times)-1]
@@ -132,7 +132,7 @@ func BeatTimes(dys []*Dynamic, duration int64, meter int) (times []int64) {
 		}
 		step = ndy.BeatDuration(meter)
 		for t := start; t < end; t += step {
-			times = append(times, int64(t))
+			times = append(times, int32(t))
 		}
 	}
 	return
