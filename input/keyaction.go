@@ -1,7 +1,5 @@
 package input
 
-import "time"
-
 type KeyAction int
 
 const (
@@ -26,7 +24,11 @@ func keyAction(last, current bool) KeyAction {
 	}
 }
 
-type KeyActionLog struct {
-	Time   time.Time
-	Action []KeyAction
+func keyActions(last, current []bool) []KeyAction {
+	a := make([]KeyAction, len(current))
+	for k, p := range current {
+		lp := last[k]
+		a[k] = keyAction(lp, p)
+	}
+	return a
 }
