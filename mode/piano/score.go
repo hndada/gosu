@@ -6,60 +6,171 @@ import (
 )
 
 var (
-	Kool = mode.Judgment{Window: 20, Weight: 1}
-	Cool = mode.Judgment{Window: 40, Weight: 1}
-	Good = mode.Judgment{Window: 80, Weight: 0.5}
-	Miss = mode.Judgment{Window: 120, Weight: 0}
+	Kool  = mode.Judgment{Window: 20, Weight: 1}
+	Cool  = mode.Judgment{Window: 40, Weight: 1}
+	Good  = mode.Judgment{Window: 80, Weight: 0.5}
+	Miss  = mode.Judgment{Window: 120, Weight: 0}
+	blank = mode.Judgment{}
 )
 
 var Judgments = []mode.Judgment{Kool, Cool, Good, Miss}
 
-func Judge(noteType int, a input.KeyActionType, td int64) mode.Judgment {
-	if noteType == Tail { // Either Hold or Release when Tail is not scored
-		switch {
-		case td > Miss.Window:
-			if a == input.Release {
-				return Miss
-			}
-		case td < -Miss.Window:
-			return Miss
-		default: // In range
-			if a == input.Release { // a != Hold
-				return mode.Evaluate(Judgments, td)
-			}
-		}
-	} else { // Head, Normal
-		return mode.Judge(Judgments, a, td)
-	}
-	return mode.Judgment{}
+const (
+	MaxFlow = 50
+	MaxAcc  = 20
+)
+
+// Score consists of three parts: Flow, Acc, and Extra.
+// Ratios of Flow and Acc to their max values are multiplied to unit scores.
+// Flow drops to zero when Miss, and recovers when Kool, Cool, and Good.
+// Acc drops to zero when Miss or Good, and recovers when Kool and Cool.
+// Extra will be simply added to the score when hit Kool.
+const (
+	Flow = iota
+	Acc
+	Extra
+)
+
+type Scorer struct {
+	Mods      interface{}
+	Judgments []mode.Judgment // May change by mods
+
+	Combo          int
+	Score          float64
+	UnitScores     [3]float64
+	JudgmentCounts []int
+
+	Flow float64
+	Acc  float64
+
+	notes  []*Note
+	Staged []*Note
 }
 
-// Extra primitive in Piano mode is a count of Kools.
+func (c Chart) NewScorer() Scorer {
+	// Todo: staged
+	unit := 1e6 / float64(len(c.Notes))
+	unitScores := [3]float64{unit * 0.7, unit * 0.3, unit * 0.1}
+	js := Judgments
+
+	return Scorer{
+		Mods:      c.Mods,
+		Judgments: js,
+
+		UnitScores:     unitScores,
+		JudgmentCounts: make([]int, len(Judgments)),
+
+		Flow: MaxFlow,
+		Acc:  MaxAcc,
+
+		notes: c.Notes,
+		// staged:         ,
+	}
+}
+
+func (s *Scorer) Check(ka input.KeyboardAction) {
+	for k, n := range s.Staged {
+		if n == nil {
+			continue
+		}
+
+		// Flush marked tail notes.
+		if n.Marked {
+			if n.Type == Tail {
+				s.Staged[k] = n.Next
+			} else {
+				panic("marked unflushed note is not tail")
+			}
+		}
+
+		timeError := n.Time - ka.Time
+		j := Judge(n.Type, timeError, ka.Action[k])
+		if j != blank {
+			s.Mark(n, j)
+		}
+	}
+}
+
+func Judge(noteType int, timeError int32, a input.KeyActionType) mode.Judgment {
+	switch noteType {
+	case Normal, Head:
+		return mode.Judge(Judgments, timeError, a)
+	case Tail:
+		return judgeTail(timeError, a)
+	}
+	return blank
+}
+
+// Either Hold or Release when Tail is not scored
+func judgeTail(timeError int32, a input.KeyActionType) mode.Judgment {
+	switch {
+	case timeError > Miss.Window:
+		if a == input.Release {
+			return Miss
+		}
+	case timeError < -Miss.Window:
+		return Miss
+	default: // In range
+		if a == input.Release { // a != Hold
+			j := mode.Evaluate(Judgments, timeError)
+			if j.Is(Cool) { // Cool at Tail goes Kool
+				j = Kool
+			}
+			return j
+		}
+	}
+	return blank
+}
+
 // Todo: no getting Flow when hands off the long note
-func (s *ScenePlay) MarkNote(n *Note, j mode.Judgment) {
+func (s *Scorer) Mark(n *Note, j mode.Judgment) {
 	if j == Miss {
-		s.BreakCombo()
-	} else {
-		s.AddCombo()
+		s.Combo = 0
+		s.Flow = 0
+	} else { // Kool, Cool, Good
+		s.Combo++
+		s.Flow++
+		if s.Flow > MaxFlow {
+			s.Flow = MaxFlow
+		}
+
+		if j.Is(Good) {
+			s.Acc = 0
+		} else {
+			s.Acc++
+			if s.Acc > MaxAcc {
+				s.Acc = MaxAcc
+			}
+		}
 	}
-	s.CalcScore(mode.Flow, j.Flow, n.Weight())
-	s.CalcScore(mode.Acc, j.Acc, n.Weight())
+
+	flow := s.UnitScores[Flow] * (s.Flow / MaxFlow)
+	acc := s.UnitScores[Acc] * (s.Acc / MaxAcc)
+	var extra float64
 	if j.Is(Kool) {
-		s.CalcScore(mode.Extra, 1, n.Weight())
-	} else {
-		s.CalcScore(mode.Extra, 0, n.Weight())
+		extra = s.UnitScores[Extra]
 	}
+
+	s.Score += j.Weight * (flow + acc + extra)
+	s.addJugdmentCount(j)
+	n.Marked = true
+
+	// when Head is missed, its tail goes missed as well.
+	if n.Type == Head && j.Is(Miss) {
+		s.Mark(n.Next, Miss)
+	}
+
+	// Tail is flushed at Check().
+	if n.Type != Tail {
+		s.Staged[n.Key] = n.Next
+	}
+}
+
+func (s *Scorer) addJugdmentCount(j mode.Judgment) {
 	for i, j2 := range Judgments {
 		if j.Is(j2) {
 			s.JudgmentCounts[i]++
 			break
 		}
-	}
-	n.Marked = true
-	if n.Type == Head && j == Miss {
-		s.MarkNote(n.Next, Miss)
-	}
-	if n.Type != Tail {
-		s.Staged[n.Key] = n.Next
 	}
 }

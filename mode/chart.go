@@ -16,7 +16,7 @@ const (
 )
 
 type Chart interface {
-	Duration() int64
+	Duration() int32
 	Difficulties() []float64
 }
 
@@ -40,8 +40,8 @@ func ParseChartFile(fsys fs.FS, name string) (format any, hash [16]byte, err err
 
 // BPM with longest duration will be main BPM.
 // When there are multiple BPMs with same duration, larger one will be main BPM.
-func BPMs(dys []*Dynamic, duration int64) (main, min, max float64) {
-	bpmDurations := make(map[float64]int64)
+func BPMs(dys []*Dynamic, duration int32) (main, min, max float64) {
+	bpmDurations := make(map[float64]int32)
 	for i, dy := range dys {
 		if i == 0 {
 			bpmDurations[dy.BPM] += dy.Time
@@ -52,7 +52,7 @@ func BPMs(dys []*Dynamic, duration int64) (main, min, max float64) {
 			bpmDurations[dy.BPM] += duration - dy.Time // Bounds to final note time; confirmed with test.
 		}
 	}
-	var maxDuration int64
+	var maxDuration int32
 	min = math.MaxFloat64
 	for bpm, duration := range bpmDurations {
 		if maxDuration < duration {

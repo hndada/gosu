@@ -14,8 +14,8 @@ import (
 // with the certain audio file, which is too strict.
 // Hence, AudioHash should be handled via outer way.
 type ChartHeader struct {
-	SetID int64 // Compatibility for osu.
-	ID    int64 // Compatibility for osu.
+	SetID int32 // Compatibility for osu.
+	ID    int32 // Compatibility for osu.
 
 	MusicName     string
 	MusicUnicode  string
@@ -24,15 +24,15 @@ type ChartHeader struct {
 	MusicSource   string
 	ChartName     string
 	Charter       string
-	CharterID     int64
-	HolderID      int64 // When the chart is uploaded by non-charter.
+	CharterID     int32
+	HolderID      int32 // When the chart is uploaded by non-charter.
 	Tags          []string
 
-	PreviewTime     int64
+	PreviewTime     int32
 	MusicFilename   string // Filename is fine to use. (cf. FileName; Filepath)
 	ImageFilename   string
 	VideoFilename   string
-	VideoTimeOffset int64
+	VideoTimeOffset int32
 
 	Mode    int
 	SubMode int
@@ -48,8 +48,8 @@ func LoadChartHeader(f any) (c ChartHeader) {
 func newChartHeaderFromOsu(f *osu.Format) (c ChartHeader) {
 	const unknownID = -1
 	c = ChartHeader{
-		SetID: int64(f.BeatmapSetID),
-		ID:    int64(f.BeatmapID),
+		SetID: int32(f.BeatmapSetID),
+		ID:    int32(f.BeatmapID),
 
 		MusicName:     f.Title,
 		MusicUnicode:  f.TitleUnicode,
@@ -62,7 +62,7 @@ func newChartHeaderFromOsu(f *osu.Format) (c ChartHeader) {
 		HolderID:      unknownID,
 		Tags:          f.Tags,
 
-		PreviewTime:   int64(f.PreviewTime),
+		PreviewTime:   int32(f.PreviewTime),
 		MusicFilename: f.AudioFilename,
 	}
 
@@ -71,7 +71,7 @@ func newChartHeaderFromOsu(f *osu.Format) (c ChartHeader) {
 	c.ImageFilename = e.Filename
 	e, _ = f.Video()
 	c.VideoFilename = e.Filename
-	c.VideoTimeOffset = int64(e.StartTime)
+	c.VideoTimeOffset = int32(e.StartTime)
 	if c.MusicFilename == "virtual" {
 		c.MusicFilename = ""
 	}

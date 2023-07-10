@@ -15,11 +15,11 @@ const (
 )
 
 type Note struct {
-	Time int64
+	Time int32
 	Type int
 	Key  int
 	mode.Sample
-	Duration int64
+	Duration int32
 
 	Position float64 // Scaled x or y value.
 	Next     *Note
@@ -61,14 +61,14 @@ func NewNotes(f any, keyCount int) (ns []*Note) {
 // The length of the returned slice is 1 or 2.
 func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []*Note) {
 	n := &Note{
-		Time:   int64(f.Time),
+		Time:   int32(f.Time),
 		Type:   Normal,
 		Key:    f.Column(keyCount),
 		Sample: mode.NewSample(f),
 	}
 	if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
 		n.Type = Head
-		n.Duration = int64(f.EndTime) - n.Time
+		n.Duration = int32(f.EndTime) - n.Time
 		n2 := &Note{
 			Time: n.Time + n.Duration,
 			Type: Tail,

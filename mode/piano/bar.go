@@ -3,14 +3,14 @@ package piano
 import "github.com/hndada/gosu/mode"
 
 type Bar struct {
-	Time int64 // Times are in milliseconds.
+	Time int32 // Times are in milliseconds.
 
 	Position float64
 	Next     *Bar
 	Prev     *Bar
 }
 
-func NewBars(dys []*mode.Dynamic, duration int64) (bs []*Bar) {
+func NewBars(dys []*mode.Dynamic, duration int32) (bs []*Bar) {
 	const useDefaultMeter = 0
 	times := mode.BeatTimes(dys, duration, useDefaultMeter)
 

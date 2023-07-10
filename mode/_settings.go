@@ -10,7 +10,7 @@ type SettingsType struct {
 	MusicVolume          float64
 	SoundVolume          float64
 	BackgroundBrightness float64
-	Offset               int64
+	Offset               int32
 	DebugPrint           bool
 
 	ScoreScale    float64

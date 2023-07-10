@@ -2,8 +2,14 @@ package mode
 
 import "github.com/hndada/gosu/input"
 
+type Scorer interface {
+	Check()
+	Judge()
+	Mark()
+}
+
 type Judgment struct {
-	Window int64
+	Window int32
 	Weight float64
 }
 
@@ -22,7 +28,8 @@ func (j Judgment) Is(j2 Judgment) bool { return j.Window == j2.Window }
 func (j Judgment) IsBlank() bool       { return j.Window == 0 }
 
 // Judge judges in normal style: Whether a player hits a key in time.
-func Judge(js []Judgment, timeError int64, a input.KeyActionType) Judgment {
+// Late hit makes negative timeError.
+func Judge(js []Judgment, timeError int32, a input.KeyActionType) Judgment {
 	miss := js[len(js)-1]
 	switch {
 	case timeError > miss.Window:
@@ -37,7 +44,7 @@ func Judge(js []Judgment, timeError int64, a input.KeyActionType) Judgment {
 	return blank
 }
 
-func Evaluate(js []Judgment, timeError int64) Judgment {
+func Evaluate(js []Judgment, timeError int32) Judgment {
 	if timeError < 0 {
 		timeError *= -1
 	}

@@ -15,7 +15,7 @@ type Settings struct {
 	// Settings that will be from scene.TheSettings
 	MusicVolume float64
 	SoundVolume float64
-	Offset      int64
+	Offset      int32
 
 	// Logic settings
 	KeySettings   map[int][]string
