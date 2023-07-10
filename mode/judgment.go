@@ -22,7 +22,7 @@ func (j Judgment) Is(j2 Judgment) bool { return j.Window == j2.Window }
 func (j Judgment) IsBlank() bool       { return j.Window == 0 }
 
 // Judge judges in normal style: Whether a player hits a key in time.
-func Judge(js []Judgment, timeError int64, a input.KeyAction) Judgment {
+func Judge(js []Judgment, timeError int64, a input.KeyActionType) Judgment {
 	miss := js[len(js)-1]
 	switch {
 	case timeError > miss.Window:

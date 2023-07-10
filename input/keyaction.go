@@ -1,15 +1,17 @@
 package input
 
-type KeyAction int
+import "time"
+
+type KeyActionType int
 
 const (
-	Idle KeyAction = iota
+	Idle KeyActionType = iota
 	Hit
 	Release
 	Hold
 )
 
-func keyAction(last, current bool) KeyAction {
+func KeyAction(last, current bool) KeyActionType {
 	switch {
 	case !last && !current:
 		return Idle
@@ -22,4 +24,9 @@ func keyAction(last, current bool) KeyAction {
 	default:
 		panic("not reach")
 	}
+}
+
+type KeyActionLog struct {
+	Time   time.Time
+	Action []KeyActionType
 }

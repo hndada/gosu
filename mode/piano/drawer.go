@@ -313,3 +313,6 @@ func (d JudgmentDrawer) Draw(dst draws.Image) {
 // 	ColorBad  = color.NRGBA{244, 177, 0, 255}   // Yellow
 // 	ColorMiss = color.NRGBA{109, 120, 134, 255} // Gray
 // )
+
+// var JudgmentColors = []color.NRGBA{
+// mode.ColorKool, mode.ColorCool, mode.ColorGood, mode.ColorBad, mode.ColorMiss}
