@@ -3,6 +3,7 @@ package mode
 import (
 	"path/filepath"
 
+	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/format/osu"
 )
 
@@ -22,9 +23,21 @@ func NewSample(f any) (s Sample) {
 	return Sample{}
 }
 
-func (n Sample) Path(cpath string) (string, bool) {
-	if n.Name == "" {
+// Todo: refactor?
+func (s Sample) Path(cpath string) (string, bool) {
+	if s.Name == "" {
 		return "", false
 	}
-	return filepath.Join(filepath.Dir(cpath), n.Name), true
+	return filepath.Join(filepath.Dir(cpath), s.Name), true
+}
+
+func (s Sample) Play(vol2, scale float64) {
+	if s.Name == "" {
+		return
+	}
+	if s.Volume == 0 {
+		s.Volume = vol2
+	}
+	p := audios.Context.NewPlayerFromBytes(s.Sound)
+	s.SoundPlayer.Play(s.Name, s.Volume*scale)
 }

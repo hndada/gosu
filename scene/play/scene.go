@@ -11,22 +11,27 @@ import (
 	"github.com/hndada/gosu/scene"
 )
 
+// ScenePlay: struct, PlayScene: function
 // Interface declares at 'user' package.
 type ScenePlay struct {
 	SceneModePlay
 	SpeedScaleKeyHandler *ctrl.KeyHandler
+
+	Background           scene.BackgroundDrawer
+	backgroundBrightness *float64
+	debugPrint           *bool
 }
 type SceneModePlay interface {
 	scene.Scene
 
 	PlayPause()
 	Finish() any // Return Scene.
-	// IsDone() bool // Draw clear mark.
 
 	SetMusicVolume(float64)
 	SetSoundVolume(float64)
 	SetOffset(int64)
 	SetSpeedScale() // Each mode has its own variable for speed scale.
+	DebugPrint(draws.Image)
 }
 
 func NewScene(m int, args mode.ScenePlayArgs) (*ScenePlay, error) {
@@ -40,17 +45,34 @@ func NewScene(m int, args mode.ScenePlayArgs) (*ScenePlay, error) {
 		// case mode.ModeDrum:
 		// play, err = drum.NewSceneModePlay(args)
 	}
+
 	s := &ScenePlay{
 		SceneModePlay:        play,
 		SpeedScaleKeyHandler: &scene.SpeedScaleKeyHandlers[m],
+
+		backgroundBrightness: &scene.TheSettings.BackgroundBrightness,
+		debugPrint:           &scene.TheSettings.DebugPrint,
 	}
+	s.SetMusicVolume(scene.TheSettings.MusicVolume)
+	s.SetSoundVolume(scene.TheSettings.SoundVolume)
+	s.SetOffset(scene.TheSettings.Offset)
+	s.SetSpeedScale()
+	// Todo: pass background drawer from choose scene
+	// s.Background = scene.BackgroundDrawer{
+	// 	Sprite: scene.NewBackground(args.FS, c.ImageFilename),
+	// }
+	// if !s.Background.Sprite.IsValid() {
+	// 	s.Background.Sprite = skin.DefaultBackground
+	// }
+	// ebiten.SetWindowTitle(c.WindowTitle())
 	// debug.SetGCPercent(0)
 	return s, err
 }
 
 func (s *ScenePlay) Update() any {
-	r := s.SceneModePlay.Update()
+	scene.BackgroundBrightnessKeyHandler.Update()
 
+	r := s.SceneModePlay.Update()
 	// Settings which affect scene flow.
 	if inpututil.IsKeyJustPressed(input.KeyTab) {
 		s.PlayPause()
@@ -73,12 +95,13 @@ func (s *ScenePlay) Update() any {
 		s.SetSpeedScale()
 	}
 
-	// Settings which don't affect SceneModePlay.
-	scene.BackgroundBrightnessKeyHandler.Update()
 	scene.DebugPrintKeyHandler.Update()
-
 	return r
 }
 func (s ScenePlay) Draw(screen draws.Image) {
+	s.Background.Draw(screen)
 	s.SceneModePlay.Draw(screen)
+	if *s.debugPrint {
+		s.SceneModePlay.DebugPrint(screen)
+	}
 }

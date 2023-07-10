@@ -47,7 +47,10 @@ func LoadChart(fsys fs.FS, name string, mods interface{}) (c *Chart, err error) 
 // Position is for drawing notes and bars efficiently.
 // Only cursor is updated in every Update(), then notes and bars
 // are drawn based on the difference between their positions and cursor's.
+
 // Position calculation is based on Dynamics.
+// Farther note has larger position.
+// Tail's Position is always larger than Head's.
 func (c *Chart) setDynamicPositions() {
 	// Brilliant idea: Make SpeedScale scaled by MainBPM.
 	mainBPM, _, _ := mode.BPMs(c.Dynamics, c.Duration())
