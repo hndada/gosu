@@ -40,16 +40,16 @@ func ParseChartFile(fsys fs.FS, name string) (format any, hash [16]byte, err err
 
 // BPM with longest duration will be main BPM.
 // When there are multiple BPMs with same duration, larger one will be main BPM.
-func BPMs(dys []*Dynamic, duration int32) (main, min, max float64) {
+func BPMs(ds []*Dynamic, duration int32) (main, min, max float64) {
 	bpmDurations := make(map[float64]int32)
-	for i, dy := range dys {
+	for i, d := range ds {
 		if i == 0 {
-			bpmDurations[dy.BPM] += dy.Time
+			bpmDurations[d.BPM] += d.Time
 		}
-		if i < len(dys)-1 {
-			bpmDurations[dy.BPM] += dys[i+1].Time - dy.Time
+		if i < len(ds)-1 {
+			bpmDurations[d.BPM] += ds[i+1].Time - d.Time
 		} else {
-			bpmDurations[dy.BPM] += duration - dy.Time // Bounds to final note time; confirmed with test.
+			bpmDurations[d.BPM] += duration - d.Time // Bounds to final note time; confirmed with test.
 		}
 	}
 	var maxDuration int32

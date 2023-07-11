@@ -28,28 +28,28 @@ func (j Judgment) Is(j2 Judgment) bool { return j.Window == j2.Window }
 func (j Judgment) IsBlank() bool       { return j.Window == 0 }
 
 // Judge judges in normal style: Whether a player hits a key in time.
-// Late hit makes negative timeError.
-func Judge(js []Judgment, timeError int32, a input.KeyActionType) Judgment {
+// Late hit makes negative time error.
+func Judge(js []Judgment, e int32, a input.KeyActionType) Judgment {
 	miss := js[len(js)-1]
 	switch {
-	case timeError > miss.Window:
+	case e > miss.Window:
 		return blank
-	case timeError < -miss.Window:
+	case e < -miss.Window:
 		return miss
 	default: // In range
 		if a == input.Hit {
-			return Evaluate(js, timeError)
+			return Evaluate(js, e)
 		}
 	}
 	return blank
 }
 
-func Evaluate(js []Judgment, timeError int32) Judgment {
-	if timeError < 0 {
-		timeError *= -1
+func Evaluate(js []Judgment, e int32) Judgment {
+	if e < 0 {
+		e *= -1
 	}
 	for _, j := range js {
-		if timeError <= j.Window {
+		if e <= j.Window {
 			return j
 		}
 	}
