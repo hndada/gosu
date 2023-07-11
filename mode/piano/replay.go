@@ -113,3 +113,6 @@ func (rl *ReplayListener) Resume() {
 func (rl *ReplayListener) IsPaused() bool { return rl.paused }
 
 func (rl *ReplayListener) Output() []input.KeyboardState { return rl.States }
+
+// Close does nothing on ReplayListener.
+func (rl *ReplayListener) Close() {}

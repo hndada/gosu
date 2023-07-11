@@ -28,10 +28,6 @@ type BaseScenePlay struct {
 	paused          bool
 }
 
-func NewBaseScenePlay() BaseScenePlay {
-	return BaseScenePlay{}
-}
-
 func (s *BaseScenePlay) Pause() {
 	s.PauseTime = time.Now()
 	s.MusicPlayer.Pause()
