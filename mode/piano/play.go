@@ -41,9 +41,9 @@ type SceneModePlay struct {
 	// Meter        mode.MeterDrawer
 }
 
-func NewSceneModePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s *SceneModePlay, err error) {
+func NewSceneModePlay(fsys fs.FS, cname string, mods Mods, rf *osr.Format) (s *SceneModePlay, err error) {
 	s = new(SceneModePlay)
-	s.Chart, err = LoadChart(fsys, cname)
+	s.Chart, err = NewChart(fsys, cname)
 	if err != nil {
 		return
 	}

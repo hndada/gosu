@@ -76,7 +76,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	// defer skin.fillBlank(DefaultSkin)
 	skin.defaultBackground = mode.UserSkin.DefaultBackground
 	for state, name := range []string{"idle", "high"} {
-		img := draws.LoadImage(fsys, fmt.Sprintf("drum/stage/field-%s.png", name))
+		img := draws.NewImageFromFile(fsys, fmt.Sprintf("drum/stage/field-%s.png", name))
 		if !img.IsValid() {
 			switch state {
 			case Idle:
@@ -93,7 +93,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	}
 	var hintScale float64 // For using idle image's size.
 	for state, name := range []string{"idle", "high"} {
-		img := draws.LoadImage(fsys, fmt.Sprintf("drum/stage/hint-%s.png", name))
+		img := draws.NewImageFromFile(fsys, fmt.Sprintf("drum/stage/hint-%s.png", name))
 		if !img.IsValid() {
 			switch state {
 			case Idle:
@@ -119,25 +119,25 @@ func (skin *Skin) Load(fsys fs.FS) {
 		skin.Bar = s
 	}
 
-	skin.note = draws.LoadImage(fsys, "drum/note/note.png")
+	skin.note = draws.NewImageFromFile(fsys, "drum/note/note.png")
 	if !skin.note.IsValid() {
 		skin.note = DefaultSkin.note
 	}
-	skin.end = draws.LoadImage(fsys, "drum/note/end.png")
+	skin.end = draws.NewImageFromFile(fsys, "drum/note/end.png")
 	if !skin.end.IsValid() {
 		skin.end = DefaultSkin.end
 	}
-	skin.mid = draws.LoadImage(fsys, "drum/note/mid.png")
+	skin.mid = draws.NewImageFromFile(fsys, "drum/note/mid.png")
 	if !skin.mid.IsValid() {
 		skin.mid = DefaultSkin.mid
 	}
-	skin.dot = draws.LoadImage(fsys, "drum/note/dot.png")
+	skin.dot = draws.NewImageFromFile(fsys, "drum/note/dot.png")
 	if !skin.dot.IsValid() {
 		skin.dot = DefaultSkin.dot
 	}
 	for i, sname := range []string{"", "-big"} {
 		name := fmt.Sprintf("drum/note/overlay%s", sname)
-		imgs := draws.LoadImages(fsys, name)
+		imgs := draws.NewImagesFromFile(fsys, name)
 		if len(imgs) == 1 && !imgs[0].IsValid() {
 			skin.overlay = DefaultSkin.overlay
 			break
@@ -169,7 +169,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 			} else {
 				name = fmt.Sprintf("drum/judgment/%s%s", kname, sname)
 			}
-			a := draws.NewAnimation(fsys, name)
+			a := draws.NewAnimationFromFile(fsys, name)
 			for frame := range a {
 				a[frame].MultiplyScale(S.JudgmentScale)
 				a[frame].Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
@@ -183,7 +183,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 			s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 			skin.Note[kind][size] = s
 		}
-		a := draws.NewAnimationFromImages(skin.overlay[size])
+		a := draws.NewAnimation(skin.overlay[size])
 		for frame := range a {
 			a[frame].SetScaleToH(noteHeight)
 			a[frame].Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
@@ -220,7 +220,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	// Key sprites are overlapped at each side.
 	for i, kname := range []string{"in", "out"} {
 		name := fmt.Sprintf("drum/key/%s.png", kname)
-		img := draws.LoadImage(fsys, name)
+		img := draws.NewImageFromFile(fsys, name)
 		if !img.IsValid() {
 			skin.key = DefaultSkin.key
 			break
@@ -265,7 +265,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	}
 	for i, kname := range []string{"idle", "yes", "no", "high"} {
 		name := fmt.Sprintf("drum/dancer/%s", kname)
-		imgs := draws.LoadImages(fsys, name)
+		imgs := draws.NewImagesFromFile(fsys, name)
 		if len(imgs) == 1 && !imgs[0].IsValid() {
 			skin.dancer = DefaultSkin.dancer
 			break
@@ -273,7 +273,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 		skin.dancer[i] = imgs
 	}
 	for i, imgs := range skin.dancer {
-		a := draws.NewAnimationFromImages(imgs)
+		a := draws.NewAnimation(imgs)
 		for frame := range a {
 			a[frame].MultiplyScale(S.DancerScale)
 			a[frame].Locate(S.DancerPositionX, S.DancerPositionY, draws.CenterMiddle)
@@ -284,7 +284,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	{ // Position of combo is dependent on widths of key sprite.
 		var imgs [10]draws.Image
 		for i := 0; i < 10; i++ {
-			img := draws.LoadImage(fsys, fmt.Sprintf("combo/%d.png", i))
+			img := draws.NewImageFromFile(fsys, fmt.Sprintf("combo/%d.png", i))
 			if !img.IsValid() {
 				skin.combo = DefaultSkin.combo
 				break

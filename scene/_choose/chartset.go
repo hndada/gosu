@@ -107,7 +107,7 @@ func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 		p.Sprite = s
 	}
 	go func() {
-		i, err := draws.LoadImageFromURL(cs.URLCover("cover", Large))
+		i, err := draws.NewImageFromURL(cs.URLCover("cover", Large))
 		if err != nil {
 			fmt.Println("chart set cover: ", err)
 		}

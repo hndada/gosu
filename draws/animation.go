@@ -1,54 +1,30 @@
 package draws
 
 import (
-	"fmt"
 	"io/fs"
-	"path"
-	"path/filepath"
-	"sort"
-	"strconv"
-	"strings"
 )
 
 type Animation []Sprite
 
-func NewAnimation(fsys fs.FS, name string) Animation {
-	return NewAnimationFromImages(LoadImages(fsys, name))
-}
-func NewAnimationFromImages(images []Image) (a Animation) {
-	a = make(Animation, len(images))
-	for i, image := range images {
-		a[i] = NewSprite(image)
+func NewAnimation(srcs any) Animation {
+	switch srcs := srcs.(type) {
+	case []Image:
+		return newAnimationFromImages(srcs)
 	}
-	return
+	return nil
 }
-func LoadImages(fsys fs.FS, name string) (is []Image) {
-	const ext = ".png"
+func newAnimationFromImages(imgs []Image) Animation {
+	a := make(Animation, len(imgs))
+	for i, img := range imgs {
+		a[i] = NewSprite(img)
+	}
+	return a
+}
 
-	// name supposed to have no extension when passed in LoadImages.
-	name = strings.TrimSuffix(name, filepath.Ext(name))
-
-	one := []Image{LoadImage(fsys, name+ext)}
-	fs, err := fs.ReadDir(fsys, name)
-	if err != nil {
-		return one
-	}
-	nums := make([]int, 0, len(fs))
-	for _, f := range fs {
-		if f.IsDir() {
-			continue
-		}
-		num := strings.TrimSuffix(f.Name(), ext)
-		if num, err := strconv.Atoi(num); err == nil {
-			nums = append(nums, num)
-		}
-	}
-	sort.Ints(nums)
-	for _, num := range nums {
-		// Avoid use filepath here; it yields backslash, which is invalid path for FS.
-		name2 := path.Join(name, fmt.Sprintf("%d.png", num))
-		is = append(is, LoadImage(fsys, name2))
-	}
-	return
+func NewAnimationFromFile(fsys fs.FS, name string) Animation {
+	return NewAnimation(NewImagesFromFile(fsys, name))
 }
-func (a Animation) IsValid() bool { return len(a) > 1 || a[0].IsValid() }
+
+func (a Animation) IsEmpty() bool {
+	return len(a) <= 1 && a[0].IsEmpty()
+}

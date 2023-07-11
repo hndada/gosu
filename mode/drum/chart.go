@@ -57,7 +57,7 @@ func LoadChart(fsys fs.FS, name string) (c *Chart, err error) {
 		}
 	}
 	c = new(Chart)
-	c.ChartHeader = mode.LoadChartHeader(f)
+	c.ChartHeader = mode.NewChartHeader(f)
 	c.Mode = Mode
 	c.SubMode = 4
 	c.MD5 = md5.Sum(dat)

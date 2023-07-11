@@ -43,15 +43,15 @@ var TheAsset = Asset{}
 func LoadTheAsset(fsys fs.FS) {
 	// Cursor should be at CenterMiddle in circle mode (in far future)
 	for i, name := range []string{"base", "additive", "trail"} {
-		s := draws.LoadSprite(fsys, fmt.Sprintf("cursor/%s.png", name))
+		s := draws.NewSpriteFromFile(fsys, fmt.Sprintf("cursor/%s.png", name))
 		s.MultiplyScale(TheSettings.CursorScale)
 		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.LeftTop)
 		TheAsset.Cursor[i] = s
 	}
-	TheAsset.DefaultBackground = NewBackground(fsys, "interface/default-bg.jpg")
-	TheAsset.BoxMask = draws.LoadSprite(fsys, "interface/box-mask.png")
+	TheAsset.DefaultBackground = NewBackgroundFromFile(fsys, "interface/default-bg.jpg")
+	TheAsset.BoxMask = draws.NewSpriteFromFile(fsys, "interface/box-mask.png")
 	{
-		s := draws.LoadSprite(fsys, "interface/clear.png")
+		s := draws.NewSpriteFromFile(fsys, "interface/clear.png")
 		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 		s.MultiplyScale(TheSettings.ClearScale)
 		TheAsset.Clear = s

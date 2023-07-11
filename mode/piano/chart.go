@@ -12,20 +12,21 @@ type Chart struct {
 	KeyCount int      // same with ChartHeader.SubMode
 	Hash     [16]byte // MD5
 
-	Mods     interface{}
+	Mods     Mods
 	Dynamics []*mode.Dynamic
 	Notes    []*Note
 	Bars     []*Bar
 }
 
-func LoadChart(fsys fs.FS, name string, mods interface{}) (c *Chart, err error) {
+// NewXxx returns *Chart, while LoadXxx doesn't.
+func NewChart(cfg *Config, fsys fs.FS, name string, mods Mods) (c *Chart, err error) {
+	c = new(Chart)
+
 	format, hash, err := mode.ParseChartFile(fsys, name)
 	if err != nil {
 		return
 	}
-
-	c = new(Chart)
-	c.ChartHeader = mode.LoadChartHeader(format)
+	c.ChartHeader = mode.NewChartHeader(format)
 	c.KeyCount = c.SubMode
 	c.Hash = hash
 
@@ -39,7 +40,7 @@ func LoadChart(fsys fs.FS, name string, mods interface{}) (c *Chart, err error) 
 	c.Bars = NewBars(c.Dynamics, c.Duration())
 
 	c.setDynamicPositions()
-	c.setNotePositions()
+	c.setNotePositions(cfg)
 	c.setBarPositions()
 	return
 }
@@ -64,7 +65,8 @@ func (c *Chart) setDynamicPositions() {
 		}
 	}
 }
-func (c *Chart) setNotePositions() {
+func (c *Chart) setNotePositions(cfg *Config) {
+	tailExtraTime := cfg.TailExtraTime
 	dy := c.Dynamics[0]
 	for _, n := range c.Notes {
 		for dy.Next != nil && n.Time >= dy.Next.Time {
@@ -72,7 +74,7 @@ func (c *Chart) setNotePositions() {
 		}
 		n.Position = dy.Position + float64(n.Time-dy.Time)*dy.Speed
 		if n.Type == Tail {
-			n.Position += float64(TheSettings.TailExtraTime) * dy.Speed
+			n.Position += float64(tailExtraTime) * dy.Speed
 
 			// Tail notes should be drawn after their heads.
 			if n.Position < n.Prev.Position {

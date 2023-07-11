@@ -48,7 +48,7 @@ func NewRow(cardURL, thumbURL, first, second string) Row {
 		r.Thumb = s
 	}
 	go func() {
-		i, err := draws.LoadImageFromURL(thumbURL)
+		i, err := draws.NewImageFromURL(thumbURL)
 		if err != nil {
 			return
 		}
@@ -63,7 +63,7 @@ func NewRow(cardURL, thumbURL, first, second string) Row {
 		r.Card = s
 	}
 	go func() {
-		i, err := draws.LoadImageFromURL(cardURL)
+		i, err := draws.NewImageFromURL(cardURL)
 		if err != nil {
 			return
 		}

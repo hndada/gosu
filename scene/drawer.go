@@ -6,8 +6,8 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-func NewBackground(fsys fs.FS, name string) draws.Sprite {
-	s := draws.LoadSprite(fsys, name)
+func NewBackgroundFromFile(fsys fs.FS, name string) draws.Sprite {
+	s := draws.NewSpriteFromFile(fsys, name)
 	s.MultiplyScale(ScreenSizeX / s.W())
 	s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
 	return s

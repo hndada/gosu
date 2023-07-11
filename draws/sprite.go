@@ -27,11 +27,11 @@ func NewSprite(src Source) Sprite {
 		Filter: ebiten.FilterLinear, // FilterNearest is the default in ebiten.
 	}
 }
-func LoadSprite(fsys fs.FS, name string) Sprite {
-	return NewSprite(LoadImage(fsys, name))
+func NewSpriteFromFile(fsys fs.FS, name string) Sprite {
+	return NewSprite(NewImageFromFile(fsys, name))
 }
-func LoadSpriteFromURL(url string) (Sprite, error) {
-	img, err := LoadImageFromURL(url)
+func NewSpriteFromURL(url string) (Sprite, error) {
+	img, err := NewImageFromURL(url)
 	if err != nil {
 		return Sprite{}, err
 	}
@@ -68,7 +68,7 @@ func (s Sprite) In(p Vector2) bool {
 }
 func (s Sprite) LeftTop(screenSize Vector2) (v Vector2) { return s.Min() }
 func (s Sprite) Draw(dst Image, op Op) {
-	if s.Source == nil || !s.IsValid() {
+	if s.Source == nil || s.IsEmpty() {
 		return
 	}
 	op.GeoM.Scale(s.Scale.XY())

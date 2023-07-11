@@ -291,7 +291,7 @@ func (s *Scene) Update() any {
 				// }
 			}
 			defer resp.Body.Close()
-			if s.Preview.IsValid() {
+			if !s.Preview.IsEmpty() {
 				s.Preview.Close()
 			}
 			s.Preview, err = NewPreviewPlayer(resp.Body)
@@ -303,8 +303,8 @@ func (s *Scene) Update() any {
 			}
 		}()
 		go func() {
-			// i, err := draws.LoadImageFromURL("https://upload.wikimedia.org/wikipedia/commons/1/1f/As08-16-2593.jpg")
-			i, err := draws.LoadImageFromURL(cset.URLCover("cover", Large))
+			// i, err := draws.NewImageFromURL("https://upload.wikimedia.org/wikipedia/commons/1/1f/As08-16-2593.jpg")
+			i, err := draws.NewImageFromURL(cset.URLCover("cover", Large))
 			if err != nil {
 				return
 			}
