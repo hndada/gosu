@@ -7,8 +7,13 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-// func NewScoreSprites(fsys fs.FS, cfg Config) [13]draws.Sprite {
-func NewScoreSprites(fsys fs.FS, ScreenSize draws.Vector2, scale float64) [13]draws.Sprite {
+const (
+	ScoreDot = iota + 10
+	ScoreComma
+	ScorePercent
+)
+
+func NewScoreNumbers(fsys fs.FS, ScreenSize draws.Vector2, scale float64) [13]draws.Sprite {
 	var sprites [13]draws.Sprite
 	for i := 0; i < 10; i++ {
 		s := draws.NewSpriteFromFile(fsys, fmt.Sprintf("score/%d.png", i))
@@ -30,3 +35,9 @@ func NewScoreSprites(fsys fs.FS, ScreenSize draws.Vector2, scale float64) [13]dr
 	}
 	return sprites
 }
+
+// type Config interface {
+// 	ScreenSize() draws.Vector2
+// 	ScoreScale() float64
+// }
+// func NewScoreNumbers(fsys fs.FS, cfg Config) [13]draws.Sprite {

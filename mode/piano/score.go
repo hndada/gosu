@@ -42,14 +42,11 @@ type Scorer struct {
 
 	Flow float64
 	Acc  float64
-
-	notes  []*Note
-	Staged []*Note
-
 	// Todo: FlowPoint
 
+	Staged        []*Note
 	worstJudgment mode.Judgment
-	isHits        []bool
+	isNoteHits    []bool // for drawing hit lighting
 }
 
 func NewScorer(c *Chart) Scorer {
@@ -61,13 +58,16 @@ func NewScorer(c *Chart) Scorer {
 		Mods:      c.Mods,
 		Judgments: js,
 
+		// Accumulating floating-point numbers may result in imprecise values.
+		// To ensure that the maximum score is attainable,
+		// we initialize the score with a small value in advance.
+		Score:          0.01,
 		UnitScores:     unitScores,
 		JudgmentCounts: make([]int, len(Judgments)),
 
 		Flow: MaxFlow,
 		Acc:  MaxAcc,
 
-		notes:  c.Notes,
 		Staged: newStaged(c),
 	}
 }
@@ -85,8 +85,7 @@ func newStaged(c *Chart) []*Note {
 }
 
 func (s *Scorer) Check(ka input.KeyboardAction) {
-	s.worstJudgment = blank
-	s.isHits = make([]bool, len(s.Staged)) // for drawing hit lighting
+	s.isNoteHits = make([]bool, len(s.Staged))
 	for k, n := range s.Staged {
 		if n == nil {
 			continue
@@ -94,7 +93,7 @@ func (s *Scorer) Check(ka input.KeyboardAction) {
 
 		timeError := n.Time - ka.Time
 
-		// Flush marked tail notes.
+		// Flush marked tail note.
 		if n.Marked {
 			if n.Type != Tail {
 				panic("marked yet remained note is not Tail")
@@ -113,7 +112,7 @@ func (s *Scorer) Check(ka input.KeyboardAction) {
 				s.worstJudgment = j
 			}
 			if !j.Is(Miss) { // && n.Type != Head
-				s.isHits[k] = true
+				s.isNoteHits[k] = true
 			}
 			// Todo: Add time error meter mark
 			// Todo: Use different color for error meter of Tail
@@ -203,4 +202,13 @@ func (s *Scorer) addJugdmentCount(j mode.Judgment) {
 			break
 		}
 	}
+}
+
+func (s Scorer) judgmentIndex(j mode.Judgment) int {
+	for i, j2 := range Judgments {
+		if j.Is(j2) {
+			return i
+		}
+	}
+	return len(Judgments) // blank
 }
