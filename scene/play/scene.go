@@ -34,6 +34,10 @@ type SceneModePlay interface {
 	DebugPrint(draws.Image)
 }
 
+func init() {
+	skins.loadSkin(4)
+	skins.loadSkin(7)
+}
 func NewScene(m int, args mode.ScenePlayArgs) (*ScenePlay, error) {
 	var (
 		play SceneModePlay
