@@ -91,7 +91,7 @@ func (s *Scorer) Check(ka input.KeyboardAction) {
 			continue
 		}
 
-		timeError := n.Time - ka.Time
+		e := n.Time - ka.Time
 
 		// Flush marked tail note.
 		if n.Marked {
@@ -99,13 +99,13 @@ func (s *Scorer) Check(ka input.KeyboardAction) {
 				panic("marked yet remained note is not Tail")
 			}
 			// Keep Tail staged until near ends.
-			if timeError < Miss.Window {
+			if e < Miss.Window {
 				s.Staged[k] = n.Next
 			}
 			// continue // I think no continue is right.
 		}
 
-		j := Judge(n.Type, timeError, ka.Action[k])
+		j := Judge(n.Type, e, ka.Action[k])
 		if j != blank { // Comparison between two structs is possible.
 			s.Mark(n, j)
 			if s.worstJudgment.Window < j.Window {
@@ -120,28 +120,28 @@ func (s *Scorer) Check(ka input.KeyboardAction) {
 	}
 }
 
-func Judge(noteType int, timeError int32, a input.KeyActionType) mode.Judgment {
+func Judge(noteType int, e int32, a input.KeyActionType) mode.Judgment {
 	switch noteType {
 	case Normal, Head:
-		return mode.Judge(Judgments, timeError, a)
+		return mode.Judge(Judgments, e, a)
 	case Tail:
-		return judgeTail(timeError, a)
+		return judgeTail(e, a)
 	}
 	return blank
 }
 
 // Either Hold or Release when Tail is not scored
-func judgeTail(timeError int32, a input.KeyActionType) mode.Judgment {
+func judgeTail(e int32, a input.KeyActionType) mode.Judgment {
 	switch {
-	case timeError > Miss.Window:
+	case e > Miss.Window:
 		if a == input.Release {
 			return Miss
 		}
-	case timeError < -Miss.Window:
+	case e < -Miss.Window:
 		return Miss
 	default: // In range
 		if a == input.Release { // a != Hold
-			j := mode.Evaluate(Judgments, timeError)
+			j := mode.Evaluate(Judgments, e)
 			if j.Is(Cool) { // Cool at Tail goes Kool
 				j = Kool
 			}

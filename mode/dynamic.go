@@ -23,19 +23,19 @@ type Dynamic struct {
 }
 
 func NewDynamics(f any) []*Dynamic {
-	var transPoints []*Dynamic
+	var ds []*Dynamic
 	switch f := f.(type) {
 	case *osu.Format:
-		transPoints = newDynamicsFromOsu(f)
+		ds = newDynamicsFromOsu(f)
 	}
 
 	var prev *Dynamic
-	for _, dy := range transPoints {
-		dy.Prev = prev
+	for _, d := range ds {
+		d.Prev = prev
 		if prev != nil {
-			prev.Next = dy
+			prev.Next = d
 		}
-		prev = dy
+		prev = d
 	}
 	return nil
 }
@@ -43,7 +43,7 @@ func NewDynamics(f any) []*Dynamic {
 // When gathering Dynamics from osu.Format, it should input the whole slice.
 // It is because osu.Format.TimingPoints brings some value from previous TimingPoint.
 func newDynamicsFromOsu(f *osu.Format) []*Dynamic {
-	var transPoints []*Dynamic
+	var ds []*Dynamic
 	sort.SliceStable(f.TimingPoints, func(i int, j int) bool {
 		if f.TimingPoints[i].Time == f.TimingPoints[j].Time {
 			return f.TimingPoints[i].Uninherited
@@ -55,13 +55,13 @@ func newDynamicsFromOsu(f *osu.Format) []*Dynamic {
 		f.TimingPoints = f.TimingPoints[1:]
 	}
 	if len(f.TimingPoints) == 0 {
-		return transPoints
+		return ds
 	}
 	tempMainBPM := f.TimingPoints[0].BPM()
-	transPoints = make([]*Dynamic, 0, len(f.TimingPoints))
+	ds = make([]*Dynamic, 0, len(f.TimingPoints))
 	prevBPM := tempMainBPM
 	for _, timingPoint := range f.TimingPoints {
-		dy := &Dynamic{
+		d := &Dynamic{
 			Time:      int32(timingPoint.Time),
 			BPM:       prevBPM,
 			Speed:     prevBPM / tempMainBPM,
@@ -71,44 +71,44 @@ func newDynamicsFromOsu(f *osu.Format) []*Dynamic {
 			Highlight: timingPoint.IsKiai(),
 		}
 		if timingPoint.Uninherited {
-			dy.BPM = timingPoint.BPM()
-			dy.Speed = dy.BPM / tempMainBPM
+			d.BPM = timingPoint.BPM()
+			d.Speed = d.BPM / tempMainBPM
 		} else {
-			dy.Speed *= timingPoint.BeatLengthScale()
+			d.Speed *= timingPoint.BeatLengthScale()
 		}
 		// Drop a Dynamic with a same time
-		if len(transPoints) > 0 && transPoints[len(transPoints)-1].Time == dy.Time {
+		if len(ds) > 0 && ds[len(ds)-1].Time == d.Time {
 			// Either one makes Dynamic a NewBeat
-			dy.NewBeat = transPoints[len(transPoints)-1].NewBeat || dy.NewBeat
-			transPoints = transPoints[:len(transPoints)-1]
+			d.NewBeat = ds[len(ds)-1].NewBeat || d.NewBeat
+			ds = ds[:len(ds)-1]
 		}
-		transPoints = append(transPoints, dy)
-		prevBPM = dy.BPM
+		ds = append(ds, d)
+		prevBPM = d.BPM
 	}
-	return transPoints
+	return ds
 }
 
 // 0: Use default meter.
-func (dy Dynamic) BeatDuration(meter int) float64 {
-	m := float64(dy.Meter)
+func (d Dynamic) BeatDuration(meter int) float64 {
+	m := float64(d.Meter)
 	if meter > 0 {
 		m = float64(meter)
 	}
-	return m * (60000 / dy.BPM)
+	return m * (60000 / d.BPM)
 }
 
-func BeatTimes(dys []*Dynamic, duration int32, meter int) (times []int32) {
+func BeatTimes(ds []*Dynamic, duration int32, meter int) (times []int32) {
 	// These variables are for iterating over the Time.
 	var start, end, step float64
 	const bufferTime = 5000
 
 	// times before first Dynamic
-	start = float64(dys[0].Time)
+	start = float64(ds[0].Time)
 	end = start
 	if end > -bufferTime {
 		end = -bufferTime
 	}
-	step = dys[0].BeatDuration(meter)
+	step = ds[0].BeatDuration(meter)
 	for t := start; t >= end; t -= step {
 		times = append([]int32{int32(t)}, times...)
 	}
@@ -117,20 +117,20 @@ func BeatTimes(dys []*Dynamic, duration int32, meter int) (times []int32) {
 
 	// times after first Dynamic
 	var newDys []*Dynamic
-	for _, dy := range dys {
-		if dy.NewBeat {
-			newDys = append(newDys, dy)
+	for _, d := range ds {
+		if d.NewBeat {
+			newDys = append(newDys, d)
 		}
 	}
 
-	for i, ndy := range newDys {
-		start = float64(ndy.Time)
+	for i, nd := range newDys {
+		start = float64(nd.Time)
 		if i == len(newDys)-1 {
 			end = float64(duration + bufferTime)
 		} else {
 			end = float64(newDys[i+1].Time)
 		}
-		step = ndy.BeatDuration(meter)
+		step = nd.BeatDuration(meter)
 		for t := start; t < end; t += step {
 			times = append(times, int32(t))
 		}

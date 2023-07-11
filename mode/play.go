@@ -68,11 +68,11 @@ func (s *BaseScenePlay) SetMusicVolume(vol float64) {
 }
 
 func (s *BaseScenePlay) UpdateDynamic() {
-	dy := s.Dynamic
-	for dy.Next != nil && s.Now() >= dy.Next.Time {
-		dy = dy.Next
+	d := s.Dynamic
+	for d.Next != nil && s.Now() >= d.Next.Time {
+		d = d.Next
 	}
-	s.Dynamic = dy
+	s.Dynamic = d
 }
 
 func (s BaseScenePlay) StartMusic() {

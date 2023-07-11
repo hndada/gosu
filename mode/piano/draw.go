@@ -40,11 +40,11 @@ func (s ScenePlay) Draw(screen draws.Image) {
 }
 
 func (s ScenePlay) drawField(dst draws.Image) {
-	s.asset.Field.Draw(dst, draws.Op{})
+	s.Field.Draw(dst, draws.Op{})
 }
 
 func (s ScenePlay) drawHint(dst draws.Image) {
-	s.asset.Hint.Draw(dst, draws.Op{})
+	s.Hint.Draw(dst, draws.Op{})
 }
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
@@ -52,7 +52,7 @@ func (s ScenePlay) drawBars(dst draws.Image) {
 	lowerBound := s.cursor - 100
 	for b := s.highestBar; b.Position > lowerBound; b = b.Prev {
 		pos := b.Position - s.cursor
-		sprite := s.asset.Bar
+		sprite := s.Bar
 		sprite.Move(0, -pos)
 		sprite.Draw(dst, draws.Op{})
 		if b.Prev == nil {
@@ -69,12 +69,12 @@ func (s ScenePlay) drawLongNoteBodies(dst draws.Image) {
 			continue
 		}
 		head := tail.Prev
-		body := s.asset.NoteTypes[k][Body][0]
+		body := s.NoteTypes[k][Body][0]
 
 		holding := s.lastKeyActions[k] == input.Hold
 		holding = holding && s.Scorer.Staged[k].Type == Tail
 		if holding {
-			body = s.noteTimers[k].Frame(s.asset.NoteTypes[k][Body])
+			body = s.noteTimers[k].Frame(s.NoteTypes[k][Body])
 		}
 
 		length := tail.Position - head.Position
@@ -101,7 +101,7 @@ func (s ScenePlay) drawNotes(dst draws.Image) {
 	lowerBound := s.cursor - 100
 	for k, n := range s.highestNotes {
 		for ; n.Position > lowerBound; n = n.Prev {
-			sprite := s.noteTimers[k].Frame(s.asset.NoteTypes[k][n.Type])
+			sprite := s.noteTimers[k].Frame(s.NoteTypes[k][n.Type])
 			pos := n.Position - s.cursor
 			sprite.Move(0, -pos)
 
@@ -119,7 +119,7 @@ func (s ScenePlay) drawNotes(dst draws.Image) {
 }
 
 func (s ScenePlay) drawKeys(dst draws.Image) {
-	for k, sprites := range s.asset.KeysUpDowns {
+	for k, sprites := range s.KeysUpDowns {
 		timer := s.keyTimers[k]
 		if s.isKeyHit(k) {
 			s.keyTimers[k].Reset()
@@ -135,7 +135,7 @@ func (s ScenePlay) drawKeys(dst draws.Image) {
 
 // drawKeyLightings draws for a while even when pressed off very shortly.
 func (s ScenePlay) drawKeyLightings(dst draws.Image) {
-	for k, sprite := range s.asset.KeyLightings {
+	for k, sprite := range s.KeyLightings {
 		if s.isKeyHit(k) {
 			s.keyLightingTimers[k].Reset()
 		}
@@ -150,7 +150,7 @@ func (s ScenePlay) drawKeyLightings(dst draws.Image) {
 
 // drawHitLightings draws when Normal is Hit or Tail is Release.
 func (s ScenePlay) drawHitLightings(dst draws.Image) {
-	for k, a := range s.asset.HitLightings {
+	for k, a := range s.HitLightings {
 		if s.isKeyHit(k) {
 			s.hitLightingTimers[k].Reset()
 		}
@@ -166,7 +166,7 @@ func (s ScenePlay) drawHitLightings(dst draws.Image) {
 }
 
 func (s ScenePlay) drawHoldLightings(dst draws.Image) {
-	for k, a := range s.asset.HoldLightings {
+	for k, a := range s.HoldLightings {
 		if !s.isKeyPressed(k) {
 			return
 		}
@@ -207,7 +207,7 @@ func (s ScenePlay) drawJudgment(dst draws.Image) {
 	}
 
 	index := s.Scorer.judgmentIndex(s.Scorer.worstJudgment)
-	sprite := timer.Frame(s.asset.Judgments[index])
+	sprite := timer.Frame(s.JudgmentKinds[index])
 	sprite.MultiplyScale(scale)
 	sprite.Draw(dst, draws.Op{})
 }

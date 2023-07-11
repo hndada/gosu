@@ -56,25 +56,25 @@ func (c *Chart) setDynamicPositions() {
 	// Brilliant idea: Make SpeedScale scaled by MainBPM.
 	mainBPM, _, _ := mode.BPMs(c.Dynamics, c.Duration())
 	bpmScale := c.Dynamics[0].BPM / mainBPM
-	for _, dy := range c.Dynamics {
-		dy.Speed *= bpmScale
-		if prev := dy.Prev; prev != nil {
-			dy.Position = prev.Position + float64(dy.Time-prev.Time)*prev.Speed
+	for _, d := range c.Dynamics {
+		d.Speed *= bpmScale
+		if prev := d.Prev; prev != nil {
+			d.Position = prev.Position + float64(d.Time-prev.Time)*prev.Speed
 		} else {
-			dy.Position = float64(dy.Time) * dy.Speed
+			d.Position = float64(d.Time) * d.Speed
 		}
 	}
 }
 func (c *Chart) setNotePositions(cfg *Config) {
 	tailExtraTime := cfg.TailExtraTime
-	dy := c.Dynamics[0]
+	d := c.Dynamics[0]
 	for _, n := range c.Notes {
-		for dy.Next != nil && n.Time >= dy.Next.Time {
-			dy = dy.Next
+		for d.Next != nil && n.Time >= d.Next.Time {
+			d = d.Next
 		}
-		n.Position = dy.Position + float64(n.Time-dy.Time)*dy.Speed
+		n.Position = d.Position + float64(n.Time-d.Time)*d.Speed
 		if n.Type == Tail {
-			n.Position += float64(tailExtraTime) * dy.Speed
+			n.Position += float64(tailExtraTime) * d.Speed
 
 			// Tail notes should be drawn after their heads.
 			if n.Position < n.Prev.Position {
@@ -84,12 +84,12 @@ func (c *Chart) setNotePositions(cfg *Config) {
 	}
 }
 func (c *Chart) setBarPositions() {
-	dy := c.Dynamics[0]
+	d := c.Dynamics[0]
 	for _, b := range c.Bars {
-		for dy.Next != nil && b.Time >= dy.Next.Time {
-			dy = dy.Next
+		for d.Next != nil && b.Time >= d.Next.Time {
+			d = d.Next
 		}
-		b.Position = dy.Position + float64(b.Time-dy.Time)*dy.Speed
+		b.Position = d.Position + float64(b.Time-d.Time)*d.Speed
 	}
 }
 

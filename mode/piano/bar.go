@@ -10,9 +10,9 @@ type Bar struct {
 	Prev     *Bar
 }
 
-func NewBars(dys []*mode.Dynamic, duration int32) (bs []*Bar) {
+func NewBars(ds []*mode.Dynamic, duration int32) (bs []*Bar) {
 	const useDefaultMeter = 0
-	times := mode.BeatTimes(dys, duration, useDefaultMeter)
+	times := mode.BeatTimes(ds, duration, useDefaultMeter)
 
 	bs = make([]*Bar, 0, len(times))
 	for _, t := range times {

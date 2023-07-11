@@ -13,10 +13,10 @@ import (
 type ScenePlay struct {
 	mode.BaseScenePlay
 
-	cfg    *Config
-	asset  *Asset
-	Chart  *Chart
-	Scorer Scorer
+	*Config
+	*Asset
+	*Chart
+	Scorer
 
 	lastSpeedScale float64
 	cursor         float64
@@ -49,8 +49,8 @@ func NewScenePlay(cfg *Config, asset *Asset, fsys fs.FS, name string, mods Mods,
 		s.KeyLogger.FetchPressed = NewReplayListener(rf, s.Chart.KeyCount, &s.Timer)
 	}
 
-	s.cfg = cfg
-	s.asset = asset
+	s.Config = cfg
+	s.Asset = asset
 	s.Chart, err = NewChart(cfg, fsys, name, mods)
 	if err != nil {
 		return
@@ -74,9 +74,9 @@ func NewScenePlay(cfg *Config, asset *Asset, fsys fs.FS, name string, mods Mods,
 	s.comboTimer = draws.NewTimer(mode.ToTick(2000), 0)
 
 	const comboBounce = 0.85
-	s.drawScore = mode.NewDrawScoreFunc(s.asset.ScoreNumbers, &s.Scorer.Score,
+	s.drawScore = mode.NewDrawScoreFunc(s.ScoreNumbers, &s.Scorer.Score,
 		s.cfg.ScoreScale)
-	s.drawCombo = mode.NewDrawComboFunc(s.asset.ComboNumbers, &s.Scorer.Combo, &s.comboTimer,
+	s.drawCombo = mode.NewDrawComboFunc(s.ComboNumbers, &s.Scorer.Combo, &s.comboTimer,
 		s.cfg.ComboDigitGap, comboBounce)
 	return
 }
@@ -156,8 +156,8 @@ func (s *ScenePlay) SetSpeedScale() {
 	old := s.lastSpeedScale
 	new := s.cfg.SpeedScale
 	s.cursor *= new / old
-	for _, dy := range c.Dynamics {
-		dy.Position *= new / old
+	for _, d := range c.Dynamics {
+		d.Position *= new / old
 	}
 	for _, n := range c.Notes {
 		n.Position *= new / old

@@ -33,10 +33,10 @@ type Asset struct {
 	keyTypes   []KeyType
 
 	// asset that are not affected by key count
-	ScoreNumbers [13]draws.Sprite // numbers with sign (. , %)
-	ComboNumbers [10]draws.Sprite
-	Judgments    [4]draws.Animation
-	Sound        []byte
+	ScoreNumbers  [13]draws.Sprite // numbers with sign (. , %)
+	ComboNumbers  [10]draws.Sprite
+	JudgmentKinds [4]draws.Animation
+	Sound         []byte
 
 	// asset for a field
 	Field draws.Sprite
@@ -68,7 +68,7 @@ func NewAsset(cfg *Config, fsys fs.FS, keyCount int, scratchMode ScratchMode) *A
 
 	asset.setScoreNumbers()
 	asset.setComboNumbers()
-	asset.setJudgments()
+	asset.setJudgmentKinds()
 	asset.setSound()
 
 	asset.setFieldSprite()
@@ -96,7 +96,7 @@ func (asset *Asset) setComboNumbers() {
 	}
 	asset.ComboNumbers = sprites
 }
-func (asset *Asset) setJudgments() {
+func (asset *Asset) setJudgmentKinds() {
 	var anims [4]draws.Animation
 	for i, name := range []string{"kool", "cool", "good", "miss"} {
 		a := draws.NewAnimationFromFile(asset.fsys, fmt.Sprintf("piano/judgment/%s", name))
@@ -106,7 +106,7 @@ func (asset *Asset) setJudgments() {
 		}
 		anims[i] = a
 	}
-	asset.Judgments = anims
+	asset.JudgmentKinds = anims
 }
 func (asset *Asset) setSound() {
 	sound := audios.NewSound(asset.fsys, "piano/sound.wav")
