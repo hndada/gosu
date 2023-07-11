@@ -10,8 +10,11 @@ import (
 // TPS affects only on Update(), not on Draw().
 var TPS = float64(ebiten.TPS())
 
-func ToTick(t time.Duration) int { return int(TPS * t.Seconds()) }
-func ToTime(t int) time.Duration { return time.Duration(float64(t)/TPS) * time.Second }
+func ToTick(ms int32) int   { return int(TPS * float64(ms) / 1000) }
+func ToTime(tick int) int32 { return int32(float64(tick) / TPS * 1000) }
+
+// func ToTick(t time.Duration) int { return int(TPS * t.Seconds()) }
+// func ToTime(t int) time.Duration { return time.Duration(float64(t)/TPS) * time.Second }
 
 type Timer struct {
 	StartTime time.Time
@@ -21,14 +24,14 @@ type Timer struct {
 	MaxTick   int
 }
 
-func NewTimer(lifetime time.Duration, offset *time.Duration) Timer {
-	const wait = 1800 * time.Millisecond
+func NewTimer(ms int32, offset *time.Duration) Timer {
+	const wait = 1800
 	return Timer{
 		StartTime: time.Now().Add(wait * time.Millisecond),
 		Offset:    *offset,
 		offset:    offset,
 		Tick:      ToTick(-wait),
-		MaxTick:   ToTick(lifetime + wait),
+		MaxTick:   ToTick(ms + wait),
 	}
 }
 func (t Timer) Now() time.Duration { return ToTime(t.Tick) }

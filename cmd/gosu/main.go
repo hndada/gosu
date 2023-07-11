@@ -18,6 +18,11 @@ type game struct {
 func main() {
 	// Todo: input fs.FS by os.Getwd()
 	// scenes["choose"] = choose.NewScene()
+	ebiten.SetWindowSize(scene.ScreenSizeX, scene.ScreenSizeY)
+
+	// In 240Hz monitor, TPS is 60 and FPS is 240 at start.
+	// SetTPS will set TPS to FPS, hence TPS will be 240 too.
+	ebiten.SetTPS(ebiten.SyncWithFPS)
 	g := &game{
 		Scene: scenes["choose"],
 	}
@@ -25,7 +30,6 @@ func main() {
 	// "nekodex - circles! (MuangMuangE) [Hard].osu", nil, nil)
 	// scene, err := drum.NewScenePlay(os.DirFS(path.Join(dir, "asdf - 1223")),
 	// 	"asdf - 1223 (MuangMuangE) [Oni].osu", nil, nil)
-	ebiten.SetWindowSize(scene.ScreenSizeX, scene.ScreenSizeY)
 	if err := ebiten.RunGame(g); err != nil {
 		panic(err)
 	}
