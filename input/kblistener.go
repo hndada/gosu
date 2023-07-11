@@ -127,3 +127,11 @@ func (kl *KeyboardListener) Resume() {
 func (kl *KeyboardListener) IsPaused() bool { return kl.paused }
 
 func (kl *KeyboardListener) Output() []KeyboardState { return kl.States }
+
+func (kl *KeyboardListener) Close() {
+	kl.pauseMutex.Lock()
+	defer kl.pauseMutex.Unlock()
+	kl.pauseChannel <- struct{}{}
+	close(kl.pauseChannel)
+	close(kl.resumeChannel)
+}

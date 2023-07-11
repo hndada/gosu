@@ -2,6 +2,7 @@ package piano
 
 import (
 	"io/fs"
+	"time"
 
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
@@ -11,12 +12,11 @@ import (
 )
 
 type ScenePlay struct {
-	mode.BaseScenePlay
-
 	*Config
 	*Asset
 	*Chart
 	Scorer
+	mode.BaseScenePlay
 
 	lastSpeedScale float64
 	cursor         float64
@@ -36,19 +36,9 @@ type ScenePlay struct {
 	drawCombo func(draws.Image)
 }
 
-// c.Duration()
+// Todo: replay listener
 func NewScenePlay(cfg *Config, asset *Asset, fsys fs.FS, name string, mods Mods, rf *osr.Format) (s *ScenePlay, err error) {
 	s = new(ScenePlay)
-	s.MusicPlayer, err = audios.NewMusicPlayer(fsys, s.Chart.MusicFilename)
-	if err != nil {
-		return
-	}
-	s.SoundPlayer = audios.NewSoundPlayer(fsys, S.volumeSound)
-	s.KeyLogger = input.NewKeyLogger(S.KeySettings[s.Chart.KeyCount])
-	if rf != nil {
-		s.KeyLogger.FetchPressed = NewReplayListener(rf, s.Chart.KeyCount, &s.Timer)
-	}
-
 	s.Config = cfg
 	s.Asset = asset
 	s.Chart, err = NewChart(cfg, fsys, name, mods)
@@ -56,6 +46,20 @@ func NewScenePlay(cfg *Config, asset *Asset, fsys fs.FS, name string, mods Mods,
 		return
 	}
 	s.Scorer = NewScorer(s.Chart)
+
+	s.MusicPlayer, err = audios.NewMusicPlayer(fsys, s.MusicFilename)
+	if err != nil {
+		return
+	}
+	s.SoundPlayer = audios.NewSoundPlayer(fsys, &cfg.SoundVolume)
+
+	const wait = 1800 * time.Millisecond
+	if rf != nil {
+		s.Keyboard = NewReplayListener(rf, s.KeyCount, wait)
+	} else {
+		keys := input.NamesToKeys(s.KeySettings[s.keyCount])
+		s.Keyboard = input.NewKeyboardListener(keys, wait)
+	}
 
 	s.Dynamic = s.Chart.Dynamics[0]
 	s.lastSpeedScale = s.cfg.SpeedScale

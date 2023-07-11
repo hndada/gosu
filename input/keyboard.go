@@ -8,6 +8,7 @@ type Keyboard interface {
 	Resume()
 	IsPaused() bool
 	Output() []KeyboardState // Output all states.
+	Close()
 }
 type KeyboardState struct {
 	Time    int32
