@@ -253,8 +253,8 @@ func (s *Scene) Update() any {
 		}
 		// cset := s.ChartSets.Current()
 		// go func() {
-		// 	// i, err := draws.LoadImageFromURL("https://upload.wikimedia.org/wikipedia/commons/1/1f/As08-16-2593.jpg")
-		// 	i, err := draws.LoadImageFromURL(cset.URLCover("cover", Large))
+		// 	// i, err := draws.NewImageFromURL("https://upload.wikimedia.org/wikipedia/commons/1/1f/As08-16-2593.jpg")
+		// 	i, err := draws.NewImageFromURL(cset.URLCover("cover", Large))
 		// 	if err != nil {
 		// 		return
 		// 	}

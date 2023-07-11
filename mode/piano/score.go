@@ -32,7 +32,7 @@ const (
 )
 
 type Scorer struct {
-	Mods      interface{}
+	Mods      Mods
 	Judgments []mode.Judgment // May change by mods
 
 	Combo          int

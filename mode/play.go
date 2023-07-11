@@ -9,6 +9,6 @@ import (
 type ScenePlayArgs struct {
 	FS            fs.FS
 	ChartFilename string
-	Mods          interface{}
+	Mods          any
 	Replay        *osr.Format
 }

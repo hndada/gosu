@@ -33,7 +33,7 @@ func (s Sound) Play(vol float64) {
 	p.SetVolume(vol)
 	p.Play()
 }
-func (s Sound) IsValid() bool { return s != nil }
+func (s Sound) IsEmpty() bool { return s != nil }
 
 // SoundBag is for playing one of effects in the slice. Useful for
 // playing slightly different effect when doing same actions.

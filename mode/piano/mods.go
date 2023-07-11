@@ -7,3 +7,5 @@ const (
 	LeftScratch
 	RightScratch
 )
+
+type Mods struct{}

@@ -38,7 +38,7 @@ type ChartHeader struct {
 	SubMode int
 }
 
-func LoadChartHeader(f any) (c ChartHeader) {
+func NewChartHeader(f any) (c ChartHeader) {
 	switch f := f.(type) {
 	case *osu.Format:
 		return newChartHeaderFromOsu(f)

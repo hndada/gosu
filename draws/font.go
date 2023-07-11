@@ -35,7 +35,7 @@ func init() {
 	Fonts[DefaultFontKey] = f
 	DefaultFont = f
 }
-func LoadFace(fontKey FontKey, size float64) font.Face {
+func NewFace(fontKey FontKey, size float64) font.Face {
 	var (
 		_font *truetype.Font
 		face  font.Face
@@ -55,6 +55,6 @@ func LoadFace(fontKey FontKey, size float64) font.Face {
 	}
 	return face
 }
-func LoadDefaultFace(size float64) font.Face {
-	return LoadFace(DefaultFontKey, size)
+func DefaultFace(size float64) font.Face {
+	return NewFace(DefaultFontKey, size)
 }

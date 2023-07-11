@@ -65,7 +65,7 @@ func NewScene(m int, args mode.ScenePlayArgs) (*ScenePlay, error) {
 	// s.Background = scene.BackgroundDrawer{
 	// 	Sprite: scene.NewBackground(args.FS, c.ImageFilename),
 	// }
-	// if !s.Background.Sprite.IsValid() {
+	// if s.Background.Sprite.IsEmpty() {
 	// 	s.Background.Sprite = skin.DefaultBackground
 	// }
 	// ebiten.SetWindowTitle(c.WindowTitle())

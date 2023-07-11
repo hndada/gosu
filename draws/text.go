@@ -16,11 +16,16 @@ func NewText(t string, face font.Face) Text {
 		face: face,
 	}
 }
-func (t Text) IsValid() bool { return len(t.text) > 0 }
+
+// Append new line when each function has more than one line
+// and functions are not strictly related.
 func (t Text) Size() Vector2 {
 	b := text.BoundString(t.face, t.text)
 	return IntVec2(b.Max.X, -b.Min.Y)
 }
+
 func (t Text) Draw(dst Image, op Op) {
 	text.DrawWithOptions(dst.Image, t.text, t.face, &op)
 }
+
+func (t Text) IsEmpty() bool { return len(t.text) == 0 }

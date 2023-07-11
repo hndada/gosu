@@ -46,7 +46,7 @@ func NewPreviewPlayer(rc io.ReadCloser) (p PreviewPlayer, err error) {
 	}, nil
 }
 func (p *PreviewPlayer) Update() {
-	if !p.IsValid() {
+	if p.IsEmpty() {
 		return
 	}
 	if vol := *p.volume; p.Volume != vol {
@@ -71,7 +71,7 @@ func (p *PreviewPlayer) Update() {
 		p.Pause()
 	}
 }
-func (p PreviewPlayer) IsValid() bool { return p.Player != nil }
+func (p PreviewPlayer) IsEmpty() bool { return p.Player == nil }
 func (p PreviewPlayer) Close() {
 	p.Player.Close()
 	p.Closer()
