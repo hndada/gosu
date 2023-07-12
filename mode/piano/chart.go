@@ -66,7 +66,7 @@ func (c *Chart) setDynamicPositions() {
 	}
 }
 func (c *Chart) setNotePositions(cfg *Config) {
-	tailExtraTime := cfg.TailExtraTime
+	tailExtraTime := cfg.TailExtraDuration
 	d := c.Dynamics[0]
 	for _, n := range c.Notes {
 		for d.Next != nil && n.Time >= d.Next.Time {

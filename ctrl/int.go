@@ -32,6 +32,35 @@ func (h IntHandler) Increase() {
 	}
 }
 
+type Int32Handler struct {
+	Value *int32
+	Min   int32
+	Max   int32
+	Unit  int32
+	Loop  bool
+}
+
+func (h Int32Handler) Decrease() {
+	*h.Value -= h.Unit
+	if *h.Value < h.Min {
+		if h.Loop {
+			*h.Value = h.Max
+		} else {
+			*h.Value = h.Min
+		}
+	}
+}
+func (h Int32Handler) Increase() {
+	*h.Value += h.Unit
+	if *h.Value > h.Max {
+		if h.Loop {
+			*h.Value = h.Min
+		} else {
+			*h.Value = h.Max
+		}
+	}
+}
+
 type Int64Handler struct {
 	Value *int64
 	Min   int64

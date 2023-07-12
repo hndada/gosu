@@ -12,12 +12,13 @@ const (
 )
 
 // Todo: Modifiers work strangely when there are plural modifiers.
+// Todo: support modifiers for KeyHandler
 type KeyHandler struct {
 	Handler
-	Modifiers []input.Key // Handler works only when all Modifier are pressed.
-	Keys      [2]input.Key
-	Sounds    [2]audios.SoundPlayer
-	Volume    *float64
+	Modifier input.Key // Handler works only when Modifier is pressed.
+	Keys     [2]input.Key
+	Sounds   [2]audios.SoundPlayer
+	Volume   *float64
 
 	holdIndex int
 	active    bool
@@ -26,42 +27,46 @@ type KeyHandler struct {
 
 // Update returns whether the handler has set off (triggered) or not.
 // Todo: set off the stricter handler only
-func (h *KeyHandler) Update() (set bool) {
-	if h.countdown > 0 {
-		h.countdown--
+func (kh *KeyHandler) Update() (set bool) {
+	if kh.countdown > 0 {
+		kh.countdown--
 		return
 	}
-	for _, k := range h.Modifiers {
-		if !ebiten.IsKeyPressed(k) {
-			h.reset()
-			return
-		}
+
+	if !ebiten.IsKeyPressed(kh.Modifier) {
+		kh.reset()
+		return
 	}
-	if h.holdIndex > none && !ebiten.IsKeyPressed(h.Keys[h.holdIndex]) {
-		h.reset()
+
+	if kh.holdIndex > none && !ebiten.IsKeyPressed(kh.Keys[kh.holdIndex]) {
+		kh.reset()
 	}
-	for i, k := range h.Keys {
+
+	for i, k := range kh.Keys {
 		if ebiten.IsKeyPressed(k) {
-			h.holdIndex = i
+			kh.holdIndex = i
 			break
 		}
 	}
-	if h.holdIndex == none {
+	if kh.holdIndex == none {
 		return
 	}
-	[]func(){h.Decrease, h.Increase}[h.holdIndex]()
-	h.Sounds[h.holdIndex].Play(*h.Volume)
 
-	if h.active {
-		h.countdown = short
+	[]func(){kh.Decrease, kh.Increase}[kh.holdIndex]()
+
+	kh.Sounds[kh.holdIndex].Play(*kh.Volume)
+
+	if kh.active {
+		kh.countdown = short
 	} else {
-		h.countdown = long
+		kh.countdown = long
 	}
-	h.active = true
+	kh.active = true
+
 	return true
 }
 
-func (h *KeyHandler) reset() {
-	h.active = false
-	h.holdIndex = none
+func (kh *KeyHandler) reset() {
+	kh.active = false
+	kh.holdIndex = none
 }

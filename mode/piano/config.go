@@ -7,20 +7,17 @@ import (
 )
 
 type Config struct {
-	ScreenSize draws.Vector2
-
 	// Settings that will be from scene.TheSettings
-	MusicVolume float64
-	SoundVolume float64
-	Offset      int32
+	ScreenSize  *draws.Vector2
+	MusicVolume *float64
+	SoundVolume *float64
+	Offset      *int32
 
 	// Logic settings
-	KeySettings   map[int][]string
-	SpeedScale    float64
-	HitPosition   float64
-	TailExtraTime float64
-	// maxPosition   float64 // derived from HitPosition
-	// minPosition   float64 // derived from HitPosition
+	KeySettings       map[int][]string
+	SpeedScale        float64
+	HitPosition       float64
+	TailExtraDuration float64
 
 	KeyTypeWidths      [4]float64
 	NoteHeigth         float64 // Applies to all types of notes.
@@ -35,24 +32,17 @@ type Config struct {
 	// BodyStyle          int // Stretch or Attach.
 	// ReverseBody        int // Might have been used for stepmania skin.
 
-	ScoreScale    float64
-	ComboScale    float64
-	ComboDigitGap float64
-	JudgmentScale float64
-	HintHeight    float64
-	LightingScale float64
+	ScoreSpriteScale    float64
+	ComboSpriteScale    float64
+	ComboDigitGap       float64
+	JudgmentSpriteScale float64
+	HintHeight          float64
+	LightingSpriteScale float64
 }
 
 func DefaultConfig() *Config {
 	ScreenSize := draws.Vector2{X: 1600, Y: 900}
 	return &Config{
-		ScreenSize: ScreenSize,
-		// Settings that will be from scene.TheSettings
-		// These values are placeholders.
-		MusicVolume: 0.50,
-		SoundVolume: 0.50,
-		Offset:      -20,
-
 		KeySettings: map[int][]string{
 			4:  {"D", "F", "J", "K"},
 			5:  {"D", "F", "Space", "J", "K"},
@@ -62,9 +52,9 @@ func DefaultConfig() *Config {
 			9:  {"A", "S", "D", "F", "Space", "J", "K", "L", "Semicolon"},
 			10: {"A", "S", "D", "F", "V", "N", "J", "K", "L", "Semicolon"},
 		},
-		SpeedScale:    1.0,
-		HitPosition:   0.90 * ScreenSize.Y,
-		TailExtraTime: 0,
+		SpeedScale:        1.0,
+		HitPosition:       0.90 * ScreenSize.Y,
+		TailExtraDuration: 0,
 
 		KeyTypeWidths: [4]float64{
 			0.06 * ScreenSize.X, // One
@@ -87,11 +77,11 @@ func DefaultConfig() *Config {
 		HitLightingOpaque:  0.5,
 		HoldLightingOpaque: 0.8,
 
-		ComboScale:    0.75,
-		ComboDigitGap: -1, // unit: pixel
-		JudgmentScale: 0.33,
-		HintHeight:    0.05 * ScreenSize.Y, // 0.06: 45px
-		LightingScale: 1.0,
+		ComboSpriteScale:    0.75,
+		ComboDigitGap:       -1, // unit: pixel
+		JudgmentSpriteScale: 0.33,
+		HintHeight:          0.05 * ScreenSize.Y, // 0.06: 45px
+		LightingSpriteScale: 1.0,
 	}
 }
 
@@ -123,11 +113,3 @@ func (cfg Config) KeyXs(keyCount int, sm ScratchMode) []float64 {
 	}
 	return xs
 }
-
-// const positionMargin = 100
-
-// func (s *Settings) process() {
-// 	max := s.HitPosition
-// 	s.maxPosition = max + positionMargin
-// 	s.minPosition = max - ScreenSizeY - positionMargin
-// }

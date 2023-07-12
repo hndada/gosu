@@ -13,7 +13,7 @@ const (
 	ScorePercent
 )
 
-func NewScoreNumbers(fsys fs.FS, ScreenSize draws.Vector2, scale float64) [13]draws.Sprite {
+func NewScoreSprites(fsys fs.FS, ScreenSize draws.Vector2, scale float64) [13]draws.Sprite {
 	var sprites [13]draws.Sprite
 	for i := 0; i < 10; i++ {
 		s := draws.NewSpriteFromFile(fsys, fmt.Sprintf("score/%d.png", i))
