@@ -26,15 +26,15 @@ type Scene struct {
 }
 
 func NewScene(cfg *scene.Config, asset *scene.Asset, fsys fs.FS, name string,
-	_mode int, subMode int, mods any, rf *osr.Format) (s *Scene, err error) {
+	_mode int, mods any, rf *osr.Format) (s *Scene, err error) {
 
 	s = new(Scene)
 	s.mode = _mode
 	switch s.mode {
 	case mode.ModePiano:
 		mods := mods.(piano.Mods)
-		s.ScenePlay, err = piano.NewScenePlay(
-			cfg.PianoConfig, asset.PianoAssets[subMode], fsys, name, mods, rf)
+		s.ScenePlay, err = piano.NewScenePlay(cfg.PianoConfig, asset.PianoAssets,
+			fsys, name, mods, rf)
 	}
 
 	bgFilename := s.ScenePlay.BackgroundFilename()

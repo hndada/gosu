@@ -38,15 +38,15 @@ type ScenePlay struct {
 }
 
 // Todo: replay listener
-func NewScenePlay(cfg *Config, asset *Asset, fsys fs.FS, name string,
+func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string,
 	mods Mods, rf *osr.Format) (s *ScenePlay, err error) {
 	s = new(ScenePlay)
 	s.Config = cfg
-	s.Asset = asset
 	s.Chart, err = NewChart(cfg, fsys, name, mods)
 	if err != nil {
 		return
 	}
+	s.Asset = assets[s.KeyCount]
 	s.Scorer = NewScorer(s.Chart)
 
 	const ratio = 1

@@ -24,8 +24,8 @@ type Config struct {
 	PianoConfig *piano.Config
 }
 
-func DefaultConfig() Config {
-	cfg := Config{
+func DefaultConfig() *Config {
+	cfg := &Config{
 		MusicRoots: []string{"music"},
 
 		ScreenSize:  draws.Vector2{X: 1600, Y: 900},

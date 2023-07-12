@@ -35,8 +35,13 @@ func NewBaseScene(cfg *Config, asset *Asset) *BaseScene {
 	return s
 }
 
-type Return struct {
-	From string
-	To   string
-	Args any
-}
+// type FromChooseToPlay struct {
+// 	cfg     *Config
+// 	asset   *Asset
+// 	fsys    fs.FS
+// 	name    string
+// 	_mode   int
+// 	subMode int
+// 	mods    any
+// 	rf      *osr.Format
+// }
