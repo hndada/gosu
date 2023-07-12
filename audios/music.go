@@ -33,7 +33,7 @@ func init() {
 	speaker.Init(defaultSampleRate, defaultSampleRate.N(time.Second/30))
 }
 
-func NewMusicPlayer(f beep.StreamSeekCloser, format beep.Format, ratio float64) *MusicPlayer {
+func NewMusicPlayer(f beep.StreamSeekCloser, format beep.Format, ratio float64) MusicPlayer {
 	done := make(chan bool)
 	callback := beep.Callback(func() { done <- true })
 	ctrl := &beep.Ctrl{Streamer: beep.Seq(f, callback)}
@@ -47,7 +47,7 @@ func NewMusicPlayer(f beep.StreamSeekCloser, format beep.Format, ratio float64) 
 	}
 
 	volume := &effects.Volume{Streamer: resampler, Base: 2}
-	return &MusicPlayer{
+	return MusicPlayer{
 		streamer:  f,
 		ctrl:      ctrl,
 		resampler: resampler,
@@ -63,10 +63,10 @@ func NewMusicPlayer(f beep.StreamSeekCloser, format beep.Format, ratio float64) 
 	}
 }
 
-func NewMusicPlayerFromFile(fsys fs.FS, name string, ratio float64) (*MusicPlayer, error) {
-	f, format, err := decodeFromFile(fsys, name)
+func NewMusicPlayerFromFile(fsys fs.FS, name string, ratio float64) (MusicPlayer, error) {
+	f, format, err := DecodeFromFile(fsys, name)
 	if err != nil {
-		return nil, err
+		return MusicPlayer{}, err
 	}
 	return NewMusicPlayer(f, format, ratio), nil
 }

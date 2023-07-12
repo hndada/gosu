@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"io/fs"
 
+	"github.com/faiface/beep"
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode"
@@ -36,7 +37,7 @@ type Asset struct {
 	ScoreNumbers  [13]draws.Sprite // numbers with sign (. , %)
 	ComboNumbers  [10]draws.Sprite
 	JudgmentKinds [4]draws.Animation
-	Sound         []byte
+	Sound         beep.Streamer // []byte
 
 	// asset for a field
 	Field draws.Sprite
@@ -109,8 +110,8 @@ func (asset *Asset) setJudgmentKinds() {
 	asset.JudgmentKinds = anims
 }
 func (asset *Asset) setSound() {
-	sound := audios.NewSound(asset.fsys, "piano/sound.wav")
-	asset.Sound = sound
+	streamer, _, _ := audios.DecodeFromFile(asset.fsys, "piano/sound.wav")
+	asset.Sound = streamer
 }
 
 func (asset *Asset) setBarSprite() {

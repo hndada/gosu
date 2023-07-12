@@ -78,7 +78,7 @@ func (s ScenePlay) drawLongNoteBodies(dst draws.Image) {
 		}
 
 		length := tail.Position - head.Position
-		length += s.cfg.NoteHeigth
+		length += s.NoteHeigth
 		if length < 0 {
 			length = 0
 		}
@@ -142,7 +142,7 @@ func (s ScenePlay) drawKeyLightings(dst draws.Image) {
 		timer := s.keyLightingTimers[k]
 		if s.isKeyPressed(k) || timer.Tick < timer.MaxTick {
 			op := draws.Op{}
-			op.ColorM.ScaleWithColor(s.cfg.KeyLightingColors[k])
+			op.ColorM.ScaleWithColor(s.KeyLightingColors[k])
 			sprite.Draw(dst, op)
 		}
 	}
@@ -160,7 +160,7 @@ func (s ScenePlay) drawHitLightings(dst draws.Image) {
 		}
 		op := draws.Op{}
 		// opaque := UserSettings.HitLightingOpaque * (1 - d.Progress(0.75, 1))
-		op.ColorM.Scale(1, 1, 1, s.cfg.HitLightingOpaque)
+		op.ColorM.Scale(1, 1, 1, s.HitLightingOpaque)
 		timer.Frame(a).Draw(dst, op)
 	}
 }
@@ -175,7 +175,7 @@ func (s ScenePlay) drawHoldLightings(dst draws.Image) {
 		}
 		timer := s.holdLightingTimers[k]
 		op := draws.Op{}
-		op.ColorM.Scale(1, 1, 1, s.cfg.HoldLightingOpaque)
+		op.ColorM.Scale(1, 1, 1, s.HoldLightingOpaque)
 		timer.Frame(a).Draw(dst, op)
 	}
 }
@@ -235,12 +235,12 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 	acc := fmt.Sprintf("Acc: %.2f%%\n", s.Scorer.Acc/MaxAcc*100)
 	judgmentCount := fmt.Sprintf("Judgment counts: %v\n", s.Scorer.JudgmentCounts)
 
-	speedScale := fmt.Sprintf("Speed scale (Z/X): %.0f (x%.2f)\n", s.cfg.SpeedScale, s.Dynamic.Speed)
+	speedScale := fmt.Sprintf("Speed scale (Z/X): %.0f (x%.2f)\n", s.SpeedScale, s.Dynamic.Speed)
 	exposureTime := fmt.Sprintf("(Exposure time: %.fms)\n", s.ExposureTime(s.Speed()))
 
-	musicVolume := fmt.Sprintf("Music volume (Ctrl+ Left/Right): %.0f%%\n", s.cfg.MusicVolume*100)
-	soundVolume := fmt.Sprintf("Sound volume (Alt+ Left/Right): %.0f%%\n", s.cfg.SoundVolume*100)
-	offset := fmt.Sprintf("Offset (Shift+ Left/Right): %dms\n", s.cfg.Offset)
+	musicVolume := fmt.Sprintf("Music volume (Ctrl+ Left/Right): %.0f%%\n", s.MusicVolume*100)
+	soundVolume := fmt.Sprintf("Sound volume (Alt+ Left/Right): %.0f%%\n", s.SoundVolume*100)
+	offset := fmt.Sprintf("Offset (Shift+ Left/Right): %dms\n", s.Offset)
 
 	exit := "Press ESC to back to choose a song.\n"
 	pause := "Press TAB to pause.\n"

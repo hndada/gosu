@@ -16,8 +16,8 @@ var (
 	SpeedScaleKeyHandlers []ctrl.KeyHandler
 )
 
-// LoadHandler should be called after asset is loaded.
-func LoadHandler(speedScales []*float64) {
+// loadHandler should be called after asset is loaded.
+func (asset Asset) loadHandler(speedScales []*float64) {
 	var (
 		ctrlKey  = []input.Key{input.KeyControlLeft}
 		altKey   = []input.Key{input.KeyAltLeft}
@@ -27,9 +27,9 @@ func LoadHandler(speedScales []*float64) {
 		upDownKeys    = [2]input.Key{input.KeyArrowUp, input.KeyArrowDown}
 	)
 	var (
-		toggleSounds     = [2]audios.Sounder{TheAsset.Toggle[0], TheAsset.Toggle[1]}
-		transitionSounds = [2]audios.Sounder{TheAsset.Transition[0], TheAsset.Transition[1]}
-		tapSound         = [2]audios.Sounder{TheAsset.Tap, TheAsset.Tap}
+		toggleSounds     = [2]audios.Sound{TheAsset.Toggle[0], TheAsset.Toggle[1]}
+		transitionSounds = [2]audios.Sound{TheAsset.Transition[0], TheAsset.Transition[1]}
+		tapSound         = [2]audios.Sound{TheAsset.Tap, TheAsset.Tap}
 	)
 	var vol = &TheSettings.SoundVolume
 
