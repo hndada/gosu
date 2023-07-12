@@ -9,6 +9,7 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
+// sceneplay_draw.go: infers it is a part of sceneplay.go.
 func (s *ScenePlay) Ticker() {
 	for k := 0; k < s.Chart.KeyCount; k++ {
 		s.keyTimers[k].Ticker()
