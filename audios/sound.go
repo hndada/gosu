@@ -1,108 +1,100 @@
 package audios
 
 import (
-	"io"
+	"fmt"
 	"io/fs"
-	"math/rand"
-	"path"
 	"path/filepath"
-	"strings"
+
+	"github.com/faiface/beep"
+	"github.com/faiface/beep/effects"
+	"github.com/faiface/beep/speaker"
 )
 
-type Sounder interface {
-	Play(vol float64)
-}
-type Sound []byte
+// type Sound []byte
 
-// NewSound is for effect sounds, which is short.
-// Long audio file will make the game stutter.
-// No closers are related since no any files are open.
-func NewSound(fsys fs.FS, name string) Sound {
-	streamer, _, err := decode(fsys, name)
-	if err != nil {
-		return nil
-	}
-	b, err := io.ReadAll(streamer)
-	if err != nil {
-		return nil
-	}
-	return b
-}
-func (s Sound) Play(vol float64) {
-	p := Context.NewPlayerFromBytes(s)
-	p.SetVolume(vol)
-	p.Play()
-}
-func (s Sound) IsEmpty() bool { return s != nil }
-
-// SoundBag is for playing one of effects in the slice. Useful for
-// playing slightly different effect when doing same actions.
-type SoundBag []Sound
-
-// Todo: remove redundancy with NewImages()?
-func NewSoundBag(fsys fs.FS, name string) SoundBag {
-	// name supposed to have no extension when passed in NewSoundBag.
-	var sb SoundBag
-	ext := filepath.Ext(name)
-	name = strings.TrimSuffix(name, ext)
-	one := SoundBag{NewSound(fsys, name+ext)}
-	fs, err := fs.ReadDir(fsys, name)
-	if err != nil {
-		return one
-	}
-	for _, f := range fs {
-		if f.IsDir() {
-			continue
-		}
-		name := path.Join(name, f.Name())
-		sb = append(sb, NewSound(fsys, name))
-	}
-	return sb
-}
-func (sb SoundBag) Play(vol float64) {
-	if len(sb) == 0 {
-		return
-	}
-	i := rand.Intn(len(sb))
-	sb[i].Play(vol)
-}
-
-// A player for sample sound is generated at a place.
 type SoundPlayer struct {
-	Sounds map[string]Sound
-	Volume *float64
-	// Player *audio.Player
+	// sounds        map[string]Sound
+	// fsys          fs.FS
+	format        beep.Format
+	buffer        *beep.Buffer
+	startIndexMap map[string]int
+	endIndexMap   map[string]int
+
+	volumeScale   *float64
+	resampleRatio float64
 }
 
-// Todo: need a test
-func NewSoundPlayer(fsys fs.FS, vol *float64) (s SoundPlayer) {
-	const oneMB = 1024 * 1024
-	s.Sounds = make(map[string]Sound)
-	s.Volume = vol
-	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		f, err := fsys.Open(path)
-		if err != nil {
-			return err
-		}
-		info, err := f.Stat()
-		if err != nil {
-			return err
-		}
-		if info.Size() > oneMB {
-			return nil
-		}
-		switch ext := filepath.Ext(path); ext {
-		case ".wav", ".WAV", ".ogg", ".OGG":
-			s.Sounds[path] = NewSound(fsys, path)
-		}
-		return nil
-	})
-	return
+func NewSoundPlayer(fsys fs.FS, volumeScale *float64) *SoundPlayer {
+	sp := &SoundPlayer{
+		// fsys:          fsys,
+		startIndexMap: make(map[string]int),
+		endIndexMap:   make(map[string]int),
+
+		volumeScale:   volumeScale,
+		resampleRatio: 1,
+	}
+	// sp.format.SampleRate = 44100
+	// streamers = make([]beep.StreamSeekCloser, 0)
+	sp.walkAndLoad(fsys, ".")
+	return sp
 }
-func (s SoundPlayer) Play(name string, vol2 float64) {
-	vol := (*s.Volume) * vol2
-	s.Sounds[name].Play(vol)
+func (sp *SoundPlayer) walkAndLoad(root fs.FS, dir string) error {
+	entries, err := fs.ReadDir(root, dir)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		path := filepath.Join(dir, entry.Name())
+		if entry.IsDir() {
+			if err := sp.walkAndLoad(root, path); err != nil {
+				return fmt.Errorf("error in walkDir at %q: %v", path, err)
+			}
+		} else {
+			if !isAudioFile(path) {
+				continue
+			}
+
+			streamer, format, err := decodeFromFile(root, path)
+			if err != nil {
+				return err
+			}
+
+			// Resample if the streamer has different sample rate
+			// var resampled beep.Resampler
+			// if format.SampleRate != defaultSampleRate {
+			// resampled = beep.Resample(quality, format.SampleRate, defaultSampleRate, f)
+			// }
+
+			// Skipping resampling then making sounds a bit slower or faster
+			// wouldn't make a big difference.
+
+			if sp.buffer == nil {
+				sp.format = format
+				sp.buffer = beep.NewBuffer(format)
+			}
+
+			sp.startIndexMap[path] = sp.buffer.Len()
+			sp.buffer.Append(streamer)
+			streamer.Close()
+			sp.endIndexMap[path] = sp.buffer.Len()
+		}
+	}
+
+	return nil
+}
+
+func (sp SoundPlayer) Play(path string, vol float64) {
+	start := sp.startIndexMap[path]
+	end := sp.endIndexMap[path]
+	streamer := sp.buffer.Streamer(start, end)
+
+	resampler := beep.ResampleRatio(quality, sp.resampleRatio, streamer)
+	beepVol := beepVolume(vol * (*sp.volumeScale))
+	volume := &effects.Volume{Streamer: resampler, Base: 2, Volume: beepVol}
+	speaker.Play(volume)
+}
+
+func (sp *SoundPlayer) SetResampleRatio(ratio float64) {
+	sp.resampleRatio = ratio
 }
