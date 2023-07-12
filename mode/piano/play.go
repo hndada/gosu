@@ -52,7 +52,7 @@ func NewScenePlay(cfg *Config, asset *Asset, fsys fs.FS, name string, mods Mods,
 	if err != nil {
 		return
 	}
-	s.SoundPlayer = audios.NewSoundPlayer(fsys, &s.SoundVolume)
+	s.SoundMap = audios.NewSoundMap(fsys, &s.SoundVolume)
 
 	const wait = 1800 * time.Millisecond
 	if rf != nil {
