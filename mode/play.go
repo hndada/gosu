@@ -4,17 +4,37 @@ import (
 	"time"
 
 	"github.com/hndada/gosu/audios"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/input"
 )
 
-// type ScenePlayArgs struct {
-// 	FS            fs.FS
-// 	ChartFilename string
-// 	Mods          any
-// 	Replay        *osr.Format
-// }
+// Interface is also used when it uses the unknown struct.
+type ScenePlay interface {
+	Now() int32
+	StartMusic()
+	PlaySound(sample Sample, scale float64)
+	SetOffset(currentOffset int32)
+	SetMusicVolume(vol float64)
+	IsPaused() bool
+	Pause()
+	Resume()
+	// UpdateDynamic() // This is used only in each mode.
 
-// interface is also used when it uses the unknown struct.
+	// The following methods would go implemented in each mode.
+	Speed() float64
+	Update() any
+	SetSpeedScale()
+
+	WindowTitle() string
+	BackgroundFilename() string
+	ExposureTime() int32
+	Finish() any
+
+	Draw(screen draws.Image)
+	DebugPrint(screen draws.Image)
+}
+
+// BaseScenePlay implements ScenePlay.
 type BaseScenePlay struct {
 	StartTime  time.Time
 	lastOffset int32
@@ -63,14 +83,6 @@ func (s *BaseScenePlay) SetMusicVolume(vol float64) {
 	s.MusicPlayer.SetVolume(vol)
 }
 
-func (s *BaseScenePlay) UpdateDynamic() {
-	d := s.Dynamic
-	for d.Next != nil && s.Now() >= d.Next.Time {
-		d = d.Next
-	}
-	s.Dynamic = d
-}
-
 func (s BaseScenePlay) IsPaused() bool { return s.paused }
 
 func (s *BaseScenePlay) Pause() {
@@ -86,6 +98,14 @@ func (s *BaseScenePlay) Resume() {
 	s.MusicPlayer.Play()
 	s.Keyboard.Resume()
 	s.paused = false
+}
+
+func (s *BaseScenePlay) UpdateDynamic() {
+	d := s.Dynamic
+	for d.Next != nil && s.Now() >= d.Next.Time {
+		d = d.Next
+	}
+	s.Dynamic = d
 }
 
 func (s BaseScenePlay) Finish() {

@@ -1,111 +1,89 @@
 package play
 
 import (
+	"io/fs"
+
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
-	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
-
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
 )
 
 // ScenePlay: struct, PlayScene: function
 // Interface declares at 'user' package.
-type ScenePlay struct {
-	SceneModePlay
-	SpeedScaleKeyHandler *ctrl.KeyHandler
+type Scene struct {
+	cfg *scene.Config
+	// asset *scene.Asset
 
-	Background           scene.BackgroundDrawer
-	backgroundBrightness *float64
-	debugPrint           *bool
-}
-type SceneModePlay interface {
-	scene.Scene
-
-	PlayPause()
-	Finish() any // Return Scene.
-
-	SetMusicVolume(float64)
-	SetSoundVolume(float64)
-	SetOffset(int64)
-	SetSpeedScale() // Each mode has its own variable for speed scale.
-	DebugPrint(draws.Image)
+	*scene.BaseScene
+	mode int
+	mode.ScenePlay
+	drawBackground func(draws.Image)
 }
 
-func init() {
-	skins.loadSkin(4)
-	skins.loadSkin(7)
-}
-func NewScene(m int, args mode.ScenePlayArgs) (*ScenePlay, error) {
-	var (
-		play SceneModePlay
-		err  error
-	)
-	switch m {
+func NewScene(cfg *scene.Config, asset *scene.Asset, fsys fs.FS, name string,
+	_mode int, subMode int, mods any, rf *osr.Format) (s *Scene, err error) {
+
+	s = new(Scene)
+	s.mode = _mode
+	switch s.mode {
 	case mode.ModePiano:
-		play, err = piano.NewSceneModePlay(args)
-		// case mode.ModeDrum:
-		// play, err = drum.NewSceneModePlay(args)
+		mods := mods.(piano.Mods)
+		s.ScenePlay, err = piano.NewScenePlay(
+			cfg.PianoConfig, asset.PianoAssets[subMode], fsys, name, mods, rf)
 	}
 
-	s := &ScenePlay{
-		SceneModePlay:        play,
-		SpeedScaleKeyHandler: &scene.SpeedScaleKeyHandlers[m],
-
-		backgroundBrightness: &scene.TheSettings.BackgroundBrightness,
-		debugPrint:           &scene.TheSettings.DebugPrint,
+	bgFilename := s.ScenePlay.BackgroundFilename()
+	bgSprite := scene.NewBackgroundSprite(fsys, bgFilename, cfg.ScreenSize)
+	if bgSprite.IsEmpty() {
+		bgSprite = asset.DefaultBackgroundSprite
 	}
-	s.SetMusicVolume(scene.TheSettings.MusicVolume)
-	s.SetSoundVolume(scene.TheSettings.SoundVolume)
-	s.SetOffset(scene.TheSettings.Offset)
-	s.SetSpeedScale()
-	// Todo: pass background drawer from choose scene
-	// s.Background = scene.BackgroundDrawer{
-	// 	Sprite: scene.NewBackground(args.FS, c.ImageFilename),
-	// }
-	// if s.Background.Sprite.IsEmpty() {
-	// 	s.Background.Sprite = skin.DefaultBackground
-	// }
-	// ebiten.SetWindowTitle(c.WindowTitle())
+	s.drawBackground = scene.NewDrawBackgroundFunc(bgSprite,
+		cfg.ScreenSize, &cfg.BackgroundBrightness)
+
+	ebiten.SetWindowTitle(s.WindowTitle())
 	// debug.SetGCPercent(0)
-	return s, err
+	return
 }
 
-func (s *ScenePlay) Update() any {
-	scene.BackgroundBrightnessKeyHandler.Update()
-
-	r := s.SceneModePlay.Update()
-	// Settings which affect scene flow.
+// The order of function calls may not consistent with
+// the order of methods of mode.ScenePlay.
+func (s *Scene) Update() any {
 	if inpututil.IsKeyJustPressed(input.KeyTab) {
-		s.PlayPause()
+		if s.IsPaused() {
+			s.Resume()
+		} else {
+			s.Pause()
+		}
 	}
 	if inpututil.IsKeyJustPressed(input.KeyEscape) {
-		return s.SceneModePlay.Finish()
+		return s.ScenePlay.Finish()
 	}
 
-	// Settings which affect SceneModePlay.
-	if fired := scene.MusicVolumeKeyHandler.Update(); fired {
-		s.SetMusicVolume(scene.TheSettings.MusicVolume)
+	if s.MusicVolumeKeyHandler.Update() {
+		s.SetMusicVolume(s.cfg.MusicVolume)
 	}
-	if fired := scene.SoundVolumeKeyHandler.Update(); fired {
-		s.SetSoundVolume(scene.TheSettings.SoundVolume)
+	s.SoundVolumeKeyHandler.Update()
+	s.BackgroundBrightnessKeyHandler.Update()
+	if s.OffsetKeyHandler.Update() {
+		s.SetOffset(s.cfg.Offset)
 	}
-	if fired := scene.OffsetKeyHandler.Update(); fired {
-		s.SetOffset(scene.TheSettings.Offset)
-	}
-	if fired := s.SpeedScaleKeyHandler.Update(); fired {
+	s.DebugPrintKeyHandler.Update()
+	if s.SpeedScaleKeyHandlers[s.mode].Update() {
 		s.SetSpeedScale()
 	}
 
-	scene.DebugPrintKeyHandler.Update()
-	return r
+	return s.ScenePlay.Update()
 }
-func (s ScenePlay) Draw(screen draws.Image) {
-	s.Background.Draw(screen)
-	s.SceneModePlay.Draw(screen)
-	if *s.debugPrint {
-		s.SceneModePlay.DebugPrint(screen)
+
+func (s Scene) Draw(screen draws.Image) {
+	s.drawBackground(screen)
+	s.ScenePlay.Draw(screen)
+	if s.cfg.DebugPrint {
+		s.ScenePlay.DebugPrint(screen)
 	}
 }

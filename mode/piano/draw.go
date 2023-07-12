@@ -239,7 +239,7 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 	judgmentCount := fmt.Sprintf("Judgment counts: %v\n", s.Scorer.JudgmentCounts)
 
 	speedScale := fmt.Sprintf("Speed scale (Z/X): %.0f (x%.2f)\n", s.SpeedScale, s.Dynamic.Speed)
-	exposureTime := fmt.Sprintf("(Exposure time: %.fms)\n", s.ExposureTime(s.Speed()))
+	exposureTime := fmt.Sprintf("(Exposure time: %dms)\n", s.ExposureTime())
 
 	musicVolume := fmt.Sprintf("Music volume (Ctrl+ Left/Right): %.0f%%\n", *s.MusicVolume*100)
 	soundVolume := fmt.Sprintf("Sound volume (Alt+ Left/Right): %.0f%%\n", *s.SoundVolume*100)

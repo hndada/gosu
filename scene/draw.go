@@ -25,10 +25,3 @@ func NewDrawBackgroundFunc(s draws.Sprite,
 		s.Draw(dst, op)
 	}
 }
-
-func NewDrawBackgroundFuncFromFile(fsys fs.FS, name string,
-	screenSize draws.Vector2, bgBrightness *float64) func(draws.Image) {
-
-	s := NewBackgroundSprite(fsys, name, screenSize)
-	return NewDrawBackgroundFunc(s, screenSize, bgBrightness)
-}
