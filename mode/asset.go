@@ -35,9 +35,3 @@ func NewScoreNumbers(fsys fs.FS, ScreenSize draws.Vector2, scale float64) [13]dr
 	}
 	return sprites
 }
-
-// type Config interface {
-// 	ScreenSize() draws.Vector2
-// 	ScoreScale() float64
-// }
-// func NewScoreNumbers(fsys fs.FS, cfg Config) [13]draws.Sprite {

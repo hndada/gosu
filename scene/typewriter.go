@@ -6,6 +6,11 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
+type TypeWriter struct {
+	Text  string
+	runes []rune
+}
+
 // Original source code is written by Hajimehoshi, the Author of Ebitengine.
 // https://ebitengine.org/en/examples/typewriter.html
 func IsRepeatKeyPressed(k input.Key) bool {
@@ -23,11 +28,6 @@ func IsRepeatKeyPressed(k input.Key) bool {
 	return false
 }
 
-type TypeWriter struct {
-	Text  string
-	runes []rune
-}
-
 func (w *TypeWriter) Update() error {
 	w.runes = ebiten.AppendInputChars(w.runes[:0])
 	w.Text += string(w.runes)
@@ -41,6 +41,7 @@ func (w *TypeWriter) Update() error {
 	}
 	return nil
 }
+
 func (w *TypeWriter) Reset() {
 	w.Text = ""
 	w.runes = []rune{}

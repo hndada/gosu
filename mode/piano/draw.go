@@ -21,6 +21,8 @@ func (s *ScenePlay) Ticker() {
 	s.comboTimer.Ticker()
 }
 
+// I used 'sprite' for local variable of Sprite instead of 's'
+// to avoid confusion with the local variable of Scene.
 func (s ScenePlay) Draw(screen draws.Image) {
 	s.drawField(screen)
 	s.drawBars(screen)
@@ -29,6 +31,7 @@ func (s ScenePlay) Draw(screen draws.Image) {
 	s.drawLongNoteBodies(screen)
 	s.drawNotes(screen)
 
+	s.drawKeys(screen)
 	s.drawKeyLightings(screen)
 	s.drawHitLightings(screen)
 	s.drawHoldLightings(screen)
@@ -43,10 +46,6 @@ func (s ScenePlay) drawField(dst draws.Image) {
 	s.Field.Draw(dst, draws.Op{})
 }
 
-func (s ScenePlay) drawHint(dst draws.Image) {
-	s.Hint.Draw(dst, draws.Op{})
-}
-
 // Bars are fixed. Lane itself moves, all bars move as same amount.
 func (s ScenePlay) drawBars(dst draws.Image) {
 	lowerBound := s.cursor - 100
@@ -59,6 +58,10 @@ func (s ScenePlay) drawBars(dst draws.Image) {
 			break
 		}
 	}
+}
+
+func (s ScenePlay) drawHint(dst draws.Image) {
+	s.Hint.Draw(dst, draws.Op{})
 }
 
 // drawLongNoteBody draws stretched long note body sprite.
