@@ -3,7 +3,6 @@ package audios
 import (
 	"fmt"
 	"io/fs"
-	"path/filepath"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
@@ -36,49 +35,64 @@ func NewSoundPlayer(fsys fs.FS, volumeScale *float64) SoundPlayer {
 	}
 	// sp.format.SampleRate = 44100
 	// streamers = make([]beep.StreamSeekCloser, 0)
-	sp.walkAndLoad(fsys, ".")
+	// sp.walkAndLoad(fsys, ".")
+	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			fmt.Printf("%+v\n", err)
+		}
+		if d.IsDir() || !isAudioFile(path) || !isSoundFileSize(fsys, path) {
+			return nil
+		}
+
+		streamer, format, err := DecodeFromFile(fsys, path)
+		if err != nil {
+			return err
+		}
+
+		// Skipping resampling then making sounds a bit slower or faster
+		// wouldn't make a big difference.
+
+		// var resampled beep.Resampler
+		// if format.SampleRate != defaultSampleRate {
+		// resampled = beep.Resample(quality, format.SampleRate, defaultSampleRate, f)
+		// }
+
+		if sp.buffer == nil {
+			sp.format = format
+			sp.buffer = beep.NewBuffer(format)
+		}
+		sp.AppendSound(path, streamer)
+
+		return nil
+	})
 	return sp
 }
-func (sp *SoundPlayer) walkAndLoad(root fs.FS, dir string) error {
-	entries, err := fs.ReadDir(root, dir)
+
+func isSoundFileSize(fsys fs.FS, name string) bool {
+	// if filepath.Ext(path) == ".mp3" {
+	// 	continue
+	// }
+
+	const maxSoundFileSize = 1 << 20 // 1MB
+
+	f, err := fsys.Open(name)
 	if err != nil {
-		return err
+		return false
 	}
 
-	for _, entry := range entries {
-		path := filepath.Join(dir, entry.Name())
-		if entry.IsDir() {
-			if err := sp.walkAndLoad(root, path); err != nil {
-				return fmt.Errorf("error in walkDir at %q: %v", path, err)
-			}
-		} else {
-			if !isAudioFile(path) {
-				continue
-			}
-
-			streamer, format, err := DecodeFromFile(root, path)
-			if err != nil {
-				return err
-			}
-
-			// Resample if the streamer has different sample rate
-			// var resampled beep.Resampler
-			// if format.SampleRate != defaultSampleRate {
-			// resampled = beep.Resample(quality, format.SampleRate, defaultSampleRate, f)
-			// }
-
-			// Skipping resampling then making sounds a bit slower or faster
-			// wouldn't make a big difference.
-
-			if sp.buffer == nil {
-				sp.format = format
-				sp.buffer = beep.NewBuffer(format)
-			}
-			sp.AppendSound(path, streamer)
-		}
+	info, err := f.Stat()
+	if err != nil {
+		return false
 	}
-	return nil
+	if info.Size() > maxSoundFileSize {
+		return false
+	}
+
+	return true
 }
+
+// Len returns the number of sounds in SoundPlayer.
+func (sp SoundPlayer) Len() int { return len(sp.startIndexMap) }
 
 func (sp *SoundPlayer) AppendSound(name string, streamer beep.StreamSeekCloser) {
 	sp.startIndexMap[name] = sp.buffer.Len()
@@ -96,6 +110,10 @@ func (sp *SoundPlayer) AppendSoundFromFile(fsys fs.FS, name string) error {
 	return nil
 }
 
+func (sp *SoundPlayer) SetResampleRatio(ratio float64) {
+	sp.resampleRatio = ratio
+}
+
 func (sp SoundPlayer) Play(name string, vol float64) {
 	start := sp.startIndexMap[name]
 	end := sp.endIndexMap[name]
@@ -105,8 +123,4 @@ func (sp SoundPlayer) Play(name string, vol float64) {
 	beepVol := beepVolume(vol * (*sp.volumeScale))
 	volume := &effects.Volume{Streamer: resampler, Base: 2, Volume: beepVol}
 	speaker.Play(volume)
-}
-
-func (sp *SoundPlayer) SetResampleRatio(ratio float64) {
-	sp.resampleRatio = ratio
 }

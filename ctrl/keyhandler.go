@@ -16,7 +16,7 @@ type KeyHandler struct {
 	Handler
 	Modifiers []input.Key // Handler works only when all Modifier are pressed.
 	Keys      [2]input.Key
-	Sounds    [2]audios.Sounder
+	Sounds    [2]audios.SoundEffect
 	Volume    *float64
 
 	holdIndex int

@@ -31,10 +31,10 @@ type Asset struct {
 	// Loading draws.Sprite
 
 	Enter      audios.Sound
-	Swipe      audios.SoundBag
-	Tap        audios.SoundBag
-	Toggle     [2]audios.Sound
-	Transition [2]audios.Sound
+	Swipe      audios.SoundPod
+	Tap        audios.SoundPod
+	Toggle     [2]audios.SoundEffect
+	Transition [2]audios.SoundEffect
 }
 
 var TheAsset = Asset{}
@@ -60,8 +60,21 @@ func LoadTheAsset(fsys fs.FS) {
 		streamer, _, _ := audios.DecodeFromFile(fsys, "sound/ringtone2_loop.wav")
 		TheAsset.Enter = streamer
 	}
-	TheAsset.Swipe = audios.NewSoundBag(fsys, "sound/swipe.wav")
-	TheAsset.Tap = audios.NewSoundBag(fsys, "sound/tap.wav")
+	var SoundVolume float64
+	{
+		subFS, err := fs.Sub(fsys, "sound/swipe")
+		if err != nil {
+			panic(err)
+		}
+		TheAsset.Swipe = audios.NewSoundPod(subFS, &SoundVolume)
+	}
+	{
+		subFS, err := fs.Sub(fsys, "sound/tap")
+		if err != nil {
+			panic(err)
+		}
+		TheAsset.Tap = audios.NewSoundPod(subFS, &SoundVolume)
+	}
 	for i, name := range []string{"off", "on"} {
 		name := fmt.Sprintf("sound/toggle/%s.wav", name)
 		streamer, _, _ := audios.DecodeFromFile(fsys, name)
