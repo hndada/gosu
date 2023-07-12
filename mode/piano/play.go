@@ -47,11 +47,12 @@ func NewScenePlay(cfg *Config, asset *Asset, fsys fs.FS, name string, mods Mods,
 	}
 	s.Scorer = NewScorer(s.Chart)
 
-	s.MusicPlayer, err = audios.NewMusicPlayer(fsys, s.MusicFilename)
+	const ratio = 1
+	s.MusicPlayer, err = audios.NewMusicPlayerFromFile(fsys, s.MusicFilename, ratio)
 	if err != nil {
 		return
 	}
-	s.SoundPlayer = audios.NewSoundPlayer(fsys, &cfg.SoundVolume)
+	s.SoundPlayer = audios.NewSoundPlayer(fsys, &s.SoundVolume)
 
 	const wait = 1800 * time.Millisecond
 	if rf != nil {
@@ -62,8 +63,8 @@ func NewScenePlay(cfg *Config, asset *Asset, fsys fs.FS, name string, mods Mods,
 	}
 
 	s.Dynamic = s.Chart.Dynamics[0]
-	s.lastSpeedScale = s.cfg.SpeedScale
-	s.cursor = float64(s.Now()) * s.cfg.SpeedScale
+	s.lastSpeedScale = s.SpeedScale
+	s.cursor = float64(s.Now()) * s.SpeedScale
 	s.highestBar = s.Chart.Bars[0]
 	s.highestNotes = make([]*Note, s.Chart.KeyCount)
 
@@ -79,9 +80,9 @@ func NewScenePlay(cfg *Config, asset *Asset, fsys fs.FS, name string, mods Mods,
 
 	const comboBounce = 0.85
 	s.drawScore = mode.NewDrawScoreFunc(s.ScoreNumbers, &s.Scorer.Score,
-		s.cfg.ScoreScale)
+		s.ScoreScale)
 	s.drawCombo = mode.NewDrawComboFunc(s.ComboNumbers, &s.Scorer.Combo, &s.comboTimer,
-		s.cfg.ComboDigitGap, comboBounce)
+		s.ComboDigitGap, comboBounce)
 	return
 }
 
@@ -103,9 +104,7 @@ func (s *ScenePlay) Update() any {
 		for k, n := range s.Scorer.Staged {
 			a := ka.Action[k]
 			if n.Type != Tail && a == input.Hit {
-				vol := s.Dynamic.Volume
-				scale := s.cfg.SoundVolume
-				n.Sample.Play(vol, scale)
+				s.PlaySound(n.Sample, s.SoundVolume)
 			}
 		}
 	}
@@ -115,6 +114,8 @@ func (s *ScenePlay) Update() any {
 
 	// Changed speed might not be applied after positions are calculated.
 	// But this is not tested.
+	s.updateHighestBar()
+	s.updateHighestNotes()
 	s.UpdateDynamic()
 	s.updateCursor()
 	return nil
@@ -132,7 +133,7 @@ func (s *ScenePlay) updateCursor() {
 // fine because that makes some unnecessary bars are drawn.
 // The same concept also applies to notes.
 func (s *ScenePlay) updateHighestBar() {
-	upperBound := s.cursor + s.cfg.ScreenSize.Y + 100
+	upperBound := s.cursor + s.ScreenSize.Y + 100
 	for b := s.highestBar; b.Position < upperBound; b = b.Next {
 		s.highestBar = b
 		if b.Next == nil {
@@ -141,7 +142,7 @@ func (s *ScenePlay) updateHighestBar() {
 	}
 }
 func (s *ScenePlay) updateHighestNotes() {
-	upperBound := s.cursor + s.cfg.ScreenSize.Y + 100
+	upperBound := s.cursor + s.ScreenSize.Y + 100
 	for k, n := range s.highestNotes {
 		for ; n.Position < upperBound; n = n.Next {
 			s.highestNotes[k] = n
@@ -152,13 +153,13 @@ func (s *ScenePlay) updateHighestNotes() {
 	}
 }
 
-func (s ScenePlay) Speed() float64 { return s.Dynamic.Speed * s.cfg.SpeedScale }
+func (s ScenePlay) Speed() float64 { return s.Dynamic.Speed * s.SpeedScale }
 
 // Need to re-calculate positions when Speed has changed.
 func (s *ScenePlay) SetSpeedScale() {
 	c := s.Chart
 	old := s.lastSpeedScale
-	new := s.cfg.SpeedScale
+	new := s.SpeedScale
 	s.cursor *= new / old
 	for _, d := range c.Dynamics {
 		d.Position *= new / old
@@ -169,12 +170,12 @@ func (s *ScenePlay) SetSpeedScale() {
 	for _, b := range c.Bars {
 		b.Position *= new / old
 	}
-	s.lastSpeedScale = s.cfg.SpeedScale
+	s.lastSpeedScale = s.SpeedScale
 }
 
 // Cursor moves 1 pixel per 1 millisecond with speed 1.
 func (s ScenePlay) ExposureTime(speed float64) float64 {
-	return s.cfg.HitPosition / speed
+	return s.HitPosition / speed
 }
 
 func (s ScenePlay) isKeyHit(k int) bool {

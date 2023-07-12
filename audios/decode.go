@@ -11,7 +11,7 @@ import (
 	"github.com/faiface/beep/wav"
 )
 
-func decodeFromFile(fsys fs.FS, name string) (streamer beep.StreamSeekCloser, format beep.Format, err error) {
+func DecodeFromFile(fsys fs.FS, name string) (streamer beep.StreamSeekCloser, format beep.Format, err error) {
 	f, err := fsys.Open(name)
 	if err != nil {
 		return

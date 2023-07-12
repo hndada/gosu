@@ -21,32 +21,32 @@ type BaseScenePlay struct {
 	PauseTime  time.Time
 	Dynamic    *Dynamic
 
-	MusicPlayer     audios.MusicPlayer
-	hasMusicStarted bool
-	SoundPlayer     audios.SoundPlayer
-	Keyboard        input.Keyboard
-	paused          bool
+	MusicPlayer audios.MusicPlayer
+	musicPlayed bool
+	SoundPlayer audios.SoundPlayer
+	Keyboard    input.Keyboard
+	paused      bool
 }
-
-func (s *BaseScenePlay) Pause() {
-	s.PauseTime = time.Now()
-	s.MusicPlayer.Pause()
-	s.Keyboard.Pause()
-	s.paused = true
-}
-
-func (s *BaseScenePlay) Resume() {
-	elapsedTime := time.Now().Sub(s.PauseTime)
-	s.StartTime = s.StartTime.Add(elapsedTime)
-	s.MusicPlayer.Play()
-	s.Keyboard.Resume()
-	s.paused = false
-}
-
-func (s BaseScenePlay) IsPaused() bool { return s.paused }
 
 func (s BaseScenePlay) Now() int32 {
 	return int32(time.Since(s.StartTime).Milliseconds())
+}
+
+func (s BaseScenePlay) StartMusic() {
+	if !s.musicPlayed && s.Now() >= 0 {
+		s.MusicPlayer.Play()
+		s.musicPlayed = true
+	}
+}
+
+func (s BaseScenePlay) PlaySound(sample Sample, scale float64) {
+	name := sample.Name
+	vol := sample.Volume
+	if vol == 0 {
+		vol = s.Dynamic.Volume
+	}
+	vol *= scale
+	s.SoundPlayer.Play(name, vol)
 }
 
 // Music is hard to seek precisely.
@@ -71,11 +71,21 @@ func (s *BaseScenePlay) UpdateDynamic() {
 	s.Dynamic = d
 }
 
-func (s BaseScenePlay) StartMusic() {
-	if !s.hasMusicStarted && s.Now() >= 0 {
-		s.MusicPlayer.Play()
-		s.hasMusicStarted = true
-	}
+func (s BaseScenePlay) IsPaused() bool { return s.paused }
+
+func (s *BaseScenePlay) Pause() {
+	s.PauseTime = time.Now()
+	s.MusicPlayer.Pause()
+	s.Keyboard.Pause()
+	s.paused = true
+}
+
+func (s *BaseScenePlay) Resume() {
+	elapsedTime := time.Since(s.PauseTime)
+	s.StartTime = s.StartTime.Add(elapsedTime)
+	s.MusicPlayer.Play()
+	s.Keyboard.Resume()
+	s.paused = false
 }
 
 func (s BaseScenePlay) Finish() {

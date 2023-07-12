@@ -56,16 +56,20 @@ func LoadTheAsset(fsys fs.FS) {
 		s.MultiplyScale(TheSettings.ClearScale)
 		TheAsset.Clear = s
 	}
-
-	TheAsset.Enter = audios.NewSound(fsys, "sound/ringtone2_loop.wav")
+	{
+		streamer, _, _ := audios.DecodeFromFile(fsys, "sound/ringtone2_loop.wav")
+		TheAsset.Enter = streamer
+	}
 	TheAsset.Swipe = audios.NewSoundBag(fsys, "sound/swipe.wav")
 	TheAsset.Tap = audios.NewSoundBag(fsys, "sound/tap.wav")
 	for i, name := range []string{"off", "on"} {
 		name := fmt.Sprintf("sound/toggle/%s.wav", name)
-		TheAsset.Toggle[i] = audios.NewSound(fsys, name)
+		streamer, _, _ := audios.DecodeFromFile(fsys, name)
+		TheAsset.Toggle[i] = streamer
 	}
 	for i, name := range []string{"down", "up"} {
 		name := fmt.Sprintf("sound/transition/%s.wav", name)
-		TheAsset.Transition[i] = audios.NewSound(fsys, name)
+		streamer, _, _ := audios.DecodeFromFile(fsys, name)
+		TheAsset.Transition[i] = streamer
 	}
 }

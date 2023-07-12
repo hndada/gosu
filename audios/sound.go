@@ -11,6 +11,7 @@ import (
 )
 
 // type Sound []byte
+type Sound beep.Streamer
 
 type SoundPlayer struct {
 	// sounds        map[string]Sound
@@ -24,8 +25,8 @@ type SoundPlayer struct {
 	resampleRatio float64
 }
 
-func NewSoundPlayer(fsys fs.FS, volumeScale *float64) *SoundPlayer {
-	sp := &SoundPlayer{
+func NewSoundPlayer(fsys fs.FS, volumeScale *float64) SoundPlayer {
+	sp := SoundPlayer{
 		// fsys:          fsys,
 		startIndexMap: make(map[string]int),
 		endIndexMap:   make(map[string]int),
@@ -55,7 +56,7 @@ func (sp *SoundPlayer) walkAndLoad(root fs.FS, dir string) error {
 				continue
 			}
 
-			streamer, format, err := decodeFromFile(root, path)
+			streamer, format, err := DecodeFromFile(root, path)
 			if err != nil {
 				return err
 			}
@@ -73,20 +74,31 @@ func (sp *SoundPlayer) walkAndLoad(root fs.FS, dir string) error {
 				sp.format = format
 				sp.buffer = beep.NewBuffer(format)
 			}
-
-			sp.startIndexMap[path] = sp.buffer.Len()
-			sp.buffer.Append(streamer)
-			streamer.Close()
-			sp.endIndexMap[path] = sp.buffer.Len()
+			sp.AppendSound(path, streamer)
 		}
 	}
-
 	return nil
 }
 
-func (sp SoundPlayer) Play(path string, vol float64) {
-	start := sp.startIndexMap[path]
-	end := sp.endIndexMap[path]
+func (sp *SoundPlayer) AppendSound(name string, streamer beep.StreamSeekCloser) {
+	sp.startIndexMap[name] = sp.buffer.Len()
+	sp.buffer.Append(streamer)
+	streamer.Close()
+	sp.endIndexMap[name] = sp.buffer.Len()
+}
+
+func (sp *SoundPlayer) AppendSoundFromFile(fsys fs.FS, name string) error {
+	streamer, _, err := DecodeFromFile(fsys, name)
+	if err != nil {
+		return err
+	}
+	sp.AppendSound(name, streamer)
+	return nil
+}
+
+func (sp SoundPlayer) Play(name string, vol float64) {
+	start := sp.startIndexMap[name]
+	end := sp.endIndexMap[name]
 	streamer := sp.buffer.Streamer(start, end)
 
 	resampler := beep.ResampleRatio(quality, sp.resampleRatio, streamer)
