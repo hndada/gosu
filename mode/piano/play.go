@@ -96,6 +96,26 @@ func (s ScenePlay) newTimers(maxTick, period int) []draws.Timer {
 	return timers
 }
 
+func (s ScenePlay) Speed() float64 { return s.Dynamic.Speed * s.SpeedScale }
+
+// Need to re-calculate positions when Speed has changed.
+func (s *ScenePlay) SetSpeedScale() {
+	c := s.Chart
+	old := s.lastSpeedScale
+	new := s.SpeedScale
+	s.cursor *= new / old
+	for _, d := range c.Dynamics {
+		d.Position *= new / old
+	}
+	for _, n := range c.Notes {
+		n.Position *= new / old
+	}
+	for _, b := range c.Bars {
+		b.Position *= new / old
+	}
+	s.lastSpeedScale = s.SpeedScale
+}
+
 func (s *ScenePlay) Update() any {
 	s.Ticker()
 
@@ -155,29 +175,23 @@ func (s *ScenePlay) updateHighestNotes() {
 	}
 }
 
-func (s ScenePlay) Speed() float64 { return s.Dynamic.Speed * s.SpeedScale }
-
-// Need to re-calculate positions when Speed has changed.
-func (s *ScenePlay) SetSpeedScale() {
-	c := s.Chart
-	old := s.lastSpeedScale
-	new := s.SpeedScale
-	s.cursor *= new / old
-	for _, d := range c.Dynamics {
-		d.Position *= new / old
-	}
-	for _, n := range c.Notes {
-		n.Position *= new / old
-	}
-	for _, b := range c.Bars {
-		b.Position *= new / old
-	}
-	s.lastSpeedScale = s.SpeedScale
+func (s ScenePlay) WindowTitle() string {
+	return s.Chart.WindowTitle()
 }
 
-// Cursor moves 1 pixel per 1 millisecond with speed 1.
-func (s ScenePlay) ExposureTime(speed float64) float64 {
-	return s.HitPosition / speed
+func (s ScenePlay) BackgroundFilename() string {
+	return s.Chart.ImageFilename
+}
+
+// ExposureTime is the time that cursor takes to move 1 logical pixel.
+// The unit is millisecond.
+func (s ScenePlay) ExposureTime() int32 {
+	return int32(s.HitPosition / s.Speed())
+}
+
+func (s ScenePlay) Finish() any {
+	s.BaseScenePlay.Finish()
+	return s.Scorer
 }
 
 func (s ScenePlay) isKeyHit(k int) bool {
