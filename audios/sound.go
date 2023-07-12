@@ -14,17 +14,16 @@ type Sound struct {
 	volumeScale *float64
 }
 
-func NewSound(fsys fs.FS, name string, volumeScale *float64) (Sound, error) {
+// NewSound returns an empty struct when error occurs
+// because most of error just comes from file not found.
+func NewSound(fsys fs.FS, name string, volumeScale *float64) Sound {
 	streamer, format, err := DecodeFromFile(fsys, name)
 	if err != nil {
-		return Sound{}, err
+		return Sound{}
 	}
 	buffer := beep.NewBuffer(format)
 	buffer.Append(streamer)
-	return Sound{
-		buffer:      buffer,
-		volumeScale: volumeScale,
-	}, nil
+	return Sound{buffer, volumeScale}
 }
 
 // Play plays a random sound from the sound pod.

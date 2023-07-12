@@ -6,11 +6,7 @@ import (
 
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
-)
-
-const (
-	ScreenSizeX = 1600
-	ScreenSizeY = 900
+	"github.com/hndada/gosu/mode/piano"
 )
 
 const (
@@ -19,9 +15,7 @@ const (
 	CursorTrail
 )
 
-// Asset is previously known as "Skin"
-// Skin might not be clear.
-// Assets would be confusing name for singleton.
+// Asset is previously known as Skin.
 type Asset struct {
 	Cursor            [3]draws.Sprite
 	DefaultBackground draws.Sprite
@@ -30,68 +24,103 @@ type Asset struct {
 	// Intro   draws.Sprite
 	// Loading draws.Sprite
 
-	Enter      audios.Sound
-	Swipe      audios.SoundPod
-	Tap        audios.SoundPod
-	Toggle     [2]audios.Sound
-	Transition [2]audios.Sound
+	EnterSound       audios.Sound
+	SwipeSoundPod    audios.SoundPod
+	TapSoundPod      audios.SoundPod
+	ToggleSounds     [2]audios.Sound
+	TransitionSounds [2]audios.Sound
+
+	// Each key count has different asset in piano mode.
+	PianoAssets map[int]*piano.Asset
 }
 
-var TheAsset = Asset{}
+func NewAsset(cfg *Config, fsys fs.FS) *Asset {
+	asset := &Asset{}
+	asset.setCursor(cfg, fsys)
+	asset.setDefaultBackground(cfg, fsys)
+	asset.setBoxMask(cfg, fsys)
+	asset.setClear(cfg, fsys)
+	// Intro   draws.Sprite
+	// Loading draws.Sprite
 
-// Wrapping with each block looks good in terms of readability and reliability.
-func LoadTheAsset(fsys fs.FS) {
-	// Cursor should be at CenterMiddle in circle mode (in far future)
+	asset.setEnterSound(cfg, fsys)
+	asset.setSwipeSoundPod(cfg, fsys)
+	asset.setTapSoundPod(cfg, fsys)
+	asset.setToggleSounds(cfg, fsys)
+	asset.setTransitionSounds(cfg, fsys)
+
+	asset.PianoAssets = make(map[int]*piano.Asset)
+	for _, keyCount := range []int{4, 7} {
+		pianoAsset := piano.NewAsset(cfg.PianoConfig, fsys, keyCount, piano.NoScratch)
+		asset.PianoAssets[keyCount] = pianoAsset
+	}
+	return asset
+}
+
+// Cursor should be at CenterMiddle in circle mode (in far future)
+func (asset *Asset) setCursor(cfg *Config, fsys fs.FS) {
 	for i, name := range []string{"base", "additive", "trail"} {
 		s := draws.NewSpriteFromFile(fsys, fmt.Sprintf("cursor/%s.png", name))
-		s.MultiplyScale(TheSettings.CursorScale)
-		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.LeftTop)
-		TheAsset.Cursor[i] = s
+		s.MultiplyScale(cfg.CursorScale)
+		s.Locate(cfg.ScreenSize.X/2, cfg.ScreenSize.Y/2, draws.LeftTop)
+		asset.Cursor[i] = s
 	}
-	TheAsset.DefaultBackground = NewBackgroundFromFile(fsys, "interface/default-bg.jpg")
-	TheAsset.BoxMask = draws.NewSpriteFromFile(fsys, "interface/box-mask.png")
-	{
-		s := draws.NewSpriteFromFile(fsys, "interface/clear.png")
-		s.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
-		s.MultiplyScale(TheSettings.ClearScale)
-		TheAsset.Clear = s
+}
+
+func (asset *Asset) setDefaultBackground(cfg *Config, fsys fs.FS) {
+	s := NewBackgroundSprite(fsys, "interface/default-bg.jpg", cfg.ScreenSize)
+	asset.DefaultBackground = s
+}
+
+// Todo: MultiplyScale by cfg.ChooseEntryBoxCount
+func (asset *Asset) setBoxMask(cfg *Config, fsys fs.FS) {
+	s := draws.NewSpriteFromFile(fsys, "interface/box-mask.png")
+	s.Locate(cfg.ScreenSize.X, cfg.ScreenSize.Y/2, draws.RightMiddle)
+	// s.MultiplyScale(cfg.CursorScale)
+	asset.BoxMask = s
+}
+
+func (asset *Asset) setClear(cfg *Config, fsys fs.FS) {
+	s := draws.NewSpriteFromFile(fsys, "interface/clear.png")
+	s.Locate(cfg.ScreenSize.X/2, cfg.ScreenSize.Y/2, draws.CenterMiddle)
+	s.MultiplyScale(cfg.ClearScale)
+	asset.Clear = s
+}
+
+// Intro   draws.Sprite
+// Loading draws.Sprite
+
+func (asset *Asset) setEnterSound(cfg *Config, fsys fs.FS) {
+	name := "sound/ringtone2_loop.wav"
+	asset.EnterSound = audios.NewSound(fsys, name, &cfg.SoundVolume)
+}
+
+func (asset *Asset) setSwipeSoundPod(cfg *Config, fsys fs.FS) {
+	subFS, err := fs.Sub(fsys, "sound/swipe")
+	if err != nil {
+		return
 	}
-	var SoundVolume float64
-	{
-		sound, err := audios.NewSound(fsys, "sound/ringtone2_loop.wav", &SoundVolume)
-		if err != nil {
-			panic(err)
-		}
-		TheAsset.Enter = sound
+	asset.SwipeSoundPod = audios.NewSoundPod(subFS, &cfg.SoundVolume)
+}
+
+func (asset *Asset) setTapSoundPod(cfg *Config, fsys fs.FS) {
+	subFS, err := fs.Sub(fsys, "sound/tap")
+	if err != nil {
+		return
 	}
-	{
-		subFS, err := fs.Sub(fsys, "sound/swipe")
-		if err != nil {
-			panic(err)
-		}
-		TheAsset.Swipe = audios.NewSoundPod(subFS, &SoundVolume)
-	}
-	{
-		subFS, err := fs.Sub(fsys, "sound/tap")
-		if err != nil {
-			panic(err)
-		}
-		TheAsset.Tap = audios.NewSoundPod(subFS, &SoundVolume)
-	}
+	asset.TapSoundPod = audios.NewSoundPod(subFS, &cfg.SoundVolume)
+}
+
+func (asset *Asset) setToggleSounds(cfg *Config, fsys fs.FS) {
 	for i, name := range []string{"off", "on"} {
 		name := fmt.Sprintf("sound/toggle/%s.wav", name)
-		sound, err := audios.NewSound(fsys, name, &SoundVolume)
-		if err != nil {
-			panic(err)
-		}
-		TheAsset.Toggle[i] = sound
+		asset.ToggleSounds[i] = audios.NewSound(fsys, name, &cfg.SoundVolume)
 	}
+}
+
+func (asset *Asset) setTransitionSounds(cfg *Config, fsys fs.FS) {
 	for i, name := range []string{"down", "up"} {
 		name := fmt.Sprintf("sound/transition/%s.wav", name)
-		sound, err := audios.NewSound(fsys, name, &SoundVolume)
-		if err != nil {
-			panic(err)
-		}
-		TheAsset.Transition[i] = sound
+		asset.TransitionSounds[i] = audios.NewSound(fsys, name, &cfg.SoundVolume)
 	}
 }

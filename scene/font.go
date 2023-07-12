@@ -6,38 +6,31 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 )
 
-// FaceDefault = basicfont.Face7x13
-var (
-	Face12 font.Face
-	Face16 font.Face
-	Face20 font.Face
-	Face24 font.Face
-)
+var goregularFont *truetype.Font
+
+const dpi = 72
+
+var Faces = make(map[int]font.Face)
 
 func init() {
-	const dpi = 72
 	f, err := truetype.Parse(goregular.TTF)
 	if err != nil {
 		panic(err)
 	}
-	Face12 = truetype.NewFace(f, &truetype.Options{
-		Size:    12,
-		DPI:     dpi,
-		Hinting: font.HintingFull,
-	})
-	Face16 = truetype.NewFace(f, &truetype.Options{
-		Size:    16,
-		DPI:     dpi,
-		Hinting: font.HintingFull,
-	})
-	Face20 = truetype.NewFace(f, &truetype.Options{
-		Size:    20,
-		DPI:     dpi,
-		Hinting: font.HintingFull,
-	})
-	Face24 = truetype.NewFace(f, &truetype.Options{
-		Size:    24,
-		DPI:     dpi,
-		Hinting: font.HintingFull,
-	})
+	goregularFont = f
 }
+
+func Face(size int) font.Face {
+	if face, ok := Faces[size]; ok {
+		return face
+	}
+	face := truetype.NewFace(goregularFont, &truetype.Options{
+		Size:    float64(size),
+		DPI:     dpi,
+		Hinting: font.HintingFull,
+	})
+	Faces[size] = face
+	return face
+}
+
+// FaceDefault = basicfont.Face7x13
