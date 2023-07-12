@@ -23,7 +23,7 @@ type BaseScenePlay struct {
 
 	MusicPlayer audios.MusicPlayer
 	musicPlayed bool
-	SoundPlayer audios.SoundPlayer
+	SoundMap    audios.SoundMap
 	Keyboard    input.Keyboard
 	paused      bool
 }
@@ -46,7 +46,7 @@ func (s BaseScenePlay) PlaySound(sample Sample, scale float64) {
 		vol = s.Dynamic.Volume
 	}
 	vol *= scale
-	s.SoundPlayer.Play(name, vol)
+	s.SoundMap.Play(name, vol)
 }
 
 // Music is hard to seek precisely.

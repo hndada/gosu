@@ -27,9 +27,9 @@ func (asset Asset) loadHandler(speedScales []*float64) {
 		upDownKeys    = [2]input.Key{input.KeyArrowUp, input.KeyArrowDown}
 	)
 	var (
-		toggleSounds     = [2]audios.SoundEffect{TheAsset.Toggle[0], TheAsset.Toggle[1]}
-		transitionSounds = [2]audios.SoundEffect{TheAsset.Transition[0], TheAsset.Transition[1]}
-		tapSound         = [2]audios.SoundEffect{TheAsset.Tap, TheAsset.Tap}
+		toggleSounds     = [2]audios.SoundPlayer{TheAsset.Toggle[0], TheAsset.Toggle[1]}
+		transitionSounds = [2]audios.SoundPlayer{TheAsset.Transition[0], TheAsset.Transition[1]}
+		tapSound         = [2]audios.SoundPlayer{TheAsset.Tap, TheAsset.Tap}
 	)
 	var vol = &TheSettings.SoundVolume
 

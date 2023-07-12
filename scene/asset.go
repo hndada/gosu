@@ -33,8 +33,8 @@ type Asset struct {
 	Enter      audios.Sound
 	Swipe      audios.SoundPod
 	Tap        audios.SoundPod
-	Toggle     [2]audios.SoundEffect
-	Transition [2]audios.SoundEffect
+	Toggle     [2]audios.Sound
+	Transition [2]audios.Sound
 }
 
 var TheAsset = Asset{}
@@ -56,11 +56,14 @@ func LoadTheAsset(fsys fs.FS) {
 		s.MultiplyScale(TheSettings.ClearScale)
 		TheAsset.Clear = s
 	}
-	{
-		streamer, _, _ := audios.DecodeFromFile(fsys, "sound/ringtone2_loop.wav")
-		TheAsset.Enter = streamer
-	}
 	var SoundVolume float64
+	{
+		sound, err := audios.NewSound(fsys, "sound/ringtone2_loop.wav", &SoundVolume)
+		if err != nil {
+			panic(err)
+		}
+		TheAsset.Enter = sound
+	}
 	{
 		subFS, err := fs.Sub(fsys, "sound/swipe")
 		if err != nil {
@@ -77,12 +80,18 @@ func LoadTheAsset(fsys fs.FS) {
 	}
 	for i, name := range []string{"off", "on"} {
 		name := fmt.Sprintf("sound/toggle/%s.wav", name)
-		streamer, _, _ := audios.DecodeFromFile(fsys, name)
-		TheAsset.Toggle[i] = streamer
+		sound, err := audios.NewSound(fsys, name, &SoundVolume)
+		if err != nil {
+			panic(err)
+		}
+		TheAsset.Toggle[i] = sound
 	}
 	for i, name := range []string{"down", "up"} {
 		name := fmt.Sprintf("sound/transition/%s.wav", name)
-		streamer, _, _ := audios.DecodeFromFile(fsys, name)
-		TheAsset.Transition[i] = streamer
+		sound, err := audios.NewSound(fsys, name, &SoundVolume)
+		if err != nil {
+			panic(err)
+		}
+		TheAsset.Transition[i] = sound
 	}
 }

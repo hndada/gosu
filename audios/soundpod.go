@@ -8,17 +8,13 @@ import (
 	"github.com/faiface/beep/speaker"
 )
 
-type SoundEffect interface {
-	Play(vol float64)
-}
-
 // SoundBag is for playing randomly one of the sounds.
 type SoundPod struct {
-	SoundPlayer
+	SoundMap
 }
 
 func NewSoundPod(fsys fs.FS, volumeScale *float64) SoundPod {
-	return SoundPod{NewSoundPlayer(fsys, volumeScale)}
+	return SoundPod{NewSoundMap(fsys, volumeScale)}
 }
 
 // Play plays a random sound from the sound pod.
