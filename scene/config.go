@@ -8,37 +8,50 @@ import (
 )
 
 type Config struct {
-	ScreenSize draws.Vector2
 	MusicRoots []string
 
-	CursorScale float64
-	ClearScale  float64
+	ScreenSize  draws.Vector2
+	MusicVolume float64
+	SoundVolume float64
+	Offset      int32
 
-	MusicVolume          float64
-	SoundVolume          float64
-	Offset               int64
 	BackgroundBrightness float64
 	DebugPrint           bool
+
+	CursorSpriteScale float64
+	ClearSpriteScale  float64
 
 	PianoConfig *piano.Config
 }
 
 func DefaultConfig() Config {
-	return Config{
-		ScreenSize: draws.Vector2{X: 1600, Y: 900},
+	cfg := Config{
 		MusicRoots: []string{"music"},
 
-		CursorScale: 0.1,
-		ClearScale:  0.5,
+		ScreenSize:  draws.Vector2{X: 1600, Y: 900},
+		MusicVolume: 0.50,
+		SoundVolume: 0.50,
+		Offset:      -20,
 
-		MusicVolume:          0.50,
-		SoundVolume:          0.50,
-		Offset:               -20,
 		BackgroundBrightness: 0.6,
 		DebugPrint:           true,
 
+		CursorSpriteScale: 0.1,
+		ClearSpriteScale:  0.5,
+
 		PianoConfig: piano.DefaultConfig(),
 	}
+
+	cfg.loadPianoConfig()
+
+	return cfg
+}
+func (cfg *Config) loadPianoConfig() {
+	cfg.PianoConfig = piano.DefaultConfig()
+	cfg.PianoConfig.ScreenSize = &cfg.ScreenSize
+	cfg.PianoConfig.MusicVolume = &cfg.MusicVolume
+	cfg.PianoConfig.SoundVolume = &cfg.SoundVolume
+	cfg.PianoConfig.Offset = &cfg.Offset
 }
 
 func (c *Config) NormalizeMusicRoots() {

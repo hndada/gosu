@@ -24,6 +24,7 @@ type ScenePlay struct {
 	highestNotes   []*Note
 	lastKeyActions []input.KeyActionType
 
+	// For animation or transition.
 	keyTimers          []draws.Timer
 	noteTimers         []draws.Timer
 	keyLightingTimers  []draws.Timer
@@ -37,7 +38,8 @@ type ScenePlay struct {
 }
 
 // Todo: replay listener
-func NewScenePlay(cfg *Config, asset *Asset, fsys fs.FS, name string, mods Mods, rf *osr.Format) (s *ScenePlay, err error) {
+func NewScenePlay(cfg *Config, asset *Asset, fsys fs.FS, name string,
+	mods Mods, rf *osr.Format) (s *ScenePlay, err error) {
 	s = new(ScenePlay)
 	s.Config = cfg
 	s.Asset = asset
@@ -52,13 +54,13 @@ func NewScenePlay(cfg *Config, asset *Asset, fsys fs.FS, name string, mods Mods,
 	if err != nil {
 		return
 	}
-	s.SoundMap = audios.NewSoundMap(fsys, &s.SoundVolume)
+	s.SoundMap = audios.NewSoundMap(fsys, s.SoundVolume)
 
 	const wait = 1800 * time.Millisecond
 	if rf != nil {
 		s.Keyboard = NewReplayListener(rf, s.KeyCount, wait)
 	} else {
-		keys := input.NamesToKeys(s.KeySettings[s.keyCount])
+		keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
 		s.Keyboard = input.NewKeyboardListener(keys, wait)
 	}
 
@@ -79,9 +81,9 @@ func NewScenePlay(cfg *Config, asset *Asset, fsys fs.FS, name string, mods Mods,
 	s.comboTimer = draws.NewTimer(mode.ToTick(2000), 0)
 
 	const comboBounce = 0.85
-	s.drawScore = mode.NewDrawScoreFunc(s.ScoreNumbers, &s.Scorer.Score,
-		s.ScoreScale)
-	s.drawCombo = mode.NewDrawComboFunc(s.ComboNumbers, &s.Scorer.Combo, &s.comboTimer,
+	s.drawScore = mode.NewDrawScoreFunc(s.ScoreSprites, &s.Scorer.Score,
+		s.ScoreSpriteScale)
+	s.drawCombo = mode.NewDrawComboFunc(s.ComboSprites, &s.Scorer.Combo, &s.comboTimer,
 		s.ComboDigitGap, comboBounce)
 	return
 }
@@ -104,7 +106,7 @@ func (s *ScenePlay) Update() any {
 		for k, n := range s.Scorer.Staged {
 			a := ka.Action[k]
 			if n.Type != Tail && a == input.Hit {
-				s.PlaySound(n.Sample, s.SoundVolume)
+				s.PlaySound(n.Sample, *s.SoundVolume)
 			}
 		}
 	}
@@ -181,6 +183,7 @@ func (s ScenePlay) ExposureTime(speed float64) float64 {
 func (s ScenePlay) isKeyHit(k int) bool {
 	return s.lastKeyActions[k] == input.Hit
 }
+
 func (s ScenePlay) isKeyPressed(k int) bool {
 	return s.lastKeyActions[k] == input.Hit ||
 		s.lastKeyActions[k] == input.Hold

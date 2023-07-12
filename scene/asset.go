@@ -17,18 +17,18 @@ const (
 
 // Asset is previously known as Skin.
 type Asset struct {
-	Cursor            [3]draws.Sprite
-	DefaultBackground draws.Sprite
-	BoxMask           draws.Sprite
-	Clear             draws.Sprite
+	CursorSprites           [3]draws.Sprite
+	DefaultBackgroundSprite draws.Sprite
+	BoxMaskSprite           draws.Sprite
+	ClearSprite             draws.Sprite
 	// Intro   draws.Sprite
 	// Loading draws.Sprite
 
-	EnterSound       audios.Sound
-	SwipeSoundPod    audios.SoundPod
-	TapSoundPod      audios.SoundPod
-	ToggleSounds     [2]audios.Sound
-	TransitionSounds [2]audios.Sound
+	EnterSound       audios.SoundPlayer
+	SwipeSoundPod    audios.SoundPlayer
+	TapSoundPod      audios.SoundPlayer
+	ToggleSounds     [2]audios.SoundPlayer
+	TransitionSounds [2]audios.SoundPlayer
 
 	// Each key count has different asset in piano mode.
 	PianoAssets map[int]*piano.Asset
@@ -36,10 +36,10 @@ type Asset struct {
 
 func NewAsset(cfg *Config, fsys fs.FS) *Asset {
 	asset := &Asset{}
-	asset.setCursor(cfg, fsys)
-	asset.setDefaultBackground(cfg, fsys)
-	asset.setBoxMask(cfg, fsys)
-	asset.setClear(cfg, fsys)
+	asset.setCursorSprites(cfg, fsys)
+	asset.setDefaultBackgroundSprite(cfg, fsys)
+	asset.setBoxMaskSprite(cfg, fsys)
+	asset.setClearSprite(cfg, fsys)
 	// Intro   draws.Sprite
 	// Loading draws.Sprite
 
@@ -58,33 +58,33 @@ func NewAsset(cfg *Config, fsys fs.FS) *Asset {
 }
 
 // Cursor should be at CenterMiddle in circle mode (in far future)
-func (asset *Asset) setCursor(cfg *Config, fsys fs.FS) {
+func (asset *Asset) setCursorSprites(cfg *Config, fsys fs.FS) {
 	for i, name := range []string{"base", "additive", "trail"} {
 		s := draws.NewSpriteFromFile(fsys, fmt.Sprintf("cursor/%s.png", name))
-		s.MultiplyScale(cfg.CursorScale)
+		s.MultiplyScale(cfg.CursorSpriteScale)
 		s.Locate(cfg.ScreenSize.X/2, cfg.ScreenSize.Y/2, draws.LeftTop)
-		asset.Cursor[i] = s
+		asset.CursorSprites[i] = s
 	}
 }
 
-func (asset *Asset) setDefaultBackground(cfg *Config, fsys fs.FS) {
+func (asset *Asset) setDefaultBackgroundSprite(cfg *Config, fsys fs.FS) {
 	s := NewBackgroundSprite(fsys, "interface/default-bg.jpg", cfg.ScreenSize)
-	asset.DefaultBackground = s
+	asset.DefaultBackgroundSprite = s
 }
 
 // Todo: MultiplyScale by cfg.ChooseEntryBoxCount
-func (asset *Asset) setBoxMask(cfg *Config, fsys fs.FS) {
+func (asset *Asset) setBoxMaskSprite(cfg *Config, fsys fs.FS) {
 	s := draws.NewSpriteFromFile(fsys, "interface/box-mask.png")
 	s.Locate(cfg.ScreenSize.X, cfg.ScreenSize.Y/2, draws.RightMiddle)
-	// s.MultiplyScale(cfg.CursorScale)
-	asset.BoxMask = s
+	// s.MultiplyScale(cfg.ChooseEntryBox)
+	asset.BoxMaskSprite = s
 }
 
-func (asset *Asset) setClear(cfg *Config, fsys fs.FS) {
+func (asset *Asset) setClearSprite(cfg *Config, fsys fs.FS) {
 	s := draws.NewSpriteFromFile(fsys, "interface/clear.png")
 	s.Locate(cfg.ScreenSize.X/2, cfg.ScreenSize.Y/2, draws.CenterMiddle)
-	s.MultiplyScale(cfg.ClearScale)
-	asset.Clear = s
+	s.MultiplyScale(cfg.ClearSpriteScale)
+	asset.ClearSprite = s
 }
 
 // Intro   draws.Sprite
