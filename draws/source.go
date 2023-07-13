@@ -1,8 +1,12 @@
 package draws
 
-import "github.com/hajimehoshi/ebiten/v2"
+import "github.com/hajimehoshi/ebiten/v2/colorm"
 
-type Op = ebiten.DrawImageOptions
+// type Op = ebiten.DrawImageOptions
+type Op struct {
+	colorm.DrawImageOptions
+	ColorM colorm.ColorM
+}
 
 // Image, Text, and Blank implement Source.
 type Source interface {

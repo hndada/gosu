@@ -11,7 +11,7 @@ import (
 // Interface is also used when it uses the unknown struct.
 type ScenePlay interface {
 	Now() int32
-	StartMusic()
+	// StartMusic()
 	PlaySound(sample Sample, scale float64)
 	SetOffset(currentOffset int32)
 	SetMusicVolume(vol float64)
@@ -43,7 +43,7 @@ type BaseScenePlay struct {
 	Dynamic *Dynamic
 
 	MusicPlayer audios.MusicPlayer
-	musicPlayed bool
+	MusicPlayed bool
 	SoundMap    audios.SoundMap
 	Keyboard    input.Keyboard
 	paused      bool
@@ -54,9 +54,9 @@ func (s BaseScenePlay) Now() int32 {
 }
 
 func (s BaseScenePlay) StartMusic() {
-	if !s.musicPlayed && s.Now() >= 0 {
+	if !s.MusicPlayed && s.Now() >= 0 {
 		s.MusicPlayer.Play()
-		s.musicPlayed = true
+		s.MusicPlayed = true
 	}
 }
 
