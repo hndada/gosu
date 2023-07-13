@@ -11,7 +11,7 @@ type KeyboardListener struct {
 	getKeyStates func() []bool
 	PollingRate  time.Duration
 
-	PauseTime     time.Time
+	pauseTime     time.Time
 	paused        bool
 	pauseChannel  chan struct{}
 	resumeChannel chan struct{}
@@ -111,7 +111,7 @@ func (kl *KeyboardListener) Pause() {
 	defer kl.pauseMutex.Unlock()
 	kl.pauseChannel <- struct{}{}
 
-	kl.PauseTime = time.Now()
+	kl.pauseTime = time.Now()
 	kl.paused = true
 }
 
@@ -120,7 +120,7 @@ func (kl *KeyboardListener) Resume() {
 	defer kl.pauseMutex.Unlock()
 	kl.resumeChannel <- struct{}{}
 
-	pauseDuration := time.Since(kl.PauseTime)
+	pauseDuration := time.Since(kl.pauseTime)
 	kl.StartTime = kl.StartTime.Add(pauseDuration)
 	kl.paused = false
 }

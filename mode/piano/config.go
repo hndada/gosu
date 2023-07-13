@@ -57,10 +57,10 @@ func NewConfig() *Config {
 		TailExtraDuration: 0,
 
 		KeyTypeWidths: [4]float64{
-			0.06 * ScreenSize.X, // One
-			0.06 * ScreenSize.X, // Two
-			0.06 * ScreenSize.X, // Mid
-			0.06 * ScreenSize.X, // Tip
+			0.055 * ScreenSize.X, // One
+			0.055 * ScreenSize.X, // Two
+			0.055 * ScreenSize.X, // Mid
+			0.055 * ScreenSize.X, // Tip
 		},
 		NoteHeigth:       0.03 * ScreenSize.Y, // 0.03: 27px
 		FieldPosition:    0.50 * ScreenSize.X,

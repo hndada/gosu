@@ -15,7 +15,7 @@ func (s *BaseScene) setMusicVolumeKeyHandler(cfg *Config, asset *Asset) {
 			Unit:  0.05,
 		},
 		Modifier: input.KeyControlLeft,
-		Keys:     ctrl.LeftRightKeys,
+		Keys:     ctrl.KeysLeftRight,
 		Sounds:   asset.ToggleSounds,
 		Volume:   &cfg.SoundVolume,
 	}
@@ -29,7 +29,7 @@ func (s *BaseScene) setSoundVolumeKeyHandler(cfg *Config, asset *Asset) {
 			Unit:  0.05,
 		},
 		Modifier: input.KeyAltLeft,
-		Keys:     ctrl.LeftRightKeys,
+		Keys:     ctrl.KeysLeftRight,
 		Sounds:   asset.ToggleSounds,
 		Volume:   &cfg.SoundVolume,
 	}
@@ -58,7 +58,7 @@ func (s *BaseScene) setOffsetKeyHandler(cfg *Config, asset *Asset) {
 			Unit:  1,
 		},
 		Modifier: input.KeyShiftLeft,
-		Keys:     ctrl.LeftRightKeys,
+		Keys:     ctrl.KeysLeftRight,
 		Sounds:   asset.TransitionSounds,
 		Volume:   &cfg.SoundVolume,
 	}
@@ -68,9 +68,10 @@ func (s *BaseScene) setDebugPrintKeyHandler(cfg *Config, asset *Asset) {
 		Handler: ctrl.BoolHandler{
 			Value: &cfg.DebugPrint,
 		},
-		Keys:   [2]input.Key{input.KeyF12, input.KeyF12},
-		Sounds: [2]audios.SoundPlayer{asset.TapSoundPod, asset.TapSoundPod},
-		Volume: &cfg.SoundVolume,
+		Modifier: input.KeyNone,
+		Keys:     [2]input.Key{input.KeyF12, input.KeyF12},
+		Sounds:   [2]audios.SoundPlayer{asset.TapSoundPod, asset.TapSoundPod},
+		Volume:   &cfg.SoundVolume,
 	}
 }
 func (s *BaseScene) setSpeedScaleKeyHandlers(cfg *Config, asset *Asset) {
@@ -84,8 +85,8 @@ func (s *BaseScene) setSpeedScaleKeyHandlers(cfg *Config, asset *Asset) {
 				Max:   2.5,
 				Unit:  0.05,
 			},
-			Modifier: input.KeyControlLeft,
-			Keys:     ctrl.UpDownKeys,
+			Modifier: input.KeyNone,
+			Keys:     [2]input.Key{input.KeyPageDown, input.KeyPageUp},
 			Sounds:   asset.ToggleSounds,
 			Volume:   &cfg.SoundVolume,
 		}

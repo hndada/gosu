@@ -38,8 +38,9 @@ type ScenePlay interface {
 type BaseScenePlay struct {
 	StartTime  time.Time
 	lastOffset int32
-	PauseTime  time.Time
-	Dynamic    *Dynamic
+	pauseTime  time.Time
+
+	Dynamic *Dynamic
 
 	MusicPlayer audios.MusicPlayer
 	musicPlayed bool
@@ -86,14 +87,14 @@ func (s *BaseScenePlay) SetMusicVolume(vol float64) {
 func (s BaseScenePlay) IsPaused() bool { return s.paused }
 
 func (s *BaseScenePlay) Pause() {
-	s.PauseTime = time.Now()
+	s.pauseTime = time.Now()
 	s.MusicPlayer.Pause()
 	s.Keyboard.Pause()
 	s.paused = true
 }
 
 func (s *BaseScenePlay) Resume() {
-	elapsedTime := time.Since(s.PauseTime)
+	elapsedTime := time.Since(s.pauseTime)
 	s.StartTime = s.StartTime.Add(elapsedTime)
 	s.MusicPlayer.Play()
 	s.Keyboard.Resume()
