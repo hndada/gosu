@@ -69,6 +69,7 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string,
 	s.cursor = float64(s.Now()) * s.SpeedScale
 	s.highestBar = s.Chart.Bars[0]
 	s.highestNotes = s.Staged
+	s.lastKeyActions = make([]input.KeyActionType, s.Chart.KeyCount)
 
 	// Since timers are now updated in Draw(), their ticks would be dependent on FPS.
 	// However, so far TPS and FPS goes synced by SyncWithFPS().
