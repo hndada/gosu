@@ -120,10 +120,13 @@ func (s *ScenePlay) SetSpeedScale() {
 }
 
 func (s *ScenePlay) Update() any {
-	s.Ticker()
+	// if !s.MusicPlayed && s.Now() >= 0 && s.Now() < 3 {
+	// 	s.MusicPlayer.Play()
+	// 	s.MusicPlayed = true
+	// }
 
 	s.Scorer.worstJudgment = blank
-	var kas []input.KeyboardAction
+	kas := s.Keyboard.Fetch()
 	for _, ka := range kas {
 		s.Scorer.Check(ka)
 		for k, n := range s.Scorer.Staged {
@@ -143,6 +146,9 @@ func (s *ScenePlay) Update() any {
 	s.updateHighestNotes()
 	s.UpdateDynamic()
 	s.updateCursor()
+
+	s.Ticker()
+
 	return nil
 }
 

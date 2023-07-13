@@ -1,6 +1,7 @@
 package draws
 
 import (
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text"
 	"golang.org/x/image/font"
 )
@@ -24,8 +25,14 @@ func (t Text) Size() Vector2 {
 	return IntVec2(b.Max.X, -b.Min.Y)
 }
 
+// issue: ebiten/v2/text.DrawWithOptions does not support ColorM.
 func (t Text) Draw(dst Image, op Op) {
-	text.DrawWithOptions(dst.Image, t.text, t.face, &op)
+	op2 := &ebiten.DrawImageOptions{
+		GeoM:   op.GeoM,
+		Blend:  op.Blend,
+		Filter: op.Filter,
+	}
+	text.DrawWithOptions(dst.Image, t.text, t.face, op2)
 }
 
 func (t Text) IsEmpty() bool { return len(t.text) == 0 }

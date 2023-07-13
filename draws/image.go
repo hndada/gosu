@@ -11,6 +11,7 @@ import (
 	_ "image/png"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/colorm"
 )
 
 type Image struct{ *ebiten.Image }
@@ -23,7 +24,7 @@ func (i Image) Size() Vector2 {
 }
 
 func (i Image) Draw(dst Image, op Op) {
-	dst.Image.DrawImage(i.Image, &op)
+	colorm.DrawImage(dst.Image, i.Image, op.ColorM, &op.DrawImageOptions)
 }
 
 func (i Image) IsEmpty() bool { return i.Image == nil }
