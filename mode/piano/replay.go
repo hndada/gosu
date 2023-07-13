@@ -12,7 +12,7 @@ type ReplayListener struct {
 	index  int
 
 	StartTime time.Time
-	PauseTime time.Time
+	pauseTime time.Time
 	paused    bool
 }
 
@@ -100,12 +100,12 @@ func (rl *ReplayListener) Fetch() (kas []input.KeyboardAction) {
 func (rl *ReplayListener) Poll() {}
 
 func (rl *ReplayListener) Pause() {
-	rl.PauseTime = time.Now()
+	rl.pauseTime = time.Now()
 	rl.paused = true
 }
 
 func (rl *ReplayListener) Resume() {
-	pauseDuration := time.Since(rl.PauseTime)
+	pauseDuration := time.Since(rl.pauseTime)
 	rl.StartTime = rl.StartTime.Add(pauseDuration)
 	rl.paused = false
 }

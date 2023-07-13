@@ -2,6 +2,7 @@ package draws
 
 import (
 	"io/fs"
+	"path"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -16,18 +17,13 @@ func NewFramesFromFilename(fsys fs.FS, name string) Frames {
 	one := []Image{NewImageFromFile(fsys, name)}
 	dirName := strings.TrimSuffix(name, filepath.Ext(name))
 
-	es, err := fs.ReadDir(fsys, dirName)
-	if err != nil {
+	paths := framePaths(fsys, dirName)
+	if len(paths) == 0 {
 		return one
 	}
 
-	names := frameNames(es)
-	if len(names) == 0 {
-		return one
-	}
-
-	frames := make(Frames, len(names))
-	for i, name := range names {
+	frames := make(Frames, len(paths))
+	for i, name := range paths {
 		frames[i] = NewImageFromFile(fsys, name)
 	}
 	return frames
@@ -35,10 +31,15 @@ func NewFramesFromFilename(fsys fs.FS, name string) Frames {
 
 // Avoid using filepath at fs.FS.
 // It yields backslash, which is invalid.
-func frameNames(es []fs.DirEntry) []string {
+func framePaths(fsys fs.FS, dirName string) []string {
 	type frameName struct {
 		num int
 		ext string
+	}
+
+	es, err := fs.ReadDir(fsys, dirName)
+	if err != nil {
+		return []string{}
 	}
 
 	fns := make([]frameName, 0, len(es))
@@ -61,9 +62,10 @@ func frameNames(es []fs.DirEntry) []string {
 		return fns[i].num < fns[j].num
 	})
 
-	names := make([]string, len(fns))
+	paths := make([]string, len(fns))
 	for i, fn := range fns {
-		names[i] = strconv.Itoa(fn.num) + fn.ext
+		name := strconv.Itoa(fn.num) + fn.ext
+		paths[i] = path.Join(dirName, name)
 	}
-	return names
+	return paths
 }

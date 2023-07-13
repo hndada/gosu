@@ -74,39 +74,42 @@ func (s ScenePlay) drawHint(dst draws.Image) {
 	s.HintSprite.Draw(dst, draws.Op{})
 }
 
-// drawLongNoteBody draws stretched long note body sprite.
+// drawLongNoteBodies draws stretched long note body sprite.
 // Draw long note body before drawing notes.
 func (s ScenePlay) drawLongNoteBodies(dst draws.Image) {
+	lowerBound := s.cursor - 100
 	for k, tail := range s.highestNotes {
-		if tail == nil || tail.Type != Tail {
-			continue
+		for ; tail != nil && tail.Position > lowerBound; tail = tail.Prev {
+			if tail.Type != Tail {
+				continue
+			}
+			head := tail.Prev
+
+			bodyAnim := s.KeyKindNoteTypeAnimations[k][Body]
+			bodyFrame := bodyAnim[0]
+
+			holding := s.lastKeyActions[k] == input.Hold
+			holding = holding && s.Scorer.Staged[k].Type == Tail
+			if holding {
+				bodyFrame = s.noteTimers[k].Frame(bodyAnim)
+			}
+
+			length := tail.Position - head.Position
+			length += s.NoteHeigth
+			if length < 0 {
+				length = 0
+			}
+
+			bodyFrame.SetSize(bodyFrame.W(), length)
+			tailY := head.Position - s.cursor
+			bodyFrame.Move(0, -tailY)
+
+			op := draws.Op{}
+			if tail.Marked {
+				op.ColorM.ChangeHSV(0, 0.3, 0.3)
+			}
+			bodyFrame.Draw(dst, op)
 		}
-		head := tail.Prev
-
-		bodyAnim := s.KeyKindNoteTypeAnimations[k][Body]
-		bodyFrame := bodyAnim[0]
-
-		holding := s.lastKeyActions[k] == input.Hold
-		holding = holding && s.Scorer.Staged[k].Type == Tail
-		if holding {
-			bodyFrame = s.noteTimers[k].Frame(bodyAnim)
-		}
-
-		length := tail.Position - head.Position
-		length += s.NoteHeigth
-		if length < 0 {
-			length = 0
-		}
-
-		bodyFrame.SetSize(bodyFrame.W(), length)
-		tailY := head.Position - s.cursor
-		bodyFrame.Move(0, -tailY)
-
-		op := draws.Op{}
-		if tail.Marked {
-			op.ColorM.ChangeHSV(0, 0.3, 0.3)
-		}
-		bodyFrame.Draw(dst, op)
 	}
 }
 
@@ -116,6 +119,9 @@ func (s ScenePlay) drawNotes(dst draws.Image) {
 	lowerBound := s.cursor - 100
 	for k, n := range s.highestNotes {
 		for ; n != nil && n.Position > lowerBound; n = n.Prev {
+			// if n.Type == Tail {
+			// 	s.drawLongNoteBody(dst, n)
+			// }
 			sprite := s.noteTimers[k].Frame(s.KeyKindNoteTypeAnimations[k][n.Type])
 			pos := n.Position - s.cursor
 			sprite.Move(0, -pos)
@@ -130,6 +136,11 @@ func (s ScenePlay) drawNotes(dst draws.Image) {
 				break
 			}
 		}
+		// There is a case that head is off the screen
+		// but tail is on the screen.
+		// if n.Type == Head {
+		// 	s.drawLongNoteBody(dst, n.Next)
+		// }
 	}
 }
 
@@ -241,30 +252,29 @@ func (s ScenePlay) drawJudgment(dst draws.Image) {
 
 func (s ScenePlay) DebugPrint(screen draws.Image) {
 	var b strings.Builder
-	f := fmt.Sprintf
+	f := fmt.Fprintf
 
-	now := mode.ToSecond(s.Now())
-	duration := mode.ToSecond(s.Duration())
-
-	b.WriteString(f("FPS: %.2f\n", ebiten.ActualFPS()))
-	b.WriteString(f("TPS: %.2f\n", ebiten.ActualTPS()))
-	b.WriteString(f("Time: %.3fs/%.0fs\n", now, duration))
-	b.WriteString("\n")
-	b.WriteString(f("Score: %.0f \n", s.Score))
-	b.WriteString(f("Combo: %d\n", s.Combo))
-	b.WriteString(f("Flow: %.2f%%\n", s.Flow/MaxFlow*100))
-	b.WriteString(f("Acc: %.2f%%\n", s.Acc/MaxAcc*100))
-	b.WriteString(f("Judgment counts: %v\n", s.JudgmentCounts))
-	b.WriteString("\n")
-	b.WriteString(f("Speed scale (Z/X): %.0f (x%.2f)\n", s.SpeedScale, s.Speed()))
-	b.WriteString(f("(Exposure time: %dms)\n", s.NoteExposureDuration()))
-	b.WriteString("\n")
-	b.WriteString(f("Music volume (Ctrl+ Left/Right): %.0f%%\n", *s.MusicVolume*100))
-	b.WriteString(f("Sound volume (Alt+ Left/Right): %.0f%%\n", *s.SoundVolume*100))
-	b.WriteString(f("Offset (Shift+ Left/Right): %dms\n", s.Offset))
-	b.WriteString("\n")
-	b.WriteString("Press ESC to back to choose a song.\n")
-	b.WriteString("Press TAB to pause.\n")
+	f(&b, "FPS: %.2f\n", ebiten.ActualFPS())
+	f(&b, "TPS: %.2f\n", ebiten.ActualTPS())
+	f(&b, "Time: %.3fs/%.0fs\n", mode.ToSecond(s.Now()), mode.ToSecond(s.Duration()))
+	f(&b, "\n")
+	f(&b, "Score: %.0f \n", s.Score)
+	f(&b, "Combo: %d\n", s.Combo)
+	f(&b, "Flow: %.0f/%2d\n", s.Flow, MaxFlow)
+	f(&b, " Acc: %.0f/%2d\n", s.Acc, MaxAcc)
+	f(&b, "Judgment counts: %v\n", s.JudgmentCounts)
+	f(&b, "\n")
+	f(&b, "Speed scale (PageUp/Down): x%.2f (x%.2f)\n", s.SpeedScale, s.Speed())
+	f(&b, "(Exposure time: %dms)\n", s.NoteExposureDuration())
+	f(&b, "\n")
+	f(&b, "Music volume (Ctrl+ Left/Right): %.0f%%\n", *s.MusicVolume*100)
+	f(&b, "Sound volume (Alt+ Left/Right): %.0f%%\n", *s.SoundVolume*100)
+	f(&b, "Offset (Shift+ Left/Right): %dms\n", *s.Offset)
+	f(&b, "\n")
+	f(&b, "Press ESC to back to choose a song.\n")
+	f(&b, "Press TAB to pause.\n")
+	f(&b, "Press Ctrl+ O/P to change background brightness\n")
+	f(&b, "Press F12 to print debug.\n")
 
 	ebitenutil.DebugPrint(screen.Image, b.String())
 }

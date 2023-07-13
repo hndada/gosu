@@ -49,6 +49,9 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string,
 	s.Asset = assets[s.KeyCount]
 	s.Scorer = NewScorer(s.Chart)
 
+	const wait = 1800 * time.Millisecond
+	s.StartTime = time.Now().Add(wait)
+
 	const ratio = 1
 	s.MusicPlayer, err = audios.NewMusicPlayerFromFile(fsys, s.MusicFilename, ratio)
 	if err != nil {
@@ -56,7 +59,6 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string,
 	}
 	s.SoundMap = audios.NewSoundMap(fsys, s.SoundVolume)
 
-	const wait = 1800 * time.Millisecond
 	if rf != nil {
 		s.Keyboard = NewReplayListener(rf, s.KeyCount, wait)
 	} else {
@@ -164,6 +166,7 @@ func (s *ScenePlay) updateHighestBar() {
 		}
 	}
 }
+
 func (s *ScenePlay) updateHighestNotes() {
 	upperBound := s.cursor + s.ScreenSize.Y + 100
 	for k, n := range s.highestNotes {
@@ -172,6 +175,11 @@ func (s *ScenePlay) updateHighestNotes() {
 			if n.Next == nil {
 				break
 			}
+		}
+		// Head cannot be the highest note, since drawLongNoteBody
+		// is drawn by its Tail.
+		if n.Type == Head {
+			s.highestNotes[k] = n.Next
 		}
 	}
 }

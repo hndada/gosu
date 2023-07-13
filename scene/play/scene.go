@@ -29,6 +29,8 @@ func NewScene(cfg *scene.Config, asset *scene.Asset, fsys fs.FS, name string,
 	_mode int, mods any, rf *osr.Format) (s *Scene, err error) {
 
 	s = new(Scene)
+	s.cfg = cfg
+	s.BaseScene = scene.TheBaseScene
 	s.mode = _mode
 	switch s.mode {
 	case mode.ModePiano:

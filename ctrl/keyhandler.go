@@ -6,10 +6,21 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
-const (
-	short = 80
-	long  = 200
+var (
+	shortTicks = 5
+	longTicks  = 20
 )
+
+var lastTPS float64 = 60 // default value of ebiten
+
+// https://go.dev/play/p/NgTdSwjyCXC
+func UpdateTPS() {
+	newTPS := float64(ebiten.TPS())
+	scale := newTPS / lastTPS
+	shortTicks = int(float64(shortTicks) * scale)
+	longTicks = int(float64(longTicks) * scale)
+	lastTPS = newTPS
+}
 
 // Todo: Modifiers work strangely when there are plural modifiers.
 // Todo: support modifiers for KeyHandler
@@ -25,15 +36,14 @@ type KeyHandler struct {
 	countdown int // User needs to hold for a while to activate.
 }
 
-// Update returns whether the handler has set off (triggered) or not.
-// Todo: set off the stricter handler only
-func (kh *KeyHandler) Update() (set bool) {
+// Update returns whether the handler has fired (triggered) or not.
+func (kh *KeyHandler) Update() (fired bool) {
 	if kh.countdown > 0 {
 		kh.countdown--
 		return
 	}
 
-	if !ebiten.IsKeyPressed(kh.Modifier) {
+	if kh.Modifier != input.KeyNone && !ebiten.IsKeyPressed(kh.Modifier) {
 		kh.reset()
 		return
 	}
@@ -57,9 +67,9 @@ func (kh *KeyHandler) Update() (set bool) {
 	kh.Sounds[kh.holdIndex].Play(*kh.Volume)
 
 	if kh.active {
-		kh.countdown = short
+		kh.countdown = shortTicks
 	} else {
-		kh.countdown = long
+		kh.countdown = longTicks
 	}
 	kh.active = true
 

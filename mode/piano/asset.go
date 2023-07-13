@@ -133,7 +133,7 @@ func (asset *Asset) setKeyKindNoteTypeAnimations(cfg *Config, fsys fs.FS, keyXs 
 	// Todo: 2nd mid -> tip
 	for keyKind, kkname := range []string{"one", "two", "mid", "mid"} {
 		for noteType, ntname := range []string{"normal", "head", "tail", "body"} {
-			name := fmt.Sprintf("piano/note/%s/%s", kkname, ntname)
+			name := fmt.Sprintf("piano/note/%s/%s.png", kkname, ntname)
 			frames := draws.NewFramesFromFilename(fsys, name)
 			keyKindNoteTypeFrames[keyKind][noteType] = frames
 		}
