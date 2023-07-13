@@ -136,7 +136,7 @@ func (asset *Asset) setKeyKindNoteTypeAnimations(cfg *Config, fsys fs.FS,
 	for keyKind, kkname := range []string{"one", "two", "mid", "mid"} {
 		for noteType, ntname := range []string{"normal", "head", "tail", "body"} {
 			name := fmt.Sprintf("piano/note/%s/%s", kkname, ntname)
-			frames := draws.NewFramesFromFile(fsys, name)
+			frames := draws.NewFramesFromFilename(fsys, name)
 			fmt.Println(kkname, ntname, len(frames))
 			keyKindNoteTypeFrames[keyKind][noteType] = frames
 		}
@@ -192,7 +192,7 @@ func (asset *Asset) setKeyLightingSprites(cfg *Config, fsys fs.FS,
 
 func (asset *Asset) setHitLightingAnimations(cfg *Config, fsys fs.FS,
 	keyXs []float64) []draws.Animation {
-	imgs := draws.NewFramesFromFile(fsys, "piano/lighting/hit")
+	imgs := draws.NewFramesFromFilename(fsys, "piano/lighting/hit")
 	anims := make([]draws.Animation, len(keyXs))
 	for k := range anims {
 		anim := draws.NewAnimation(imgs)
@@ -207,7 +207,7 @@ func (asset *Asset) setHitLightingAnimations(cfg *Config, fsys fs.FS,
 
 func (asset *Asset) setHoldLightingAnimations(cfg *Config, fsys fs.FS,
 	keyXs []float64) []draws.Animation {
-	imgs := draws.NewFramesFromFile(fsys, "piano/lighting/hold")
+	imgs := draws.NewFramesFromFilename(fsys, "piano/lighting/hold")
 	anims := make([]draws.Animation, len(keyXs))
 	for k := range anims {
 		anim := draws.NewAnimation(imgs)
