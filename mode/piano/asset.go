@@ -30,11 +30,11 @@ type Asset struct {
 	BarSprite   draws.Sprite // bottom: hit position
 
 	// asset for each key
-	KeyNoteAnimations      [][4]draws.Animation // bottom: hit position
-	KeySprites             [][2]draws.Sprite    // top: hit position
-	KeyLightingSprites     []draws.Sprite
-	HitLightingAnimations  []draws.Animation
-	HoldLightingAnimations []draws.Animation
+	KeyKindNoteTypeAnimations [][4]draws.Animation // bottom: hit position
+	KeySprites                [][2]draws.Sprite    // top: hit position
+	KeyLightingSprites        []draws.Sprite
+	HitLightingAnimations     []draws.Animation
+	HoldLightingAnimations    []draws.Animation
 }
 
 // Todo: should Scratch be excluded from fieldWidth?
@@ -55,7 +55,7 @@ func NewAsset(cfg *Config, fsys fs.FS, keyCount int, scratchMode ScratchMode) *A
 	asset.setHintSprite(cfg, fsys, fieldWidth)
 	asset.setBarSprite(cfg, fsys, fieldWidth)
 
-	asset.setKeyNoteAnimations(cfg, fsys, keyXs, keyWidths, keyTypes)
+	asset.setKeyKindNoteTypeAnimations(cfg, fsys, keyXs, keyWidths, keyTypes)
 	asset.setKeySprites(cfg, fsys, keyXs, keyWidths)
 	asset.setKeyLightingSprites(cfg, fsys, keyXs, keyWidths)
 	asset.setHitLightingAnimations(cfg, fsys, keyXs)
@@ -71,10 +71,10 @@ func (asset *Asset) setScoreSprites(cfg *Config, fsys fs.FS) {
 func (asset *Asset) setComboSprites(cfg *Config, fsys fs.FS) {
 	var sprites [10]draws.Sprite
 	for i := 0; i < 10; i++ {
-		s := draws.NewSpriteFromFile(fsys, fmt.Sprintf("combo/%d.png", i))
-		s.MultiplyScale(cfg.ComboSpriteScale)
-		s.Locate(cfg.FieldPosition, cfg.ComboPosition, draws.CenterMiddle)
-		sprites[i] = s
+		sprite := draws.NewSpriteFromFile(fsys, fmt.Sprintf("combo/%d.png", i))
+		sprite.MultiplyScale(cfg.ComboSpriteScale)
+		sprite.Locate(cfg.FieldPosition, cfg.ComboPosition, draws.CenterMiddle)
+		sprites[i] = sprite
 	}
 	asset.ComboSprites = sprites
 }
@@ -82,71 +82,76 @@ func (asset *Asset) setComboSprites(cfg *Config, fsys fs.FS) {
 func (asset *Asset) setJudgmentAnimations(cfg *Config, fsys fs.FS) {
 	var anims [4]draws.Animation
 	for i, name := range []string{"kool", "cool", "good", "miss"} {
-		a := draws.NewAnimationFromFile(fsys, fmt.Sprintf("piano/judgment/%s", name))
-		for frame := range a {
-			a[frame].MultiplyScale(cfg.JudgmentSpriteScale)
-			a[frame].Locate(cfg.FieldPosition, cfg.JudgmentPosition, draws.CenterMiddle)
+		anim := draws.NewAnimationFromFile(fsys, fmt.Sprintf("piano/judgment/%s", name))
+		for frame := range anim {
+			anim[frame].MultiplyScale(cfg.JudgmentSpriteScale)
+			anim[frame].Locate(cfg.FieldPosition, cfg.JudgmentPosition, draws.CenterMiddle)
 		}
-		anims[i] = a
+		anims[i] = anim
 	}
 	asset.JudgmentAnimations = anims
 }
 
 func (asset *Asset) setDefaultHitSound(cfg *Config, fsys fs.FS) {
-	sound := audios.NewSound(fsys, "piano/sound.wav", cfg.SoundVolume)
+	sound := audios.NewSound(fsys, "piano/sound/hit.wav", cfg.SoundVolume)
 	asset.DefaultHitSound = sound
 }
 
 func (asset *Asset) setBarSprite(cfg *Config, fsys fs.FS, fieldWidth float64) {
 	img := draws.NewImage(fieldWidth, 1)
 	img.Fill(color.White)
-	s := draws.NewSprite(img)
-	s.Locate(cfg.FieldPosition, cfg.HitPosition, draws.CenterBottom)
-	asset.BarSprite = s
+
+	sprite := draws.NewSprite(img)
+	sprite.Locate(cfg.FieldPosition, cfg.HitPosition, draws.CenterBottom)
+	asset.BarSprite = sprite
 }
 
 func (asset *Asset) setHintSprite(cfg *Config, fsys fs.FS, fieldWidth float64) {
 	img := draws.NewImageFromFile(fsys, "piano/stage/hint.png")
-	s := draws.NewSprite(img)
-	s.SetSize(fieldWidth, cfg.HintHeight)
-	s.Locate(cfg.FieldPosition, cfg.HitPosition, draws.CenterBottom)
-	asset.HintSprite = s
+
+	sprite := draws.NewSprite(img)
+	sprite.SetSize(fieldWidth, cfg.HintHeight)
+	sprite.Locate(cfg.FieldPosition, cfg.HitPosition, draws.CenterBottom)
+	asset.HintSprite = sprite
 }
 
 func (asset *Asset) setFieldSprite(cfg *Config, fsys fs.FS, fieldWidth float64) {
 	img := draws.NewImage(fieldWidth, cfg.ScreenSize.Y)
 	img.Fill(color.NRGBA{0, 0, 0, uint8(255 * cfg.FieldOpaque)})
-	s := draws.NewSprite(img)
-	s.Locate(cfg.FieldPosition, 0, draws.CenterTop)
-	asset.FieldSprite = s
+
+	sprite := draws.NewSprite(img)
+	sprite.Locate(cfg.FieldPosition, 0, draws.CenterTop)
+	asset.FieldSprite = sprite
 }
 
 // When note/normal image is not found, use default's note/normal.
 // When note/head image is not found, use user's note/normal.
 // When note/tail image is not found, let it be blank.
 // When note/body image is not found, use user's note/normal.
-func (asset *Asset) setKeyNoteAnimations(cfg *Config, fsys fs.FS,
+func (asset *Asset) setKeyKindNoteTypeAnimations(cfg *Config, fsys fs.FS,
 	keyXs []float64, keyWidths []float64, keyTypes []KeyType) [][4]draws.Animation {
 
-	var keyNoteImgs [4][4][]draws.Image                            // key and note images
-	for i, keyType := range []string{"one", "two", "mid", "mid"} { // Todo: 2nd mid -> tip
-		for j, noteType := range []string{"normal", "head", "tail", "body"} {
-			name := fmt.Sprintf("piano/note/%s/%s", keyType, noteType)
-			keyNoteImgs[i][j] = draws.NewImagesFromFile(fsys, name)
+	var keyKindNoteTypeFrames [4][4]draws.Frames
+	// Todo: 2nd mid -> tip
+	for keyKind, kkname := range []string{"one", "two", "mid", "mid"} {
+		for noteType, ntname := range []string{"normal", "head", "tail", "body"} {
+			name := fmt.Sprintf("piano/note/%s/%s", kkname, ntname)
+			frames := draws.NewFramesFromFile(fsys, name)
+			fmt.Println(kkname, ntname, len(frames))
+			keyKindNoteTypeFrames[keyKind][noteType] = frames
 		}
 	}
 
 	anims := make([][4]draws.Animation, len(keyWidths))
 	for k := range anims {
-		keyType := keyTypes[k]
-		noteImgs := keyNoteImgs[keyType]
-		for j, imgs := range noteImgs {
-			a := draws.NewAnimation(imgs[:])
-			for frame := range a {
-				a[frame].SetSize(keyWidths[k], cfg.NoteHeigth)
-				a[frame].Locate(keyXs[k], cfg.HitPosition, draws.CenterBottom)
+		noteTypeFrames := keyKindNoteTypeFrames[keyTypes[k]]
+		for noteType, frames := range noteTypeFrames {
+			anim := draws.NewAnimation(frames[:])
+			for frame := range anim {
+				anim[frame].SetSize(keyWidths[k], cfg.NoteHeigth)
+				anim[frame].Locate(keyXs[k], cfg.HitPosition, draws.CenterBottom)
 			}
-			anims[k][j] = a
+			anims[k][noteType] = anim
 		}
 	}
 	return anims
@@ -162,10 +167,10 @@ func (asset *Asset) setKeySprites(cfg *Config, fsys fs.FS,
 	sprites := make([][2]draws.Sprite, len(keyXs))
 	for k := range sprites {
 		for i, img := range imgs {
-			s := draws.NewSprite(img)
-			s.SetSize(keyWidths[k], cfg.ScreenSize.Y-cfg.HitPosition)
-			s.Locate(keyXs[k], cfg.HitPosition, draws.CenterTop)
-			sprites[k][i] = s
+			sprite := draws.NewSprite(img)
+			sprite.SetSize(keyWidths[k], cfg.ScreenSize.Y-cfg.HitPosition)
+			sprite.Locate(keyXs[k], cfg.HitPosition, draws.CenterTop)
+			sprites[k][i] = sprite
 		}
 	}
 	return sprites
@@ -187,30 +192,30 @@ func (asset *Asset) setKeyLightingSprites(cfg *Config, fsys fs.FS,
 
 func (asset *Asset) setHitLightingAnimations(cfg *Config, fsys fs.FS,
 	keyXs []float64) []draws.Animation {
-	imgs := draws.NewImagesFromFile(fsys, "piano/lighting/hit")
+	imgs := draws.NewFramesFromFile(fsys, "piano/lighting/hit")
 	anims := make([]draws.Animation, len(keyXs))
 	for k := range anims {
-		a := draws.NewAnimation(imgs)
-		for frame := range a {
-			a[frame].MultiplyScale(cfg.LightingSpriteScale)
-			a[frame].Locate(keyXs[k], cfg.HitPosition, draws.CenterMiddle) // -HintHeight
+		anim := draws.NewAnimation(imgs)
+		for frame := range anim {
+			anim[frame].MultiplyScale(cfg.LightingSpriteScale)
+			anim[frame].Locate(keyXs[k], cfg.HitPosition, draws.CenterMiddle) // -HintHeight
 		}
-		anims[k] = a
+		anims[k] = anim
 	}
 	return anims
 }
 
 func (asset *Asset) setHoldLightingAnimations(cfg *Config, fsys fs.FS,
 	keyXs []float64) []draws.Animation {
-	imgs := draws.NewImagesFromFile(fsys, "piano/lighting/hold")
+	imgs := draws.NewFramesFromFile(fsys, "piano/lighting/hold")
 	anims := make([]draws.Animation, len(keyXs))
 	for k := range anims {
-		a := draws.NewAnimation(imgs)
-		for frame := range a {
-			a[frame].MultiplyScale(cfg.LightingSpriteScale)
-			a[frame].Locate(keyXs[k], cfg.HitPosition-cfg.HintHeight/2, draws.CenterMiddle)
+		anim := draws.NewAnimation(imgs)
+		for frame := range anim {
+			anim[frame].MultiplyScale(cfg.LightingSpriteScale)
+			anim[frame].Locate(keyXs[k], cfg.HitPosition-cfg.HintHeight/2, draws.CenterMiddle)
 		}
-		anims[k] = a
+		anims[k] = anim
 	}
 	return anims
 }

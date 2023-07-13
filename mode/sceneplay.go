@@ -27,7 +27,7 @@ type ScenePlay interface {
 
 	WindowTitle() string
 	BackgroundFilename() string
-	ExposureTime() int32
+	NoteExposureDuration() int32
 	Finish() any
 
 	Draw(screen draws.Image)
