@@ -1,10 +1,11 @@
 package main
 
 import (
+	"io/fs"
 	"os"
-	"path"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/defaultskin"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
@@ -34,29 +35,37 @@ func main() {
 	}
 	fsys := os.DirFS(dir)
 	cfg := scene.NewConfig()
-	asset := scene.NewAsset(cfg, fsys)
+	asset := scene.NewAsset(cfg, defaultskin.FS)
 
 	g := &game{
 		musicRoots: cfg.MusicRoots,
 		screenSize: &cfg.ScreenSize,
 	}
+	musicRoot := g.musicRoots[0]
+	musicsFS, err := fs.Sub(fsys, musicRoot)
+	if err != nil {
+		panic(err)
+	}
+
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(int(g.screenSize.X), int(g.screenSize.Y))
 
-	g.loadTestPiano(cfg, asset)
+	g.loadTestPiano(cfg, asset, musicsFS)
 
 	if err := ebiten.RunGame(g); err != nil {
 		panic(err)
 	}
 }
-func (g *game) loadTestPiano(cfg *scene.Config, asset *scene.Asset) {
-	musicRoot := g.musicRoots[0]
+func (g *game) loadTestPiano(cfg *scene.Config, asset *scene.Asset, musicsFS fs.FS) {
 	musicName := "test"
-	subFS := os.DirFS(path.Join(musicRoot, musicName))
-	// subFS := ZipFS(filepath.Join(dir, musicName+".osz"))
+	musicFS, err := fs.Sub(musicsFS, musicName)
+	// musicFS := ZipFS(filepath.Join(dir, musicName+".osz"))
+	if err != nil {
+		panic(err)
+	}
 	name := "nekodex - circles! (MuangMuangE) [Hard].osu"
 	scenePlay, err := piano.NewScenePlay(
-		cfg.PianoConfig, asset.PianoAssets, subFS, name, piano.Mods{}, nil)
+		cfg.PianoConfig, asset.PianoAssets, musicFS, name, piano.Mods{}, nil)
 	if err != nil {
 		panic(err)
 	}

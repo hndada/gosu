@@ -128,16 +128,13 @@ func (asset *Asset) setFieldSprite(cfg *Config, fsys fs.FS, fieldWidth float64) 
 // When note/head image is not found, use user's note/normal.
 // When note/tail image is not found, let it be blank.
 // When note/body image is not found, use user's note/normal.
-func (asset *Asset) setKeyKindNoteTypeAnimations(cfg *Config, fsys fs.FS,
-	keyXs []float64, keyWidths []float64, keyTypes []KeyType) [][4]draws.Animation {
-
+func (asset *Asset) setKeyKindNoteTypeAnimations(cfg *Config, fsys fs.FS, keyXs []float64, keyWidths []float64, keyTypes []KeyType) {
 	var keyKindNoteTypeFrames [4][4]draws.Frames
 	// Todo: 2nd mid -> tip
 	for keyKind, kkname := range []string{"one", "two", "mid", "mid"} {
 		for noteType, ntname := range []string{"normal", "head", "tail", "body"} {
 			name := fmt.Sprintf("piano/note/%s/%s", kkname, ntname)
 			frames := draws.NewFramesFromFilename(fsys, name)
-			fmt.Println(kkname, ntname, len(frames))
 			keyKindNoteTypeFrames[keyKind][noteType] = frames
 		}
 	}
@@ -154,12 +151,10 @@ func (asset *Asset) setKeyKindNoteTypeAnimations(cfg *Config, fsys fs.FS,
 			anims[k][noteType] = anim
 		}
 	}
-	return anims
+	asset.KeyKindNoteTypeAnimations = anims
 }
 
-func (asset *Asset) setKeySprites(cfg *Config, fsys fs.FS,
-	keyXs []float64, keyWidths []float64) [][2]draws.Sprite {
-
+func (asset *Asset) setKeySprites(cfg *Config, fsys fs.FS, keyXs []float64, keyWidths []float64) {
 	imgs := [2]draws.Image{
 		draws.NewImageFromFile(fsys, "piano/key/up.png"),
 		draws.NewImageFromFile(fsys, "piano/key/down.png"),
@@ -173,12 +168,10 @@ func (asset *Asset) setKeySprites(cfg *Config, fsys fs.FS,
 			sprites[k][i] = sprite
 		}
 	}
-	return sprites
+	asset.KeySprites = sprites
 }
 
-func (asset *Asset) setKeyLightingSprites(cfg *Config, fsys fs.FS,
-	keyXs []float64, keyWidths []float64) []draws.Sprite {
-
+func (asset *Asset) setKeyLightingSprites(cfg *Config, fsys fs.FS, keyXs []float64, keyWidths []float64) {
 	img := draws.NewImageFromFile(fsys, "piano/key/lighting.png")
 	sprites := make([]draws.Sprite, len(keyXs))
 	for k := range sprites {
@@ -187,11 +180,10 @@ func (asset *Asset) setKeyLightingSprites(cfg *Config, fsys fs.FS,
 		s.Locate(keyXs[k], cfg.HitPosition, draws.CenterBottom) // -HintHeight
 		sprites[k] = s
 	}
-	return sprites
+	asset.KeyLightingSprites = sprites
 }
 
-func (asset *Asset) setHitLightingAnimations(cfg *Config, fsys fs.FS,
-	keyXs []float64) []draws.Animation {
+func (asset *Asset) setHitLightingAnimations(cfg *Config, fsys fs.FS, keyXs []float64) {
 	imgs := draws.NewFramesFromFilename(fsys, "piano/lighting/hit")
 	anims := make([]draws.Animation, len(keyXs))
 	for k := range anims {
@@ -202,11 +194,10 @@ func (asset *Asset) setHitLightingAnimations(cfg *Config, fsys fs.FS,
 		}
 		anims[k] = anim
 	}
-	return anims
+	asset.HitLightingAnimations = anims
 }
 
-func (asset *Asset) setHoldLightingAnimations(cfg *Config, fsys fs.FS,
-	keyXs []float64) []draws.Animation {
+func (asset *Asset) setHoldLightingAnimations(cfg *Config, fsys fs.FS, keyXs []float64) {
 	imgs := draws.NewFramesFromFilename(fsys, "piano/lighting/hold")
 	anims := make([]draws.Animation, len(keyXs))
 	for k := range anims {
@@ -217,5 +208,5 @@ func (asset *Asset) setHoldLightingAnimations(cfg *Config, fsys fs.FS,
 		}
 		anims[k] = anim
 	}
-	return anims
+	asset.HoldLightingAnimations = anims
 }
