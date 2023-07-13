@@ -7,6 +7,9 @@ import (
 	"github.com/hndada/gosu/mode/piano"
 )
 
+// *piano.Config wins piano.Config
+// 1. Easier to pass around.
+// 2. Easier to check whether config is defined or not.
 type Config struct {
 	MusicRoots []string
 
@@ -24,7 +27,7 @@ type Config struct {
 	PianoConfig *piano.Config
 }
 
-func DefaultConfig() *Config {
+func NewConfig() *Config {
 	cfg := &Config{
 		MusicRoots: []string{"music"},
 
@@ -39,7 +42,7 @@ func DefaultConfig() *Config {
 		CursorSpriteScale: 0.1,
 		ClearSpriteScale:  0.5,
 
-		PianoConfig: piano.DefaultConfig(),
+		PianoConfig: piano.NewConfig(),
 	}
 
 	cfg.loadPianoConfig()
@@ -47,7 +50,7 @@ func DefaultConfig() *Config {
 	return cfg
 }
 func (cfg *Config) loadPianoConfig() {
-	cfg.PianoConfig = piano.DefaultConfig()
+	cfg.PianoConfig = piano.NewConfig()
 	cfg.PianoConfig.ScreenSize = &cfg.ScreenSize
 	cfg.PianoConfig.MusicVolume = &cfg.MusicVolume
 	cfg.PianoConfig.SoundVolume = &cfg.SoundVolume

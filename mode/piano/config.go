@@ -40,7 +40,7 @@ type Config struct {
 	LightingSpriteScale float64
 }
 
-func DefaultConfig() *Config {
+func NewConfig() *Config {
 	ScreenSize := draws.Vector2{X: 1600, Y: 900}
 	return &Config{
 		KeySettings: map[int][]string{
