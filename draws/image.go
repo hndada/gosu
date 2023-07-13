@@ -1,16 +1,10 @@
 package draws
 
 import (
-	"fmt"
 	"image"
 	"image/color"
 	"io/fs"
 	"net/http"
-	"path"
-	"path/filepath"
-	"sort"
-	"strconv"
-	"strings"
 
 	// Following imports are required.
 	_ "image/jpeg"
@@ -73,37 +67,6 @@ func NewImageImageFromFile(fsys fs.FS, name string) image.Image {
 		return nil
 	}
 	return src
-}
-
-// NewImagesFromFile is for Animation.
-func NewImagesFromFile(fsys fs.FS, name string) (is []Image) {
-	const ext = ".png"
-
-	// name supposed to have no extension when passed in NewImagesFromFile.
-	name = strings.TrimSuffix(name, filepath.Ext(name))
-
-	one := []Image{NewImageFromFile(fsys, name+ext)}
-	fs, err := fs.ReadDir(fsys, name)
-	if err != nil {
-		return one
-	}
-	nums := make([]int, 0, len(fs))
-	for _, f := range fs {
-		if f.IsDir() {
-			continue
-		}
-		num := strings.TrimSuffix(f.Name(), ext)
-		if num, err := strconv.Atoi(num); err == nil {
-			nums = append(nums, num)
-		}
-	}
-	sort.Ints(nums)
-	for _, num := range nums {
-		// Avoid use filepath here; it yields backslash, which is invalid path for FS.
-		name2 := path.Join(name, fmt.Sprintf("%d.png", num))
-		is = append(is, NewImageFromFile(fsys, name2))
-	}
-	return
 }
 
 func NewImageXFlipped(src Image) Image {

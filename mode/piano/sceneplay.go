@@ -68,7 +68,7 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string,
 	s.lastSpeedScale = s.SpeedScale
 	s.cursor = float64(s.Now()) * s.SpeedScale
 	s.highestBar = s.Chart.Bars[0]
-	s.highestNotes = make([]*Note, s.Chart.KeyCount)
+	s.highestNotes = s.Staged
 
 	// Since timers are now updated in Draw(), their ticks would be dependent on FPS.
 	// However, so far TPS and FPS goes synced by SyncWithFPS().
@@ -175,30 +175,16 @@ func (s *ScenePlay) updateHighestNotes() {
 	}
 }
 
-func (s ScenePlay) WindowTitle() string {
-	return s.Chart.WindowTitle()
-}
+func (s ScenePlay) WindowTitle() string        { return s.Chart.WindowTitle() }
+func (s ScenePlay) BackgroundFilename() string { return s.Chart.ImageFilename }
 
-func (s ScenePlay) BackgroundFilename() string {
-	return s.Chart.ImageFilename
-}
-
-// ExposureTime is the time that cursor takes to move 1 logical pixel.
-// The unit is millisecond.
-func (s ScenePlay) ExposureTime() int32 {
+// NoteExposureDuration returns time in milliseconds
+// that cursor takes to move 1 logical pixel.
+func (s ScenePlay) NoteExposureDuration() int32 {
 	return int32(s.HitPosition / s.Speed())
 }
 
 func (s ScenePlay) Finish() any {
 	s.BaseScenePlay.Finish()
 	return s.Scorer
-}
-
-func (s ScenePlay) isKeyHit(k int) bool {
-	return s.lastKeyActions[k] == input.Hit
-}
-
-func (s ScenePlay) isKeyPressed(k int) bool {
-	return s.lastKeyActions[k] == input.Hit ||
-		s.lastKeyActions[k] == input.Hold
 }

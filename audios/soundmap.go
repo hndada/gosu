@@ -1,7 +1,6 @@
 package audios
 
 import (
-	"fmt"
 	"io/fs"
 
 	"github.com/faiface/beep"
@@ -10,8 +9,6 @@ import (
 )
 
 type SoundMap struct {
-	// sounds        map[string]Sound
-	// fsys          fs.FS
 	format        beep.Format
 	buffer        *beep.Buffer
 	startIndexMap map[string]int
@@ -23,21 +20,17 @@ type SoundMap struct {
 
 func NewSoundMap(fsys fs.FS, volumeScale *float64) SoundMap {
 	sm := SoundMap{
-		// fsys:          fsys,
 		startIndexMap: make(map[string]int),
 		endIndexMap:   make(map[string]int),
 
 		volumeScale:   volumeScale,
 		resampleRatio: 1,
 	}
-	// sm.format.SampleRate = 44100
-	// streamers = make([]beep.StreamSeekCloser, 0)
-	// sm.walkAndLoad(fsys, ".")
 	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
-			fmt.Printf("%+v\n", err)
+			return err
 		}
-		if d.IsDir() || !isAudioFile(path) || !isSoundFileSize(fsys, path) {
+		if d.IsDir() || !isAudioFile(path) || !isFileSizeSmall(fsys, path) {
 			return nil
 		}
 
@@ -48,7 +41,7 @@ func NewSoundMap(fsys fs.FS, volumeScale *float64) SoundMap {
 
 		// Skipping resampling then making sounds a bit slower or faster
 		// wouldn't make a big difference.
-
+		//
 		// var resampled beep.Resampler
 		// if format.SampleRate != defaultSampleRate {
 		// resampled = beep.Resample(quality, format.SampleRate, defaultSampleRate, f)
@@ -65,7 +58,7 @@ func NewSoundMap(fsys fs.FS, volumeScale *float64) SoundMap {
 	return sm
 }
 
-func isSoundFileSize(fsys fs.FS, name string) bool {
+func isFileSizeSmall(fsys fs.FS, name string) bool {
 	// if filepath.Ext(path) == ".mp3" {
 	// 	continue
 	// }

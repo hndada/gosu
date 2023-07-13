@@ -2,12 +2,21 @@ package piano
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/input"
+	"github.com/hndada/gosu/mode"
 )
+
+// These methods are for drawing.
+func (s ScenePlay) isKeyHit(k int) bool { return s.lastKeyActions[k] == input.Hit }
+func (s ScenePlay) isKeyPressed(k int) bool {
+	ka := s.lastKeyActions[k]
+	return ka == input.Hit || ka == input.Hold
+}
 
 // sceneplay_draw.go: infers it is a part of sceneplay.go.
 func (s *ScenePlay) Ticker() {
@@ -50,7 +59,7 @@ func (s ScenePlay) drawField(dst draws.Image) {
 // Bars are fixed. Lane itself moves, all bars move as same amount.
 func (s ScenePlay) drawBars(dst draws.Image) {
 	lowerBound := s.cursor - 100
-	for b := s.highestBar; b.Position > lowerBound; b = b.Prev {
+	for b := s.highestBar; b != nil && b.Position > lowerBound; b = b.Prev {
 		pos := b.Position - s.cursor
 		sprite := s.BarSprite
 		sprite.Move(0, -pos)
@@ -69,16 +78,18 @@ func (s ScenePlay) drawHint(dst draws.Image) {
 // Draw long note body before drawing notes.
 func (s ScenePlay) drawLongNoteBodies(dst draws.Image) {
 	for k, tail := range s.highestNotes {
-		if tail.Type != Tail {
+		if tail == nil || tail.Type != Tail {
 			continue
 		}
 		head := tail.Prev
-		body := s.KeyNoteAnimations[k][Body][0]
+
+		bodyAnim := s.KeyKindNoteTypeAnimations[k][Body]
+		bodyFrame := bodyAnim[0]
 
 		holding := s.lastKeyActions[k] == input.Hold
 		holding = holding && s.Scorer.Staged[k].Type == Tail
 		if holding {
-			body = s.noteTimers[k].Frame(s.KeyNoteAnimations[k][Body])
+			bodyFrame = s.noteTimers[k].Frame(bodyAnim)
 		}
 
 		length := tail.Position - head.Position
@@ -87,15 +98,15 @@ func (s ScenePlay) drawLongNoteBodies(dst draws.Image) {
 			length = 0
 		}
 
-		body.SetSize(body.W(), length)
+		bodyFrame.SetSize(bodyFrame.W(), length)
 		tailY := head.Position - s.cursor
-		body.Move(0, -tailY)
+		bodyFrame.Move(0, -tailY)
 
 		op := draws.Op{}
 		if tail.Marked {
 			op.ColorM.ChangeHSV(0, 0.3, 0.3)
 		}
-		body.Draw(dst, op)
+		bodyFrame.Draw(dst, op)
 	}
 }
 
@@ -104,8 +115,8 @@ func (s ScenePlay) drawLongNoteBodies(dst draws.Image) {
 func (s ScenePlay) drawNotes(dst draws.Image) {
 	lowerBound := s.cursor - 100
 	for k, n := range s.highestNotes {
-		for ; n.Position > lowerBound; n = n.Prev {
-			sprite := s.noteTimers[k].Frame(s.KeyNoteAnimations[k][n.Type])
+		for ; n != nil && n.Position > lowerBound; n = n.Prev {
+			sprite := s.noteTimers[k].Frame(s.KeyKindNoteTypeAnimations[k][n.Type])
 			pos := n.Position - s.cursor
 			sprite.Move(0, -pos)
 
@@ -229,30 +240,31 @@ func (s ScenePlay) drawJudgment(dst draws.Image) {
 // mode.ColorKool, mode.ColorCool, mode.ColorGood, mode.ColorBad, mode.ColorMiss}
 
 func (s ScenePlay) DebugPrint(screen draws.Image) {
-	fps := fmt.Sprintf("FPS: %.2f\n", ebiten.ActualFPS())
-	tps := fmt.Sprintf("TPS: %.2f\n", ebiten.ActualTPS())
-	time := fmt.Sprintf("Time: %.3fs/%.0fs\n", float64(s.Now())/1000, float64(s.Chart.Duration())/1000)
+	var b strings.Builder
+	f := fmt.Sprintf
 
-	score := fmt.Sprintf("Score: %.0f \n", s.Scorer.Score)
-	combo := fmt.Sprintf("Combo: %d\n", s.Scorer.Combo)
-	flow := fmt.Sprintf("Flow: %.2f%%\n", s.Scorer.Flow/MaxFlow*100)
-	acc := fmt.Sprintf("Acc: %.2f%%\n", s.Scorer.Acc/MaxAcc*100)
-	judgmentCount := fmt.Sprintf("Judgment counts: %v\n", s.Scorer.JudgmentCounts)
+	now := mode.ToSecond(s.Now())
+	duration := mode.ToSecond(s.Duration())
 
-	speedScale := fmt.Sprintf("Speed scale (Z/X): %.0f (x%.2f)\n", s.SpeedScale, s.Dynamic.Speed)
-	exposureTime := fmt.Sprintf("(Exposure time: %dms)\n", s.ExposureTime())
+	b.WriteString(f("FPS: %.2f\n", ebiten.ActualFPS()))
+	b.WriteString(f("TPS: %.2f\n", ebiten.ActualTPS()))
+	b.WriteString(f("Time: %.3fs/%.0fs\n", now, duration))
+	b.WriteString("\n")
+	b.WriteString(f("Score: %.0f \n", s.Score))
+	b.WriteString(f("Combo: %d\n", s.Combo))
+	b.WriteString(f("Flow: %.2f%%\n", s.Flow/MaxFlow*100))
+	b.WriteString(f("Acc: %.2f%%\n", s.Acc/MaxAcc*100))
+	b.WriteString(f("Judgment counts: %v\n", s.JudgmentCounts))
+	b.WriteString("\n")
+	b.WriteString(f("Speed scale (Z/X): %.0f (x%.2f)\n", s.SpeedScale, s.Speed()))
+	b.WriteString(f("(Exposure time: %dms)\n", s.NoteExposureDuration()))
+	b.WriteString("\n")
+	b.WriteString(f("Music volume (Ctrl+ Left/Right): %.0f%%\n", *s.MusicVolume*100))
+	b.WriteString(f("Sound volume (Alt+ Left/Right): %.0f%%\n", *s.SoundVolume*100))
+	b.WriteString(f("Offset (Shift+ Left/Right): %dms\n", s.Offset))
+	b.WriteString("\n")
+	b.WriteString("Press ESC to back to choose a song.\n")
+	b.WriteString("Press TAB to pause.\n")
 
-	musicVolume := fmt.Sprintf("Music volume (Ctrl+ Left/Right): %.0f%%\n", *s.MusicVolume*100)
-	soundVolume := fmt.Sprintf("Sound volume (Alt+ Left/Right): %.0f%%\n", *s.SoundVolume*100)
-	offset := fmt.Sprintf("Offset (Shift+ Left/Right): %dms\n", s.Offset)
-
-	exit := "Press ESC to back to choose a song.\n"
-	pause := "Press TAB to pause.\n"
-
-	ebitenutil.DebugPrint(screen.Image, fps+tps+time+"\n"+
-		score+combo+flow+acc+judgmentCount+"\n"+
-		speedScale+exposureTime+"\n"+
-		musicVolume+soundVolume+offset+"\n"+
-		exit+pause,
-	)
+	ebitenutil.DebugPrint(screen.Image, b.String())
 }

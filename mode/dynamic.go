@@ -37,7 +37,7 @@ func NewDynamics(f any) []*Dynamic {
 		}
 		prev = d
 	}
-	return nil
+	return ds
 }
 
 // When gathering Dynamics from osu.Format, it should input the whole slice.
