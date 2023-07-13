@@ -6,12 +6,19 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
 )
 
-var scenes = make(map[string]scene.Scene)
+func init() {
+	// In 240Hz monitor, TPS is 60 and FPS is 240 at start.
+	// SetTPS will set TPS to FPS, hence TPS will be 240 too.
+	// I guess ebiten.SetTPS should be called before scene.NewConfig is called.
+	ebiten.SetTPS(ebiten.SyncWithFPS)
+}
+
+// scenes should be out of main(), because it will be used in other methods of game.
+// var scenes = make(map[string]scene.Scene)
 
 // All structs and variables in cmd/* package should be unexported.
 type game struct {
@@ -24,38 +31,31 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	musicName := "asdf - 1223"
-	fsys := os.DirFS(path.Join(dir, musicName))
-	name := "nekodex - circles! (MuangMuangE) [Hard].osu"
-
-	// oszName := "asdf - 1223.osz"
-	// fsys:= ZipFS(filepath.Join(dir, oszName))
-	// name := "nekodex - circles! (MuangMuangE) [Hard].osu"
-
-	// In 240Hz monitor, TPS is 60 and FPS is 240 at start.
-	// SetTPS will set TPS to FPS, hence TPS will be 240 too.
-	// I guess ebiten.SetTPS should be called before scene.DefaultConfig is called.
-	ebiten.SetTPS(ebiten.SyncWithFPS)
-
-	cfg := scene.DefaultConfig()
+	fsys := os.DirFS(dir)
+	cfg := scene.NewConfig()
 	asset := scene.NewAsset(cfg, fsys)
-	mods := piano.Mods{}
-	var rf *osr.Format = nil
-	scenePlay, err := piano.NewScenePlay(cfg.PianoConfig, asset.PianoAssets, fsys, name, mods, rf)
-	if err != nil {
-		panic(err)
-	}
-	g := &game{
-		screenSize: &cfg.ScreenSize,
-		Scene:      scenePlay,
-	}
 
+	g := &game{screenSize: &cfg.ScreenSize}
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(int(g.screenSize.X), int(g.screenSize.Y))
+
+	g.loadTestPiano(cfg, asset, dir)
+
 	if err := ebiten.RunGame(g); err != nil {
 		panic(err)
 	}
+}
+func (g *game) loadTestPiano(cfg *scene.Config, asset *scene.Asset, dir string) {
+	musicName := "asdf - 1223"
+	subFS := os.DirFS(path.Join(dir, musicName))
+	// subFS := ZipFS(filepath.Join(dir, musicName+".osz"))
+	name := "nekodex - circles! (MuangMuangE) [Hard].osu"
+	scenePlay, err := piano.NewScenePlay(
+		cfg.PianoConfig, asset.PianoAssets, subFS, name, piano.Mods{}, nil)
+	if err != nil {
+		panic(err)
+	}
+	g.Scene = scenePlay
 }
 
 // Todo: implement
