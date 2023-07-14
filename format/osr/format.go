@@ -209,8 +209,7 @@ func readReplayData(r io.Reader, dst *[]Action) error {
 	return nil
 }
 
-// for i := range md5 {...}
-// strconv.ParseUint(string(f.BeatmapMD5[i*2:(i+1)*2]), 16, 8)
+// strconv.ParseUint(string(f.BeatmapMD5[i*2:(i+1)*2]), 16, 8) // byte
 func (f Format) MD5() (hash [16]byte, err error) {
 	var hashBytes []byte
 	hashBytes, err = hex.DecodeString(f.BeatmapMD5)
@@ -221,39 +220,11 @@ func (f Format) MD5() (hash [16]byte, err error) {
 	return
 }
 
-// In normal replay, first 2 data are dummy with x = 256 and y = -500
-// I assume it is for setting time offset: -1.
-// In auto replay, first data is blank action.
-// func (f Format) IsAuto() bool {
-// 	const (
-// 		x = 256
-// 		y = -500
-// 	)
-// 	if len(f.ReplayData) < 2 {
-// 		return true
-// 	}
-// 	a0, a1 := f.ReplayData[0], f.ReplayData[1]
-// 	if a0.X == 0 && a0.Y == 0 {
-// 		return true
-// 	} else if a0.X == x && a0.Y == y && a1.X == x && a1.Y == y {
-// 		return false
-// 	}
-// 	panic("no reach")
-// }
-
-// // Last action data is dummy which is for random seed.
-// func (f Format) TrimmedActions() []Action {
-// 	if f.IsAuto() {
-// 		return f.ReplayData
-// 	}
-// 	return f.ReplayData[2 : len(f.ReplayData)-1]
-// }
-
-// BufferTime returns the amount of time of waiting before music start when playing a chart.
-// func (f Format) BufferTime() int64 {
-// 	if f.IsAuto() {
-// 		return 0
-// 	}
-// 	a0, a1, a2 := f.ReplayData[0], f.ReplayData[1], f.ReplayData[2]
-// 	return a0.W + a1.W + a2.W // Must be 0 - 1 - (actual buffer time)
-// }
+// The easiest way to check whether the replay is auto or not is
+// checking the last action data: {W:-12345 X:0 Y:0 Z:0}
+func (f Format) IsAuto() bool {
+	if len(f.ReplayData) == 0 {
+		return false
+	}
+	return f.ReplayData[len(f.ReplayData)-1].Z == 0
+}
