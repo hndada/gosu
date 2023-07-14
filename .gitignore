@@ -19,25 +19,3 @@
 
 # Go workspace file
 go.work
-
-/cmd/gosu/music/*
-# !/cmd/gosu/music/circles
-# !/cmd/gosu/music/triangles
-
-/cmd/gosu/replay/*
-# !/cmd/gosu/replay/circles.osr
-# !/cmd/gosu/replay/triangles.osr
-
-/cmd/gosu/skin/*
-
-# Test files
-/cmd/gosu/asdf - 1223/*
-/cmd/gosu/test.osz
-
-# Extra binaries for programs and plugins
-*.wasm
-
-proxy.txt
-
-# Test files for HCI experiments
-/cmd/gosu/log
