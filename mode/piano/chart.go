@@ -3,14 +3,15 @@ package piano
 import (
 	"fmt"
 	"io/fs"
+	"path/filepath"
 
+	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/mode"
 )
 
 type Chart struct {
 	mode.ChartHeader
-	KeyCount int      // same with ChartHeader.SubMode
-	Hash     [16]byte // MD5
+	KeyCount int // same with ChartHeader.SubMode
 
 	Mods     Mods
 	Dynamics []*mode.Dynamic
@@ -21,14 +22,23 @@ type Chart struct {
 // NewXxx returns *Chart, while LoadXxx doesn't.
 func NewChart(cfg *Config, fsys fs.FS, name string, mods Mods) (c *Chart, err error) {
 	c = new(Chart)
-
-	format, hash, err := mode.ParseChartFile(fsys, name)
+	f, err := fsys.Open(name)
 	if err != nil {
 		return
 	}
+
+	var format any
+	switch filepath.Ext(name) {
+	case ".osu", ".OSU":
+		format, err = osu.NewFormat(f)
+		if err != nil {
+			return
+		}
+	}
+
 	c.ChartHeader = mode.NewChartHeader(format)
 	c.KeyCount = c.SubMode
-	c.Hash = hash
+	c.ChartHash, _ = mode.Hash(f)
 
 	c.Mods = mods
 	c.Dynamics = mode.NewDynamics(format)

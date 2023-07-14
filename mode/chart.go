@@ -1,13 +1,6 @@
 package mode
 
-import (
-	"crypto/md5"
-	"io/fs"
-	"math"
-	"path/filepath"
-
-	"github.com/hndada/gosu/format/osu"
-)
+import "math"
 
 const (
 	ModePiano = iota
@@ -18,24 +11,6 @@ const (
 type Chart interface {
 	Duration() int32
 	Difficulties() []float64
-}
-
-func ParseChartFile(fsys fs.FS, name string) (format any, hash [16]byte, err error) {
-	var dat []byte
-	dat, err = fs.ReadFile(fsys, name)
-	if err != nil {
-		return
-	}
-	hash = md5.Sum(dat)
-
-	switch filepath.Ext(name) {
-	case ".osu", ".OSU":
-		format, err = osu.NewFormat(dat)
-		if err != nil {
-			return
-		}
-	}
-	return
 }
 
 // BPM with longest duration will be main BPM.

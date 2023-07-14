@@ -1,9 +1,10 @@
 package osu
 
 import (
-	"bytes"
+	"bufio"
 	"fmt"
 	"image/color"
+	"io"
 	"strings"
 	"unicode"
 )
@@ -26,8 +27,8 @@ type Format struct {
 	Difficulty
 	Events       []Event
 	TimingPoints []TimingPoint
-	Colours
-	HitObjects []HitObject
+	Colours      // Beware this is not a slice.
+	HitObjects   []HitObject
 }
 
 type General struct { // delimiter:(space)
@@ -88,9 +89,7 @@ type Colours struct {
 	SliderBorder        color.RGBA
 }
 
-func NewFormat(dat []byte) (f *Format, err error) {
-	dat = bytes.ReplaceAll(dat, []byte("\r\n"), []byte("\n"))
-
+func NewFormat(r io.Reader) (f *Format, err error) {
 	f = &Format{
 		General: General{
 			PreviewTime:      -1,
@@ -101,12 +100,14 @@ func NewFormat(dat []byte) (f *Format, err error) {
 			OverlayPosition:  "NoChange",
 		},
 	}
+	// dat = bytes.ReplaceAll(dat, []byte("\r\n"), []byte("\n"))
+	scanner := bufio.NewScanner(r)
 
 	var section string
-	for _, l := range bytes.Split(dat, []byte("\n")) {
+	for scanner.Scan() {
+		line := scanner.Text()
 		// TrimLeftFunc: prevent trimming delimiter
-		l = bytes.TrimLeftFunc(l, unicode.IsSpace)
-		line := string(l)
+		line = strings.TrimLeftFunc(line, unicode.IsSpace)
 
 		if isPass(line) {
 			continue
@@ -157,7 +158,8 @@ func NewFormat(dat []byte) (f *Format, err error) {
 			f.HitObjects = append(f.HitObjects, ho)
 		}
 	}
-	return f, nil
+
+	return f, scanner.Err()
 }
 
 func isPass(line string) bool { return len(line) < 2 || line[:2] == "//" }

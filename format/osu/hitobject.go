@@ -28,7 +28,7 @@ type HitObject struct { // delimiter,
 	HitSample    HitSample
 }
 
-const comboMask = ^(NewCombo + ComboColourSkip1 + ComboColourSkip2 + ComboColourSkip3)
+const ComboMask = ^(NewCombo + ComboColourSkip1 + ComboColourSkip2 + ComboColourSkip3)
 
 func newHitObject(line string) (ho HitObject, err error) {
 	// x,y,time,type,hitSound,objectParams,hitSample
@@ -64,7 +64,7 @@ func newHitObject(line string) (ho HitObject, err error) {
 	// The first comment of each case is the format of sub.
 	sub := vs[5] // A remained substring.
 	var hitSampleData string
-	switch ho.NoteType & comboMask {
+	switch ho.NoteType & ComboMask {
 	case HitTypeNote:
 		// hitSample
 		hitSampleData = sub
