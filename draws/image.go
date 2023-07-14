@@ -20,7 +20,8 @@ func (i Image) Size() Vector2 {
 	if i.IsEmpty() {
 		return Vector2{}
 	}
-	return IntVec2(i.Image.Size())
+	size := i.Image.Bounds().Size()
+	return IntVec2(size.X, size.Y)
 }
 
 func (i Image) Draw(dst Image, op Op) {
