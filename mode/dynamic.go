@@ -29,6 +29,7 @@ func NewDynamics(f any) []*Dynamic {
 		ds = newDynamicsFromOsu(f)
 	}
 
+	// linking
 	var prev *Dynamic
 	for _, d := range ds {
 		d.Prev = prev
