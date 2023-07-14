@@ -1,7 +1,9 @@
 package mode
 
 import (
+	"crypto/md5"
 	"fmt"
+	"io"
 
 	"github.com/hndada/gosu/format/osu"
 )
@@ -9,10 +11,6 @@ import (
 // ChartHeader contains non-play information.
 // Changing ChartHeader's data will not affect integrity of the chart.
 // Mode-specific fields are located to each Chart struct.
-
-// If AudioHash was a thing, a player must have to play a chart
-// with the certain audio file, which is too strict.
-// Hence, AudioHash should be handled via outer way.
 type ChartHeader struct {
 	SetID int32 // Compatibility for osu.
 	ID    int32 // Compatibility for osu.
@@ -36,6 +34,15 @@ type ChartHeader struct {
 
 	Mode    int
 	SubMode int
+
+	// Hash works as id in database.
+	// Hash is not exported to file.
+	ChartHash [16]byte // MD5
+
+	// MusicHash is used to check for music updates.
+	// A player may replace the music file with another,
+	// such as a higher-quality version.
+	MusicHash [16]byte // MD5
 }
 
 func NewChartHeader(f any) (c ChartHeader) {
@@ -91,4 +98,12 @@ func newChartHeaderFromOsu(f *osu.Format) (c ChartHeader) {
 
 func (c ChartHeader) WindowTitle() string {
 	return fmt.Sprintf("gosu | %s - %s [%s] (%s) ", c.Artist, c.MusicName, c.ChartName, c.Charter)
+}
+
+func Hash(r io.Reader) ([16]byte, error) {
+	dat, err := io.ReadAll(r)
+	if err != nil {
+		return [16]byte{}, err
+	}
+	return md5.Sum(dat), nil
 }
