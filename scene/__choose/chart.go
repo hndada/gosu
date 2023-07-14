@@ -86,7 +86,7 @@ func LoadChartSets() (sets []ChartSet) {
 				fmt.Println(err)
 				continue
 			}
-			f, err := osu.Parse(b)
+			f, err := osu.NewFormat(b)
 			if err != nil {
 				fmt.Println(err)
 				continue

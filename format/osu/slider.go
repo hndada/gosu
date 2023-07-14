@@ -80,16 +80,3 @@ func (h HitObject) SliderLength() float64 {
 	unit := h.SliderParams.Length
 	return count * unit
 }
-
-func parsePoint(s string) (p [2]int, err error) {
-	xy := strings.Split(s, `:`)
-	if len(xy) < 2 {
-		return p, fmt.Errorf("point has not enough length: %s", s)
-	}
-	for i := 0; i < 2; i++ {
-		if p[i], err = parseInt(xy[i]); err != nil {
-			return
-		}
-	}
-	return
-}

@@ -51,7 +51,7 @@ func LoadChart(fsys fs.FS, name string) (c *Chart, err error) {
 	var f any
 	switch filepath.Ext(name) {
 	case ".osu":
-		f, err = osu.Parse(dat)
+		f, err = osu.NewFormat(dat)
 		if err != nil {
 			return
 		}
