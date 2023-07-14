@@ -12,6 +12,7 @@ import (
 // 1. There might be some more ways to check whether the replay is auto or not,
 // but they varies among modes.
 // 2. There is no difference in replays whether a player skipped the intro or not.
+// 3. Auto always hit precisely, without 1ms error on every notes.
 func TestNewFormat(t *testing.T) {
 	for _, name := range []string{"4k_auto.osr"} {
 		path := filepath.Join("testdata", name)

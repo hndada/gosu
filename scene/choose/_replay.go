@@ -26,7 +26,7 @@ func LoadReplays(replayRoot string) ([]*osr.Format, error) {
 			fmt.Println(err)
 			continue
 		}
-		rf, err := osr.Parse(rd)
+		rf, err := osr.NewFormat(rd)
 		if err != nil {
 			fmt.Println(err)
 			continue

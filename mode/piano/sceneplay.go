@@ -37,7 +37,6 @@ type ScenePlay struct {
 	drawCombo func(draws.Image)
 }
 
-// Todo: replay listener
 func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string,
 	mods Mods, rf *osr.Format) (s *ScenePlay, err error) {
 	s = new(ScenePlay)
@@ -60,7 +59,8 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string,
 	s.SoundMap = audios.NewSoundMap(fsys, s.SoundVolume)
 
 	if rf != nil {
-		s.Keyboard = NewReplayListener(rf, s.KeyCount, wait)
+		// Todo: replay listener
+		// s.Keyboard = mode.NewReplayListener(rf, s.KeyCount, wait)
 	} else {
 		keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
 		s.Keyboard = input.NewKeyboardListener(keys, wait)
