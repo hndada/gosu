@@ -2,23 +2,23 @@ package osu
 
 import (
 	"errors"
-	"strconv"
 	"strings"
 )
 
-// storyboard not implemented yet
+// Storyboard is not fully implemented so far.
 type Event struct { // delimiter,
 	Type      string
 	StartTime int
-	EndTime   int // optional
+	EndTime   int
 	Filename  string
 	XOffset   int
 	YOffset   int
 }
 
-func newEvent(line string) (Event, error) {
-	vs := strings.Split(line, `,`)
-	var e Event
+// Exported functions are not guaranteed to be at top of the file.
+func newEvent(line string) (e Event, err error) {
+	vs := strings.Split(line, ",")
+
 	switch vs[0] {
 	case "0":
 		e.Type = "Background"
@@ -27,55 +27,36 @@ func newEvent(line string) (Event, error) {
 	case "2", "Break":
 		e.Type = "Break"
 	}
+
 	switch e.Type {
 	case "Background", "Video":
 		if len(vs) < 5 {
 			return e, errors.New("invalid event: not enough length")
 		}
-		{
-			f, err := strconv.ParseFloat(vs[1], 64)
-			if err != nil {
-				return e, err
-			}
-			e.StartTime = int(f)
+		if e.StartTime, err = parseInt(vs[1]); err != nil {
+			return
 		}
-		{
-			e.Filename = strings.Trim(vs[2], `"`)
+		e.Filename = strings.Trim(vs[2], `"`)
+		if e.XOffset, err = parseInt(vs[3]); err != nil {
+			return
 		}
-		{
-			f, err := strconv.ParseFloat(vs[3], 64)
-			if err != nil {
-				return e, err
-			}
-			e.XOffset = int(f)
+		if e.YOffset, err = parseInt(vs[4]); err != nil {
+			return
 		}
-		{
-			f, err := strconv.ParseFloat(vs[4], 64)
-			if err != nil {
-				return e, err
-			}
-			e.YOffset = int(f)
-		}
+
 	case "Break":
-		{
-			if len(vs) < 3 {
-				return e, errors.New("invalid event: not enough length")
-			}
-			f, err := strconv.ParseFloat(vs[1], 64)
-			if err != nil {
-				return e, err
-			}
-			e.StartTime = int(f)
+		if len(vs) < 3 {
+			return e, errors.New("invalid event: not enough length")
 		}
-		{
-			f, err := strconv.ParseFloat(vs[2], 64)
-			if err != nil {
-				return e, err
-			}
-			e.EndTime = int(f)
+		if e.StartTime, err = parseInt(vs[1]); err != nil {
+			return
+		}
+		if e.EndTime, err = parseInt(vs[2]); err != nil {
+			return
 		}
 	}
-	return e, nil
+
+	return
 }
 
 func (es Events) Background() (Event, bool) {

@@ -399,3 +399,23 @@ func Mode(path string) (int, int) {
 	}
 	return ModeDefault, 0
 }
+
+func parseInt(s string) (int, error) {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		f, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			return 0, err
+		}
+		return int(f), nil
+	}
+	return i, nil
+}
+
+func parseFloat(s string) (float64, error) {
+	return strconv.ParseFloat(s, 64)
+}
+
+func parseBool(s string) (bool, error) {
+	return strconv.ParseBool(s)
+}
