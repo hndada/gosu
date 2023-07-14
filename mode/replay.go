@@ -1,12 +1,12 @@
-package piano
+package mode
 
 import (
 	"time"
 
-	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
 )
 
+// Todo: handle error message from osr.NewFormat
 type ReplayListener struct {
 	States []input.KeyboardState
 	index  int
@@ -14,50 +14,6 @@ type ReplayListener struct {
 	StartTime time.Time
 	pauseTime time.Time
 	paused    bool
-}
-
-// ReplayListener supposes the time of first state is 0 ms with no any inputs.
-func NewReplayListener(f *osr.Format, keyCount int, bufferTime time.Duration) *ReplayListener {
-	actions := f.ReplayData
-	// actions := append(f.ReplayData, osr.Action{W: 2e9})
-
-	// clean replay data
-	// Osu replay data uses X for storing key count.
-	for i := 0; i < 2; i++ {
-		if i < len(actions) {
-			break
-		}
-		if a := actions[i]; a.Y == -500 {
-			a.X = 0
-		}
-	}
-
-	getKeyStates := func(a osr.Action) []bool {
-		ps := make([]bool, keyCount)
-		var k int
-		for x := int(a.X); x > 0; x /= 2 {
-			if x%2 == 1 {
-				ps[k] = true
-			}
-			k++
-		}
-		return ps
-	}
-
-	states := make([]input.KeyboardState, 0, len(actions)+1)
-	var t int32
-	for _, a := range actions {
-		t += int32(a.W)
-		s := input.KeyboardState{Time: t, Pressed: getKeyStates(a)}
-		states = append(states, s)
-	}
-
-	return &ReplayListener{
-		States: states,
-		index:  1,
-
-		StartTime: time.Now().Add(bufferTime),
-	}
 }
 
 func (rl *ReplayListener) Now() int32 {
