@@ -1,9 +1,9 @@
 package choose
 
 import (
+	"github.com/hndada/gosu/assets"
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
-	"github.com/hndada/gosu/defaultskin"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
@@ -44,8 +44,8 @@ const (
 	RowCount  = int(ScreenSizeY/RowHeight) + 2
 )
 
-// Load box-mask.png from defaultskin
-var boxMask = draws.LoadSprite(defaultskin.FS, "box-mask.png") // interface/
+// Load box-mask.png from assets
+var boxMask = draws.LoadSprite(assets.FS, "box-mask.png") // interface/
 
 // May add extra effect to box arrangement. e.g., x -= y / 5
 func (l List) Draw(dst draws.Image) {

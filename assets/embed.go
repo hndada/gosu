@@ -1,4 +1,4 @@
-package defaultskin
+package assets
 
 import "embed"
 
