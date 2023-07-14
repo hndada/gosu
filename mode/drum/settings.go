@@ -1,7 +1,7 @@
 package drum
 
 import (
-	"github.com/hndada/gosu/defaultskin"
+	"github.com/hndada/gosu/assets"
 	"github.com/hndada/gosu/mode"
 )
 
@@ -79,8 +79,8 @@ var (
 
 func init() {
 	S.process()
-	DefaultSkin.Load(defaultskin.FS)
-	UserSkin.Load(defaultskin.FS)
+	DefaultSkin.Load(assets.FS)
+	UserSkin.Load(assets.FS)
 }
 func (s *Settings) Load(src Settings) {
 	*s = src

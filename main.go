@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/assets"
 	"github.com/hndada/gosu/ctrl"
-	"github.com/hndada/gosu/defaultskin"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
@@ -42,7 +42,7 @@ func main() {
 	}
 	fsys := os.DirFS(dir)
 	cfg := scene.NewConfig()
-	asset := scene.NewAsset(cfg, defaultskin.FS)
+	asset := scene.NewAsset(cfg, assets.FS)
 
 	g := &game{
 		musicRoots: cfg.MusicRoots,
