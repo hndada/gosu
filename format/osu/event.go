@@ -16,42 +16,42 @@ type Event struct { // delimiter,
 }
 
 // Exported functions are not guaranteed to be at top of the file.
-func newEvent(line string) (e Event, err error) {
+func newEvent(line string) (ev Event, err error) {
 	vs := strings.Split(line, ",")
 
 	switch vs[0] {
 	case "0":
-		e.Type = "Background"
+		ev.Type = "Background"
 	case "1", "Video":
-		e.Type = "Video"
+		ev.Type = "Video"
 	case "2", "Break":
-		e.Type = "Break"
+		ev.Type = "Break"
 	}
 
-	switch e.Type {
+	switch ev.Type {
 	case "Background", "Video":
 		if len(vs) < 5 {
-			return e, errors.New("invalid event: not enough length")
+			return ev, errors.New("invalid event: not enough length")
 		}
-		if e.StartTime, err = parseInt(vs[1]); err != nil {
+		if ev.StartTime, err = parseInt(vs[1]); err != nil {
 			return
 		}
-		e.Filename = strings.Trim(vs[2], `"`)
-		if e.XOffset, err = parseInt(vs[3]); err != nil {
+		ev.Filename = strings.Trim(vs[2], `"`)
+		if ev.XOffset, err = parseInt(vs[3]); err != nil {
 			return
 		}
-		if e.YOffset, err = parseInt(vs[4]); err != nil {
+		if ev.YOffset, err = parseInt(vs[4]); err != nil {
 			return
 		}
 
 	case "Break":
 		if len(vs) < 3 {
-			return e, errors.New("invalid event: not enough length")
+			return ev, errors.New("invalid event: not enough length")
 		}
-		if e.StartTime, err = parseInt(vs[1]); err != nil {
+		if ev.StartTime, err = parseInt(vs[1]); err != nil {
 			return
 		}
-		if e.EndTime, err = parseInt(vs[2]); err != nil {
+		if ev.EndTime, err = parseInt(vs[2]); err != nil {
 			return
 		}
 	}
@@ -59,8 +59,8 @@ func newEvent(line string) (e Event, err error) {
 	return
 }
 
-func (es Events) Background() (Event, bool) {
-	for _, e := range es {
+func (f Format) Background() (Event, bool) {
+	for _, e := range f.Events {
 		if e.Type == "Background" {
 			return e, true
 		}
@@ -68,8 +68,8 @@ func (es Events) Background() (Event, bool) {
 	return Event{}, false
 }
 
-func (es Events) Video() (Event, bool) {
-	for _, e := range es {
+func (f Format) Video() (Event, bool) {
+	for _, e := range f.Events {
 		if e.Type == "Video" {
 			return e, true
 		}

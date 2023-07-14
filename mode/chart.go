@@ -30,7 +30,7 @@ func ParseChartFile(fsys fs.FS, name string) (format any, hash [16]byte, err err
 
 	switch filepath.Ext(name) {
 	case ".osu", ".OSU":
-		format, err = osu.Parse(dat)
+		format, err = osu.NewFormat(dat)
 		if err != nil {
 			return
 		}
