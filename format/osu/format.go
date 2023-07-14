@@ -2,6 +2,8 @@ package osu
 
 import "image/color"
 
+// Format is preferred name to Type
+// because Type is a more general term.
 type Format struct {
 	FormatVersion int // delimiter:(space)
 	General
