@@ -145,9 +145,9 @@ func (s *ScenePlay) Update() any {
 	// if len(kas) >= 2 {
 	// 	fmt.Println(s.now, kas[0].Time, kas[len(kas)-1].Time, len(kas))
 	// }
-	// if s.now >= 0 && s.now < 300 {
-	// 	s.MusicPlayer.Play()
-	// }
+	if s.now >= 0 && s.now < 100 {
+		s.MusicPlayer.Play()
+	}
 	// Play sounds from one KeyboardAction for simplicity.
 	// s.playSounds(kas[0])
 
