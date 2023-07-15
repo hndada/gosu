@@ -65,7 +65,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	}
 	s.KeyLogger = input.NewKeyLogger(S.KeySettings[4][:])
 	if rf != nil {
-		s.KeyLogger.FetchPressed = NewReplayListener(rf, &s.Timer)
+		s.KeyLogger.FetchPressed = NewReplayPlayer(rf, &s.Timer)
 	}
 
 	s.Dynamic = c.Dynamics[0]

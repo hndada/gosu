@@ -2,11 +2,11 @@ package mode
 
 import "github.com/hndada/gosu/input"
 
-type Scorer interface {
-	Check()
-	Judge()
-	Mark()
-}
+// type Scorer interface {
+// 	Check()
+// 	Judge()
+// 	Mark()
+// }
 
 type Judgment struct {
 	Window int32

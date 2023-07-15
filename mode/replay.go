@@ -1,74 +1,61 @@
 package mode
 
 import (
-	"time"
+	"fmt"
+	"io/fs"
 
+	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
 )
 
-// Todo: handle error message from osr.NewFormat
-type ReplayListener struct {
-	States []input.KeyboardState
-	index  int
-
-	StartTime time.Time
-	pauseTime time.Time
-	paused    bool
+type ReplayPlayer struct {
+	states []input.KeyboardState
+	index  int // states[index] is last latest state
 }
 
-func (rl *ReplayListener) Now() int32 {
-	return int32(time.Since(rl.StartTime).Milliseconds())
+func NewReplayPlayer(f *osr.Format, keyCount int) ReplayPlayer {
+	return ReplayPlayer{states: f.KeyboardStates(keyCount)}
+}
+func NewReplayPlayerFromFile(fsys fs.FS, name string, keyCount int) (ReplayPlayer, error) {
+	file, err := fsys.Open(name)
+	if err != nil {
+		return ReplayPlayer{}, err
+	}
+
+	f, err := osr.NewFormat(file)
+	if err != nil {
+		return ReplayPlayer{}, fmt.Errorf("failed to parse replay file: %s", err)
+	}
+
+	return NewReplayPlayer(f, keyCount), nil
 }
 
-func (rl *ReplayListener) Fetch() (kas []input.KeyboardAction) {
-	end := rl.index
-	now := rl.Now()
-	for ; end < len(rl.States)-1; end++ {
-		if rl.States[end+1].Time > now {
+func (rp ReplayPlayer) Fetch(now int32) (kas []input.KeyboardAction) {
+	count := 0
+	for _, s := range rp.states[rp.index:] {
+		if s.Time > now {
 			break
 		}
+		count++
 	}
 
-	last := rl.States[rl.index-1]
-	// From last fetched state to latest state
-	for _, current := range rl.States[rl.index : end+1] {
-		as := input.KeyActions(last.Pressed, current.Pressed)
-		for t := last.Time; t < current.Time; t++ {
-			ka := input.KeyboardAction{Time: t, Action: as}
-			kas = append(kas, ka)
-		}
-		last = current
+	states := rp.states[rp.index : rp.index+count]
+	if len(states) == 1 {
+		dummy := input.KeyboardState{Time: now, Pressed: states[0].Pressed}
+		states = append(states, dummy)
 	}
 
-	// From latest state to now
-	las := input.KeyActions(last.Pressed, last.Pressed)
-	for t := last.Time; t < rl.Now(); t++ {
-		ka := input.KeyboardAction{Time: t, Action: las}
+	lps := states[0].Pressed
+	for _, s := range states[1:] {
+		ps := s.Pressed
+		as := input.KeyActions(lps, ps)
+		ka := input.KeyboardAction{Time: s.Time, Action: as}
 		kas = append(kas, ka)
+		lps = s.Pressed
 	}
 
-	// Update index
-	rl.index = end
-	return nil
+	rp.index += count
+	return
 }
 
-// Poll does nothing on ReplayListener.
-func (rl *ReplayListener) Poll() {}
-
-func (rl *ReplayListener) Pause() {
-	rl.pauseTime = time.Now()
-	rl.paused = true
-}
-
-func (rl *ReplayListener) Resume() {
-	pauseDuration := time.Since(rl.pauseTime)
-	rl.StartTime = rl.StartTime.Add(pauseDuration)
-	rl.paused = false
-}
-
-func (rl *ReplayListener) IsPaused() bool { return rl.paused }
-
-func (rl *ReplayListener) Output() []input.KeyboardState { return rl.States }
-
-// Close does nothing on ReplayListener.
-func (rl *ReplayListener) Close() {}
+func (rp ReplayPlayer) Output() []input.KeyboardState { return rp.states }

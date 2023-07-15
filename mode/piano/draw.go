@@ -18,8 +18,7 @@ func (s ScenePlay) isKeyPressed(k int) bool {
 	return ka == input.Hit || ka == input.Hold
 }
 
-// sceneplay_draw.go: infers it is a part of sceneplay.go.
-func (s *ScenePlay) Ticker() {
+func (s *ScenePlay) ticker() {
 	for k := 0; k < s.Chart.KeyCount; k++ {
 		s.keyTimers[k].Ticker()
 		s.noteTimers[k].Ticker()
@@ -89,7 +88,7 @@ func (s ScenePlay) drawLongNoteBodies(dst draws.Image) {
 			bodyFrame := bodyAnim[0]
 
 			holding := s.lastKeyActions[k] == input.Hold
-			holding = holding && s.Scorer.Staged[k].Type == Tail
+			holding = holding && s.stagedNotes[k].Type == Tail
 			if holding {
 				bodyFrame = s.noteTimers[k].Frame(bodyAnim)
 			}
@@ -260,8 +259,8 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 	f(&b, "\n")
 	f(&b, "Score: %.0f \n", s.Score)
 	f(&b, "Combo: %d\n", s.Combo)
-	f(&b, "Flow: %.0f/%2d\n", s.Flow, MaxFlow)
-	f(&b, " Acc: %.0f/%2d\n", s.Acc, MaxAcc)
+	f(&b, "Flow: %.0f/%2d\n", s.Flow, maxFlow)
+	f(&b, " Acc: %.0f/%2d\n", s.Acc, maxAcc)
 	f(&b, "Judgment counts: %v\n", s.JudgmentCounts)
 	f(&b, "\n")
 	f(&b, "Speed scale (PageUp/Down): x%.2f (x%.2f)\n", s.SpeedScale, s.Speed())

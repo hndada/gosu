@@ -18,13 +18,13 @@ type ScenePlay struct {
 	Scorer
 	mode.BaseScenePlay
 
+	// for drawing
 	lastSpeedScale float64
 	cursor         float64
 	highestBar     *Bar
 	highestNotes   []*Note
-	lastKeyActions []input.KeyActionType
 
-	// For animation or transition.
+	// for animation or transition
 	keyTimers          []draws.Timer
 	noteTimers         []draws.Timer
 	keyLightingTimers  []draws.Timer
@@ -37,8 +37,7 @@ type ScenePlay struct {
 	drawCombo func(draws.Image)
 }
 
-func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string,
-	mods Mods, rf *osr.Format) (s *ScenePlay, err error) {
+func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, mods Mods, rf *osr.Format) (s *ScenePlay, err error) {
 	s = new(ScenePlay)
 	s.Config = cfg
 	s.Chart, err = NewChart(cfg, fsys, name, mods)
@@ -46,7 +45,15 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string,
 		return
 	}
 	s.Asset = assets[s.KeyCount]
-	s.Scorer = NewScorer(s.Chart)
+
+	var kb input.Keyboard
+	if rf != nil {
+		kb = mode.NewReplayPlayer(rf, s.KeyCount)
+	} else {
+		// keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
+		// kb = input.NewKeyboardListener(keys, wait)
+	}
+	s.Scorer = NewScorer(s.Chart, kb)
 
 	const wait = 1800 * time.Millisecond
 	s.StartTime = time.Now().Add(wait)
@@ -58,19 +65,11 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string,
 	}
 	s.SoundMap = audios.NewSoundMap(fsys, s.SoundVolume)
 
-	if rf != nil {
-		// Todo: replay listener
-		// s.Keyboard = mode.NewReplayListener(rf, s.KeyCount, wait)
-	} else {
-		keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
-		s.Keyboard = input.NewKeyboardListener(keys, wait)
-	}
-
 	s.Dynamic = s.Chart.Dynamics[0]
 	s.lastSpeedScale = s.SpeedScale
 	s.cursor = float64(s.Now()) * s.SpeedScale
 	s.highestBar = s.Chart.Bars[0]
-	s.highestNotes = s.Staged
+	s.highestNotes = s.stagedNotes
 	s.lastKeyActions = make([]input.KeyActionType, s.Chart.KeyCount)
 
 	// Since timers are now updated in Draw(), their ticks would be dependent on FPS.
@@ -125,20 +124,7 @@ func (s *ScenePlay) Update() any {
 	// 	s.MusicPlayed = true
 	// }
 
-	s.Scorer.worstJudgment = blank
-	kas := s.Keyboard.Fetch()
-	for _, ka := range kas {
-		s.Scorer.Check(ka)
-		for k, n := range s.Scorer.Staged {
-			a := ka.Action[k]
-			if n.Type != Tail && a == input.Hit {
-				s.PlaySound(n.Sample, *s.SoundVolume)
-			}
-		}
-	}
-	if len(kas) > 0 {
-		s.lastKeyActions = kas[len(kas)-1].Action
-	}
+	s.Scorer.Update(s.Now())
 
 	// Changed speed might not be applied after positions are calculated.
 	// But this is not tested.
@@ -146,9 +132,7 @@ func (s *ScenePlay) Update() any {
 	s.updateHighestNotes()
 	s.UpdateDynamic()
 	s.updateCursor()
-
-	s.Ticker()
-
+	s.ticker()
 	return nil
 }
 
@@ -195,9 +179,7 @@ func (s ScenePlay) BackgroundFilename() string { return s.Chart.ImageFilename }
 
 // NoteExposureDuration returns time in milliseconds
 // that cursor takes to move 1 logical pixel.
-func (s ScenePlay) NoteExposureDuration() int32 {
-	return int32(s.HitPosition / s.Speed())
-}
+func (s ScenePlay) NoteExposureDuration() int32 { return int32(s.HitPosition / s.Speed()) }
 
 func (s ScenePlay) Finish() any {
 	s.BaseScenePlay.Finish()
