@@ -1,15 +1,15 @@
 package piano
 
-type KeyType int
+type KeyKind int
 
 const (
-	One KeyType = iota
+	One KeyKind = iota
 	Two
 	Mid
 	Tip
 )
 
-var keyTypesList = [][]KeyType{
+var keyKindsList = [][]KeyKind{
 	{},
 	{Mid},
 	{One, One},
@@ -24,14 +24,14 @@ var keyTypesList = [][]KeyType{
 }
 
 // I'm personally proud of this code.
-func KeyTypes(keyCount int, scratchMode ScratchMode) []KeyType {
+func KeyKinds(keyCount int, scratchMode ScratchMode) []KeyKind {
 	switch scratchMode {
 	case NoScratch:
-		return keyTypesList[keyCount]
+		return keyKindsList[keyCount]
 	case LeftScratch:
-		return append([]KeyType{Tip}, keyTypesList[keyCount-1]...)
+		return append([]KeyKind{Tip}, keyKindsList[keyCount-1]...)
 	case RightScratch:
-		return append(keyTypesList[keyCount-1], Tip)
+		return append(keyKindsList[keyCount-1], Tip)
 	}
 	return nil
 }

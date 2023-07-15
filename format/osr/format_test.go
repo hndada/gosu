@@ -20,6 +20,7 @@ func TestNewFormat(t *testing.T) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		defer f.Close()
 
 		r, err := NewFormat(f)
 		if err != nil {
@@ -42,6 +43,7 @@ func TestMD5(t *testing.T) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		defer f.Close()
 
 		r, err := NewFormat(f)
 		if err != nil {

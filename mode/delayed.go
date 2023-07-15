@@ -21,7 +21,7 @@ type Delayed struct {
 }
 
 func NewDelayed(src *float64) Delayed {
-	const transDuration = 400
+	const transDuration int32 = 400
 	return Delayed{
 		Mode:     DelayedModeExp,
 		Feedback: 0,

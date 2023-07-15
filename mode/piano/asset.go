@@ -44,7 +44,7 @@ func NewAsset(cfg *Config, fsys fs.FS, keyCount int, scratchMode ScratchMode) *A
 	fieldWidth := cfg.FieldWidth(keyCount, scratchMode)
 	keyXs := cfg.KeyXs(keyCount, scratchMode)
 	keyWidths := cfg.KeyWidths(keyCount, scratchMode)
-	keyTypes := KeyTypes(keyCount, scratchMode)
+	keyKinds := KeyKinds(keyCount, scratchMode)
 
 	asset.setScoreSprites(cfg, fsys)
 	asset.setComboSprites(cfg, fsys)
@@ -55,7 +55,7 @@ func NewAsset(cfg *Config, fsys fs.FS, keyCount int, scratchMode ScratchMode) *A
 	asset.setHintSprite(cfg, fsys, fieldWidth)
 	asset.setBarSprite(cfg, fsys, fieldWidth)
 
-	asset.setKeyKindNoteTypeAnimations(cfg, fsys, keyXs, keyWidths, keyTypes)
+	asset.setKeyKindNoteTypeAnimations(cfg, fsys, keyXs, keyWidths, keyKinds)
 	asset.setKeySprites(cfg, fsys, keyXs, keyWidths)
 	asset.setKeyLightingSprites(cfg, fsys, keyXs, keyWidths)
 	asset.setHitLightingAnimations(cfg, fsys, keyXs)
@@ -128,7 +128,7 @@ func (asset *Asset) setFieldSprite(cfg *Config, fsys fs.FS, fieldWidth float64) 
 // When note/head image is not found, use user's note/normal.
 // When note/tail image is not found, let it be blank.
 // When note/body image is not found, use user's note/normal.
-func (asset *Asset) setKeyKindNoteTypeAnimations(cfg *Config, fsys fs.FS, keyXs []float64, keyWidths []float64, keyTypes []KeyType) {
+func (asset *Asset) setKeyKindNoteTypeAnimations(cfg *Config, fsys fs.FS, keyXs []float64, keyWidths []float64, keyKinds []KeyKind) {
 	var keyKindNoteTypeFrames [4][4]draws.Frames
 	// Todo: 2nd mid -> tip
 	for keyKind, kkname := range []string{"one", "two", "mid", "mid"} {
@@ -141,7 +141,7 @@ func (asset *Asset) setKeyKindNoteTypeAnimations(cfg *Config, fsys fs.FS, keyXs 
 
 	anims := make([][4]draws.Animation, len(keyWidths))
 	for k := range anims {
-		noteTypeFrames := keyKindNoteTypeFrames[keyTypes[k]]
+		noteTypeFrames := keyKindNoteTypeFrames[keyKinds[k]]
 		for noteType, frames := range noteTypeFrames {
 			anim := draws.NewAnimation(frames[:])
 			for frame := range anim {

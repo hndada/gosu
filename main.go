@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/hndada/gosu/assets"
 	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
@@ -34,6 +36,8 @@ type game struct {
 	screenSize *draws.Vector2
 	scene.Scene
 }
+
+var print = func(args ...any) { fmt.Printf("%+v\n", args...) }
 
 func main() {
 	dir, err := os.Getwd()
@@ -65,7 +69,7 @@ func main() {
 	}
 }
 func (g *game) loadTestPiano(cfg *scene.Config, asset *scene.Asset, musicsFS fs.FS) {
-	musicName := "test"
+	musicName := "nekodex - circles!"
 	musicFS, err := fs.Sub(musicsFS, musicName)
 	// musicFS := ZipFS(filepath.Join(dir, musicName+".osz"))
 	if err != nil {
@@ -73,7 +77,18 @@ func (g *game) loadTestPiano(cfg *scene.Config, asset *scene.Asset, musicsFS fs.
 	}
 	name := "nekodex - circles! (MuangMuangE) [Hard].osu"
 
-	scenePlay, err := play.NewScene(cfg, asset, musicFS, name, mode.ModePiano, piano.Mods{}, nil)
+	rfile, err := os.Open("./format/osr/testdata/circles(7k).osr")
+	if err != nil {
+		panic(err)
+	}
+	defer rfile.Close()
+
+	rf, err := osr.NewFormat(rfile)
+	if err != nil {
+		panic(err)
+	}
+
+	scenePlay, err := play.NewScene(cfg, asset, musicFS, name, mode.ModePiano, piano.Mods{}, rf)
 	if err != nil {
 		panic(err)
 	}

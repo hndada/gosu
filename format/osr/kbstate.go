@@ -29,7 +29,7 @@ func (f Format) KeyboardStates(keyCount int) []input.KeyboardState {
 func (f Format) maniaKeyboardStates(keyCount int) []input.KeyboardState {
 	// Need to clean first two replay actions.
 	for i := 0; i < 2; i++ {
-		if i < len(f.ReplayData) {
+		if i >= len(f.ReplayData) {
 			break
 		}
 		if f.ReplayData[i].Y == -500 {

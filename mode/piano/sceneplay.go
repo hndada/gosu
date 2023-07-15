@@ -12,19 +12,19 @@ import (
 )
 
 type ScenePlay struct {
-	*Config
 	mode.Timer
 	now int32 // Use a certain time point. Each Now() may yield different time point.
+
+	*Config
+	*Chart
+
 	input.Keyboard
 
-	// state
-	*Chart
-	Scorer
-	Dynamic *mode.Dynamic
-
-	// audio
 	audios.MusicPlayer
 	audios.SoundMap
+
+	Dynamic *mode.Dynamic
+	Scorer
 
 	// draw
 	*Asset
@@ -47,11 +47,16 @@ type ScenePlay struct {
 }
 
 func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, mods Mods, rf *osr.Format) (s *ScenePlay, err error) {
-	s = &ScenePlay{Config: cfg}
-
+	s = &ScenePlay{}
 	const wait = 1800 * time.Millisecond
 	s.Timer = mode.NewTimer(wait)
 	s.now = s.Now()
+
+	s.Config = cfg
+	s.Chart, err = NewChart(cfg, fsys, name, mods)
+	if err != nil {
+		return
+	}
 
 	if rf != nil {
 		s.Keyboard = mode.NewReplayPlayer(rf, s.KeyCount)
@@ -60,21 +65,15 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 		// s.Keyboard = input.NewKeyboardListener(keys, wait)
 	}
 
-	// state
-	s.Chart, err = NewChart(cfg, fsys, name, mods)
-	if err != nil {
-		return
-	}
-	s.Scorer = NewScorer(s.Chart)
-	s.Dynamic = s.Chart.Dynamics[0]
-
-	// audio
 	const ratio = 1
 	s.MusicPlayer, err = audios.NewMusicPlayerFromFile(fsys, s.MusicFilename, ratio)
 	if err != nil {
 		return
 	}
 	s.SoundMap = audios.NewSoundMap(fsys, s.SoundVolume)
+
+	s.Dynamic = s.Chart.Dynamics[0]
+	s.Scorer = NewScorer(s.Chart)
 
 	// draw
 	s.Asset = assets[s.KeyCount]
@@ -99,6 +98,7 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	return
 }
 
+// Todo: Timer -> DrawTimer
 func (s ScenePlay) newTimers(maxTick, period int) []draws.Timer {
 	timers := make([]draws.Timer, s.Chart.KeyCount)
 	for k := range timers {
@@ -141,18 +141,16 @@ func (s *ScenePlay) Update() any {
 	s.now = s.Now()
 	kas := s.Keyboard.Fetch(s.now)
 
-	// state
-	s.Scorer.Update(s.now, kas)
-	s.Dynamic = mode.NextDynamics(s.Dynamic, s.now)
-
-	// audio
-	if s.now >= 0 && s.now < 300 {
-		s.MusicPlayer.Play()
-	}
+	// if s.now >= 0 && s.now < 300 {
+	// 	s.MusicPlayer.Play()
+	// }
 	// Play sounds from one KeyboardAction for simplicity.
 	s.playSounds(kas[0])
 
-	// update for draw
+	s.Dynamic = mode.NextDynamics(s.Dynamic, s.now)
+	s.Scorer.Update(s.now, kas)
+
+	// draw
 	s.updateCursor()
 	s.updateHighestBar()
 	s.updateHighestNotes()
@@ -163,6 +161,9 @@ func (s *ScenePlay) Update() any {
 // Todo: set all sample volumes in advance?
 func (s ScenePlay) playSounds(ka input.KeyboardAction) {
 	for k, n := range s.stagedNotes {
+		if n == nil {
+			continue
+		}
 		a := ka.Action[k]
 		if n.Type != Tail && a == input.Hit {
 			name := n.Sample.Filename
@@ -189,26 +190,30 @@ func (s *ScenePlay) updateCursor() {
 // The same concept also applies to notes.
 func (s *ScenePlay) updateHighestBar() {
 	upperBound := s.cursor + s.ScreenSize.Y + 100
-	for b := s.highestBar; b.Position < upperBound; b = b.Next {
-		s.highestBar = b
+	b := s.highestBar
+	for b != nil && b.Position < upperBound {
 		if b.Next == nil {
 			break
 		}
+		b = b.Next
+		s.highestBar = b
 	}
 }
 
 func (s *ScenePlay) updateHighestNotes() {
 	upperBound := s.cursor + s.ScreenSize.Y + 100
 	for k, n := range s.highestNotes {
-		for ; n.Position < upperBound; n = n.Next {
-			s.highestNotes[k] = n
+		// It is possible that n is nil when there is no notes in the whole lane.
+		for n != nil && n.Position < upperBound {
 			if n.Next == nil {
 				break
 			}
+			n = n.Next
+			s.highestNotes[k] = n
 		}
 		// Head cannot be the highest note, since drawLongNoteBody
 		// is drawn by its Tail.
-		if n.Type == Head {
+		if n != nil && n.Type == Head {
 			s.highestNotes[k] = n.Next
 		}
 	}

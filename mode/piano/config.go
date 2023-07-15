@@ -19,7 +19,7 @@ type Config struct {
 	HitPosition       float64
 	TailExtraDuration float64
 
-	KeyTypeWidths      [4]float64
+	KeyKindWidths      [4]float64
 	NoteHeigth         float64 // Applies to all types of notes.
 	FieldPosition      float64
 	ComboPosition      float64
@@ -40,6 +40,7 @@ type Config struct {
 	LightingSpriteScale float64
 }
 
+// Todo: ScreenSize
 func NewConfig() *Config {
 	ScreenSize := draws.Vector2{X: 1600, Y: 900}
 	return &Config{
@@ -56,7 +57,7 @@ func NewConfig() *Config {
 		HitPosition:       0.90 * ScreenSize.Y,
 		TailExtraDuration: 0,
 
-		KeyTypeWidths: [4]float64{
+		KeyKindWidths: [4]float64{
 			0.055 * ScreenSize.X, // One
 			0.055 * ScreenSize.X, // Two
 			0.055 * ScreenSize.X, // Mid
@@ -77,6 +78,7 @@ func NewConfig() *Config {
 		HitLightingOpaque:  0.5,
 		HoldLightingOpaque: 0.8,
 
+		ScoreSpriteScale:    0.65,
 		ComboSpriteScale:    0.75,
 		ComboDigitGap:       -1, // unit: pixel
 		JudgmentSpriteScale: 0.33,
@@ -87,8 +89,8 @@ func NewConfig() *Config {
 
 func (cfg Config) KeyWidths(keyCount int, sm ScratchMode) []float64 {
 	ws := make([]float64, keyCount)
-	for k, kt := range KeyTypes(keyCount, sm) {
-		ws[k] = cfg.KeyTypeWidths[kt] // Todo: math.Ceil()?
+	for k, kt := range KeyKinds(keyCount, sm) {
+		ws[k] = cfg.KeyKindWidths[kt] // Todo: math.Ceil()?
 	}
 	return ws
 }
