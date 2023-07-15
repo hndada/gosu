@@ -16,48 +16,47 @@ var (
 var Judgments = []mode.Judgment{Kool, Cool, Good, Miss}
 
 const (
-	MaxFlow = 50
-	MaxAcc  = 20
-)
-
-// Score consists of three parts: Flow, Acc, and Extra.
-// Ratios of Flow and Acc to their max values are multiplied to unit scores.
-// Flow drops to zero when Miss, and recovers when Kool, Cool, and Good.
-// Acc drops to zero when Miss or Good, and recovers when Kool and Cool.
-// Extra will be simply added to the score when hit Kool.
-const (
-	Flow = iota
-	Acc
-	Extra
+	maxFlow = 50
+	maxAcc  = 20
 )
 
 type Scorer struct {
-	Mods      Mods
-	Judgments []mode.Judgment // May change by mods
+	Keyboard input.Keyboard
 
+	// Never changes after initialization.
+	Mods       Mods
+	Judgments  []mode.Judgment // May change by mods.
+	UnitScores [3]float64
+
+	// Exported to result
 	Combo          int
 	Score          float64
-	UnitScores     [3]float64
 	JudgmentCounts []int
-
-	Flow float64
-	Acc  float64
 	// Todo: FlowPoint
 
-	Staged        []*Note
-	worstJudgment mode.Judgment
-	isNoteHits    []bool // for drawing hit lighting
+	// for score calculation
+	Flow        float64
+	Acc         float64
+	stagedNotes []*Note
+
+	// for drawing
+	worstJudgment  mode.Judgment
+	isNoteHits     []bool // for drawing hit lighting
+	lastKeyActions []input.KeyActionType
 }
 
-func NewScorer(c *Chart) Scorer {
+// It is separated from ScenePlay because it can be used for score simulation.
+func NewScorer(c *Chart, kb input.Keyboard) Scorer {
 	unit := 1e6 / float64(len(c.Notes))
 	unitScores := [3]float64{unit * 0.7, unit * 0.3, unit * 0.1}
 	js := Judgments
 
 	return Scorer{
+		Keyboard: kb,
+
 		Mods:      c.Mods,
 		Judgments: js,
-
+		Combo:     0,
 		// Accumulating floating-point numbers may result in imprecise values.
 		// To ensure that the maximum score is attainable,
 		// we initialize the score with a small value in advance.
@@ -65,13 +64,14 @@ func NewScorer(c *Chart) Scorer {
 		UnitScores:     unitScores,
 		JudgmentCounts: make([]int, len(Judgments)),
 
-		Flow: MaxFlow,
-		Acc:  MaxAcc,
+		Flow: maxFlow,
+		Acc:  maxAcc,
 
-		Staged: newStaged(c),
+		stagedNotes: newStagedNotes(c),
 	}
 }
-func newStaged(c *Chart) []*Note {
+
+func newStagedNotes(c *Chart) []*Note {
 	staged := make([]*Note, c.KeyCount)
 	for k := range staged {
 		for _, n := range c.Notes {
@@ -84,34 +84,58 @@ func newStaged(c *Chart) []*Note {
 	return staged
 }
 
-func (s *Scorer) Check(ka input.KeyboardAction) {
-	s.isNoteHits = make([]bool, len(s.Staged))
-	for k, n := range s.Staged {
+func (s *Scorer) Update(now int32) {
+	s.worstJudgment = blank
+	s.isNoteHits = make([]bool, len(s.stagedNotes))
+	s.flush(now)
+
+	// Fetch guarantees it returns at least one KeyboardAction.
+	kas := s.Keyboard.Fetch(now)
+	for _, ka := range kas {
+		s.tryJudge(ka)
+		for k, n := range s.stagedNotes {
+			a := ka.Action[k]
+			if n.Type != Tail && a == input.Hit {
+				s.PlaySound(n.Sample, *s.SoundVolume)
+			}
+		}
+	}
+	s.lastKeyActions = kas[len(kas)-1].Action
+}
+
+func (s *Scorer) flush(now int32) {
+	for k, n := range s.stagedNotes {
+		for ; n != nil; n = n.Next {
+			if e := n.Time - now; e >= -Miss.Window {
+				break
+			}
+
+			// Tail note may remain in staged even if it is missed.
+			if !n.Marked {
+				s.mark(n, Miss)
+			} else {
+				if n.Type != Tail {
+					panic("remained marked note is not Tail")
+				}
+			}
+			s.stagedNotes[k] = n.Next
+		}
+	}
+}
+
+func (s *Scorer) tryJudge(ka input.KeyboardAction) {
+	for k, n := range s.stagedNotes {
 		if n == nil {
 			continue
 		}
-
 		e := n.Time - ka.Time
-
-		// Flush marked tail note.
-		if n.Marked {
-			if n.Type != Tail {
-				panic("marked yet remained note is not Tail")
-			}
-			// Keep Tail staged until near ends.
-			if e < Miss.Window {
-				s.Staged[k] = n.Next
-			}
-			// continue // I think no continue is right.
-		}
-
-		j := Judge(n.Type, e, ka.Action[k])
+		j := judge(n.Type, e, ka.Action[k])
 		if j != blank { // Comparison between two structs is possible.
-			s.Mark(n, j)
+			s.mark(n, j)
 			if s.worstJudgment.Window < j.Window {
 				s.worstJudgment = j
 			}
-			if !j.Is(Miss) { // && n.Type != Head
+			if !j.Is(Miss) && n.Type != Tail {
 				s.isNoteHits[k] = true
 			}
 			// Todo: Add time error meter mark
@@ -120,7 +144,7 @@ func (s *Scorer) Check(ka input.KeyboardAction) {
 	}
 }
 
-func Judge(noteType int, e int32, a input.KeyActionType) mode.Judgment {
+func judge(noteType int, e int32, a input.KeyActionType) mode.Judgment {
 	switch noteType {
 	case Normal, Head:
 		return mode.Judge(Judgments, e, a)
@@ -152,46 +176,57 @@ func judgeTail(e int32, a input.KeyActionType) mode.Judgment {
 }
 
 // Todo: no getting Flow when hands off the long note
-func (s *Scorer) Mark(n *Note, j mode.Judgment) {
+func (s *Scorer) mark(n *Note, j mode.Judgment) {
+	// Score consists of three parts: Flow, Acc, and Extra.
+	// Ratios of Flow and Acc to their max values are multiplied to unit scores.
+	// Flow drops to zero when Miss, and recovers when Kool, Cool, and Good.
+	// Acc drops to zero when Miss or Good, and recovers when Kool and Cool.
+	// Extra will be simply added to the score when hit Kool.
+	const (
+		flow = iota
+		acc
+		extra
+	)
+
 	if j == Miss {
 		s.Combo = 0
 		s.Flow = 0
 	} else { // Kool, Cool, Good
 		s.Combo++
 		s.Flow++
-		if s.Flow > MaxFlow {
-			s.Flow = MaxFlow
+		if s.Flow > maxFlow {
+			s.Flow = maxFlow
 		}
 
 		if j.Is(Good) {
 			s.Acc = 0
 		} else {
 			s.Acc++
-			if s.Acc > MaxAcc {
-				s.Acc = MaxAcc
+			if s.Acc > maxAcc {
+				s.Acc = maxAcc
 			}
 		}
 	}
 
-	flow := s.UnitScores[Flow] * (s.Flow / MaxFlow)
-	acc := s.UnitScores[Acc] * (s.Acc / MaxAcc)
-	var extra float64
+	flowScore := s.UnitScores[flow] * (s.Flow / maxFlow)
+	accScore := s.UnitScores[acc] * (s.Acc / maxAcc)
+	var extraScore float64
 	if j.Is(Kool) {
-		extra = s.UnitScores[Extra]
+		extraScore = s.UnitScores[extra]
 	}
 
-	s.Score += j.Weight * (flow + acc + extra)
+	s.Score += j.Weight * (flowScore + accScore + extraScore)
 	s.addJugdmentCount(j)
 	n.Marked = true
 
 	// when Head is missed, its tail goes missed as well.
 	if n.Type == Head && j.Is(Miss) {
-		s.Mark(n.Next, Miss)
+		s.mark(n.Next, Miss)
 	}
 
-	// Tail is flushed at Check().
+	// Tail is flushed separately at flush().
 	if n.Type != Tail {
-		s.Staged[n.Key] = n.Next
+		s.stagedNotes[n.Key] = n.Next
 	}
 }
 
