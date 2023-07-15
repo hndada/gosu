@@ -29,12 +29,12 @@ type Config struct {
 
 func NewConfig() *Config {
 	cfg := &Config{
-		MusicRoots: []string{"music"},
+		MusicRoots: []string{"musics"},
 
 		ScreenSize:  draws.Vector2{X: 1600, Y: 900},
 		MusicVolume: 0.50,
 		SoundVolume: 0.50,
-		Offset:      -20,
+		Offset:      0,
 
 		BackgroundBrightness: 0.6,
 		DebugPrint:           true,
@@ -59,7 +59,7 @@ func (cfg *Config) loadPianoConfig() {
 
 func (c *Config) NormalizeMusicRoots() {
 	if len(c.MusicRoots) == 0 {
-		c.MusicRoots = []string{"music"}
+		c.MusicRoots = []string{"musics"}
 	}
 
 	// Leading dot and slash is not allowed in fs.

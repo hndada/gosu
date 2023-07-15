@@ -7,8 +7,7 @@ import (
 )
 
 // NewDrawScoreFunc returns closure function that draws score.
-func NewDrawScoreFunc(sprites [13]draws.Sprite, score *float64,
-	digitGap float64) func(draws.Image) {
+func NewDrawScoreFunc(sprites [13]draws.Sprite, score *float64, digitGap float64) func(draws.Image) {
 	const zeroFill = 1
 
 	numbers := sprites[:10]
@@ -17,21 +16,22 @@ func NewDrawScoreFunc(sprites [13]draws.Sprite, score *float64,
 
 	return func(dst draws.Image) {
 		delayedScore.Update()
-
-		vs := make([]int, 0)
 		score := int(math.Floor(delayedScore.Delayed))
+		digits := make([]int, 0)
 		for v := score; v > 0; v /= 10 {
-			vs = append(vs, v%10) // Little endian.
+			digits = append(digits, v%10) // Little endian.
 		}
-		for i := len(vs); i < zeroFill; i++ {
-			vs = append(vs, 0)
+		for i := len(digits); i < zeroFill; i++ {
+			digits = append(digits, 0)
 		}
+
 		w := digitWidth + digitGap
 		var tx float64
-		for _, v := range vs {
-			sprite := numbers[v]
+		for _, d := range digits {
+			sprite := numbers[d]
 			sprite.Move(tx, 0)
-			sprite.Move(-w/2+sprite.W()/2, 0) // Need to set at center since anchor is RightTop.
+			// Need to set at center since anchor is RightTop.
+			sprite.Move(-w/2+sprite.W()/2, 0)
 			sprite.Draw(dst, draws.Op{})
 			tx -= w
 		}
@@ -40,8 +40,7 @@ func NewDrawScoreFunc(sprites [13]draws.Sprite, score *float64,
 
 // Each number has different width. Number 0's width is used as standard.
 // ComboDrawer's Draw draws each number at constant x regardless of their widths.
-func NewDrawComboFunc(sprites [10]draws.Sprite, src *int, timer *draws.Timer,
-	digitGap float64, bounce float64) func(draws.Image) {
+func NewDrawComboFunc(sprites [10]draws.Sprite, src *int, timer *draws.Timer, digitGap float64, bounce float64) func(draws.Image) {
 	digitWidth := sprites[0].W() // Use number 0's width.
 	combo := *src
 	return func(dst draws.Image) {

@@ -1,3 +1,6 @@
+// MeterUnit:   4,
+// MeterHeight: 65,
+
 // Todo: refactor MeterDrawer code
 var MeterMarkColors = []color.NRGBA{
 	{255, 255, 255, 192}, // White

@@ -282,7 +282,7 @@ func (f *Format) setEditorContent(line string) error {
 }
 
 func (f *Format) setMetadataContent(line string) error {
-	k, v, err := keyValue(line, `: `)
+	k, v, err := keyValue(line, `:`)
 	if err != nil {
 		return err
 	}
@@ -317,7 +317,7 @@ func (f *Format) setMetadataContent(line string) error {
 }
 
 func (f *Format) setDifficultyContent(line string) error {
-	k, v, err := keyValue(line, `: `)
+	k, v, err := keyValue(line, `:`)
 	if err != nil {
 		return err
 	}
@@ -354,7 +354,7 @@ func (f *Format) setDifficultyContent(line string) error {
 }
 
 func (f *Format) setColoursContent(line string) error {
-	k, v, err := keyValue(line, `: `)
+	k, v, err := keyValue(line, ` : `)
 	if err != nil {
 		return err
 	}

@@ -10,7 +10,7 @@ import (
 func keyValue(line, delimiter string) (key, value string, err error) {
 	kv := strings.SplitN(line, delimiter, 2)
 	if len(kv) < 2 {
-		return "", "", fmt.Errorf("not enough length")
+		return "", "", fmt.Errorf("%s: key value not enough length", line)
 	}
 
 	k := strings.TrimSpace(kv[0])

@@ -42,7 +42,11 @@ func (rp *ReplayPlayer) Fetch(now int32) (kas []input.KeyboardAction) {
 	}
 
 	states := rp.states[rp.index : rp.index+count]
-	if len(states) == 1 {
+	if len(states) == 0 {
+		ps := make([]bool, len(rp.states[0].Pressed))
+		dummy := input.KeyboardState{Time: now, Pressed: ps}
+		states = append(states, dummy, dummy)
+	} else if len(states) == 1 {
 		dummy := input.KeyboardState{Time: now, Pressed: states[0].Pressed}
 		states = append(states, dummy)
 	}
