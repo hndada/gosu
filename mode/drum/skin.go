@@ -258,7 +258,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	}
 	{
 		src := draws.NewImage(keyFieldSize.XY())
-		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * S.FieldOpaque)})
+		src.Fill(color.NRGBA{0, 0, 0, uint8(255 * S.FieldOpacity)})
 		s := draws.NewSprite(src)
 		s.Locate(0, S.FieldPosition, draws.LeftMiddle)
 		skin.KeyField = s

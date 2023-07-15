@@ -14,9 +14,9 @@ type ScenePlay interface {
 	IsPaused() bool
 
 	// set
-	SetMusicVolume(vol float64)
+	SetMusicVolume(float64)
 	SetSpeedScale()
-	SetOffset(currentOffset int32)
+	SetMusicOffset(int32)
 
 	// life cycle
 	Update() any

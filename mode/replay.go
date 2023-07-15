@@ -33,21 +33,25 @@ func NewReplayPlayerFromFile(fsys fs.FS, name string, keyCount int) (*ReplayPlay
 }
 
 func (rp *ReplayPlayer) Fetch(now int32) (kas []input.KeyboardAction) {
-	count := 0
-	for _, s := range rp.states[rp.index:] {
-		if s.Time > now {
+	add := 0
+	for _, next := range rp.states[rp.index+1:] {
+		if next.Time > now {
 			break
 		}
-		count++
+		add++
 	}
 
-	states := rp.states[rp.index : rp.index+count]
+	// Beware: states can manipulate rp.states.
+	states := make([]input.KeyboardState, add+1)
+	copy(states, rp.states[rp.index:rp.index+add+1])
+
 	if len(states) == 0 {
 		blank := make([]bool, len(rp.states[0].Pressed))
 		dummy := input.KeyboardState{Time: now, Pressed: blank}
 		states = append(states, dummy)
 	}
 
+	// Time of the last state is always 'now'.
 	currentState := input.KeyboardState{
 		Time:    now,
 		Pressed: states[len(states)-1].Pressed,
@@ -64,10 +68,10 @@ func (rp *ReplayPlayer) Fetch(now int32) (kas []input.KeyboardAction) {
 		kas = append(kas, ka)
 		lps = s.Pressed
 	}
-
-	rp.index += count
+	rp.index += add
 	return
 }
+
 func (rp *ReplayPlayer) Output() []input.KeyboardState { return rp.states }
 
 // ReplayPlayer does nothing at these methods.

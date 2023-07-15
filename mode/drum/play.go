@@ -202,7 +202,7 @@ func (s *ScenePlay) Update() any {
 	if !s.paused {
 		defer s.Ticker()
 	}
-	if s.Now == 0+s.Offset {
+	if s.Now == 0+s.MusicOffset {
 		s.MusicPlayer.Play()
 	}
 	if vol := *S.musicVolume; S.MusicVolume != vol {
@@ -357,7 +357,7 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 			"Judgment counts: %v\nPartial counts: %v\nTick counts: %v\n\n"+
 			"Speed scale (PageUp/Down): %.0f (x%.2f)\n(Exposure time: %.fms)\n\n"+
 			"Music volume (Ctrl+ Left/Right): %.0f%%\nSound volume (Alt+ Left/Right): %.0f%%\n\n"+
-			"Offset (Shift+ Left/Right): %dms\n",
+			"MusicOffset (Shift+ Left/Right): %dms\n",
 		ebiten.ActualFPS(), ebiten.ActualTPS(), float64(s.Now)/1000, float64(s.Chart.Duration())/1000,
 		s.Scores[mode.Total], s.ScoreBounds[mode.Total], s.Flow*100, s.Scorer.Combo,
 		s.Ratios[0]*100, s.Ratios[1]*100, s.Ratios[2]*100,

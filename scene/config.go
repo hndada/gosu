@@ -16,7 +16,7 @@ type Config struct {
 	ScreenSize  draws.Vector2
 	MusicVolume float64
 	SoundVolume float64
-	Offset      int32
+	MusicOffset int32
 
 	BackgroundBrightness float64
 	DebugPrint           bool
@@ -34,7 +34,7 @@ func NewConfig() *Config {
 		ScreenSize:  draws.Vector2{X: 1600, Y: 900},
 		MusicVolume: 0.50,
 		SoundVolume: 0.50,
-		Offset:      0,
+		MusicOffset: 0,
 
 		BackgroundBrightness: 0.6,
 		DebugPrint:           true,
@@ -54,7 +54,7 @@ func (cfg *Config) loadPianoConfig() {
 	cfg.PianoConfig.ScreenSize = &cfg.ScreenSize
 	cfg.PianoConfig.MusicVolume = &cfg.MusicVolume
 	cfg.PianoConfig.SoundVolume = &cfg.SoundVolume
-	cfg.PianoConfig.Offset = &cfg.Offset
+	cfg.PianoConfig.MusicOffset = &cfg.MusicOffset
 }
 
 func (c *Config) NormalizeMusicRoots() {

@@ -94,7 +94,7 @@ func NewScene() *Scene {
 	s.musicVolume = &mode.S.MusicVolume
 	s.volumeSound = &mode.S.SoundVolume
 	s.brightness = &mode.S.BackgroundBrightness
-	s.offset = &mode.S.Offset
+	s.offset = &mode.S.MusicOffset
 	s.speedFactors = []*float64{
 		&piano.S.SpeedScale, &drum.S.SpeedScale}
 	s.exposureTimes = []func(float64) float64{
@@ -173,7 +173,7 @@ func (s *Scene) Update() any {
 	scene.MusicVolume.Update()
 	scene.SoundVolume.Update()
 	scene.Brightness.Update()
-	scene.Offset.Update()
+	scene.MusicOffset.Update()
 	scene.SpeedScales[modes[s.mode]].Update()
 	s.Preview.Update()
 	// select {
@@ -456,7 +456,7 @@ func (s Scene) DebugPrint(screen draws.Image) {
 		"Music volume (Ctrl+ Left/Right): %.0f%%\n"+
 		"Sound volume (Alt+ Left/Right): %.0f%%\n"+
 		"Brightness (Ctrl+ O/P): %.0f%%\n"+
-		"Offset (Shift+ Left/Right): %dms\n"+
+		"MusicOffset (Shift+ Left/Right): %dms\n"+
 		"\n"+
 		"Speed (PageUp/Down): %.0f (Exposure time: %.0fms)\n"+
 		"\n"+

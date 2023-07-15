@@ -14,7 +14,7 @@ import (
 // 2. There is no difference in replays whether a player skipped the intro or not.
 // 3. Auto always hit precisely, without 1ms error on every notes.
 func TestNewFormat(t *testing.T) {
-	for _, name := range []string{"4k_auto.osr"} {
+	for _, name := range []string{"circles(7k).osr"} {
 		path := filepath.Join("testdata", name)
 		f, err := os.Open(path)
 		if err != nil {
@@ -29,7 +29,7 @@ func TestNewFormat(t *testing.T) {
 
 		fmt.Printf("%s's replay. The score is %d\n", r.PlayerName, r.Score)
 		var time int64
-		for _, rd := range r.ReplayData[len(r.ReplayData)-20:] {
+		for _, rd := range r.ReplayData[:500] {
 			time += rd.W
 			// fmt.Printf("%d: %+v\n", time, rd)
 			fmt.Printf("%+v\n", rd)
