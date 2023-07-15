@@ -57,7 +57,7 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 		s.Keyboard = mode.NewReplayPlayer(rf, s.KeyCount)
 	} else {
 		// keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
-		// kb = input.NewKeyboardListener(keys, wait)
+		// s.Keyboard = input.NewKeyboardListener(keys, wait)
 	}
 
 	// state
@@ -107,11 +107,15 @@ func (s ScenePlay) newTimers(maxTick, period int) []draws.Timer {
 	return timers
 }
 
+// get
 func (s ScenePlay) ChartHeader() mode.ChartHeader { return s.Chart.ChartHeader }
 func (s ScenePlay) WindowTitle() string           { return s.Chart.WindowTitle() }
+func (s ScenePlay) Now() int32                    { return s.Timer.Now() }
 func (s ScenePlay) Speed() float64                { return s.Dynamic.Speed * s.SpeedScale }
+func (s ScenePlay) IsPaused() bool                { return s.Timer.IsPaused() }
 
-// SetMusicVolume()
+// set
+func (s ScenePlay) SetMusicVolume(vol float64) { s.MusicPlayer.SetVolume(vol) }
 
 // Need to re-calculate positions when Speed has changed.
 func (s *ScenePlay) SetSpeedScale() {
@@ -130,7 +134,9 @@ func (s *ScenePlay) SetSpeedScale() {
 	}
 	s.speedScale = s.SpeedScale
 }
+func (s *ScenePlay) SetOffset(offset int32) { s.Timer.SetOffset(offset) }
 
+// life cycle
 func (s *ScenePlay) Update() any {
 	s.now = s.Now()
 	kas := s.Keyboard.Fetch(s.now)
@@ -146,7 +152,7 @@ func (s *ScenePlay) Update() any {
 	// Play sounds from one KeyboardAction for simplicity.
 	s.playSounds(kas[0])
 
-	// draw
+	// update for draw
 	s.updateCursor()
 	s.updateHighestBar()
 	s.updateHighestNotes()
@@ -168,6 +174,11 @@ func (s ScenePlay) playSounds(ka input.KeyboardAction) {
 			s.SoundMap.Play(name, vol*scale)
 		}
 	}
+}
+
+func (s *ScenePlay) updateCursor() {
+	duration := float64(s.now - s.Dynamic.Time)
+	s.cursor = s.Dynamic.Position + duration*s.Speed()
 }
 
 // When speed changes from fast to slow, which means there are more bars
@@ -201,11 +212,6 @@ func (s *ScenePlay) updateHighestNotes() {
 			s.highestNotes[k] = n.Next
 		}
 	}
-}
-
-func (s *ScenePlay) updateCursor() {
-	duration := float64(s.now - s.Dynamic.Time)
-	s.cursor = s.Dynamic.Position + duration*s.Speed()
 }
 
 func (s *ScenePlay) Pause() {
