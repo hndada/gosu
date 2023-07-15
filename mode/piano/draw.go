@@ -184,8 +184,8 @@ func (s ScenePlay) drawHitLightings(dst draws.Image) {
 			return
 		}
 		op := draws.Op{}
-		// opaque := UserSettings.HitLightingOpaque * (1 - d.Progress(0.75, 1))
-		op.ColorM.Scale(1, 1, 1, s.HitLightingOpaque)
+		// opaque := UserSettings.HitLightingOpacity * (1 - d.Progress(0.75, 1))
+		op.ColorM.Scale(1, 1, 1, s.HitLightingOpacity)
 		timer.Frame(a).Draw(dst, op)
 	}
 }
@@ -200,7 +200,7 @@ func (s ScenePlay) drawHoldLightings(dst draws.Image) {
 		}
 		timer := s.holdLightingTimers[k]
 		op := draws.Op{}
-		op.ColorM.Scale(1, 1, 1, s.HoldLightingOpaque)
+		op.ColorM.Scale(1, 1, 1, s.HoldLightingOpacity)
 		timer.Frame(a).Draw(dst, op)
 	}
 }
@@ -268,7 +268,7 @@ func (s ScenePlay) DebugPrint(screen draws.Image) {
 	f(&b, "\n")
 	f(&b, "Music volume (Ctrl+ Left/Right): %.0f%%\n", *s.MusicVolume*100)
 	f(&b, "Sound volume (Alt+ Left/Right): %.0f%%\n", *s.SoundVolume*100)
-	f(&b, "Offset (Shift+ Left/Right): %dms\n", *s.Offset)
+	f(&b, "MusicOffset (Shift+ Left/Right): %dms\n", *s.MusicOffset)
 	f(&b, "\n")
 	f(&b, "Press ESC to back to choose a song.\n")
 	f(&b, "Press TAB to pause.\n")

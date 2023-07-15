@@ -17,7 +17,7 @@ type BaseScene struct {
 	MusicVolumeKeyHandler          ctrl.KeyHandler
 	SoundVolumeKeyHandler          ctrl.KeyHandler
 	BackgroundBrightnessKeyHandler ctrl.KeyHandler
-	OffsetKeyHandler               ctrl.KeyHandler
+	MusicOffsetKeyHandler          ctrl.KeyHandler
 	DebugPrintKeyHandler           ctrl.KeyHandler
 	SpeedScaleKeyHandlers          []ctrl.KeyHandler
 
@@ -29,7 +29,7 @@ func NewBaseScene(cfg *Config, asset *Asset) *BaseScene {
 	s.setMusicVolumeKeyHandler(cfg, asset)
 	s.setSoundVolumeKeyHandler(cfg, asset)
 	s.setBackgroundBrightnessKeyHandler(cfg, asset)
-	s.setOffsetKeyHandler(cfg, asset)
+	s.setMusicOffsetKeyHandler(cfg, asset)
 	s.setDebugPrintKeyHandler(cfg, asset)
 	s.setSpeedScaleKeyHandlers(cfg, asset)
 	return s

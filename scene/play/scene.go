@@ -68,8 +68,8 @@ func (s *Scene) Update() any {
 	if s.SpeedScaleKeyHandlers[s.mode].Update() {
 		s.SetSpeedScale()
 	}
-	if s.OffsetKeyHandler.Update() {
-		s.SetOffset(s.cfg.Offset)
+	if s.MusicOffsetKeyHandler.Update() {
+		s.SetMusicOffset(s.cfg.MusicOffset)
 	}
 
 	// life cycle

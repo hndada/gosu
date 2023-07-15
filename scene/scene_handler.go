@@ -48,10 +48,10 @@ func (s *BaseScene) setBackgroundBrightnessKeyHandler(cfg *Config, asset *Asset)
 		Volume:   &cfg.SoundVolume,
 	}
 }
-func (s *BaseScene) setOffsetKeyHandler(cfg *Config, asset *Asset) {
-	s.OffsetKeyHandler = ctrl.KeyHandler{
+func (s *BaseScene) setMusicOffsetKeyHandler(cfg *Config, asset *Asset) {
+	s.MusicOffsetKeyHandler = ctrl.KeyHandler{
 		Handler: ctrl.Int32Handler{
-			Value: &cfg.Offset,
+			Value: &cfg.MusicOffset,
 			Min:   -200,
 			Max:   200,
 			Loop:  false,

@@ -31,7 +31,7 @@ type Settings struct {
 	Reverse     bool
 
 	// Skin-independent settings
-	FieldOpaque       float64
+	FieldOpacity      float64
 	FieldPosition     float64
 	FieldHeight       float64
 	bigNoteHeight     float64
@@ -56,7 +56,7 @@ func NewSettings() Settings {
 		HitPosition: 0.1875,
 		Reverse:     false,
 
-		FieldOpaque:     0.7,
+		FieldOpacity:    0.7,
 		FieldPosition:   0.4115,
 		FieldHeight:     0.26,
 		DancerPositionX: 0.1,
@@ -93,7 +93,7 @@ func (s *Settings) Load(src Settings) {
 	mode.Normalize(&s.HitPosition, 0, 1)
 	// Reverse: bool
 
-	mode.Normalize(&s.FieldOpaque, 0, 1)
+	mode.Normalize(&s.FieldOpacity, 0, 1)
 	mode.Normalize(&s.FieldPosition, 0, 1)
 	mode.Normalize(&s.FieldHeight, 0, 1)
 	mode.Normalize(&s.DancerPositionX, 0, 1)
@@ -111,7 +111,7 @@ func (s *Settings) Load(src Settings) {
 func (s *Settings) process() {
 	s.musicVolume = &mode.S.MusicVolume
 	s.volumeSound = &mode.S.SoundVolume
-	s.offset = &mode.S.Offset
+	s.offset = &mode.S.MusicOffset
 	s.backgroundBrightness = &mode.S.BackgroundBrightness
 	s.delayedJudge = &mode.S.DelayedJudge
 	s.debugPrint = &mode.S.DebugPrint

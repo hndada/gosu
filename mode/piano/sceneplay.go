@@ -49,7 +49,7 @@ type ScenePlay struct {
 func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, mods Mods, rf *osr.Format) (s *ScenePlay, err error) {
 	s = &ScenePlay{}
 	const wait = 1800 * time.Millisecond
-	s.Timer = mode.NewTimer(wait)
+	s.Timer = mode.NewTimer(*cfg.MusicOffset, wait)
 	s.now = s.Now()
 
 	s.Config = cfg
@@ -109,15 +109,12 @@ func (s ScenePlay) newTimers(maxTick, period int) []draws.Timer {
 	return timers
 }
 
-// get
 func (s ScenePlay) ChartHeader() mode.ChartHeader { return s.Chart.ChartHeader }
 func (s ScenePlay) WindowTitle() string           { return s.Chart.WindowTitle() }
 func (s ScenePlay) Now() int32                    { return s.Timer.Now() }
 func (s ScenePlay) Speed() float64                { return s.Dynamic.Speed * s.SpeedScale }
 func (s ScenePlay) IsPaused() bool                { return s.Timer.IsPaused() }
-
-// set
-func (s ScenePlay) SetMusicVolume(vol float64) { s.MusicPlayer.SetVolume(vol) }
+func (s ScenePlay) SetMusicVolume(vol float64)    { s.MusicPlayer.SetVolume(vol) }
 
 // Need to re-calculate positions when Speed has changed.
 func (s *ScenePlay) SetSpeedScale() {
@@ -136,16 +133,13 @@ func (s *ScenePlay) SetSpeedScale() {
 	}
 	s.speedScale = s.SpeedScale
 }
-func (s *ScenePlay) SetOffset(offset int32) { s.Timer.SetOffset(offset) }
+func (s *ScenePlay) SetMusicOffset(offset int32) { s.Timer.SetMusicOffset(offset) }
 
-// life cycle
 func (s *ScenePlay) Update() any {
 	s.now = s.Now()
 	kas := s.Keyboard.Fetch(s.now)
-	// if len(kas) >= 2 {
-	// 	fmt.Println(s.now, kas[0].Time, kas[len(kas)-1].Time, len(kas))
-	// }
-	if s.now >= 0 && s.now < 100 {
+
+	if s.now >= *s.MusicOffset && s.now < 300 {
 		s.MusicPlayer.Play()
 	}
 	// Play sounds from one KeyboardAction for simplicity.
@@ -215,8 +209,7 @@ func (s *ScenePlay) updateHighestNotes() {
 			n = n.Next
 			s.highestNotes[k] = n
 		}
-		// Head cannot be the highest note, since drawLongNoteBody
-		// is drawn by its Tail.
+		// Update Head to Tail since drawLongNoteBody uses Tail.
 		if n != nil && n.Type == Head {
 			s.highestNotes[k] = n.Next
 		}

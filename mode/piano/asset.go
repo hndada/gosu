@@ -33,6 +33,7 @@ type Asset struct {
 	KeyKindNoteTypeAnimations [][4]draws.Animation // bottom: hit position
 	KeySprites                [][2]draws.Sprite    // top: hit position
 	KeyLightingSprites        []draws.Sprite
+	KeyLightingColors         []color.Color
 	HitLightingAnimations     []draws.Animation
 	HoldLightingAnimations    []draws.Animation
 }
@@ -58,6 +59,7 @@ func NewAsset(cfg *Config, fsys fs.FS, keyCount int, scratchMode ScratchMode) *A
 	asset.setKeyKindNoteTypeAnimations(cfg, fsys, keyXs, keyWidths, keyKinds)
 	asset.setKeySprites(cfg, fsys, keyXs, keyWidths)
 	asset.setKeyLightingSprites(cfg, fsys, keyXs, keyWidths)
+	asset.setKeyLightingColors(cfg, fsys, keyKinds)
 	asset.setHitLightingAnimations(cfg, fsys, keyXs)
 	asset.setHoldLightingAnimations(cfg, fsys, keyXs)
 	return asset
@@ -117,7 +119,7 @@ func (asset *Asset) setHintSprite(cfg *Config, fsys fs.FS, fieldWidth float64) {
 
 func (asset *Asset) setFieldSprite(cfg *Config, fsys fs.FS, fieldWidth float64) {
 	img := draws.NewImage(fieldWidth, cfg.ScreenSize.Y)
-	img.Fill(color.NRGBA{0, 0, 0, uint8(255 * cfg.FieldOpaque)})
+	img.Fill(color.NRGBA{0, 0, 0, uint8(255 * cfg.FieldOpacity)})
 
 	sprite := draws.NewSprite(img)
 	sprite.Locate(cfg.FieldPosition, 0, draws.CenterTop)
@@ -181,6 +183,14 @@ func (asset *Asset) setKeyLightingSprites(cfg *Config, fsys fs.FS, keyXs []float
 		sprites[k] = s
 	}
 	asset.KeyLightingSprites = sprites
+}
+
+func (asset *Asset) setKeyLightingColors(cfg *Config, fsys fs.FS, keyKinds []KeyKind) {
+	colors := make([]color.Color, len(keyKinds))
+	for k := range colors {
+		colors[k] = cfg.KeyKindLightingColors[keyKinds[k]]
+	}
+	asset.KeyLightingColors = colors
 }
 
 func (asset *Asset) setHitLightingAnimations(cfg *Config, fsys fs.FS, keyXs []float64) {

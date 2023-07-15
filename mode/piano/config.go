@@ -6,12 +6,13 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
+// Todo: SoundVolume -> SoundVolumeScale?
 type Config struct {
 	// Settings that will be from scene.TheSettings
 	ScreenSize  *draws.Vector2
 	MusicVolume *float64
 	SoundVolume *float64
-	Offset      *int32
+	MusicOffset *int32
 
 	// Logic settings
 	KeySettings       map[int][]string
@@ -19,16 +20,16 @@ type Config struct {
 	HitPosition       float64
 	TailExtraDuration float64
 
-	KeyKindWidths      [4]float64
-	NoteHeigth         float64 // Applies to all types of notes.
-	FieldPosition      float64
-	ComboPosition      float64
-	JudgmentPosition   float64
-	ScratchColor       color.NRGBA
-	FieldOpaque        float64
-	KeyLightingColors  [4]color.NRGBA
-	HitLightingOpaque  float64
-	HoldLightingOpaque float64
+	KeyKindWidths         [4]float64
+	NoteHeigth            float64 // Applies to all types of notes.
+	FieldPosition         float64
+	ComboPosition         float64
+	JudgmentPosition      float64
+	ScratchColor          color.NRGBA
+	FieldOpacity          float64
+	KeyKindLightingColors [4]color.NRGBA
+	HitLightingOpacity    float64
+	HoldLightingOpacity   float64
 	// BodyStyle          int // Stretch or Attach.
 	// ReverseBody        int // Might have been used for stepmania skin.
 
@@ -68,15 +69,15 @@ func NewConfig() *Config {
 		ComboPosition:    0.40 * ScreenSize.Y,
 		JudgmentPosition: 0.66 * ScreenSize.Y,
 		ScratchColor:     color.NRGBA{224, 0, 0, 255},
-		FieldOpaque:      0.8,
-		KeyLightingColors: [4]color.NRGBA{
+		FieldOpacity:     0.8,
+		KeyKindLightingColors: [4]color.NRGBA{
 			{224, 224, 224, 64}, // One: white
 			{255, 170, 204, 64}, // Two: pink
 			{224, 224, 0, 64},   // Mid: yellow
 			{255, 0, 0, 64},     // Tip: red
 		},
-		HitLightingOpaque:  0.5,
-		HoldLightingOpaque: 0.8,
+		HitLightingOpacity:  0.5,
+		HoldLightingOpacity: 0.8,
 
 		ScoreSpriteScale:    0.65,
 		ComboSpriteScale:    0.75,
