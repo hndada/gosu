@@ -80,7 +80,9 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	s.speedScale = s.SpeedScale
 	s.cursor = float64(s.now) * s.SpeedScale
 	s.highestBar = s.Chart.Bars[0]
-	s.highestNotes = s.stagedNotes
+	// Just assigning slice will shallow copy.
+	s.highestNotes = make([]*Note, len(s.Chart.Notes))
+	copy(s.highestNotes, s.stagedNotes)
 
 	// Since timers are now updated in Draw(), their ticks would be dependent on FPS.
 	// However, so far TPS and FPS goes synced by SyncWithFPS().
@@ -140,12 +142,14 @@ func (s *ScenePlay) SetOffset(offset int32) { s.Timer.SetOffset(offset) }
 func (s *ScenePlay) Update() any {
 	s.now = s.Now()
 	kas := s.Keyboard.Fetch(s.now)
-
+	// if len(kas) >= 2 {
+	// 	fmt.Println(s.now, kas[0].Time, kas[len(kas)-1].Time, len(kas))
+	// }
 	// if s.now >= 0 && s.now < 300 {
 	// 	s.MusicPlayer.Play()
 	// }
 	// Play sounds from one KeyboardAction for simplicity.
-	s.playSounds(kas[0])
+	// s.playSounds(kas[0])
 
 	s.Dynamic = mode.NextDynamics(s.Dynamic, s.now)
 	s.Scorer.Update(s.now, kas)

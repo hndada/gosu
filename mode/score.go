@@ -39,9 +39,10 @@ func Judge(js []Judgment, e int32, a input.KeyActionType) Judgment {
 	default: // In range
 		if a == input.Hit {
 			return Evaluate(js, e)
+		} else {
+			return blank
 		}
 	}
-	return blank
 }
 
 func Evaluate(js []Judgment, e int32) Judgment {
