@@ -1,6 +1,7 @@
 package piano
 
 import (
+	"fmt"
 	"io/fs"
 	"time"
 
@@ -20,14 +21,14 @@ type ScenePlay struct {
 
 	input.Keyboard
 
+	Scorer
+	Dynamic *mode.Dynamic
+
+	*Asset
 	audios.MusicPlayer
 	audios.SoundMap
 
-	Dynamic *mode.Dynamic
-	Scorer
-
 	// draw
-	*Asset
 	speedScale   float64
 	cursor       float64
 	highestBar   *Bar
@@ -65,18 +66,21 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 		// s.Keyboard = input.NewKeyboardListener(keys, wait)
 	}
 
+	s.Scorer = NewScorer(s.Chart)
+	s.Dynamic = s.Chart.Dynamics[0]
+
+	s.Asset = assets[s.KeyCount]
 	const ratio = 1
 	s.MusicPlayer, err = audios.NewMusicPlayerFromFile(fsys, s.MusicFilename, ratio)
 	if err != nil {
 		return
 	}
-	s.SoundMap = audios.NewSoundMap(fsys, s.SoundVolume)
-
-	s.Dynamic = s.Chart.Dynamics[0]
-	s.Scorer = NewScorer(s.Chart)
+	s.SoundMap = audios.NewSoundMap(fsys, s.DefaultHitSoundFormat, s.SoundVolume)
+	// It is possible for empty string to be a key of a map.
+	// https://go.dev/play/p/nn-peGAjawW
+	s.SoundMap.AppendSound("", s.DefaultHitSoundStreamer)
 
 	// draw
-	s.Asset = assets[s.KeyCount]
 	s.speedScale = s.SpeedScale
 	s.cursor = float64(s.now) * s.SpeedScale
 	s.highestBar = s.Chart.Bars[0]
@@ -139,14 +143,14 @@ func (s *ScenePlay) Update() any {
 	s.now = s.Now()
 	kas := s.Keyboard.Fetch(s.now)
 
+	s.Scorer.Update(s.now, kas)
+
 	if s.now >= *s.MusicOffset && s.now < 300 {
 		s.MusicPlayer.Play()
 	}
-	// Play sounds from one KeyboardAction for simplicity.
-	// s.playSounds(kas[0])
+	s.playSounds()
 
 	s.Dynamic = mode.NextDynamics(s.Dynamic, s.now)
-	s.Scorer.Update(s.now, kas)
 
 	// draw
 	s.updateCursor()
@@ -157,21 +161,15 @@ func (s *ScenePlay) Update() any {
 }
 
 // Todo: set all sample volumes in advance?
-func (s ScenePlay) playSounds(ka input.KeyboardAction) {
-	for k, n := range s.stagedNotes {
-		if n == nil {
-			continue
+func (s ScenePlay) playSounds() {
+	for _, sample := range s.hitSoundQueue {
+		vol := sample.Volume
+		if vol == 0 {
+			vol = s.Dynamic.Volume
 		}
-		a := ka.Action[k]
-		if n.Type != Tail && a == input.Hit {
-			name := n.Sample.Filename
-			vol := n.Sample.Volume
-			if vol == 0 {
-				vol = s.Dynamic.Volume
-			}
-			scale := *s.SoundVolume
-			s.SoundMap.Play(name, vol*scale)
-		}
+		scale := *s.SoundVolume
+		fmt.Println(sample.Filename, vol*scale)
+		s.SoundMap.Play(sample.Filename, vol*scale)
 	}
 }
 

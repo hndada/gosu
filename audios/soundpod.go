@@ -4,6 +4,7 @@ import (
 	"io/fs"
 	"math/rand"
 
+	"github.com/faiface/beep"
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/speaker"
 )
@@ -13,8 +14,8 @@ type SoundPod struct {
 	SoundMap
 }
 
-func NewSoundPod(fsys fs.FS, volumeScale *float64) SoundPod {
-	return SoundPod{NewSoundMap(fsys, volumeScale)}
+func NewSoundPod(fsys fs.FS, format beep.Format, volumeScale *float64) SoundPod {
+	return SoundPod{NewSoundMap(fsys, format, volumeScale)}
 }
 
 // Play plays a random sound from the sound pod.

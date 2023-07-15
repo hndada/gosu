@@ -19,10 +19,11 @@ const (
 // All names of fields in Asset ends with their types.
 type Asset struct {
 	// asset that are not affected by key count
-	ScoreSprites       [13]draws.Sprite // numbers with sign (. , %)
-	ComboSprites       [10]draws.Sprite
-	JudgmentAnimations [4]draws.Animation
-	DefaultHitSound    audios.Sound
+	ScoreSprites            [13]draws.Sprite // numbers with sign (. , %)
+	ComboSprites            [10]draws.Sprite
+	JudgmentAnimations      [4]draws.Animation
+	DefaultHitSoundStreamer audios.StreamSeekCloser
+	DefaultHitSoundFormat   audios.Format
 
 	// asset for a field
 	FieldSprite draws.Sprite
@@ -95,8 +96,9 @@ func (asset *Asset) setJudgmentAnimations(cfg *Config, fsys fs.FS) {
 }
 
 func (asset *Asset) setDefaultHitSound(cfg *Config, fsys fs.FS) {
-	sound := audios.NewSound(fsys, "piano/sound/hit.wav", cfg.SoundVolume)
-	asset.DefaultHitSound = sound
+	streamer, format, _ := audios.DecodeFromFile(fsys, "piano/sound/hit.wav")
+	asset.DefaultHitSoundStreamer = streamer
+	asset.DefaultHitSoundFormat = format
 }
 
 func (asset *Asset) setBarSprite(cfg *Config, fsys fs.FS, fieldWidth float64) {

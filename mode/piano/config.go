@@ -8,19 +8,21 @@ import (
 
 // Todo: SoundVolume -> SoundVolumeScale?
 type Config struct {
-	// Settings that will be from scene.TheSettings
+	// settings exported from parent configuration
 	ScreenSize  *draws.Vector2
 	MusicVolume *float64
 	SoundVolume *float64
 	MusicOffset *int32
 
-	// Logic settings
+	// logic-affecting settings
 	KeySettings       map[int][]string
 	SpeedScale        float64
 	HitPosition       float64
 	TailExtraDuration float64
 
+	// others
 	KeyKindWidths         [4]float64
+	FieldWidthScales      map[int]float64
 	NoteHeigth            float64 // Applies to all types of notes.
 	FieldPosition         float64
 	ComboPosition         float64
@@ -64,6 +66,14 @@ func NewConfig() *Config {
 			0.055 * ScreenSize.X, // Mid
 			0.055 * ScreenSize.X, // Tip
 		},
+		FieldWidthScales: map[int]float64{
+			4: 1.2,  // 4.8
+			5: 1.1,  // 5.5
+			6: 1.05, // 6.3
+			7: 1.0,  // 7.0
+			8: 1.0,  // 8.0
+			9: 1.0,  // 9.0
+		},
 		NoteHeigth:       0.03 * ScreenSize.Y, // 0.03: 27px
 		FieldPosition:    0.50 * ScreenSize.X,
 		ComboPosition:    0.40 * ScreenSize.Y,
@@ -90,11 +100,14 @@ func NewConfig() *Config {
 
 func (cfg Config) KeyWidths(keyCount int, sm ScratchMode) []float64 {
 	ws := make([]float64, keyCount)
-	for k, kt := range KeyKinds(keyCount, sm) {
-		ws[k] = cfg.KeyKindWidths[kt] // Todo: math.Ceil()?
+	scale := cfg.FieldWidthScales[keyCount]
+	for k, kk := range KeyKinds(keyCount, sm) {
+		w := cfg.KeyKindWidths[kk] // Todo: math.Ceil()?
+		ws[k] = w * scale
 	}
 	return ws
 }
+
 func (cfg Config) FieldWidth(keyCount int, sm ScratchMode) float64 {
 	ws := cfg.KeyWidths(keyCount, sm)
 	var fw float64
