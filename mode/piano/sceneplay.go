@@ -46,14 +46,13 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	}
 	s.Asset = assets[s.KeyCount]
 
-	var kb input.Keyboard
 	if rf != nil {
-		kb = mode.NewReplayPlayer(rf, s.KeyCount)
+		s.Keyboard = mode.NewReplayPlayer(rf, s.KeyCount)
 	} else {
 		// keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
 		// kb = input.NewKeyboardListener(keys, wait)
 	}
-	s.Scorer = NewScorer(s.Chart, kb)
+	s.Scorer = NewScorer(s.Chart)
 
 	const wait = 1800 * time.Millisecond
 	s.StartTime = time.Now().Add(wait)
@@ -124,21 +123,32 @@ func (s *ScenePlay) Update() any {
 	// 	s.MusicPlayed = true
 	// }
 
-	s.Scorer.Update(s.Now())
+	kas := s.Keyboard.Fetch(s.Now())
+
+	// Play sounds from one KeyboardAction for simplicity.
+	s.playSounds(kas[0])
+
+	s.Scorer.Update(s.Now(), kas)
 
 	// Changed speed might not be applied after positions are calculated.
 	// But this is not tested.
 	s.updateHighestBar()
 	s.updateHighestNotes()
-	s.UpdateDynamic()
+
+	s.updateDynamic()
 	s.updateCursor()
+
 	s.ticker()
 	return nil
 }
 
-func (s *ScenePlay) updateCursor() {
-	duration := float64(s.Now() - s.Dynamic.Time)
-	s.cursor = s.Dynamic.Position + duration*s.Speed()
+func (s ScenePlay) playSounds(ka input.KeyboardAction) {
+	for k, n := range s.stagedNotes {
+		a := ka.Action[k]
+		if n.Type != Tail && a == input.Hit {
+			s.PlaySound(n.Sample, *s.SoundVolume)
+		}
+	}
 }
 
 // When speed changes from fast to slow, which means there are more bars
@@ -172,6 +182,13 @@ func (s *ScenePlay) updateHighestNotes() {
 			s.highestNotes[k] = n.Next
 		}
 	}
+}
+
+func (s *ScenePlay) updateDynamic() { s.UpdateDynamic() }
+
+func (s *ScenePlay) updateCursor() {
+	duration := float64(s.Now() - s.Dynamic.Time)
+	s.cursor = s.Dynamic.Position + duration*s.Speed()
 }
 
 func (s ScenePlay) WindowTitle() string        { return s.Chart.WindowTitle() }

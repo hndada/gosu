@@ -21,8 +21,6 @@ const (
 )
 
 type Scorer struct {
-	Keyboard input.Keyboard
-
 	// Never changes after initialization.
 	Mods       Mods
 	Judgments  []mode.Judgment // May change by mods.
@@ -46,14 +44,12 @@ type Scorer struct {
 }
 
 // It is separated from ScenePlay because it can be used for score simulation.
-func NewScorer(c *Chart, kb input.Keyboard) Scorer {
+func NewScorer(c *Chart) Scorer {
 	unit := 1e6 / float64(len(c.Notes))
 	unitScores := [3]float64{unit * 0.7, unit * 0.3, unit * 0.1}
 	js := Judgments
 
 	return Scorer{
-		Keyboard: kb,
-
 		Mods:      c.Mods,
 		Judgments: js,
 		Combo:     0,
@@ -84,22 +80,16 @@ func newStagedNotes(c *Chart) []*Note {
 	return staged
 }
 
-func (s *Scorer) Update(now int32) {
+func (s *Scorer) Update(now int32, kas []input.KeyboardAction) {
 	s.worstJudgment = blank
 	s.isNoteHits = make([]bool, len(s.stagedNotes))
 	s.flush(now)
 
-	// Fetch guarantees it returns at least one KeyboardAction.
-	kas := s.Keyboard.Fetch(now)
 	for _, ka := range kas {
 		s.tryJudge(ka)
-		for k, n := range s.stagedNotes {
-			a := ka.Action[k]
-			if n.Type != Tail && a == input.Hit {
-				s.PlaySound(n.Sample, *s.SoundVolume)
-			}
-		}
 	}
+
+	// Fetch guarantees it returns at least one KeyboardAction.
 	s.lastKeyActions = kas[len(kas)-1].Action
 }
 
