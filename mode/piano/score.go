@@ -114,8 +114,8 @@ func (s *Scorer) flush(now int32) {
 					panic("remained marked note is not Tail")
 				}
 			}
-			s.stagedNotes[k] = n.Next
 		}
+		s.stagedNotes[k] = n
 	}
 }
 
@@ -125,29 +125,25 @@ func (s *Scorer) tryJudge(ka input.KeyboardAction) {
 			continue
 		}
 		e := n.Time - ka.Time
-		j := judge(n.Type, e, ka.Action[k])
+		j := s.judge(n.Type, e, ka.Action[k])
 		if j != blank { // Comparison between two structs is possible.
 			s.mark(n, j)
-			if s.worstJudgment.Window < j.Window {
-				s.worstJudgment = j
-			}
 			if !j.Is(Miss) && n.Type != Tail {
 				s.isNoteHits[k] = true
 			}
-			// Todo: Add time error meter mark
-			// Todo: Use different color for error meter of Tail
 		}
 	}
 }
 
-func judge(noteType int, e int32, a input.KeyActionType) mode.Judgment {
+func (s Scorer) judge(noteType int, e int32, a input.KeyActionType) mode.Judgment {
 	switch noteType {
 	case Normal, Head:
-		return mode.Judge(Judgments, e, a)
+		return mode.Judge(s.Judgments, e, a)
 	case Tail:
 		return judgeTail(e, a)
+	default:
+		panic("invalid note type")
 	}
-	return blank
 }
 
 // Either Hold or Release when Tail is not scored
@@ -224,6 +220,12 @@ func (s *Scorer) mark(n *Note, j mode.Judgment) {
 	if n.Type != Tail {
 		s.stagedNotes[n.Key] = n.Next
 	}
+
+	if s.worstJudgment.Window < j.Window {
+		s.worstJudgment = j
+	}
+	// Todo: Add time error meter mark
+	// Todo: Use different color for error meter of Tail
 }
 
 func (s *Scorer) addJugdmentCount(j mode.Judgment) {

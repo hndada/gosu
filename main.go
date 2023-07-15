@@ -24,9 +24,11 @@ func init() {
 	// SetTPS will set TPS to FPS, hence TPS will be 240 too.
 	// I guess ebiten.SetTPS should be called before scene.NewConfig is called.
 
+	// issue: It jitters when Vsync is enabled.
+	ebiten.SetVsyncEnabled(false)
 	// issue: TPS becomes literally -1 when setting with ebiten.SyncWithFPS.
 	// ebiten.SetTPS(ebiten.SyncWithFPS)
-	ebiten.SetTPS(240)
+	ebiten.SetTPS(480)
 	ctrl.UpdateTPS()
 }
 
