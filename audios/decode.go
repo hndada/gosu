@@ -11,6 +11,9 @@ import (
 	"github.com/faiface/beep/wav"
 )
 
+type StreamSeekCloser = beep.StreamSeekCloser
+type Format = beep.Format
+
 func DecodeFromFile(fsys fs.FS, name string) (streamer beep.StreamSeekCloser, format beep.Format, err error) {
 	f, err := fsys.Open(name)
 	if err != nil {
@@ -37,4 +40,24 @@ func isAudioFile(name string) bool {
 		return true
 	}
 	return false
+}
+
+// FormatFromFS returns the format of the first audio file in the file system.
+// It is possible that there is no audio file in file system.
+func FormatFromFS(fsys fs.FS) (format beep.Format, err error) {
+	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() || !isAudioFile(path) || !isFileSizeSmall(fsys, path) {
+			return nil
+		}
+
+		_, format, err = DecodeFromFile(fsys, path)
+		if err != nil {
+			return err
+		}
+		return filepath.SkipDir // Skip further processing of directories
+	})
+	return
 }

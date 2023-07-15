@@ -109,7 +109,11 @@ func (asset *Asset) setSwipeSoundPod(cfg *Config, fsys fs.FS) {
 	if err != nil {
 		return
 	}
-	asset.SwipeSoundPod = audios.NewSoundPod(subFS, &cfg.SoundVolume)
+	format, err := audios.FormatFromFS(subFS)
+	if err != nil {
+		return
+	}
+	asset.SwipeSoundPod = audios.NewSoundPod(subFS, format, &cfg.SoundVolume)
 }
 
 func (asset *Asset) setTapSoundPod(cfg *Config, fsys fs.FS) {
@@ -117,7 +121,11 @@ func (asset *Asset) setTapSoundPod(cfg *Config, fsys fs.FS) {
 	if err != nil {
 		return
 	}
-	asset.TapSoundPod = audios.NewSoundPod(subFS, &cfg.SoundVolume)
+	format, err := audios.FormatFromFS(subFS)
+	if err != nil {
+		return
+	}
+	asset.TapSoundPod = audios.NewSoundPod(subFS, format, &cfg.SoundVolume)
 }
 
 func (asset *Asset) setToggleSounds(cfg *Config, fsys fs.FS) {

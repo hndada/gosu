@@ -18,14 +18,20 @@ type SoundMap struct {
 	resampleRatio float64
 }
 
-func NewSoundMap(fsys fs.FS, volumeScale *float64) SoundMap {
+// It is possible that there is no sounds in file system.
+// Hence, selecting format from the first met sound in file system
+// then do beep.NewBuffer(format) may cause error.
+func NewSoundMap(fsys fs.FS, format beep.Format, volumeScale *float64) SoundMap {
 	sm := SoundMap{
+		format:        format,
+		buffer:        beep.NewBuffer(format),
 		startIndexMap: make(map[string]int),
 		endIndexMap:   make(map[string]int),
 
 		volumeScale:   volumeScale,
 		resampleRatio: 1,
 	}
+
 	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -34,25 +40,18 @@ func NewSoundMap(fsys fs.FS, volumeScale *float64) SoundMap {
 			return nil
 		}
 
-		streamer, format, err := DecodeFromFile(fsys, path)
+		// Skipping resampling then making sounds a bit slower or faster
+		// wouldn't make a big difference.
+		streamer, _, err := DecodeFromFile(fsys, path)
 		if err != nil {
 			return err
 		}
-
-		// Skipping resampling then making sounds a bit slower or faster
-		// wouldn't make a big difference.
-		//
 		// var resampled beep.Resampler
 		// if format.SampleRate != defaultSampleRate {
 		// resampled = beep.Resample(quality, format.SampleRate, defaultSampleRate, f)
 		// }
 
-		if sm.buffer == nil {
-			sm.format = format
-			sm.buffer = beep.NewBuffer(format)
-		}
 		sm.AppendSound(path, streamer)
-
 		return nil
 	})
 	return sm

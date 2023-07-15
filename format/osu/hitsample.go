@@ -58,9 +58,16 @@ func (h HitObject) SampleFilename() string {
 		return h.HitSample.Filename
 	}
 
+	// default sample
+	// Todo: test
+	sampleSetName := h.sampleSetName()
+	if sampleSetName == "" {
+		return ""
+	}
+
 	// <sampleSet>-hit<hitSound><index>.wav
 	var b strings.Builder
-	b.WriteString(h.sampleSetName())
+	b.WriteString(sampleSetName)
 	b.WriteString("-hit")
 	b.WriteString(h.hitSoundName())
 

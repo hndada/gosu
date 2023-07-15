@@ -18,6 +18,7 @@ type ReplayPlayer struct {
 func NewReplayPlayer(f *osr.Format, keyCount int) *ReplayPlayer {
 	return &ReplayPlayer{states: f.KeyboardStates(keyCount)}
 }
+
 func NewReplayPlayerFromFile(fsys fs.FS, name string, keyCount int) (*ReplayPlayer, error) {
 	file, err := fsys.Open(name)
 	if err != nil {
@@ -45,6 +46,8 @@ func (rp *ReplayPlayer) Fetch(now int32) (kas []input.KeyboardAction) {
 	states := make([]input.KeyboardState, add+1)
 	copy(states, rp.states[rp.index:rp.index+add+1])
 
+	// states should be at least two elements to get KeyboardAction.
+	// If states is empty, add dummy state.
 	if len(states) == 0 {
 		blank := make([]bool, len(rp.states[0].Pressed))
 		dummy := input.KeyboardState{Time: now, Pressed: blank}

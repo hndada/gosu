@@ -37,6 +37,9 @@ type Scorer struct {
 	acc         float64
 	stagedNotes []*Note
 
+	// audio
+	hitSoundQueue []mode.Sample
+
 	// draw
 	worstJudgment  mode.Judgment
 	isNoteHits     []bool // for drawing hit lighting
@@ -87,19 +90,21 @@ func newStagedNotes(c *Chart) []*Note {
 }
 
 func (s *Scorer) Update(now int32, kas []input.KeyboardAction) {
+	s.hitSoundQueue = s.hitSoundQueue[:0] // flush hit sounds in the queue
 	s.worstJudgment = blank
 	s.isNoteHits = make([]bool, len(s.stagedNotes))
-	s.flush(now)
+	s.flushStagedNotes(now)
 
 	for _, ka := range kas {
+		s.appendHitSounds(ka)
 		s.tryJudge(ka)
 	}
 
-	// Fetch guarantees it returns at least one KeyboardAction.
+	// Fetch guarantees that it length is at least one.
 	s.lastKeyActions = kas[len(kas)-1].Action
 }
 
-func (s *Scorer) flush(now int32) {
+func (s *Scorer) flushStagedNotes(now int32) {
 	for k, n := range s.stagedNotes {
 		for ; n != nil; n = n.Next {
 			if e := n.Time - now; e >= -Miss.Window {
@@ -116,6 +121,22 @@ func (s *Scorer) flush(now int32) {
 			}
 		}
 		s.stagedNotes[k] = n
+	}
+}
+
+// if n.Type != Tail
+func (s *Scorer) appendHitSounds(ka input.KeyboardAction) {
+	for k, n := range s.stagedNotes {
+		a := ka.Action[k]
+		if a != input.Hit {
+			continue
+		}
+		if n != nil {
+			s.hitSoundQueue = append(s.hitSoundQueue, n.Sample)
+		} else {
+			defaultSample := mode.Sample{Filename: "", Volume: 0.5}
+			s.hitSoundQueue = append(s.hitSoundQueue, defaultSample)
+		}
 	}
 }
 
@@ -216,7 +237,7 @@ func (s *Scorer) mark(n *Note, j mode.Judgment) {
 		s.mark(n.Next, Miss)
 	}
 
-	// Tail is flushed separately at flush().
+	// Tail is flushed separately at flushStagedNotes().
 	if n.Type != Tail {
 		s.stagedNotes[n.Key] = n.Next
 	}
