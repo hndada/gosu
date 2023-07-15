@@ -26,11 +26,11 @@ type ChartHeader struct {
 	HolderID      int32 // When the chart is uploaded by non-charter.
 	Tags          []string
 
-	PreviewTime     int32
-	MusicFilename   string // Filename is fine to use. (cf. FileName; Filepath)
-	ImageFilename   string
-	VideoFilename   string
-	VideoTimeOffset int32
+	PreviewTime        int32
+	MusicFilename      string // Filename is fine to use. (cf. FileName; Filepath)
+	BackgroundFilename string
+	VideoFilename      string
+	VideoTimeOffset    int32
 
 	Mode    int
 	SubMode int
@@ -75,7 +75,7 @@ func newChartHeaderFromOsu(f *osu.Format) (c ChartHeader) {
 
 	var e osu.Event
 	e, _ = f.Background()
-	c.ImageFilename = e.Filename
+	c.BackgroundFilename = e.Filename
 	e, _ = f.Video()
 	c.VideoFilename = e.Filename
 	c.VideoTimeOffset = int32(e.StartTime)

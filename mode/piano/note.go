@@ -15,10 +15,10 @@ const (
 )
 
 type Note struct {
-	Time int32
-	Type int
-	Key  int
-	mode.Sample
+	Time     int32
+	Type     int
+	Key      int
+	Sample   mode.Sample
 	Duration int32
 
 	Position float64 // Scaled x or y value.

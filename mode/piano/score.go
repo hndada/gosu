@@ -21,23 +21,23 @@ const (
 )
 
 type Scorer struct {
-	// Never changes after initialization.
+	// no changes after initialization
 	Mods       Mods
 	Judgments  []mode.Judgment // May change by mods.
 	UnitScores [3]float64
 
-	// Exported to result
+	// exported to result
 	Combo          int
 	Score          float64
 	JudgmentCounts []int
 	// Todo: FlowPoint
 
-	// for score calculation
-	Flow        float64
-	Acc         float64
+	// score calculation
+	flow        float64
+	acc         float64
 	stagedNotes []*Note
 
-	// for drawing
+	// draw
 	worstJudgment  mode.Judgment
 	isNoteHits     []bool // for drawing hit lighting
 	lastKeyActions []input.KeyActionType
@@ -46,24 +46,30 @@ type Scorer struct {
 // It is separated from ScenePlay because it can be used for score simulation.
 func NewScorer(c *Chart) Scorer {
 	unit := 1e6 / float64(len(c.Notes))
-	unitScores := [3]float64{unit * 0.7, unit * 0.3, unit * 0.1}
 	js := Judgments
+	unitScores := [3]float64{unit * 0.7, unit * 0.3, unit * 0.1}
 
 	return Scorer{
-		Mods:      c.Mods,
-		Judgments: js,
-		Combo:     0,
+		// no changes after initializations
+		Mods:       c.Mods,
+		Judgments:  js,
+		UnitScores: unitScores,
+
+		// exported to result
+		Combo: 0,
 		// Accumulating floating-point numbers may result in imprecise values.
 		// To ensure that the maximum score is attainable,
 		// we initialize the score with a small value in advance.
 		Score:          0.01,
-		UnitScores:     unitScores,
 		JudgmentCounts: make([]int, len(Judgments)),
 
-		Flow: maxFlow,
-		Acc:  maxAcc,
-
+		// score calculation
+		flow:        maxFlow,
+		acc:         maxAcc,
 		stagedNotes: newStagedNotes(c),
+
+		// draw
+		// These are assigned in every Update.
 	}
 }
 
@@ -180,26 +186,26 @@ func (s *Scorer) mark(n *Note, j mode.Judgment) {
 
 	if j == Miss {
 		s.Combo = 0
-		s.Flow = 0
+		s.flow = 0
 	} else { // Kool, Cool, Good
 		s.Combo++
-		s.Flow++
-		if s.Flow > maxFlow {
-			s.Flow = maxFlow
+		s.flow++
+		if s.flow > maxFlow {
+			s.flow = maxFlow
 		}
 
 		if j.Is(Good) {
-			s.Acc = 0
+			s.acc = 0
 		} else {
-			s.Acc++
-			if s.Acc > maxAcc {
-				s.Acc = maxAcc
+			s.acc++
+			if s.acc > maxAcc {
+				s.acc = maxAcc
 			}
 		}
 	}
 
-	flowScore := s.UnitScores[flow] * (s.Flow / maxFlow)
-	accScore := s.UnitScores[acc] * (s.Acc / maxAcc)
+	flowScore := s.UnitScores[flow] * (s.flow / maxFlow)
+	accScore := s.UnitScores[acc] * (s.acc / maxAcc)
 	var extraScore float64
 	if j.Is(Kool) {
 		extraScore = s.UnitScores[extra]
@@ -221,7 +227,7 @@ func (s *Scorer) mark(n *Note, j mode.Judgment) {
 }
 
 func (s *Scorer) addJugdmentCount(j mode.Judgment) {
-	for i, j2 := range Judgments {
+	for i, j2 := range s.Judgments {
 		if j.Is(j2) {
 			s.JudgmentCounts[i]++
 			break
@@ -230,7 +236,7 @@ func (s *Scorer) addJugdmentCount(j mode.Judgment) {
 }
 
 func (s Scorer) judgmentIndex(j mode.Judgment) int {
-	for i, j2 := range Judgments {
+	for i, j2 := range s.Judgments {
 		if j.Is(j2) {
 			return i
 		}

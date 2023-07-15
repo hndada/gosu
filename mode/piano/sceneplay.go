@@ -13,18 +13,27 @@ import (
 
 type ScenePlay struct {
 	*Config
-	*Asset
+	mode.Timer
+	now int32 // Use a certain time point. Each Now() may yield different time point.
+	input.Keyboard
+
+	// state
 	*Chart
 	Scorer
-	mode.BaseScenePlay
+	Dynamic *mode.Dynamic
 
-	// for drawing
-	lastSpeedScale float64
-	cursor         float64
-	highestBar     *Bar
-	highestNotes   []*Note
+	// audio
+	audios.MusicPlayer
+	audios.SoundMap
 
-	// for animation or transition
+	// draw
+	*Asset
+	speedScale   float64
+	cursor       float64
+	highestBar   *Bar
+	highestNotes []*Note
+
+	// draw: animation or transition
 	keyTimers          []draws.Timer
 	noteTimers         []draws.Timer
 	keyLightingTimers  []draws.Timer
@@ -38,13 +47,11 @@ type ScenePlay struct {
 }
 
 func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, mods Mods, rf *osr.Format) (s *ScenePlay, err error) {
-	s = new(ScenePlay)
-	s.Config = cfg
-	s.Chart, err = NewChart(cfg, fsys, name, mods)
-	if err != nil {
-		return
-	}
-	s.Asset = assets[s.KeyCount]
+	s = &ScenePlay{Config: cfg}
+
+	const wait = 1800 * time.Millisecond
+	s.Timer = mode.NewTimer(wait)
+	s.now = s.Now()
 
 	if rf != nil {
 		s.Keyboard = mode.NewReplayPlayer(rf, s.KeyCount)
@@ -52,11 +59,16 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 		// keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
 		// kb = input.NewKeyboardListener(keys, wait)
 	}
+
+	// state
+	s.Chart, err = NewChart(cfg, fsys, name, mods)
+	if err != nil {
+		return
+	}
 	s.Scorer = NewScorer(s.Chart)
+	s.Dynamic = s.Chart.Dynamics[0]
 
-	const wait = 1800 * time.Millisecond
-	s.StartTime = time.Now().Add(wait)
-
+	// audio
 	const ratio = 1
 	s.MusicPlayer, err = audios.NewMusicPlayerFromFile(fsys, s.MusicFilename, ratio)
 	if err != nil {
@@ -64,12 +76,12 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	}
 	s.SoundMap = audios.NewSoundMap(fsys, s.SoundVolume)
 
-	s.Dynamic = s.Chart.Dynamics[0]
-	s.lastSpeedScale = s.SpeedScale
-	s.cursor = float64(s.Now()) * s.SpeedScale
+	// draw
+	s.Asset = assets[s.KeyCount]
+	s.speedScale = s.SpeedScale
+	s.cursor = float64(s.now) * s.SpeedScale
 	s.highestBar = s.Chart.Bars[0]
 	s.highestNotes = s.stagedNotes
-	s.lastKeyActions = make([]input.KeyActionType, s.Chart.KeyCount)
 
 	// Since timers are now updated in Draw(), their ticks would be dependent on FPS.
 	// However, so far TPS and FPS goes synced by SyncWithFPS().
@@ -82,10 +94,8 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	s.comboTimer = draws.NewTimer(mode.ToTick(2000), 0)
 
 	const comboBounce = 0.85
-	s.drawScore = mode.NewDrawScoreFunc(s.ScoreSprites, &s.Scorer.Score,
-		s.ScoreSpriteScale)
-	s.drawCombo = mode.NewDrawComboFunc(s.ComboSprites, &s.Scorer.Combo, &s.comboTimer,
-		s.ComboDigitGap, comboBounce)
+	s.drawScore = mode.NewDrawScoreFunc(s.ScoreSprites, &s.Score, s.ScoreSpriteScale)
+	s.drawCombo = mode.NewDrawComboFunc(s.ComboSprites, &s.Combo, &s.comboTimer, s.ComboDigitGap, comboBounce)
 	return
 }
 
@@ -97,12 +107,16 @@ func (s ScenePlay) newTimers(maxTick, period int) []draws.Timer {
 	return timers
 }
 
-func (s ScenePlay) Speed() float64 { return s.Dynamic.Speed * s.SpeedScale }
+func (s ScenePlay) ChartHeader() mode.ChartHeader { return s.Chart.ChartHeader }
+func (s ScenePlay) WindowTitle() string           { return s.Chart.WindowTitle() }
+func (s ScenePlay) Speed() float64                { return s.Dynamic.Speed * s.SpeedScale }
+
+// SetMusicVolume()
 
 // Need to re-calculate positions when Speed has changed.
 func (s *ScenePlay) SetSpeedScale() {
 	c := s.Chart
-	old := s.lastSpeedScale
+	old := s.speedScale
 	new := s.SpeedScale
 	s.cursor *= new / old
 	for _, d := range c.Dynamics {
@@ -114,39 +128,44 @@ func (s *ScenePlay) SetSpeedScale() {
 	for _, b := range c.Bars {
 		b.Position *= new / old
 	}
-	s.lastSpeedScale = s.SpeedScale
+	s.speedScale = s.SpeedScale
 }
 
 func (s *ScenePlay) Update() any {
-	// if !s.MusicPlayed && s.Now() >= 0 && s.Now() < 3 {
-	// 	s.MusicPlayer.Play()
-	// 	s.MusicPlayed = true
-	// }
+	s.now = s.Now()
+	kas := s.Keyboard.Fetch(s.now)
 
-	kas := s.Keyboard.Fetch(s.Now())
+	// state
+	s.Scorer.Update(s.now, kas)
+	s.Dynamic = mode.NextDynamics(s.Dynamic, s.now)
 
+	// audio
+	if s.now >= 0 && s.now < 300 {
+		s.MusicPlayer.Play()
+	}
 	// Play sounds from one KeyboardAction for simplicity.
 	s.playSounds(kas[0])
 
-	s.Scorer.Update(s.Now(), kas)
-
-	// Changed speed might not be applied after positions are calculated.
-	// But this is not tested.
+	// draw
+	s.updateCursor()
 	s.updateHighestBar()
 	s.updateHighestNotes()
-
-	s.updateDynamic()
-	s.updateCursor()
-
 	s.ticker()
 	return nil
 }
 
+// Todo: set all sample volumes in advance?
 func (s ScenePlay) playSounds(ka input.KeyboardAction) {
 	for k, n := range s.stagedNotes {
 		a := ka.Action[k]
 		if n.Type != Tail && a == input.Hit {
-			s.PlaySound(n.Sample, *s.SoundVolume)
+			name := n.Sample.Filename
+			vol := n.Sample.Volume
+			if vol == 0 {
+				vol = s.Dynamic.Volume
+			}
+			scale := *s.SoundVolume
+			s.SoundMap.Play(name, vol*scale)
 		}
 	}
 }
@@ -184,21 +203,25 @@ func (s *ScenePlay) updateHighestNotes() {
 	}
 }
 
-func (s *ScenePlay) updateDynamic() { s.UpdateDynamic() }
-
 func (s *ScenePlay) updateCursor() {
-	duration := float64(s.Now() - s.Dynamic.Time)
+	duration := float64(s.now - s.Dynamic.Time)
 	s.cursor = s.Dynamic.Position + duration*s.Speed()
 }
 
-func (s ScenePlay) WindowTitle() string        { return s.Chart.WindowTitle() }
-func (s ScenePlay) BackgroundFilename() string { return s.Chart.ImageFilename }
+func (s *ScenePlay) Pause() {
+	s.Timer.Pause()
+	s.MusicPlayer.Pause()
+	s.Keyboard.Pause()
+}
 
-// NoteExposureDuration returns time in milliseconds
-// that cursor takes to move 1 logical pixel.
-func (s ScenePlay) NoteExposureDuration() int32 { return int32(s.HitPosition / s.Speed()) }
+func (s *ScenePlay) Resume() {
+	s.Timer.Resume()
+	s.MusicPlayer.Resume()
+	s.Keyboard.Resume()
+}
 
 func (s ScenePlay) Finish() any {
-	s.BaseScenePlay.Finish()
+	s.MusicPlayer.Close()
+	s.Keyboard.Close()
 	return s.Scorer
 }

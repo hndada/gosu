@@ -3,8 +3,8 @@ package mode
 import "github.com/hndada/gosu/format/osu"
 
 type Sample struct {
-	Name   string // aka SampleFilename.
-	Volume float64
+	Filename string
+	Volume   float64
 }
 
 func NewSample(f any) (s Sample) {
@@ -14,9 +14,10 @@ func NewSample(f any) (s Sample) {
 	}
 	return Sample{}
 }
+
 func newSampleFromOsu(f osu.HitObject) (s Sample) {
 	return Sample{
-		Name:   f.HitSample.Filename,
-		Volume: float64(f.HitSample.Volume) / 100,
+		Filename: f.SampleFilename(),
+		Volume:   float64(f.HitSample.Volume) / 100,
 	}
 }
