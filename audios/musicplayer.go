@@ -15,17 +15,8 @@ type MusicPlayer struct {
 	resampler *beep.Resampler
 	volume    *effects.Volume
 	done      chan bool
-
-	// format    beep.Format
-	// volume    float64
-	// resampleRatio float64
-	// pauseChannel  chan struct{}
-	// resumeChannel chan struct{}
-	// paused        bool
-	played bool
+	played    bool
 }
-
-// var isSpeakerInit bool
 
 const defaultSampleRate beep.SampleRate = 44100
 const quality = 4
@@ -39,10 +30,13 @@ func NewMusicPlayer(f beep.StreamSeekCloser, format beep.Format, ratio float64) 
 	callback := beep.Callback(func() { done <- true })
 	ctrl := &beep.Ctrl{Streamer: beep.Seq(f, callback)}
 
-	resampler := beep.ResampleRatio(quality, 1, ctrl) // for applying ctrl
+	// No ratio change. Is is for applying ctrl.
+	resampler := beep.ResampleRatio(quality, 1, ctrl)
+	// Do the actual resample here if sample rate is different.
 	if format.SampleRate != defaultSampleRate {
 		resampler = beep.Resample(quality, format.SampleRate, defaultSampleRate, ctrl)
 	}
+	// Change the ratio if it is not 1.
 	if ratio != 1 {
 		resampler = beep.ResampleRatio(quality, ratio, resampler)
 	}
@@ -54,13 +48,6 @@ func NewMusicPlayer(f beep.StreamSeekCloser, format beep.Format, ratio float64) 
 		resampler: resampler,
 		volume:    volume,
 		done:      done,
-
-		// format:    format,
-		// volume:    1,
-		// resampleRatio: ratio,
-		// pauseChannel:  make(chan struct{}),
-		// resumeChannel: make(chan struct{}),
-		// paused:        false,
 	}
 }
 
@@ -73,27 +60,11 @@ func NewMusicPlayerFromFile(fsys fs.FS, name string, ratio float64) (MusicPlayer
 }
 
 func (mp *MusicPlayer) Play() {
-	// if !isSpeakerInit {
-	// 	speaker.Init(mp.format.SampleRate, mp.format.SampleRate.N(time.Second/30))
-	// 	isSpeakerInit = true
-	// }
 	if mp.played {
 		return
 	}
 	speaker.Play(mp.volume)
-	for range mp.done {
-		mp.Close()
-		return
-	}
-	// for {
-	// 	select {
-	// 	case <-done:
-	// 		mp.Close()
-	// 		return
-	// 		// case <-mp.pauseChannel:
-	// 		// case <-mp.resumeChannel:
-	// 	}
-	// }
+	mp.played = true
 }
 
 func (mp MusicPlayer) CurrentTime() time.Duration {
@@ -114,41 +85,28 @@ func beepVolume(vol float64) float64 { return vol*5 - 5 }
 
 func (mp MusicPlayer) IsPaused() bool { return mp.ctrl.Paused }
 func (mp *MusicPlayer) Pause() {
-	// if !mp.paused {
-	// 	mp.pauseChannel <- struct{}{}
-	// }
-	// mp.paused = true
 	speaker.Lock()
 	mp.ctrl.Paused = true
 	speaker.Unlock()
 }
 
 func (mp *MusicPlayer) Resume() {
-	// if mp.paused {
-	// 	mp.resumeChannel <- struct{}{}
-	// }
-	// mp.paused = false
 	speaker.Lock()
 	mp.ctrl.Paused = false
 	speaker.Unlock()
 }
 
-func (mp MusicPlayer) Speed() float64 { return mp.resampler.Ratio() }
+func (mp MusicPlayer) TimeRate() float64 { return mp.resampler.Ratio() }
 
 func (mp *MusicPlayer) SetResampleRatio(ratio float64) {
 	speaker.Lock()
 	mp.resampler.SetRatio(ratio)
 	speaker.Unlock()
-	// mp.resampleRatio = ratio
 }
 
 func (mp *MusicPlayer) Close() {
 	speaker.Lock()
 	speaker.Clear()
-	speaker.Unlock()
 	mp.streamer.Close()
+	speaker.Unlock()
 }
-
-// Always call beep.ResampleRatio to set the ratio even if ratio is 1,
-// because return type of beep.ResampleRatio is *beep.Resampler
-// whereas type of f is beep.StreamSeekCloser.
