@@ -98,7 +98,7 @@ func NewScenePlay(fsys fs.FS, cname string, mods interface{}, rf *osr.Format) (s
 	skin := UserSkin
 	s.DrumSound = skin.DrumSound
 	s.Background = mode.BackgroundDrawer{
-		Sprite: mode.NewBackground(fsys, c.ImageFilename),
+		Sprite: mode.NewBackground(fsys, c.BackgroundFilename),
 	}
 	if !s.Background.Sprite.IsValid() {
 		s.Background.Sprite = skin.defaultBackground

@@ -22,6 +22,7 @@ type MusicPlayer struct {
 	// pauseChannel  chan struct{}
 	// resumeChannel chan struct{}
 	// paused        bool
+	played bool
 }
 
 // var isSpeakerInit bool
@@ -76,7 +77,9 @@ func (mp *MusicPlayer) Play() {
 	// 	speaker.Init(mp.format.SampleRate, mp.format.SampleRate.N(time.Second/30))
 	// 	isSpeakerInit = true
 	// }
-
+	if mp.played {
+		return
+	}
 	speaker.Play(mp.volume)
 	for range mp.done {
 		mp.Close()

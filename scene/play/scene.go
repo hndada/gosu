@@ -16,36 +16,38 @@ import (
 // ScenePlay: struct, PlayScene: function
 // Interface declares at 'user' package.
 type Scene struct {
-	cfg *scene.Config
-	// asset *scene.Asset
-
+	cfg   *scene.Config
+	asset *scene.Asset
 	*scene.BaseScene
+
 	mode int
 	mode.ScenePlay
+
 	drawBackground func(draws.Image)
 }
 
-func NewScene(cfg *scene.Config, asset *scene.Asset, fsys fs.FS, name string,
-	_mode int, mods any, rf *osr.Format) (s *Scene, err error) {
-
-	s = new(Scene)
-	s.cfg = cfg
-	s.BaseScene = scene.TheBaseScene
-	s.mode = _mode
-	switch s.mode {
-	case mode.ModePiano:
-		mods := mods.(piano.Mods)
-		s.ScenePlay, err = piano.NewScenePlay(cfg.PianoConfig, asset.PianoAssets,
-			fsys, name, mods, rf)
+func NewScene(cfg *scene.Config, asset *scene.Asset, fsys fs.FS, name string, _mode int, mods any, rf *osr.Format) (s *Scene, err error) {
+	s = &Scene{
+		cfg:       cfg,
+		asset:     asset,
+		BaseScene: scene.TheBaseScene,
 	}
 
-	bgFilename := s.ScenePlay.BackgroundFilename()
+	switch _mode {
+	case mode.ModePiano:
+		s.mode = _mode
+		mods := mods.(piano.Mods)
+		s.ScenePlay, err = piano.NewScenePlay(cfg.PianoConfig, asset.PianoAssets, fsys, name, mods, rf)
+	case mode.ModeDrum:
+	}
+
+	ch := s.ScenePlay.ChartHeader()
+	bgFilename := ch.BackgroundFilename
 	bgSprite := scene.NewBackgroundSprite(fsys, bgFilename, cfg.ScreenSize)
 	if bgSprite.IsEmpty() {
 		bgSprite = asset.DefaultBackgroundSprite
 	}
-	s.drawBackground = scene.NewDrawBackgroundFunc(bgSprite,
-		cfg.ScreenSize, &cfg.BackgroundBrightness)
+	s.drawBackground = scene.NewDrawBackgroundFunc(bgSprite, cfg.ScreenSize, &cfg.BackgroundBrightness)
 
 	ebiten.SetWindowTitle(s.WindowTitle())
 	// debug.SetGCPercent(0)
@@ -54,7 +56,25 @@ func NewScene(cfg *scene.Config, asset *scene.Asset, fsys fs.FS, name string,
 
 // The order of function calls may not consistent with
 // the order of methods of mode.ScenePlay.
+
+// Changed speed might not be applied after positions are calculated.
+// But this is not tested.
 func (s *Scene) Update() any {
+	// set
+	if s.MusicVolumeKeyHandler.Update() {
+		s.SetMusicVolume(s.cfg.MusicVolume)
+	}
+	s.SoundVolumeKeyHandler.Update()
+	if s.SpeedScaleKeyHandlers[s.mode].Update() {
+		s.SetSpeedScale()
+	}
+	if s.OffsetKeyHandler.Update() {
+		s.SetOffset(s.cfg.Offset)
+	}
+
+	// life cycle
+	args := s.ScenePlay.Update()
+
 	if inpututil.IsKeyJustPressed(input.KeyTab) {
 		if s.IsPaused() {
 			s.Resume()
@@ -66,20 +86,11 @@ func (s *Scene) Update() any {
 		return s.ScenePlay.Finish()
 	}
 
-	if s.MusicVolumeKeyHandler.Update() {
-		s.SetMusicVolume(s.cfg.MusicVolume)
-	}
-	s.SoundVolumeKeyHandler.Update()
+	// draw
 	s.BackgroundBrightnessKeyHandler.Update()
-	if s.OffsetKeyHandler.Update() {
-		s.SetOffset(s.cfg.Offset)
-	}
 	s.DebugPrintKeyHandler.Update()
-	if s.SpeedScaleKeyHandlers[s.mode].Update() {
-		s.SetSpeedScale()
-	}
 
-	return s.ScenePlay.Update()
+	return args
 }
 
 func (s Scene) Draw(screen draws.Image) {

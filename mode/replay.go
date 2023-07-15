@@ -13,24 +13,26 @@ type ReplayPlayer struct {
 	index  int // states[index] is last latest state
 }
 
-func NewReplayPlayer(f *osr.Format, keyCount int) ReplayPlayer {
-	return ReplayPlayer{states: f.KeyboardStates(keyCount)}
+// The type of return value should be pointer because to implement
+// interface, all methods should be either value or pointer receiver.
+func NewReplayPlayer(f *osr.Format, keyCount int) *ReplayPlayer {
+	return &ReplayPlayer{states: f.KeyboardStates(keyCount)}
 }
-func NewReplayPlayerFromFile(fsys fs.FS, name string, keyCount int) (ReplayPlayer, error) {
+func NewReplayPlayerFromFile(fsys fs.FS, name string, keyCount int) (*ReplayPlayer, error) {
 	file, err := fsys.Open(name)
 	if err != nil {
-		return ReplayPlayer{}, err
+		return nil, err
 	}
 
 	f, err := osr.NewFormat(file)
 	if err != nil {
-		return ReplayPlayer{}, fmt.Errorf("failed to parse replay file: %s", err)
+		return nil, fmt.Errorf("failed to parse replay file: %s", err)
 	}
 
 	return NewReplayPlayer(f, keyCount), nil
 }
 
-func (rp ReplayPlayer) Fetch(now int32) (kas []input.KeyboardAction) {
+func (rp *ReplayPlayer) Fetch(now int32) (kas []input.KeyboardAction) {
 	count := 0
 	for _, s := range rp.states[rp.index:] {
 		if s.Time > now {
@@ -57,5 +59,9 @@ func (rp ReplayPlayer) Fetch(now int32) (kas []input.KeyboardAction) {
 	rp.index += count
 	return
 }
+func (rp *ReplayPlayer) Output() []input.KeyboardState { return rp.states }
 
-func (rp ReplayPlayer) Output() []input.KeyboardState { return rp.states }
+// ReplayPlayer does nothing at these methods.
+func (rp *ReplayPlayer) Pause()  {}
+func (rp *ReplayPlayer) Resume() {}
+func (rp *ReplayPlayer) Close()  {}

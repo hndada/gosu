@@ -113,3 +113,9 @@ func (cfg Config) KeyXs(keyCount int, sm ScratchMode) []float64 {
 	}
 	return xs
 }
+
+// NoteExposureDuration returns time in milliseconds
+// that cursor takes to move 1 logical pixel.
+func (cfg Config) NoteExposureDuration(speed float64) int32 {
+	return int32(cfg.HitPosition / speed)
+}

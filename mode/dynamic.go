@@ -6,15 +6,19 @@ import (
 	"github.com/hndada/gosu/format/osu"
 )
 
-// First BPM is used as temporary main BPM.
-// No two Dynamics have same Time.
+// Except Volume, all fields in Dynamic are related in beat, or 'Pace'.
+// Tempo: Allergo, Adagio
+// Rhythm: confusing with pattern
+// Measure: aka BPM
+// Meter: confusing with field 'Meter'
 type Dynamic struct {
-	Time      int32
-	BPM       float64
-	Speed     float64
-	Meter     int
-	NewBeat   bool // NewBeat draws a bar.
-	Volume    float64
+	Time    int32
+	BPM     float64
+	Speed   float64
+	Meter   int
+	NewBeat bool // NewBeat draws a bar.
+
+	Volume    float64 // Used when sample volume is 0.
 	Highlight bool
 
 	Position float64
@@ -43,6 +47,9 @@ func NewDynamics(f any) []*Dynamic {
 
 // When gathering Dynamics from osu.Format, it should input the whole slice.
 // It is because osu.Format.TimingPoints brings some value from previous TimingPoint.
+
+// First BPM is used as temporary main BPM.
+// No two Dynamics have same Time.
 func newDynamicsFromOsu(f *osu.Format) []*Dynamic {
 	var ds []*Dynamic
 	sort.SliceStable(f.TimingPoints, func(i int, j int) bool {
