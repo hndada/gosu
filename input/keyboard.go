@@ -24,7 +24,7 @@ type Keyboard struct {
 }
 
 func NewKeyboard(keys []Key, startTime time.Time) *Keyboard {
-	return &Keyboard{
+	kb := &Keyboard{
 		keyStatesGetter: newKeyStatesGetter(keys),
 		pollingRate:     PollingRate,
 
@@ -35,6 +35,10 @@ func NewKeyboard(keys []Key, startTime time.Time) *Keyboard {
 		resume:    make(chan struct{}),
 		paused:    false,
 	}
+
+	first := KeyboardState{kb.now(), make([]bool, len(keys))}
+	kb.states = append(kb.states, first)
+	return kb
 }
 
 func (kb *Keyboard) Listen() {

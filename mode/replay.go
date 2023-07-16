@@ -10,6 +10,8 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
+type Replay = input.KeyboardReader
+
 // := is called short assignment statement. When assigning multiple variables
 // by :=, at least one of the variables on the left side must be newly declared.
 // It will work just as = for already existing variables.

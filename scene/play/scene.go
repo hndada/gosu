@@ -6,7 +6,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
@@ -26,7 +25,7 @@ type Scene struct {
 	drawBackground func(draws.Image)
 }
 
-func NewScene(cfg *scene.Config, asset *scene.Asset, fsys fs.FS, name string, _mode int, mods any, rf *osr.Format) (s *Scene, err error) {
+func NewScene(cfg *scene.Config, asset *scene.Asset, fsys fs.FS, name string, _mode int, mods any, replay mode.Replay) (s *Scene, err error) {
 	s = &Scene{
 		cfg:       cfg,
 		asset:     asset,
@@ -37,7 +36,7 @@ func NewScene(cfg *scene.Config, asset *scene.Asset, fsys fs.FS, name string, _m
 	case mode.ModePiano:
 		s.mode = _mode
 		mods := mods.(piano.Mods)
-		s.ScenePlay, err = piano.NewScenePlay(cfg.PianoConfig, asset.PianoAssets, fsys, name, mods, rf)
+		s.ScenePlay, err = piano.NewScenePlay(cfg.PianoConfig, asset.PianoAssets, fsys, name, mods, replay)
 	case mode.ModeDrum:
 	}
 
