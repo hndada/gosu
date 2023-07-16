@@ -1,7 +1,6 @@
 package piano
 
 import (
-	"fmt"
 	"io/fs"
 	"time"
 
@@ -60,11 +59,12 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	s.Timer = mode.NewTimer(*s.MusicOffset, wait)
 	s.now = s.Now()
 
-	if !replay.IsEmpty() {
-		s.KeyboardReader = replay
-	} else {
+	if replay.IsEmpty() {
 		keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
 		s.Keyboard = input.NewKeyboard(keys, s.StartTime())
+		defer s.Keyboard.Listen()
+	} else {
+		s.KeyboardReader = replay
 	}
 
 	const ratio = 1
@@ -163,9 +163,9 @@ func (s *ScenePlay) Update() any {
 
 func (s ScenePlay) readInput() []input.KeyboardAction {
 	if s.Keyboard != nil {
-		return s.KeyboardReader.Read(s.now)
+		return s.Keyboard.Read(s.now)
 	}
-	return s.Keyboard.Read(s.now)
+	return s.KeyboardReader.Read(s.now)
 }
 
 func (s *ScenePlay) tryPlayMusic() {
@@ -186,7 +186,6 @@ func (s ScenePlay) playSounds() {
 			vol = s.Dynamic.Volume
 		}
 		scale := *s.SoundVolume
-		fmt.Println(sample.Filename, vol*scale)
 		s.SoundMap.Play(sample.Filename, vol*scale)
 	}
 }
