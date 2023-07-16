@@ -6,8 +6,8 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-// NewDrawScoreFunc returns closure function that draws score.
-func NewDrawScoreFunc(sprites [13]draws.Sprite, score *float64, digitGap float64) func(draws.Image) {
+// Name of a function which returns closure ends with "-er".
+func NewScoreDrawer(sprites [13]draws.Sprite, score *float64, digitGap float64) func(draws.Image) {
 	const zeroFill = 1
 
 	numbers := sprites[:10]
@@ -40,7 +40,7 @@ func NewDrawScoreFunc(sprites [13]draws.Sprite, score *float64, digitGap float64
 
 // Each number has different width. Number 0's width is used as standard.
 // ComboDrawer's Draw draws each number at constant x regardless of their widths.
-func NewDrawComboFunc(sprites [10]draws.Sprite, src *int, timer *draws.Timer, digitGap float64, bounce float64) func(draws.Image) {
+func NewComboDrawer(sprites [10]draws.Sprite, src *int, timer *draws.Timer, digitGap float64, bounce float64) func(draws.Image) {
 	digitWidth := sprites[0].W() // Use number 0's width.
 	combo := *src
 	return func(dst draws.Image) {
