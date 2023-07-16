@@ -13,7 +13,6 @@ type Chart struct {
 	mode.ChartHeader
 	KeyCount int // same with ChartHeader.SubMode
 
-	Mods     Mods
 	Dynamics []*mode.Dynamic
 	Notes    []*Note
 	Bars     []*Bar
@@ -40,7 +39,6 @@ func NewChart(cfg *Config, fsys fs.FS, name string, mods Mods) (c *Chart, err er
 	c.KeyCount = c.SubMode
 	c.ChartHash, _ = mode.Hash(f)
 
-	c.Mods = mods
 	c.Dynamics = mode.NewDynamics(format)
 	if len(c.Dynamics) == 0 {
 		err = fmt.Errorf("no Dynamics in the chart")

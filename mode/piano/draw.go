@@ -7,30 +7,10 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
 )
 
-// These methods are for drawing.
-func (s ScenePlay) isKeyHit(k int) bool { return s.lastKeyActions[k] == input.Hit }
-func (s ScenePlay) isKeyPressed(k int) bool {
-	ka := s.lastKeyActions[k]
-	return ka == input.Hit || ka == input.Hold
-}
-
-func (s *ScenePlay) ticker() {
-	for k := 0; k < s.Chart.KeyCount; k++ {
-		s.keyTimers[k].Ticker()
-		s.noteTimers[k].Ticker()
-		s.keyLightingTimers[k].Ticker()
-		s.hitLightingTimers[k].Ticker()
-		s.holdLightingTimers[k].Ticker()
-	}
-	s.judgmentTimer.Ticker()
-	s.comboTimer.Ticker()
-}
-
-// I used 'sprite' for local variable of Sprite instead of 's'
+// The name 'sprite' is used for local variable of Sprite instead of 's'
 // to avoid confusion with the local variable of Scene.
 func (s ScenePlay) Draw(screen draws.Image) {
 	s.drawField(screen)
@@ -48,7 +28,7 @@ func (s ScenePlay) Draw(screen draws.Image) {
 	s.drawJudgment(screen)
 	s.drawScore(screen)
 	s.drawCombo(screen)
-	// s.drawMeter(screen)
+	// Todo: s.drawMeter(screen)
 }
 
 func (s ScenePlay) drawField(dst draws.Image) {
@@ -87,9 +67,7 @@ func (s ScenePlay) drawLongNoteBodies(dst draws.Image) {
 			bodyAnim := s.KeyKindNoteTypeAnimations[k][Body]
 			bodyFrame := bodyAnim[0]
 
-			holding := s.lastKeyActions[k] == input.Hold
-			holding = holding && s.stagedNotes[k].Type == Tail
-			if holding {
+			if s.isKeyHolds[k] { // || s.stagedNotes[k].Type == Tail
 				bodyFrame = s.noteTimers[k].Frame(bodyAnim)
 			}
 
@@ -146,12 +124,9 @@ func (s ScenePlay) drawNotes(dst draws.Image) {
 func (s ScenePlay) drawKeys(dst draws.Image) {
 	for k, sprites := range s.KeySprites {
 		timer := s.keyTimers[k]
-		if s.isKeyHit(k) {
-			s.keyTimers[k].Reset()
-		}
 		index := keyUp
 		// drawKeys draws for a while even when pressed off very shortly.
-		if s.isKeyPressed(k) || timer.Tick < timer.MaxTick {
+		if s.isKeyPresseds[k] || timer.Tick < timer.MaxTick {
 			index = keyDown
 		}
 		sprites[index].Draw(dst, draws.Op{})
@@ -161,11 +136,8 @@ func (s ScenePlay) drawKeys(dst draws.Image) {
 // drawKeyLightings draws for a while even when pressed off very shortly.
 func (s ScenePlay) drawKeyLightings(dst draws.Image) {
 	for k, sprite := range s.KeyLightingSprites {
-		if s.isKeyHit(k) {
-			s.keyLightingTimers[k].Reset()
-		}
 		timer := s.keyLightingTimers[k]
-		if s.isKeyPressed(k) || timer.Tick < timer.MaxTick {
+		if s.isKeyPresseds[k] || timer.Tick < timer.MaxTick {
 			op := draws.Op{}
 			op.ColorM.ScaleWithColor(s.KeyLightingColors[k])
 			sprite.Draw(dst, op)
@@ -176,9 +148,6 @@ func (s ScenePlay) drawKeyLightings(dst draws.Image) {
 // drawHitLightings draws when Normal is Hit or Tail is Release.
 func (s ScenePlay) drawHitLightings(dst draws.Image) {
 	for k, a := range s.HitLightingAnimations {
-		if s.isKeyHit(k) {
-			s.hitLightingTimers[k].Reset()
-		}
 		timer := s.hitLightingTimers[k]
 		if timer.IsDone() {
 			return
@@ -192,11 +161,8 @@ func (s ScenePlay) drawHitLightings(dst draws.Image) {
 
 func (s ScenePlay) drawHoldLightings(dst draws.Image) {
 	for k, a := range s.HoldLightingAnimations {
-		if !s.isKeyPressed(k) {
+		if !s.isKeyPresseds[k] {
 			return
-		}
-		if s.isKeyHit(k) {
-			s.holdLightingTimers[k].Reset()
 		}
 		timer := s.holdLightingTimers[k]
 		op := draws.Op{}
@@ -206,7 +172,7 @@ func (s ScenePlay) drawHoldLightings(dst draws.Image) {
 }
 
 func (s ScenePlay) drawJudgment(dst draws.Image) {
-	if !s.Scorer.worstJudgment.IsBlank() {
+	if !s.worstJudgment.IsBlank() {
 		s.judgmentTimer.Reset()
 	}
 	timer := s.judgmentTimer
@@ -231,7 +197,7 @@ func (s ScenePlay) drawJudgment(dst draws.Image) {
 		scale = 1 - 0.25*timer.Progress(bound2, 1)
 	}
 
-	index := s.Scorer.judgmentIndex(s.Scorer.worstJudgment)
+	index := s.judgmentIndex(s.worstJudgment)
 	sprite := timer.Frame(s.JudgmentAnimations[index])
 	sprite.MultiplyScale(scale)
 	sprite.Draw(dst, draws.Op{})

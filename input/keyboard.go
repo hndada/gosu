@@ -21,6 +21,7 @@ type Keyboard struct {
 	pause     chan struct{}
 	resume    chan struct{}
 	paused    bool
+	done      chan struct{}
 }
 
 func NewKeyboard(keys []Key, startTime time.Time) *Keyboard {
@@ -34,6 +35,7 @@ func NewKeyboard(keys []Key, startTime time.Time) *Keyboard {
 		pause:     make(chan struct{}),
 		resume:    make(chan struct{}),
 		paused:    false,
+		done:      make(chan struct{}),
 	}
 
 	first := KeyboardState{kb.now(), make([]bool, len(keys))}
@@ -48,6 +50,8 @@ func (kb *Keyboard) Listen() {
 			case <-kb.pause:
 				// Wait until Resume() is called.
 				<-kb.resume
+			case <-kb.done:
+				return
 			default:
 				start := time.Now()
 
@@ -104,6 +108,8 @@ func (kb *Keyboard) Close() {
 		kb.paused = false
 	}
 
+	kb.done <- struct{}{}
 	close(kb.pause)
 	close(kb.resume)
+	close(kb.done)
 }
