@@ -15,14 +15,16 @@ type ScenePlay struct {
 	*Config
 	*Asset
 	*Chart
-	input.Keyboard
-	audios.MusicPlayer
-	audios.SoundMap
 
 	mode.Timer
 	// Store a certain time point to now.
 	// Each Now() may yield different time point.
 	now int32
+	*input.Keyboard
+	input.KeyboardReader // for replay
+	audios.MusicPlayer
+	audios.SoundMap
+
 	Scorer
 	Dynamic *mode.Dynamic
 
@@ -46,7 +48,7 @@ type ScenePlay struct {
 }
 
 // Todo: pass key count beforehand so that s.Asset can be initialized before s.Chart.
-func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, mods Mods, rp mode.Replay) (s *ScenePlay, err error) {
+func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, mods Mods, replay input.KeyboardReader) (s *ScenePlay, err error) {
 	s = &ScenePlay{Config: cfg}
 	s.Chart, err = NewChart(s.Config, fsys, name, mods)
 	if err != nil {
@@ -54,11 +56,15 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	}
 	s.Asset = assets[s.KeyCount]
 
-	if rp != nil {
-		s.Keyboard = input.NewKeyboardFromStates(rp)
+	const wait = 1800 * time.Millisecond
+	s.Timer = mode.NewTimer(*s.MusicOffset, wait)
+	s.now = s.Now()
+
+	if !replay.IsEmpty() {
+		s.KeyboardReader = replay
 	} else {
 		keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
-		s.Keyboard = input.NewKeyboard(keys)
+		s.Keyboard = input.NewKeyboard(keys, s.StartTime())
 	}
 
 	const ratio = 1
@@ -71,12 +77,7 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	// https://go.dev/play/p/nn-peGAjawW
 	s.SoundMap.AppendSound("", s.DefaultHitSoundStreamer)
 
-	const wait = 1800 * time.Millisecond
-	s.Timer = mode.NewTimer(*s.MusicOffset, wait)
-	s.now = s.Now()
-
 	s.Scorer = NewScorer(s.Chart)
-
 	s.Dynamic = s.Chart.Dynamics[0]
 
 	// draw
@@ -147,7 +148,7 @@ func (s *ScenePlay) Update() any {
 	s.tryPlayMusic()
 
 	s.now = s.Now()
-	s.Scorer.Update(s.now, s.Keyboard.Fetch(s.now))
+	s.Scorer.Update(s.now, s.Keyboard.Read(s.now))
 	s.playSounds()
 	s.Dynamic = mode.NextDynamics(s.Dynamic, s.now)
 

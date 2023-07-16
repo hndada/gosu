@@ -1,96 +1,104 @@
 package input
 
+import (
+	"sync"
+	"time"
+)
+
+// When to use lock: read or write to shared resources.
+// A practical example would be public toilet.
 type Keyboard struct {
-	index  int // states[index] is last latest state
-	states []KeyboardState
+	KeyboardReader
+	keyStatesGetter func() []bool
+	pollingRate     time.Duration
+
+	mu        *sync.Mutex
+	startTime time.Time
+	pauseTime time.Time
+	pause     chan struct{}
+	resume    chan struct{}
+	paused    bool
 }
 
-type KeyboardState struct {
-	Time    int32
-	Pressed []bool
+func NewKeyboard(keys []Key, startTime time.Time) *Keyboard {
+	return &Keyboard{
+		keyStatesGetter: newKeyStatesGetter(keys),
+		pollingRate:     PollingRate,
+
+		mu:        &sync.Mutex{},
+		startTime: startTime,
+		pauseTime: time.Time{},
+		pause:     make(chan struct{}),
+		resume:    make(chan struct{}),
+		paused:    false,
+	}
 }
 
-type KeyboardAction struct {
-	Time   int32
-	Action []KeyActionType
+func (kb *Keyboard) Now() int32 {
+	return int32(time.Since(kb.startTime).Milliseconds())
 }
 
-// NewKeyboardFromStates is for replay.
-func NewKeyboardFromStates(states []KeyboardState) Keyboard {
-	return Keyboard{states: states}
-}
+func (kb *Keyboard) Poll() {
+	go func() {
+		for {
+			select {
+			case <-kb.pause:
+				// Wait until Resume() is called.
+				<-kb.resume
+			default:
+				start := time.Now()
 
-func (kb *Keyboard) Fetch(now int32) []KeyboardAction {
-	kas := []KeyboardAction{}
+				state := KeyboardState{kb.Now(), kb.keyStatesGetter()}
+				kb.mu.Lock()
+				kb.states = append(kb.states, state)
+				kb.mu.Unlock()
 
-	add := 0
-	for _, next := range kb.states[kb.index+1:] {
-		if next.Time > now {
-			break
+				// It is fine to pass negative value to Sleep().
+				elapsed := time.Since(start)
+				time.Sleep(kb.pollingRate - elapsed)
+			}
 		}
-		add++
-	}
-
-	// Beware: states can manipulate kb.states.
-	states := make([]KeyboardState, add+1)
-	copy(states, kb.states[kb.index:kb.index+add+1])
-
-	// states should be at least two elements to get KeyboardAction.
-	// If states is empty, add dummy state.
-	if len(states) == 0 {
-		blank := make([]bool, len(kb.states[0].Pressed))
-		dummy := KeyboardState{Time: now, Pressed: blank}
-		states = append(states, dummy)
-	}
-
-	// Time of the last state is always 'now'.
-	currentState := KeyboardState{
-		Time:    now,
-		Pressed: states[len(states)-1].Pressed,
-	}
-	if len(states) <= 1 || states[len(states)-1].Time != now {
-		states = append(states, currentState)
-	}
-
-	lps := states[0].Pressed
-	for _, s := range states[1:] {
-		ps := s.Pressed
-		as := KeyActions(lps, ps)
-		ka := KeyboardAction{Time: s.Time, Action: as}
-		kas = append(kas, ka)
-		lps = s.Pressed
-	}
-	kb.index += add
-
-	return kas
+	}()
 }
 
-// Tidy removes redundant states.
-func (kb *Keyboard) Tidy() {
-	if len(kb.states) == 0 {
+func (kb Keyboard) IsPaused() bool { return kb.paused }
+
+func (kb *Keyboard) Pause() {
+	kb.mu.Lock()
+	defer kb.mu.Unlock()
+
+	if kb.paused {
 		return
 	}
 
-	news := []KeyboardState{}
-	last := kb.states[0]
-	for _, s := range kb.states[1:] {
-		if areStatesEqual(last, s) {
-			continue
-		}
-		news = append(news, s)
-		last = s
-	}
-	kb.states = news
+	kb.pause <- struct{}{}
+	kb.pauseTime = time.Now()
+	kb.paused = true
 }
 
-func areStatesEqual(old, new KeyboardState) bool {
-	for k, p := range new.Pressed {
-		lp := old.Pressed[k]
-		if lp != p {
-			return false
-		}
+func (kb *Keyboard) Resume() {
+	kb.mu.Lock()
+	defer kb.mu.Unlock()
+
+	if !kb.paused {
+		return
 	}
-	return true
+
+	kb.resume <- struct{}{}
+	elapsedTime := time.Since(kb.pauseTime)
+	kb.startTime = kb.startTime.Add(elapsedTime)
+	kb.paused = false
 }
 
-func (kb Keyboard) Output() []KeyboardState { return kb.states }
+func (kb *Keyboard) Close() {
+	kb.mu.Lock()
+	defer kb.mu.Unlock()
+
+	if kb.paused {
+		kb.resume <- struct{}{}
+		kb.paused = false
+	}
+
+	close(kb.pause)
+	close(kb.resume)
+}

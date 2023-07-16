@@ -28,6 +28,8 @@ func NewTimer(musicOffset int32, wait time.Duration) Timer {
 	}
 }
 
+func (t Timer) StartTime() time.Time { return t.startTime }
+
 func (t Timer) Now() int32 {
 	var duration time.Duration
 	if t.paused {
