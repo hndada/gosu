@@ -7,27 +7,24 @@ import (
 
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
 )
 
 type ScenePlay struct {
-	mode.Timer
-	now int32 // Use a certain time point. Each Now() may yield different time point.
-
 	*Config
-	*Chart
-
-	input.Keyboard
-
-	Scorer
-	Dynamic *mode.Dynamic
-
 	*Asset
-
+	*Chart
+	input.Keyboard
 	audios.MusicPlayer
 	audios.SoundMap
+
+	mode.Timer
+	// Store a certain time point to now.
+	// Each Now() may yield different time point.
+	now int32
+	Scorer
+	Dynamic *mode.Dynamic
 
 	// draw
 	speedScale   float64
@@ -48,29 +45,21 @@ type ScenePlay struct {
 	drawCombo func(draws.Image)
 }
 
-func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, mods Mods, rf *osr.Format) (s *ScenePlay, err error) {
-	s = &ScenePlay{}
-	const wait = 1800 * time.Millisecond
-	s.Timer = mode.NewTimer(*cfg.MusicOffset, wait)
-	s.now = s.Now()
-
-	s.Config = cfg
-	s.Chart, err = NewChart(cfg, fsys, name, mods)
+// Todo: pass key count beforehand so that s.Asset can be initialized before s.Chart.
+func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, mods Mods, rp mode.Replay) (s *ScenePlay, err error) {
+	s = &ScenePlay{Config: cfg}
+	s.Chart, err = NewChart(s.Config, fsys, name, mods)
 	if err != nil {
 		return
 	}
-
-	if rf != nil {
-		s.Keyboard = mode.NewReplayPlayer(rf, s.KeyCount)
-	} else {
-		// keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
-		// s.Keyboard = input.NewKeyboardListener(keys, wait)
-	}
-
-	s.Scorer = NewScorer(s.Chart)
-	s.Dynamic = s.Chart.Dynamics[0]
-
 	s.Asset = assets[s.KeyCount]
+
+	if rp != nil {
+		s.Keyboard = input.NewKeyboardFromStates(rp)
+	} else {
+		keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
+		s.Keyboard = input.NewKeyboard(keys)
+	}
 
 	const ratio = 1
 	s.MusicPlayer, err = audios.NewMusicPlayerFromFile(fsys, s.MusicFilename, ratio)
@@ -81,6 +70,14 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	// It is possible for empty string to be a key of a map.
 	// https://go.dev/play/p/nn-peGAjawW
 	s.SoundMap.AppendSound("", s.DefaultHitSoundStreamer)
+
+	const wait = 1800 * time.Millisecond
+	s.Timer = mode.NewTimer(*s.MusicOffset, wait)
+	s.now = s.Now()
+
+	s.Scorer = NewScorer(s.Chart)
+
+	s.Dynamic = s.Chart.Dynamics[0]
 
 	// draw
 	s.speedScale = s.SpeedScale
