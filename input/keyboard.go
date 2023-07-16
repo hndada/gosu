@@ -3,7 +3,6 @@ package input
 type Keyboard struct {
 	states []KeyboardState
 	index  int // states[index] is last latest state
-	*KeyboardListener
 }
 
 type KeyboardState struct {
@@ -14,10 +13,6 @@ type KeyboardState struct {
 type KeyboardAction struct {
 	Time   int32
 	Action []KeyActionType
-}
-
-func NewKeyboard(keys []Key) Keyboard {
-	return Keyboard{KeyboardListener: NewKeyboardListener(keys)}
 }
 
 // NewKeyboardFromStates is for replay.
@@ -68,6 +63,34 @@ func (kb *Keyboard) Fetch(now int32) []KeyboardAction {
 	kb.index += add
 
 	return kas
+}
+
+// Tidy removes redundant states.
+func (kb *Keyboard) Tidy() {
+	if len(kb.states) == 0 {
+		return
+	}
+
+	news := []KeyboardState{}
+	last := kb.states[0]
+	for _, s := range kb.states[1:] {
+		if areStatesEqual(last, s) {
+			continue
+		}
+		news = append(news, s)
+		last = s
+	}
+	kb.states = news
+}
+
+func areStatesEqual(old, new KeyboardState) bool {
+	for k, p := range new.Pressed {
+		lp := old.Pressed[k]
+		if lp != p {
+			return false
+		}
+	}
+	return true
 }
 
 func (kb Keyboard) Output() []KeyboardState { return kb.states }

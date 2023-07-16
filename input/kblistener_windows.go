@@ -24,8 +24,8 @@ const (
 
 const PollingRate = 1 * time.Millisecond
 
-// getKeyStatesFunc returns closure.
-func getKeyStatesFunc(keys []Key) func() []bool {
+// newKeyStatesGetter returns closure.
+func newKeyStatesGetter(keys []Key) func() []bool {
 	vkcodes := make([]uint32, len(keys))
 	for k, ek := range keys {
 		vkcodes[k] = ToVirtualKey(ek)
