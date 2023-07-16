@@ -5,14 +5,14 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
-func (f Format) KeyboardStates(keyCount int) []input.KeyboardState {
+func (f Format) KeyboardReader(keyCount int) input.KeyboardReader {
 	switch f.GameMode {
 	case osu.ModeMania:
-		return f.maniaKeyboardStates(keyCount)
+		return f.maniaKeyboardReader(keyCount)
 	case osu.ModeTaiko:
-		return f.taikoKeyboardStates()
+		return f.taikoKeyboardReader()
 	}
-	return nil
+	return input.KeyboardReader{}
 }
 
 // The first three replay actions of normal mania play:
@@ -26,7 +26,7 @@ func (f Format) KeyboardStates(keyCount int) []input.KeyboardState {
 // {W:1 X:0 Y:0 Z:0}
 
 // Replay format itself has no information about key count.
-func (f Format) maniaKeyboardStates(keyCount int) []input.KeyboardState {
+func (f Format) maniaKeyboardReader(keyCount int) input.KeyboardReader {
 	// Need to clean first two replay actions.
 	for i := 0; i < 2; i++ {
 		if i >= len(f.ReplayData) {
@@ -51,9 +51,9 @@ func (f Format) maniaKeyboardStates(keyCount int) []input.KeyboardState {
 			}
 			k++
 		}
-		states[i] = input.KeyboardState{Time: t, Pressed: ps}
+		states[i] = input.KeyboardState{Time: t, Presses: ps}
 	}
-	return states
+	return input.NewKeyboardReader(states)
 }
 
 // Reference 1: testdata/taiko.osr (Wizdomiot, koyomi's Oni)
@@ -80,7 +80,7 @@ func (f Format) maniaKeyboardStates(keyCount int) []input.KeyboardState {
 // X = 320: no hands hit.
 // X = 640: right hand hits.
 // X = 0: both hands hit. (beware: X = 0 again)
-func (f Format) taikoKeyboardStates() []input.KeyboardState {
+func (f Format) taikoKeyboardReader() input.KeyboardReader {
 	// Unlike mania, taiko doesn't need to clean first two replay actions.
 
 	states := make([]input.KeyboardState, len(f.ReplayData)-1)
@@ -98,7 +98,7 @@ func (f Format) taikoKeyboardStates() []input.KeyboardState {
 				ps[k] = true
 			}
 		}
-		states[i] = input.KeyboardState{Time: t, Pressed: ps}
+		states[i] = input.KeyboardState{Time: t, Presses: ps}
 	}
-	return states
+	return input.NewKeyboardReader(states)
 }

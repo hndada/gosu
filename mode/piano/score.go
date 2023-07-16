@@ -100,8 +100,8 @@ func (s *Scorer) Update(now int32, kas []input.KeyboardAction) {
 		s.tryJudge(ka)
 	}
 
-	// Fetch guarantees that it length is at least one.
-	s.lastKeyActions = kas[len(kas)-1].Action
+	// Read guarantees that it length is at least one.
+	s.lastKeyActions = kas[len(kas)-1].KeyActions
 }
 
 func (s *Scorer) flushStagedNotes(now int32) {
@@ -127,7 +127,7 @@ func (s *Scorer) flushStagedNotes(now int32) {
 // if n.Type != Tail
 func (s *Scorer) appendHitSounds(ka input.KeyboardAction) {
 	for k, n := range s.stagedNotes {
-		a := ka.Action[k]
+		a := ka.KeyActions[k]
 		if a != input.Hit {
 			continue
 		}
@@ -146,7 +146,7 @@ func (s *Scorer) tryJudge(ka input.KeyboardAction) {
 			continue
 		}
 		e := n.Time - ka.Time
-		j := s.judge(n.Type, e, ka.Action[k])
+		j := s.judge(n.Type, e, ka.KeyActions[k])
 		if j != blank { // Comparison between two structs is possible.
 			s.mark(n, j)
 			if !j.Is(Miss) && n.Type != Tail {
