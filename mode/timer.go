@@ -42,9 +42,11 @@ func (t Timer) Now() int32 {
 
 func (t Timer) IsPaused() bool { return t.paused }
 
+// No update t.startTime here.
+// Notes would look like they suddenly teleport at the beginning.
 func (t *Timer) SetMusicPlayed(now time.Time) {
-	offset := time.Duration(t.musicOffset) * time.Millisecond
-	t.startTime = now.Add(-offset)
+	// offset := time.Duration(t.musicOffset) * time.Millisecond
+	// t.startTime = now.Add(-offset)
 	t.musicPlayed = true
 }
 
@@ -62,6 +64,7 @@ func (t *Timer) SetMusicOffset(new int32) {
 		old := t.musicOffset
 		diff := time.Duration(new-old) * time.Millisecond
 		t.startTime = t.startTime.Add(-diff)
+		t.musicOffset = new
 	}
 	// If the music has not played yet, we can adjust the offset
 	// and let the music played at given delayed time.

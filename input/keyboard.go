@@ -7,6 +7,9 @@ import (
 
 // When to use lock: read or write to shared resources.
 // A practical example would be public toilet.
+
+// No additional adjustment for keyboard when offset has changed.
+// Both music and keyboard cannot seek at precise position once they start.
 type Keyboard struct {
 	KeyboardReader
 	keyStatesGetter func() []bool
