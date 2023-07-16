@@ -42,10 +42,10 @@ func (t Timer) Now() int32 {
 
 func (t Timer) IsPaused() bool { return t.paused }
 
-// For changing offset set mode.
-func (t *Timer) SetMusicPlayed(new time.Time) {
+func (t *Timer) SetMusicPlayed(now time.Time) {
+	offset := time.Duration(t.musicOffset) * time.Millisecond
+	t.startTime = now.Add(-offset)
 	t.musicPlayed = true
-	t.startTime = new
 }
 
 // TL;DR: If you tend to hit early, set positive offset.

@@ -34,11 +34,7 @@ func NewKeyboard(keys []Key, startTime time.Time) *Keyboard {
 	}
 }
 
-func (kb *Keyboard) Now() int32 {
-	return int32(time.Since(kb.startTime).Milliseconds())
-}
-
-func (kb *Keyboard) Poll() {
+func (kb *Keyboard) Listen() {
 	go func() {
 		for {
 			select {
@@ -48,7 +44,7 @@ func (kb *Keyboard) Poll() {
 			default:
 				start := time.Now()
 
-				state := KeyboardState{kb.Now(), kb.keyStatesGetter()}
+				state := KeyboardState{kb.now(), kb.keyStatesGetter()}
 				kb.mu.Lock()
 				kb.states = append(kb.states, state)
 				kb.mu.Unlock()
@@ -61,7 +57,9 @@ func (kb *Keyboard) Poll() {
 	}()
 }
 
-func (kb Keyboard) IsPaused() bool { return kb.paused }
+func (kb *Keyboard) now() int32 {
+	return int32(time.Since(kb.startTime).Milliseconds())
+}
 
 func (kb *Keyboard) Pause() {
 	kb.mu.Lock()

@@ -148,7 +148,8 @@ func (s *ScenePlay) Update() any {
 	s.tryPlayMusic()
 
 	s.now = s.Now()
-	s.Scorer.Update(s.now, s.Keyboard.Read(s.now))
+	kbActions := s.readInput()
+	s.Scorer.Update(s.now, kbActions)
 	s.playSounds()
 	s.Dynamic = mode.NextDynamics(s.Dynamic, s.now)
 
@@ -158,6 +159,13 @@ func (s *ScenePlay) Update() any {
 	s.updateHighestNotes()
 	s.ticker()
 	return nil
+}
+
+func (s ScenePlay) readInput() []input.KeyboardAction {
+	if s.Keyboard != nil {
+		return s.KeyboardReader.Read(s.now)
+	}
+	return s.Keyboard.Read(s.now)
 }
 
 func (s *ScenePlay) tryPlayMusic() {
