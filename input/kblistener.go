@@ -7,7 +7,7 @@ import (
 
 type KeyboardListener struct {
 	KeySettings  []Key
-	StartTime    time.Time
+	startTime    time.Time
 	getKeyStates func() []bool
 	PollingRate  time.Duration
 
@@ -15,36 +15,38 @@ type KeyboardListener struct {
 	paused        bool
 	pauseChannel  chan struct{}
 	resumeChannel chan struct{}
-	pauseMutex    *sync.Mutex
+	mu            *sync.Mutex
 
 	States []KeyboardState
 	index  int
 }
 
-func NewKeyboardListener(keys []Key, bufferTime time.Duration) *KeyboardListener {
+func NewKeyboardListener(keys []Key) *KeyboardListener {
+	var bufferTime time.Duration
 	blank := KeyboardState{
 		Time:    -5000,
 		Pressed: make([]bool, len(keys)),
 	}
 	return &KeyboardListener{
 		KeySettings:  keys,
-		StartTime:    time.Now().Add(bufferTime),
+		startTime:    time.Now().Add(bufferTime),
 		getKeyStates: getKeyStatesFunc(keys),
 		PollingRate:  PollingRate,
 
 		pauseChannel:  make(chan struct{}),
 		resumeChannel: make(chan struct{}),
-		pauseMutex:    &sync.Mutex{},
+		mu:            &sync.Mutex{},
 		States:        []KeyboardState{blank},
 		// index:         1, // Suppose blank has already fetched.
 	}
 }
 
 func (kl *KeyboardListener) Now() int32 {
-	return int32(time.Since(kl.StartTime).Milliseconds())
+	return int32(time.Since(kl.startTime).Milliseconds())
 }
 
-func (kl *KeyboardListener) Fetch() (kas []KeyboardAction) {
+func (kl *KeyboardListener) Fetch(now int32) []KeyboardAction {
+	var kas []KeyboardAction
 	// last := kl.States[kl.index-1]
 	last := kl.States[kl.index]
 
@@ -67,8 +69,9 @@ func (kl *KeyboardListener) Fetch() (kas []KeyboardAction) {
 
 	// Update index
 	kl.index = len(kl.States) - 1
-	return nil
+	return kas
 }
+
 func (kl KeyboardListener) isStateChanged(state KeyboardState) bool {
 	last := kl.States[len(kl.States)-1].Pressed
 	current := state.Pressed
@@ -90,9 +93,9 @@ func (kl *KeyboardListener) Poll() {
 			default:
 				start := time.Now()
 
-				kl.pauseMutex.Lock()
+				kl.mu.Lock()
 				state := KeyboardState{kl.Now(), kl.getKeyStates()}
-				kl.pauseMutex.Unlock()
+				kl.mu.Unlock()
 
 				if kl.isStateChanged(state) {
 					kl.States = append(kl.States, state)
@@ -106,32 +109,31 @@ func (kl *KeyboardListener) Poll() {
 	}()
 }
 
-func (kl *KeyboardListener) Pause() {
-	kl.pauseMutex.Lock()
-	defer kl.pauseMutex.Unlock()
-	kl.pauseChannel <- struct{}{}
+func (kl *KeyboardListener) IsPaused() bool { return kl.paused }
 
+func (kl *KeyboardListener) Pause() {
+	kl.mu.Lock()
+	kl.pauseChannel <- struct{}{}
 	kl.pauseTime = time.Now()
 	kl.paused = true
+	kl.mu.Unlock()
 }
 
 func (kl *KeyboardListener) Resume() {
-	kl.pauseMutex.Lock()
-	defer kl.pauseMutex.Unlock()
+	kl.mu.Lock()
 	kl.resumeChannel <- struct{}{}
-
-	pauseDuration := time.Since(kl.pauseTime)
-	kl.StartTime = kl.StartTime.Add(pauseDuration)
+	elapsedTime := time.Since(kl.pauseTime)
+	kl.startTime = kl.startTime.Add(elapsedTime)
 	kl.paused = false
+	kl.mu.Unlock()
 }
-func (kl *KeyboardListener) IsPaused() bool { return kl.paused }
 
 func (kl *KeyboardListener) Output() []KeyboardState { return kl.States }
 
 func (kl *KeyboardListener) Close() {
-	kl.pauseMutex.Lock()
-	defer kl.pauseMutex.Unlock()
+	kl.mu.Lock()
 	kl.pauseChannel <- struct{}{}
 	close(kl.pauseChannel)
 	close(kl.resumeChannel)
+	kl.mu.Unlock()
 }

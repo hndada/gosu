@@ -2,12 +2,6 @@ package mode
 
 import "github.com/hndada/gosu/input"
 
-// type Scorer interface {
-// 	Check()
-// 	Judge()
-// 	Mark()
-// }
-
 type Judgment struct {
 	Window int32
 	Weight float64
@@ -36,7 +30,7 @@ func Judge(js []Judgment, e int32, a input.KeyActionType) Judgment {
 		return blank
 	case e < -miss.Window:
 		return miss
-	default: // In range
+	default: // in range
 		if a == input.Hit {
 			return Evaluate(js, e)
 		} else {
