@@ -40,6 +40,12 @@ func (t Timer) Now() int32 {
 
 func (t Timer) IsPaused() bool { return t.paused }
 
+// For changing offset set mode.
+func (t *Timer) SetMusicPlayed(new time.Time) {
+	t.musicPlayed = true
+	t.startTime = new
+}
+
 // TL;DR: If you tend to hit early, set positive offset.
 // It leads to delayed music / early start time.
 func (t *Timer) SetMusicOffset(new int32) {
@@ -64,9 +70,6 @@ func (t *Timer) SetMusicOffset(new int32) {
 	// when setting offset. Maybe the fact that osu! doesn't allow to change offset
 	// during pausing is related to this.
 }
-
-// For changing offset set mode.
-func (t *Timer) SetMusicPlayed() { t.musicPlayed = true }
 
 func (t *Timer) Pause() {
 	t.pauseTime = time.Now()

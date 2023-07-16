@@ -61,3 +61,6 @@ func FormatFromFS(fsys fs.FS) (format beep.Format, err error) {
 	})
 	return
 }
+
+// vol: [0, 1] -> Volume: [-5, 0] => [1/32, 1]
+func beepVolume(vol float64) float64 { return vol*5 - 5 }
