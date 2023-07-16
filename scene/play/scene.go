@@ -47,7 +47,7 @@ func NewScene(cfg *scene.Config, asset *scene.Asset, fsys fs.FS, name string, _m
 	if bgSprite.IsEmpty() {
 		bgSprite = asset.DefaultBackgroundSprite
 	}
-	s.drawBackground = scene.NewDrawBackgroundFunc(bgSprite, cfg.ScreenSize, &cfg.BackgroundBrightness)
+	s.drawBackground = scene.NewBackgroundDrawer(bgSprite, cfg.ScreenSize, &cfg.BackgroundBrightness)
 
 	ebiten.SetWindowTitle(s.WindowTitle())
 	// debug.SetGCPercent(0)

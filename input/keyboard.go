@@ -1,8 +1,8 @@
 package input
 
 type Keyboard struct {
-	states []KeyboardState
 	index  int // states[index] is last latest state
+	states []KeyboardState
 }
 
 type KeyboardState struct {

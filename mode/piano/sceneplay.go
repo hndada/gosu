@@ -98,8 +98,8 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	s.comboTimer = draws.NewTimer(mode.ToTick(2000), 0)
 
 	const comboBounce = 0.85
-	s.drawScore = mode.NewDrawScoreFunc(s.ScoreSprites, &s.Score, s.ScoreSpriteScale)
-	s.drawCombo = mode.NewDrawComboFunc(s.ComboSprites, &s.Combo, &s.comboTimer, s.ComboDigitGap, comboBounce)
+	s.drawScore = mode.NewScoreDrawer(s.ScoreSprites, &s.Score, s.ScoreSpriteScale)
+	s.drawCombo = mode.NewComboDrawer(s.ComboSprites, &s.Combo, &s.comboTimer, s.ComboDigitGap, comboBounce)
 	return
 }
 
