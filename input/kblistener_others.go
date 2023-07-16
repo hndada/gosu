@@ -10,8 +10,8 @@ import (
 
 const PollingRate = 12 * time.Millisecond
 
-// getKeyStatesFunc returns closure.
-func getKeyStatesFunc(keys []Key) func() []bool {
+// newKeyStatesGetter returns closure.
+func newKeyStatesGetter(keys []Key) func() []bool {
 	return func() []bool {
 		ps := make([]bool, len(ks))
 		for k, ek := range ks {
