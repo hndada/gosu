@@ -13,6 +13,7 @@ import (
 type ScenePlay struct {
 	*Config
 	*Asset
+	Mods
 	*Chart
 
 	mode.Timer
@@ -23,6 +24,7 @@ type ScenePlay struct {
 	input.KeyboardReader // for replay
 	audios.MusicPlayer
 	audios.SoundMap
+	stagedNotes []*Note // Scorer has same slice. This is for playing samples.
 
 	Scorer
 	Dynamic *mode.Dynamic
@@ -32,6 +34,11 @@ type ScenePlay struct {
 	cursor       float64
 	highestBar   *Bar
 	highestNotes []*Note
+
+	isKeyHolds    []bool // long note body, hold lightings
+	isKeyPresseds []bool // keys, key lightings, and hold lightings
+	isNoteHits    []bool // 'hit' lighting
+	worstJudgment mode.Judgment
 
 	// draw: animation or transition
 	keyTimers          []draws.Timer
@@ -49,6 +56,7 @@ type ScenePlay struct {
 // Todo: pass key count beforehand so that s.Asset can be initialized before s.Chart.
 func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, mods Mods, replay input.KeyboardReader) (s *ScenePlay, err error) {
 	s = &ScenePlay{Config: cfg}
+	s.Mods = mods
 	s.Chart, err = NewChart(s.Config, fsys, name, mods)
 	if err != nil {
 		return
@@ -76,8 +84,9 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	// It is possible for empty string to be a key of a map.
 	// https://go.dev/play/p/nn-peGAjawW
 	s.SoundMap.AppendSound("", s.DefaultHitSoundStreamer)
+	s.stagedNotes = s.newStagedNotes()
 
-	s.Scorer = NewScorer(s.Chart)
+	s.Scorer = s.newScorer()
 	s.Dynamic = s.Chart.Dynamics[0]
 
 	// draw
@@ -102,6 +111,19 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	s.drawScore = mode.NewScoreDrawer(s.ScoreSprites, &s.Score, s.ScoreSpriteScale)
 	s.drawCombo = mode.NewComboDrawer(s.ComboSprites, &s.Combo, &s.comboTimer, s.ComboDigitGap, comboBounce)
 	return
+}
+
+func (s ScenePlay) newStagedNotes() []*Note {
+	staged := make([]*Note, s.KeyCount)
+	for k := range staged {
+		for _, n := range s.Notes {
+			if k == n.Key {
+				staged[n.Key] = n
+				break
+			}
+		}
+	}
+	return staged
 }
 
 // Todo: Timer -> DrawTimer
@@ -137,21 +159,52 @@ func (s *ScenePlay) SetSpeedScale() {
 	}
 	s.speedScale = s.SpeedScale
 }
+
 func (s *ScenePlay) SetMusicOffset(offset int32) { s.Timer.SetMusicOffset(offset) }
 
-// The order of each function call is finalized.
-// tryPlayMusic(): May affect s.Now() by updating s.Timer.
-// s.Now(): Set s.now, which is used in s.Scorer.Update().
-// s.Scorer.Update(): refresh hitSoundQueue, which is used in s.playSounds().
-// s.playSounds(): use old s.Dynamic.Volume
 func (s *ScenePlay) Update() any {
+	s.now = s.Now()
 	s.tryPlayMusic()
 
-	s.now = s.Now()
-	kbActions := s.readInput()
-	s.Scorer.Update(s.now, kbActions)
-	s.playSounds()
-	s.Dynamic = mode.NextDynamics(s.Dynamic, s.now)
+	// draw
+	s.isKeyHolds = make([]bool, s.KeyCount)
+	s.isKeyPresseds = make([]bool, s.KeyCount)
+	s.isNoteHits = make([]bool, s.KeyCount)
+	s.worstJudgment = s.kool()
+	for _, ka := range s.readInput() {
+		s.Scorer.flushStagedNotes(ka.Time)
+		s.Dynamic = mode.NextDynamics(s.Dynamic, ka.Time) // for Volume
+		s.playSounds(ka)
+		js := s.Scorer.tryJudge(ka)
+
+		// draw
+		for k, a := range ka.KeyActions {
+			switch a {
+			case input.Hit:
+				s.isKeyPresseds[k] = true
+				s.keyTimers[k].Reset()
+				s.keyLightingTimers[k].Reset()
+				s.hitLightingTimers[k].Reset()
+				s.holdLightingTimers[k].Reset()
+			case input.Hold:
+				s.isKeyPresseds[k] = true
+				s.isKeyHolds[k] = true
+			}
+		}
+
+		for k, j := range js {
+			// Tail also makes hit lighting on.
+			if !j.Is(s.miss()) {
+				s.isNoteHits[k] = true
+			}
+			if s.worstJudgment.Window < j.Window {
+				s.worstJudgment = j
+			}
+		}
+
+		// Todo: Add time error meter mark
+		// Todo: Use different color for error meter of Tail
+	}
 
 	// draw
 	s.updateCursor()
@@ -161,6 +214,7 @@ func (s *ScenePlay) Update() any {
 	return nil
 }
 
+// readInput guarantees that it length is at least one.
 func (s ScenePlay) readInput() []input.KeyboardAction {
 	if s.Keyboard != nil {
 		return s.Keyboard.Read(s.now)
@@ -178,9 +232,22 @@ func (s *ScenePlay) tryPlayMusic() {
 	}
 }
 
+// No need to check whether staged note is Tail or not,
+// since Tail has no sample in advance.
+
 // Todo: set all sample volumes in advance?
-func (s ScenePlay) playSounds() {
-	for _, sample := range s.hitSoundQueue {
+func (s ScenePlay) playSounds(ka input.KeyboardAction) {
+	for k, n := range s.stagedNotes {
+		a := ka.KeyActions[k]
+		if a != input.Hit {
+			continue
+		}
+
+		sample := mode.DefaultSample
+		if n != nil {
+			sample = n.Sample
+		}
+
 		vol := sample.Volume
 		if vol == 0 {
 			vol = s.Dynamic.Volume
@@ -229,6 +296,18 @@ func (s *ScenePlay) updateHighestNotes() {
 			s.highestNotes[k] = n.Next
 		}
 	}
+}
+
+func (s *ScenePlay) ticker() {
+	for k := 0; k < s.KeyCount; k++ {
+		s.keyTimers[k].Ticker()
+		s.noteTimers[k].Ticker()
+		s.keyLightingTimers[k].Ticker()
+		s.hitLightingTimers[k].Ticker()
+		s.holdLightingTimers[k].Ticker()
+	}
+	s.judgmentTimer.Ticker()
+	s.comboTimer.Ticker()
 }
 
 func (s *ScenePlay) Pause() {

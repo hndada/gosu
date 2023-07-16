@@ -5,115 +5,77 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
-var (
-	Kool  = mode.Judgment{Window: 20, Weight: 1}
-	Cool  = mode.Judgment{Window: 40, Weight: 1}
-	Good  = mode.Judgment{Window: 80, Weight: 0.5}
-	Miss  = mode.Judgment{Window: 120, Weight: 0}
-	blank = mode.Judgment{}
+const (
+	Kool = iota
+	Cool
+	Good
+	Miss
 )
 
-var Judgments = []mode.Judgment{Kool, Cool, Good, Miss}
+func DefaultJudgments() []mode.Judgment {
+	return []mode.Judgment{
+		{Window: 20, Weight: 1},
+		{Window: 40, Weight: 1},
+		{Window: 80, Weight: 0.5},
+		{Window: 120, Weight: 0},
+	}
+}
 
 const (
 	maxFlow = 50
 	maxAcc  = 20
 )
 
+// Todo: FlowPoint
 type Scorer struct {
-	// no changes after initialization
-	Mods       Mods
-	Judgments  []mode.Judgment // May change by mods.
-	UnitScores [3]float64
+	stagedNotes []*Note // ScenePlay has same slice.
+	flow        float64
+	acc         float64
+	judgments   []mode.Judgment // May change by mods.
+	unitScores  [3]float64
 
-	// exported to result
 	Combo          int
 	Score          float64
 	JudgmentCounts []int
-	// Todo: FlowPoint
-
-	// score calculation
-	flow        float64
-	acc         float64
-	stagedNotes []*Note
-
-	// audio
-	hitSoundQueue []mode.Sample
-
-	// draw
-	worstJudgment  mode.Judgment
-	isNoteHits     []bool // for drawing hit lighting
-	lastKeyActions []input.KeyActionType
 }
 
 // It is separated from ScenePlay because it can be used for score simulation.
-func NewScorer(c *Chart) Scorer {
-	unit := 1e6 / float64(len(c.Notes))
-	js := Judgments
+func (s ScenePlay) newScorer() Scorer {
+	unit := 1e6 / float64(len(s.Notes))
+	js := DefaultJudgments()
 	unitScores := [3]float64{unit * 0.7, unit * 0.3, unit * 0.1}
 
 	return Scorer{
-		// no changes after initializations
-		Mods:       c.Mods,
-		Judgments:  js,
-		UnitScores: unitScores,
+		stagedNotes: s.stagedNotes,
+		flow:        maxFlow,
+		acc:         maxAcc,
+		judgments:   js,
+		unitScores:  unitScores,
 
-		// exported to result
 		Combo: 0,
 		// Accumulating floating-point numbers may result in imprecise values.
 		// To ensure that the maximum score is attainable,
 		// we initialize the score with a small value in advance.
 		Score:          0.01,
-		JudgmentCounts: make([]int, len(Judgments)),
-
-		// score calculation
-		flow:        maxFlow,
-		acc:         maxAcc,
-		stagedNotes: newStagedNotes(c),
-
-		// draw
-		// These are assigned in every Update.
+		JudgmentCounts: make([]int, len(js)),
 	}
 }
 
-func newStagedNotes(c *Chart) []*Note {
-	staged := make([]*Note, c.KeyCount)
-	for k := range staged {
-		for _, n := range c.Notes {
-			if k == n.Key {
-				staged[n.Key] = n
-				break
-			}
-		}
-	}
-	return staged
-}
-
-func (s *Scorer) Update(now int32, kas []input.KeyboardAction) {
-	s.hitSoundQueue = s.hitSoundQueue[:0] // flush hit sounds in the queue
-	s.worstJudgment = blank
-	s.isNoteHits = make([]bool, len(s.stagedNotes))
-	s.flushStagedNotes(now)
-
-	for _, ka := range kas {
-		s.appendHitSounds(ka)
-		s.tryJudge(ka)
-	}
-
-	// Read guarantees that it length is at least one.
-	s.lastKeyActions = kas[len(kas)-1].KeyActions
-}
+func (s Scorer) kool() mode.Judgment { return s.judgments[Kool] }
+func (s Scorer) cool() mode.Judgment { return s.judgments[Cool] }
+func (s Scorer) good() mode.Judgment { return s.judgments[Good] }
+func (s Scorer) miss() mode.Judgment { return s.judgments[Miss] }
 
 func (s *Scorer) flushStagedNotes(now int32) {
 	for k, n := range s.stagedNotes {
 		for ; n != nil; n = n.Next {
-			if e := n.Time - now; e >= -Miss.Window {
+			if e := n.Time - now; e >= -s.miss().Window {
 				break
 			}
 
 			// Tail note may remain in staged even if it is missed.
 			if !n.Marked {
-				s.mark(n, Miss)
+				s.mark(n, s.miss())
 			} else {
 				if n.Type != Tail {
 					panic("remained marked note is not Tail")
@@ -124,68 +86,53 @@ func (s *Scorer) flushStagedNotes(now int32) {
 	}
 }
 
-// if n.Type != Tail
-func (s *Scorer) appendHitSounds(ka input.KeyboardAction) {
-	for k, n := range s.stagedNotes {
-		a := ka.KeyActions[k]
-		if a != input.Hit {
-			continue
-		}
-		if n != nil {
-			s.hitSoundQueue = append(s.hitSoundQueue, n.Sample)
-		} else {
-			defaultSample := mode.Sample{Filename: "", Volume: 0.5}
-			s.hitSoundQueue = append(s.hitSoundQueue, defaultSample)
-		}
-	}
-}
-
-func (s *Scorer) tryJudge(ka input.KeyboardAction) {
+func (s *Scorer) tryJudge(ka input.KeyboardAction) []mode.Judgment {
+	js := make([]mode.Judgment, len(s.judgments)) // draw
 	for k, n := range s.stagedNotes {
 		if n == nil {
 			continue
 		}
 		e := n.Time - ka.Time
 		j := s.judge(n.Type, e, ka.KeyActions[k])
-		if j != blank { // Comparison between two structs is possible.
+		if !j.IsBlank() {
 			s.mark(n, j)
-			if !j.Is(Miss) && n.Type != Tail {
-				s.isNoteHits[k] = true
-			}
 		}
+
+		js[k] = j
 	}
+	return js
 }
 
 func (s Scorer) judge(noteType int, e int32, a input.KeyActionType) mode.Judgment {
 	switch noteType {
 	case Normal, Head:
-		return mode.Judge(s.Judgments, e, a)
+		return mode.Judge(s.judgments, e, a)
 	case Tail:
-		return judgeTail(e, a)
+		return s.judgeTail(e, a)
 	default:
 		panic("invalid note type")
 	}
 }
 
 // Either Hold or Release when Tail is not scored
-func judgeTail(e int32, a input.KeyActionType) mode.Judgment {
+func (s Scorer) judgeTail(e int32, a input.KeyActionType) mode.Judgment {
 	switch {
-	case e > Miss.Window:
+	case e > s.miss().Window:
 		if a == input.Release {
-			return Miss
+			return s.miss()
 		}
-	case e < -Miss.Window:
-		return Miss
+	case e < -s.miss().Window:
+		return s.miss()
 	default: // In range
 		if a == input.Release { // a != Hold
-			j := mode.Evaluate(Judgments, e)
-			if j.Is(Cool) { // Cool at Tail goes Kool
-				j = Kool
+			j := mode.Evaluate(s.judgments, e)
+			if j.Is(s.cool()) { // Cool at Tail goes Kool
+				j = s.kool()
 			}
 			return j
 		}
 	}
-	return blank
+	return mode.Judgment{}
 }
 
 // Todo: no getting Flow when hands off the long note
@@ -201,7 +148,7 @@ func (s *Scorer) mark(n *Note, j mode.Judgment) {
 		extra
 	)
 
-	if j == Miss {
+	if j == s.miss() {
 		s.Combo = 0
 		s.flow = 0
 	} else { // Kool, Cool, Good
@@ -211,7 +158,7 @@ func (s *Scorer) mark(n *Note, j mode.Judgment) {
 			s.flow = maxFlow
 		}
 
-		if j.Is(Good) {
+		if j.Is(s.good()) {
 			s.acc = 0
 		} else {
 			s.acc++
@@ -221,11 +168,11 @@ func (s *Scorer) mark(n *Note, j mode.Judgment) {
 		}
 	}
 
-	flowScore := s.UnitScores[flow] * (s.flow / maxFlow)
-	accScore := s.UnitScores[acc] * (s.acc / maxAcc)
+	flowScore := s.unitScores[flow] * (s.flow / maxFlow)
+	accScore := s.unitScores[acc] * (s.acc / maxAcc)
 	var extraScore float64
-	if j.Is(Kool) {
-		extraScore = s.UnitScores[extra]
+	if j.Is(s.kool()) {
+		extraScore = s.unitScores[extra]
 	}
 
 	s.Score += j.Weight * (flowScore + accScore + extraScore)
@@ -233,24 +180,18 @@ func (s *Scorer) mark(n *Note, j mode.Judgment) {
 	n.Marked = true
 
 	// when Head is missed, its tail goes missed as well.
-	if n.Type == Head && j.Is(Miss) {
-		s.mark(n.Next, Miss)
+	if n.Type == Head && j.Is(s.miss()) {
+		s.mark(n.Next, s.miss())
 	}
 
 	// Tail is flushed separately at flushStagedNotes().
 	if n.Type != Tail {
 		s.stagedNotes[n.Key] = n.Next
 	}
-
-	if s.worstJudgment.Window < j.Window {
-		s.worstJudgment = j
-	}
-	// Todo: Add time error meter mark
-	// Todo: Use different color for error meter of Tail
 }
 
 func (s *Scorer) addJugdmentCount(j mode.Judgment) {
-	for i, j2 := range s.Judgments {
+	for i, j2 := range s.judgments {
 		if j.Is(j2) {
 			s.JudgmentCounts[i]++
 			break
@@ -259,10 +200,10 @@ func (s *Scorer) addJugdmentCount(j mode.Judgment) {
 }
 
 func (s Scorer) judgmentIndex(j mode.Judgment) int {
-	for i, j2 := range s.Judgments {
+	for i, j2 := range s.judgments {
 		if j.Is(j2) {
 			return i
 		}
 	}
-	return len(Judgments) // blank
+	return len(s.judgments) // blank
 }
