@@ -25,6 +25,7 @@ type ScenePlay struct {
 	Dynamic *mode.Dynamic
 
 	*Asset
+
 	audios.MusicPlayer
 	audios.SoundMap
 
@@ -70,6 +71,7 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	s.Dynamic = s.Chart.Dynamics[0]
 
 	s.Asset = assets[s.KeyCount]
+
 	const ratio = 1
 	s.MusicPlayer, err = audios.NewMusicPlayerFromFile(fsys, s.MusicFilename, ratio)
 	if err != nil {
@@ -139,17 +141,17 @@ func (s *ScenePlay) SetSpeedScale() {
 }
 func (s *ScenePlay) SetMusicOffset(offset int32) { s.Timer.SetMusicOffset(offset) }
 
+// The order of each function call is finalized.
+// tryPlayMusic(): May affect s.Now() by updating s.Timer.
+// s.Now(): Set s.now, which is used in s.Scorer.Update().
+// s.Scorer.Update(): refresh hitSoundQueue, which is used in s.playSounds().
+// s.playSounds(): use old s.Dynamic.Volume
 func (s *ScenePlay) Update() any {
+	s.tryPlayMusic()
+
 	s.now = s.Now()
-	kas := s.Keyboard.Fetch(s.now)
-
-	s.Scorer.Update(s.now, kas)
-
-	if s.now >= *s.MusicOffset && s.now < 300 {
-		s.MusicPlayer.Play()
-	}
+	s.Scorer.Update(s.now, s.Keyboard.Fetch(s.now))
 	s.playSounds()
-
 	s.Dynamic = mode.NextDynamics(s.Dynamic, s.now)
 
 	// draw
@@ -158,6 +160,16 @@ func (s *ScenePlay) Update() any {
 	s.updateHighestNotes()
 	s.ticker()
 	return nil
+}
+
+func (s *ScenePlay) tryPlayMusic() {
+	if s.MusicPlayer.IsPlayed() {
+		return
+	}
+	if s.now >= *s.MusicOffset && s.now < 300 {
+		s.MusicPlayer.Play()
+		s.Timer.SetMusicPlayed(time.Now())
+	}
 }
 
 // Todo: set all sample volumes in advance?

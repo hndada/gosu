@@ -67,6 +67,8 @@ func (mp *MusicPlayer) Play() {
 	mp.played = true
 }
 
+func (mp MusicPlayer) IsPlayed() bool { return mp.played }
+
 func (mp MusicPlayer) CurrentTime() time.Duration {
 	return defaultSampleRate.D(mp.streamer.Position())
 }
@@ -79,9 +81,6 @@ func (mp *MusicPlayer) SetVolume(vol float64) {
 		mp.volume.Silent = false
 	}
 }
-
-// vol: [0, 1] -> Volume: [-5, 0] => [1/32, 1]
-func beepVolume(vol float64) float64 { return vol*5 - 5 }
 
 func (mp MusicPlayer) IsPaused() bool { return mp.ctrl.Paused }
 func (mp *MusicPlayer) Pause() {
