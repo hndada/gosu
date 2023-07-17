@@ -8,7 +8,6 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/assets"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
@@ -77,18 +76,18 @@ func (g *game) loadTestPiano(cfg *scene.Config, asset *scene.Asset, musicsFS fs.
 	}
 	name := "nekodex - circles! (MuangMuangE) [Hard].osu"
 
-	// dir, err := os.Getwd()
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fsys := os.DirFS(dir)
+	dir, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	fsys := os.DirFS(dir)
 
-	// replay, err := mode.NewReplay(fsys, "format/osr/testdata/circles(7k).osr", 7)
-	// if err != nil {
-	// 	panic(err)
-	// }
+	replay, err := mode.NewReplay(fsys, "format/osr/testdata/circles(7k).osr", 7)
+	if err != nil {
+		panic(err)
+	}
 
-	scenePlay, err := play.NewScene(cfg, asset, musicFS, name, mode.ModePiano, piano.Mods{}, input.KeyboardReader{})
+	scenePlay, err := play.NewScene(cfg, asset, musicFS, name, mode.ModePiano, piano.Mods{}, replay)
 	if err != nil {
 		panic(err)
 	}

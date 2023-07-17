@@ -1,14 +1,10 @@
 package scene
 
-import (
-	"github.com/hndada/gosu/draws"
-)
+import "github.com/hndada/gosu/draws"
 
 // asset.go: functions that load assets from fs.FS.
 // draw.go: functions that draw.
-func NewBackgroundDrawer(s draws.Sprite,
-	screenSize draws.Vector2, bgBrightness *float64) func(draws.Image) {
-
+func NewBackgroundDrawer(s draws.Sprite, screenSize draws.Vector2, bgBrightness *float64) func(draws.Image) {
 	return func(dst draws.Image) {
 		op := draws.Op{}
 		value := *bgBrightness
