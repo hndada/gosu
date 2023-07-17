@@ -57,7 +57,7 @@ type ScenePlay struct {
 }
 
 // Todo: pass key count beforehand so that s.Asset can be initialized before s.Chart.
-func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, mods Mods, replay input.KeyboardReader) (s *ScenePlay, err error) {
+func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, mods Mods, replay mode.Replay) (s *ScenePlay, err error) {
 	s = &ScenePlay{Config: cfg}
 	s.Mods = mods
 	s.Chart, err = NewChart(s.Config, fsys, name, mods)
@@ -70,6 +70,7 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	s.Timer = mode.NewTimer(*s.MusicOffset, wait)
 	s.now = s.Now()
 
+	replay = mode.Replay{} // temp
 	if replay.IsEmpty() {
 		keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
 		s.Keyboard = input.NewKeyboard(keys, s.StartTime())
@@ -97,7 +98,7 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	s.cursor = float64(s.now) * s.SpeedScale
 	s.highestBar = s.Chart.Bars[0]
 	// Just assigning slice will shallow copy.
-	s.highestNotes = make([]*Note, len(s.Chart.Notes))
+	s.highestNotes = make([]*Note, s.KeyCount)
 	copy(s.highestNotes, s.stagedNotes)
 
 	s.isKeyPresseds = make([]bool, s.KeyCount)
@@ -105,8 +106,6 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	// s.isJudgeOKs = make([]bool, s.KeyCount)
 	s.isLongNoteHoldings = make([]bool, s.KeyCount)
 
-	// Since timers are now updated in Draw(), their ticks would be dependent on FPS.
-	// However, so far TPS and FPS goes synced by SyncWithFPS().
 	s.drawKeyTimers = s.newDrawTimers(mode.ToTick(30), 0)
 	s.drawNoteTimers = s.newDrawTimers(0, mode.ToTick(400))
 	s.drawKeyLightingTimers = s.newDrawTimers(mode.ToTick(30), 0)
@@ -124,7 +123,7 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 func (s ScenePlay) newStagedNotes() []*Note {
 	staged := make([]*Note, s.KeyCount)
 	for k := range staged {
-		for _, n := range s.Notes {
+		for _, n := range s.Chart.Notes {
 			if k == n.Key {
 				staged[n.Key] = n
 				break
@@ -135,7 +134,7 @@ func (s ScenePlay) newStagedNotes() []*Note {
 }
 
 func (s ScenePlay) newDrawTimers(maxTick, period int) []draws.Timer {
-	timers := make([]draws.Timer, s.Chart.KeyCount)
+	timers := make([]draws.Timer, s.KeyCount)
 	for k := range timers {
 		timers[k] = draws.NewTimer(maxTick, period)
 	}
@@ -201,11 +200,11 @@ func (s *ScenePlay) Update() any {
 			case input.Hold:
 				s.isKeyPresseds[k] = true
 				s.isKeyHolds[k] = true
-				s.isLongNoteHoldings[k] = s.stagedNotes[k] != nil && s.stagedNotes[k].Type == Tail
+				isLN := s.stagedNotes[k] != nil && s.stagedNotes[k].Type == Tail
+				s.isLongNoteHoldings[k] = isLN
 			}
 		}
 
-		// draw
 		for k, j := range js {
 			// Tail also makes hit lighting on.
 			if !j.Is(s.miss()) {
@@ -234,7 +233,8 @@ func (s *ScenePlay) Update() any {
 }
 
 // readInput guarantees that length of return value is at least one.
-func (s ScenePlay) readInput() []input.KeyboardAction {
+// The receiver should be pointer for updating replay's index.
+func (s *ScenePlay) readInput() []input.KeyboardAction {
 	if s.Keyboard != nil {
 		return s.Keyboard.Read(s.now)
 	}
@@ -257,6 +257,9 @@ func (s *ScenePlay) tryPlayMusic() {
 // Todo: set all sample volumes in advance?
 func (s ScenePlay) playSounds(ka input.KeyboardAction) {
 	for k, n := range s.stagedNotes {
+		if n == nil {
+			continue
+		}
 		a := ka.KeyActions[k]
 		if a != input.Hit {
 			continue

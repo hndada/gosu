@@ -37,24 +37,25 @@ func (kb *KeyboardReader) Read(now int32) []KeyboardAction {
 		add++
 	}
 
+	count := add + 1
 	// Beware: states can manipulate kb.states.
-	states := make([]KeyboardState, add+1)
-	copy(states, kb.states[kb.index:kb.index+add+1])
+	states := make([]KeyboardState, count)
+	copy(states, kb.states[kb.index:kb.index+count])
 
 	// states should be at least two elements to get KeyboardAction.
 	// If states is empty, add dummy state.
-	if len(states) == 0 {
-		blank := make([]bool, len(kb.states[0].Presses))
-		dummy := KeyboardState{Time: now, Presses: blank}
-		states = append(states, dummy)
-	}
+	// if len(states) == 0 {
+	// 	blank := make([]bool, len(kb.states[0].Presses))
+	// 	dummy := KeyboardState{Time: now, Presses: blank}
+	// 	states = append(states, dummy)
+	// }
 
 	// Time of the last state is always 'now'.
-	currentState := KeyboardState{
-		Time:    now,
-		Presses: states[len(states)-1].Presses,
-	}
-	if len(states) <= 1 || states[len(states)-1].Time != now {
+	if states[len(states)-1].Time != now { // len(states) <= 1 ||
+		currentState := KeyboardState{
+			Time:    now,
+			Presses: states[len(states)-1].Presses,
+		}
 		states = append(states, currentState)
 	}
 

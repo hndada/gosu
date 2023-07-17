@@ -161,7 +161,7 @@ func (s ScenePlay) drawHitLightings(dst draws.Image) {
 
 func (s ScenePlay) drawHoldLightings(dst draws.Image) {
 	for k, a := range s.HoldLightingAnimations {
-		if !s.isKeyPresseds[k] {
+		if !s.isLongNoteHoldings[k] {
 			return
 		}
 		timer := s.drawHoldLightingTimers[k]
@@ -200,7 +200,6 @@ func (s ScenePlay) drawJudgment(dst draws.Image) {
 		scale = 1 - 0.25*timer.Progress(bound2, 1)
 	}
 	sprite.MultiplyScale(scale)
-	// fmt.Printf("%d %f %+v\n", index, scale, sprite)
 	sprite.Draw(dst, draws.Op{})
 }
 

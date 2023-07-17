@@ -35,7 +35,7 @@ func NewConfig() *Config {
 		MusicRoots: []string{"musics"},
 
 		ScreenSize:  draws.Vector2{X: 1600, Y: 900},
-		MusicVolume: 0.50,
+		MusicVolume: 0.30,
 		SoundVolume: 0.50,
 		MusicOffset: 0,
 

@@ -81,9 +81,10 @@ func (s *Scorer) flushStagedNotes(now int32) (missed bool) { // return: for draw
 				if n.Type != Tail {
 					panic("remained marked note is not Tail")
 				}
+				// Other notes go flushed at mark().
+				s.stagedNotes[k] = n.Next
 			}
 		}
-		s.stagedNotes[k] = n
 	}
 	return missed
 }
@@ -91,7 +92,7 @@ func (s *Scorer) flushStagedNotes(now int32) (missed bool) { // return: for draw
 func (s *Scorer) tryJudge(ka input.KeyboardAction) []mode.Judgment {
 	js := make([]mode.Judgment, len(s.stagedNotes)) // draw
 	for k, n := range s.stagedNotes {
-		if n == nil {
+		if n == nil || n.Marked {
 			continue
 		}
 		e := n.Time - ka.Time
@@ -99,7 +100,6 @@ func (s *Scorer) tryJudge(ka input.KeyboardAction) []mode.Judgment {
 		if !j.IsBlank() {
 			s.mark(n, j)
 		}
-
 		js[k] = j
 	}
 	return js
