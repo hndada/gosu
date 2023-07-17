@@ -1,14 +1,6 @@
 package piano
 
-import (
-	"fmt"
-	"strings"
-
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
-	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/mode"
-)
+import "github.com/hndada/gosu/draws"
 
 // The name 'sprite' is used for local variable of Sprite instead of 's'
 // to avoid confusion with the local variable of Scene.
@@ -82,7 +74,7 @@ func (s ScenePlay) drawLongNoteBodies(dst draws.Image) {
 			bodyFrame.Move(0, -tailY)
 
 			op := draws.Op{}
-			if tail.Marked {
+			if tail.scored {
 				op.ColorM.ChangeHSV(0, 0.3, 0.3)
 			}
 			bodyFrame.Draw(dst, op)
@@ -104,7 +96,7 @@ func (s ScenePlay) drawNotes(dst draws.Image) {
 			sprite.Move(0, -pos)
 
 			op := draws.Op{}
-			if n.Marked {
+			if n.scored {
 				op.ColorM.ChangeHSV(0, 0.3, 0.3)
 			}
 			sprite.Draw(dst, op)
@@ -211,32 +203,3 @@ func (s ScenePlay) drawJudgment(dst draws.Image) {
 // 	{51, 255, 40, 255},   // Lime
 // 	{109, 120, 134, 255}, // Gray
 // }
-
-func (s ScenePlay) DebugPrint(screen draws.Image) {
-	var b strings.Builder
-	f := fmt.Fprintf
-
-	f(&b, "FPS: %.2f\n", ebiten.ActualFPS())
-	f(&b, "TPS: %.2f\n", ebiten.ActualTPS())
-	f(&b, "Time: %.3fs/%.0fs\n", mode.ToSecond(s.now), mode.ToSecond(s.Duration()))
-	f(&b, "\n")
-	f(&b, "Score: %.0f \n", s.Score)
-	f(&b, "Combo: %d\n", s.Combo)
-	f(&b, "Flow: %.0f/%2d\n", s.flow, maxFlow)
-	f(&b, " Acc: %.0f/%2d\n", s.acc, maxAcc)
-	f(&b, "Judgment counts: %v\n", s.JudgmentCounts)
-	f(&b, "\n")
-	f(&b, "Speed scale (PageUp/Down): x%.2f (x%.2f)\n", s.SpeedScale, s.Speed())
-	f(&b, "(Exposure time: %dms)\n", s.NoteExposureDuration(s.Speed()))
-	f(&b, "\n")
-	f(&b, "Music volume (Ctrl+ Left/Right): %.0f%%\n", *s.MusicVolume*100)
-	f(&b, "Sound volume (Alt+ Left/Right): %.0f%%\n", *s.SoundVolume*100)
-	f(&b, "MusicOffset (Shift+ Left/Right): %dms\n", *s.MusicOffset)
-	f(&b, "\n")
-	f(&b, "Press ESC to back to choose a song.\n")
-	f(&b, "Press TAB to pause.\n")
-	f(&b, "Press Ctrl+ O/P to change background brightness\n")
-	f(&b, "Press F12 to print debug.\n")
-
-	ebitenutil.DebugPrint(screen.Image, b.String())
-}

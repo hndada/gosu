@@ -22,8 +22,9 @@ type Dynamic struct {
 	Highlight bool
 
 	Position float64
-	Next     *Dynamic
-	Prev     *Dynamic
+	// Next and Prev are used in each mode too, hence exported.
+	Next *Dynamic
+	Prev *Dynamic
 }
 
 func NewDynamics(f any) []*Dynamic {

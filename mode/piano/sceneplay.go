@@ -1,7 +1,9 @@
 package piano
 
 import (
+	"fmt"
 	"io/fs"
+	"strings"
 	"time"
 
 	"github.com/hndada/gosu/audios"
@@ -348,4 +350,22 @@ func (s ScenePlay) Finish() any {
 	s.MusicPlayer.Close()
 	s.Keyboard.Close()
 	return s.Scorer
+}
+
+func (s ScenePlay) DebugString() string {
+	var b strings.Builder
+	f := fmt.Fprintf
+
+	f(&b, "Time: %.3fs/%.0fs\n", mode.ToSecond(s.now), mode.ToSecond(s.Duration()))
+	f(&b, "\n")
+	f(&b, "Score: %.0f \n", s.Score)
+	f(&b, "Combo: %d\n", s.Combo)
+	f(&b, "Flow: %.0f/%2d\n", s.flow, maxFlow)
+	f(&b, " Acc: %.0f/%2d\n", s.acc, maxAcc)
+	f(&b, "Judgment counts: %v\n", s.JudgmentCounts)
+	f(&b, "\n")
+	f(&b, "Speed scale (PageUp/Down): x%.2f (x%.2f)\n", s.SpeedScale, s.Speed())
+	f(&b, "(Exposure time: %dms)\n", s.NoteExposureDuration(s.Speed()))
+	f(&b, "\n")
+	return b.String()
 }

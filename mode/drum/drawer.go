@@ -189,7 +189,7 @@ func (d RollDrawer) Draw(dst draws.Image) {
 			continue
 		}
 		op := draws.Op{}
-		switch dot.Marked {
+		switch dot.scored {
 		case DotReady:
 			op.ColorM.ScaleWithColor(DotColorReady)
 		case DotHit:
@@ -251,7 +251,7 @@ func (d NoteDrawer) Draw(dst draws.Image) {
 				}
 				op.ColorM.Scale(1, 1, 1, alpha)
 			case modeNote:
-				if n.Marked {
+				if n.scored {
 					op.ColorM.Scale(1, 1, 1, 0)
 				}
 			}

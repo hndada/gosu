@@ -38,7 +38,7 @@ type Note struct {
 	Tick     int     // The number of ticks in Roll or Shake.
 	mode.Sample
 
-	Marked  bool
+	scored  bool
 	HitTick int // The number of ticks being hit.
 	Next    *Note
 	Prev    *Note
