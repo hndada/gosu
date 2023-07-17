@@ -100,7 +100,7 @@ func (g *game) loadTestPiano(cfg *scene.Config, asset *scene.Asset, musicsFS fs.
 func (g *game) Update() error {
 	switch r := g.Scene.Update().(type) {
 	case error:
-		return r
+		return fmt.Errorf("game update error: %w", r)
 		// case "choose":
 		// 	g.Scene = scenes["choose"]
 		// case "play":
@@ -113,7 +113,7 @@ func (g *game) Update() error {
 	return nil
 }
 
-// Todo: print error using ebitenutil.DebugPrintAt
+// Todo: print error using ebitenutil.DebugPrintAt?
 func (g *game) Draw(screen *ebiten.Image) {
 	g.Scene.Draw(draws.Image{Image: screen})
 }
