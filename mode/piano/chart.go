@@ -19,11 +19,11 @@ type Chart struct {
 }
 
 // NewXxx returns *Chart, while LoadXxx doesn't.
-func NewChart(cfg *Config, fsys fs.FS, name string, mods Mods) (c *Chart, err error) {
-	c = new(Chart)
+func NewChart(cfg *Config, fsys fs.FS, name string, mods Mods) (*Chart, error) {
+	c := new(Chart)
 	f, err := fsys.Open(name)
 	if err != nil {
-		return
+		return c, fmt.Errorf("open %s: %w", name, err)
 	}
 
 	var format any
@@ -31,7 +31,7 @@ func NewChart(cfg *Config, fsys fs.FS, name string, mods Mods) (c *Chart, err er
 	case ".osu", ".OSU":
 		format, err = osu.NewFormat(f)
 		if err != nil {
-			return
+			return c, fmt.Errorf("new osu format: %w", err)
 		}
 	}
 
@@ -41,8 +41,7 @@ func NewChart(cfg *Config, fsys fs.FS, name string, mods Mods) (c *Chart, err er
 
 	c.Dynamics = mode.NewDynamics(format)
 	if len(c.Dynamics) == 0 {
-		err = fmt.Errorf("no Dynamics in the chart")
-		return
+		return c, fmt.Errorf("no Dynamics in the chart")
 	}
 	c.Notes = NewNotes(format, c.KeyCount)
 	c.Bars = NewBars(c.Dynamics, c.Duration())
@@ -50,7 +49,7 @@ func NewChart(cfg *Config, fsys fs.FS, name string, mods Mods) (c *Chart, err er
 	c.setDynamicPositions()
 	c.setNotePositions(cfg)
 	c.setBarPositions()
-	return
+	return c, nil
 }
 
 // Position is for drawing notes and bars efficiently.

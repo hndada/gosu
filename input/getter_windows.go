@@ -15,13 +15,9 @@ var (
 	procGetKeyState = moduser32.NewProc("GetKeyState")
 )
 
-const (
-	// Deprecated: whether the key was pressed after the previous call to GetKeyState
-	// wasPressed = 0x0001
-
-	isPressed = 0x8000
-)
-
+// Deprecated: whether the key was pressed after the previous call to GetKeyState
+// const wasPressed = 0x0001
+const isPressed = 0x8000
 const PollingRate = 1 * time.Millisecond
 
 // newKeyStatesGetter returns closure.

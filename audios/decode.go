@@ -1,6 +1,7 @@
 package audios
 
 import (
+	"fmt"
 	"io/fs"
 	"path/filepath"
 	"strings"
@@ -14,13 +15,20 @@ import (
 type StreamSeekCloser = beep.StreamSeekCloser
 type Format = beep.Format
 
-func DecodeFromFile(fsys fs.FS, name string) (streamer beep.StreamSeekCloser, format beep.Format, err error) {
+func DecodeFromFile(fsys fs.FS, name string) (StreamSeekCloser, Format, error) {
+	var (
+		streamer beep.StreamSeekCloser
+		format   beep.Format
+		err      error
+	)
+
 	f, err := fsys.Open(name)
 	if err != nil {
-		return
+		err = &fs.PathError{Op: "open", Path: name, Err: err}
+		return streamer, format, err
 	}
-	// No close file. Streamer will close it.
 
+	// streamer as StreamerSeekCloser will close it.
 	ext := filepath.Ext(name)
 	switch strings.ToLower(ext) {
 	case ".mp3":
@@ -30,7 +38,10 @@ func DecodeFromFile(fsys fs.FS, name string) (streamer beep.StreamSeekCloser, fo
 	case ".ogg":
 		streamer, format, err = vorbis.Decode(f)
 	}
-	return
+	if err != nil {
+		err = fmt.Errorf("decode %s: %w", name, err)
+	}
+	return streamer, format, err
 }
 
 func isAudioFile(name string) bool {
@@ -44,7 +55,11 @@ func isAudioFile(name string) bool {
 
 // FormatFromFS returns the format of the first audio file in the file system.
 // It is possible that there is no audio file in file system.
-func FormatFromFS(fsys fs.FS) (format beep.Format, err error) {
+func FormatFromFS(fsys fs.FS) (Format, error) {
+	var (
+		format beep.Format
+		err    error
+	)
 	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -59,7 +74,10 @@ func FormatFromFS(fsys fs.FS) (format beep.Format, err error) {
 		}
 		return filepath.SkipDir // Skip further processing of directories
 	})
-	return
+	if err != nil {
+		err = fmt.Errorf("format from fs: %w", err)
+	}
+	return format, err
 }
 
 // vol: [0, 1] -> Volume: [-5, 0] => [1/32, 1]
