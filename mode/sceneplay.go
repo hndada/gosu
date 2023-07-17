@@ -6,27 +6,24 @@ import (
 
 // Interface is also used when it uses the unknown struct.
 type ScenePlay interface {
-	// get
 	ChartHeader() ChartHeader
 	WindowTitle() string
-	Now() int32 // int32: Maximum duration is around 24 days.
+	// int32 is enough for dealing with scene time in millisecond.
+	// Maximum duration with int32 is around 24 days.
+	Now() int32
 	Speed() float64
 	IsPaused() bool
+	DebugString() string
 
-	// set
 	SetMusicVolume(float64)
 	SetSpeedScale()
 	SetMusicOffset(int32)
 
-	// life cycle
 	Update() any
 	Pause()
 	Resume()
 	Finish() any
-
-	// draw
 	Draw(screen draws.Image)
-	DebugString() string
 }
 
 func NextDynamics(d *Dynamic, now int32) *Dynamic {

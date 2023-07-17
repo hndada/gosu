@@ -107,6 +107,8 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	s.isKeyHolds = make([]bool, s.KeyCount)
 	// s.isJudgeOKs = make([]bool, s.KeyCount)
 	s.isLongNoteHoldings = make([]bool, s.KeyCount)
+	// s.kool() is just for placeholder.
+	s.worstJudgment = s.kool()
 
 	s.drawKeyTimers = s.newDrawTimers(mode.ToTick(30), 0)
 	s.drawNoteTimers = s.newDrawTimers(0, mode.ToTick(400))

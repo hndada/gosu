@@ -142,7 +142,7 @@ func (s ScenePlay) drawHitLightings(dst draws.Image) {
 	for k, a := range s.HitLightingAnimations {
 		timer := s.drawHitLightingTimers[k]
 		if timer.IsDone() {
-			return
+			continue
 		}
 		op := draws.Op{}
 		// opaque := UserSettings.HitLightingOpacity * (1 - d.Progress(0.75, 1))
@@ -154,7 +154,7 @@ func (s ScenePlay) drawHitLightings(dst draws.Image) {
 func (s ScenePlay) drawHoldLightings(dst draws.Image) {
 	for k, a := range s.HoldLightingAnimations {
 		if !s.isLongNoteHoldings[k] {
-			return
+			continue
 		}
 		timer := s.drawHoldLightingTimers[k]
 		op := draws.Op{}
@@ -168,10 +168,9 @@ func (s ScenePlay) drawJudgment(dst draws.Image) {
 	if timer.IsDone() {
 		return
 	}
-	if s.worstJudgment.IsBlank() {
-		return
-	}
 
+	// worstJudgment is guaranteed not to be blank,
+	// hence no panicked by index out of range.
 	index := s.judgmentIndex(s.worstJudgment)
 	sprite := timer.Frame(s.JudgmentAnimations[index])
 
