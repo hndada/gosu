@@ -85,7 +85,7 @@ func (asset *Asset) setComboSprites(cfg *Config, fsys fs.FS) {
 func (asset *Asset) setJudgmentAnimations(cfg *Config, fsys fs.FS) {
 	var anims [4]draws.Animation
 	for i, name := range []string{"kool", "cool", "good", "miss"} {
-		anim := draws.NewAnimationFromFile(fsys, fmt.Sprintf("piano/judgment/%s", name))
+		anim := draws.NewAnimationFromFile(fsys, fmt.Sprintf("piano/judgment/%s.png", name))
 		for frame := range anim {
 			anim[frame].MultiplyScale(cfg.JudgmentSpriteScale)
 			anim[frame].Locate(cfg.FieldPosition, cfg.JudgmentPosition, draws.CenterMiddle)

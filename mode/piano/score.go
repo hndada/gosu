@@ -66,7 +66,7 @@ func (s Scorer) cool() mode.Judgment { return s.judgments[Cool] }
 func (s Scorer) good() mode.Judgment { return s.judgments[Good] }
 func (s Scorer) miss() mode.Judgment { return s.judgments[Miss] }
 
-func (s *Scorer) flushStagedNotes(now int32) {
+func (s *Scorer) flushStagedNotes(now int32) (missed bool) { // return: for draw
 	for k, n := range s.stagedNotes {
 		for ; n != nil; n = n.Next {
 			if e := n.Time - now; e >= -s.miss().Window {
@@ -76,6 +76,7 @@ func (s *Scorer) flushStagedNotes(now int32) {
 			// Tail note may remain in staged even if it is missed.
 			if !n.Marked {
 				s.mark(n, s.miss())
+				missed = true
 			} else {
 				if n.Type != Tail {
 					panic("remained marked note is not Tail")
@@ -84,10 +85,11 @@ func (s *Scorer) flushStagedNotes(now int32) {
 		}
 		s.stagedNotes[k] = n
 	}
+	return missed
 }
 
 func (s *Scorer) tryJudge(ka input.KeyboardAction) []mode.Judgment {
-	js := make([]mode.Judgment, len(s.judgments)) // draw
+	js := make([]mode.Judgment, len(s.stagedNotes)) // draw
 	for k, n := range s.stagedNotes {
 		if n == nil {
 			continue

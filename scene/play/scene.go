@@ -2,6 +2,7 @@ package play
 
 import (
 	"io/fs"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
@@ -82,7 +83,8 @@ func (s *Scene) Update() any {
 		}
 	}
 	if inpututil.IsKeyJustPressed(input.KeyEscape) {
-		return s.ScenePlay.Finish()
+		// return s.ScenePlay.Finish()
+		os.Exit(1)
 	}
 
 	// draw

@@ -2,6 +2,7 @@ package piano
 
 import (
 	"fmt"
+	"image/color"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -68,7 +69,7 @@ func (s ScenePlay) drawLongNoteBodies(dst draws.Image) {
 			bodyFrame := bodyAnim[0]
 
 			if s.isKeyHolds[k] { // || s.stagedNotes[k].Type == Tail
-				bodyFrame = s.noteTimers[k].Frame(bodyAnim)
+				bodyFrame = s.drawNoteTimers[k].Frame(bodyAnim)
 			}
 
 			length := tail.Position - head.Position
@@ -99,7 +100,7 @@ func (s ScenePlay) drawNotes(dst draws.Image) {
 			// if n.Type == Tail {
 			// 	s.drawLongNoteBody(dst, n)
 			// }
-			sprite := s.noteTimers[k].Frame(s.KeyKindNoteTypeAnimations[k][n.Type])
+			sprite := s.drawNoteTimers[k].Frame(s.KeyKindNoteTypeAnimations[k][n.Type])
 			pos := n.Position - s.cursor
 			sprite.Move(0, -pos)
 
@@ -123,7 +124,7 @@ func (s ScenePlay) drawNotes(dst draws.Image) {
 
 func (s ScenePlay) drawKeys(dst draws.Image) {
 	for k, sprites := range s.KeySprites {
-		timer := s.keyTimers[k]
+		timer := s.drawKeyTimers[k]
 		index := keyUp
 		// drawKeys draws for a while even when pressed off very shortly.
 		if s.isKeyPresseds[k] || timer.Tick < timer.MaxTick {
@@ -136,7 +137,7 @@ func (s ScenePlay) drawKeys(dst draws.Image) {
 // drawKeyLightings draws for a while even when pressed off very shortly.
 func (s ScenePlay) drawKeyLightings(dst draws.Image) {
 	for k, sprite := range s.KeyLightingSprites {
-		timer := s.keyLightingTimers[k]
+		timer := s.drawKeyLightingTimers[k]
 		if s.isKeyPresseds[k] || timer.Tick < timer.MaxTick {
 			op := draws.Op{}
 			op.ColorM.ScaleWithColor(s.KeyLightingColors[k])
@@ -148,7 +149,7 @@ func (s ScenePlay) drawKeyLightings(dst draws.Image) {
 // drawHitLightings draws when Normal is Hit or Tail is Release.
 func (s ScenePlay) drawHitLightings(dst draws.Image) {
 	for k, a := range s.HitLightingAnimations {
-		timer := s.hitLightingTimers[k]
+		timer := s.drawHitLightingTimers[k]
 		if timer.IsDone() {
 			return
 		}
@@ -164,7 +165,7 @@ func (s ScenePlay) drawHoldLightings(dst draws.Image) {
 		if !s.isKeyPresseds[k] {
 			return
 		}
-		timer := s.holdLightingTimers[k]
+		timer := s.drawHoldLightingTimers[k]
 		op := draws.Op{}
 		op.ColorM.Scale(1, 1, 1, s.HoldLightingOpacity)
 		timer.Frame(a).Draw(dst, op)
@@ -172,13 +173,16 @@ func (s ScenePlay) drawHoldLightings(dst draws.Image) {
 }
 
 func (s ScenePlay) drawJudgment(dst draws.Image) {
-	if !s.worstJudgment.IsBlank() {
-		s.judgmentTimer.Reset()
-	}
-	timer := s.judgmentTimer
+	timer := s.drawJudgmentTimer
 	if timer.IsDone() {
 		return
 	}
+	if s.worstJudgment.IsBlank() {
+		return
+	}
+
+	index := s.judgmentIndex(s.worstJudgment)
+	sprite := timer.Frame(s.JudgmentAnimations[index])
 
 	age := timer.Age()
 	const (
@@ -196,24 +200,19 @@ func (s ScenePlay) drawJudgment(dst draws.Image) {
 	if age >= bound2 {
 		scale = 1 - 0.25*timer.Progress(bound2, 1)
 	}
-
-	index := s.judgmentIndex(s.worstJudgment)
-	sprite := timer.Frame(s.JudgmentAnimations[index])
 	sprite.MultiplyScale(scale)
+	// fmt.Printf("%d %f %+v\n", index, scale, sprite)
 	sprite.Draw(dst, draws.Op{})
 }
 
-// TimeErrorMeter
-// var (
-// 	ColorKool = color.NRGBA{0, 170, 242, 255}   // Blue
-// 	ColorCool = color.NRGBA{85, 251, 255, 255}  // Skyblue
-// 	ColorGood = color.NRGBA{51, 255, 40, 255}   // Lime
-// 	ColorBad  = color.NRGBA{244, 177, 0, 255}   // Yellow
-// 	ColorMiss = color.NRGBA{109, 120, 134, 255} // Gray
-// )
-
-// var JudgmentColors = []color.NRGBA{
-// mode.ColorKool, mode.ColorCool, mode.ColorGood, mode.ColorBad, mode.ColorMiss}
+// for TimeErrorMeter
+// {244, 177, 0, 255},   // Yellow
+var judgmentColors = []color.NRGBA{
+	{0, 170, 242, 255},   // Blue
+	{85, 251, 255, 255},  // Skyblue
+	{51, 255, 40, 255},   // Lime
+	{109, 120, 134, 255}, // Gray
+}
 
 func (s ScenePlay) DebugPrint(screen draws.Image) {
 	var b strings.Builder

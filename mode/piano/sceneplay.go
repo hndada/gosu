@@ -24,7 +24,9 @@ type ScenePlay struct {
 	input.KeyboardReader // for replay
 	audios.MusicPlayer
 	audios.SoundMap
-	stagedNotes []*Note // Scorer has same slice. This is for playing samples.
+	// Scorer also has stagedNotes.
+	// ScenePlay.stagedNotes is for playing samples.
+	stagedNotes []*Note
 
 	Scorer
 	Dynamic *mode.Dynamic
@@ -35,19 +37,19 @@ type ScenePlay struct {
 	highestBar   *Bar
 	highestNotes []*Note
 
-	isKeyHolds    []bool // long note body, hold lightings
-	isKeyPresseds []bool // keys, key lightings, and hold lightings
-	isNoteHits    []bool // 'hit' lighting
+	isKeyHolds    []bool // for long note body, hold lightings
+	isKeyPresseds []bool // for keys, key lightings, and hold lightings
+	isJudgeOK     []bool // for 'hit' lighting
 	worstJudgment mode.Judgment
 
 	// draw: animation or transition
-	keyTimers          []draws.Timer
-	noteTimers         []draws.Timer
-	keyLightingTimers  []draws.Timer
-	hitLightingTimers  []draws.Timer
-	holdLightingTimers []draws.Timer
-	judgmentTimer      draws.Timer
-	comboTimer         draws.Timer
+	drawKeyTimers          []draws.Timer
+	drawNoteTimers         []draws.Timer
+	drawKeyLightingTimers  []draws.Timer
+	drawHitLightingTimers  []draws.Timer
+	drawHoldLightingTimers []draws.Timer
+	drawJudgmentTimer      draws.Timer
+	drawComboTimer         draws.Timer
 
 	drawScore func(draws.Image)
 	drawCombo func(draws.Image)
@@ -99,17 +101,17 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 
 	// Since timers are now updated in Draw(), their ticks would be dependent on FPS.
 	// However, so far TPS and FPS goes synced by SyncWithFPS().
-	s.keyTimers = s.newTimers(mode.ToTick(30), 0)
-	s.noteTimers = s.newTimers(0, mode.ToTick(400))
-	s.keyLightingTimers = s.newTimers(mode.ToTick(30), 0)
-	s.hitLightingTimers = s.newTimers(mode.ToTick(150), mode.ToTick(150))
-	s.holdLightingTimers = s.newTimers(0, mode.ToTick(300))
-	s.judgmentTimer = draws.NewTimer(mode.ToTick(250), mode.ToTick(40))
-	s.comboTimer = draws.NewTimer(mode.ToTick(2000), 0)
+	s.drawKeyTimers = s.newDrawTimers(mode.ToTick(30), 0)
+	s.drawNoteTimers = s.newDrawTimers(0, mode.ToTick(400))
+	s.drawKeyLightingTimers = s.newDrawTimers(mode.ToTick(30), 0)
+	s.drawHitLightingTimers = s.newDrawTimers(mode.ToTick(150), mode.ToTick(150))
+	s.drawHoldLightingTimers = s.newDrawTimers(0, mode.ToTick(300))
+	s.drawJudgmentTimer = draws.NewTimer(mode.ToTick(250), mode.ToTick(40))
+	s.drawComboTimer = draws.NewTimer(mode.ToTick(2000), 0)
 
 	const comboBounce = 0.85
 	s.drawScore = mode.NewScoreDrawer(s.ScoreSprites, &s.Score, s.ScoreSpriteScale)
-	s.drawCombo = mode.NewComboDrawer(s.ComboSprites, &s.Combo, &s.comboTimer, s.ComboDigitGap, comboBounce)
+	s.drawCombo = mode.NewComboDrawer(s.ComboSprites, &s.Combo, &s.drawComboTimer, s.ComboDigitGap, comboBounce)
 	return
 }
 
@@ -126,8 +128,7 @@ func (s ScenePlay) newStagedNotes() []*Note {
 	return staged
 }
 
-// Todo: Timer -> DrawTimer
-func (s ScenePlay) newTimers(maxTick, period int) []draws.Timer {
+func (s ScenePlay) newDrawTimers(maxTick, period int) []draws.Timer {
 	timers := make([]draws.Timer, s.Chart.KeyCount)
 	for k := range timers {
 		timers[k] = draws.NewTimer(maxTick, period)
@@ -169,10 +170,16 @@ func (s *ScenePlay) Update() any {
 	// draw
 	s.isKeyHolds = make([]bool, s.KeyCount)
 	s.isKeyPresseds = make([]bool, s.KeyCount)
-	s.isNoteHits = make([]bool, s.KeyCount)
-	s.worstJudgment = s.kool()
+	s.isJudgeOK = make([]bool, s.KeyCount)
+	var worstJudgment mode.Judgment
+	s.worstJudgment = mode.Judgment{}
+
 	for _, ka := range s.readInput() {
-		s.Scorer.flushStagedNotes(ka.Time)
+		missed := s.Scorer.flushStagedNotes(ka.Time)
+		if missed {
+			worstJudgment = s.miss()
+		}
+
 		s.Dynamic = mode.NextDynamics(s.Dynamic, ka.Time) // for Volume
 		s.playSounds(ka)
 		js := s.Scorer.tryJudge(ka)
@@ -182,23 +189,28 @@ func (s *ScenePlay) Update() any {
 			switch a {
 			case input.Hit:
 				s.isKeyPresseds[k] = true
-				s.keyTimers[k].Reset()
-				s.keyLightingTimers[k].Reset()
-				s.hitLightingTimers[k].Reset()
-				s.holdLightingTimers[k].Reset()
+				s.drawKeyTimers[k].Reset()
+				s.drawKeyLightingTimers[k].Reset()
+				s.drawHitLightingTimers[k].Reset()
+				s.drawHoldLightingTimers[k].Reset()
 			case input.Hold:
 				s.isKeyPresseds[k] = true
 				s.isKeyHolds[k] = true
 			}
 		}
 
+		// draw
 		for k, j := range js {
 			// Tail also makes hit lighting on.
 			if !j.Is(s.miss()) {
-				s.isNoteHits[k] = true
+				s.isJudgeOK[k] = true
 			}
-			if s.worstJudgment.Window < j.Window {
+			if s.worstJudgment.Window < j.Window { // j is worse
 				s.worstJudgment = j
+			}
+			if !worstJudgment.IsBlank() {
+				s.worstJudgment = worstJudgment
+				s.drawJudgmentTimer.Reset()
 			}
 		}
 
@@ -210,7 +222,7 @@ func (s *ScenePlay) Update() any {
 	s.updateCursor()
 	s.updateHighestBar()
 	s.updateHighestNotes()
-	s.ticker()
+	s.tickerDrawTimers()
 	return nil
 }
 
@@ -298,16 +310,16 @@ func (s *ScenePlay) updateHighestNotes() {
 	}
 }
 
-func (s *ScenePlay) ticker() {
+func (s *ScenePlay) tickerDrawTimers() {
 	for k := 0; k < s.KeyCount; k++ {
-		s.keyTimers[k].Ticker()
-		s.noteTimers[k].Ticker()
-		s.keyLightingTimers[k].Ticker()
-		s.hitLightingTimers[k].Ticker()
-		s.holdLightingTimers[k].Ticker()
+		s.drawKeyTimers[k].Ticker()
+		s.drawNoteTimers[k].Ticker()
+		s.drawKeyLightingTimers[k].Ticker()
+		s.drawHitLightingTimers[k].Ticker()
+		s.drawHoldLightingTimers[k].Ticker()
 	}
-	s.judgmentTimer.Ticker()
-	s.comboTimer.Ticker()
+	s.drawJudgmentTimer.Ticker()
+	s.drawComboTimer.Ticker()
 }
 
 func (s *ScenePlay) Pause() {
