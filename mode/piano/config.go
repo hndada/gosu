@@ -87,7 +87,7 @@ func NewConfig() *Config {
 			{255, 0, 0, 64},     // Tip: red
 		},
 		HitLightingOpacity:  0.5,
-		HoldLightingOpacity: 0.8,
+		HoldLightingOpacity: 1.5,
 
 		ScoreSpriteScale:    0.65,
 		ComboSpriteScale:    0.75,

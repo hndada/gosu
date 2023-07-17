@@ -10,6 +10,7 @@ type Timer struct {
 	Period  int
 }
 
+// All timer starts at maxTick, hence IsDone() is true at the beginning.
 func NewTimer(maxTick, period int) Timer {
 	return Timer{
 		Tick:    maxTick,
@@ -48,6 +49,7 @@ func (t Timer) Progress(start, end float64) float64 {
 	}
 	return float64(t.Age()-start) / float64(end-start)
 }
+
 func (t Timer) IsDone() bool { return t.MaxTick != 0 && t.Tick == t.MaxTick }
 
 // For Animation.
