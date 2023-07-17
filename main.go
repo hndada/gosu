@@ -7,7 +7,6 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/assets"
-	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
@@ -28,8 +27,7 @@ func init() {
 	ebiten.SetVsyncEnabled(false)
 	// issue: TPS becomes literally -1 when setting with ebiten.SyncWithFPS.
 	// ebiten.SetTPS(ebiten.SyncWithFPS)
-	ebiten.SetTPS(480)
-	ctrl.UpdateTPS()
+	scene.SetTPS(480)
 }
 
 // All structs and variables in cmd/* package should be unexported.

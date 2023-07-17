@@ -1,7 +1,6 @@
 package ctrl
 
 import (
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/input"
 )
@@ -14,8 +13,8 @@ var (
 var lastTPS float64 = 60 // default value of ebiten
 
 // https://go.dev/play/p/NgTdSwjyCXC
-func UpdateTPS() {
-	newTPS := float64(ebiten.TPS())
+func UpdateTPS(tps float64) {
+	newTPS := float64(tps)
 	scale := newTPS / lastTPS
 	shortTicks = int(float64(shortTicks) * scale)
 	longTicks = int(float64(longTicks) * scale)
@@ -43,17 +42,17 @@ func (kh *KeyHandler) Update() (fired bool) {
 		return
 	}
 
-	if kh.Modifier != input.KeyNone && !ebiten.IsKeyPressed(kh.Modifier) {
+	if kh.Modifier != input.KeyNone && !input.IsKeyPressed(kh.Modifier) {
 		kh.reset()
 		return
 	}
 
-	if kh.holdIndex > none && !ebiten.IsKeyPressed(kh.Keys[kh.holdIndex]) {
+	if kh.holdIndex > none && !input.IsKeyPressed(kh.Keys[kh.holdIndex]) {
 		kh.reset()
 	}
 
 	for i, k := range kh.Keys {
-		if ebiten.IsKeyPressed(k) {
+		if input.IsKeyPressed(k) {
 			kh.holdIndex = i
 			break
 		}

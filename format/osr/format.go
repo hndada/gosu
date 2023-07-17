@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/hex"
-	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"strconv"
@@ -150,7 +150,7 @@ func readString(r *bytes.Reader, dst *string) error {
 		*dst = string(b)
 		return nil
 	default:
-		return errors.New("invalid string header")
+		return fmt.Errorf("invalid string type: %x", first)
 	}
 }
 
@@ -168,7 +168,7 @@ func readReplayData(r io.Reader, dst *[]Action) error {
 		return err
 	}
 	if int32(n) != length {
-		return errors.New("replay data length mismatch")
+		return fmt.Errorf("failed to read replay data: %d != %d", n, length)
 	}
 
 	r2, err := lzma.NewReader(bytes.NewReader(compressedData))
@@ -186,22 +186,22 @@ func readReplayData(r io.Reader, dst *[]Action) error {
 		var a Action
 		vs := strings.Split(f, "|")
 		if len(vs) != 4 {
-			return errors.New("action data length is not 4")
+			return fmt.Errorf("invalid replay data: %s", f)
 		}
 		if a.W, err = strconv.ParseInt(vs[0], 10, 64); err != nil {
-			return errors.New("failed to parse w")
+			return fmt.Errorf("failed to parse w: %s", f)
 		}
 		// if a.W == -12345 {
 		// 	continue
 		// }
 		if a.X, err = strconv.ParseFloat(vs[1], 64); err != nil {
-			return errors.New("failed to parse x")
+			return fmt.Errorf("failed to parse x: %s", f)
 		}
 		if a.Y, err = strconv.ParseFloat(vs[2], 64); err != nil {
-			return errors.New("failed to parse y")
+			return fmt.Errorf("failed to parse y: %s", f)
 		}
 		if a.Z, err = strconv.ParseInt(vs[3], 10, 64); err != nil {
-			return errors.New("failed to parse z")
+			return fmt.Errorf("failed to parse z: %s", f)
 		}
 		actions = append(actions, a)
 	}

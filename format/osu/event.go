@@ -2,6 +2,7 @@ package osu
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -31,7 +32,7 @@ func newEvent(line string) (ev Event, err error) {
 	switch ev.Type {
 	case "Background", "Video":
 		if len(vs) < 5 {
-			return ev, errors.New("invalid event: not enough length")
+			return ev, fmt.Errorf("invalid event: not enough length")
 		}
 		if ev.StartTime, err = parseInt(vs[1]); err != nil {
 			return
