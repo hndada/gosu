@@ -37,10 +37,11 @@ type ScenePlay struct {
 	highestBar   *Bar
 	highestNotes []*Note
 
-	isKeyHolds    []bool // for long note body, hold lightings
 	isKeyPresseds []bool // for keys, key lightings, and hold lightings
-	isJudgeOK     []bool // for 'hit' lighting
-	worstJudgment mode.Judgment
+	isKeyHolds    []bool // for long note body, hold lightings
+	// isJudgeOKs         []bool // for 'hit' lighting
+	isLongNoteHoldings []bool // for long note body
+	worstJudgment      mode.Judgment
 
 	// draw: animation or transition
 	drawKeyTimers          []draws.Timer
@@ -98,6 +99,11 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, m
 	// Just assigning slice will shallow copy.
 	s.highestNotes = make([]*Note, len(s.Chart.Notes))
 	copy(s.highestNotes, s.stagedNotes)
+
+	s.isKeyPresseds = make([]bool, s.KeyCount)
+	s.isKeyHolds = make([]bool, s.KeyCount)
+	// s.isJudgeOKs = make([]bool, s.KeyCount)
+	s.isLongNoteHoldings = make([]bool, s.KeyCount)
 
 	// Since timers are now updated in Draw(), their ticks would be dependent on FPS.
 	// However, so far TPS and FPS goes synced by SyncWithFPS().
@@ -167,14 +173,9 @@ func (s *ScenePlay) Update() any {
 	s.now = s.Now()
 	s.tryPlayMusic()
 
-	// draw
-	s.isKeyHolds = make([]bool, s.KeyCount)
-	s.isKeyPresseds = make([]bool, s.KeyCount)
-	s.isJudgeOK = make([]bool, s.KeyCount)
 	var worstJudgment mode.Judgment
-	s.worstJudgment = mode.Judgment{}
-
-	for _, ka := range s.readInput() {
+	kas := s.readInput()
+	for _, ka := range kas {
 		missed := s.Scorer.flushStagedNotes(ka.Time)
 		if missed {
 			worstJudgment = s.miss()
@@ -187,6 +188,10 @@ func (s *ScenePlay) Update() any {
 		// draw
 		for k, a := range ka.KeyActions {
 			switch a {
+			case input.Idle, input.Release:
+				s.isKeyPresseds[k] = false
+				s.isKeyHolds[k] = false
+				s.isLongNoteHoldings[k] = false
 			case input.Hit:
 				s.isKeyPresseds[k] = true
 				s.drawKeyTimers[k].Reset()
@@ -196,6 +201,7 @@ func (s *ScenePlay) Update() any {
 			case input.Hold:
 				s.isKeyPresseds[k] = true
 				s.isKeyHolds[k] = true
+				s.isLongNoteHoldings[k] = s.stagedNotes[k] != nil && s.stagedNotes[k].Type == Tail
 			}
 		}
 
@@ -203,17 +209,18 @@ func (s *ScenePlay) Update() any {
 		for k, j := range js {
 			// Tail also makes hit lighting on.
 			if !j.Is(s.miss()) {
-				s.isJudgeOK[k] = true
+				// s.isJudgeOKs[k] = true
+				s.drawHitLightingTimers[k].Reset()
 			}
-			if s.worstJudgment.Window < j.Window { // j is worse
-				s.worstJudgment = j
-			}
-			if !worstJudgment.IsBlank() {
-				s.worstJudgment = worstJudgment
-				s.drawJudgmentTimer.Reset()
+			if worstJudgment.Window < j.Window { // j is worse
+				worstJudgment = j
 			}
 		}
 
+		if !worstJudgment.IsBlank() {
+			s.worstJudgment = worstJudgment
+			s.drawJudgmentTimer.Reset()
+		}
 		// Todo: Add time error meter mark
 		// Todo: Use different color for error meter of Tail
 	}
@@ -226,7 +233,7 @@ func (s *ScenePlay) Update() any {
 	return nil
 }
 
-// readInput guarantees that it length is at least one.
+// readInput guarantees that length of return value is at least one.
 func (s ScenePlay) readInput() []input.KeyboardAction {
 	if s.Keyboard != nil {
 		return s.Keyboard.Read(s.now)

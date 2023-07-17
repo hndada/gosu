@@ -1,16 +1,13 @@
 package mode
 
-import (
-	"time"
-
-	"github.com/hajimehoshi/ebiten/v2"
-)
+import "time"
 
 // TPS affects only on Update(), not on Draw().
-var TPS = float64(ebiten.TPS())
+var tps = float64(60) // ebitengine's default TPS
 
-func ToTick(ms int32) int       { return int(TPS * float64(ms) / 1000) }
-func ToTime(tick int) int32     { return int32(float64(tick) / TPS * 1000) }
+func SetTPS(new float64)        { tps = new }
+func ToTick(ms int32) int       { return int(tps * float64(ms) / 1000) }
+func ToTime(tick int) int32     { return int32(float64(tick) / tps * 1000) }
 func ToSecond(ms int32) float64 { return float64(ms) / 1000 }
 
 type Timer struct {

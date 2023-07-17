@@ -1,6 +1,7 @@
 package audios
 
 import (
+	"fmt"
 	"io/fs"
 	"time"
 
@@ -54,7 +55,7 @@ func NewMusicPlayer(f beep.StreamSeekCloser, format beep.Format, ratio float64) 
 func NewMusicPlayerFromFile(fsys fs.FS, name string, ratio float64) (MusicPlayer, error) {
 	f, format, err := DecodeFromFile(fsys, name)
 	if err != nil {
-		return MusicPlayer{}, err
+		return MusicPlayer{}, fmt.Errorf("decode %s: %w", name, err)
 	}
 	return NewMusicPlayer(f, format, ratio), nil
 }

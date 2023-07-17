@@ -2,6 +2,8 @@ package input
 
 import "github.com/hajimehoshi/ebiten/v2"
 
+var IsKeyPressed = ebiten.IsKeyPressed
+
 // type Key int
 type Key = ebiten.Key
 

@@ -3,7 +3,10 @@ package scene
 import (
 	"strings"
 
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
 )
 
@@ -70,4 +73,10 @@ func (c *Config) NormalizeMusicRoots() {
 		name = strings.TrimPrefix(name, "\\")
 		c.MusicRoots[i] = name
 	}
+}
+
+func SetTPS(tps float64) {
+	ebiten.SetTPS(int(tps))
+	ctrl.UpdateTPS(tps)
+	mode.SetTPS(tps)
 }
