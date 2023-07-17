@@ -24,7 +24,7 @@ type Note struct {
 	Position float64 // Scaled x or y value.
 	Next     *Note
 	Prev     *Note // For accessing to Head from Tail.
-	Marked   bool
+	scored   bool
 
 	Strain float64 // Strain is for calculating difficulty.
 }

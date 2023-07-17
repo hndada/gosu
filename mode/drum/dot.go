@@ -10,7 +10,7 @@ const (
 type Dot struct {
 	Floater
 	// Showtime int64 // Dot will appear at Showtime.
-	Marked int
+	scored int
 	Next   *Dot
 	Prev   *Dot
 }

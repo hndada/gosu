@@ -26,7 +26,7 @@ type ScenePlay interface {
 
 	// draw
 	Draw(screen draws.Image)
-	DebugPrint(screen draws.Image)
+	DebugString() string
 }
 
 func NextDynamics(d *Dynamic, now int32) *Dynamic {

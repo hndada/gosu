@@ -74,7 +74,7 @@ func (s *Scorer) flushStagedNotes(now int32) (missed bool) { // return: for draw
 			}
 
 			// Tail note may remain in staged even if it is missed.
-			if !n.Marked {
+			if !n.scored {
 				s.mark(n, s.miss())
 				missed = true
 			} else {
@@ -92,7 +92,7 @@ func (s *Scorer) flushStagedNotes(now int32) (missed bool) { // return: for draw
 func (s *Scorer) tryJudge(ka input.KeyboardAction) []mode.Judgment {
 	js := make([]mode.Judgment, len(s.stagedNotes)) // draw
 	for k, n := range s.stagedNotes {
-		if n == nil || n.Marked {
+		if n == nil || n.scored {
 			continue
 		}
 		e := n.Time - ka.Time
@@ -179,7 +179,7 @@ func (s *Scorer) mark(n *Note, j mode.Judgment) {
 
 	s.Score += j.Weight * (flowScore + accScore + extraScore)
 	s.addJugdmentCount(j)
-	n.Marked = true
+	n.scored = true
 
 	// when Head is missed, its tail goes missed as well.
 	if n.Type == Head && j.Is(s.miss()) {

@@ -135,7 +135,7 @@ func (s *ScenePlay) MarkNote(n *Note, j mode.Judgment, big bool) {
 	case Miss.Window:
 		s.JudgmentCounts[Misses]++
 	}
-	n.Marked = true
+	n.scored = true
 	s.StagedNote = s.StagedNote.Next
 }
 func VerdictDot(dot *Dot, actions [2]int, td int64) (marked int) {
@@ -156,11 +156,11 @@ func (s *ScenePlay) MarkDot(dot *Dot, marked int) {
 	case DotHit:
 		s.JudgmentCounts[TickHits]++
 		s.CalcScore(mode.Extra, 1, dot.Weight())
-		dot.Marked = DotHit
+		dot.scored = DotHit
 	case DotMiss:
 		s.JudgmentCounts[TickDrops]++
 		s.CalcScore(mode.Extra, 0, dot.Weight())
-		dot.Marked = DotMiss
+		dot.scored = DotMiss
 	}
 	if marked != DotReady {
 		s.StagedDot = s.StagedDot.Next
@@ -192,7 +192,7 @@ func (s *ScenePlay) MarkShake(shake *Note, flush bool) {
 		s.CalcScore(mode.Extra, 1, shake.Weight()/float64(shake.Tick))
 	}
 	if flush || shake.HitTick == shake.Tick {
-		shake.Marked = true
+		shake.scored = true
 		s.StagedShake = s.StagedShake.Next
 	}
 }
