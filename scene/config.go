@@ -16,48 +16,60 @@ import (
 type Config struct {
 	MusicRoots []string
 
-	ScreenSize  draws.Vector2
-	MusicVolume float64
-	SoundVolume float64
-	MusicOffset int32
-
+	ScreenSize           draws.Vector2
+	MusicVolume          float64
+	SoundVolume          float64
+	MusicOffset          int32
 	BackgroundBrightness float64
 	DebugPrint           bool
 
 	CursorSpriteScale float64
+	ListItemWidth     float64 // For folder, chart list
+	ListItemHeight    float64
+	ListItemShrink    float64 // Items are not focused will be shrinked.
+	SearchBoxWidth    float64
+	SearchBoxHeight   float64
 	ClearSpriteScale  float64
 
 	PianoConfig *piano.Config
 }
 
 func NewConfig() *Config {
+	screenSize := draws.Vector2{X: 1600, Y: 900}
 	cfg := &Config{
 		MusicRoots: []string{"musics"},
 
-		ScreenSize:  draws.Vector2{X: 1600, Y: 900},
-		MusicVolume: 0.30,
-		SoundVolume: 0.50,
-		MusicOffset: 0,
-
+		ScreenSize:           screenSize,
+		MusicVolume:          0.30,
+		SoundVolume:          0.50,
+		MusicOffset:          0,
 		BackgroundBrightness: 0.6,
 		DebugPrint:           true,
 
 		CursorSpriteScale: 0.1,
+		ListItemWidth:     550, // 400(card) + 150(list)
+		ListItemHeight:    40,
+		ListItemShrink:    0.05 * 550,
+		SearchBoxWidth:    250,
+		SearchBoxHeight:   30,
 		ClearSpriteScale:  0.5,
 
 		PianoConfig: piano.NewConfig(),
 	}
-
 	cfg.loadPianoConfig()
-
 	return cfg
 }
+
 func (cfg *Config) loadPianoConfig() {
 	cfg.PianoConfig = piano.NewConfig()
 	cfg.PianoConfig.ScreenSize = &cfg.ScreenSize
 	cfg.PianoConfig.MusicVolume = &cfg.MusicVolume
 	cfg.PianoConfig.SoundVolume = &cfg.SoundVolume
 	cfg.PianoConfig.MusicOffset = &cfg.MusicOffset
+}
+
+func (cfg Config) ListItemCount() int {
+	return int(cfg.ScreenSize.Y/cfg.ListItemHeight) + 1
 }
 
 func (c *Config) NormalizeMusicRoots() {

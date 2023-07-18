@@ -13,7 +13,7 @@ func IsEscapeJustPressed() bool {
 	return input.IsKeyJustPressed(input.KeyEscape)
 }
 
-func (s *BaseScene) setMusicVolumeKeyHandler(cfg *Config, asset *Asset) {
+func (s *Scene) setMusicVolumeKeyHandler(cfg *Config, asset *Asset) {
 	s.MusicVolumeKeyHandler = ctrl.KeyHandler{
 		Handler: ctrl.FloatHandler{
 			Value: &cfg.MusicVolume,
@@ -27,7 +27,7 @@ func (s *BaseScene) setMusicVolumeKeyHandler(cfg *Config, asset *Asset) {
 		Volume:   &cfg.SoundVolume,
 	}
 }
-func (s *BaseScene) setSoundVolumeKeyHandler(cfg *Config, asset *Asset) {
+func (s *Scene) setSoundVolumeKeyHandler(cfg *Config, asset *Asset) {
 	s.SoundVolumeKeyHandler = ctrl.KeyHandler{
 		Handler: ctrl.FloatHandler{
 			Value: &cfg.SoundVolume,
@@ -41,7 +41,7 @@ func (s *BaseScene) setSoundVolumeKeyHandler(cfg *Config, asset *Asset) {
 		Volume:   &cfg.SoundVolume,
 	}
 }
-func (s *BaseScene) setBackgroundBrightnessKeyHandler(cfg *Config, asset *Asset) {
+func (s *Scene) setBackgroundBrightnessKeyHandler(cfg *Config, asset *Asset) {
 	s.BackgroundBrightnessKeyHandler = ctrl.KeyHandler{
 		Handler: ctrl.FloatHandler{
 			Value: &cfg.BackgroundBrightness,
@@ -55,7 +55,7 @@ func (s *BaseScene) setBackgroundBrightnessKeyHandler(cfg *Config, asset *Asset)
 		Volume:   &cfg.SoundVolume,
 	}
 }
-func (s *BaseScene) setMusicOffsetKeyHandler(cfg *Config, asset *Asset) {
+func (s *Scene) setMusicOffsetKeyHandler(cfg *Config, asset *Asset) {
 	s.MusicOffsetKeyHandler = ctrl.KeyHandler{
 		Handler: ctrl.Int32Handler{
 			Value: &cfg.MusicOffset,
@@ -70,7 +70,7 @@ func (s *BaseScene) setMusicOffsetKeyHandler(cfg *Config, asset *Asset) {
 		Volume:   &cfg.SoundVolume,
 	}
 }
-func (s *BaseScene) setDebugPrintKeyHandler(cfg *Config, asset *Asset) {
+func (s *Scene) setDebugPrintKeyHandler(cfg *Config, asset *Asset) {
 	s.DebugPrintKeyHandler = ctrl.KeyHandler{
 		Handler: ctrl.BoolHandler{
 			Value: &cfg.DebugPrint,
@@ -81,7 +81,7 @@ func (s *BaseScene) setDebugPrintKeyHandler(cfg *Config, asset *Asset) {
 		Volume:   &cfg.SoundVolume,
 	}
 }
-func (s *BaseScene) setSpeedScaleKeyHandlers(cfg *Config, asset *Asset) {
+func (s *Scene) setSpeedScaleKeyHandlers(cfg *Config, asset *Asset) {
 	speedScalesPtrs := []*float64{&cfg.PianoConfig.SpeedScale}
 	s.SpeedScaleKeyHandlers = make([]ctrl.KeyHandler, len(speedScalesPtrs))
 	for i, speedScalePtr := range speedScalesPtrs {
