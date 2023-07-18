@@ -9,36 +9,17 @@ import (
 	"github.com/hndada/gosu/scene"
 )
 
-type ChartSet struct {
-	SetId            int
-	ChildrenBeatmaps []*Chart
-	RankedStatus     int
-	ApprovedDate     string
-	LastUpdate       string
-	LastChecked      string
-	Artist           string
-	Title            string
-	Creator          string
-	Source           string
-	Tags             string
-	HasVideo         bool
-	Genre            int
-	Language         int
-	Favourites       int
-	Disabled         int
-}
-
-//go:embed proxy.txt
-var proxy string
-
-func (c ChartSet) URLCover(kind, suffix string) string {
-	return fmt.Sprintf("%s%s/%d/covers/%s%s.jpg", proxy, APIBeatmap, c.SetId, kind, suffix) // https://proxy.cors.sh/
-}
-func (c ChartSet) URLPreview() string {
-	return fmt.Sprintf("%shttps://b.ppy.sh/preview/%d.mp3", proxy, c.SetId) // https://proxy.cors.sh/
-}
-func (c ChartSet) URLDownload() string {
-	return fmt.Sprintf("%shttps://api.chimu.moe/v1/d/%d", proxy, c.SetId) // https://proxy.cors.sh/
+func (s *Scene) LoadChartSetList() (err error) {
+	s.loading = true
+	const rankedOnly = true
+	css, err := Search(s.query, s.mode, s.page, s.levelLimit, rankedOnly)
+	if err != nil {
+		return
+	}
+	s.ChartSets = NewChartSetList(css)
+	s.Focus = FocusChartSet
+	s.loading = false
+	return
 }
 
 type ChartSetList struct {

@@ -1,8 +1,12 @@
 package input
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
+)
 
 var IsKeyPressed = ebiten.IsKeyPressed
+var IsKeyJustPressed = inpututil.IsKeyJustPressed
 
 // type Key int
 type Key = ebiten.Key

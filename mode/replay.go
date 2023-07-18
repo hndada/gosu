@@ -16,7 +16,7 @@ type Replay = input.KeyboardReader
 // by :=, at least one of the variables on the left side must be newly declared.
 // It will work just as = for already existing variables.
 // https://go.dev/play/p/5SUt9uyrncD
-func NewReplay(fsys fs.FS, name string, keyCount int) (input.KeyboardReader, error) {
+func NewReplay(fsys fs.FS, name string, keyCount int) (Replay, error) {
 	file, err := fsys.Open(name)
 	if err != nil {
 		return input.KeyboardReader{}, fmt.Errorf("failed to open replay file: %s", err)
