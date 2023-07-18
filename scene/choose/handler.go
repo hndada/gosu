@@ -22,7 +22,7 @@ func (s *Scene) setSubModeKeyHandler(cfg *Config, asset *Asset) {
 }
 
 // Todo: ctrl.UpDownKeys -> input.UpDownKeys?
-func (s *Scene) setCursorKeyHandler(slice any) {
+func (s *Scene) setCursorKeyHandler(slice []any) {
 	s.cursorKeyHandlers = make([]ctrl.KeyHandler, len(slice))
 	for i := range s.cursorKeyHandlers {
 		s.cursorKeyHandlers[i] = ctrl.KeyHandler{

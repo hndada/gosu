@@ -21,13 +21,6 @@ func (s Scene) Draw(screen draws.Image) {
 // May add extra effect to box arrangement. e.g., x -= y / 5
 func (s Scene) drawList(screen draws.Image) {
 	const (
-		RowWidth  = 750 // 400(card) + 150(list)
-		RowHeight = 50  // 75
-		RowShrink = 0.15 * RowWidth
-		RowCount  = int(ScreenSizeY/RowHeight) + 2
-	)
-
-	const (
 		tx = 20
 		ty = 20
 	)

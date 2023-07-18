@@ -11,29 +11,31 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
-// BeatmapSet, ChartSet
-type Music = []Chart
-
 // Chart contains information of a chart.
 // Favorites and Played count needs to be checked frequently.
 type Chart struct {
 	mode.ChartHeader
-	// Attributes can be added by user.
-	// Genre, Language, etc.
-	Attributes map[string]string
-	Levels     map[int]float64 // levels from game clients
-	// Level      float64
-
-	AddAtTime        time.Time
-	LastUpdateAtTime time.Time
-
 	Duration int32
 	MainBPM  float64
 	MinBPM   float64
 	MaxBPM   float64
 
+	Dirname          string // for music ID
+	AddAtTime        time.Time
+	LastUpdateAtTime time.Time
+
+	Level      float64
 	NoteCounts []int
+
+	// Attributes can be added by user, such as:
+	// Genre, Language
+	// Levels from game clients
+	Attributes map[string]any
 }
+
+// This will be work as a key of music.
+// Another possible way: MusicID = SetID + MusicFilename
+func (c Chart) MusicPath() string { return filepath.Join(c.Dirname, c.MusicFilename) }
 
 // newMusics reads only first depth of fsys.
 func newMusics(root fs.FS) ([]Music, []error) {
