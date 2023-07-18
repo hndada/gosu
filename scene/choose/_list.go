@@ -10,13 +10,6 @@ import (
 	"github.com/hndada/gosu/scene"
 )
 
-const (
-	RowWidth  = 550 // 400(card) + 150(list)
-	RowHeight = 75  // 50
-	RowShrink = 0.15 * RowWidth
-	RowCount  = 15 // int(ScreenSizeY/RowHeight) + 2
-)
-
 type Row struct {
 	// thumbCh chan draws.Image
 	// cardCh  chan draws.Image

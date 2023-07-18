@@ -6,6 +6,13 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
+func IsEnterJustPressed() bool {
+	return input.IsKeyJustPressed(input.KeyEnter) || input.IsKeyJustPressed(input.KeyNumpadEnter)
+}
+func IsEscapeJustPressed() bool {
+	return input.IsKeyJustPressed(input.KeyEscape)
+}
+
 func (s *BaseScene) setMusicVolumeKeyHandler(cfg *Config, asset *Asset) {
 	s.MusicVolumeKeyHandler = ctrl.KeyHandler{
 		Handler: ctrl.FloatHandler{
@@ -75,9 +82,9 @@ func (s *BaseScene) setDebugPrintKeyHandler(cfg *Config, asset *Asset) {
 	}
 }
 func (s *BaseScene) setSpeedScaleKeyHandlers(cfg *Config, asset *Asset) {
-	speedScales := []*float64{&cfg.PianoConfig.SpeedScale}
-	s.SpeedScaleKeyHandlers = make([]ctrl.KeyHandler, len(speedScales))
-	for i, speedScalePtr := range speedScales {
+	speedScalesPtrs := []*float64{&cfg.PianoConfig.SpeedScale}
+	s.SpeedScaleKeyHandlers = make([]ctrl.KeyHandler, len(speedScalesPtrs))
+	for i, speedScalePtr := range speedScalesPtrs {
 		s.SpeedScaleKeyHandlers[i] = ctrl.KeyHandler{
 			Handler: ctrl.FloatHandler{
 				Value: speedScalePtr,

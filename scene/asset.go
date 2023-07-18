@@ -72,15 +72,6 @@ func (asset *Asset) setDefaultBackgroundSprite(cfg *Config, fsys fs.FS) {
 	asset.DefaultBackgroundSprite = s
 }
 
-func NewBackgroundSprite(fsys fs.FS, name string,
-	screenSize draws.Vector2) draws.Sprite {
-
-	s := draws.NewSpriteFromFile(fsys, name)
-	s.MultiplyScale(screenSize.X / s.W())
-	s.Locate(screenSize.X/2, screenSize.Y/2, draws.CenterMiddle)
-	return s
-}
-
 // Todo: MultiplyScale by cfg.ChooseEntryBoxCount
 func (asset *Asset) setBoxMaskSprite(cfg *Config, fsys fs.FS) {
 	s := draws.NewSpriteFromFile(fsys, "interface/box-mask.png")
