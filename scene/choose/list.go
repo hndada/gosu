@@ -31,3 +31,10 @@ func (s Scene) NewListMoveKeyHandler(handler ctrl.Handler) ctrl.KeyHandler {
 //		handler := NewSliceIndexKeyHandler(&list.Cursor, len(list.Children))
 //		list.keyHandleCursor = handler.Handle
 //	}
+
+type List struct {
+	Name     string
+	IsLeaf   bool // Then plays music.
+	Parent   *List
+	Children []*List
+}
