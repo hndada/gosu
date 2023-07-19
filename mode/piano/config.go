@@ -6,7 +6,6 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-// Todo: SoundVolume -> SoundVolumeScale?
 type Config struct {
 	// settings exported from parent configuration
 	ScreenSize  *draws.Vector2
@@ -15,6 +14,8 @@ type Config struct {
 	MusicOffset *int32
 
 	// logic-affecting settings
+	Mods Mods
+
 	KeySettings       map[int][]string
 	SpeedScale        float64
 	HitPosition       float64

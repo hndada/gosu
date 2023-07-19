@@ -9,12 +9,12 @@ import (
 	"github.com/hndada/gosu/assets"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode"
-	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/scene/play"
 )
 
 // scenes should be out of main(), because it will be used in other methods of game.
+// Todo: save the scene to gosu.scenes
 // var scenes = make(map[string]scene.Scene)
 
 func init() {
@@ -33,7 +33,10 @@ func init() {
 type game struct {
 	musicRoots []string
 	screenSize *draws.Vector2
-	scene.Scene
+	scene      interface {
+		Update() any
+		Draw(screen draws.Image)
+	}
 }
 
 var print = func(args ...any) { fmt.Printf("%+v\n", args...) }
@@ -60,8 +63,6 @@ func main() {
 	ebiten.SetWindowTitle("gosu")
 	ebiten.SetWindowSize(int(g.screenSize.X), int(g.screenSize.Y))
 
-	scene.TheBaseScene = scene.NewBaseScene(cfg, asset)
-
 	g.loadTestPiano(cfg, asset, musicsFS)
 	if err := ebiten.RunGame(g); err != nil {
 		panic(err)
@@ -87,21 +88,24 @@ func (g *game) loadTestPiano(cfg *scene.Config, asset *scene.Asset, musicsFS fs.
 		panic(err)
 	}
 
-	scenePlay, err := play.NewScene(cfg, asset, musicFS, name, mode.ModePiano, piano.Mods{}, replay)
+	scenePlay, err := play.NewScene(cfg, asset, musicFS, name, replay)
 	if err != nil {
 		panic(err)
 	}
 	// fmt.Println(len(scenePlay.ScenePlay.(*piano.ScenePlay).Chart.Notes))
-	g.Scene = scenePlay
+	g.scene = scenePlay
 }
 
 // Todo: implement
 // pp.Print(g.Scene.(*piano.ScenePlay).Now())
 func (g *game) Update() error {
-	switch r := g.Scene.Update().(type) {
+	switch r := g.scene.Update().(type) {
 	case error:
 		return fmt.Errorf("game update error: %w", r)
 		// case "choose":
+		// ebiten.SetFPSMode(ebiten.FPSModeVsyncOn)
+		// debug.SetGCPercent(100)
+		// ebiten.SetWindowTitle("gosu")
 		// 	g.Scene = scenes["choose"]
 		// case "play":
 		// 	scene, err := play.NewScene()
@@ -115,7 +119,7 @@ func (g *game) Update() error {
 
 // Todo: print error using ebitenutil.DebugPrintAt?
 func (g *game) Draw(screen *ebiten.Image) {
-	g.Scene.Draw(draws.Image{Image: screen})
+	g.scene.Draw(draws.Image{Image: screen})
 }
 
 func (g *game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

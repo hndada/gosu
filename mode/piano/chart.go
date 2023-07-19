@@ -19,7 +19,7 @@ type Chart struct {
 }
 
 // NewXxx returns *Chart, while LoadXxx doesn't.
-func NewChart(cfg *Config, fsys fs.FS, name string, mods Mods) (*Chart, error) {
+func NewChart(cfg *Config, fsys fs.FS, name string) (*Chart, error) {
 	c := new(Chart)
 	f, err := fsys.Open(name)
 	if err != nil {
