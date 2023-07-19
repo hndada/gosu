@@ -1,6 +1,8 @@
 package choose
 
 import (
+	"time"
+
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/scene"
 )
@@ -37,38 +39,27 @@ func (s *Scene) Update() any {
 	// back: listDepth--; 0
 
 	// play preview music if music changes.
-	// s.handleVolume()
+	// osu! seems fading music out when changing music.
+
+	s.handleMusicPlayer()
 	// scene's handlers
 	return nil
 }
+func (s *Scene) setMusicPlayer() {
+	// Loop: wait + streamer
 
-// fade in/out effect
-// osu! seems fading music out when changing music.
-// Todo: audios.MusicPlayer.FadeOut(duration time.Duration)
-// Todo: audios.MusicPlayer.Duration() time.Duration
-func (s *Scene) handleVolume() {
-	const wait = -500
+}
 
-	s.Tick++
-	if s.Tick == 0 {
-		s.Play()
+// handleMusicPlayer handles fade in/out effect.
+func (s *Scene) handleMusicPlayer() {
+	const waitDuration = 500 * time.Millisecond
+	const fadeDuration = time.Second
+
+	if s.MusicPlayer.Time() == waitDuration {
+		s.MusicPlayer.FadeIn(fadeDuration, &s.MusicVolume)
 	}
-	if s.Tick > 0 && s.Tick <= 1000 {
-		age := float64(s.Tick) / 1000
-		s.SetVolume(s.Volume * age)
-	}
-
-	// when playing osu!'s 10 seconds preview music.
-	// need to handle rewinding music anyway.
-	if s.Tick > 9000 && s.Tick <= 10000 {
-		age := float64(s.Tick-9000) / 1000
-		s.SetVolume(s.Volume * (1 - age))
-	}
-
-	if s.Tick >= 10000 {
-		s.Tick = wait
-		s.MusicPlayer.Rewind()
-		s.MusicPlayer.Pause()
+	if s.MusicPlayer.Time() == s.MusicPlayer.Duration()-fadeDuration {
+		s.MusicPlayer.FadeOut(fadeDuration, &s.MusicVolume)
 	}
 }
 

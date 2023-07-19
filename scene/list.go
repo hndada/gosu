@@ -1,26 +1,26 @@
 package scene
 
 // Tree structure.
-type List struct {
-	Value ListValue
-	// Title is derived from Value.String().
-	// It is stored for drawing efficiently.
-	Title string
+// type List struct {
+// 	Value ListValue
+// 	// Title is derived from Value.String().
+// 	// It is stored for drawing efficiently.
+// 	title string
 
+// 	Parent   *List
+// 	Children []*List
+// }
+
+// type ListValue interface{ String() string }
+
+// func NewList(v ListValue) *List {
+// 	return &List{Value: v, title: v.String()}
+// }
+
+type List struct {
+	Name     string
 	Parent   *List
 	Children []*List
-}
-
-type ListValue interface{ String() string }
-
-func NewList(v ListValue, parent *List, children []*List) *List {
-	list := &List{
-		Value:    v,
-		Title:    v.String(),
-		Parent:   parent,
-		Children: children,
-	}
-	return list
 }
 
 // It is possible that non-leaf node has no children.

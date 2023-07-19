@@ -64,26 +64,34 @@ func (mp *MusicPlayer) Play() {
 	if mp.played {
 		return
 	}
+	speaker.Lock()
 	speaker.Play(mp.volume)
 	mp.played = true
+	speaker.Unlock()
 }
 
 func (mp MusicPlayer) IsPlayed() bool { return mp.played }
 
-func (mp MusicPlayer) CurrentTime() time.Duration {
+func (mp MusicPlayer) Time() time.Duration {
 	return defaultSampleRate.D(mp.streamer.Position())
+}
+func (mp MusicPlayer) Duration() time.Duration {
+	return defaultSampleRate.D(mp.streamer.Len())
 }
 
 func (mp *MusicPlayer) SetVolume(vol float64) {
+	speaker.Lock()
 	mp.volume.Volume = beepVolume(vol)
 	if vol <= 0.001 { // 0.1%
 		mp.volume.Silent = true
 	} else {
 		mp.volume.Silent = false
 	}
+	speaker.Unlock()
 }
 
 func (mp MusicPlayer) IsPaused() bool { return mp.ctrl.Paused }
+
 func (mp *MusicPlayer) Pause() {
 	speaker.Lock()
 	mp.ctrl.Paused = true
@@ -93,14 +101,6 @@ func (mp *MusicPlayer) Pause() {
 func (mp *MusicPlayer) Resume() {
 	speaker.Lock()
 	mp.ctrl.Paused = false
-	speaker.Unlock()
-}
-
-func (mp MusicPlayer) TimeRate() float64 { return mp.resampler.Ratio() }
-
-func (mp *MusicPlayer) SetResampleRatio(ratio float64) {
-	speaker.Lock()
-	mp.resampler.SetRatio(ratio)
 	speaker.Unlock()
 }
 
