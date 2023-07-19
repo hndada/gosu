@@ -1,6 +1,6 @@
 package ctrl
 
-type Int interface{ int | int64 }
+// type Int interface{ int | int64 }
 
 // Todo: merge with Int64Handler into one
 type IntHandler struct {

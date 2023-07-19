@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/mode"
 )
 
@@ -37,10 +36,10 @@ type Chart struct {
 // Another possible way: MusicID = SetID + MusicFilename
 func (c Chart) MusicPath() string { return filepath.Join(c.Dirname, c.MusicFilename) }
 
-// newMusics reads only first depth of fsys.
-func newMusics(root fs.FS) ([]Music, []error) {
-	var musics []Music
-
+// 'name' is a officially used name as file path in io/fs.
+// newMusics reads only first depth of root for music.
+// Then it will read all charts in each music.
+func newMusics(root fs.FS) ([]Chart, []error) {
 	musicEntries, err := fs.ReadDir(root, ".")
 	errs := make([]error, 0, 5)
 	if err != nil {
@@ -105,40 +104,4 @@ func zipFS(path string) (fs.FS, error) {
 		return nil, err
 	}
 	return r, nil
-}
-
-// Todo: re-wrap mode.Replay; include osr.Format's header part.
-func newReplays(fsys fs.FS, charts map[[16]byte]*Chart) map[[16]byte]*osr.Format {
-	m := make(map[[16]byte]*osr.Format)
-
-	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-
-		if d.IsDir() || ext(path) != ".osr" {
-			return nil
-		}
-
-		file, err := fsys.Open(path)
-		if err != nil {
-			return err
-		}
-
-		switch ext(path) {
-		case ".osr":
-			f, err := osr.NewFormat(file)
-			if err != nil {
-				return err
-			}
-
-			md5, err := f.MD5()
-			if err != nil {
-				return err
-			}
-			m[md5] = f
-		}
-		return nil
-	})
-	return m
 }

@@ -36,7 +36,7 @@ type KeyHandler struct {
 }
 
 // Update returns whether the handler has fired (triggered) or not.
-func (kh *KeyHandler) Update() (fired bool) {
+func (kh *KeyHandler) Handle() (fired bool) {
 	if kh.countdown > 0 {
 		kh.countdown--
 		return

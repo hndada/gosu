@@ -59,10 +59,9 @@ type ScenePlay struct {
 }
 
 // Todo: pass key count beforehand so that s.Asset can be initialized before s.Chart.
-func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, mods Mods, replay mode.Replay) (s *ScenePlay, err error) {
+func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, replay mode.Replay) (s *ScenePlay, err error) {
 	s = &ScenePlay{Config: cfg}
-	s.Mods = mods
-	s.Chart, err = NewChart(s.Config, fsys, name, mods)
+	s.Chart, err = NewChart(s.Config, fsys, name)
 	if err != nil {
 		return
 	}

@@ -10,6 +10,10 @@ import (
 	"github.com/hndada/gosu/scene"
 )
 
+// Background brightness at Song select: 60% (153 / 255), confirmed.
+// Score box color: Gray128 with 50% transparent
+// Hovered Score box color: Gray96 with 50% transparent
+
 func (s Scene) Draw(screen draws.Image) {
 	// I don't want to put BaseXxx
 	// s.drawBackground() // from baseScene
@@ -19,6 +23,7 @@ func (s Scene) Draw(screen draws.Image) {
 }
 
 // May add extra effect to box arrangement. e.g., x -= y / 5
+// File explorer style: depth * indent
 func (s Scene) drawList(screen draws.Image) {
 	const (
 		tx = 20

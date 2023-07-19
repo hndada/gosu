@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
@@ -12,8 +13,14 @@ import (
 	"github.com/faiface/beep/wav"
 )
 
+type Streamer = beep.Streamer
 type StreamSeekCloser = beep.StreamSeekCloser
 type Format = beep.Format
+
+func NewSilence(duration time.Duration) Streamer {
+	num := defaultSampleRate.N(duration)
+	return beep.Silence(num)
+}
 
 func DecodeFromFile(fsys fs.FS, name string) (StreamSeekCloser, Format, error) {
 	var (

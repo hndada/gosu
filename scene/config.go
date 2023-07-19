@@ -10,11 +10,20 @@ import (
 	"github.com/hndada/gosu/mode/piano"
 )
 
+const (
+	ModeAll   = -1
+	ModePiano = iota
+)
+
+// Todo: SoundVolume -> SoundVolumeScale?
+
 // *piano.Config wins piano.Config
 // 1. Easier to pass around.
 // 2. Easier to check whether config is defined or not.
 type Config struct {
 	MusicRoots []string
+	Mode       int
+	SubMode    int
 
 	ScreenSize           draws.Vector2
 	MusicVolume          float64
