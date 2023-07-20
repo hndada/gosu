@@ -1,6 +1,8 @@
 package choose
 
 import (
+	"fmt"
+	"io/fs"
 	"time"
 
 	"github.com/hndada/gosu/audios"
@@ -14,21 +16,25 @@ type Scene struct {
 	*scene.Config
 	*scene.Asset
 
+	charts []*Chart
+	audios.MusicPlayer
+	currentNode *Node
+
 	// queryTypeWriter input.TypeWriter
 	// keySettings map[int][]string // todo: type aliasing for []string
-
-	charts      []*Chart
-	list        *scene.List
-	listCursors []int
-	listDepth   int
-
-	audios.MusicPlayer
+	// list        *scene.List
+	// listCursors []int
+	// listDepth   int
 }
 
-func NewScene() *Scene {
+func NewScene(root fs.FS) *Scene {
 	s := &Scene{}
-	s.charts = newMusics()
-	s.listDepth = listDepthMusic
+	var errs []error
+	s.charts, errs = newCharts(root)
+	for _, err := range errs {
+		fmt.Println(err)
+	}
+	// s.listDepth = listDepthMusic
 	return s
 }
 
@@ -45,9 +51,21 @@ func (s *Scene) Update() any {
 	// scene's handlers
 	return nil
 }
-func (s *Scene) setMusicPlayer() {
+
+// type FromChooseToPlay struct {
+// 	cfg     *Config
+// 	asset   *Asset
+// 	fsys    fs.FS
+// 	name    string
+// 	rf      *osr.Format
+// }
+
+func (s *Scene) setMusicPlayer(fsys fs.FS, name string) {
 	// Loop: wait + streamer
 
+}
+func (s *Scene) setBackground(fsys fs.FS, name string) {
+	scene.NewBackgroundDrawer()
 }
 
 // handleMusicPlayer handles fade in/out effect.
@@ -66,41 +84,3 @@ func (s *Scene) handleMusicPlayer() {
 func (s Scene) DebugString() string {
 	return ""
 }
-
-// type FromChooseToPlay struct {
-// 	cfg     *Config
-// 	asset   *Asset
-// 	fsys    fs.FS
-// 	name    string
-// 	rf      *osr.Format
-// }
-
-// choose key bindings from finite selections.
-// Todo: KeySettings -> KeyBinding?
-//	if inpututil.IsKeyJustPressed(input.KeyF5) {
-//		if s.Focus != FocusKeySettings {
-//			s.lastFocus = s.Focus
-//		}
-//		s.keySettings = make([]string, 0)
-//		s.Focus = FocusKeySettings
-//		scene.UserSkin.Swipe.Play(*s.volumeSound)
-//	}
-// func setKeySettings() {
-// 	for k := input.Key(0); k < input.KeyReserved0; k++ {
-// 		if input.IsKeyJustPressed(k) {
-// 			name := input.KeyToName(k)
-// 			if name[0] == 'F' && name != "F" {
-// 				continue
-// 			}
-// 			s.keySettings = append(s.keySettings, name)
-// 		}
-// 	}
-// 	switch s.mode {
-// 	case 0:
-// 		if len(s.keySettings) >= 4 {
-// 			s.keySettings = s.keySettings[:4]
-// 			s.keySettings = mode.NormalizeKeys(s.keySettings)
-// 			s.Focus = s.lastFocus
-// 		}
-// 	}
-// }

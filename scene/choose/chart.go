@@ -4,13 +4,14 @@ import (
 	"archive/zip"
 	"fmt"
 	"io/fs"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
 	"time"
 
+	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/mode"
-	"github.com/hndada/gosu/scene"
 )
 
 // Chart contains information of a chart.
@@ -23,10 +24,9 @@ type Chart struct {
 	MaxBPM    float64
 	AddAtTime time.Time
 
-	// Attributes can be added by user, such as:
-	// Genre, Language
-	// Levels from game clients
-	Path             string
+	Path string
+	// Attributes can be added by user, such as
+	// Genre, Language, Levels from game clients
 	Attributes       map[string]any
 	LastUpdateAtTime time.Time
 
@@ -34,14 +34,30 @@ type Chart struct {
 	NoteCounts []int
 }
 
-// This will be work as a key of music.
-// Another possible way: MusicID = SetID + MusicFilename
-// func (c Chart) MusicPath() string { return filepath.Join(c.Dirname, c.MusicFilename) }
+// Music name itself may be duplicated.
+// Artist + Title (Music name) may be unique.
+func (c Chart) FolderNodeName() string {
+	return fmt.Sprintf("%s - %s", c.MusicName, c.Artist)
+}
 
-// 'name' is a officially used name as file path in io/fs.
-// newMusics reads only first depth of root for music.
-// Then it will read all charts in each music.
-func newMusics(root fs.FS) ([]Chart, []error) {
+func (c Chart) NodeName() string {
+	return fmt.Sprintf("[Lv. %.0f] %s [%s]", c.Level, c.MusicName, c.ChartName)
+}
+
+// Todo: support .osz as music folder
+// Memo: archive/zip.OpenReader returns ReadSeeker, which implements Read.
+// Both Read and fs.Open are same in type: (name string) (fs.File, error)
+func (c Chart) FSPath(root fs.FS) (fs.FS, string) {
+	dir, name := path.Split(c.Path)
+	fsys, _ := fs.Sub(root, dir)
+	return fsys, name
+}
+
+// newCharts reads only first depth of root for directory.
+// Then it will read all charts in each directory.
+// Memo: 'name' is a officially used name as file path in io/fs.
+func newCharts(root fs.FS) ([]*Chart, []error) {
+	var cs []*Chart
 	musicEntries, err := fs.ReadDir(root, ".")
 	errs := make([]error, 0, 5)
 	if err != nil {
@@ -49,31 +65,59 @@ func newMusics(root fs.FS) ([]Chart, []error) {
 	}
 
 	// Support format: directory/.osu, .osz
-	for _, entry := range musicEntries {
+	for _, me := range musicEntries {
 		var musicFS fs.FS
 		switch {
-		case entry.IsDir():
-			musicFS, err = fs.Sub(root, entry.Name())
-		case ext(entry.Name()) == ".osz":
-			musicFS, err = zipFS(entry.Name())
+		case me.IsDir():
+			musicFS, err = fs.Sub(root, me.Name())
+			// case ext(entry.Name()) == ".osz":
+			// 	musicFS, err = zipFS(entry.Name())
 		}
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
 
-		cs, err := newCharts(musicFS)
+		chartEntries, err := fs.ReadDir(musicFS, ".")
 		if err != nil {
 			errs = append(errs, err)
 			continue
 		}
-		musics = append(musics, groupCharts(cs)...)
+
+		for _, ce := range chartEntries {
+			if ce.IsDir() {
+				continue
+			}
+			// Charts of unsupporting mode are still shown.
+			switch ext(ce.Name()) {
+			case ".osu":
+				// read chart
+				file, err := musicFS.Open(ce.Name())
+				if err != nil {
+					errs = append(errs, err)
+					continue
+				}
+
+				f, err := osu.NewFormat(file)
+				if err != nil {
+					errs = append(errs, err)
+					continue
+				}
+
+				c := &Chart{
+					ChartHeader: mode.NewChartHeader(f),
+					Path:        path.Join(me.Name(), ce.Name()),
+				}
+				cs = append(cs, c)
+			}
+		}
 	}
-
-	return musics, errs
+	return cs, errs
 }
 
-func ext(path string) string { return strings.ToLower(filepath.Ext(path)) }
+func ext(path string) string {
+	return strings.ToLower(filepath.Ext(path))
+}
 
 func zipFS(path string) (fs.FS, error) {
 	r, err := zip.OpenReader(path)
@@ -83,115 +127,42 @@ func zipFS(path string) (fs.FS, error) {
 	return r, nil
 }
 
-// try parse. when no supporting mode,
-// still enable to be shown, but not playable.
-func newCharts(musicFS fs.FS) ([]Chart, error) {
-	fs, err := fs.ReadDir(musicFS, ".")
-	if err != nil {
-		return nil, err
-	}
-
-	cs := make([]Chart, 0, 5)
-	for _, f := range fs {
-		if f.IsDir() {
-			continue
-		}
-		// parse
-	}
-	return cs, nil
-}
-
-type sortBy int
-
-const (
-	sortByMusicName sortBy = iota
-	sortByLevel
-	sortByTime
-	sortByAddAtTime
-)
-
 // You can keep each order of slice when after copying slice
 // even if the slice is a slice of pointers.
 // https://go.dev/play/p/yhvMddwd2co
-func sortCharts(src []Chart, sortBy sortBy) []Chart {
-	cs := make([]Chart, len(src))
+func newChartTree(src []*Chart) *Node {
+	cs := make([]*Chart, len(src))
 	copy(cs, src)
 
-	var less func(i, j int) bool
-	switch sortBy {
-	case sortByMusicName:
-		less = func(i, j int) bool {
-			if cs[i].MusicName < cs[j].MusicName {
-				return true
-			} else if cs[i].MusicName > cs[j].MusicName {
-				return false
-			}
-			if cs[i].Artist < cs[j].Artist {
-				return true
-			} else if cs[i].Artist > cs[j].Artist {
-				return false
-			}
-			return cs[i].Level < cs[j].Level
-		}
-	case sortByLevel:
+	folders := make(map[string][]*Chart)
+	for _, c := range cs {
+		fdname := c.FolderNodeName()
+		folders[fdname] = append(folders[fdname], c)
+	}
+
+	// Sort folders by name, sort charts by level.
+	keys := make([]string, len(folders))
+	for k, cs := range folders {
 		// Currently all precision of level is used.
 		// Usage of using a certain precision: int(cs[i].Level*10)
-		less = func(i, j int) bool {
+		sort.Slice(cs, func(i, j int) bool {
 			return cs[i].Level < cs[j].Level
-		}
-	case sortByTime:
-		less = func(i, j int) bool {
-			if cs[i].Duration < cs[j].Duration {
-				return true
-			} else if cs[i].Duration > cs[j].Duration {
-				return false
-			}
-			return cs[i].Level < cs[j].Level
-		}
-	case sortByAddAtTime:
-		less = func(i, j int) bool {
-			return cs[i].AddAtTime.Before(cs[j].AddAtTime)
-		}
+		})
+		folders[k] = cs
+		keys = append(keys, k)
 	}
+	sort.Strings(keys)
 
-	sort.Slice(cs, less)
-	return cs
-}
-
-func newList(src []Chart, sortBy sortBy) *scene.List {
-	root := &scene.List{Name: "root"}
-	cs := sortCharts(src, sortBy)
-
-	var isEqual func(c1, c2 Chart) bool
-	switch sortBy {
-	case sortByMusicName:
-		// Music name itself may be duplicated.
-		// Artist + Title (Music name) may be unique.
-		isEqual = func(c1, c2 Chart) bool {
-			return c1.MusicName == c2.MusicName && c1.Artist == c2.Artist
+	root := &Node{Type: RootNode}
+	for _, name := range keys {
+		folder := &Node{Type: FolderNode, Data: name, Parent: root}
+		for _, c := range folders[name] {
+			chart := &Node{Type: ChartNote, Data: c.NodeName(), Parent: folder}
+			path := &Node{Type: PathNode, Data: c.Path, Parent: chart}
+			chart.AppendChild(path)
+			folder.AppendChild(chart)
 		}
-	case sortByLevel:
-		isEqual = func(c1, c2 Chart) bool {
-			return int(c1.Level*10) == int(c2.Level*10)
-		}
-	case sortByTime:
-		// Unit is 10 seconds.
-		isEqual = func(c1, c2 Chart) bool {
-			return c1.Duration/1e4 == c2.Duration/1e4
-		}
-		// case sortByAddAtTime:
-	}
-
-	list := &scene.List{}
-	for _, c := range cs {
-		s := fmt.Sprintf("%s", c.MusicName)
-		if len(list.Children) == 0 || isEqual(c, list.Children[0]) {
-
-		}
+		root.AppendChild(folder)
 	}
 	return root
-}
-
-func (c Chart) String() string {
-	return fmt.Sprintf("[Lv. %.0f] %s", c.MusicName)
 }
