@@ -1,7 +1,6 @@
 package choose
 
 import (
-	"fmt"
 	"sort"
 )
 
@@ -31,11 +30,6 @@ func a() {
 	// 		n.Children = append(n.Children, &Node{Name: c.String()})
 	// 	}
 	// }
-	type Node struct {
-		Name     string
-		Parent   *Node
-		Children []*Node
-	}
 
 	// It is fine to append first element at map without make().
 	// https://go.dev/play/p/nXBtGxBIh1p
@@ -54,11 +48,4 @@ func a() {
 		n := &Node{Name: name, Children: ns}
 		root.Children = append(root.Children, n)
 	}
-}
-
-func (c Chart) LeafName() string {
-	return fmt.Sprintf("[Lv. %.0f] %s [%s]", c.Level, c.MusicName, c.ChartName)
-}
-func (c Chart) MusicArtistName() string {
-	return fmt.Sprintf("%s - %s", c.MusicName, c.Artist)
 }

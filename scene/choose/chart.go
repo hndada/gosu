@@ -17,22 +17,21 @@ import (
 // Favorites and Played count needs to be checked frequently.
 type Chart struct {
 	mode.ChartHeader
-	Duration int32
-	MainBPM  float64
-	MinBPM   float64
-	MaxBPM   float64
-
-	Dirname          string // for music ID
-	AddAtTime        time.Time
-	LastUpdateAtTime time.Time
-
-	Level      float64
-	NoteCounts []int
+	Duration  int32
+	MainBPM   float64
+	MinBPM    float64
+	MaxBPM    float64
+	AddAtTime time.Time
 
 	// Attributes can be added by user, such as:
 	// Genre, Language
 	// Levels from game clients
-	Attributes map[string]any
+	Path             string
+	Attributes       map[string]any
+	LastUpdateAtTime time.Time
+
+	Level      float64
+	NoteCounts []int
 }
 
 // This will be work as a key of music.

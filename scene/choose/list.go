@@ -8,7 +8,6 @@ import (
 )
 
 // Group1, Group2, Sort, Filter int
-
 const (
 	listDepthSearch = -1
 	listDepthMusic  = iota
@@ -25,16 +24,4 @@ func (s Scene) NewListMoveKeyHandler(handler ctrl.Handler) ctrl.KeyHandler {
 		Sounds:   [2]audios.SoundPlayer{s.SwipeSoundPod, s.SwipeSoundPod},
 		Volume:   &s.SoundVolume,
 	}
-}
-
-//	if len(children) != 0 {
-//		handler := NewSliceIndexKeyHandler(&list.Cursor, len(list.Children))
-//		list.keyHandleCursor = handler.Handle
-//	}
-
-type List struct {
-	Name     string
-	IsLeaf   bool // Then plays music.
-	Parent   *List
-	Children []*List
 }
