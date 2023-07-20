@@ -1,86 +1,72 @@
 package choose
 
 import (
-	"fmt"
 	"image/color"
-	"strings"
 
-	"github.com/hajimehoshi/ebiten/v2/text"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/scene"
 )
 
 // Background brightness at Song select: 60% (153 / 255), confirmed.
 // Score box color: Gray128 with 50% transparent
 // Hovered Score box color: Gray96 with 50% transparent
-
-func (s Scene) Draw(screen draws.Image) {
-	// I don't want to put BaseXxx
-	// s.drawBackground() // from baseScene
-	s.drawList(screen)
-	s.drawSearchBox(screen)
-	// Todo: s.drawPanel()?
+func (s Scene) Draw(dst draws.Image) {
+	s.drawBackground()
+	s.drawChartTree(dst)
+	// Todo: s.drawSearchBox(screen)
+	// Todo: s.drawPanel()
 }
 
-// May add extra effect to box arrangement. e.g., x -= y / 5
-// File explorer style: depth * indent
-func (s Scene) drawList(screen draws.Image) {
-	const (
-		tx = 20
-		ty = 20
-	)
-	for i := range l.Texts[:l.cursor] {
-		if i > RowCount/2 {
+var (
+	black = color.NRGBA{R: 16, G: 16, B: 16, A: 128}
+	gray  = color.NRGBA{R: 128, G: 128, B: 128, A: 128}
+)
+
+func (s Scene) drawChartTree(dst draws.Image) {
+	half := s.ListItemCount()/2 + 1
+
+	// upper part
+	var c int
+	for n := s.currentNode.Prev(); n != nil; n = n.Prev() {
+		c++
+
+		box := s.BoxMaskSprite
+		dy := float64(c) * s.ListItemHeight
+		box.Move(0, -dy)
+
+		op := draws.Op{}
+		switch n.Type {
+		case FolderNode:
+			op.ColorM.ScaleWithColor(black)
+		case ChartNote:
+			op.ColorM.ScaleWithColor(gray)
+		}
+		box.Draw(dst, op)
+
+		if c >= half {
 			break
 		}
-		row := boxMask
-		op := draws.Op{}
-		op.GeoM.Translate(ScreenSizeX-1*RowWidth, ScreenSizeY/2-RowHeight/2-float64(i+1)*RowHeight)
-		// row.Move(0, -float64(i+1)*RowHeight)
-		row.Draw(dst, op)
-
-		t := draws.NewText(l.Texts[l.cursor-i-1], draws.LoadDefaultFace(20))
-		op.GeoM.Translate(tx, ty)
-		t.Draw(dst, op)
 	}
-	for i := range l.Texts[l.cursor:] {
-		if i > RowCount/2 {
+
+	// lower part
+	c = 0 // reset
+	for n := s.currentNode.Next(); n != nil; n = n.Next() {
+		c++
+
+		box := s.BoxMaskSprite
+		dy := float64(c) * s.ListItemHeight
+		box.Move(0, dy)
+
+		op := draws.Op{}
+		switch n.Type {
+		case FolderNode:
+			op.ColorM.ScaleWithColor(black)
+		case ChartNote:
+			op.ColorM.ScaleWithColor(gray)
+		}
+		box.Draw(dst, op)
+
+		if c >= half {
 			break
 		}
-		row := boxMask
-		op := draws.Op{}
-		op.GeoM.Translate(ScreenSizeX-1*RowWidth, ScreenSizeY/2-RowHeight/2+float64(i)*RowHeight)
-		// row.Move(0, -float64(i+1)*RowHeight)
-		row.Draw(dst, op)
-		if i == 0 {
-			op.GeoM.Translate(-RowShrink+10, 0)
-		}
-		t := draws.NewText(l.Texts[l.cursor+i], draws.LoadDefaultFace(20))
-		op.GeoM.Translate(tx, ty)
-		t.Draw(dst, op)
 	}
-}
-
-func (s Scene) drawSearchBox(screen draws.Image) {
-	t := *&s.queryTypeWriter.Text()
-	if t == "" {
-		t = "Type for search..."
-	}
-	const a = "searching..."
-	count := 0
-	if count == 0 {
-		fmt.Sprintf("found no charts", count)
-	} else {
-		fmt.Sprintf("%s charts found", count)
-	}
-	text.Draw(screen, t, scene.Face16, int(d.X), int(d.Y)+25, color.White)
-}
-
-// imported from old code.
-// It was for displaying text when loading.
-func loadingText(t draws.Timer) string {
-	s := "Loading"
-	c := int(3*t.Age() + 1)
-	s += strings.Repeat(".", c)
-	return s
 }

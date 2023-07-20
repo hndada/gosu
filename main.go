@@ -16,7 +16,7 @@ import (
 // scenes should be out of main(), because it will be used in other methods of game.
 // Todo: save the scene to gosu.scenes
 // var scenes = make(map[string]scene.Scene)
-
+// Todo: musics -> music
 func init() {
 	// In 240Hz monitor, TPS is 60 and FPS is 240 at start.
 	// SetTPS will set TPS to FPS, hence TPS will be 240 too.
@@ -114,6 +114,20 @@ func (g *game) Update() error {
 		// 	}
 		// 	g.Scene = scene
 	}
+	// args := g.scene.Update()
+	// switch g.scene {
+	// case *choose.Scene:
+	// 	switch args.(type) {
+	// 	case string:
+	// 		path := args.(string)
+	// 	}
+	// case *play.Scene:
+	// 	switch args.(type) {
+	// 	case Exit:
+	// 	case piano.Scorer: // , drum.Scorer
+	// 		// Result scene
+	// 	}
+	// }
 	return nil
 }
 
