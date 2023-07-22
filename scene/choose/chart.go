@@ -16,9 +16,10 @@ import (
 // Chart contains information of a chart.
 // Favorites and Played count needs to be checked frequently.
 type Chart struct {
-	MusicFS fs.FS
-	Base    string // For comparing fsys.
-	Hash    string // md5 with 16 bytes
+	MusicFS  fs.FS
+	Base     string // For comparing fsys.
+	Filename string
+	Hash     string // md5 with 16 bytes
 
 	mode.ChartHeader
 	Duration         int32
@@ -111,6 +112,7 @@ func newCharts(root fs.FS) (map[string]*Chart, []error) {
 				c := &Chart{
 					MusicFS:     musicFS,
 					Base:        me.Name(),
+					Filename:    ce.Name(),
 					Hash:        string(hash[:]),
 					ChartHeader: mode.NewChartHeader(f),
 				}

@@ -88,6 +88,7 @@ func (s *Scene) Update() any {
 	switch key {
 	case input.KeyEnter, input.KeyNumpadEnter:
 		s.chartTreeNode = s.chartTreeNode.FirstChild
+		fmt.Printf("%+v\n", s.chartTreeNode)
 	case input.KeyEscape:
 		// Todo: return to intro screen when
 		// escape is pressed on root node.
@@ -105,7 +106,7 @@ func (s *Scene) Update() any {
 			s.chartTreeNode = s.chartTreeNode.FirstChild
 		}
 	case input.KeyArrowUp:
-		if prev := s.chartTreeNode.Prev(); prev != nil {
+		if prev := s.chartTreeNode.Prev(); prev != nil && prev.Type != RootNode {
 			s.chartTreeNode = prev
 		}
 	case input.KeyArrowDown:
@@ -115,7 +116,7 @@ func (s *Scene) Update() any {
 	}
 
 	if s.chartTreeNode.Type == LeafNode {
-		s.playChart()
+		return s.playChart()
 	}
 
 	newChart := s.chart()
@@ -164,9 +165,9 @@ func (s *Scene) playChart() any {
 	c := s.chart()
 	s.chartTreeNode = s.chartTreeNode.Parent
 	return scene.PlayArgs{
-		MusicFS:   c.MusicFS,
-		ChartName: c.ChartName,
-		Replay:    s.replays[c.Hash],
+		MusicFS:       c.MusicFS,
+		ChartFilename: c.Filename,
+		Replay:        s.replays[c.Hash],
 	}
 }
 

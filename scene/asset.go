@@ -77,11 +77,10 @@ func (asset *Asset) setDefaultBackgroundSprite(cfg *Config, fsys fs.FS) {
 	asset.DefaultBackgroundSprite = s
 }
 
-// Todo: MultiplyScale by cfg.ChooseEntryBoxCount
 func (asset *Asset) setBoxMaskSprite(cfg *Config, fsys fs.FS) {
 	s := draws.NewSpriteFromFile(fsys, "interface/box-mask.png")
 	s.Locate(cfg.ScreenSize.X, cfg.ScreenSize.Y/2, draws.RightMiddle)
-	// s.MultiplyScale(cfg.ChooseEntryBox) // Box count
+	s.SetSize(cfg.ListItemWidth, cfg.ListItemHeight)
 	asset.BoxMaskSprite = s
 }
 
