@@ -64,7 +64,7 @@ func NewScene(cfg *scene.Config, asset *scene.Asset, root fs.FS) (s *Scene, err 
 		input.KeyArrowLeft, input.KeyArrowRight,
 	}
 	s.UIKeyListener = ctrl.NewUIKeyListener(uiKeys)
-	s.chartTreeNode = newChartTree(s.charts) // root node
+	s.chartTreeNode = newChartTree(s.charts).FirstChild
 	s.updatePreviewMusic()
 	s.updateBackground()
 
@@ -105,9 +105,13 @@ func (s *Scene) Update() any {
 			s.chartTreeNode = s.chartTreeNode.FirstChild
 		}
 	case input.KeyArrowUp:
-		s.chartTreeNode = s.chartTreeNode.Prev()
+		if prev := s.chartTreeNode.Prev(); prev != nil {
+			s.chartTreeNode = prev
+		}
 	case input.KeyArrowDown:
-		s.chartTreeNode = s.chartTreeNode.Next()
+		if next := s.chartTreeNode.Next(); next != nil {
+			s.chartTreeNode = next
+		}
 	}
 
 	if s.chartTreeNode.Type == LeafNode {
