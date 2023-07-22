@@ -44,9 +44,7 @@ type Config struct {
 	LightingSpriteScale float64
 }
 
-// Todo: ScreenSize
-func NewConfig() *Config {
-	ScreenSize := draws.Vector2{X: 1600, Y: 900}
+func NewConfig(ScreenSize draws.Vector2) *Config {
 	return &Config{
 		KeySettings: map[int][]string{
 			4:  {"D", "F", "J", "K"},

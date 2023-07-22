@@ -14,7 +14,6 @@ import (
 	"github.com/hndada/gosu/scene/play"
 )
 
-// Todo: musics -> music
 func init() {
 	// In 240Hz monitor, TPS is 60 and FPS is 240 at start.
 	// SetTPS will set TPS to FPS, hence TPS will be 240 too.

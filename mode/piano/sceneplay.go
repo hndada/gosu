@@ -75,7 +75,7 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, r
 	}
 	s.Asset = assets[s.KeyCount]
 
-	const wait = 1800 * time.Millisecond
+	const wait = 1100 * time.Millisecond
 	s.Timer = mode.NewTimer(*s.MusicOffset, wait)
 	s.now = s.Now()
 
@@ -102,7 +102,8 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, r
 	s.Dynamic = s.Chart.Dynamics[0]
 
 	// draw
-	s.speedScale = s.SpeedScale
+	s.speedScale = 1
+	s.SetSpeedScale()
 	s.cursor = float64(s.now) * s.SpeedScale
 	s.highestBar = s.Chart.Bars[0]
 	// Just assigning slice will shallow copy.
@@ -161,8 +162,8 @@ func (s ScenePlay) SetMusicVolume(vol float64)    { s.musicPlayer.SetVolume(vol)
 // Need to re-calculate positions when Speed has changed.
 func (s *ScenePlay) SetSpeedScale() {
 	c := s.Chart
-	old := s.speedScale
-	new := s.SpeedScale
+	old := s.speedScale // Scene's field value
+	new := s.SpeedScale // Config's field value
 	s.cursor *= new / old
 	for _, d := range c.Dynamics {
 		d.Position *= new / old
@@ -266,6 +267,11 @@ func (s *ScenePlay) tryPlayMusic() {
 
 // Todo: set all sample volumes in advance?
 func (s ScenePlay) playSounds(ka input.KeyboardAction) {
+	if len(ka.KeyActions) != s.KeyCount {
+		fmt.Println("len(ka.KeyActions) != s.KeyCount")
+		return
+	}
+
 	for k, n := range s.stagedNotes {
 		if n == nil {
 			continue
