@@ -47,12 +47,12 @@ type Config struct {
 func NewConfig() *Config {
 	screenSize := draws.Vector2{X: 1600, Y: 900}
 	cfg := &Config{
-		MusicRoots: []string{"musics"},
+		MusicRoots: []string{"music"},
 		ScreenSize: screenSize,
 
 		MusicVolume:          0.30,
 		SoundVolume:          0.50,
-		MusicOffset:          0,
+		MusicOffset:          -20,
 		BackgroundBrightness: 0.6,
 		DebugPrint:           true,
 
@@ -64,16 +64,15 @@ func NewConfig() *Config {
 		SearchBoxHeight:   30,
 		ClearSpriteScale:  0.5,
 
-		Mode:        ModePiano,
-		SubMode:     4,
-		PianoConfig: piano.NewConfig(),
+		Mode:    ModePiano,
+		SubMode: 4,
 	}
-	cfg.loadPianoConfig()
+	cfg.loadPianoConfig(screenSize)
 	return cfg
 }
 
-func (cfg *Config) loadPianoConfig() {
-	cfg.PianoConfig = piano.NewConfig()
+func (cfg *Config) loadPianoConfig(screenSize draws.Vector2) {
+	cfg.PianoConfig = piano.NewConfig(screenSize)
 	cfg.PianoConfig.ScreenSize = &cfg.ScreenSize
 	cfg.PianoConfig.MusicVolume = &cfg.MusicVolume
 	cfg.PianoConfig.SoundVolume = &cfg.SoundVolume
