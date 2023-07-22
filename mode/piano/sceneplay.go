@@ -8,6 +8,7 @@ import (
 
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
 )
@@ -24,14 +25,14 @@ type ScenePlay struct {
 	now int32
 	*input.Keyboard
 	input.KeyboardReader // for replay
-	audios.MusicPlayer
+	musicPlayer          audios.MusicPlayer
 	audios.SoundMap
 	// Scorer also has stagedNotes.
 	// ScenePlay.stagedNotes is for playing samples.
 	stagedNotes []*Note
 
 	Scorer
-	Dynamic *mode.Dynamic
+	Dynamic *mode.Dynamic // Todo: Dynamic -> dynamic
 
 	// draw
 	speedScale   float64
@@ -59,7 +60,7 @@ type ScenePlay struct {
 }
 
 // Todo: pass key count beforehand so that s.Asset can be initialized before s.Chart.
-func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, replay mode.Replay) (s *ScenePlay, err error) {
+func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, replay *osr.Format) (s *ScenePlay, err error) {
 	s = &ScenePlay{Config: cfg}
 	s.Chart, err = NewChart(s.Config, fsys, name)
 	if err != nil {
@@ -71,17 +72,16 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, r
 	s.Timer = mode.NewTimer(*s.MusicOffset, wait)
 	s.now = s.Now()
 
-	replay = mode.Replay{} // temp
-	if replay.IsEmpty() {
+	if replay != nil {
+		s.KeyboardReader = replay.KeyboardReader(s.KeyCount)
+	} else {
 		keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
 		s.Keyboard = input.NewKeyboard(keys, s.StartTime())
 		defer s.Keyboard.Listen()
-	} else {
-		s.KeyboardReader = replay
 	}
 
 	const ratio = 1
-	s.MusicPlayer, err = audios.NewMusicPlayerFromFile(fsys, s.MusicFilename, ratio)
+	s.musicPlayer, err = audios.NewMusicPlayerFromFile(fsys, s.MusicFilename, ratio)
 	if err != nil {
 		return
 	}
@@ -149,7 +149,7 @@ func (s ScenePlay) WindowTitle() string           { return s.Chart.WindowTitle()
 func (s ScenePlay) Now() int32                    { return s.Timer.Now() }
 func (s ScenePlay) Speed() float64                { return s.Dynamic.Speed * s.SpeedScale }
 func (s ScenePlay) IsPaused() bool                { return s.Timer.IsPaused() }
-func (s ScenePlay) SetMusicVolume(vol float64)    { s.MusicPlayer.SetVolume(vol) }
+func (s ScenePlay) SetMusicVolume(vol float64)    { s.musicPlayer.SetVolume(vol) }
 
 // Need to re-calculate positions when Speed has changed.
 func (s *ScenePlay) SetSpeedScale() {
@@ -245,11 +245,11 @@ func (s *ScenePlay) readInput() []input.KeyboardAction {
 }
 
 func (s *ScenePlay) tryPlayMusic() {
-	if s.MusicPlayer.IsPlayed() {
+	if s.musicPlayer.IsPlayed() {
 		return
 	}
 	if s.now >= *s.MusicOffset && s.now < 300 {
-		s.MusicPlayer.Play()
+		s.musicPlayer.Play()
 		s.Timer.SetMusicPlayed(time.Now())
 	}
 }
@@ -337,18 +337,18 @@ func (s *ScenePlay) tickerDrawTimers() {
 
 func (s *ScenePlay) Pause() {
 	s.Timer.Pause()
-	s.MusicPlayer.Pause()
+	s.musicPlayer.Pause()
 	s.Keyboard.Pause()
 }
 
 func (s *ScenePlay) Resume() {
 	s.Timer.Resume()
-	s.MusicPlayer.Resume()
+	s.musicPlayer.Resume()
 	s.Keyboard.Resume()
 }
 
 func (s ScenePlay) Finish() any {
-	s.MusicPlayer.Close()
+	s.musicPlayer.Close()
 	s.Keyboard.Close()
 	return s.Scorer
 }

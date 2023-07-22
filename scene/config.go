@@ -1,6 +1,7 @@
 package scene
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -22,10 +23,8 @@ const (
 // 2. Easier to check whether config is defined or not.
 type Config struct {
 	MusicRoots []string
-	Mode       int
-	SubMode    int
+	ScreenSize draws.Vector2
 
-	ScreenSize           draws.Vector2
 	MusicVolume          float64
 	SoundVolume          float64
 	MusicOffset          int32
@@ -40,6 +39,8 @@ type Config struct {
 	SearchBoxHeight   float64
 	ClearSpriteScale  float64
 
+	Mode        int
+	SubMode     int
 	PianoConfig *piano.Config
 }
 
@@ -47,8 +48,8 @@ func NewConfig() *Config {
 	screenSize := draws.Vector2{X: 1600, Y: 900}
 	cfg := &Config{
 		MusicRoots: []string{"musics"},
+		ScreenSize: screenSize,
 
-		ScreenSize:           screenSize,
 		MusicVolume:          0.30,
 		SoundVolume:          0.50,
 		MusicOffset:          0,
@@ -63,6 +64,8 @@ func NewConfig() *Config {
 		SearchBoxHeight:   30,
 		ClearSpriteScale:  0.5,
 
+		Mode:        ModePiano,
+		SubMode:     4,
 		PianoConfig: piano.NewConfig(),
 	}
 	cfg.loadPianoConfig()
@@ -100,4 +103,29 @@ func SetTPS(tps float64) {
 	ebiten.SetTPS(int(tps))
 	ctrl.UpdateTPS(tps)
 	mode.SetTPS(tps)
+}
+
+func (cfg Config) DebugString() string {
+	f := fmt.Fprintf
+	var b strings.Builder
+
+	var speedScale float64
+	switch cfg.Mode {
+	case mode.ModePiano:
+		speedScale = cfg.PianoConfig.SpeedScale
+	}
+
+	f(&b, "FPS: %.2f\n", ebiten.ActualFPS())
+	f(&b, "TPS: %.2f\n", ebiten.ActualTPS())
+	f(&b, "\n")
+	f(&b, "Music volume (Ctrl+ Left/Right): %.0f%%\n", cfg.MusicVolume*100)
+	f(&b, "Sound volume (Alt+ Left/Right): %.0f%%\n", cfg.SoundVolume*100)
+	f(&b, "Music offset (Shift+ Left/Right): %dms\n", cfg.MusicOffset)
+	f(&b, "Background brightness: (Ctrl+ O/P): %.0f%%\n", cfg.BackgroundBrightness*100)
+	f(&b, "Debug print (F12): %v\n", cfg.DebugPrint)
+	f(&b, "\n")
+	f(&b, "Mode (F1): %d\n", cfg.Mode)
+	f(&b, "Sub mode (F2/F3): %d\n", cfg.SubMode)
+	f(&b, "Speed scale: (Ctrl+ Shift+ Left/Right): %.2f\n", speedScale)
+	return b.String()
 }

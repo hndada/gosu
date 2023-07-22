@@ -1,5 +1,6 @@
 package choose
 
+// sort by. // music name, level folder (+time?)
 type sortBy int
 
 const (

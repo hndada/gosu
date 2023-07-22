@@ -3,82 +3,174 @@ package choose
 import (
 	"fmt"
 	"io/fs"
-	"time"
 
-	"github.com/hndada/gosu/audios"
+	"github.com/hndada/gosu/ctrl"
+	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/format/osr"
+	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/scene"
 )
 
-// Todo: KeyHandler.OneAtATime option
-
-// List is all in choose scene.
 type Scene struct {
 	*scene.Config
 	*scene.Asset
 
-	charts []*Chart
-	audios.MusicPlayer
-	currentNode *Node
+	charts  map[string]*Chart // key: chart.Hash
+	replays map[string]*osr.Format
+
+	ctrl.UIKeyListener
+	chartTreeNode *Node // focused chart
+	PreviewMusicPlayer
+	drawBackground func(draws.Image)
+
+	KeyHandleMusicVolume          func() bool
+	KeyHandleSoundVolume          func() bool
+	KeyHandleMusicOffset          func() bool
+	KeyHandleBackgroundBrightness func() bool
+	KeyHandleDebugPrint           func() bool
+
+	// Todo: key handle mode and sub mode.
+	// Todo: add 'NoRepeat' option to KeyHandle.
+	// KeyHandleMode       func() bool
+	// KeyHandleSubMode    func() bool
+	KeyHandleSpeedScale func() bool
 
 	// queryTypeWriter input.TypeWriter
 	// keySettings map[int][]string // todo: type aliasing for []string
-	// list        *scene.List
-	// listCursors []int
-	// listDepth   int
 }
 
-func NewScene(root fs.FS) *Scene {
-	s := &Scene{}
-	var errs []error
-	s.charts, errs = newCharts(root)
-	for _, err := range errs {
+func NewScene(cfg *scene.Config, asset *scene.Asset, root fs.FS) (s *Scene, err error) {
+	s = &Scene{Config: cfg, Asset: asset}
+
+	musicRoot, err := fs.Sub(root, cfg.MusicRoots[0])
+	if err != nil {
+		return
+	}
+	var errsParse []error
+	s.charts, errsParse = newCharts(musicRoot)
+	for _, err := range errsParse {
 		fmt.Println(err)
 	}
-	// s.listDepth = listDepthMusic
-	return s
+
+	replayRoot, err := fs.Sub(root, "replays")
+	if err != nil {
+		return
+	}
+	s.replays = newReplays(replayRoot, s.charts)
+
+	uiKeys := []input.Key{
+		input.KeyEnter, input.KeyNumpadEnter, input.KeyEscape,
+		input.KeyArrowUp, input.KeyArrowDown,
+		input.KeyArrowLeft, input.KeyArrowRight,
+	}
+	s.UIKeyListener = ctrl.NewUIKeyListener(uiKeys)
+	s.chartTreeNode = newChartTree(s.charts) // root node
+	s.updatePreviewMusic()
+	s.updateBackground()
+
+	s.KeyHandleMusicVolume = scene.NewMusicVolumeKeyHandler(s.Config, s.Asset)
+	s.KeyHandleSoundVolume = scene.NewSoundVolumeKeyHandler(s.Config, s.Asset)
+	s.KeyHandleMusicOffset = scene.NewMusicOffsetKeyHandler(s.Config, s.Asset)
+	s.KeyHandleBackgroundBrightness = scene.NewBackgroundBrightnessKeyHandler(s.Config, s.Asset)
+	s.KeyHandleDebugPrint = scene.NewDebugPrintKeyHandler(s.Config, s.Asset)
+
+	// s.KeyHandleMode = scene.NewModeKeyHandler(s.Config, s.Asset)
+	// s.KeyHandleSubMode = scene.NewSubModeKeyHandler(s.Config, s.Asset, s.Mode)
+	s.KeyHandleSpeedScale = scene.NewSpeedScaleKeyHandler(s.Config, s.Asset, s.Mode)
+	return
 }
 
-// sort by. // music name, level folder (+time?)
+// Node is all in choose scene.
 func (s *Scene) Update() any {
-	// up down: move cursor
-	// enter: listDepth++ select list item or play the chart.
-	// back: listDepth--; 0
+	oldChart := s.chart()
 
-	// play preview music if music changes.
-	// osu! seems fading music out when changing music.
+	key := s.UIKeyListener.Listen()
+	switch key {
+	case input.KeyEnter, input.KeyNumpadEnter:
+		s.chartTreeNode = s.chartTreeNode.FirstChild
+	case input.KeyEscape:
+		// Todo: return to intro screen when
+		// escape is pressed on root node.
+		if s.chartTreeNode.Type != FolderNode {
+			s.chartTreeNode = s.chartTreeNode.Parent
+		}
+	case input.KeyArrowLeft:
+		// Arrow left has no effect on root node.
+		if s.chartTreeNode.Type == ChartNode {
+			s.chartTreeNode = s.chartTreeNode.Parent
+		}
+	case input.KeyArrowRight:
+		// Arrow right has no effect on leaf node.
+		if s.chartTreeNode.Type != LeafNode {
+			s.chartTreeNode = s.chartTreeNode.FirstChild
+		}
+	case input.KeyArrowUp:
+		s.chartTreeNode = s.chartTreeNode.Prev()
+	case input.KeyArrowDown:
+		s.chartTreeNode = s.chartTreeNode.Next()
+	}
 
-	s.handleMusicPlayer()
-	// scene's handlers
+	if s.chartTreeNode.Type == LeafNode {
+		s.playChart()
+	}
+
+	newChart := s.chart()
+	var (
+		isMusicChanged      bool
+		isBackgroundChanged bool
+	)
+	if newChart.Base != oldChart.Base {
+		isMusicChanged = true
+		isBackgroundChanged = true
+	} else {
+		if newChart.MusicFilename != oldChart.MusicFilename {
+			isMusicChanged = true
+		}
+		if newChart.BackgroundFilename != oldChart.BackgroundFilename {
+			isBackgroundChanged = true
+		}
+	}
+
+	if isMusicChanged {
+		s.updatePreviewMusic()
+	}
+	if isBackgroundChanged {
+		s.updateBackground()
+	}
+
+	s.HandleEffect()
+	if s.KeyHandleMusicVolume() {
+		s.MusicPlayer.SetVolume(s.MusicVolume)
+	}
+	s.KeyHandleSoundVolume()
+	s.KeyHandleMusicOffset()
+	s.KeyHandleBackgroundBrightness()
+	s.KeyHandleDebugPrint()
+
+	// s.KeyHandleMode()
+	// s.KeyHandleSubMode()
+	s.KeyHandleSpeedScale()
 	return nil
 }
 
-// type FromChooseToPlay struct {
-// 	cfg     *Config
-// 	asset   *Asset
-// 	fsys    fs.FS
-// 	name    string
-// 	rf      *osr.Format
-// }
+func (s Scene) chart() *Chart { return s.charts[s.chartTreeNode.LeafData()] }
 
-func (s *Scene) setMusicPlayer(fsys fs.FS, name string) {
-	// Loop: wait + streamer
-
-}
-func (s *Scene) setBackground(fsys fs.FS, name string) {
-	scene.NewBackgroundDrawer()
+func (s *Scene) playChart() any {
+	s.MusicPlayer.Close()
+	c := s.chart()
+	s.chartTreeNode = s.chartTreeNode.Parent
+	return scene.PlayArgs{
+		MusicFS:   c.MusicFS,
+		ChartName: c.ChartName,
+		Replay:    s.replays[c.Hash],
+	}
 }
 
-// handleMusicPlayer handles fade in/out effect.
-func (s *Scene) handleMusicPlayer() {
-	const waitDuration = 500 * time.Millisecond
-	const fadeDuration = time.Second
-
-	if s.MusicPlayer.Time() == waitDuration {
-		s.MusicPlayer.FadeIn(fadeDuration, &s.MusicVolume)
-	}
-	if s.MusicPlayer.Time() == s.MusicPlayer.Duration()-fadeDuration {
-		s.MusicPlayer.FadeOut(fadeDuration, &s.MusicVolume)
-	}
+func (s *Scene) updateBackground() {
+	c := s.chart()
+	fsys := c.MusicFS
+	name := c.BackgroundFilename
+	s.drawBackground = scene.NewBackgroundDrawer(s.Config, s.Asset, fsys, name)
 }
 
 func (s Scene) DebugString() string {

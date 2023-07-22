@@ -1,10 +1,9 @@
 package choose
 
 import (
-	"archive/zip"
+	"crypto/md5"
 	"fmt"
 	"io/fs"
-	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -17,21 +16,22 @@ import (
 // Chart contains information of a chart.
 // Favorites and Played count needs to be checked frequently.
 type Chart struct {
-	mode.ChartHeader
-	Duration  int32
-	MainBPM   float64
-	MinBPM    float64
-	MaxBPM    float64
-	AddAtTime time.Time
+	MusicFS fs.FS
+	Base    string // For comparing fsys.
+	Hash    string // md5 with 16 bytes
 
-	Path string
+	mode.ChartHeader
+	Duration         int32
+	MainBPM          float64
+	MinBPM           float64
+	MaxBPM           float64
+	AddAtTime        time.Time
+	LastUpdateAtTime time.Time
+	Level            float64
+	NoteCounts       []int
 	// Attributes can be added by user, such as
 	// Genre, Language, Levels from game clients
-	Attributes       map[string]any
-	LastUpdateAtTime time.Time
-
-	Level      float64
-	NoteCounts []int
+	Attributes map[string]any
 }
 
 // Music name itself may be duplicated.
@@ -44,20 +44,11 @@ func (c Chart) NodeName() string {
 	return fmt.Sprintf("[Lv. %.0f] %s [%s]", c.Level, c.MusicName, c.ChartName)
 }
 
-// Todo: support .osz as music folder
-// Memo: archive/zip.OpenReader returns ReadSeeker, which implements Read.
-// Both Read and fs.Open are same in type: (name string) (fs.File, error)
-func (c Chart) FSPath(root fs.FS) (fs.FS, string) {
-	dir, name := path.Split(c.Path)
-	fsys, _ := fs.Sub(root, dir)
-	return fsys, name
-}
-
 // newCharts reads only first depth of root for directory.
 // Then it will read all charts in each directory.
 // Memo: 'name' is a officially used name as file path in io/fs.
-func newCharts(root fs.FS) ([]*Chart, []error) {
-	var cs []*Chart
+func newCharts(root fs.FS) (map[string]*Chart, []error) {
+	cs := make(map[string]*Chart)
 	musicEntries, err := fs.ReadDir(root, ".")
 	errs := make([]error, 0, 5)
 	if err != nil {
@@ -97,6 +88,14 @@ func newCharts(root fs.FS) ([]*Chart, []error) {
 					errs = append(errs, err)
 					continue
 				}
+				defer file.Close()
+
+				dat, err := fs.ReadFile(musicFS, ce.Name())
+				if err != nil {
+					errs = append(errs, err)
+					continue
+				}
+				hash := md5.Sum(dat)
 
 				f, err := osu.NewFormat(file)
 				if err != nil {
@@ -105,10 +104,12 @@ func newCharts(root fs.FS) ([]*Chart, []error) {
 				}
 
 				c := &Chart{
+					MusicFS:     musicFS,
+					Base:        me.Name(),
+					Hash:        string(hash[:]),
 					ChartHeader: mode.NewChartHeader(f),
-					Path:        path.Join(me.Name(), ce.Name()),
 				}
-				cs = append(cs, c)
+				cs[c.Hash] = c
 			}
 		}
 	}
@@ -119,22 +120,18 @@ func ext(path string) string {
 	return strings.ToLower(filepath.Ext(path))
 }
 
-func zipFS(path string) (fs.FS, error) {
-	r, err := zip.OpenReader(path)
-	if err != nil {
-		return nil, err
-	}
-	return r, nil
-}
-
 // You can keep each order of slice when after copying slice
 // even if the slice is a slice of pointers.
 // https://go.dev/play/p/yhvMddwd2co
-func newChartTree(src []*Chart) *Node {
+func newChartTree(src map[string]*Chart) *Node { // key: c.Hash
 	cs := make([]*Chart, len(src))
-	copy(cs, src)
+	i := 0
+	for _, c := range src {
+		cs[i] = c
+		i++
+	}
 
-	folders := make(map[string][]*Chart)
+	folders := make(map[string][]*Chart) // key: c.FolderNodeName()
 	for _, c := range cs {
 		fdname := c.FolderNodeName()
 		folders[fdname] = append(folders[fdname], c)
@@ -157,8 +154,8 @@ func newChartTree(src []*Chart) *Node {
 	for _, name := range keys {
 		folder := &Node{Type: FolderNode, Data: name, Parent: root}
 		for _, c := range folders[name] {
-			chart := &Node{Type: ChartNote, Data: c.NodeName(), Parent: folder}
-			path := &Node{Type: PathNode, Data: c.Path, Parent: chart}
+			chart := &Node{Type: ChartNode, Data: c.NodeName(), Parent: folder}
+			path := &Node{Type: LeafNode, Data: c.Hash, Parent: chart}
 			chart.AppendChild(path)
 			folder.AppendChild(chart)
 		}
@@ -166,3 +163,20 @@ func newChartTree(src []*Chart) *Node {
 	}
 	return root
 }
+
+// Todo: support .osz as music folder
+// Memo: archive/zip.OpenReader returns ReadSeeker, which implements Read.
+// Both Read and fs.Open are same in type: (name string) (fs.File, error)
+// func zipFS(path string) (fs.FS, error) {
+// 	r, err := zip.OpenReader(path)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return r, nil
+// }
+
+// func (c Chart) FSPath(root fs.FS) (fs.FS, string) {
+// 	dir, name := path.Split(c.Path)
+// 	fsys, _ := fs.Sub(root, dir)
+// 	return fsys, name
+// }

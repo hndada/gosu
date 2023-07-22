@@ -70,6 +70,12 @@ func (mp *MusicPlayer) Play() {
 	speaker.Unlock()
 }
 
+func (mp *MusicPlayer) Rewind() {
+	speaker.Lock()
+	mp.streamer.Seek(0)
+	speaker.Unlock()
+}
+
 func (mp MusicPlayer) IsPlayed() bool { return mp.played }
 
 func (mp MusicPlayer) Time() time.Duration {
@@ -107,6 +113,8 @@ func (mp *MusicPlayer) Resume() {
 func (mp *MusicPlayer) Close() {
 	speaker.Lock()
 	speaker.Clear()
-	mp.streamer.Close()
+	if mp.streamer != nil {
+		mp.streamer.Close()
+	}
 	speaker.Unlock()
 }

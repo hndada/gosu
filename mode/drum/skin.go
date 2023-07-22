@@ -179,31 +179,31 @@ func (skin *Skin) Load(fsys fs.FS) {
 		for kind, color := range []color.NRGBA{ColorRed, ColorBlue, ColorYellow, ColorPurple} {
 			img := draws.NewImageColored(skin.note, color)
 			s := draws.NewSprite(img)
-			s.SetScaleToH(noteHeight)
+			s.MultiplyScale(noteHeight / s.H())
 			s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 			skin.Note[kind][size] = s
 		}
 		a := draws.NewAnimation(skin.overlay[size])
 		for frame := range a {
-			a[frame].SetScaleToH(noteHeight)
+			a[frame].MultiplyScale(noteHeight / a[frame].H())
 			a[frame].Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		}
 		skin.Overlay[size] = a
 		{
 			s := draws.NewSprite(head)
-			s.SetScaleToH(noteHeight)
+			s.MultiplyScale(noteHeight / s.H())
 			s.Locate(S.HitPosition, S.FieldPosition, draws.RightMiddle)
 			skin.Head[size] = s
 		}
 		{
 			s := draws.NewSprite(tail)
-			s.SetScaleToH(noteHeight)
+			s.MultiplyScale(noteHeight / s.H())
 			s.Locate(S.HitPosition, S.FieldPosition, draws.LeftMiddle)
 			skin.Tail[size] = s
 		}
 		{
 			s := draws.NewSprite(body)
-			s.SetScaleToH(noteHeight)
+			s.MultiplyScale(noteHeight / s.H())
 			s.Locate(S.HitPosition, S.FieldPosition, draws.LeftMiddle)
 			s.Filter = ebiten.FilterNearest
 			skin.Body[size] = s
@@ -242,7 +242,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 	)
 	for k, img := range key {
 		s := draws.NewSprite(img)
-		s.SetScaleToH(S.FieldInnerHeight)
+		s.MultiplyScale(S.FieldInnerHeight / s.H())
 		if k < 2 { // Includes determining key field size.
 			s.Locate(0, S.FieldPosition, draws.LeftMiddle)
 			if w := s.W(); keyFieldSize.X < w*2 {
@@ -338,13 +338,15 @@ func NewShakeSprites(note draws.Image) (sprites [2]draws.Sprite) {
 	}
 	{
 		s := draws.NewSprite(outerImage)
-		s.SetScaleToH(scale * S.regularNoteHeight)
+		h := scale * S.regularNoteHeight
+		s.MultiplyScale(h / s.H())
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		sprites[outer] = s
 	}
 	{
 		s := draws.NewSprite(innerImage)
-		s.SetScaleToH((scale + thickness) * S.regularNoteHeight)
+		h := (scale + thickness) * S.regularNoteHeight
+		s.MultiplyScale(h / s.H())
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		sprites[inner] = s
 	}
