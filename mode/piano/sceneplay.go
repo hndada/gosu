@@ -66,6 +66,13 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, r
 	if err != nil {
 		return
 	}
+	if s.Chart.KeyCount == 0 {
+		return s, fmt.Errorf("key count is zero")
+	}
+
+	if _, ok := assets[s.KeyCount]; !ok {
+		assets[s.KeyCount] = NewAsset(s.Config, fsys, s.KeyCount, NoScratch)
+	}
 	s.Asset = assets[s.KeyCount]
 
 	const wait = 1800 * time.Millisecond
