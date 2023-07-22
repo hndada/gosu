@@ -64,10 +64,10 @@ func (mp *MusicPlayer) Play() {
 	if mp.played {
 		return
 	}
-	speaker.Lock()
+	// speaker.Lock()
 	speaker.Play(mp.volume)
 	mp.played = true
-	speaker.Unlock()
+	// speaker.Unlock()
 }
 
 func (mp *MusicPlayer) Rewind() {

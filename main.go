@@ -78,8 +78,10 @@ func (g *game) Update() error {
 
 	switch args := g.scene.Update().(type) {
 	case error:
-		err := args
-		return fmt.Errorf("game update error: %w", err)
+		fmt.Println("play scene error:", args)
+		g.scene = g.scenes["choose"]
+		// err := args
+		// return fmt.Errorf("game update error: %w", err)
 	case piano.Scorer:
 		ebiten.SetWindowTitle("gosu")
 		// debug.SetGCPercent(100)
@@ -90,10 +92,12 @@ func (g *game) Update() error {
 		replay := args.Replay
 		scene, err := play.NewScene(g.Config, g.Asset, fsys, name, replay)
 		if err != nil {
-			return err
+			fmt.Println("play scene error:", args)
+			g.scene = g.scenes["choose"]
+		} else {
+			// debug.SetGCPercent(0)
+			g.scene = scene
 		}
-		// debug.SetGCPercent(0)
-		g.scene = scene
 	}
 	return nil
 }
