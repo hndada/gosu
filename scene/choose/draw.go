@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/scene"
 )
 
 // Background brightness at Song select: 60% (153 / 255), confirmed.
@@ -31,26 +32,27 @@ func (s Scene) drawChartTree(dst draws.Image) {
 
 	// upper part
 	n = s.chartTreeNode.Prev()
-	for i := 0; i < half; i++ {
+	for i := 1; i <= half; i++ {
 		if n == nil {
 			break
 		}
-		s.drawChartTreeNode(dst, s.chartTreeNode, i)
+		s.drawChartTreeNode(dst, n, -i)
 		n = n.Prev()
 	}
 
+	// middle part
+	n = s.chartTreeNode
+	s.drawChartTreeNode(dst, n, 0)
+
 	// lower part
 	n = s.chartTreeNode.Next()
-	for i := 0; i < half; i++ {
+	for i := 1; i <= half; i++ {
 		if n == nil {
 			break
 		}
-		s.drawChartTreeNode(dst, s.chartTreeNode, i)
+		s.drawChartTreeNode(dst, n, i)
 		n = n.Next()
 	}
-
-	// middle part
-	s.drawChartTreeNode(dst, s.chartTreeNode, 0)
 }
 
 func (s Scene) drawChartTreeNode(dst draws.Image, n *Node, offset int) {
@@ -67,6 +69,9 @@ func (s Scene) drawChartTreeNode(dst draws.Image, n *Node, offset int) {
 	}
 
 	box := s.BoxMaskSprite
+	text := s.newNodeTextSprite(n)
+	op := draws.Op{}
+	op.ColorM.ScaleWithColor(clr)
 	switch offset {
 	case 0:
 		// Todo: glow effect
@@ -74,8 +79,20 @@ func (s Scene) drawChartTreeNode(dst draws.Image, n *Node, offset int) {
 		dx := s.ListItemShrink
 		dy := float64(offset) * s.ListItemHeight
 		box.Move(dx, dy)
+		text.Move(dx, dy)
 	}
-	op := draws.Op{}
-	op.ColorM.ScaleWithColor(clr)
+	text.Draw(dst, op)
 	box.Draw(dst, op)
+}
+
+// Todo: handle dx, dy automatically with face size.
+func (s Scene) newNodeTextSprite(n *Node) draws.Sprite {
+	const (
+		dx = 9
+		dy = 18
+	)
+	src := draws.NewText(n.Data, scene.Face(24))
+	text := draws.NewSprite(src)
+	text.Locate(s.ScreenSize.X-s.ListItemWidth+dx, s.ScreenSize.Y/2+dy, draws.LeftMiddle)
+	return text
 }
