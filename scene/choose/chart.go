@@ -55,8 +55,13 @@ func newCharts(root fs.FS) (map[string]*Chart, []error) {
 		return nil, append(errs, err)
 	}
 
-	// Support format: directory/.osu, .osz
+	// Support format: directory/.osu
 	for _, me := range musicEntries {
+		// Todo: support .osz as music folder
+		if !me.IsDir() {
+			continue
+		}
+
 		var musicFS fs.FS
 		switch {
 		case me.IsDir():
@@ -138,7 +143,8 @@ func newChartTree(src map[string]*Chart) *Node { // key: c.Hash
 	}
 
 	// Sort folders by name, sort charts by level.
-	keys := make([]string, len(folders))
+	// Memo: make([]T, len) and make([]T, 0, len) is prone to be erroneous.
+	keys := make([]string, 0, len(folders))
 	for k, cs := range folders {
 		// Currently all precision of level is used.
 		// Usage of using a certain precision: int(cs[i].Level*10)
@@ -152,10 +158,10 @@ func newChartTree(src map[string]*Chart) *Node { // key: c.Hash
 
 	root := &Node{Type: RootNode}
 	for _, name := range keys {
-		folder := &Node{Type: FolderNode, Data: name, Parent: root}
+		folder := &Node{Type: FolderNode, Data: name}
 		for _, c := range folders[name] {
-			chart := &Node{Type: ChartNode, Data: c.NodeName(), Parent: folder}
-			path := &Node{Type: LeafNode, Data: c.Hash, Parent: chart}
+			chart := &Node{Type: ChartNode, Data: c.NodeName()}
+			path := &Node{Type: LeafNode, Data: c.Hash}
 			chart.AppendChild(path)
 			folder.AppendChild(chart)
 		}
@@ -164,7 +170,6 @@ func newChartTree(src map[string]*Chart) *Node { // key: c.Hash
 	return root
 }
 
-// Todo: support .osz as music folder
 // Memo: archive/zip.OpenReader returns ReadSeeker, which implements Read.
 // Both Read and fs.Open are same in type: (name string) (fs.File, error)
 // func zipFS(path string) (fs.FS, error) {

@@ -42,19 +42,23 @@ func (s *Scene) updatePreviewMusic() *PreviewMusicPlayer {
 func (s *Scene) HandleEffect() {
 	const fadeDuration = time.Second
 	mp := s.PreviewMusicPlayer
+	if mp.IsEmpty() {
+		return
+	}
 
+	t := time.Since(mp.StartTime)
 	switch mp.EffectMode {
 	case EffectModeFadeIn:
-		if mp.Time() > fadeDuration {
+		if t > fadeDuration {
 			mp.EffectMode = EffectModeNormal
 		}
 	case EffectModeNormal:
-		if mp.Time() > mp.Duration()-fadeDuration {
+		if t > mp.Duration()-fadeDuration {
 			mp.FadeOut(fadeDuration, &s.MusicVolume)
 			mp.EffectMode = EffectModeFadeOut
 		}
 	case EffectModeFadeOut:
-		if time.Since(mp.StartTime) > mp.Duration()+waitDuration {
+		if t > mp.Duration()+waitDuration {
 			mp.Rewind()
 			mp.StartTime = time.Now()
 			mp.FadeIn(fadeDuration, &s.MusicVolume)
