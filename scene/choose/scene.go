@@ -61,7 +61,7 @@ func NewScene(cfg *scene.Config, asset *scene.Asset, root fs.FS) (s *Scene, err 
 	uiKeys := []input.Key{
 		input.KeyEnter, input.KeyNumpadEnter, input.KeyEscape,
 		input.KeyArrowUp, input.KeyArrowDown,
-		input.KeyArrowLeft, input.KeyArrowRight,
+		// input.KeyArrowLeft, input.KeyArrowRight,
 	}
 	s.UIKeyListener = ctrl.NewUIKeyListener(uiKeys)
 	s.chartTreeNode = newChartTree(s.charts).FirstChild
@@ -88,23 +88,22 @@ func (s *Scene) Update() any {
 	switch key {
 	case input.KeyEnter, input.KeyNumpadEnter:
 		s.chartTreeNode = s.chartTreeNode.FirstChild
-		fmt.Printf("%+v\n", s.chartTreeNode)
 	case input.KeyEscape:
 		// Todo: return to intro screen when
 		// escape is pressed on root node.
 		if s.chartTreeNode.Type != FolderNode {
 			s.chartTreeNode = s.chartTreeNode.Parent
 		}
-	case input.KeyArrowLeft:
-		// Arrow left has no effect on root node.
-		if s.chartTreeNode.Type == ChartNode {
-			s.chartTreeNode = s.chartTreeNode.Parent
-		}
-	case input.KeyArrowRight:
-		// Arrow right has no effect on leaf node.
-		if s.chartTreeNode.Type != LeafNode {
-			s.chartTreeNode = s.chartTreeNode.FirstChild
-		}
+	// case input.KeyArrowLeft:
+	// 	// Arrow left has no effect on root node.
+	// 	if s.chartTreeNode.Type == ChartNode {
+	// 		s.chartTreeNode = s.chartTreeNode.Parent
+	// 	}
+	// case input.KeyArrowRight:
+	// 	// Arrow right has no effect on leaf node.
+	// 	if s.chartTreeNode.Type != LeafNode {
+	// 		s.chartTreeNode = s.chartTreeNode.FirstChild
+	// 	}
 	case input.KeyArrowUp:
 		if prev := s.chartTreeNode.Prev(); prev != nil && prev.Type != RootNode {
 			s.chartTreeNode = prev
@@ -145,7 +144,9 @@ func (s *Scene) Update() any {
 
 	s.HandleEffect()
 	if s.KeyHandleMusicVolume() {
-		s.MusicPlayer.SetVolume(s.MusicVolume)
+		if !s.MusicPlayer.IsEmpty() {
+			s.MusicPlayer.SetVolume(s.MusicVolume)
+		}
 	}
 	s.KeyHandleSoundVolume()
 	s.KeyHandleMusicOffset()

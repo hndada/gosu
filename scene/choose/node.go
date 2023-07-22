@@ -36,17 +36,19 @@ func (n *Node) AppendChild(child *Node) {
 }
 
 func (n *Node) Prev() *Node {
-	if n.PrevSibling != nil {
-		return n.PrevSibling
-	}
-	return n.Parent
+	// if n.PrevSibling != nil {
+	// 	return n.PrevSibling
+	// }
+	// return n.Parent
+	return n.PrevSibling
 }
 
 func (n *Node) Next() *Node {
-	if n.NextSibling != nil {
-		return n.NextSibling
-	}
-	return n.Parent.NextSibling
+	// if n.NextSibling != nil {
+	// 	return n.NextSibling
+	// }
+	// return n.Parent.NextSibling
+	return n.NextSibling
 }
 
 func (root Node) LeafData() string {
