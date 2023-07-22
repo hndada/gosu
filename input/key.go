@@ -11,7 +11,7 @@ var IsKeyJustPressed = inpututil.IsKeyJustPressed
 // type Key int
 type Key = ebiten.Key
 
-const KeyNone = -1
+const KeyNone Key = -1
 
 // The order is consistent with Ebiten.
 const (

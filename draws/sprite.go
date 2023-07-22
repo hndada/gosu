@@ -43,8 +43,6 @@ func (s Sprite) Size() Vector2                { return s.SrcSize().Mul(s.Scale) 
 func (s Sprite) W() float64                   { return s.Size().X }
 func (s Sprite) H() float64                   { return s.Size().Y }
 func (s *Sprite) SetSize(w, h float64)        { s.Scale = Vec2(w, h).Div(s.SrcSize()) }
-func (s *Sprite) SetScaleToW(w float64)       { s.Scale = Scalar(w / s.W()) }
-func (s *Sprite) SetScaleToH(h float64)       { s.Scale = Scalar(h / s.H()) }
 func (s *Sprite) MultiplyScale(scale float64) { s.Scale = s.Scale.Mul(Scalar(scale)) }
 func (s *Sprite) Locate(x, y float64, anchor Anchor) {
 	s.X = x

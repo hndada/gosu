@@ -5,8 +5,8 @@ type NodeType int
 const (
 	RootNode NodeType = iota
 	FolderNode
-	ChartNote // Chart
-	PathNode  // leaf; Chart.Path
+	ChartNode
+	LeafNode // Hash
 )
 
 // Inspired by html.Node.
@@ -47,4 +47,15 @@ func (n *Node) Next() *Node {
 		return n.NextSibling
 	}
 	return n.Parent.NextSibling
+}
+
+func (root Node) LeafData() string {
+	if root.Type == LeafNode {
+		return root.Data
+	}
+	n := root.FirstChild
+	for n.Type != LeafNode {
+		n = n.FirstChild
+	}
+	return n.Data
 }
