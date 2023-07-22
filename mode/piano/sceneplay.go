@@ -59,7 +59,7 @@ type ScenePlay struct {
 	drawCombo func(draws.Image)
 }
 
-// Todo: pass key count beforehand so that s.Asset can be initialized before s.Chart.
+// Todo: initialize s.Asset with s.KeyCount, then set s.Chart.
 func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, replay *osr.Format) (s *ScenePlay, err error) {
 	s = &ScenePlay{Config: cfg}
 	s.Chart, err = NewChart(s.Config, fsys, name)

@@ -86,7 +86,7 @@ func (g *game) Update() error {
 		g.scene = g.scenes["choose"]
 	case scene.PlayArgs:
 		fsys := args.MusicFS
-		name := args.ChartName
+		name := args.ChartFilename
 		replay := args.Replay
 		scene, err := play.NewScene(g.Config, g.Asset, fsys, name, replay)
 		if err != nil {

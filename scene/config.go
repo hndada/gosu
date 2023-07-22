@@ -12,8 +12,8 @@ import (
 )
 
 const (
-	ModeAll   = -1
-	ModePiano = iota
+	// ModeAll   = -1
+	ModePiano = mode.ModePiano
 )
 
 // Todo: SoundVolume -> SoundVolumeScale?

@@ -53,7 +53,6 @@ func (s Scene) drawChartTree(dst draws.Image) {
 	s.drawChartTreeNode(dst, s.chartTreeNode, 0)
 }
 
-// Todo: glow effect on focused node
 func (s Scene) drawChartTreeNode(dst draws.Image, n *Node, offset int) {
 	// var (
 	// 	black = color.NRGBA{R: 16, G: 16, B: 16, A: 128}
@@ -62,21 +61,21 @@ func (s Scene) drawChartTreeNode(dst draws.Image, n *Node, offset int) {
 	var clr color.NRGBA
 	switch n.Type {
 	case FolderNode:
-		// color in blue class color
-		clr = color.NRGBA{R: 0, G: 0, B: 255, A: 128} // blue
+		clr = color.NRGBA{R: 64, G: 255, B: 255, A: 128} // skyblue
 	case ChartNode:
-		// color in pink class color
-		clr = color.NRGBA{R: 255, G: 128, B: 255, A: 128} // red
+		clr = color.NRGBA{R: 255, G: 128, B: 255, A: 128} // pink
 	}
 
+	box := s.BoxMaskSprite
 	switch offset {
 	case 0:
+		// Todo: glow effect
 	default:
-		box := s.BoxMaskSprite
+		dx := s.ListItemShrink
 		dy := float64(offset) * s.ListItemHeight
-		box.Move(0, dy)
-		op := draws.Op{}
-		op.ColorM.ScaleWithColor(clr)
-		box.Draw(dst, op)
+		box.Move(dx, dy)
 	}
+	op := draws.Op{}
+	op.ColorM.ScaleWithColor(clr)
+	box.Draw(dst, op)
 }
