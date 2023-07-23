@@ -87,6 +87,14 @@ func (mp MusicPlayer) Duration() time.Duration {
 	return defaultSampleRate.D(mp.streamer.Len())
 }
 
+func (mp MusicPlayer) PlaybackRate() float64 { return mp.resampler.Ratio() }
+
+func (mp *MusicPlayer) SetPlaybackRate(ratio float64) {
+	speaker.Lock()
+	mp.resampler.SetRatio(ratio)
+	speaker.Unlock()
+}
+
 func (mp *MusicPlayer) SetVolume(vol float64) {
 	speaker.Lock()
 	mp.volume.Volume = beepVolume(vol)
@@ -114,7 +122,7 @@ func (mp *MusicPlayer) Resume() {
 
 func (mp *MusicPlayer) Close() {
 	speaker.Clear()
-	if mp.streamer != nil {
+	if mp != nil && mp.streamer != nil {
 		mp.streamer.Close()
 	}
 }
