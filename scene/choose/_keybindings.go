@@ -8,6 +8,7 @@
 // 	s.Focus = FocusKeySettings
 // 	scene.UserSkin.Swipe.Play(*s.volumeSound)
 // }
+
 func setKeySettings() {
 	for k := input.Key(0); k < input.KeyReserved0; k++ {
 		if input.IsKeyJustPressed(k) {

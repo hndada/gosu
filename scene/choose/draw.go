@@ -77,6 +77,11 @@ func (s Scene) drawChartTreeNode(dst draws.Image, n *Node, offset int) {
 		// Todo: glow effect
 	default:
 		dx := s.ListItemShrink
+		if offset > 0 {
+			dx += 10 * float64(offset)
+		} else {
+			dx -= 10 * float64(offset)
+		}
 		dy := float64(offset) * s.ListItemHeight
 		box.Move(dx, dy)
 		text.Move(dx, dy)

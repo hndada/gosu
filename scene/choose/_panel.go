@@ -1,7 +1,6 @@
 package choose
 
 import (
-	_ "embed"
 	"fmt"
 	"sort"
 
@@ -9,61 +8,16 @@ import (
 	"github.com/hndada/gosu/scene"
 )
 
-func (s *Scene) LoadChartSetList() (err error) {
-	s.loading = true
-	const rankedOnly = true
-	css, err := Search(s.query, s.mode, s.page, s.levelLimit, rankedOnly)
-	if err != nil {
-		return
-	}
-	s.ChartSets = NewChartSetList(css)
-	s.Focus = FocusChartSet
-	s.loading = false
-	return
-}
+// list: 150x150
+// card: 400x140
+// cover: 900x250
+// slimcover: 1920x360
+// Example: https://assets.ppy.sh/beatmaps/784354/covers/slimcover@2x.jpg
+// Reference: https://osu.ppy.sh/docs/index.html#beatmapsetcompact-covers
+const APIBeatmap = "https://assets.ppy.sh/beatmaps"
+const Large = "@2x"
 
-type ChartSetList struct {
-	*List
-	ChartSets []*ChartSet
-	// Panel     *ChartSetPanel
-}
-
-func NewChartSetList(css []*ChartSet) (l ChartSetList) {
-	rows := make([]Row, len(css))
-	for i, cs := range css {
-		card := cs.URLCover("card", "")
-		thumb := cs.URLCover("list", "")
-		rows[i] = NewRow(card, thumb, cs.Title, cs.Artist)
-	}
-	sort.Slice(rows, func(i, j int) bool {
-		return css[i].LastUpdate > css[j].LastUpdate
-	})
-	l.List = NewList(rows)
-	l.ChartSets = css
-	// l.Panel = NewChartSetPanel(l.Current())
-	return
-}
-func (l *ChartSetList) Update() (fired bool, state int) {
-	fired, state = l.List.Update()
-	// if l.Panel != nil {
-	// 	l.Panel.Update()
-	// }
-	// if fired = l.Cursor.Update(); fired {
-	// 	cs := l.ChartSets[l.cursor]
-	// 	l.Panel = NewChartSetPanel(cs)
-	// }
-	return
-}
-func (l ChartSetList) Draw(dst draws.Image) {
-	l.List.Draw(dst)
-	// l.Panel.Draw(dst)
-}
-func (l ChartSetList) Current() *ChartSet {
-	if len(l.ChartSets) == 0 {
-		return nil
-	}
-	return l.ChartSets[l.cursor]
-}
+var DefaultCover = draws.NewImage(400, 140)
 
 type ChartSetPanel struct {
 	// bgCh chan draws.Image
@@ -76,8 +30,6 @@ type ChartSetPanel struct {
 	Duration   draws.Sprite // in seconds.
 	BPM        draws.Sprite
 }
-
-var DefaultCover = draws.NewImage(400, 140)
 
 func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 	p := &ChartSetPanel{}
@@ -142,21 +94,70 @@ func NewChartSetPanel(cs *ChartSet) *ChartSetPanel {
 	}
 	return p
 }
-func (p *ChartSetPanel) Update() {
-	// select {
-	// case i := <-p.bgCh:
-	// 	s := draws.NewSprite(i)
-	// 	s.Locate(100, 100, draws.CenterMiddle)
-	// 	p.Sprite = s
-	// default:
-	// }
+
+func (c Chart) URLDownload() string {
+	return fmt.Sprintf("https://api.chimu.moe/v1/%s", c.DownloadPath)
 }
-func (p ChartSetPanel) Draw(dst draws.Image) {
+
+// ChartPanel has own Duration and BPM.
+// Todo: chart channel
+type ChartPanel struct {
+	*ChartSetPanel
+	Duration draws.Sprite // in seconds.
+	BPM      draws.Sprite
+
+	ChartName draws.Sprite
+	Level     draws.Sprite
+	NoteCount draws.Sprite
+}
+
+func NewChartPanel(sp *ChartSetPanel, c *Chart) *ChartPanel {
+	p := &ChartPanel{
+		ChartSetPanel: sp,
+	}
+	{
+		second := c.HitLength
+		t := fmt.Sprintf("%02d:%02d", second/60, second%60)
+		src := draws.NewText(t, scene.Face16)
+		s := draws.NewSprite(src)
+		s.Locate(450, 0, draws.RightTop)
+		p.Duration = s
+	}
+	{
+		bpm := c.BPM
+		src := draws.NewText(fmt.Sprintf("%.0f", bpm), scene.Face16)
+		s := draws.NewSprite(src)
+		s.Locate(450, 50, draws.LeftTop)
+		p.BPM = s
+	}
+	{
+		src := draws.NewText(c.DiffName, scene.Face20)
+		s := draws.NewSprite(src)
+		s.Locate(0, 80, draws.LeftTop)
+		p.ChartName = s
+	}
+	{ // Todo: use gosu's own level system
+		lv := Level(c.DifficultyRating)
+		src := draws.NewText(fmt.Sprintf("Level: %2d", lv), scene.Face16)
+		s := draws.NewSprite(src)
+		s.Locate(450, 100, draws.RightTop)
+		p.Level = s
+	}
+	// Todo: NoteCount
+	// Due to different logic, MaxCombo tells nothing.
+	return p
+}
+
+func (p ChartPanel) Draw(dst draws.Image) {
 	p.Sprite.Draw(dst, draws.Op{})
 	p.MusicName.Draw(dst, draws.Op{})
 	p.Artist.Draw(dst, draws.Op{})
+	p.ChartName.Draw(dst, draws.Op{})
 	p.Charter.Draw(dst, draws.Op{})
 	p.UpdateDate.Draw(dst, draws.Op{})
+
 	p.Duration.Draw(dst, draws.Op{})
 	p.BPM.Draw(dst, draws.Op{})
+	p.Level.Draw(dst, draws.Op{})
+	// p.NoteCount.Draw(dst, draws.Op{})
 }
