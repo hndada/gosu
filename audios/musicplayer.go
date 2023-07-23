@@ -23,7 +23,7 @@ const defaultSampleRate beep.SampleRate = 44100
 const quality = 4
 
 func init() {
-	speaker.Init(defaultSampleRate, defaultSampleRate.N(time.Second/30))
+	speaker.Init(defaultSampleRate, defaultSampleRate.N(time.Second/20))
 }
 
 func NewMusicPlayer(f beep.StreamSeekCloser, format beep.Format, ratio float64) MusicPlayer {
@@ -61,6 +61,9 @@ func NewMusicPlayerFromFile(fsys fs.FS, name string, ratio float64) (MusicPlayer
 }
 
 func (mp *MusicPlayer) Play() {
+	if mp.IsEmpty() {
+		return
+	}
 	if mp.played {
 		return
 	}
@@ -78,24 +81,46 @@ func (mp *MusicPlayer) Rewind() {
 
 func (mp MusicPlayer) IsEmpty() bool { return mp.streamer == nil }
 
-func (mp MusicPlayer) IsPlayed() bool { return mp.played }
+func (mp MusicPlayer) IsPlayed() bool {
+	if mp.IsEmpty() {
+		return false
+	}
+	return mp.played
+}
 
 func (mp MusicPlayer) Time() time.Duration {
+	if mp.IsEmpty() {
+		return 0
+	}
 	return defaultSampleRate.D(mp.streamer.Position())
 }
 func (mp MusicPlayer) Duration() time.Duration {
+	if mp.IsEmpty() {
+		return 0
+	}
 	return defaultSampleRate.D(mp.streamer.Len())
 }
 
-func (mp MusicPlayer) PlaybackRate() float64 { return mp.resampler.Ratio() }
+func (mp MusicPlayer) PlaybackRate() float64 {
+	if mp.IsEmpty() {
+		return 1
+	}
+	return mp.resampler.Ratio()
+}
 
 func (mp *MusicPlayer) SetPlaybackRate(ratio float64) {
+	if mp.IsEmpty() {
+		return
+	}
 	speaker.Lock()
 	mp.resampler.SetRatio(ratio)
 	speaker.Unlock()
 }
 
 func (mp *MusicPlayer) SetVolume(vol float64) {
+	if mp.IsEmpty() {
+		return
+	}
 	speaker.Lock()
 	mp.volume.Volume = beepVolume(vol)
 	if vol <= 0.001 { // 0.1%
@@ -106,23 +131,35 @@ func (mp *MusicPlayer) SetVolume(vol float64) {
 	speaker.Unlock()
 }
 
-func (mp MusicPlayer) IsPaused() bool { return mp.ctrl.Paused }
+func (mp MusicPlayer) IsPaused() bool {
+	if mp.IsEmpty() {
+		return false
+	}
+	return mp.ctrl.Paused
+}
 
 func (mp *MusicPlayer) Pause() {
+	if mp.IsEmpty() {
+		return
+	}
 	speaker.Lock()
 	mp.ctrl.Paused = true
 	speaker.Unlock()
 }
 
 func (mp *MusicPlayer) Resume() {
+	if mp.IsEmpty() {
+		return
+	}
 	speaker.Lock()
 	mp.ctrl.Paused = false
 	speaker.Unlock()
 }
 
 func (mp *MusicPlayer) Close() {
-	speaker.Clear()
-	if mp != nil && mp.streamer != nil {
-		mp.streamer.Close()
+	if mp.IsEmpty() {
+		return
 	}
+	speaker.Clear()
+	mp.streamer.Close()
 }

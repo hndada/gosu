@@ -24,13 +24,16 @@ type PreviewMusicPlayer struct {
 
 func (s *Scene) updatePreviewMusic() {
 	// It is fine to call Close at blank MusicPlayer.
-	s.MusicPlayer.Close()
+	if s.MusicPlayer != nil {
+		s.MusicPlayer.Close()
+	}
 
 	c := s.chart()
 	fsys := c.MusicFS
 	name := c.MusicFilename
 	mp, _ := audios.NewMusicPlayerFromFile(fsys, name, 1)
 	mp.SetVolume(s.MusicVolume)
+	// MusicPlayer should be pointer so that it plays only once.
 	s.PreviewMusicPlayer = PreviewMusicPlayer{
 		MusicPlayer: &mp,
 		StartTime:   time.Now(),

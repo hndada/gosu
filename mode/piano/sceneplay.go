@@ -88,10 +88,7 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, r
 	}
 
 	const ratio = 1
-	s.musicPlayer, err = audios.NewMusicPlayerFromFile(fsys, s.MusicFilename, ratio)
-	if err != nil {
-		return
-	}
+	s.musicPlayer, _ = audios.NewMusicPlayerFromFile(fsys, s.MusicFilename, ratio)
 	s.SetMusicVolume(*s.MusicVolume)
 
 	s.SoundMap = audios.NewSoundMap(fsys, s.DefaultHitSoundFormat, s.SoundVolume)
@@ -189,6 +186,12 @@ func (s *ScenePlay) Update() any {
 	var worstJudgment mode.Judgment
 	kas := s.readInput()
 	for _, ka := range kas {
+		// Todo: solve this
+		if len(ka.KeyActions) != s.KeyCount {
+			fmt.Println("len(ka.KeyActions) != s.KeyCount")
+			continue
+		}
+
 		missed := s.Scorer.flushStagedNotes(ka.Time)
 		if missed {
 			worstJudgment = s.miss()
@@ -270,11 +273,6 @@ func (s *ScenePlay) tryPlayMusic() {
 
 // Todo: set all sample volumes in advance?
 func (s ScenePlay) playSounds(ka input.KeyboardAction) {
-	if len(ka.KeyActions) != s.KeyCount {
-		fmt.Println("len(ka.KeyActions) != s.KeyCount")
-		return
-	}
-
 	for k, n := range s.stagedNotes {
 		if n == nil {
 			continue
@@ -364,7 +362,7 @@ func (s *ScenePlay) Resume() {
 }
 
 func (s ScenePlay) Finish() any {
-	s.musicPlayer.Close()
+	// s.musicPlayer.Close()
 	if s.Keyboard != nil {
 		s.Keyboard.Close()
 	}
