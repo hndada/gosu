@@ -86,7 +86,7 @@ func NewConfig(ScreenSize draws.Vector2) *Config {
 			{255, 0, 0, 64},     // Tip: red
 		},
 		HitLightingOpacity:  0.5,
-		HoldLightingOpacity: 1.5,
+		HoldLightingOpacity: 1.2,
 
 		ScoreSpriteScale:    0.65,
 		ComboSpriteScale:    0.75,
