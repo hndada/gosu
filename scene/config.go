@@ -50,8 +50,8 @@ func NewConfig() *Config {
 		MusicRoots: []string{"music"},
 		ScreenSize: screenSize,
 
-		MusicVolume:          0.30,
-		SoundVolume:          0.50,
+		MusicVolume:          0.60,
+		SoundVolume:          0.60,
 		MusicOffset:          0,
 		BackgroundBrightness: 0.6,
 		DebugPrint:           true,
