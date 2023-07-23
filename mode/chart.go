@@ -2,6 +2,7 @@ package mode
 
 import "math"
 
+const ModeAll = -1
 const (
 	ModePiano = iota
 	ModeDrum

@@ -362,7 +362,9 @@ func (s *ScenePlay) Resume() {
 
 func (s ScenePlay) Finish() any {
 	s.musicPlayer.Close()
-	s.Keyboard.Close()
+	if s.Keyboard != nil {
+		s.Keyboard.Close()
+	}
 	return s.Scorer
 }
 
@@ -380,6 +382,5 @@ func (s ScenePlay) DebugString() string {
 	f(&b, "\n")
 	f(&b, "Speed scale (PageUp/Down): x%.2f (x%.2f)\n", s.SpeedScale, s.Speed())
 	f(&b, "(Exposure time: %dms)\n", s.NoteExposureDuration(s.Speed()))
-	f(&b, "\n")
 	return b.String()
 }

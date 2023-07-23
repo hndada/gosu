@@ -11,11 +11,6 @@ import (
 	"github.com/hndada/gosu/mode/piano"
 )
 
-const (
-	// ModeAll   = -1
-	ModePiano = mode.ModePiano
-)
-
 // Todo: SoundVolume -> SoundVolumeScale?
 
 // *piano.Config wins piano.Config
@@ -30,6 +25,7 @@ type Config struct {
 	MusicOffset          int32
 	BackgroundBrightness float64
 	DebugPrint           bool
+	Replay               bool
 
 	CursorSpriteScale float64
 	ListItemWidth     float64 // For folder, chart list
@@ -55,6 +51,7 @@ func NewConfig() *Config {
 		MusicOffset:          0,
 		BackgroundBrightness: 0.6,
 		DebugPrint:           true,
+		Replay:               false,
 
 		CursorSpriteScale: 0.1,
 		ListItemWidth:     550, // 400(card) + 150(list)
@@ -64,7 +61,7 @@ func NewConfig() *Config {
 		SearchBoxHeight:   30,
 		ClearSpriteScale:  0.5,
 
-		Mode:    ModePiano,
+		Mode:    mode.ModePiano,
 		SubMode: 4,
 	}
 	cfg.loadPianoConfig(screenSize)
@@ -123,6 +120,7 @@ func (cfg Config) DebugString() string {
 	f(&b, "Music offset (Shift+ Left/Right): %dms\n", cfg.MusicOffset)
 	f(&b, "Background brightness: (Ctrl+ O/P): %.0f\n", cfg.BackgroundBrightness*100)
 	f(&b, "Debug print (F12): %v\n", cfg.DebugPrint)
+	f(&b, "Replay (F11): %v\n", cfg.Replay)
 	f(&b, "\n")
 	// f(&b, "Mode (F1): %d\n", cfg.Mode)
 	// f(&b, "Sub mode (F2/F3): %d\n", cfg.SubMode)

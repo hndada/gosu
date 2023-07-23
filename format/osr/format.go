@@ -209,14 +209,16 @@ func readReplayData(r io.Reader, dst *[]Action) error {
 	return nil
 }
 
+// f.BeatmapMD5 is a string, consisting of 32 hexadecimal characters.
+// It needs to be converted from 32 hexadecimal characters to 16 bytes.
 // strconv.ParseUint(string(f.BeatmapMD5[i*2:(i+1)*2]), 16, 8) // byte
-func (f Format) MD5() (hash [16]byte, err error) {
+func (f Format) MD5() (hash string, err error) {
 	var hashBytes []byte
 	hashBytes, err = hex.DecodeString(f.BeatmapMD5)
 	if err != nil {
 		return
 	}
-	copy(hash[:], hashBytes)
+	hash = string(hashBytes)
 	return
 }
 
