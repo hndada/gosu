@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/assets"
+	defaultasset "github.com/hndada/gosu/asset"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode/piano"
 	"github.com/hndada/gosu/scene"
@@ -61,7 +61,13 @@ func main() {
 
 func newGame(root fs.FS) *game {
 	cfg := scene.NewConfig()
-	asset := scene.NewAsset(cfg, assets.FS)
+
+	assetFS, err := fs.Sub(root, "asset")
+	if err != nil {
+		assetFS = defaultasset.FS
+	}
+	asset := scene.NewAsset(cfg, assetFS)
+
 	return &game{
 		root:   root,
 		Config: cfg,
