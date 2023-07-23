@@ -11,11 +11,15 @@ import (
 	"github.com/hndada/gosu/mode/piano"
 )
 
-// Todo: SoundVolume -> SoundVolumeScale?
+// Todo: MusicVolume -> MusicVolumeScale?
 
 // *piano.Config wins piano.Config
-// 1. Easier to pass around.
+// 1. Easier to pass to function.
 // 2. Easier to check whether config is defined or not.
+
+// scene.Config and scene.Asset contains all the configuration and assets
+// that are used in the game. They are passed to other scenes. There should not be
+// any additional configuration or assets in other scenes.
 type Config struct {
 	MusicRoots []string
 	ScreenSize draws.Vector2
@@ -27,13 +31,13 @@ type Config struct {
 	DebugPrint           bool
 	Replay               bool
 
-	CursorSpriteScale float64
-	ListItemWidth     float64 // For folder, chart list
-	ListItemHeight    float64
-	ListItemShrink    float64 // Items are not focused will be shrinked.
-	SearchBoxWidth    float64
-	SearchBoxHeight   float64
-	ClearSpriteScale  float64
+	CursorSpriteScale   float64
+	ChartTreeNodeWidth  float64
+	ChartTreeNodeHeight float64
+	ChartTreeNodeShrink float64 // Nodes are not focused will be shrinked.
+	SearchBoxWidth      float64
+	SearchBoxHeight     float64
+	ClearSpriteScale    float64
 
 	Mode        int
 	SubMode     int
@@ -53,13 +57,13 @@ func NewConfig() *Config {
 		DebugPrint:           true,
 		Replay:               false,
 
-		CursorSpriteScale: 0.1,
-		ListItemWidth:     550, // 400(card) + 150(list)
-		ListItemHeight:    40,
-		ListItemShrink:    0.05 * 550,
-		SearchBoxWidth:    250,
-		SearchBoxHeight:   30,
-		ClearSpriteScale:  0.5,
+		CursorSpriteScale:   0.1,
+		ChartTreeNodeWidth:  550, // 400(card) + 150(list)
+		ChartTreeNodeHeight: 40,
+		ChartTreeNodeShrink: 0.05 * 550,
+		SearchBoxWidth:      250,
+		SearchBoxHeight:     30,
+		ClearSpriteScale:    0.5,
 
 		Mode:    mode.ModePiano,
 		SubMode: 4,
@@ -76,8 +80,8 @@ func (cfg *Config) loadPianoConfig(screenSize draws.Vector2) {
 	cfg.PianoConfig.MusicOffset = &cfg.MusicOffset
 }
 
-func (cfg Config) ListItemCount() int {
-	return int(cfg.ScreenSize.Y/cfg.ListItemHeight) + 1
+func (cfg Config) ChartTreeNodeCount() int {
+	return int(cfg.ScreenSize.Y/cfg.ChartTreeNodeHeight) + 1
 }
 
 func (c *Config) NormalizeMusicRoots() {
