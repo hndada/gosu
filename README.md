@@ -7,6 +7,10 @@ Latest version: 0.6 (July 23rd, 2023)
 # Game play preview
 Click thumbnails to watch at YouTube.
 
+[![7!! - Orange (Piano Arrange Ver.) [Cherry Blossom]](https://i.imgur.com/0uvCmQL.png)](https://youtu.be/dS0WV4bbmnc)
+
+[![Paitan - LEMON SUMMER [4K NOVICE]](https://i.imgur.com/rlxIgiH.png)](https://youtu.be/c6USbVgRnUo)
+
 [![Taishi - bluefieldcreator [Etherealization]](https://i.imgur.com/DN8JTzQ.png)](https://youtu.be/9kMUT8vQI24)
 
 [![The Flashbulb - The Bridgeport Run [Escapism]](https://i.imgur.com/tIVTiXo.png)](https://youtu.be/5VWaSAs7bbQ)
