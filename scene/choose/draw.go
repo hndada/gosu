@@ -27,7 +27,7 @@ func (s Scene) Draw(screen draws.Image) {
 }
 
 func (s Scene) drawChartTree(dst draws.Image) {
-	half := s.ListItemCount()/2 + 1
+	half := s.ChartTreeNodeCount()/2 + 1
 	var n *Node
 
 	// upper part
@@ -76,13 +76,13 @@ func (s Scene) drawChartTreeNode(dst draws.Image, n *Node, offset int) {
 	case 0:
 		// Todo: glow effect
 	default:
-		dx := s.ListItemShrink
+		dx := s.ChartTreeNodeShrink
 		if offset > 0 {
 			dx += 10 * float64(offset)
 		} else {
 			dx -= 10 * float64(offset)
 		}
-		dy := float64(offset) * s.ListItemHeight
+		dy := float64(offset) * s.ChartTreeNodeHeight
 		box.Move(dx, dy)
 		text.Move(dx, dy)
 	}
@@ -98,6 +98,6 @@ func (s Scene) newNodeTextSprite(n *Node) draws.Sprite {
 	)
 	src := draws.NewText(n.Data, scene.Face(24))
 	text := draws.NewSprite(src)
-	text.Locate(s.ScreenSize.X-s.ListItemWidth+dx, s.ScreenSize.Y/2+dy, draws.LeftMiddle)
+	text.Locate(s.ScreenSize.X-s.ChartTreeNodeWidth+dx, s.ScreenSize.Y/2+dy, draws.LeftMiddle)
 	return text
 }

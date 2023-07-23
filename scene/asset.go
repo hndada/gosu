@@ -80,7 +80,7 @@ func (asset *Asset) setDefaultBackgroundSprite(cfg *Config, fsys fs.FS) {
 func (asset *Asset) setBoxMaskSprite(cfg *Config, fsys fs.FS) {
 	s := draws.NewSpriteFromFile(fsys, "interface/box-mask.png")
 	s.Locate(cfg.ScreenSize.X, cfg.ScreenSize.Y/2, draws.RightMiddle)
-	s.SetSize(cfg.ListItemWidth, cfg.ListItemHeight)
+	s.SetSize(cfg.ChartTreeNodeWidth, cfg.ChartTreeNodeHeight)
 	asset.BoxMaskSprite = s
 }
 
@@ -109,7 +109,7 @@ func (asset *Asset) setSearchBoxSprite(cfg *Config, fsys fs.FS) {
 	img.Fill(color.RGBA{128, 128, 128, 128}) // semi-transparent gray
 
 	var (
-		x float64 = cfg.ScreenSize.X - cfg.ListItemWidth
+		x float64 = cfg.ScreenSize.X - cfg.ChartTreeNodeWidth
 		y float64 = 25
 	)
 	s := draws.NewSprite(img)
