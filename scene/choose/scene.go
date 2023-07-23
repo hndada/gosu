@@ -85,6 +85,9 @@ func (s *Scene) Update() any {
 	oldChart := s.chart()
 
 	key := s.UIKeyListener.Listen()
+	if key != input.KeyNone {
+		s.SwipeSoundPod.Play(s.SoundVolume)
+	}
 	switch key {
 	case input.KeyEnter, input.KeyNumpadEnter:
 		s.chartTreeNode = s.chartTreeNode.FirstChild
@@ -179,6 +182,5 @@ func (s *Scene) updateBackground() {
 	s.drawBackground = scene.NewBackgroundDrawer(s.Config, s.Asset, fsys, name)
 }
 
-func (s Scene) DebugString() string {
-	return ""
-}
+// It is safe to call len() at nil slice.
+// https://go.dev/play/p/-1VWc9iDgMl

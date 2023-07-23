@@ -52,7 +52,7 @@ func NewConfig() *Config {
 
 		MusicVolume:          0.30,
 		SoundVolume:          0.50,
-		MusicOffset:          -20,
+		MusicOffset:          0,
 		BackgroundBrightness: 0.6,
 		DebugPrint:           true,
 

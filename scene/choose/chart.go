@@ -156,6 +156,10 @@ func newChartTree(src map[string]*Chart) *Node { // key: c.Hash
 		folders[k] = cs
 		keys = append(keys, k)
 	}
+	// Todo: add sort criteria to config.
+	// Group1, Group2, Sort, Filter int
+	// sortByMusicName, Level, Time, AddAtTime
+	// func(i, j int) bool { return cs[i].AddAtTime.Before(cs[j].AddAtTime) }
 	sort.Strings(keys)
 
 	root := &Node{Type: RootNode}
