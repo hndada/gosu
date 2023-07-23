@@ -35,8 +35,6 @@ type game struct {
 	scene  scene.Scene
 }
 
-// var print = func(args ...any) { fmt.Printf("%+v\n", args...) }
-
 func main() {
 	dir, err := os.Getwd()
 	if err != nil {

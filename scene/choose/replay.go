@@ -9,7 +9,7 @@ import (
 // Todo: implement non-playing score simulator
 // Todo: re-wrap mode.Replay; include osr.Format's header part.
 func newReplays(fsys fs.FS, charts map[string]*Chart) map[string]*osr.Format {
-	m := make(map[string]*osr.Format)
+	replays := make(map[string]*osr.Format)
 
 	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -31,10 +31,10 @@ func newReplays(fsys fs.FS, charts map[string]*Chart) map[string]*osr.Format {
 			if err != nil {
 				return err
 			}
-			m[f.BeatmapMD5] = f
+			hash, _ := f.MD5()
+			replays[hash] = f
 		}
 		return nil
 	})
-
-	return m
+	return replays
 }

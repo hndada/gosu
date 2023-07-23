@@ -52,7 +52,7 @@ func NewScene(cfg *scene.Config, asset *scene.Asset, root fs.FS) (s *Scene, err 
 		fmt.Println(err)
 	}
 
-	replayRoot, err := fs.Sub(root, "replays")
+	replayRoot, err := fs.Sub(root, "replay")
 	if err != nil {
 		return
 	}
@@ -155,6 +155,9 @@ func (s *Scene) Update() any {
 	s.KeyHandleMusicOffset()
 	s.KeyHandleBackgroundBrightness()
 	s.KeyHandleDebugPrint()
+	if input.IsKeyJustPressed(input.KeyF11) {
+		s.Replay = !s.Replay
+	}
 
 	// s.KeyHandleMode()
 	// s.KeyHandleSubMode()
@@ -166,12 +169,19 @@ func (s Scene) chart() *Chart { return s.charts[s.chartTreeNode.LeafData()] }
 
 func (s *Scene) playChart() any {
 	s.MusicPlayer.Close()
+
 	c := s.chart()
 	s.chartTreeNode = s.chartTreeNode.Parent
+
+	var replay *osr.Format
+	if s.Replay {
+		replay = s.replays[c.Hash]
+	}
+
 	return scene.PlayArgs{
 		MusicFS:       c.MusicFS,
 		ChartFilename: c.Filename,
-		Replay:        s.replays[c.Hash],
+		Replay:        replay,
 	}
 }
 
