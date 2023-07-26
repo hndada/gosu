@@ -25,8 +25,6 @@ type Note struct {
 	Next     *Note
 	Prev     *Note // For accessing to Head from Tail.
 	scored   bool
-
-	Strain float64 // Strain is for calculating difficulty.
 }
 
 func NewNotes(f any, keyCount int) (ns []*Note) {

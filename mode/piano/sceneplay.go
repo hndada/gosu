@@ -131,19 +131,6 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, r
 	return
 }
 
-func (s ScenePlay) newStagedNotes() []*Note {
-	staged := make([]*Note, s.KeyCount)
-	for k := range staged {
-		for _, n := range s.Chart.Notes {
-			if k == n.Key {
-				staged[n.Key] = n
-				break
-			}
-		}
-	}
-	return staged
-}
-
 func (s ScenePlay) newDrawTimers(maxTick, period int) []draws.Timer {
 	timers := make([]draws.Timer, s.KeyCount)
 	for k := range timers {

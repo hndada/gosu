@@ -1,23 +1,5 @@
 package mode
 
-import "sort"
-
-func Level(c Chart) float64 {
-	const decayFactor = 0.95
-
-	ds := c.Difficulties()
-	sort.Slice(ds, func(i, j int) bool { return ds[i] > ds[j] })
-
-	sum, weight := 0.0, 1.0
-	for _, term := range ds {
-		sum += weight * term
-		weight *= decayFactor
-	}
-
-	// No additional Math.Pow; it would make a little change.
-	return sum
-}
-
 func DifficultyPieceTimes(dys []*Dynamic, chartDuration int32) (times []int32, durations []int32) {
 	const (
 		minDuration = 400  // 400ms. 2 beats with 300 BPM

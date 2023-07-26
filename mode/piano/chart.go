@@ -16,6 +16,9 @@ type Chart struct {
 	Dynamics []*mode.Dynamic
 	Notes    []*Note
 	Bars     []*Bar
+
+	steps []step
+	Level float64
 }
 
 // NewXxx returns *Chart, while LoadXxx doesn't.
@@ -49,6 +52,9 @@ func NewChart(cfg *Config, fsys fs.FS, name string) (*Chart, error) {
 	c.setDynamicPositions()
 	c.setNotePositions(cfg)
 	c.setBarPositions()
+
+	c.setSteps()
+	c.setLevel()
 	return c, nil
 }
 
@@ -106,4 +112,17 @@ func (c Chart) Duration() int32 {
 	}
 	last := c.Notes[len(c.Notes)-1]
 	return last.Time // + last.Duration
+}
+
+func (c Chart) newStagedNotes() []*Note {
+	staged := make([]*Note, c.KeyCount)
+	for k := range staged {
+		for _, n := range c.Notes {
+			if k == n.Key {
+				staged[n.Key] = n
+				break
+			}
+		}
+	}
+	return staged
 }
