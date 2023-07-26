@@ -257,7 +257,7 @@ func (st *step) strain() float64 {
 
 const unitDuration = 800 // 800ms. 2 beats with 150 BPM
 const decayFactor = 0.95
-const levelScale = 1.0
+const levelScale = 0.05
 
 // Different BPM make duration of diff different.
 // However, it looks fine not to scale each diff based on its duration

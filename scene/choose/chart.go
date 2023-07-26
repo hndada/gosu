@@ -11,6 +11,7 @@ import (
 
 	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/mode/piano"
 )
 
 // Chart contains information of a chart.
@@ -42,7 +43,7 @@ func (c Chart) FolderNodeName() string {
 }
 
 func (c Chart) NodeName() string {
-	return fmt.Sprintf("[Lv. %.0f] %s [%s]", c.Level, c.MusicName, c.ChartName)
+	return fmt.Sprintf("[Lv. %.0f] %s [%s]", c.Level, c.MusicName, c.ChartName) // [Lv. %4.2f]
 }
 
 // newCharts reads only first depth of root for directory.
@@ -116,6 +117,18 @@ func newCharts(root fs.FS) (map[string]*Chart, []error) {
 					Hash:        string(hash[:]),
 					ChartHeader: mode.NewChartHeader(f),
 				}
+
+				switch f.Mode {
+				case osu.ModeMania:
+					cp, err := piano.NewChart(musicFS, ce.Name())
+					if err != nil {
+						errs = append(errs, err)
+						continue
+					}
+					c.Duration = cp.Duration()
+					c.Level = cp.Level
+				}
+
 				cs[c.Hash] = c
 			}
 		}

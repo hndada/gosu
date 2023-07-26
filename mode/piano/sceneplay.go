@@ -62,10 +62,12 @@ type ScenePlay struct {
 // Todo: initialize s.Asset with s.KeyCount, then set s.Chart.
 func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, replay *osr.Format) (s *ScenePlay, err error) {
 	s = &ScenePlay{Config: cfg}
-	s.Chart, err = NewChart(s.Config, fsys, name)
+
+	s.Chart, err = NewChart(fsys, name)
 	if err != nil {
 		return
 	}
+	s.Chart.updateTailPosition(cfg.TailExtraDuration)
 	if s.Chart.KeyCount == 0 {
 		return s, fmt.Errorf("key count is zero")
 	}

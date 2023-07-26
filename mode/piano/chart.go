@@ -22,7 +22,7 @@ type Chart struct {
 }
 
 // NewXxx returns *Chart, while LoadXxx doesn't.
-func NewChart(cfg *Config, fsys fs.FS, name string) (*Chart, error) {
+func NewChart(fsys fs.FS, name string) (*Chart, error) {
 	c := new(Chart)
 	f, err := fsys.Open(name)
 	if err != nil {
@@ -50,7 +50,7 @@ func NewChart(cfg *Config, fsys fs.FS, name string) (*Chart, error) {
 	c.Bars = NewBars(c.Dynamics, c.Duration())
 
 	c.setDynamicPositions()
-	c.setNotePositions(cfg)
+	c.setNotePositions()
 	c.setBarPositions()
 
 	c.setSteps()
@@ -78,17 +78,16 @@ func (c *Chart) setDynamicPositions() {
 		}
 	}
 }
-func (c *Chart) setNotePositions(cfg *Config) {
-	tailExtraTime := cfg.TailExtraDuration
+
+func (c *Chart) setNotePositions() {
 	d := c.Dynamics[0]
 	for _, n := range c.Notes {
 		for d.Next != nil && n.Time >= d.Next.Time {
 			d = d.Next
 		}
 		n.Position = d.Position + float64(n.Time-d.Time)*d.Speed
-		if n.Type == Tail {
-			n.Position += float64(tailExtraTime) * d.Speed
 
+		if n.Type == Tail {
 			// Tail notes should be drawn after their heads.
 			if n.Position < n.Prev.Position {
 				n.Position = n.Prev.Position
@@ -96,6 +95,25 @@ func (c *Chart) setNotePositions(cfg *Config) {
 		}
 	}
 }
+
+func (c *Chart) updateTailPosition(tailExtraDuration int32) {
+	d := c.Dynamics[0]
+	for _, n := range c.Notes {
+		if n.Type != Tail {
+			continue
+		}
+		for d.Next != nil && n.Time >= d.Next.Time {
+			d = d.Next
+		}
+
+		n.Position += float64(tailExtraDuration) * d.Speed
+		// Tail notes should be drawn after their heads.
+		if n.Position < n.Prev.Position {
+			n.Position = n.Prev.Position
+		}
+	}
+}
+
 func (c *Chart) setBarPositions() {
 	d := c.Dynamics[0]
 	for _, b := range c.Bars {

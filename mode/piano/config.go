@@ -19,7 +19,7 @@ type Config struct {
 	KeySettings       map[int][]string
 	SpeedScale        float64
 	HitPosition       float64
-	TailExtraDuration float64
+	TailExtraDuration int32
 
 	// others
 	KeyKindWidths         [4]float64
