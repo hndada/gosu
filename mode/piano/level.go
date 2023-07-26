@@ -14,6 +14,9 @@ var chordStrain = func(len float64) float64 { return 1.0/len + 0.1*(len-1) }
 var jackStrain = mode.LinearInterpolate([]float64{0, 200}, []float64{1.5, 0})
 var bombStrain = mode.LinearInterpolate([]float64{0, 200}, []float64{0.75, 0})
 
+const tailHoldBonus = 1.40
+const normalHoldBonus = 1.25
+
 // weight is for Tail's variadic weight based on its length.
 // For example, short long note does not require much strain to release.
 var tailStrain = mode.LinearInterpolate(
@@ -28,7 +31,7 @@ type step struct {
 	chordStrains []float64 // from current step.notes
 	jackStrains  []float64 // from each note.Prev
 	bombStrains  []float64 // from staged notes
-	noteWeights  []float64 // from each note.Weight()
+	weights      []float64 // from each note.Weight()
 }
 
 func (c *Chart) setSteps() {
@@ -48,7 +51,7 @@ func (c *Chart) setSteps() {
 			st.setChordStrains()
 			st.setJackStrains()
 			st.setBombStrains(staged)
-			st.setNoteWeights()
+			st.setWeights()
 
 			// append
 			c.steps = append(c.steps, st)
@@ -57,9 +60,11 @@ func (c *Chart) setSteps() {
 				notes: make([]*Note, c.KeyCount),
 			}
 		}
+		// set to the step
 		st.notes[n.Key] = n
 		staged[n.Key] = n.Next
 	}
+	c.steps = append(c.steps, st)
 }
 
 const (
@@ -197,24 +202,60 @@ func (st *step) setBombStrains(staged []*Note) {
 	}
 }
 
-func (st *step) setNoteWeights() {
-	st.noteWeights = make([]float64, len(st.notes))
+func (st *step) setWeights() {
+	// Holding bonus is enabled if the hand is holding at least one long note.
+	var (
+		leftHandHoldBonus  bool
+		rightHandHoldBonus bool
+	)
+	for k, h := range st.holdings {
+		if h {
+			switch st.hands[k] {
+			case leftHand:
+				leftHandHoldBonus = true
+			case rightHand:
+				rightHandHoldBonus = true
+			}
+		}
+	}
+
+	st.weights = make([]float64, len(st.notes))
 	for k, n := range st.notes {
 		if n == nil {
 			continue
 		}
+
 		switch n.Type {
 		case Tail:
 			// Todo: put Duration on Tail
 			head := n.Prev
 			x := float64(head.Duration)
-			st.noteWeights[k] = tailStrain(x)
+			st.weights[k] = tailStrain(x)
 		default:
-			st.noteWeights[k] = 1
+			st.weights[k] = 1
+		}
+
+		if st.hands[k] == leftHand && leftHandHoldBonus ||
+			st.hands[k] == rightHand && rightHandHoldBonus {
+			if n.Type == Tail {
+				st.weights[k] *= tailHoldBonus
+			} else {
+				st.weights[k] *= normalHoldBonus
+			}
 		}
 	}
 }
 
+func (st *step) strain() float64 {
+	var strain float64
+	for k, w := range st.weights {
+		base := st.chordStrains[k] + st.jackStrains[k] + st.bombStrains[k]
+		strain += base * w
+	}
+	return strain
+}
+
+const unitDuration = 800 // 800ms. 2 beats with 150 BPM
 const decayFactor = 0.95
 const levelScale = 1.0
 
@@ -224,16 +265,18 @@ const levelScale = 1.0
 // They will be alleviated into diffs.
 func (c *Chart) setLevel() {
 	// times, durations := mode.DifficultyPieceTimes(c.Dynamics, c.Duration())
+	// scale := standardDuration / float64(durations[i])
+	// diffs = append(diffs, diff*scale)
 	diffs := make([]float64, 0, len(c.steps))
 
-	const standardDuration = 800 // 800ms. 2 beats with 150 BPM
+	// chart has at least one step.
+	endTime := c.steps[0].time + unitDuration
 	var diff float64
 	for _, st := range c.steps {
-		for n.Time > times[i] {
-			// scale := standardDuration / float64(durations[i])
-			// diffs = append(diffs, diff*scale)
+		if st.time > endTime {
 			diffs = append(diffs, diff)
 			diff = 0
+			endTime += unitDuration
 		}
 		diff += st.strain()
 	}
