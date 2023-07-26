@@ -2,6 +2,7 @@ package osu
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"strings"
 )
@@ -27,7 +28,7 @@ func newTimingPoint(line string) (tp TimingPoint, err error) {
 	}
 
 	if tp.Time, err = parseInt(vs[0]); err != nil {
-		return
+		return tp, fmt.Errorf("%s: %w", line, err)
 	}
 	if tp.BeatLength, err = parseFloat(vs[1]); err != nil {
 		switch vs[1] {
@@ -36,28 +37,28 @@ func newTimingPoint(line string) (tp TimingPoint, err error) {
 		case "-∞":
 			tp.BeatLength = math.Inf(-1)
 		default:
-			return
+			return tp, fmt.Errorf("%s: %w", line, err)
 		}
 	}
 	if tp.Meter, err = parseInt(vs[2]); err != nil {
-		return
+		return tp, fmt.Errorf("%s: %w", line, err)
 	}
 	if tp.SampleSet, err = parseInt(vs[3]); err != nil {
-		return
+		return tp, fmt.Errorf("%s: %w", line, err)
 	}
 	if tp.SampleIndex, err = parseInt(vs[4]); err != nil {
-		return
+		return tp, fmt.Errorf("%s: %w", line, err)
 	}
 	if tp.Volume, err = parseInt(vs[5]); err != nil {
-		return
+		return tp, fmt.Errorf("%s: %w", line, err)
 	}
 	if tp.Uninherited, err = parseBool(vs[6]); err != nil {
-		return
+		return tp, fmt.Errorf("%s: %w", line, err)
 	}
 	if tp.Effects, err = parseInt(vs[7]); err != nil {
-		return
+		return tp, fmt.Errorf("%s: %w", line, err)
 	}
-	return
+	return tp, nil
 }
 
 // Inherited means some of its values are derived from the base timing point.

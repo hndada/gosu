@@ -38,25 +38,25 @@ func newHitObject(line string) (ho HitObject, err error) {
 	}
 
 	if ho.X, err = parseInt(vs[0]); err != nil {
-		return
+		return ho, fmt.Errorf("%s: %w", line, err)
 	}
 	if ho.Y, err = parseInt(vs[1]); err != nil {
-		return
+		return ho, fmt.Errorf("%s: %w", line, err)
 	}
 	if ho.Time, err = parseInt(vs[2]); err != nil {
-		return
+		return ho, fmt.Errorf("%s: %w", line, err)
 	}
 	if ho.NoteType, err = parseInt(vs[3]); err != nil {
-		return
+		return ho, fmt.Errorf("%s: %w", line, err)
 	}
 	if ho.HitSound, err = parseInt(vs[4]); err != nil {
-		return
+		return ho, fmt.Errorf("%s: %w", line, err)
 	}
 
 	if len(vs) == 5 {
 		// x,y,time,type,hitSound
 		if ho.NoteType == HitTypeNote {
-			return
+			return ho, nil
 		}
 		return ho, fmt.Errorf("hit object has not enough length: %v", vs)
 	}
@@ -84,14 +84,14 @@ func newHitObject(line string) (ho HitObject, err error) {
 
 		objectParamsData := strings.Join(vs, `,`)
 		if ho.SliderParams, err = newSliderParams(objectParamsData); err != nil {
-			return
+			return ho, fmt.Errorf("%s: %w", line, err)
 		}
 
 	case HitTypeSpinner:
 		// endTime,hitSample
 		vs := strings.SplitN(sub, `,`, 2)
 		if ho.EndTime, err = parseInt(vs[0]); err != nil {
-			return
+			return ho, fmt.Errorf("%s: %w", line, err)
 		}
 		hitSampleData = vs[1]
 
@@ -99,7 +99,7 @@ func newHitObject(line string) (ho HitObject, err error) {
 		// endTime:hitSample
 		vs := strings.SplitN(sub, `:`, 2)
 		if ho.EndTime, err = parseInt(vs[0]); err != nil {
-			return
+			return ho, fmt.Errorf("%s: %w", line, err)
 		}
 		hitSampleData = vs[1]
 

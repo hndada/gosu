@@ -120,19 +120,19 @@ func NewFormat(r io.Reader) (f *Format, err error) {
 		switch section {
 		case "General":
 			if err = f.setGeneralContent(line); err != nil {
-				return
+				return f, fmt.Errorf("error at %s: %s", line, err)
 			}
 		case "Editor":
 			if err = f.setEditorContent(line); err != nil {
-				return
+				return f, fmt.Errorf("error at %s: %s", line, err)
 			}
 		case "Metadata":
 			if err = f.setMetadataContent(line); err != nil {
-				return
+				return f, fmt.Errorf("error at %s: %s", line, err)
 			}
 		case "Difficulty":
 			if err = f.setDifficultyContent(line); err != nil {
-				return
+				return f, fmt.Errorf("error at %s: %s", line, err)
 			}
 		case "Events":
 			ev, err := newEvent(line)
@@ -148,7 +148,7 @@ func NewFormat(r io.Reader) (f *Format, err error) {
 			f.TimingPoints = append(f.TimingPoints, tp)
 		case "Colours":
 			if err = f.setColoursContent(line); err != nil {
-				return
+				return f, fmt.Errorf("error at %s: %s", line, err)
 			}
 		case "HitObjects":
 			ho, err := newHitObject(line)

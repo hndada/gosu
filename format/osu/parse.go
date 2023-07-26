@@ -47,7 +47,7 @@ func parsePoint(s string) (p [2]int, err error) {
 	}
 	for i := 0; i < 2; i++ {
 		if p[i], err = parseInt(xy[i]); err != nil {
-			return
+			return p, fmt.Errorf("point parse error: %w", err)
 		}
 	}
 	return

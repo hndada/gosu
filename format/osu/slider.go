@@ -30,20 +30,20 @@ func newSliderParams(data string) (sp SliderParams, err error) {
 	sp.CurvePoints = make([][2]int, len(curveData)-1)
 	for i, p := range curveData[1:] {
 		if sp.CurvePoints[i], err = parsePoint(p); err != nil {
-			return
+			return sp, fmt.Errorf("slider params parse error: %w", err)
 		}
 	}
 	// slides
 	if sp.Slides, err = parseInt(vs[1]); err != nil {
-		return
+		return sp, fmt.Errorf("slider params parse error: %w", err)
 	}
 	// length
 	if sp.Length, err = parseFloat(vs[2]); err != nil {
-		return
+		return sp, fmt.Errorf("slider params parse error: %w", err)
 	}
 
 	if len(vs) < 5 {
-		return
+		return sp, nil
 	}
 
 	// edgeSounds
@@ -52,7 +52,7 @@ func newSliderParams(data string) (sp SliderParams, err error) {
 	sp.EdgeSounds = make([]int, len(edgeSounds))
 	for i := 0; i < len(edgeSounds); i++ {
 		if sp.EdgeSounds[i], err = parseInt(edgeSounds[i]); err != nil {
-			return
+			return sp, fmt.Errorf("slider params parse error: %w", err)
 		}
 	}
 	// edgeSets
@@ -61,10 +61,9 @@ func newSliderParams(data string) (sp SliderParams, err error) {
 	sp.EdgeSets = make([][2]int, len(edgeSets))
 	for i, p := range edgeSets {
 		if sp.EdgeSets[i], err = parsePoint(p); err != nil {
-			return
+			return sp, fmt.Errorf("slider params parse error: %w", err)
 		}
 	}
-
 	return
 }
 
