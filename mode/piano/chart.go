@@ -144,3 +144,18 @@ func (c Chart) newStagedNotes() []*Note {
 	}
 	return staged
 }
+
+func (c Chart) NoteCounts() []int {
+	counts := make([]int, 3)
+	for _, n := range c.Notes {
+		switch n.Type {
+		case Normal:
+			counts[0]++
+		case Head:
+			counts[1]++
+		case Tail:
+			counts[2]++
+		}
+	}
+	return counts
+}

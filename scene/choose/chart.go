@@ -49,7 +49,7 @@ func (c Chart) NodeName() string {
 // newCharts reads only first depth of root for directory.
 // Then it will read all charts in each directory.
 // Memo: 'name' is a officially used name as file path in io/fs.
-func newCharts(root fs.FS) (map[string]*Chart, []error) {
+func NewCharts(root fs.FS) (map[string]*Chart, []error) {
 	cs := make(map[string]*Chart)
 	musicEntries, err := fs.ReadDir(root, ".")
 	errs := make([]error, 0, 5)
@@ -126,7 +126,9 @@ func newCharts(root fs.FS) (map[string]*Chart, []error) {
 						continue
 					}
 					c.Duration = cp.Duration()
+					c.MainBPM, c.MinBPM, c.MaxBPM = mode.BPMs(cp.Dynamics, cp.Duration())
 					c.Level = cp.Level
+					c.NoteCounts = cp.NoteCounts()
 				}
 
 				cs[c.Hash] = c

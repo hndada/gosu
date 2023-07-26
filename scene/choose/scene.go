@@ -47,7 +47,7 @@ func NewScene(cfg *scene.Config, asset *scene.Asset, root fs.FS) (s *Scene, err 
 		return
 	}
 	var errsParse []error
-	s.charts, errsParse = newCharts(musicRoot)
+	s.charts, errsParse = NewCharts(musicRoot)
 	for _, err := range errsParse {
 		fmt.Println(err)
 	}
