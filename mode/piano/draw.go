@@ -69,7 +69,7 @@ func (s ScenePlay) drawLongNoteBodies(dst draws.Image) {
 				length = 0
 			}
 
-			bodyFrame.SetSize(bodyFrame.W(), length)
+			bodyFrame.SetSize(bodyFrame.Width(), length)
 			tailY := head.Position - s.cursor
 			bodyFrame.Move(0, -tailY)
 

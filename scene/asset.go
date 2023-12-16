@@ -72,7 +72,7 @@ func (asset *Asset) setCursorSprites(cfg *Config, fsys fs.FS) {
 
 func (asset *Asset) setDefaultBackgroundSprite(cfg *Config, fsys fs.FS) {
 	s := draws.NewSpriteFromFile(fsys, "interface/default-bg.jpg")
-	s.MultiplyScale(cfg.ScreenSize.X / s.W())
+	s.MultiplyScale(cfg.ScreenSize.X / s.Width())
 	s.Locate(cfg.ScreenSize.X/2, cfg.ScreenSize.Y/2, draws.CenterMiddle)
 	asset.DefaultBackgroundSprite = s
 }

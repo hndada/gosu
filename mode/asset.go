@@ -23,7 +23,7 @@ func NewScoreSprites(fsys fs.FS, ScreenSize draws.Vector2, scale float64) [13]dr
 		if i == 0 {
 			s.Locate(ScreenSize.X, 0, draws.RightTop)
 		} else {
-			s.Locate(ScreenSize.X, sprites[0].H()-s.H(), draws.RightTop)
+			s.Locate(ScreenSize.X, sprites[0].Height()-s.Height(), draws.RightTop)
 		}
 		sprites[i] = s
 	}

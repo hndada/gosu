@@ -166,7 +166,7 @@ func (d RollDrawer) Draw(dst draws.Image) {
 		{
 			s := d.Body[head.Size]
 			length := tail.Position(d.Time) - head.Position(d.Time)
-			s.SetSize(length, s.H())
+			s.SetSize(length, s.Height())
 			s.Move(head.Position(d.Time), 0)
 			s.Draw(dst, op)
 		}
@@ -392,7 +392,7 @@ func (d JudgmentDrawer) Draw(dst draws.Image) {
 			scale := 1 + 0.6*d.Progress(bound, 1)
 			d.radian = d.startRadian * scale
 		}
-		sw, sh := s.SrcSize().XY()
+		sw, sh := s.SourceSize().XY()
 		op.GeoM.Translate(-sw/2, -sh/2)
 		op.GeoM.Rotate(d.radian)
 		op.GeoM.Translate(sw/2, sh/2)

@@ -105,7 +105,7 @@ func (skin *Skin) Load(fsys fs.FS) {
 		skin.hint[state] = img
 		s := draws.NewSprite(img)
 		if name == "idle" {
-			hintScale = 1.2 * S.regularNoteHeight / s.H()
+			hintScale = 1.2 * S.regularNoteHeight / s.Height()
 		}
 		s.MultiplyScale(hintScale)
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
@@ -179,31 +179,31 @@ func (skin *Skin) Load(fsys fs.FS) {
 		for kind, color := range []color.NRGBA{ColorRed, ColorBlue, ColorYellow, ColorPurple} {
 			img := draws.NewImageColored(skin.note, color)
 			s := draws.NewSprite(img)
-			s.MultiplyScale(noteHeight / s.H())
+			s.MultiplyScale(noteHeight / s.Height())
 			s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 			skin.Note[kind][size] = s
 		}
 		a := draws.NewAnimation(skin.overlay[size])
 		for frame := range a {
-			a[frame].MultiplyScale(noteHeight / a[frame].H())
+			a[frame].MultiplyScale(noteHeight / a[frame].Height())
 			a[frame].Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		}
 		skin.Overlay[size] = a
 		{
 			s := draws.NewSprite(head)
-			s.MultiplyScale(noteHeight / s.H())
+			s.MultiplyScale(noteHeight / s.Height())
 			s.Locate(S.HitPosition, S.FieldPosition, draws.RightMiddle)
 			skin.Head[size] = s
 		}
 		{
 			s := draws.NewSprite(tail)
-			s.MultiplyScale(noteHeight / s.H())
+			s.MultiplyScale(noteHeight / s.Height())
 			s.Locate(S.HitPosition, S.FieldPosition, draws.LeftMiddle)
 			skin.Tail[size] = s
 		}
 		{
 			s := draws.NewSprite(body)
-			s.MultiplyScale(noteHeight / s.H())
+			s.MultiplyScale(noteHeight / s.Height())
 			s.Locate(S.HitPosition, S.FieldPosition, draws.LeftMiddle)
 			s.Filter = ebiten.FilterNearest
 			skin.Body[size] = s
@@ -242,13 +242,13 @@ func (skin *Skin) Load(fsys fs.FS) {
 	)
 	for k, img := range key {
 		s := draws.NewSprite(img)
-		s.MultiplyScale(S.FieldInnerHeight / s.H())
+		s.MultiplyScale(S.FieldInnerHeight / s.Height())
 		if k < 2 { // Includes determining key field size.
 			s.Locate(0, S.FieldPosition, draws.LeftMiddle)
-			if w := s.W(); keyFieldSize.X < w*2 {
+			if w := s.Width(); keyFieldSize.X < w*2 {
 				keyFieldSize.X = w * 2
 			}
-			if h := s.H(); keyFieldSize.Y < h {
+			if h := s.Height(); keyFieldSize.Y < h {
 				keyFieldSize.Y = h
 			}
 		} else {
@@ -339,14 +339,14 @@ func NewShakeSprites(note draws.Image) (sprites [2]draws.Sprite) {
 	{
 		s := draws.NewSprite(outerImage)
 		h := scale * S.regularNoteHeight
-		s.MultiplyScale(h / s.H())
+		s.MultiplyScale(h / s.Height())
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		sprites[outer] = s
 	}
 	{
 		s := draws.NewSprite(innerImage)
 		h := (scale + thickness) * S.regularNoteHeight
-		s.MultiplyScale(h / s.H())
+		s.MultiplyScale(h / s.Height())
 		s.Locate(S.HitPosition, S.FieldPosition, draws.CenterMiddle)
 		sprites[inner] = s
 	}

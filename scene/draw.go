@@ -13,7 +13,7 @@ func NewBackgroundDrawer(cfg *Config, asset *Asset, fsys fs.FS, name string) fun
 	if s.IsEmpty() {
 		s = asset.DefaultBackgroundSprite
 	}
-	s.MultiplyScale(cfg.ScreenSize.X / s.W())
+	s.MultiplyScale(cfg.ScreenSize.X / s.Width())
 	s.Locate(cfg.ScreenSize.X/2, cfg.ScreenSize.Y/2, draws.CenterMiddle)
 
 	return func(dst draws.Image) {

@@ -38,11 +38,11 @@ func NewSpriteFromURL(url string) (Sprite, error) {
 	return NewSprite(img), nil
 }
 
-func (s Sprite) SrcSize() Vector2             { return s.Source.Size() }
-func (s Sprite) Size() Vector2                { return s.SrcSize().Mul(s.Scale) }
-func (s Sprite) W() float64                   { return s.Size().X }
-func (s Sprite) H() float64                   { return s.Size().Y }
-func (s *Sprite) SetSize(w, h float64)        { s.Scale = Vec2(w, h).Div(s.SrcSize()) }
+func (s Sprite) SourceSize() Vector2          { return s.Source.Size() }
+func (s Sprite) Size() Vector2                { return s.SourceSize().Mul(s.Scale) }
+func (s Sprite) Width() float64               { return s.Size().X }
+func (s Sprite) Height() float64              { return s.Size().Y }
+func (s *Sprite) SetSize(w, h float64)        { s.Scale = Vec2(w, h).Div(s.SourceSize()) }
 func (s *Sprite) MultiplyScale(scale float64) { s.Scale = s.Scale.Mul(Scalar(scale)) }
 func (s *Sprite) Locate(x, y float64, anchor Anchor) {
 	s.X = x
@@ -57,13 +57,7 @@ func (s Sprite) Min() (min Vector2) {
 	min.Y -= []float64{0, size.Y / 2, size.Y}[s.Anchor.Y]
 	return
 }
-func (s Sprite) Max() Vector2 { return s.Min().Add(s.Size()) }
-func (s Sprite) In(p Vector2) bool {
-	min := s.Min()
-	max := s.Max()
-	p = p.Sub(min)
-	return p.X >= 0 && p.X <= max.X && p.Y >= 0 && p.Y <= max.Y
-}
+func (s Sprite) Max() Vector2                           { return s.Min().Add(s.Size()) }
 func (s Sprite) LeftTop(screenSize Vector2) (v Vector2) { return s.Min() }
 func (s Sprite) Draw(dst Image, op Op) {
 	if s.Source == nil || s.IsEmpty() {

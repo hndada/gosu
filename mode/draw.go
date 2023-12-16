@@ -11,7 +11,7 @@ func NewScoreDrawer(sprites [13]draws.Sprite, score *float64, digitGap float64) 
 	const zeroFill = 1
 
 	numbers := sprites[:10]
-	digitWidth := sprites[0].W() // Use number 0's width.
+	digitWidth := sprites[0].Width() // Use number 0's width.
 	delayedScore := NewDelayed(score)
 
 	return func(dst draws.Image) {
@@ -31,7 +31,7 @@ func NewScoreDrawer(sprites [13]draws.Sprite, score *float64, digitGap float64) 
 			sprite := numbers[d]
 			sprite.Move(tx, 0)
 			// Need to set at center since anchor is RightTop.
-			sprite.Move(-w/2+sprite.W()/2, 0)
+			sprite.Move(-w/2+sprite.Width()/2, 0)
 			sprite.Draw(dst, draws.Op{})
 			tx -= w
 		}
@@ -41,7 +41,7 @@ func NewScoreDrawer(sprites [13]draws.Sprite, score *float64, digitGap float64) 
 // Each number has different width. Number 0's width is used as standard.
 // ComboDrawer's Draw draws each number at constant x regardless of their widths.
 func NewComboDrawer(sprites [10]draws.Sprite, src *int, timer *draws.Timer, digitGap float64, bounce float64) func(draws.Image) {
-	digitWidth := sprites[0].W() // Use number 0's width.
+	digitWidth := sprites[0].Width() // Use number 0's width.
 	combo := *src
 	return func(dst draws.Image) {
 		timer.Ticker()
@@ -74,11 +74,11 @@ func NewComboDrawer(sprites [10]draws.Sprite, src *int, timer *draws.Timer, digi
 			age := timer.Age()
 			if age < boundary1 {
 				scale := 0.1 * timer.Progress(0, boundary1)
-				sprite.Move(0, bounce*sprite.H()*scale)
+				sprite.Move(0, bounce*sprite.Height()*scale)
 			}
 			if age >= boundary1 && age < boundary2 {
 				scale := 0.1 - 0.1*timer.Progress(boundary1, boundary2)
-				sprite.Move(0, bounce*sprite.H()*scale)
+				sprite.Move(0, bounce*sprite.Height()*scale)
 			}
 			sprite.Draw(dst, draws.Op{})
 			tx -= w

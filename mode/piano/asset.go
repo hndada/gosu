@@ -180,7 +180,7 @@ func (asset *Asset) setKeyLightingSprites(cfg *Config, fsys fs.FS, keyXs []float
 	sprites := make([]draws.Sprite, len(keyXs))
 	for k := range sprites {
 		s := draws.NewSprite(img)
-		s.MultiplyScale(keyWidths[k] / s.W())
+		s.MultiplyScale(keyWidths[k] / s.Width())
 		s.Locate(keyXs[k], cfg.HitPosition, draws.CenterBottom) // -HintHeight
 		sprites[k] = s
 	}
