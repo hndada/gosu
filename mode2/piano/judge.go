@@ -5,15 +5,6 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
-func DefaultJudgments() []mode.Judgment {
-	return []mode.Judgment{
-		{Window: 20, Weight: 1},
-		{Window: 40, Weight: 1},
-		{Window: 80, Weight: 0.5},
-		{Window: 120, Weight: 0},
-	}
-}
-
 const (
 	maxFlow = 50
 	maxAcc  = 20
@@ -53,11 +44,6 @@ func (s ScenePlay) newScorer() Scorer {
 		JudgmentCounts: make([]int, len(js)),
 	}
 }
-
-func (s Scorer) kool() mode.Judgment { return s.judgments[Kool] }
-func (s Scorer) cool() mode.Judgment { return s.judgments[Cool] }
-func (s Scorer) good() mode.Judgment { return s.judgments[Good] }
-func (s Scorer) miss() mode.Judgment { return s.judgments[Miss] }
 
 func (s *Scorer) flushStagedNotes(now int32) (missed bool) { // return: for draw
 	for k, n := range s.stagedNotes {
@@ -183,22 +169,4 @@ func (s *Scorer) mark(n *Note, j mode.Judgment) {
 	if n.Type != Tail {
 		s.stagedNotes[n.Key] = n.Next
 	}
-}
-
-func (s *Scorer) addJugdmentCount(j mode.Judgment) {
-	for i, j2 := range s.judgments {
-		if j.Is(j2) {
-			s.JudgmentCounts[i]++
-			break
-		}
-	}
-}
-
-func (s Scorer) judgmentIndex(j mode.Judgment) int {
-	for i, j2 := range s.judgments {
-		if j.Is(j2) {
-			return i
-		}
-	}
-	return len(s.judgments) // blank
 }

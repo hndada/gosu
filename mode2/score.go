@@ -44,7 +44,6 @@ func LoadScoreImages(fsys fs.FS) [13]draws.Image {
 }
 
 // Name of a function which returns closure ends with "-er".
-// 'score' is used as a name instead of 's' to avoid confusion with 's' in 'sprites'.
 func NewScoreComponent(imgs [13]draws.Image, cfg ScoreConfig) (sc ScoreComponent) {
 	// h0 is the height of number 0. Other numbers are located at h0 - h.
 	// Score needs to set same base line,
