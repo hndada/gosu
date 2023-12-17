@@ -1,28 +1,40 @@
 package mode
 
-import "github.com/hndada/gosu/draws"
+import (
+	"github.com/hndada/gosu/draws"
+)
 
 type Combo struct {
 	Combo int
 	// for drawing
-	cfg       *ComboConfig
-	sprites   [10]draws.Sprite
-	timer     draws.Timer2
 	lastCombo int
+	sprites   [10]draws.Sprite
+	tweens    []draws.Tween
+	w         float64
 }
 
 type ComboConfig struct {
-	Position float64 // x
-	Scale    float64
-	DigitGap float64
-	Bounce   float64 // 0.85
-	Persist  bool
+	FieldPosition *float64
+	Position      float64 // x
+	Scale         float64
+	DigitGap      float64
+	Bounce        float64 // 0.85
+	Persist       bool
 }
 
-func NewCombo(sprites [10]draws.Sprite, cfg *ComboConfig) (c Combo) {
+// Let's make NewCombo everytime when Combo is changed.
+func NewCombo(imgs [10]draws.Image, cfg ComboConfig) (c Combo) {
+	for i := 0; i < 10; i++ {
+		sprite := draws.NewSprite(imgs[i])
+		sprite.MultiplyScale(cfg.Scale)
+		sprite.Locate(*cfg.FieldPosition, cfg.Position, draws.CenterMiddle)
+		c.sprites[i] = sprite
+	}
+	tw1 := draws.NewTween(0, 1, ToTick(200), draws.EaseLinear)
+	tw2 := draws.NewTween(1, 0, ToTick(100), draws.EaseLinear)
+	tw3 := draws.NewTween(0, 0, ToTick(1500), draws.EaseLinear)
+
 	const duration = 2000 // ms
-	c.cfg = cfg
-	c.sprites = sprites
 	c.timer = draws.NewFiniteTimer(ToTick(duration))
 	return
 }
@@ -41,7 +53,6 @@ func (c Combo) Draw(screen draws.Image) {
 	if !c.cfg.Persist && c.timer.IsDone() {
 		return
 	}
-
 	if c.Combo == 0 {
 		return
 	}
