@@ -5,20 +5,20 @@ import "math"
 // Tween calculates intermediate values between two values over a specified duration.
 type Tween struct {
 	tick    int
-	start   float64
-	change  float64 // end - start
+	begin   float64
+	change  float64
 	maxTick int
 	easing  TweenFunc
 	// backward bool // for yoyo
 }
 
 // Easing function requires 4 arguments:
-// current time (tick), start and change values, and duration (max tick).
-type TweenFunc func(tick int, start, change float64, maxTick int) float64
+// current time (tick), begin and change values, and duration (max tick).
+type TweenFunc func(tick int, begin, change float64, maxTick int) float64
 
-func NewTween(start, change float64, maxTick int, easing TweenFunc) Tween {
+func NewTween(begin, change float64, maxTick int, easing TweenFunc) Tween {
 	return Tween{
-		start:   start,
+		begin:   begin,
 		change:  change,
 		maxTick: maxTick,
 		easing:  easing,
@@ -35,26 +35,26 @@ func (tw *Tween) Tick() {
 	if tw.tick < tw.maxTick {
 		tw.tick++
 	}
-	tw.change = tw.easing(tw.tick, tw.start, tw.change, tw.maxTick)
+	tw.change = tw.easing(tw.tick, tw.begin, tw.change, tw.maxTick)
 }
 
 // Easing functions
-// start + change*dx
-func EaseLinear(tick int, start, change float64, maxTick int) float64 {
+// begin + change*dx
+func EaseLinear(tick int, begin, change float64, maxTick int) float64 {
 	dx := float64(tick) / float64(maxTick)
-	return start + change*dx
+	return begin + change*dx
 }
 
-// start + change*(1-math.Exp(-k*dx))
-func EaseOutExponential(tick int, start, change float64, maxTick int) float64 {
+// begin + change*(1-math.Exp(-k*dx))
+func EaseOutExponential(tick int, begin, change float64, maxTick int) float64 {
 	if tick >= maxTick {
-		return start + change
+		return begin + change
 	}
 
 	// By setting k like below, the number of steps will be constant.
 	k := math.Log(math.Abs(change)) // steepness
 	dx := float64(tick) / float64(maxTick)
-	return start + change*(1-math.Exp(-k*dx))
+	return begin + change*(1-math.Exp(-k*dx))
 }
 
 // Yoyo is nearly no use when each tweens is not continuous.
