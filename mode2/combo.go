@@ -8,25 +8,29 @@ type Combo struct {
 	Combo     int
 	lastCombo int // to reset tween
 	sprites   [10]draws.Sprite
-	w         float64 // fixed
+	w         float64 // Combo's width is fixed.
 	tween     draws.Tween
 }
 
 type ComboConfig struct {
+	ScreenSize    *draws.Vector2
 	FieldPosition *float64
-	Position      float64 // x
-	Scale         float64
-	DigitGap      float64
-	Bounce        float64 // 0.85
-	Persist       bool
+
+	Position float64 // x
+	Scale    float64
+	DigitGap float64
+	Bounce   float64 // 0.85
+	Persist  bool
 }
 
 // Let's make NewCombo everytime when Combo is changed.
 func NewCombo(imgs [10]draws.Image, cfg ComboConfig) (c Combo) {
+	x := cfg.ScreenSize.X * *cfg.FieldPosition
+	y := cfg.ScreenSize.Y * cfg.Position
 	for i := 0; i < 10; i++ {
 		sprite := draws.NewSprite(imgs[i])
 		sprite.MultiplyScale(cfg.Scale)
-		sprite.Locate(*cfg.FieldPosition, cfg.Position, draws.CenterMiddle)
+		sprite.Locate(x, y, draws.CenterMiddle)
 		c.sprites[i] = sprite
 	}
 	// Size of the whole image is 0.5w + (n-1)(w+gap) + 0.5w.

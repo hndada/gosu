@@ -118,8 +118,11 @@ func EaseOutExponential(tick int, begin, change float64, maxTick int) float64 {
 		return begin + change
 	}
 
-	// By setting k like below, the number of steps will be constant.
-	k := math.Log(math.Abs(change)) // steepness
+	// k, steepness, is regardless of the number of steps.
+	// https://go.dev/play/p/NnGiHCfPfD-
+
+	// k := math.Log(math.Abs(change)) // delayed.go
+	const k = -6.93 // exp(-6.93) ~= pow(2, -10)
 	dx := float64(tick) / float64(maxTick)
 	return begin + change*(1-math.Exp(-k*dx))
 }
