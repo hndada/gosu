@@ -2,9 +2,7 @@ package draws
 
 import "math"
 
-// Tween encapsulates the easing function along with timing data.
-// It is used to animate between two values over a specified duration.
-// Todo: Add yoyo mode?
+// Tween calculates intermediate values between two values over a specified duration.
 type Tween struct {
 	tick    int
 	start   float64
@@ -30,34 +28,39 @@ func NewTween(start, change float64, maxTick int, easing TweenFunc) Tween {
 // IsFinished returns false if the loop is infinite.
 func (tw Tween) IsFinished() bool { return tw.tick >= tw.maxTick }
 
-// func (tw *Tween) SetChange(change float64) {
-// 	tw.start = tw.start + tw.change
-// 	tw.change = change
-// 	tw.Reset()
-// }
-
-// func (tw *Tween) Reset() {
-// 	tw.tick = 0
-// 	tw.change = 0
-// }
-
 func (tw *Tween) Tick() {
 	if tw.IsFinished() {
 		return
 	}
-
 	if tw.tick < tw.maxTick {
 		tw.tick++
 	}
 	tw.change = tw.easing(tw.tick, tw.start, tw.change, tw.maxTick)
 }
 
-// Tweens has separate loop variables apart from each Tween
-// because loop can be either each Tween's loop or whole Tweens' loop.
+// Easing functions
+// start + change*dx
+func EaseLinear(tick int, start, change float64, maxTick int) float64 {
+	dx := float64(tick) / float64(maxTick)
+	return start + change*dx
+}
+
+// start + change*(1-math.Exp(-k*dx))
+func EaseOutExponential(tick int, start, change float64, maxTick int) float64 {
+	if tick >= maxTick {
+		return start + change
+	}
+
+	// By setting k like below, the number of steps will be constant.
+	k := math.Log(math.Abs(change)) // steepness
+	dx := float64(tick) / float64(maxTick)
+	return start + change*(1-math.Exp(-k*dx))
+}
 
 // Yoyo is nearly no use when each tweens is not continuous.
 // Hence, yoyo is implemented in Tweens only, not in Tween.
 // Loop is also implemented in Tweens only for readability.
+// Todo: Add yoyo mode?
 type Tweens struct {
 	Tweens []Tween
 	index  int
@@ -141,24 +144,4 @@ func (tws *Tweens) Tick() {
 	// 		tws.loop++
 	// 	}
 	// }
-}
-
-// Easing functions
-func EaseLinear(start, end, current float64, maxTick int) float64 {
-	return (end - start) / float64(maxTick)
-}
-
-// y = start + (end-start) * (1-exp(-k/x))
-func EaseOutExponential(tick int, start, change float64, maxTick int) float64 {
-	// Decayed.go
-	// k := math.Log(math.Abs(end - start)) // steepness
-	// factor := 1 - math.Exp(-k/float64(maxTick))
-	// return (end - start) * factor
-
-	if tick >= maxTick {
-		return start + change
-	}
-	k := 10.0 // Constant for exponential decay rate
-	return start + change*(-math.Pow(2, -k*float64(tick)/float64(maxTick))+1)
-
 }
