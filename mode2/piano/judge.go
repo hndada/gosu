@@ -5,13 +5,6 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
-const (
-	Kool = iota
-	Cool
-	Good
-	Miss
-)
-
 func DefaultJudgments() []mode.Judgment {
 	return []mode.Judgment{
 		{Window: 20, Weight: 1},

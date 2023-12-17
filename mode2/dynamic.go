@@ -146,3 +146,11 @@ func BeatTimes(ds []*Dynamic, duration int32, meter int) (times []int32) {
 	}
 	return
 }
+
+// Used in ScenePlay for fetching next Dynamic.
+func NextDynamics(d *Dynamic, now int32) *Dynamic {
+	for d.Next != nil && now >= d.Next.Time {
+		d = d.Next
+	}
+	return d
+}

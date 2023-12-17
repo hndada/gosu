@@ -14,7 +14,7 @@ import (
 //	ScorePercent
 // )
 
-type Score struct {
+type ScoreComponent struct {
 	Score     float64
 	lastScore float64 // to reset tween
 	sprites   [13]draws.Sprite
@@ -45,7 +45,7 @@ func LoadScoreImages(fsys fs.FS) [13]draws.Image {
 
 // Name of a function which returns closure ends with "-er".
 // 'score' is used as a name instead of 's' to avoid confusion with 's' in 'sprites'.
-func NewScore(imgs [13]draws.Image, cfg ScoreConfig) (score Score) {
+func NewScoreComponent(imgs [13]draws.Image, cfg ScoreConfig) (sc ScoreComponent) {
 	// h0 is the height of number 0. Other numbers are located at h0 - h.
 	// Score needs to set same base line,
 	// since each number might have different height.
@@ -54,37 +54,37 @@ func NewScore(imgs [13]draws.Image, cfg ScoreConfig) (score Score) {
 		s0 := draws.NewSprite(imgs[0])
 		s0.MultiplyScale(cfg.Scale)
 		h0 = s0.Height()
-		score.w = s0.Width() + cfg.DigitGap
+		sc.w = s0.Width() + cfg.DigitGap
 	}
 
 	for i, img := range imgs {
 		sprite := draws.NewSprite(img)
 		sprite.MultiplyScale(cfg.Scale)
 		sprite.Locate(cfg.ScreenSize.X, h0-sprite.Height(), draws.RightTop)
-		score.sprites[i] = sprite
+		sc.sprites[i] = sprite
 	}
 
-	score.easing = draws.EaseOutExponential
-	score.setTween()
+	sc.easing = draws.EaseOutExponential
+	sc.setTween()
 	return
 }
 
-func (score *Score) setTween() {
-	begin := score.tween.Current()
-	change := score.Score - begin
-	score.tween = draws.NewTween(begin, change, ToTick(400), score.easing)
+func (sc *ScoreComponent) setTween() {
+	begin := sc.tween.Current()
+	change := sc.Score - begin
+	sc.tween = draws.NewTween(begin, change, ToTick(400), sc.easing)
 }
 
-func (score *Score) Update() {
-	score.tween.Tick()
-	if score.lastScore != score.Score {
-		score.lastScore = score.Score
-		score.setTween()
+func (sc *ScoreComponent) Update() {
+	sc.tween.Tick()
+	if sc.lastScore != sc.Score {
+		sc.lastScore = sc.Score
+		sc.setTween()
 	}
 }
 
-func (score Score) Draw(screen draws.Image) {
-	tweenScore := int(math.Ceil(score.tween.Current()))
+func (sc ScoreComponent) Draw(screen draws.Image) {
+	tweenScore := int(math.Ceil(sc.tween.Current()))
 	digits := make([]int, 0)
 	for v := tweenScore; v > 0; v /= 10 {
 		digits = append(digits, v%10) // Little endian.
@@ -98,11 +98,11 @@ func (score Score) Draw(screen draws.Image) {
 
 	var tx float64
 	for _, d := range digits {
-		sprite := score.sprites[d]
+		sprite := sc.sprites[d]
 		sprite.Move(tx, 0)
 		// Need to set at center since anchor is RightTop.
-		sprite.Move(-score.w/2+sprite.Width()/2, 0)
+		sprite.Move(-sc.w/2+sprite.Width()/2, 0)
 		sprite.Draw(screen, draws.Op{})
-		tx -= score.w
+		tx -= sc.w
 	}
 }

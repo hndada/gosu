@@ -25,10 +25,3 @@ type ScenePlay interface {
 	Finish() any
 	Draw(screen draws.Image)
 }
-
-func NextDynamics(d *Dynamic, now int32) *Dynamic {
-	for d.Next != nil && now >= d.Next.Time {
-		d = d.Next
-	}
-	return d
-}

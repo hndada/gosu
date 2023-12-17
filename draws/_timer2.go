@@ -8,6 +8,36 @@ type Timer2 interface {
 	Reset()
 }
 
+// Timer is for animation.
+type Timer struct {
+	tick    int
+	maxTick int
+}
+
+func NewTimer(maxTick int) Timer {
+	return Timer{maxTick: maxTick}
+}
+
+func (t *Timer) Tick() {
+	if t.maxTick > 0 {
+		t.tick = (t.tick % t.maxTick) + 1
+	}
+}
+
+func (t *Timer) Reset() { t.tick = 0 }
+
+func (t Timer) Frame(animation Animation) Sprite {
+	if len(animation) == 0 {
+		return Sprite{}
+	}
+	if t.maxTick == 0 {
+		return animation[0]
+	}
+	progress := float64(t.Tick%t.Period) / float64(t.Period)
+	count := float64(len(animation))
+	return animation[int(progress*count)]
+}
+
 // tick and maxTick contains more meanings than standalone countdown.
 // countdown cannot tell the zero value that is consumed or set.
 type baseTimer struct {
