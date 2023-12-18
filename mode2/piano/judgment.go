@@ -8,12 +8,19 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
-const (
-	Kool = iota
-	Cool
-	Good
-	Miss
-)
+type JudgmentConfig struct {
+	positionX float64 // from FieldPositionX
+	PositionY float64
+	Scale     float64
+}
+
+func NewJudgmentConfig(screen ScreenConfig, stage StageConfig) JudgmentConfig {
+	return JudgmentConfig{
+		positionX: stage.FieldPositionX,
+		PositionY: 0.66 * screen.Size.Y,
+		Scale:     0.33,
+	}
+}
 
 type JudgmentComponent struct {
 	Judgments  [4]mode.Judgment
@@ -23,35 +30,12 @@ type JudgmentComponent struct {
 	tween      draws.Tween
 }
 
-type JudgmentConfig struct {
-	FieldPosition *float64
-	Position      float64
-	Scale         float64
-}
-
-func DefaultJudgments() []mode.Judgment {
-	return []mode.Judgment{
-		{Window: 20, Weight: 1},
-		{Window: 40, Weight: 1},
-		{Window: 80, Weight: 0.5},
-		{Window: 120, Weight: 0},
-	}
-}
-
-func LoadJudgmentImages(fsys fs.FS) (framesList [4]draws.Frames) {
-	for i, name := range []string{"kool", "cool", "good", "miss"} {
-		fname := fmt.Sprintf("piano/judgment/%s.png", name)
-		framesList[i] = draws.NewFramesFromFilename(fsys, fname)
-	}
-	return
-}
-
 func NewJudgmentComponent(framesList [4]draws.Frames, cfg JudgmentConfig) (jc JudgmentComponent) {
 	jc.Judgments = [4]mode.Judgment(DefaultJudgments())
 	for i, frames := range framesList {
 		a := draws.NewAnimation(frames, mode.ToTick(40))
 		a.MultiplyScale(cfg.Scale)
-		a.Locate(*cfg.FieldPosition, cfg.Position, draws.CenterMiddle)
+		a.Locate(cfg.positionX, cfg.PositionY, draws.CenterMiddle)
 		jc.animations[i] = a
 	}
 
@@ -60,6 +44,14 @@ func NewJudgmentComponent(framesList [4]draws.Frames, cfg JudgmentConfig) (jc Ju
 	jc.tween.AppendTween(1.15, -0.15, mode.ToTick(25), draws.EaseLinear)
 	jc.tween.AppendTween(1, 0, mode.ToTick(200), draws.EaseLinear)
 	jc.tween.AppendTween(1, -0.25, mode.ToTick(25), draws.EaseLinear)
+	return
+}
+
+func LoadJudgmentImages(fsys fs.FS) (framesList [4]draws.Frames) {
+	for i, name := range []string{"kool", "cool", "good", "miss"} {
+		fname := fmt.Sprintf("piano/judgment/%s.png", name)
+		framesList[i] = draws.NewFramesFromFilename(fsys, fname)
+	}
 	return
 }
 

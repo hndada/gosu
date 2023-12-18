@@ -10,9 +10,9 @@ import (
 // c.KeyCount = c.SubMode
 type Chart struct {
 	mode.ChartHeader
-	Dynamics []*mode.Dynamic
-	Notes    []*Note
-	Bars     []*Bar
+	mode.Dynamics
+	Notes []*Note
+	Bars  []*Bar
 	Level
 }
 

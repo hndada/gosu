@@ -7,6 +7,26 @@ import (
 	"github.com/hndada/gosu/format/osu"
 )
 
+type Dynamics []*Dynamic
+
+func NewDynamics(format any, chartDuration int32) (ds Dynamics) {
+	switch format := format.(type) {
+	case *osu.Format:
+		ds = newDynamicListFromOsu(format)
+	}
+
+	// linking
+	var prev *Dynamic
+	for _, d := range ds {
+		d.Prev = prev
+		if prev != nil {
+			prev.Next = d
+		}
+		prev = d
+	}
+	return
+}
+
 // Except Volume, all fields in Dynamic are related in beat, or 'Pace'.
 // Tempo: Allergo, Adagio
 // Rhythm: confusing with pattern
@@ -92,71 +112,18 @@ func (d Dynamic) BeatDuration() float64 {
 	return float64(d.Meter) * (60000 / d.BPM)
 }
 
-type Bar struct {
-	Time     int32 // Times are in milliseconds.
-	Position float64
-	Next     *Bar
-	Prev     *Bar
-}
-
-type Dynamics struct {
-	Dynamics []*Dynamic
-	Bars     []*Bar
-}
-
-func NewDynamics(format any, chartDuration int32) (ds Dynamics) {
-	ds.setDynamicList(format)
-	ds.setBars(format, chartDuration)
-	return
-}
-func (ds *Dynamics) setDynamicList(format any) {
-	switch format := format.(type) {
-	case *osu.Format:
-		ds.Dynamics = newDynamicListFromOsu(format)
-	}
-
-	// linking
-	var prev *Dynamic
-	for _, d := range ds.Dynamics {
-		d.Prev = prev
-		if prev != nil {
-			prev.Next = d
-		}
-		prev = d
-	}
-}
-func (ds *Dynamics) setBars(format any, chartDuration int32) {
-	// const useDefaultMeter = 0
-	times := ds.BeatTimes(chartDuration)
-	ds.Bars = make([]*Bar, 0, len(times))
-	for _, t := range times {
-		b := Bar{Time: t}
-		ds.Bars = append(ds.Bars, &b)
-	}
-
-	// linking
-	var prev *Bar
-	for _, b := range ds.Bars {
-		b.Prev = prev
-		if prev != nil {
-			prev.Next = b
-		}
-		prev = b
-	}
-}
-
 func (ds Dynamics) BeatTimes(chartDuration int32) (times []int32) {
 	// These variables are for iterating over the Time.
 	var start, end, step float64
 	const bufferTime = 5000
 
 	// times before first Dynamic
-	start = float64(ds.Dynamics[0].Time)
+	start = float64(ds[0].Time)
 	end = start
 	if end > -bufferTime {
 		end = -bufferTime
 	}
-	step = ds.Dynamics[0].BeatDuration()
+	step = ds[0].BeatDuration()
 	for t := start; t >= end; t -= step {
 		times = append([]int32{int32(t)}, times...)
 	}
@@ -165,7 +132,7 @@ func (ds Dynamics) BeatTimes(chartDuration int32) (times []int32) {
 
 	// times after first Dynamic
 	var newDys []*Dynamic
-	for _, d := range ds.Dynamics {
+	for _, d := range ds {
 		if d.NewBeat {
 			newDys = append(newDys, d)
 		}
@@ -190,12 +157,12 @@ func (ds Dynamics) BeatTimes(chartDuration int32) (times []int32) {
 // When there are multiple BPMs with same duration, larger one will be main BPM.
 func (ds Dynamics) BPMs(duration int32) (main, min, max float64) {
 	bpmDurations := make(map[float64]int32)
-	for i, d := range ds.Dynamics {
+	for i, d := range ds {
 		if i == 0 {
 			bpmDurations[d.BPM] += d.Time
 		}
-		if i < len(ds.Dynamics)-1 {
-			bpmDurations[d.BPM] += ds.Dynamics[i+1].Time - d.Time
+		if i < len(ds)-1 {
+			bpmDurations[d.BPM] += ds[i+1].Time - d.Time
 		} else {
 			bpmDurations[d.BPM] += duration - d.Time // Bounds to final note time; confirmed with test.
 		}
