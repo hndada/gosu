@@ -1,6 +1,7 @@
 package mode
 
 import (
+	"math"
 	"sort"
 
 	"github.com/hndada/gosu/format/osu"
@@ -27,31 +28,12 @@ type Dynamic struct {
 	Prev *Dynamic
 }
 
-func NewDynamics(f any) []*Dynamic {
-	var ds []*Dynamic
-	switch f := f.(type) {
-	case *osu.Format:
-		ds = newDynamicsFromOsu(f)
-	}
-
-	// linking
-	var prev *Dynamic
-	for _, d := range ds {
-		d.Prev = prev
-		if prev != nil {
-			prev.Next = d
-		}
-		prev = d
-	}
-	return ds
-}
-
 // When gathering Dynamics from osu.Format, it should input the whole slice.
 // It is because osu.Format.TimingPoints brings some value from previous TimingPoint.
 
 // First BPM is used as temporary main BPM.
 // No two Dynamics have same Time.
-func newDynamicsFromOsu(f *osu.Format) []*Dynamic {
+func newDynamicListFromOsu(f *osu.Format) []*Dynamic {
 	var ds []*Dynamic
 	sort.SliceStable(f.TimingPoints, func(i int, j int) bool {
 		if f.TimingPoints[i].Time == f.TimingPoints[j].Time {
@@ -97,27 +79,84 @@ func newDynamicsFromOsu(f *osu.Format) []*Dynamic {
 	return ds
 }
 
-// 0: Use default meter.
-func (d Dynamic) BeatDuration(meter int) float64 {
-	m := float64(d.Meter)
-	if meter > 0 {
-		m = float64(meter)
+// Used in ScenePlay for fetching next Dynamic.
+func (d *Dynamic) Fetch(now int32) (d2 *Dynamic) {
+	d2 = d
+	for d2.Next != nil && now >= d2.Next.Time {
+		d2 = d.Next
 	}
-	return m * (60000 / d.BPM)
+	return
 }
 
-func BeatTimes(ds []*Dynamic, duration int32, meter int) (times []int32) {
+func (d Dynamic) BeatDuration() float64 {
+	return float64(d.Meter) * (60000 / d.BPM)
+}
+
+type Bar struct {
+	Time     int32 // Times are in milliseconds.
+	Position float64
+	Next     *Bar
+	Prev     *Bar
+}
+
+type Dynamics struct {
+	Dynamics []*Dynamic
+	Bars     []*Bar
+}
+
+func NewDynamics(format any, chartDuration int32) (ds Dynamics) {
+	ds.setDynamicList(format)
+	ds.setBars(format, chartDuration)
+	return
+}
+func (ds *Dynamics) setDynamicList(format any) {
+	switch format := format.(type) {
+	case *osu.Format:
+		ds.Dynamics = newDynamicListFromOsu(format)
+	}
+
+	// linking
+	var prev *Dynamic
+	for _, d := range ds.Dynamics {
+		d.Prev = prev
+		if prev != nil {
+			prev.Next = d
+		}
+		prev = d
+	}
+}
+func (ds *Dynamics) setBars(format any, chartDuration int32) {
+	// const useDefaultMeter = 0
+	times := ds.BeatTimes(chartDuration)
+	ds.Bars = make([]*Bar, 0, len(times))
+	for _, t := range times {
+		b := Bar{Time: t}
+		ds.Bars = append(ds.Bars, &b)
+	}
+
+	// linking
+	var prev *Bar
+	for _, b := range ds.Bars {
+		b.Prev = prev
+		if prev != nil {
+			prev.Next = b
+		}
+		prev = b
+	}
+}
+
+func (ds Dynamics) BeatTimes(chartDuration int32) (times []int32) {
 	// These variables are for iterating over the Time.
 	var start, end, step float64
 	const bufferTime = 5000
 
 	// times before first Dynamic
-	start = float64(ds[0].Time)
+	start = float64(ds.Dynamics[0].Time)
 	end = start
 	if end > -bufferTime {
 		end = -bufferTime
 	}
-	step = ds[0].BeatDuration(meter)
+	step = ds.Dynamics[0].BeatDuration()
 	for t := start; t >= end; t -= step {
 		times = append([]int32{int32(t)}, times...)
 	}
@@ -126,7 +165,7 @@ func BeatTimes(ds []*Dynamic, duration int32, meter int) (times []int32) {
 
 	// times after first Dynamic
 	var newDys []*Dynamic
-	for _, d := range ds {
+	for _, d := range ds.Dynamics {
 		if d.NewBeat {
 			newDys = append(newDys, d)
 		}
@@ -135,11 +174,11 @@ func BeatTimes(ds []*Dynamic, duration int32, meter int) (times []int32) {
 	for i, nd := range newDys {
 		start = float64(nd.Time)
 		if i == len(newDys)-1 {
-			end = float64(duration + bufferTime)
+			end = float64(chartDuration + bufferTime)
 		} else {
 			end = float64(newDys[i+1].Time)
 		}
-		step = nd.BeatDuration(meter)
+		step = nd.BeatDuration()
 		for t := start; t < end; t += step {
 			times = append(times, int32(t))
 		}
@@ -147,10 +186,35 @@ func BeatTimes(ds []*Dynamic, duration int32, meter int) (times []int32) {
 	return
 }
 
-// Used in ScenePlay for fetching next Dynamic.
-func NextDynamics(d *Dynamic, now int32) *Dynamic {
-	for d.Next != nil && now >= d.Next.Time {
-		d = d.Next
+// BPM with longest duration will be main BPM.
+// When there are multiple BPMs with same duration, larger one will be main BPM.
+func (ds Dynamics) BPMs(duration int32) (main, min, max float64) {
+	bpmDurations := make(map[float64]int32)
+	for i, d := range ds.Dynamics {
+		if i == 0 {
+			bpmDurations[d.BPM] += d.Time
+		}
+		if i < len(ds.Dynamics)-1 {
+			bpmDurations[d.BPM] += ds.Dynamics[i+1].Time - d.Time
+		} else {
+			bpmDurations[d.BPM] += duration - d.Time // Bounds to final note time; confirmed with test.
+		}
 	}
-	return d
+	var maxDuration int32
+	min = math.MaxFloat64
+	for bpm, duration := range bpmDurations {
+		if maxDuration < duration {
+			maxDuration = duration
+			main = bpm
+		} else if maxDuration == duration && main < bpm {
+			main = bpm
+		}
+		if min > bpm {
+			min = bpm
+		}
+		if max < bpm {
+			max = bpm
+		}
+	}
+	return
 }

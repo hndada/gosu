@@ -6,6 +6,11 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
+type Level struct {
+	Level float64
+	steps []step
+}
+
 // Threshold that determines whether a note is in a step or not.
 const inStepThreshold = 30
 

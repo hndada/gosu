@@ -3,45 +3,27 @@ package piano
 import (
 	"fmt"
 	"io/fs"
-	"path/filepath"
 
-	"github.com/hndada/gosu/format/osu"
-	"github.com/hndada/gosu/mode"
+	mode "github.com/hndada/gosu/mode2"
 )
 
+// c.KeyCount = c.SubMode
 type Chart struct {
 	mode.ChartHeader
-	KeyCount int // same with ChartHeader.SubMode
-
 	Dynamics []*mode.Dynamic
 	Notes    []*Note
 	Bars     []*Bar
-
-	steps []step
-	Level float64
+	Level
 }
 
 // NewXxx returns *Chart, while LoadXxx doesn't.
-func NewChart(fsys fs.FS, name string) (*Chart, error) {
-	c := new(Chart)
-	f, err := fsys.Open(name)
+func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
+	format, hash, err := mode.LoadChartFile(fsys, name)
 	if err != nil {
-		return c, fmt.Errorf("open %s: %w", name, err)
+		return
 	}
 
-	var format any
-	switch filepath.Ext(name) {
-	case ".osu", ".OSU":
-		format, err = osu.NewFormat(f)
-		if err != nil {
-			return c, fmt.Errorf("new osu format: %w", err)
-		}
-	}
-
-	c.ChartHeader = mode.NewChartHeader(format)
-	c.KeyCount = c.SubMode
-	c.ChartHash, _ = mode.Hash(f)
-
+	c.ChartHeader = mode.NewChartHeader(format, hash)
 	c.Dynamics = mode.NewDynamics(format)
 	if len(c.Dynamics) == 0 {
 		return c, fmt.Errorf("no Dynamics in the chart")
