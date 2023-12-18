@@ -42,7 +42,7 @@ type step struct {
 func (c *Chart) setSteps() {
 	var st = step{
 		time:  c.Notes[0].Time,
-		notes: make([]*Note, c.KeyCount),
+		notes: make([]*Note, c.KeyCount()),
 	}
 	// It is guaranteed that n is in stagedNotes since it is sorted by time.
 	staged := c.newStagedNotes()
@@ -62,7 +62,7 @@ func (c *Chart) setSteps() {
 			c.steps = append(c.steps, st)
 			st = step{
 				time:  n.Time,
-				notes: make([]*Note, c.KeyCount),
+				notes: make([]*Note, c.KeyCount()),
 			}
 		}
 		// set to the step
@@ -290,7 +290,7 @@ func (c *Chart) setLevel() {
 	difficulty := mode.WeightedSum(diffs, decayFactor)
 
 	// No additional Math.Pow; it would make a little change.
-	c.Level = difficulty * levelScale
+	c.Level.Level = difficulty * levelScale
 }
 
 // Todo: debug level calculation

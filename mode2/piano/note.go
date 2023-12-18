@@ -1,10 +1,11 @@
 package piano
 
 import (
+	"image/color"
 	"sort"
 
 	"github.com/hndada/gosu/format/osu"
-	"github.com/hndada/gosu/mode"
+	mode "github.com/hndada/gosu/mode2"
 )
 
 const (
@@ -27,7 +28,9 @@ type Note struct {
 	scored   bool
 }
 
-func NewNotes(f any, keyCount int) (ns []*Note) {
+type Notes []*Note
+
+func NewNotes(f any, keyCount int) (ns Notes) {
 	switch f := f.(type) {
 	case *osu.Format:
 		ns = make([]*Note, 0, len(f.HitObjects)*2)
@@ -79,4 +82,41 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []*Note) {
 		ns = append(ns, n)
 	}
 	return ns
+}
+
+type NotesConfig struct {
+	SpeedScale            float64
+	Heigth                float64 // Applies to all types of notes.
+	Colors                [4]color.NRGBA
+	TailNoteExtraDuration int32
+	LongNoteBodyStyle     int // Stretch or Attach.
+	UpsideDown            bool
+}
+
+func NewNotesConfig(screen mode.ScreenConfig) NotesConfig {
+	return NotesConfig{
+		SpeedScale: 1.0,
+		Heigth:     0.03 * screen.Size.Y, // 0.03: 27px
+		// The following colors are from
+		// each note's second outermost pixel.
+		Colors: [4]color.NRGBA{
+			{255, 255, 255, 255}, // One: white
+			{239, 191, 226, 255}, // Two: pink
+			{218, 215, 103, 255}, // Mid: yellow
+			{224, 0, 0, 255},     // Tip: red
+		},
+		TailNoteExtraDuration: 0,
+		LongNoteBodyStyle:     0,
+		UpsideDown:            false,
+	}
+}
+
+type NotesComponent struct {
+	Notes
+}
+
+func NewNotesComponent(ns Notes) NotesComponent {
+	return NotesComponent{
+		Notes: ns,
+	}
 }

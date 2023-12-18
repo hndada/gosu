@@ -6,22 +6,6 @@ import (
 )
 
 const (
-	Kool = iota
-	Cool
-	Good
-	Miss
-)
-
-func DefaultJudgments() []mode.Judgment {
-	return []mode.Judgment{
-		{Window: 20, Weight: 1},
-		{Window: 40, Weight: 1},
-		{Window: 80, Weight: 0.5},
-		{Window: 120, Weight: 0},
-	}
-}
-
-const (
 	maxFlow = 50
 	maxAcc  = 20
 )

@@ -5,7 +5,7 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/mode"
+	mode "github.com/hndada/gosu/mode2"
 )
 
 type JudgmentConfig struct {
@@ -14,11 +14,27 @@ type JudgmentConfig struct {
 	Scale     float64
 }
 
-func NewJudgmentConfig(screen ScreenConfig, stage StageConfig) JudgmentConfig {
+func NewJudgmentConfig(screen mode.ScreenConfig, stage StageConfig) JudgmentConfig {
 	return JudgmentConfig{
 		positionX: stage.FieldPositionX,
 		PositionY: 0.66 * screen.Size.Y,
 		Scale:     0.33,
+	}
+}
+
+const (
+	Kool = iota
+	Cool
+	Good
+	Miss
+)
+
+func DefaultJudgments() []mode.Judgment {
+	return []mode.Judgment{
+		{Window: 20, Weight: 1},
+		{Window: 40, Weight: 1},
+		{Window: 80, Weight: 0.5},
+		{Window: 120, Weight: 0},
 	}
 }
 
@@ -30,7 +46,7 @@ type JudgmentComponent struct {
 	tween      draws.Tween
 }
 
-func NewJudgmentComponent(framesList [4]draws.Frames, cfg JudgmentConfig) (jc JudgmentComponent) {
+func NewJudgmentComponent(cfg JudgmentConfig, framesList [4]draws.Frames) (jc JudgmentComponent) {
 	jc.Judgments = [4]mode.Judgment(DefaultJudgments())
 	for i, frames := range framesList {
 		a := draws.NewAnimation(frames, mode.ToTick(40))
@@ -93,11 +109,11 @@ func (jc JudgmentComponent) miss() mode.Judgment { return jc.Judgments[Miss] }
 
 // worstJudgment is guaranteed not to be blank,
 // hence no panicked by index out of range.
-func (jc JudgmentComponent) Draw(screen draws.Image) {
+func (jc JudgmentComponent) Draw(dst draws.Image) {
 	if jc.tween.IsFinished() {
 		return
 	}
 	a := jc.animations[jc.index()]
 	a.MultiplyScale(jc.tween.Current())
-	a.Draw(screen, draws.Op{})
+	a.Draw(dst, draws.Op{})
 }

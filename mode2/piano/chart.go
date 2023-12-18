@@ -1,18 +1,16 @@
 package piano
 
 import (
-	"fmt"
 	"io/fs"
 
 	mode "github.com/hndada/gosu/mode2"
 )
 
-// c.KeyCount = c.SubMode
 type Chart struct {
 	mode.ChartHeader
-	mode.Dynamics
 	Notes []*Note
-	Bars  []*Bar
+	mode.Dynamics
+	Bars []*mode.Bar
 	Level
 }
 
@@ -24,12 +22,12 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 	}
 
 	c.ChartHeader = mode.NewChartHeader(format, hash)
-	c.Dynamics = mode.NewDynamics(format)
-	if len(c.Dynamics) == 0 {
-		return c, fmt.Errorf("no Dynamics in the chart")
+	c.Notes = NewNotes(format, c.KeyCount())
+	c.Dynamics, err = mode.NewDynamics(format, c.Duration())
+	if err != nil {
+		return
 	}
-	c.Notes = NewNotes(format, c.KeyCount)
-	c.Bars = NewBars(c.Dynamics, c.Duration())
+	c.Bars = c.Dynamics.NewBars(c.Duration())
 
 	c.setDynamicPositions()
 	c.setNotePositions()
@@ -49,7 +47,7 @@ func NewChart(fsys fs.FS, name string) (c *Chart, err error) {
 // Tail's Position is always larger than Head's.
 func (c *Chart) setDynamicPositions() {
 	// Brilliant idea: Make SpeedScale scaled by MainBPM.
-	mainBPM, _, _ := mode.BPMs(c.Dynamics, c.Duration())
+	mainBPM, _, _ := c.Dynamics.BPMs(c.Duration())
 	bpmScale := c.Dynamics[0].BPM / mainBPM
 	for _, d := range c.Dynamics {
 		d.Speed *= bpmScale
@@ -115,7 +113,7 @@ func (c Chart) Duration() int32 {
 }
 
 func (c Chart) newStagedNotes() []*Note {
-	staged := make([]*Note, c.KeyCount)
+	staged := make([]*Note, c.KeyCount())
 	for k := range staged {
 		for _, n := range c.Notes {
 			if k == n.Key {
@@ -141,3 +139,5 @@ func (c Chart) NoteCounts() []int {
 	}
 	return counts
 }
+
+func (c Chart) KeyCount() int { return c.SubMode }

@@ -1,6 +1,7 @@
 package mode
 
 import (
+	"fmt"
 	"math"
 	"sort"
 
@@ -9,10 +10,14 @@ import (
 
 type Dynamics []*Dynamic
 
-func NewDynamics(format any, chartDuration int32) (ds Dynamics) {
+func NewDynamics(format any, chartDuration int32) (ds Dynamics, err error) {
 	switch format := format.(type) {
 	case *osu.Format:
 		ds = newDynamicListFromOsu(format)
+	}
+	if len(ds) == 0 {
+		err = fmt.Errorf("no Dynamics in the chart")
+		return
 	}
 
 	// linking

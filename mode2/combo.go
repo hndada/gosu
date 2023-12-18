@@ -4,6 +4,28 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
+type ComboConfig struct {
+	// Position x and y may be derived from other configuration values.
+	PositionX float64 // e.g. from FieldPositionX
+	PositionY float64 // e.g. from ComboPositionY
+
+	Scale    float64
+	DigitGap float64
+	Bounce   float64 // 0.85
+	Persist  bool
+}
+
+func NewComboConfig(screen ScreenConfig) ComboConfig {
+	return ComboConfig{
+		PositionX: 0.50 * screen.Size.X,
+		PositionY: 0.50 * screen.Size.Y,
+		Scale:     0.75,
+		DigitGap:  -1,
+		Bounce:    0.85,
+		Persist:   false,
+	}
+}
+
 type ComboComponent struct {
 	Combo     int
 	lastCombo int // to reset tween
@@ -12,25 +34,12 @@ type ComboComponent struct {
 	tween     draws.Tween
 }
 
-type ComboConfig struct {
-	ScreenSize    *draws.Vector2
-	FieldPosition *float64
-
-	Position float64 // x
-	Scale    float64
-	DigitGap float64
-	Bounce   float64 // 0.85
-	Persist  bool
-}
-
 // Let's make NewCombo everytime when Combo is changed.
-func NewComboComponent(imgs [10]draws.Image, cfg ComboConfig) (cc ComboComponent) {
-	x := cfg.ScreenSize.X * *cfg.FieldPosition
-	y := cfg.ScreenSize.Y * cfg.Position
+func NewComboComponent(cfg ComboConfig, imgs [10]draws.Image) (cc ComboComponent) {
 	for i := 0; i < 10; i++ {
 		sprite := draws.NewSprite(imgs[i])
 		sprite.MultiplyScale(cfg.Scale)
-		sprite.Locate(x, y, draws.CenterMiddle)
+		sprite.Locate(cfg.PositionX, cfg.PositionY, draws.CenterMiddle)
 		cc.sprites[i] = sprite
 	}
 	// Size of the whole image is 0.5w + (n-1)(w+gap) + 0.5w.
@@ -57,7 +66,7 @@ func (cc *ComboComponent) Update() {
 
 // Each number has different width. Number 0's width is used as standard.
 // ComboDrawer's Draw draws each number at constant x regardless of their widths.
-func (cc ComboComponent) Draw(screen draws.Image) {
+func (cc ComboComponent) Draw(dst draws.Image) {
 	if cc.tween.IsFinished() {
 		return
 	}
@@ -75,7 +84,7 @@ func (cc ComboComponent) Draw(screen draws.Image) {
 		sprite := cc.sprites[v]
 		ty := cc.tween.Current() * sprite.Height()
 		sprite.Move(tx, ty)
-		sprite.Draw(screen, draws.Op{})
+		sprite.Draw(dst, draws.Op{})
 		tx -= cc.w
 	}
 }

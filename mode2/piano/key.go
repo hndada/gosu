@@ -1,6 +1,10 @@
 package piano
 
-import "image/color"
+import (
+	"image/color"
+
+	mode "github.com/hndada/gosu/mode2"
+)
 
 type KeyConfig struct {
 	KeyboardMapping  map[int][]string
@@ -11,7 +15,7 @@ type KeyConfig struct {
 	HoldLightOpacity float64
 }
 
-func NewKeyConfig(screen ScreenConfig, stage *StageConfig) KeyConfig {
+func NewKeyConfig(screen mode.ScreenConfig, stage *StageConfig) KeyConfig {
 	return KeyConfig{
 		KeyboardMapping: map[int][]string{
 			4:  {"D", "F", "J", "K"},

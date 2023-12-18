@@ -14,6 +14,20 @@ import (
 //	ScorePercent
 // )
 
+type ScoreConfig struct {
+	positionX float64 // from ScreenSize.X
+	Scale     float64
+	DigitGap  float64
+}
+
+func NewScoreConfig(screen ScreenConfig) ScoreConfig {
+	return ScoreConfig{
+		positionX: screen.Size.X,
+		Scale:     0.65,
+		DigitGap:  0,
+	}
+}
+
 type ScoreComponent struct {
 	Score     float64
 	lastScore float64 // to reset tween
@@ -21,15 +35,6 @@ type ScoreComponent struct {
 	w         float64 // Score's width is fixed.
 	tween     draws.Tween
 	easing    draws.TweenFunc
-}
-
-type ScoreConfig struct {
-	ScreenSize    *draws.Vector2
-	FieldPosition *float64
-
-	Position float64 // x
-	Scale    float64
-	DigitGap float64
 }
 
 func LoadScoreImages(fsys fs.FS) [13]draws.Image {
@@ -59,7 +64,7 @@ func NewScoreComponent(imgs [13]draws.Image, cfg ScoreConfig) (sc ScoreComponent
 	for i, img := range imgs {
 		sprite := draws.NewSprite(img)
 		sprite.MultiplyScale(cfg.Scale)
-		sprite.Locate(cfg.ScreenSize.X, h0-sprite.Height(), draws.RightTop)
+		sprite.Locate(cfg.positionX, h0-sprite.Height(), draws.RightTop)
 		sc.sprites[i] = sprite
 	}
 
