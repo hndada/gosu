@@ -7,20 +7,33 @@ import (
 	mode "github.com/hndada/gosu/mode2"
 )
 
-// Config is for wrapping required arguments.
+// Since XxxConfig is for embedding, it's better
+// not to omit Xxx prefix on each field.
 type BarConfig struct {
-	positionX float64 // from FieldPositionX
-	positionY float64 // from KeyPositionY
-	width     float64 // from FieldWidth
+	BarHeight float64
+}
+
+func NewBarConfig() BarConfig {
+	return BarConfig{
+		BarHeight: 1,
+	}
+}
+
+// Arguments is used only for NewBarComponent,
+// hence omitting Xxx prefix is acceptable.
+type BarArgs struct {
+	PositionX float64
+	PositionY float64
+	Width     float64
 	Height    float64
 }
 
-func NewBarConfig(screen mode.ScreenConfig, stage StageConfig) BarConfig {
-	return BarConfig{
-		positionX: stage.FieldPositionX,
-		positionY: stage.HintPositionY,
-		width:     stage.Width(),
-		Height:    1,
+func (cfg Config) BarArgs() BarArgs {
+	return BarArgs{
+		PositionX: cfg.StagePositionX,
+		PositionY: cfg.HitPositionY,
+		Width:     cfg.StageWidth(),
+		Height:    cfg.BarHeight,
 	}
 }
 
@@ -32,14 +45,15 @@ type BarComponent struct {
 	cursor  float64
 }
 
-func NewBarComponent(cfg BarConfig, bars []*mode.Bar) (bc BarComponent) {
+func NewBarComponent(bars []*mode.Bar, args BarArgs) (bc BarComponent) {
 	bc.bars = bars
 
 	// Bar component uses a simple white rectangle as sprite.
-	img := draws.NewImage(cfg.width, cfg.Height)
+	img := draws.NewImage(args.Width, args.Height)
 	img.Fill(color.White)
+
 	sprite := draws.NewSprite(img)
-	sprite.Locate(cfg.positionX, cfg.positionY, draws.CenterMiddle)
+	sprite.Locate(args.PositionX, args.PositionY, draws.CenterMiddle)
 	bc.sprite = sprite
 	return
 }
