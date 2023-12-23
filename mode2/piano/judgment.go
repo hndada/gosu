@@ -9,27 +9,28 @@ import (
 )
 
 type JudgmentRes struct {
-	Seqs [4]draws.Sequence
+	framesList [4]draws.Frames
 }
 
 func (res *JudgmentRes) Load(fsys fs.FS) {
 	for i, name := range []string{"kool", "cool", "good", "miss"} {
 		fname := fmt.Sprintf("piano/judgment/%s.png", name)
-		res.Seqs[i] = draws.NewSequenceFromFilename(fsys, fname)
+		res.framesList[i] = draws.NewFramesFromFilename(fsys, fname)
 	}
 	return
 }
 
 type JudgmentOpts struct {
-	stage draws.WHXY // parent element
 	Scale float64
-	RY    float64
+	x     float64
+	Y     float64
 }
 
-func NewJudgmentOpts(stage draws.WHXY) JudgmentOpts {
+func NewJudgmentOpts(key KeyOpts) JudgmentOpts {
 	return JudgmentOpts{
 		Scale: 0.33,
-		RY:    0.66,
+		x:     key.stageW,
+		Y:     0.66 * mode.ScreenH,
 	}
 }
 
@@ -49,10 +50,10 @@ func NewJudgmentComp(res JudgmentRes, opts JudgmentOpts) (comp JudgmentComp) {
 	js := DefaultJudgments()
 	comp.Judgments = [4]mode.Judgment(js)
 
-	for i, frames := range res.Seqs {
+	for i, frames := range res.framesList {
 		anim := draws.NewAnimation(frames, mode.ToTick(40))
 		anim.MultiplyScale(opts.Scale)
-		anim.Locate(opts.stage.W, opts.RY*opts.stage.H, draws.CenterMiddle)
+		anim.Locate(opts.x, opts.Y, draws.CenterMiddle)
 		comp.anims[i] = anim
 	}
 

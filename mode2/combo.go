@@ -19,18 +19,12 @@ func (cr *ComboRes) Load(fsys fs.FS) {
 }
 
 type ComboOpts struct {
-	stage    draws.Box
 	Scale    float64
-	RX       float64
-	RY       float64
+	X        float64
+	Y        float64
 	DigitGap float64
 	Bounce   float64
 	Persist  bool
-}
-
-// NewComboOpts is implemented on each game mode.
-func (opts *ComboOpts) SetStage(stage draws.Box) {
-	opts.stage = stage
 }
 
 type ComboComp struct {
@@ -42,12 +36,10 @@ type ComboComp struct {
 }
 
 func NewComboComp(res ComboRes, opts ComboOpts) (cc ComboComp) {
-	x := opts.RX * opts.stage.X
-	y := opts.RY * opts.stage.Y
 	for i := 0; i < 10; i++ {
 		sprite := draws.NewSprite(res.imgs[i])
 		sprite.MultiplyScale(opts.Scale)
-		sprite.Locate(x, y, draws.CenterMiddle)
+		sprite.Locate(opts.X, opts.Y, draws.CenterMiddle)
 		cc.sprites[i] = sprite
 	}
 	// Size of the whole image is 0.5w + (n-1)(w+gap) + 0.5w.

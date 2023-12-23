@@ -1,5 +1,7 @@
 package piano
 
+import mode "github.com/hndada/gosu/mode2"
+
 // Convention: to organize types and structs in a file by
 // defining the dependencies first and
 // the types that utilize those dependencies later.
@@ -22,15 +24,21 @@ const (
 
 type KeyOpts struct {
 	Count     int
+	StageWs   map[int]float64
+	stageW    float64
+	StageX    float64
+	BaselineY float64
+
 	Mappings  map[int][]string
 	Orders    map[int][]KeyKind
 	Scratches map[int]Scratch
-	Ws        [4]float64
-	RY        float64 // Baseline
+	KindWs    [4]float64
+	ws        []float64
+	xs        []float64
 }
 
 func NewKeyOpts() KeyOpts {
-	return KeyOpts{
+	opts := KeyOpts{
 		Count: 4,
 		Mappings: map[int][]string{
 			1:  {"Space"},
@@ -59,17 +67,86 @@ func NewKeyOpts() KeyOpts {
 		Scratches: map[int]Scratch{
 			8: ScratchLeft,
 		},
-		Ws: [4]float64{
-			80, // One
-			78, // Two
-			82, // Mid
-			82, // Tip
+		KindWs: [4]float64{
+			32, // One
+			31, // Two
+			33, // Mid
+			33, // Tip
 		},
-		RY: 0.90,
+
+		StageWs: map[int]float64{
+			1:  240,
+			2:  260,
+			3:  280,
+			4:  300,
+			5:  320,
+			6:  340,
+			7:  360,
+			8:  380,
+			9:  400,
+			10: 420,
+		},
+		StageX:    0.50 * mode.ScreenW,
+		BaselineY: 0.90 * mode.ScreenH,
 	}
+
+	// Set derived fields.
+	opts.stageW = opts.StageWs[opts.Count]
+	opts.setKeyWs()
+	opts.setXs()
+	return opts
 }
 
-type KeyComp struct {
-	ws []float64
-	xs []float64
+func (opts *KeyOpts) setKeyWs() {
+	ws := make([]float64, opts.Count)
+	for k, kind := range opts.Order() {
+		ws[k] = opts.KindWs[kind]
+	}
+
+	// Adjust key width to fit the stage width.
+	var rawSum float64
+	for _, w := range ws {
+		rawSum += w
+	}
+	scale := opts.stageW / rawSum
+
+	for k := range ws {
+		ws[k] *= scale
+	}
+	opts.ws = ws
+}
+
+// KeyXs returns centered x positions.
+func (opts *KeyOpts) setXs() {
+	xs := make([]float64, opts.Count)
+	ws := opts.ws
+	x := opts.StageX - opts.stageW/2
+	for k, w := range ws {
+		x += w / 2
+		xs[k] = x
+		x += w / 2
+	}
+	opts.xs = xs
+}
+
+// I'm personally proud of this code.
+func (opts KeyOpts) Order() []KeyKind {
+	order := opts.Orders[opts.Count]
+	order_1 := opts.Orders[opts.Count-1]
+
+	switch opts.Scratches[opts.Count] {
+	case ScratchNone:
+		return order
+	case ScratchLeft:
+		return append([]KeyKind{Tip}, order_1...)
+	case ScratchRight:
+		return append(order_1, Tip)
+	}
+	return nil
+}
+
+// NoteExposureDuration returns time in milliseconds
+// that cursor takes to move 1 logical pixel.
+func (opts KeyOpts) NoteExposureDuration(speed float64) int32 {
+	return int32(opts.BaselineY / speed)
 }

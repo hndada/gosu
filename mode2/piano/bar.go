@@ -13,16 +13,18 @@ type BarRes struct {
 }
 
 type BarOpts struct {
-	stage    draws.WHXY // parent element
-	baseline draws.Position
-	H        float64
+	w float64
+	H float64
+	x float64
+	y float64
 }
 
-func NewBarOpts(stage draws.WHXY, baseline draws.Position) BarOpts {
+func NewBarOpts(key KeyOpts) BarOpts {
 	return BarOpts{
-		stage:    stage,
-		baseline: baseline,
-		H:        1,
+		w: key.stageW,
+		H: 1,
+		x: key.StageX,
+		y: key.BaselineY,
 	}
 }
 
@@ -36,11 +38,11 @@ type BarComp struct {
 func NewBarComp(res BarRes, opts BarOpts, bars []*mode.Bar) (comp BarComp) {
 	comp.bars = bars
 
-	img := draws.NewImage(opts.stage.X, opts.H)
+	img := draws.NewImage(opts.w, opts.H)
 	img.Fill(color.White)
 
 	sprite := draws.NewSprite(img)
-	sprite.Locate(opts.stage.X, opts.baseline.Y, draws.CenterMiddle)
+	sprite.Locate(opts.x, opts.y, draws.CenterMiddle)
 	comp.sprite = sprite
 	return
 }

@@ -1,9 +1,12 @@
 package piano
 
+import mode "github.com/hndada/gosu/mode2"
+
 // Letting user set stage width directly may be more convenient.
 type StageOpts struct {
 	Ws map[int]float64
-	RX float64
+	w  float64
+	X  float64
 }
 
 func NewStageOpts() StageOpts {
@@ -20,6 +23,6 @@ func NewStageOpts() StageOpts {
 			9:  400,
 			10: 420,
 		},
-		RX: 0.50,
+		X: 0.50 * mode.ScreenW,
 	}
 }

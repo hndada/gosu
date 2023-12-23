@@ -28,14 +28,12 @@ func (res *ScoreRes) Load(fsys fs.FS) {
 }
 
 type ScoreOpts struct {
-	screen   draws.Box
 	Scale    float64
 	DigitGap float64
 }
 
-func NewScoreOpts(screen draws.Box) ScoreOpts {
+func NewScoreOpts() ScoreOpts {
 	return ScoreOpts{
-		screen:   screen,
 		Scale:    0.65,
 		DigitGap: 0,
 	}
@@ -66,7 +64,7 @@ func NewScoreComp(res ScoreRes, opts ScoreOpts) (comp ScoreComp) {
 	for i, img := range res.imgs {
 		sprite := draws.NewSprite(img)
 		sprite.MultiplyScale(opts.Scale)
-		sprite.Locate(opts.screen.X, h0-sprite.H(), draws.RightTop)
+		sprite.Locate(ScreenW, h0-sprite.H(), draws.RightTop)
 		comp.sprites[i] = sprite
 	}
 

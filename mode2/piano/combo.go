@@ -1,19 +1,15 @@
 package piano
 
-import (
-	"github.com/hndada/gosu/draws"
-	mode "github.com/hndada/gosu/mode2"
-)
+import mode "github.com/hndada/gosu/mode2"
 
-func NewComboOpts(stage draws.WHXY) mode.ComboOpts {
+func NewComboOpts(key KeyOpts) mode.ComboOpts {
 	opts := mode.ComboOpts{
 		Scale:    0.75,
-		RX:       0.50,
-		RY:       0.40,
+		X:        key.StageX,
+		Y:        key.BaselineY,
 		DigitGap: -1,
 		Bounce:   0.85,
 		Persist:  false,
 	}
-	opts.SetStage(stage)
 	return opts
 }

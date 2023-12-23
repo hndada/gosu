@@ -4,6 +4,7 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
+	mode "github.com/hndada/gosu/mode2"
 )
 
 type HintRes struct {
@@ -17,16 +18,18 @@ func (res *HintRes) Load(fsys fs.FS) {
 }
 
 type HintOpts struct {
-	stage    draws.WHXY // parent element
-	baseline draws.Position
-	RH       float64
+	w float64
+	H float64
+	x float64
+	y float64
 }
 
-func NewHintOpts(stage draws.WHXY, baseline draws.Position) HintOpts {
+func NewHintOpts(key KeyOpts) HintOpts {
 	return HintOpts{
-		stage:    stage,
-		baseline: baseline,
-		RH:       0.05,
+		w: key.stageW,
+		H: 0.05 * mode.ScreenH,
+		x: key.StageX,
+		y: key.BaselineY,
 	}
 }
 
@@ -36,8 +39,8 @@ type HintComp struct {
 
 func NewHintComp(res HintRes, opts HintOpts) (comp HintComp) {
 	sprite := draws.NewSprite(res.img)
-	sprite.SetSize(opts.stage.W, opts.RH*opts.stage.H)
-	sprite.Locate(opts.baseline.X, opts.baseline.Y, draws.CenterBottom)
+	sprite.SetSize(opts.w, opts.H)
+	sprite.Locate(opts.x, opts.y, draws.CenterBottom)
 	comp.sprite = sprite
 	return
 }

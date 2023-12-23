@@ -4,6 +4,7 @@ import (
 	"image/color"
 
 	"github.com/hndada/gosu/draws"
+	mode "github.com/hndada/gosu/mode2"
 )
 
 type FieldRes struct {
@@ -11,13 +12,15 @@ type FieldRes struct {
 }
 
 type FieldOpts struct {
-	stage   draws.WHXY // parent element
+	w       float64
+	x       float64
 	Opacity float64
 }
 
-func NewFieldOpts(stage draws.WHXY) FieldOpts {
+func NewFieldOpts(key KeyOpts) FieldOpts {
 	return FieldOpts{
-		stage:   stage,
+		w:       key.stageW,
+		x:       key.StageX,
 		Opacity: 0.8,
 	}
 }
@@ -27,11 +30,11 @@ type FieldComp struct {
 }
 
 func NewFieldComp(res FieldRes, opts FieldOpts) (comp FieldComp) {
-	img := draws.NewImage(opts.stage.W, opts.stage.H)
+	img := draws.NewImage(opts.w, mode.ScreenH)
 	img.Fill(color.NRGBA{0, 0, 0, uint8(255 * opts.Opacity)})
 
 	sprite := draws.NewSprite(img)
-	sprite.Locate(opts.stage.X, opts.stage.Y, draws.CenterTop)
+	sprite.Locate(opts.x, 0, draws.CenterTop)
 	comp.sprite = sprite
 	return
 }
