@@ -1,10 +1,10 @@
 package draws
 
-// focus는 상위에서 다뤄줘야 한다. 단 하나만 focus될 수 있기 때문.
-// Cursor 모양은 Scene에서 바꾼다.
-// 필요한 field는 각 element가 추가하기로 한다.
-// holdTick          int
+// Focus should be handled by parent. Only one element can be focused.
+// Cursor shape should be changed by Scene.
+// Each element should add required fields as needed.
 
+// holdTick          int
 type Hoverable struct {
 	on      bool
 	tick    int

@@ -12,12 +12,14 @@ type Position = Vector2
 
 // Sprite is an image or a text drawn in a screen based on its position and scale.
 // DrawImageOptions is not commutative. Do Translate at the final stage.
+
+// Todo: W(), H(), X, Y or Width(), Height(), Pos.X, Pos.Y?
 type Sprite struct {
-	Source
-	Scale  Vector2
-	Filter ebiten.Filter
-	Position
-	Anchor Anchor
+	Source   Source
+	Scale    Vector2
+	Filter   ebiten.Filter
+	Position Position
+	Anchor   Anchor
 }
 
 func NewSprite(src Source) Sprite {
@@ -38,18 +40,28 @@ func NewSpriteFromURL(url string) (Sprite, error) {
 	return NewSprite(img), nil
 }
 
-func (s Sprite) SourceSize() Vector2          { return s.Source.Size() }
-func (s Sprite) Size() Vector2                { return s.SourceSize().Mul(s.Scale) }
-func (s Sprite) Width() float64               { return s.Size().X }
-func (s Sprite) Height() float64              { return s.Size().Y }
-func (s *Sprite) SetSize(w, h float64)        { s.Scale = Vec2(w, h).Div(s.SourceSize()) }
+// func (s Sprite) SourceSize() Vector2          { return s.Source.Size() }
+func (s Sprite) Size() Vector2 { return s.Source.Size().Mul(s.Scale) }
+
+// func (s Sprite) Width() float64               { return s.Size().X }
+// func (s Sprite) Height() float64              { return s.Size().Y }
+func (s Sprite) W() float64 { return s.Size().X }
+func (s Sprite) H() float64 { return s.Size().Y }
+
+func (s *Sprite) SetSize(w, h float64)        { s.Scale = Vec2(w, h).Div(s.Source.Size()) }
 func (s *Sprite) MultiplyScale(scale float64) { s.Scale = s.Scale.Mul(Scalar(scale)) }
+
+// func (s Sprite) At() Vector2                  { return s.Position }
+func (s Sprite) X() float64 { return s.Position.X }
+func (s Sprite) Y() float64 { return s.Position.Y }
+
 func (s *Sprite) Locate(x, y float64, anchor Anchor) {
-	s.X = x
-	s.Y = y
+	s.Position.X = x
+	s.Position.Y = y
 	s.Anchor = anchor
 }
 func (s *Sprite) Move(x, y float64) { s.Position = s.Position.Add(Vec2(x, y)) }
+
 func (s Sprite) Min() (min Vector2) {
 	size := s.Size()
 	min = s.Position
@@ -60,7 +72,7 @@ func (s Sprite) Min() (min Vector2) {
 func (s Sprite) Max() Vector2                           { return s.Min().Add(s.Size()) }
 func (s Sprite) LeftTop(screenSize Vector2) (v Vector2) { return s.Min() }
 func (s Sprite) Draw(dst Image, op Op) {
-	if s.Source == nil || s.IsEmpty() {
+	if s.Source == nil || s.Source.IsEmpty() {
 		return
 	}
 	op.GeoM.Scale(s.Scale.XY())

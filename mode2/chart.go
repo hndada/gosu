@@ -11,10 +11,10 @@ import (
 )
 
 const (
-	ModePiano = iota
-	ModeDrum
-	ModeSing
-	ModeAll = -1
+	GameModePiano = iota
+	GameModeDrum
+	GameModeSing
+	GameModeAll = -1
 )
 
 type Chart interface {
@@ -41,7 +41,7 @@ func LoadChartFile(fsys fs.FS, name string) (format any, hash [16]byte, err erro
 
 // ChartHeader contains non-play information.
 // Changing ChartHeader's data will not affect integrity of the chart.
-// Mode-specific fields are located to each Chart struct.
+// GameMode-specific fields are located to each Chart struct.
 type ChartHeader struct {
 	SetID int32 // Compatibility for osu.
 	ID    int32 // Compatibility for osu.
@@ -63,8 +63,8 @@ type ChartHeader struct {
 	VideoFilename      string
 	VideoTimeOffset    int32
 
-	Mode    int
-	SubMode int
+	GameMode    int
+	SubGameMode int
 
 	// Hash works as id in database.
 	// Hash is not exported to file.
@@ -115,15 +115,15 @@ func newChartHeaderFromOsu(format *osu.Format) (c ChartHeader) {
 		c.MusicFilename = ""
 	}
 
-	c.Mode = -1
+	c.GameMode = -1
 	switch format.Mode {
 	case osu.ModeStandard:
 	case osu.ModeTaiko:
-		c.Mode = ModeDrum
+		c.GameMode = GameModeDrum
 	case osu.ModeCatch:
 	case osu.ModeMania:
-		c.Mode = ModePiano
-		c.SubMode = int(format.CircleSize)
+		c.GameMode = GameModePiano
+		c.SubGameMode = int(format.CircleSize)
 	}
 	return
 }

@@ -15,9 +15,9 @@ type Source interface {
 	IsEmpty() bool // Whether the source is nil.
 }
 
-// Blank is for wrapping Sprite with specific Outer size.
-type Blank struct{ Size_ Vector2 }
+// // Blank is for wrapping Sprite with specific Outer size.
+// type Blank struct{ Size_ Vector2 }
 
-func (b Blank) Size() Vector2         { return b.Size_ }
-func (b Blank) Draw(dst Image, op Op) {}
-func (b Blank) IsEmpty() bool         { return false }
+// func (b Blank) Size() Vector2         { return b.Size_ }
+// func (b Blank) Draw(dst Image, op Op) {}
+// func (b Blank) IsEmpty() bool         { return false }

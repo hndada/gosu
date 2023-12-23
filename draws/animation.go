@@ -14,22 +14,22 @@ func NewAnimation(srcs any, maxTick int) Animation {
 	switch srcs := srcs.(type) {
 	case []Sprite:
 		return Animation{Sprites: srcs, maxTick: maxTick}
-	case Frames:
-		return newAnimationFromFrames(srcs, maxTick)
+	case ImageSequence:
+		return newAnimationFromImageSequence(srcs, maxTick)
 	}
 	return Animation{}
 }
 
-func newAnimationFromFrames(frames Frames, maxTick int) (a Animation) {
-	a.Sprites = make([]Sprite, len(frames))
-	for i, img := range frames {
+func newAnimationFromImageSequence(seq ImageSequence, maxTick int) (a Animation) {
+	a.Sprites = make([]Sprite, len(seq))
+	for i, img := range seq {
 		a.Sprites[i] = NewSprite(img)
 	}
 	return a
 }
 
 func NewAnimationFromFile(fsys fs.FS, name string, maxTick int) Animation {
-	return NewAnimation(NewFramesFromFilename(fsys, name), maxTick)
+	return NewAnimation(NewImageSequenceFromFilename(fsys, name), maxTick)
 }
 
 func (a *Animation) MultiplyScale(scale float64) {
@@ -68,7 +68,7 @@ func (a Animation) Draw(screen Image, op Op) {
 }
 
 func (a Animation) IsEmpty() bool {
-	return len(a.Sprites) <= 1 && a.Sprites[0].IsEmpty()
+	return len(a.Sprites) <= 1 && a.Sprites[0].Source.IsEmpty()
 }
 
 func (a *Animation) Reset() { a.tick = 0 }

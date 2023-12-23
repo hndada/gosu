@@ -9,29 +9,30 @@ import (
 	"strings"
 )
 
-type Frames = []Image
+type ImageSequence = []Image
 
-// Read frames if there is a directory and the directory has entries.
-// Read a single image if there is no directory or the directory has no entries.
-func NewFramesFromFilename(fsys fs.FS, name string) Frames {
+// NewImageSequenceFromFilename read a sequence of images if there
+// is a directory and the directory has entries. Otherwise, read
+// a single image if there is no directory or the directory has no entries.
+func NewImageSequenceFromFilename(fsys fs.FS, name string) ImageSequence {
 	one := []Image{NewImageFromFile(fsys, name)}
 	dirName := strings.TrimSuffix(name, filepath.Ext(name))
 
-	paths := framePaths(fsys, dirName)
+	paths := imageSequencePaths(fsys, dirName)
 	if len(paths) == 0 {
 		return one
 	}
 
-	frames := make(Frames, len(paths))
+	sequence := make(ImageSequence, len(paths))
 	for i, name := range paths {
-		frames[i] = NewImageFromFile(fsys, name)
+		sequence[i] = NewImageFromFile(fsys, name)
 	}
-	return frames
+	return sequence
 }
 
 // Avoid using filepath at fs.FS.
 // It yields backslash, which is invalid.
-func framePaths(fsys fs.FS, dirName string) []string {
+func imageSequencePaths(fsys fs.FS, dirName string) []string {
 	type frameName struct {
 		num int
 		ext string

@@ -7,69 +7,55 @@ import (
 	mode "github.com/hndada/gosu/mode2"
 )
 
-// Since XxxConfig is for embedding, it's better
-// not to omit Xxx prefix on each field.
-type BarConfig struct {
-	BarHeight float64
+// Bar component uses a simple white rectangle as sprite.
+type BarRes struct {
+	// Bar component requires no external resources.
 }
 
-func NewBarConfig() BarConfig {
-	return BarConfig{
-		BarHeight: 1,
+type BarOpts struct {
+	stage    draws.WHXY // parent element
+	baseline draws.Position
+	H        float64
+}
+
+func NewBarOpts(stage draws.WHXY, baseline draws.Position) BarOpts {
+	return BarOpts{
+		stage:    stage,
+		baseline: baseline,
+		H:        1,
 	}
 }
 
-// Arguments is used only for NewBarComponent,
-// hence omitting Xxx prefix is acceptable.
-type BarArgs struct {
-	PositionX float64
-	PositionY float64
-	Width     float64
-	Height    float64
-}
-
-func (cfg Config) BarArgs() BarArgs {
-	return BarArgs{
-		PositionX: cfg.StagePositionX,
-		PositionY: cfg.HitPositionY,
-		Width:     cfg.StageWidth(),
-		Height:    cfg.BarHeight,
-	}
-}
-
-// bottom: hit position
-type BarComponent struct {
+type BarComp struct {
 	bars    []*mode.Bar
 	sprite  draws.Sprite
 	highest *mode.Bar
 	cursor  float64
 }
 
-func NewBarComponent(bars []*mode.Bar, args BarArgs) (bc BarComponent) {
-	bc.bars = bars
+func NewBarComp(res BarRes, opts BarOpts, bars []*mode.Bar) (comp BarComp) {
+	comp.bars = bars
 
-	// Bar component uses a simple white rectangle as sprite.
-	img := draws.NewImage(args.Width, args.Height)
+	img := draws.NewImage(opts.stage.X, opts.H)
 	img.Fill(color.White)
 
 	sprite := draws.NewSprite(img)
-	sprite.Locate(args.PositionX, args.PositionY, draws.CenterMiddle)
-	bc.sprite = sprite
+	sprite.Locate(opts.stage.X, opts.baseline.Y, draws.CenterMiddle)
+	comp.sprite = sprite
 	return
 }
 
-func (bc *BarComponent) Update(cursor float64) {
-	bc.highest = bc.bars.Highest(cursor)
-	bc.cursor = cursor
-
+func (comp *BarComp) Update(cursor float64) {
+	comp.highest = comp.bars.Highest(cursor)
+	comp.cursor = cursor
 }
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
-func (bc BarComponent) Draw(dst draws.Image) {
-	lowerBound := bc.cursor - 100
-	for b := bc.highest; b != nil && b.Position > lowerBound; b = b.Prev {
-		pos := b.Position - bc.cursor
-		sprite := bc.sprite
+func (comp BarComp) Draw(dst draws.Image) {
+	lowerBound := comp.cursor - 100
+	for b := comp.highest; b != nil && b.Position > lowerBound; b = b.Prev {
+		pos := b.Position - comp.cursor
+		sprite := comp.sprite
 		sprite.Move(0, -pos)
 		sprite.Draw(dst, draws.Op{})
 		if b.Prev == nil {
