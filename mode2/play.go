@@ -33,7 +33,7 @@ func NewScenePlay(fsys fs.FS, name string, replay *osr.Format) (s ScenePlay, err
 		return
 	}
 	s.Dynamics, err = NewDynamics(format)
-	if len(s.Dynamics.Dynamics) == 0 {
+	if len(s.Dynamics.Data) == 0 {
 		err = fmt.Errorf("no Dynamics in the chart")
 		return
 	}
@@ -70,7 +70,9 @@ func (s *ScenePlay) readInput() []input.KeyboardAction {
 	return s.Keyboard.Reader.Read(s.Timer.Now()) // for replay
 }
 
-func (s ScenePlay) Speed() float64 { return s.Dynamics.Speed() * s.SpeedScale }
+func (s ScenePlay) Speed() float64 {
+	return s.Dynamics.Current().Speed * s.SpeedScale
+}
 
 func (s *ScenePlay) SetSpeedScale(new float64) {
 	old := s.SpeedScale

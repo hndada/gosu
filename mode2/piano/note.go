@@ -56,7 +56,7 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 	return ns
 }
 
-func NewNotes(f any, keyCount int) (ns []Note) {
+func NewNotes(f any, dys mode.Dynamics, keyCount int) (ns []Note) {
 	switch f := f.(type) {
 	case *osu.Format:
 		ns = make([]Note, 0, len(f.HitObjects)*2)
@@ -72,12 +72,29 @@ func NewNotes(f any, keyCount int) (ns []Note) {
 		return ns[i].Time < ns[j].Time
 	})
 
+	// Position calculation is based on Dynamics.
+	// Farther note has larger position.
+	// dys.Index = 0
+	for i, n := range ns {
+		dys.UpdateIndex(n.Time)
+		d := dys.Current()
+		ns[i].Position = d.Position + float64(n.Time-d.Time)*d.Speed
+
+		// Tail's Position should be always equal or larger than Head's.
+		if n.Type == Tail {
+			head := ns[n.Prev]
+			if n.Position < head.Position {
+				ns[i].Position = head.Position
+			}
+		}
+	}
+
 	// linking
 	prevs := make([]int, keyCount)
 	exists := make([]bool, keyCount)
 	for i, n := range ns {
 		prev := prevs[n.Key]
-		n.Prev = prev
+		ns[i].Prev = prev
 		if exists[n.Key] {
 			ns[prev].Next = i
 		}
@@ -85,7 +102,7 @@ func NewNotes(f any, keyCount int) (ns []Note) {
 		exists[n.Key] = true
 	}
 
-	// Set Note.Next of the last note of each key.
+	// Set each last note's Next.
 	for k, prev := range prevs {
 		if !exists[k] {
 			continue
@@ -160,8 +177,24 @@ type NotesComp struct {
 	colors    []color.NRGBA
 }
 
-func NewNotesComp(res NotesRes, opts NotesOpts, ns []Note) (comp NotesComp) {
+func NewNotesComp(res NotesRes, opts NotesOpts, ns []Note, dys mode.Dynamics) (comp NotesComp) {
 	comp.notes = ns
+
+	// Adjust tail position.
+	// dys.Index = 0
+	for i, n := range comp.notes {
+		if n.Type != Tail {
+			continue
+		}
+		dys.UpdateIndex(n.Time)
+		d := dys.Current()
+		comp.notes[i].Position += float64(opts.TailExtraDuration) * d.Speed
+
+		// Tail's Position should be always equal or larger than Head's.
+		if head := comp.notes[n.Prev]; n.Position < head.Position {
+			n.Position = head.Position
+		}
+	}
 
 	comp.staged = make([]int, opts.keyCount)
 	for k := range comp.staged {

@@ -47,9 +47,9 @@ func NewComboComp(res ComboRes, opts ComboOpts) (cc ComboComp) {
 	cc.w = cc.sprites[0].W() + opts.DigitGap
 
 	tw := draws.Tween{}
-	tw.AppendTween(0, opts.Bounce, ToTick(200), draws.EaseLinear)
-	tw.AppendTween(opts.Bounce, -opts.Bounce, ToTick(100), draws.EaseLinear)
-	tw.AppendTween(0, 0, ToTick(1500), draws.EaseLinear)
+	tw.AppendTween(0, opts.Bounce, 200, draws.EaseLinear)
+	tw.AppendTween(opts.Bounce, -opts.Bounce, 100, draws.EaseLinear)
+	tw.AppendTween(0, 0, 1500, draws.EaseLinear)
 	if !opts.Persist {
 		tw.SetLoop(1)
 	}
@@ -57,7 +57,6 @@ func NewComboComp(res ComboRes, opts ComboOpts) (cc ComboComp) {
 }
 
 func (cc *ComboComp) Update() {
-	cc.tween.Tick()
 	if cc.lastCombo != cc.Combo {
 		cc.lastCombo = cc.Combo
 		cc.tween.Reset()

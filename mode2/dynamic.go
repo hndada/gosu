@@ -21,7 +21,11 @@ type Dynamic struct {
 
 	Volume    float64 // Used when sample volume is 0.
 	Highlight bool
-	Position  float64
+
+	// Position is for drawing notes and bars efficiently. In piano play mode,
+	// Only cursor is updated in every Update(), then notes and bars are drawn
+	// based on the difference between their positions and cursor's.
+	Position float64
 }
 
 func (d Dynamic) BeatDuration() float64 {
@@ -30,24 +34,29 @@ func (d Dynamic) BeatDuration() float64 {
 
 // No two Dynamics have same Time.
 type Dynamics struct {
-	Dynamics []Dynamic
-	idx      int
+	Data     []Dynamic
+	Index    int
+	duration int32
 }
 
 func NewDynamics(format any) (Dynamics, error) {
 	var ds []Dynamic
+	var duration int32
 	switch format := format.(type) {
 	case *osu.Format:
 		ds = newDynamicListFromOsu(format)
+		duration = int32(format.Duration())
 	}
-	return Dynamics{ds, 0}, nil
+	dys := Dynamics{Data: ds, duration: duration}
+	dys.setPositions()
+	return dys, nil
 }
 
 // When gathering Dynamics from osu.Format, it should input the whole slice.
 // It is because osu.Format.TimingPoints brings some value from previous TimingPoint.
 // First BPM is used as temporary main BPM.
 
-func newDynamicListFromOsu(f *osu.Format) (ds []Dynamic) {
+func newDynamicListFromOsu(f *osu.Format) []Dynamic {
 	sort.SliceStable(f.TimingPoints, func(i int, j int) bool {
 		if f.TimingPoints[i].Time == f.TimingPoints[j].Time {
 			return f.TimingPoints[i].Uninherited
@@ -59,11 +68,11 @@ func newDynamicListFromOsu(f *osu.Format) (ds []Dynamic) {
 		f.TimingPoints = f.TimingPoints[1:]
 	}
 	if len(f.TimingPoints) == 0 {
-		return ds
+		return nil
 	}
 
 	tempMainBPM := f.TimingPoints[0].BPM()
-	ds = make([]Dynamic, 0, len(f.TimingPoints))
+	ds := make([]Dynamic, 0, len(f.TimingPoints))
 	prevBPM := tempMainBPM
 	for _, timingPoint := range f.TimingPoints {
 		d := Dynamic{
@@ -94,72 +103,16 @@ func newDynamicListFromOsu(f *osu.Format) (ds []Dynamic) {
 	return ds
 }
 
-func (ds Dynamics) Speed() float64  { return ds.Dynamics[ds.idx].Speed }
-func (ds Dynamics) Volume() float64 { return ds.Dynamics[ds.idx].Volume }
-func (ds Dynamics) Highlight() bool { return ds.Dynamics[ds.idx].Highlight }
-
-// Used in ScenePlay for fetching next Dynamic.
-func (ds *Dynamics) Update(now int32) {
-	for i := ds.idx; i < len(ds.Dynamics); i++ {
-		if ds.Dynamics[i].Time > now {
-			break
-		}
-		// index should be updated outside of if block.
-		ds.idx = i
-	}
-}
-
-func (ds Dynamics) BeatTimes(chartDuration int32) (times []int32) {
-	// These variables are for iterating over the Time.
-	var start, end, step float64
-	const bufferTime = 5000
-
-	// times before first Dynamic
-	start = float64(ds.Dynamics[0].Time)
-	end = start
-	if end > -bufferTime {
-		end = -bufferTime
-	}
-	step = ds.Dynamics[0].BeatDuration()
-	for t := start; t >= end; t -= step {
-		times = append([]int32{int32(t)}, times...)
-	}
-	// Need to drop a last element because it will be duplicated.
-	times = times[:len(times)-1]
-
-	// times after first Dynamic
-	var newDys []Dynamic
-	for _, d := range ds.Dynamics {
-		if d.NewBeat {
-			newDys = append(newDys, d)
-		}
-	}
-
-	for i, nd := range newDys {
-		start = float64(nd.Time)
-		if i == len(newDys)-1 {
-			end = float64(chartDuration + bufferTime)
-		} else {
-			end = float64(newDys[i+1].Time)
-		}
-		step = nd.BeatDuration()
-		for t := start; t < end; t += step {
-			times = append(times, int32(t))
-		}
-	}
-	return
-}
-
 // BPM with longest duration will be main BPM.
 // When there are multiple BPMs with same duration, larger one will be main BPM.
-func (ds Dynamics) BPMs(duration int32) (main, min, max float64) {
+func (dys Dynamics) BPMs(duration int32) (main, min, max float64) {
 	bpmDurations := make(map[float64]int32)
-	for i, d := range ds.Dynamics {
+	for i, d := range dys.Data {
 		if i == 0 {
 			bpmDurations[d.BPM] += d.Time
 		}
-		if i < len(ds.Dynamics)-1 {
-			bpmDurations[d.BPM] += ds.Dynamics[i+1].Time - d.Time
+		if i < len(dys.Data)-1 {
+			bpmDurations[d.BPM] += dys.Data[i+1].Time - d.Time
 		} else {
 			bpmDurations[d.BPM] += duration - d.Time // Bounds to final note time; confirmed with test.
 		}
@@ -182,3 +135,73 @@ func (ds Dynamics) BPMs(duration int32) (main, min, max float64) {
 	}
 	return
 }
+
+func (dys *Dynamics) setPositions() {
+	// Brilliant idea: Make SpeedScale scaled by MainBPM.
+	mainBPM, _, _ := dys.BPMs(dys.duration)
+	bpmScale := dys.Data[0].BPM / mainBPM
+	for i, d := range dys.Data {
+		d.Speed *= bpmScale
+		if i == 0 {
+			dys.Data[i].Position = float64(d.Time) * d.Speed
+			continue
+		}
+		prev := dys.Data[i-1]
+		gain := float64(d.Time-prev.Time) * prev.Speed
+		dys.Data[i].Position = prev.Position + gain
+	}
+}
+
+func (dys Dynamics) BeatTimes() (times []int32) {
+	// These variables are for iterating over the Time.
+	var start, end, step float64
+	const bufferTime = 5000
+
+	// times before first Dynamic
+	start = float64(dys.Data[0].Time)
+	end = start
+	if end > -bufferTime {
+		end = -bufferTime
+	}
+	step = dys.Data[0].BeatDuration()
+	for t := start; t >= end; t -= step {
+		times = append([]int32{int32(t)}, times...)
+	}
+	// Need to drop a last element because it will be duplicated.
+	times = times[:len(times)-1]
+
+	// times after first Dynamic
+	var newDys []Dynamic
+	for _, d := range dys.Data {
+		if d.NewBeat {
+			newDys = append(newDys, d)
+		}
+	}
+
+	for i, nd := range newDys {
+		start = float64(nd.Time)
+		if i == len(newDys)-1 {
+			end = float64(dys.duration + bufferTime)
+		} else {
+			end = float64(newDys[i+1].Time)
+		}
+		step = nd.BeatDuration()
+		for t := start; t < end; t += step {
+			times = append(times, int32(t))
+		}
+	}
+	return
+}
+
+// Used in ScenePlay for fetching next Dynamic.
+func (dys *Dynamics) UpdateIndex(now int32) {
+	for i := dys.Index; i < len(dys.Data); i++ {
+		// if-condition first, then update index.
+		if dys.Data[i].Time > now {
+			break
+		}
+		dys.Index = i
+	}
+}
+
+func (dys Dynamics) Current() Dynamic { return dys.Data[dys.Index] }

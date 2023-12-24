@@ -76,11 +76,10 @@ func NewScoreComp(res ScoreRes, opts ScoreOpts) (comp ScoreComp) {
 func (comp *ScoreComp) setTween() {
 	begin := comp.tween.Current()
 	change := comp.Score - begin
-	comp.tween = draws.NewTween(begin, change, ToTick(400), comp.easing)
+	comp.tween = draws.NewTween(begin, change, 400, comp.easing)
 }
 
 func (comp *ScoreComp) Update() {
-	comp.tween.Tick()
 	if comp.lastScore != comp.Score {
 		comp.lastScore = comp.Score
 		comp.setTween()

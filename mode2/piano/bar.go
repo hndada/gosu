@@ -8,6 +8,34 @@ import (
 	mode "github.com/hndada/gosu/mode2"
 )
 
+// Defining Bars is just redundant if it has no additional methods.
+type Bar struct {
+	Time     int32 // Times are in milliseconds.
+	Position float64
+}
+
+func NewBars(dys mode.Dynamics) []Bar {
+	// const useDefaultMeter = 0
+	times := dys.BeatTimes()
+	bs := make([]Bar, 0, len(times))
+	for _, t := range times {
+		b := Bar{Time: t}
+		bs = append(bs, b)
+	}
+
+	// Set bar positions
+	// dys.Index = 0
+	for i, b := range bs {
+		dys.UpdateIndex(b.Time)
+		d := dys.Current()
+		bs[i].Position = d.Position + float64(b.Time-d.Time)*d.Speed
+	}
+	return bs
+}
+
+// Drum and Piano modes have different bar drawing methods.
+// Hence, this method is not defined in mode.go.
+
 type BarRes struct {
 	img draws.Image
 }
@@ -36,13 +64,13 @@ func NewBarOpts(keys KeysOpts) BarOpts {
 }
 
 type BarComp struct {
-	bars   []mode.Bar
+	bars   []Bar
 	idx    int
 	cursor float64
 	sprite draws.Sprite
 }
 
-func NewBarComp(res BarRes, opts BarOpts, bars []mode.Bar) (comp BarComp) {
+func NewBarComp(res BarRes, opts BarOpts, bars []Bar) (comp BarComp) {
 	comp.bars = bars
 
 	s := draws.NewSprite(res.img)
