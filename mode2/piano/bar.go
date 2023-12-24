@@ -2,14 +2,21 @@ package piano
 
 import (
 	"image/color"
+	"io/fs"
 
 	"github.com/hndada/gosu/draws"
 	mode "github.com/hndada/gosu/mode2"
 )
 
-// Bar component uses a simple white rectangle as sprite.
 type BarRes struct {
-	// Bar component requires no external resources.
+	img draws.Image
+}
+
+func (res *BarRes) Load(fsys fs.FS) {
+	// Uses generated image.
+	img := draws.NewImage(1, 1)
+	img.Fill(color.White)
+	res.img = img
 }
 
 type BarOpts struct {
@@ -38,12 +45,10 @@ type BarComp struct {
 func NewBarComp(res BarRes, opts BarOpts, bars []mode.Bar) (comp BarComp) {
 	comp.bars = bars
 
-	img := draws.NewImage(opts.w, opts.H)
-	img.Fill(color.White)
-
-	sprite := draws.NewSprite(img)
-	sprite.Locate(opts.x, opts.y, draws.CenterBottom)
-	comp.sprite = sprite
+	s := draws.NewSprite(res.img)
+	s.SetSize(opts.w, opts.H)
+	s.Locate(opts.x, opts.y, draws.CenterBottom)
+	comp.sprite = s
 	return
 }
 
@@ -75,9 +80,9 @@ func (comp BarComp) Draw(dst draws.Image) {
 			break
 		}
 
+		s := comp.sprite
 		pos := b.Position - comp.cursor
-		sprite := comp.sprite
-		sprite.Move(0, -pos)
-		sprite.Draw(dst)
+		s.Move(0, -pos)
+		s.Draw(dst)
 	}
 }

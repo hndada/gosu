@@ -81,10 +81,10 @@ func (cc ComboComp) Draw(dst draws.Image) {
 
 	tx := float64(len(vs)-1) * cc.w / 2
 	for _, v := range vs {
-		sprite := cc.sprites[v]
-		ty := cc.tween.Current() * sprite.H()
-		sprite.Move(tx, ty)
-		sprite.Draw(dst, draws.Op{})
+		s := cc.sprites[v]
+		ty := cc.tween.Current() * s.H()
+		s.Move(tx, ty)
+		s.Draw(dst)
 		tx -= cc.w
 	}
 }

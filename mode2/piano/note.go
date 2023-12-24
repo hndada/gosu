@@ -107,7 +107,7 @@ type NotesRes struct {
 func (res *NotesRes) Load(fsys fs.FS) {
 	for nt, ntname := range []string{"normal", "head", "tail", "body"} {
 		name := fmt.Sprintf("piano/note/one/%s.png", ntname)
-		res.framesList[nt] = draws.NewFramesFromFilename(fsys, name)
+		res.framesList[nt] = draws.NewFramesFromFile(fsys, name)
 	}
 }
 
@@ -181,10 +181,10 @@ func NewNoteComp(res NotesRes, opts NotesOpts, ns []Note) (comp NoteComp) {
 	comp.animsList = make([][4]draws.Animation, opts.keyCount)
 	for k := range comp.animsList {
 		for nt, frames := range res.framesList {
-			anim := draws.NewAnimation(frames, mode.ToTick(400))
-			anim.SetSize(opts.ws[k], opts.H)
-			anim.Locate(opts.xs[k], opts.y, draws.CenterBottom)
-			comp.animsList[k][nt] = anim
+			a := draws.NewAnimation(frames, 400)
+			a.SetSize(opts.ws[k], opts.H)
+			a.Locate(opts.xs[k], opts.y, draws.CenterBottom)
+			comp.animsList[k][nt] = a
 		}
 	}
 
@@ -250,10 +250,10 @@ func (comp NoteComp) Draw(dst draws.Image) {
 				break
 			}
 
+			a := comp.animsList[k][n.Type]
 			pos := n.Position - comp.cursor
-			anim := comp.animsList[k][n.Type]
-			anim.Move(0, -pos)
-			anim.Draw(dst)
+			a.Move(0, -pos)
+			a.Draw(dst)
 		}
 	}
 }

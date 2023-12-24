@@ -15,7 +15,7 @@ type JudgmentRes struct {
 func (res *JudgmentRes) Load(fsys fs.FS) {
 	for i, name := range []string{"kool", "cool", "good", "miss"} {
 		fname := fmt.Sprintf("piano/judgment/%s.png", name)
-		res.framesList[i] = draws.NewFramesFromFilename(fsys, fname)
+		res.framesList[i] = draws.NewFramesFromFile(fsys, fname)
 	}
 	return
 }
@@ -51,18 +51,18 @@ func NewJudgmentComp(res JudgmentRes, opts JudgmentOpts) (comp JudgmentComp) {
 	comp.Judgments = [4]mode.Judgment(js)
 
 	for i, frames := range res.framesList {
-		anim := draws.NewAnimation(frames, mode.ToTick(40))
-		anim.MultiplyScale(opts.Scale)
-		anim.Locate(opts.x, opts.Y, draws.CenterMiddle)
-		comp.anims[i] = anim
+		a := draws.NewAnimation(frames, 40)
+		a.MultiplyScale(opts.Scale)
+		a.Locate(opts.x, opts.Y, draws.CenterMiddle)
+		comp.anims[i] = a
 	}
 
-	tween := draws.Tween{}
-	tween.AppendTween(1, 0.15, mode.ToTick(25), draws.EaseLinear)
-	tween.AppendTween(1.15, -0.15, mode.ToTick(25), draws.EaseLinear)
-	tween.AppendTween(1, 0, mode.ToTick(200), draws.EaseLinear)
-	tween.AppendTween(1, -0.25, mode.ToTick(25), draws.EaseLinear)
-	comp.tween = tween
+	tw := draws.Tween{}
+	tw.AppendTween(1, 0.15, mode.ToTick(25), draws.EaseLinear)
+	tw.AppendTween(1.15, -0.15, mode.ToTick(25), draws.EaseLinear)
+	tw.AppendTween(1, 0, mode.ToTick(200), draws.EaseLinear)
+	tw.AppendTween(1, -0.25, mode.ToTick(25), draws.EaseLinear)
+	comp.tween = tw
 	return
 }
 
@@ -124,7 +124,7 @@ func (comp JudgmentComp) Draw(dst draws.Image) {
 	if comp.tween.IsFinished() {
 		return
 	}
-	anim := comp.anims[comp.index()]
-	anim.MultiplyScale(comp.tween.Current())
-	anim.Draw(dst)
+	a := comp.anims[comp.index()]
+	a.MultiplyScale(comp.tween.Current())
+	a.Draw(dst)
 }

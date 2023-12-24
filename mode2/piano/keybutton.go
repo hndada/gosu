@@ -8,8 +8,6 @@ import (
 	mode "github.com/hndada/gosu/mode2"
 )
 
-// All names of fields in Asset ends with their types.
-
 type KeyButtonsRes struct {
 	imgs [2]draws.Image
 }
@@ -45,10 +43,10 @@ func NewKeyButtonComp(res KeyButtonsRes, opts KeyButtonsOpts) (comp KeyButtonCom
 	comp.spritesList = make([][2]draws.Sprite, len(opts.ws))
 	for k := range comp.spritesList {
 		for i, img := range res.imgs {
-			sprite := draws.NewSprite(img)
-			sprite.SetSize(opts.ws[k], opts.h)
-			sprite.Locate(opts.xs[k], opts.y, draws.CenterTop)
-			comp.spritesList[k][i] = sprite
+			s := draws.NewSprite(img)
+			s.SetSize(opts.ws[k], opts.h)
+			s.Locate(opts.xs[k], opts.y, draws.CenterTop)
+			comp.spritesList[k][i] = s
 		}
 	}
 	return

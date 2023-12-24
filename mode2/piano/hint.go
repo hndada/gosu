@@ -37,10 +37,10 @@ type HintComp struct {
 }
 
 func NewHintComp(res HintRes, opts HintOpts) (comp HintComp) {
-	sprite := draws.NewSprite(res.img)
-	sprite.SetSize(opts.w, opts.H)
-	sprite.Locate(opts.x, opts.y, draws.CenterBottom)
-	comp.sprite = sprite
+	s := draws.NewSprite(res.img)
+	s.SetSize(opts.w, opts.H)
+	s.Locate(opts.x, opts.y, draws.CenterBottom)
+	comp.sprite = s
 	return
 }
 

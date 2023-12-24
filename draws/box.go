@@ -4,6 +4,16 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
+type Op = ebiten.DrawImageOptions
+
+// Image, Frames, Text implement Source.
+// Sprite, Animation, TextBox embed Box.
+type Source interface {
+	SourceSize() Vector2
+	IsEmpty() bool
+	Draw(dst Image, op *Op)
+}
+
 // Box contains information to draw an 2D entity.
 type Box struct {
 	Size       Vector2 // pixel
@@ -13,18 +23,6 @@ type Box struct {
 	ColorScale ebiten.ColorScale
 	Blend      ebiten.Blend
 	Filter     ebiten.Filter
-}
-
-type Op = ebiten.DrawImageOptions
-
-// Image, Frames, Text implement Source.
-// Image -> Sprite
-// Frames -> Animation
-// Text -> TextBox
-type Source interface {
-	SourceSize() Vector2
-	IsEmpty() bool
-	Draw(dst Image, op *Op)
 }
 
 func NewBox(src Source) Box {
@@ -45,6 +43,11 @@ func (b *Box) SetSize(w, h float64) {
 	b.Size.X = w
 	b.Size.Y = h
 }
+func (b *Box) MultiplyScale(s float64) {
+	v := NewVector2FromScalar(s)
+	b.Size = b.Size.Mul(v)
+}
+
 func (b *Box) Locate(x, y float64, anchor Anchor) {
 	b.Position.X = x
 	b.Position.Y = y

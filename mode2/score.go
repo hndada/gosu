@@ -102,11 +102,11 @@ func (comp ScoreComp) Draw(screen draws.Image) {
 
 	var tx float64
 	for _, d := range digits {
-		sprite := comp.sprites[d]
-		sprite.Move(tx, 0)
+		s := comp.sprites[d]
+		s.Move(tx, 0)
 		// Need to set at center since anchor is RightTop.
-		sprite.Move(-comp.w/2+sprite.W()/2, 0)
-		sprite.Draw(screen, draws.Op{})
+		s.Move(-comp.w/2+s.W()/2, 0)
+		s.Draw(screen)
 		tx -= comp.w
 	}
 }

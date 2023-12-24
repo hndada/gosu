@@ -12,14 +12,14 @@ type FieldRes struct {
 }
 
 func (res *FieldRes) Load(fsys fs.FS) {
-	// Field component requires no external resources.
+	// Uses generated image.
 	res.img = draws.NewImage(mode.ScreenW, mode.ScreenH)
 }
 
 type FieldOpts struct {
 	w       float64
 	x       float64
-	Opacity float64
+	Opacity float32
 }
 
 func NewFieldOpts(keys KeysOpts) FieldOpts {
@@ -35,11 +35,11 @@ type FieldComp struct {
 }
 
 func NewFieldComp(res FieldRes, opts FieldOpts) (comp FieldComp) {
-	sprite := draws.NewSprite(res.img)
-	sprite.SetSize(opts.w, mode.ScreenH)
-	sprite.Locate(opts.x, 0, draws.CenterTop)
-	sprite.Color.Scale(1, 1, 1, opts.Opacity)
-	comp.sprite = sprite
+	s := draws.NewSprite(res.img)
+	s.SetSize(opts.w, mode.ScreenH)
+	s.Locate(opts.x, 0, draws.CenterTop)
+	s.ColorScale.Scale(1, 1, 1, opts.Opacity)
+	comp.sprite = s
 	return
 }
 

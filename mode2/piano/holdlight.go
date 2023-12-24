@@ -4,7 +4,6 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
-	mode "github.com/hndada/gosu/mode2"
 )
 
 type HoldLightsRes struct {
@@ -12,15 +11,15 @@ type HoldLightsRes struct {
 }
 
 func (br *HoldLightsRes) Load(fsys fs.FS) {
-	fname := "piano/lighting/hold"
-	br.frames = draws.NewFramesFromFilename(fsys, fname)
+	fname := "piano/lighting/hold.png"
+	br.frames = draws.NewFramesFromFile(fsys, fname)
 }
 
 type HoldLightsOpts struct {
 	Scale   float64
 	xs      []float64
 	y       float64
-	Opacity float64
+	Opacity float32
 }
 
 func NewHoldLightsOpts(keys KeysOpts) HoldLightsOpts {
@@ -42,13 +41,11 @@ func NewHoldLightsComp(res HoldLightsRes, opts HoldLightsOpts) (comp HoldLightsC
 	keyCount := len(opts.xs)
 	comp.anims = make([]draws.Animation, keyCount)
 	for k := range comp.anims {
-		anim := draws.NewAnimation(res.frames, mode.ToTick(300))
-		anim.MultiplyScale(opts.Scale)
-		anim.Locate(opts.xs[k], opts.y, draws.CenterBottom)
-		for i := range anim.Sprites {
-			anim.Sprites[i].Color.Scale(1, 1, 1, opts.Opacity)
-		}
-		comp.anims[k] = anim
+		a := draws.NewAnimation(res.frames, 300)
+		a.MultiplyScale(opts.Scale)
+		a.Locate(opts.xs[k], opts.y, draws.CenterBottom)
+		a.ColorScale.Scale(1, 1, 1, opts.Opacity)
+		comp.anims[k] = a
 	}
 	return
 }

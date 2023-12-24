@@ -47,11 +47,11 @@ func NewBacklightsComp(res BacklightsRes, opts BacklightsOpts) (comp BacklightsC
 	keyCount := len(opts.ws)
 	comp.sprites = make([]draws.Sprite, keyCount)
 	for k := range comp.sprites {
-		sprite := draws.NewSprite(res.img)
-		sprite.MultiplyScale(opts.ws[k] / sprite.W())
-		sprite.Locate(opts.xs[k], opts.y, draws.CenterBottom) // -HintHeight
-		sprite.Color.ScaleWithColor(opts.Colors[opts.order[k]])
-		comp.sprites[k] = sprite
+		s := draws.NewSprite(res.img)
+		s.MultiplyScale(opts.ws[k] / s.W())
+		s.Locate(opts.xs[k], opts.y, draws.CenterBottom) // -HintHeight
+		s.ColorScale.ScaleWithColor(opts.Colors[opts.order[k]])
+		comp.sprites[k] = s
 	}
 	return
 }
