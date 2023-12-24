@@ -126,5 +126,5 @@ func (comp JudgmentComp) Draw(dst draws.Image) {
 	}
 	anim := comp.anims[comp.index()]
 	anim.MultiplyScale(comp.tween.Current())
-	anim.Draw(dst, draws.Op{})
+	anim.Draw(dst)
 }

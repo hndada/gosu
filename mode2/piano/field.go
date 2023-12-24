@@ -1,14 +1,19 @@
 package piano
 
 import (
-	"image/color"
+	"io/fs"
 
 	"github.com/hndada/gosu/draws"
 	mode "github.com/hndada/gosu/mode2"
 )
 
 type FieldRes struct {
+	img draws.Image
+}
+
+func (res *FieldRes) Load(fsys fs.FS) {
 	// Field component requires no external resources.
+	res.img = draws.NewImage(mode.ScreenW, mode.ScreenH)
 }
 
 type FieldOpts struct {
@@ -30,15 +35,14 @@ type FieldComp struct {
 }
 
 func NewFieldComp(res FieldRes, opts FieldOpts) (comp FieldComp) {
-	img := draws.NewImage(opts.w, mode.ScreenH)
-	img.Fill(color.NRGBA{0, 0, 0, uint8(255 * opts.Opacity)})
-
-	sprite := draws.NewSprite(img)
+	sprite := draws.NewSprite(res.img)
+	sprite.SetSize(opts.w, mode.ScreenH)
 	sprite.Locate(opts.x, 0, draws.CenterTop)
+	sprite.Color.Scale(1, 1, 1, opts.Opacity)
 	comp.sprite = sprite
 	return
 }
 
 func (comp FieldComp) Draw(dst draws.Image) {
-	comp.sprite.Draw(dst, draws.Op{})
+	comp.sprite.Draw(dst)
 }

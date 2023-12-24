@@ -5,7 +5,9 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
+	mode "github.com/hndada/gosu/mode2"
 )
+
 // All names of fields in Asset ends with their types.
 
 type KeyButtonsRes struct {
@@ -19,16 +21,35 @@ func (kr *KeyButtonsRes) Load(fsys fs.FS) {
 	}
 }
 
-type KeyButtonOpts struct {
+type KeyButtonsOpts struct {
 	ws []float64
+	h  float64
 	xs []float64
+	y  float64 // center top
 }
 
-func NewKeyButtonOpts(keys KeysOpts) KeyButtonOpts {
-	return KeyButtonOpts{
+func NewKeyButtonsOpts(keys KeysOpts) KeyButtonsOpts {
+	return KeyButtonsOpts{
 		ws: keys.ws,
+		h:  mode.ScreenH - keys.BaselineY,
 		xs: keys.xs,
+		y:  keys.BaselineY,
 	}
 }
 
-func 
+type KeyButtonComp struct {
+	spritesList [][2]draws.Sprite
+}
+
+func NewKeyButtonComp(res KeyButtonsRes, opts KeyButtonsOpts) (comp KeyButtonComp) {
+	comp.spritesList = make([][2]draws.Sprite, len(opts.ws))
+	for k := range comp.spritesList {
+		for i, img := range res.imgs {
+			sprite := draws.NewSprite(img)
+			sprite.SetSize(opts.ws[k], opts.h)
+			sprite.Locate(opts.xs[k], opts.y, draws.CenterTop)
+			comp.spritesList[k][i] = sprite
+		}
+	}
+	return
+}

@@ -10,23 +10,18 @@ import (
 type Options struct {
 	// Music    mode.MusicOpts
 	// Sound    mode.SoundOpts
-	Key        KeyOpts
+	Key        KeysOpts
 	Field      FieldOpts
 	Hint       HintOpts
 	Bar        BarOpts
 	Notes      NotesOpts
-	KeyButtons KeyButtonOpts
-	Backlights BacklightOpts
-	HitLights  HitLightOpts
-	HoldLights HoldLightOpts
+	KeyButtons KeyButtonsOpts
+	Backlights BacklightsOpts
+	HitLights  HitLightsOpts
+	HoldLights HoldLightsOpts
 	Judgment   JudgmentOpts
 	Combo      mode.ComboOpts
 	Score      mode.ScoreOpts
-}
-
-func NewOptions(keyCount int) Options {
-	opts := Options{}
-	return opts
 }
 
 // NewXxxComponent() requires multiple arguments.

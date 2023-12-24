@@ -73,9 +73,13 @@ func (s Sprite) Min() (min Vector2) {
 }
 func (s Sprite) Max() Vector2                           { return s.Min().Add(s.Size()) }
 func (s Sprite) LeftTop(screenSize Vector2) (v Vector2) { return s.Min() }
-func (s Sprite) Draw(dst Image, op Op) {
+func (s Sprite) Draw(dst Image) {
 	if s.Source == nil || s.Source.IsEmpty() {
 		return
+	}
+
+	op := Op{
+		ColorM: s.Color,
 	}
 	op.GeoM.Scale(s.Scale.XY())
 	leftTop := s.LeftTop(dst.Size())

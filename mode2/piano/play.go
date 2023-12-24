@@ -2,6 +2,7 @@ package piano
 
 import (
 	"fmt"
+	"io/fs"
 	"strings"
 	"time"
 
@@ -15,6 +16,12 @@ const (
 	maxFlow = 50
 	maxAcc  = 20
 )
+
+func (asset *Asset) setDefaultHitSound(cfg *Config, fsys fs.FS) {
+	streamer, format, _ := audios.DecodeFromFile(fsys, "piano/sound/hit.wav")
+	asset.DefaultHitSoundStreamer = streamer
+	asset.DefaultHitSoundFormat = format
+}
 
 // Alternative names of Mods:
 // Modifiers, Parameters

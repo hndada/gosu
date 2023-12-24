@@ -16,7 +16,7 @@ type BarOpts struct {
 	w float64
 	H float64
 	x float64
-	y float64
+	y float64 // center bottom
 }
 
 func NewBarOpts(keys KeysOpts) BarOpts {
@@ -78,6 +78,6 @@ func (comp BarComp) Draw(dst draws.Image) {
 		pos := b.Position - comp.cursor
 		sprite := comp.sprite
 		sprite.Move(0, -pos)
-		sprite.Draw(dst, draws.Op{})
+		sprite.Draw(dst)
 	}
 }

@@ -24,7 +24,7 @@ func (s ScenePlay) Draw(screen draws.Image) {
 }
 
 func (s ScenePlay) drawField(dst draws.Image) {
-	s.FieldSprite.Draw(dst, draws.Op{})
+	s.FieldSprite.Draw(dst)
 }
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
@@ -34,7 +34,7 @@ func (s ScenePlay) drawBars(dst draws.Image) {
 		pos := b.Position - s.cursor
 		sprite := s.BarSprite
 		sprite.Move(0, -pos)
-		sprite.Draw(dst, draws.Op{})
+		sprite.Draw(dst)
 		if b.Prev == nil {
 			break
 		}
@@ -42,7 +42,7 @@ func (s ScenePlay) drawBars(dst draws.Image) {
 }
 
 func (s ScenePlay) drawHint(dst draws.Image) {
-	s.HintSprite.Draw(dst, draws.Op{})
+	s.HintSprite.Draw(dst)
 }
 
 // drawLongNoteBodies draws stretched long note body sprite.
@@ -121,7 +121,7 @@ func (s ScenePlay) drawKeys(dst draws.Image) {
 		if s.isKeyPresseds[k] || timer.Tick < timer.MaxTick {
 			index = keyDown
 		}
-		sprites[index].Draw(dst, draws.Op{})
+		sprites[index].Draw(dst)
 	}
 }
 
@@ -191,7 +191,7 @@ func (s ScenePlay) drawJudgment(dst draws.Image) {
 		scale = 1 - 0.25*timer.Progress(bound2, 1)
 	}
 	sprite.MultiplyScale(scale)
-	sprite.Draw(dst, draws.Op{})
+	sprite.Draw(dst)
 }
 
 // for TimeErrorMeter

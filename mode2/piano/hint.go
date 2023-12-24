@@ -20,7 +20,7 @@ type HintOpts struct {
 	w float64
 	H float64
 	x float64
-	y float64
+	y float64 // center bottom
 }
 
 func NewHintOpts(keys KeysOpts) HintOpts {
@@ -45,5 +45,5 @@ func NewHintComp(res HintRes, opts HintOpts) (comp HintComp) {
 }
 
 func (comp HintComp) Draw(dst draws.Image) {
-	comp.sprite.Draw(dst, draws.Op{})
+	comp.sprite.Draw(dst)
 }

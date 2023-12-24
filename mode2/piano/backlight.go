@@ -12,21 +12,24 @@ type BacklightsRes struct {
 }
 
 func (br *BacklightsRes) Load(fsys fs.FS) {
-	br.img = draws.NewImageFromFile(fsys, "piano/key/backlight.png")
+	fname := "piano/key/backlight.png"
+	br.img = draws.NewImageFromFile(fsys, fname)
 }
 
 type BacklightsOpts struct {
 	ws     []float64
 	xs     []float64
 	y      float64
+	order  []KeyKind
 	Colors [4]color.NRGBA
 }
 
 func NewBacklightsOpts(keys KeysOpts) BacklightsOpts {
 	return BacklightsOpts{
-		ws: keys.ws,
-		xs: keys.xs,
-		y:  keys.BaselineY,
+		ws:    keys.ws,
+		xs:    keys.xs,
+		y:     keys.BaselineY,
+		order: keys.Order(),
 		Colors: [4]color.NRGBA{
 			{224, 224, 224, 64}, // One: white
 			{255, 170, 204, 64}, // Two: pink
@@ -44,10 +47,11 @@ func NewBacklightsComp(res BacklightsRes, opts BacklightsOpts) (comp BacklightsC
 	keyCount := len(opts.ws)
 	comp.sprites = make([]draws.Sprite, keyCount)
 	for k := range comp.sprites {
-		s := draws.NewSprite(res.img)
-		s.MultiplyScale(opts.ws[k] / s.W())
-		s.Locate(opts.xs[k], opts.y, draws.CenterBottom) // -HintHeight
-		comp.sprites[k] = s
+		sprite := draws.NewSprite(res.img)
+		sprite.MultiplyScale(opts.ws[k] / sprite.W())
+		sprite.Locate(opts.xs[k], opts.y, draws.CenterBottom) // -HintHeight
+		sprite.Color.ScaleWithColor(opts.Colors[opts.order[k]])
+		comp.sprites[k] = sprite
 	}
 	return
 }

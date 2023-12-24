@@ -1,8 +1,6 @@
 package draws
 
-import (
-	"io/fs"
-)
+import "io/fs"
 
 type Animation struct {
 	Sprites []Sprite
@@ -75,8 +73,8 @@ func (a Animation) Frame() Sprite {
 	return a.Sprites[index]
 }
 
-func (a Animation) Draw(screen Image, op Op) {
-	a.Frame().Draw(screen, op)
+func (a Animation) Draw(screen Image) {
+	a.Frame().Draw(screen)
 }
 
 func (a Animation) IsEmpty() bool {

@@ -95,7 +95,7 @@ func NewNotes(f any, keyCount int) (ns []Note) {
 	return
 }
 
-type NoteRes struct {
+type NotesRes struct {
 	framesList [4]draws.Frames
 }
 
@@ -103,16 +103,15 @@ type NoteRes struct {
 // When note/head image is not found, use user's note/normal.
 // When note/tail image is not found, let it be blank.
 // When note/body image is not found, use user's note/normal.
-
 // Todo: remove key kind folders
-func (res *NoteRes) Load(fsys fs.FS) {
+func (res *NotesRes) Load(fsys fs.FS) {
 	for nt, ntname := range []string{"normal", "head", "tail", "body"} {
 		name := fmt.Sprintf("piano/note/one/%s.png", ntname)
 		res.framesList[nt] = draws.NewFramesFromFilename(fsys, name)
 	}
 }
 
-type NoteOpts struct {
+type NotesOpts struct {
 	SpeedScale        float64
 	lastSpeedScale    float64
 	TailExtraDuration int32
@@ -121,15 +120,15 @@ type NoteOpts struct {
 	ws       []float64
 	H        float64 // Applies to all types of notes.
 	xs       []float64
-	y        float64
+	y        float64 // center bottom
 
 	keyOrder []KeyKind
 	Colors   [4]color.NRGBA
 	// LongBodyStyle     int // Stretch or Attach.
 }
 
-func NewNoteOpts(keys KeysOpts) NoteOpts {
-	return NoteOpts{
+func NewNotesOpts(keys KeysOpts) NotesOpts {
+	return NotesOpts{
 		SpeedScale:        1.0,
 		lastSpeedScale:    1.0,
 		TailExtraDuration: 0,
@@ -161,7 +160,7 @@ type NoteComp struct {
 	colors    []color.NRGBA
 }
 
-func NewNoteComp(res NoteRes, opts NoteOpts, ns []Note) (comp NoteComp) {
+func NewNoteComp(res NotesRes, opts NotesOpts, ns []Note) (comp NoteComp) {
 	comp.notes = ns
 
 	comp.staged = make([]int, opts.keyCount)
@@ -254,7 +253,7 @@ func (comp NoteComp) Draw(dst draws.Image) {
 			pos := n.Position - comp.cursor
 			anim := comp.animsList[k][n.Type]
 			anim.Move(0, -pos)
-			anim.Draw(dst, draws.Op{})
+			anim.Draw(dst)
 		}
 	}
 }
