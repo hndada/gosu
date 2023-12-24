@@ -1,6 +1,30 @@
 package draws
 
-import "math"
+import (
+	"math"
+	"time"
+)
+
+type tween struct {
+	startTime time.Time
+	begin     float64
+	change    float64
+	duration  time.Duration
+	easing    TweenFunc
+	// backward bool // for yoyo
+}
+
+// Easing function requires 4 arguments:
+// current time (t), begin (b), change (c), and duration (d).
+type TweenFunc func(t time.Duration, b, c float64, d time.Duration) float64
+
+func (tw tween) isFinished() bool {
+	return tw.startTime.Add(tw.duration).Before(time.Now())
+}
+
+func (tw tween) current() float64 {
+	return tw.easing(time.Since(tw.startTime), tw.begin, tw.change, tw.duration)
+}
 
 // Tween calculates intermediate values between two values over a specified duration.
 // Yoyo is nearly no use when each tweens is not continuous.
@@ -13,54 +37,48 @@ type Tween struct {
 	// backward bool // for yoyo
 }
 
-func NewTween(begin, change float64, maxTick int, easing TweenFunc) (tw Tween) {
-	tw.AppendTween(begin, change, maxTick, easing)
+func NewTween(begin, change float64, duration int32, easing TweenFunc) (tw Tween) {
+	tw.AppendTween(begin, change, duration, easing)
 	return
 }
 
-func (tw *Tween) AppendTween(begin, change float64, maxTick int, easing TweenFunc) {
+func (tw Tween) endTime() time.Time {
+	if len(tw.units) == 0 {
+		return time.Now()
+	}
+	last := tw.units[len(tw.units)-1]
+	return last.startTime.Add(last.duration)
+}
+
+func (tw *Tween) AppendTween(begin, change float64, duration int32, easing TweenFunc) {
 	tw.units = append(tw.units, tween{
-		begin:   begin,
-		change:  change,
-		maxTick: maxTick,
-		easing:  easing,
+		startTime: tw.endTime(),
+		begin:     begin,
+		change:    change,
+		duration:  time.Duration(duration) * time.Millisecond,
+		easing:    easing,
 	})
 }
 
 func (tw *Tween) SetLoop(maxLoop int) { tw.maxLoop = maxLoop }
 
-func (tw Tween) Unit() tween { return tw.units[tw.index] }
-
-func (tw Tween) Current() float64 {
+func (tw *Tween) Current() float64 {
 	if len(tw.units) == 0 {
 		return 0
 	}
-	return tw.Unit().Current()
-}
 
-func (tw *Tween) Tick() {
-	if tw.IsFinished() {
-		return
-	}
-	if len(tw.units) == 0 {
-		return
-	}
-
-	// Process the current Tween
-	tw.units[tw.index].Tick()
-	if !tw.units[tw.index].IsFinished() {
-		return
-	}
-
-	// Process the next Tween
-	if tw.index < len(tw.units)-1 {
-		tw.index++
-	} else {
-		tw.loop++
-		if tw.loop < tw.maxLoop {
-			tw.index = 0
+	for tw.units[tw.index].isFinished() {
+		if tw.index < len(tw.units)-1 {
+			tw.index++
+		} else {
+			tw.loop++
+			if tw.loop < tw.maxLoop {
+				tw.index = 0
+			}
 		}
 	}
+
+	return tw.units[tw.index].current()
 }
 
 // IsFinished returns false if the loop is infinite.
@@ -70,60 +88,32 @@ func (tw Tween) IsFinished() bool {
 
 func (tw *Tween) Reset() {
 	for i := range tw.units {
-		tw.units[i].tick = 0
+		tw.units[i].startTime = time.Now()
 	}
 	tw.index = 0
 	tw.loop = 0
 }
 
-type tween struct {
-	tick    int
-	begin   float64
-	change  float64
-	maxTick int
-	easing  TweenFunc
-	// backward bool // for yoyo
-}
-
-// Easing function requires 4 arguments:
-// current time (tick), begin and change values, and duration (max tick).
-type TweenFunc func(tick int, begin, change float64, maxTick int) float64
-
-func (tw *tween) Tick() {
-	if tw.IsFinished() {
-		return
-	}
-	if tw.tick < tw.maxTick {
-		tw.tick++
-	}
-}
-
-func (tw tween) IsFinished() bool { return tw.tick >= tw.maxTick }
-
-func (tw tween) Current() float64 {
-	return tw.easing(tw.tick, tw.begin, tw.change, tw.maxTick)
-}
-
 // Easing functions
 // begin + change*dx
-func EaseLinear(tick int, begin, change float64, maxTick int) float64 {
-	dx := float64(tick) / float64(maxTick)
-	return begin + change*dx
+func EaseLinear(t time.Duration, b, c float64, d time.Duration) float64 {
+	dx := float64(t) / float64(d)
+	return b + c*dx
 }
 
 // begin + change*(1-math.Exp(-k*dx))
-func EaseOutExponential(tick int, begin, change float64, maxTick int) float64 {
-	if tick >= maxTick {
-		return begin + change
+func EaseOutExponential(t time.Duration, b, c float64, d time.Duration) float64 {
+	if t >= d {
+		return b + c
 	}
 
 	// k, steepness, is regardless of the number of steps.
 	// https://go.dev/play/p/NnGiHCfPfD-
-
 	// k := math.Log(math.Abs(change)) // delayed.go
+
 	const k = -6.93 // exp(-6.93) ~= pow(2, -10)
-	dx := float64(tick) / float64(maxTick)
-	return begin + change*(1-math.Exp(-k*dx))
+	dx := float64(t) / float64(d)
+	return b + c*(1-math.Exp(-k*dx))
 }
 
 func (tw *Tween) Yoyo() {

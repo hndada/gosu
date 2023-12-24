@@ -3,6 +3,7 @@ package piano
 import (
 	"image/color"
 	"io/fs"
+	"time"
 
 	"github.com/hndada/gosu/draws"
 )
@@ -17,11 +18,12 @@ func (br *BacklightsRes) Load(fsys fs.FS) {
 }
 
 type BacklightsOpts struct {
-	ws     []float64
-	xs     []float64
-	y      float64
-	order  []KeyKind
-	Colors [4]color.NRGBA
+	ws          []float64
+	xs          []float64
+	y           float64
+	order       []KeyKind
+	Colors      [4]color.NRGBA
+	minDuration int32 // milliseconds
 }
 
 func NewBacklightsOpts(keys KeysOpts) BacklightsOpts {
@@ -36,11 +38,15 @@ func NewBacklightsOpts(keys KeysOpts) BacklightsOpts {
 			{224, 224, 0, 64},   // Mid: yellow
 			{255, 0, 0, 64},     // Tip: red
 		},
+		minDuration: 30,
 	}
 }
 
 type BacklightsComp struct {
-	sprites []draws.Sprite
+	keyDowns    []bool
+	sprites     []draws.Sprite
+	startTimes  []time.Time
+	minDuration int32
 }
 
 func NewBacklightsComp(res BacklightsRes, opts BacklightsOpts) (comp BacklightsComp) {
@@ -53,5 +59,28 @@ func NewBacklightsComp(res BacklightsRes, opts BacklightsOpts) (comp BacklightsC
 		s.ColorScale.ScaleWithColor(opts.Colors[opts.order[k]])
 		comp.sprites[k] = s
 	}
+	comp.startTimes = make([]time.Time, keyCount)
+	comp.minDuration = opts.minDuration
 	return
+}
+
+func (comp *BacklightsComp) Update(keyDowns []bool) {
+	comp.keyDowns = keyDowns
+	for k, down := range keyDowns {
+		if down {
+			comp.startTimes[k] = time.Now()
+		}
+	}
+}
+
+// Draw backlights for a while even if the press is brief.
+func (comp BacklightsComp) Draw(dst draws.Image) {
+	elapsed := time.Since(comp.startTimes[0]).Milliseconds()
+	for k, keyDown := range comp.keyDowns {
+		if keyDown || int32(elapsed) <= comp.minDuration {
+			comp.sprites[k].Draw(dst)
+		} else {
+			comp.sprites[k].Draw(dst)
+		}
+	}
 }

@@ -3,6 +3,7 @@ package piano
 import (
 	"fmt"
 	"io/fs"
+	"time"
 
 	"github.com/hndada/gosu/draws"
 	mode "github.com/hndada/gosu/mode2"
@@ -35,12 +36,17 @@ func NewKeyButtonsOpts(keys KeysOpts) KeyButtonsOpts {
 	}
 }
 
-type KeyButtonComp struct {
+// Put suffix 'List' when suffix 's' is not available.
+type KeyButtonsComp struct {
+	keyDowns    []bool
 	spritesList [][2]draws.Sprite
+	startTimes  []time.Time
+	minDuration int32 // milliseconds
 }
 
-func NewKeyButtonComp(res KeyButtonsRes, opts KeyButtonsOpts) (comp KeyButtonComp) {
-	comp.spritesList = make([][2]draws.Sprite, len(opts.ws))
+func NewKeyButtonsComp(res KeyButtonsRes, opts KeyButtonsOpts) (comp KeyButtonsComp) {
+	keyCount := len(opts.ws)
+	comp.spritesList = make([][2]draws.Sprite, keyCount)
 	for k := range comp.spritesList {
 		for i, img := range res.imgs {
 			s := draws.NewSprite(img)
@@ -49,5 +55,32 @@ func NewKeyButtonComp(res KeyButtonsRes, opts KeyButtonsOpts) (comp KeyButtonCom
 			comp.spritesList[k][i] = s
 		}
 	}
+	comp.startTimes = make([]time.Time, keyCount)
+	comp.minDuration = 30
 	return
+}
+
+func (comp *KeyButtonsComp) Update(keyDowns []bool) {
+	comp.keyDowns = keyDowns
+	for k, down := range keyDowns {
+		if down {
+			comp.startTimes[k] = time.Now()
+		}
+	}
+}
+
+// Draw key-down buttons for a while even if the press is brief.
+func (comp KeyButtonsComp) Draw(dst draws.Image) {
+	const (
+		up   = 0
+		down = 1
+	)
+	elapsed := time.Since(comp.startTimes[0]).Milliseconds()
+	for k, keyDown := range comp.keyDowns {
+		if keyDown || int32(elapsed) <= comp.minDuration {
+			comp.spritesList[k][down].Draw(dst)
+		} else {
+			comp.spritesList[k][up].Draw(dst)
+		}
+	}
 }

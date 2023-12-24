@@ -5,25 +5,37 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
+const (
+	flow = iota
+	acc
+	extra
+)
+
+const (
+	maxFlowFactor = 50
+	maxAccFactor  = 20
+)
+
+type Judge struct {
+	flowFactor float64
+	accFactor  float64
+	unitScores [3]float64
+	score      *float64
+}
+
 // It is separated from ScenePlay because it can be used for score simulation.
-func (s ScenePlay) newScorer() Scorer {
-	unit := 1e6 / float64(len(s.Notes))
-	js := DefaultJudgments()
+func (s ScenePlay) setJudge() {
+	unit := 1e6 / float64(len(s.notes.notes))
 	unitScores := [3]float64{unit * 0.7, unit * 0.3, unit * 0.1}
-
-	return Scorer{
-		stagedNotes: s.stagedNotes,
-		flow:        maxFlow,
-		acc:         maxAcc,
-		judgments:   js,
-		unitScores:  unitScores,
-
-		Combo: 0,
-		// Accumulating floating-point numbers may result in imprecise values.
-		// To ensure that the maximum score is attainable,
-		// we initialize the score with a small value in advance.
-		Score:          0.01,
-		JudgmentCounts: make([]int, len(js)),
+	// Accumulating floating-point numbers may result in imprecise values.
+	// To ensure that the maximum score is attainable,
+	// we initialize the score with a small value in advance.
+	s.score.Score = 0.01
+	s.judge = Judge{
+		flowFactor: maxFlowFactor,
+		accFactor:  maxAccFactor,
+		unitScores: unitScores,
+		score:      &s.score.Score,
 	}
 }
 
@@ -105,11 +117,6 @@ func (s *Scorer) mark(n *Note, j mode.Judgment) {
 	// Flow drops to zero when Miss, and recovers when Kool, Cool, and Good.
 	// Acc drops to zero when Miss or Good, and recovers when Kool and Cool.
 	// Extra will be simply added to the score when hit Kool.
-	const (
-		flow = iota
-		acc
-		extra
-	)
 
 	if j == s.miss() {
 		s.Combo = 0
@@ -117,22 +124,22 @@ func (s *Scorer) mark(n *Note, j mode.Judgment) {
 	} else { // Kool, Cool, Good
 		s.Combo++
 		s.flow++
-		if s.flow > maxFlow {
-			s.flow = maxFlow
+		if s.flow > maxFlowFactor {
+			s.flow = maxFlowFactor
 		}
 
 		if j.Is(s.good()) {
 			s.acc = 0
 		} else {
 			s.acc++
-			if s.acc > maxAcc {
-				s.acc = maxAcc
+			if s.acc > maxAccFactor {
+				s.acc = maxAccFactor
 			}
 		}
 	}
 
-	flowScore := s.unitScores[flow] * (s.flow / maxFlow)
-	accScore := s.unitScores[acc] * (s.acc / maxAcc)
+	flowScore := s.unitScores[flow] * (s.flow / maxFlowFactor)
+	accScore := s.unitScores[acc] * (s.acc / maxAccFactor)
 	var extraScore float64
 	if j.Is(s.kool()) {
 		extraScore = s.unitScores[extra]

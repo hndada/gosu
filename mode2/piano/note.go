@@ -151,7 +151,7 @@ func NewNotesOpts(keys KeysOpts) NotesOpts {
 	}
 }
 
-type NoteComp struct {
+type NotesComp struct {
 	notes     []Note
 	staged    []int // targets of judging
 	idxs      []int // indexes of lowest notes
@@ -160,7 +160,7 @@ type NoteComp struct {
 	colors    []color.NRGBA
 }
 
-func NewNoteComp(res NotesRes, opts NotesOpts, ns []Note) (comp NoteComp) {
+func NewNotesComp(res NotesRes, opts NotesOpts, ns []Note) (comp NotesComp) {
 	comp.notes = ns
 
 	comp.staged = make([]int, opts.keyCount)
@@ -195,7 +195,7 @@ func NewNoteComp(res NotesRes, opts NotesOpts, ns []Note) (comp NoteComp) {
 	return
 }
 
-func (comp NoteComp) Duration() int32 {
+func (comp NotesComp) Duration() int32 {
 	if len(comp.notes) == 0 {
 		return 0
 	}
@@ -205,7 +205,7 @@ func (comp NoteComp) Duration() int32 {
 	return last.Time
 }
 
-func (comp NoteComp) NoteCounts() []int {
+func (comp NotesComp) NoteCounts() []int {
 	counts := make([]int, 2)
 	for _, n := range comp.notes {
 		switch n.Type {
@@ -218,7 +218,11 @@ func (comp NoteComp) NoteCounts() []int {
 	return counts
 }
 
-func (comp *NoteComp) Update(cursor float64) {
+func (comp *NotesComp) Update(cursor float64) {
+	comp.updatePosition(cursor)
+}
+
+func (comp *NotesComp) updatePosition(cursor float64) {
 	lowerBound := cursor - mode.ScreenH
 	for k, idx := range comp.idxs {
 		var n Note
@@ -240,7 +244,7 @@ func (comp *NoteComp) Update(cursor float64) {
 }
 
 // Notes are fixed. Lane itself moves, all notes move as same amount.
-func (comp NoteComp) Draw(dst draws.Image) {
+func (comp NotesComp) Draw(dst draws.Image) {
 	upperBound := comp.cursor + mode.ScreenH
 	for k, idx := range comp.idxs {
 		var n Note

@@ -34,7 +34,8 @@ func NewHoldLightsOpts(keys KeysOpts) HoldLightsOpts {
 // field name: sprites, anims
 // local name: s, a
 type HoldLightsComp struct {
-	anims []draws.Animation
+	anims    []draws.Animation
+	keyHolds []bool
 }
 
 func NewHoldLightsComp(res HoldLightsRes, opts HoldLightsOpts) (comp HoldLightsComp) {
@@ -48,4 +49,20 @@ func NewHoldLightsComp(res HoldLightsRes, opts HoldLightsOpts) (comp HoldLightsC
 		comp.anims[k] = a
 	}
 	return
+}
+
+func (comp *HoldLightsComp) Update(keyHolds []bool) {
+	olds := comp.keyHolds
+	for k, new := range keyHolds {
+		if new && !olds[k] {
+			comp.anims[k].Reset()
+		}
+	}
+	comp.keyHolds = keyHolds
+}
+
+func (comp HoldLightsComp) Draw(dst draws.Image) {
+	for _, a := range comp.anims {
+		a.Draw(dst)
+	}
 }

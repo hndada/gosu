@@ -43,7 +43,26 @@ func NewHitLightsComp(res HitLightsRes, opts HitLightsOpts) (comp HitLightsComp)
 		a.MultiplyScale(opts.Scale)
 		a.Locate(opts.xs[k], opts.y, draws.CenterBottom) // -HintHeight
 		a.ColorScale.Scale(1, 1, 1, opts.Opacity)
+		a.SetLoop(1)
 		comp.anims[k] = a
 	}
 	return
+}
+
+func (comp *HitLightsComp) Update(keyOns []bool) {
+	for k, ok := range keyOns {
+		if ok {
+			comp.anims[k].Reset()
+		}
+	}
+}
+
+// HitLightsComp.Draw draws hit lights when Normal is Hit or Tail is Release.
+func (comp HitLightsComp) Draw(dst draws.Image) {
+	for _, a := range comp.anims {
+		if a.IsFinished() {
+			continue
+		}
+		a.Draw(dst)
+	}
 }

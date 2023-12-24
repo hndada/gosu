@@ -12,36 +12,41 @@ import (
 	mode "github.com/hndada/gosu/mode2"
 )
 
-const (
-	maxFlow = 50
-	maxAcc  = 20
-)
-
 func (asset *Asset) setDefaultHitSound(cfg *Config, fsys fs.FS) {
 	streamer, format, _ := audios.DecodeFromFile(fsys, "piano/sound/hit.wav")
 	asset.DefaultHitSoundStreamer = streamer
 	asset.DefaultHitSoundFormat = format
 }
+func (s ScenePlay) Draw(screen draws.Image) {
+	s.Field.Draw(screen)
+	s.Bars.Draw(screen)
+	s.Hint.Draw(screen)
 
-// Alternative names of Mods:
-// Modifiers, Parameters
-// Occupied: Options, Settings, Configs
-// If Mods is gonna be used, it might be good to change "Mode".
+	s.LongNoteBodies.Draw(screen)
+	s.Notes.Draw(screen)
+
+	s.Keys.Draw(screen)
+	s.KeyLightings.Draw(screen)
+	s.HitLightings.Draw(screen)
+	s.HoldLightings.Draw(screen)
+
+	s.Judgment.Draw(screen)
+	s.Score.Draw(screen)
+	s.Combo.Draw(screen)
+	// Todo: s.drawMeter(screen)
+}
+
 type ScenePlay struct {
-	// Todo: FlowPoint
-	flow       float64
-	acc        float64
-	unitScores [3]float64
-
+	// Todo: Mods, FlowPoint (kind of HP)
+	judge         Judge
 	isKeyPresseds []bool // for keys, key lightings, and hold lightings
 	isKeyHolds    []bool // for long note body, hold lightings
 	// isJudgeOKs         []bool // for 'hit' lighting
 	isLongNoteHoldings []bool // for long note body
 
-	drawKeyTimers          []draws.Timer
-	drawKeyLightingTimers  []draws.Timer
-	drawHitLightingTimers  []draws.Timer
-	drawHoldLightingTimers []draws.Timer
+	notes   NotesComp
+	score   mode.ScoreComp
+	drawers []draws.Drawer
 }
 
 // Just assigning slice will shallow copy.
@@ -87,11 +92,16 @@ func NewScenePlay(res Resources, opts Options) (s ScenePlay, err error) {
 	// s.kool() is just for placeholder.
 	s.worstJudgment = s.kool()
 
-	s.drawKeyTimers = s.newDrawTimers(mode.ToTick(30), 0)
-	s.drawKeyLightingTimers = s.newDrawTimers(mode.ToTick(30), 0)
-	s.drawHitLightingTimers = s.newDrawTimers(mode.ToTick(150), mode.ToTick(150))
-	s.drawHoldLightingTimers = s.newDrawTimers(0, mode.ToTick(300))
+	s.drawers = []draws.Drawer{
+		&s.notes,
+		&s.score,
+	}
 	return
+}
+func (s ScenePlay) Draw(dst draws.Image) {
+	for _, d := range s.drawers {
+		d.Draw(dst)
+	}
 }
 
 // Need to re-calculate positions when Speed has changed.
@@ -218,14 +228,7 @@ func (s ScenePlay) DebugString() string {
 	return b.String()
 }
 
-// func (s *ScenePlay) tickerDrawTimers() {
-// 	for k := 0; k < s.KeyCount; k++ {
-// 		s.drawKeyTimers[k].Ticker()
-// 		s.drawNoteTimers[k].Ticker()
-// 		s.drawKeyLightingTimers[k].Ticker()
-// 		s.drawHitLightingTimers[k].Ticker()
-// 		s.drawHoldLightingTimers[k].Ticker()
-// 	}
-// 	s.drawJudgmentTimer.Ticker()
-// 	s.drawComboTimer.Ticker()
-// }
+// Alternative names of Mods:
+// Modifiers, Parameters
+// Occupied: Options, Settings, Configs
+// If Mods is gonna be used, it might be good to change "Mode".
