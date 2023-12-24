@@ -4,7 +4,6 @@ import "math"
 
 // Tween calculates intermediate values between two values over a specified duration.
 // Yoyo is nearly no use when each tweens is not continuous.
-// Todo: Add yoyo mode?
 type Tween struct {
 	units   []tween
 	index   int
@@ -125,4 +124,35 @@ func EaseOutExponential(tick int, begin, change float64, maxTick int) float64 {
 	const k = -6.93 // exp(-6.93) ~= pow(2, -10)
 	dx := float64(tick) / float64(maxTick)
 	return begin + change*(1-math.Exp(-k*dx))
+}
+
+func (tw *Tween) Yoyo() {
+	// // Move to the next Tween if the current one is finished
+	// switch {
+	// case !tw.yoyo:
+	// 	// Standard behavior: increment tick until maxTick
+	// 	if tw.index < len(tw.Tweens)-1 {
+	// 		tw.index++
+	// 	} else {
+	// 		tw.loop++
+	// 		if tw.loop < tw.maxLoop {
+	// 			tw.index = 0
+	// 		}
+	// 	}
+	// case tw.yoyo && !tw.backward:
+	// 	// Yoyo mode - increasing tick
+	// 	if tw.index < len(tw.Tweens)-1 {
+	// 		tw.index++
+	// 	} else {
+	// 		tw.backward = true
+	// 	}
+	// case tw.yoyo && tw.backward:
+	// 	// Yoyo mode - decreasing tick
+	// 	if tw.index > 0 {
+	// 		tw.index--
+	// 	} else {
+	// 		tw.backward = false
+	// 		tw.loop++
+	// 	}
+	// }
 }

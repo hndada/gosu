@@ -1,38 +1,32 @@
 package draws
 
-import (
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/text"
-	"golang.org/x/image/font"
-)
+import "github.com/hajimehoshi/ebiten/v2/text/v2"
 
 type Text struct {
-	text string
-	face font.Face
+	Text string
+	Face text.Face
 }
 
-func NewText(t string, face font.Face) Text {
+func NewText(txt string, Face text.Face) Text {
 	return Text{
-		text: t,
-		face: face,
+		Text: txt,
+		Face: Face,
 	}
 }
+
+func (t Text) IsEmpty() bool { return len(t.Text) == 0 }
 
 // Append new line when each function has more than one line
 // and functions are not strictly related.
-func (t Text) Size() Vector2 {
-	b := text.BoundString(t.face, t.text)
-	return IntVec2(b.Max.X, -b.Min.Y)
+func (t Text) SourceSize() Vector2 {
+	return Vec2(text.Measure(t.Text, t.Face, 1))
+	// return NewVector2FromInts(b.Max.X, -b.Min.Y)
 }
 
 // issue: ebiten/v2/text.DrawWithOptions does not support ColorM.
-func (t Text) Draw(dst Image, op Op) {
-	op2 := &ebiten.DrawImageOptions{
-		GeoM:   op.GeoM,
-		Blend:  op.Blend,
-		Filter: op.Filter,
+func (t Text) Draw(dst Image, op *Op) {
+	op2 := &text.DrawOptions{
+		DrawImageOptions: *op,
 	}
-	text.DrawWithOptions(dst.Image, t.text, t.face, op2)
+	text.Draw(dst.Image, t.Text, t.Face, op2)
 }
-
-func (t Text) IsEmpty() bool { return len(t.text) == 0 }

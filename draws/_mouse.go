@@ -3,7 +3,7 @@ package draws
 import "github.com/hajimehoshi/ebiten/v2"
 
 func (s Sprite) IsMouseIn() bool {
-	p := IntVec2(ebiten.CursorPosition())
+	p := NewVector2FromInts(ebiten.CursorPosition())
 	p = p.Sub(s.Min())
 	max := s.Max()
 	return 0 <= p.X && p.X <= max.X && 0 <= p.Y && p.Y <= max.Y

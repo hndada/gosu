@@ -11,33 +11,32 @@ import (
 
 type Frames = []Image
 
-// NewFramesFromFilename read a sequence of images if there
-// is a directory and the directory has entries. Otherwise, read
-// a single image if there is no directory or the directory has no entries.
-func NewFramesFromFilename(fsys fs.FS, name string) Frames {
-	one := []Image{NewImageFromFile(fsys, name)}
-	dirName := strings.TrimSuffix(name, filepath.Ext(name))
-
-	paths := framesPaths(fsys, dirName)
+// NewFramesFromFile read a sequence of images if there is a directory
+// and the directory has entries. Otherwise, read a single image
+// if there is no directory or the directory has no entries.
+func NewFramesFromFile(fsys fs.FS, name string) Frames {
+	base := strings.TrimSuffix(name, filepath.Ext(name))
+	paths := framePaths(fsys, base)
 	if len(paths) == 0 {
-		return one
+		one := NewImageFromFile(fsys, name)
+		return Frames{one}
 	}
 
-	sequence := make(Frames, len(paths))
+	fs := make(Frames, len(paths))
 	for i, name := range paths {
-		sequence[i] = NewImageFromFile(fsys, name)
+		fs[i] = NewImageFromFile(fsys, name)
 	}
-	return sequence
+	return fs
+}
+
+type frameName struct {
+	num int
+	ext string
 }
 
 // Avoid using filepath at fs.FS.
 // It yields backslash, which is invalid.
-func framesPaths(fsys fs.FS, dirName string) []string {
-	type frameName struct {
-		num int
-		ext string
-	}
-
+func framePaths(fsys fs.FS, dirName string) []string {
 	es, err := fs.ReadDir(fsys, dirName)
 	if err != nil {
 		return []string{}

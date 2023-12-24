@@ -1,84 +1,46 @@
 package draws
 
-import "io/fs"
+import (
+	"io/fs"
+	"time"
+)
 
 type Animation struct {
-	Sprites []Sprite
-	tick    int
-	maxTick int
+	frames    Frames
+	StartTime time.Time
+	Period    int32 // milliseconds
+	Box
 }
 
-func NewAnimation(srcs any, maxTick int) Animation {
-	switch srcs := srcs.(type) {
-	case []Sprite:
-		return Animation{Sprites: srcs, maxTick: maxTick}
-	case Frames:
-		return newAnimationFromFrames(srcs, maxTick)
-	}
-	return Animation{}
-}
-
-func newAnimationFromFrames(seq Frames, maxTick int) (a Animation) {
-	a.Sprites = make([]Sprite, len(seq))
-	for i, img := range seq {
-		a.Sprites[i] = NewSprite(img)
-	}
-	return a
-}
-
-func NewAnimationFromFile(fsys fs.FS, name string, maxTick int) Animation {
-	return NewAnimation(NewFramesFromFilename(fsys, name), maxTick)
-}
-
-func (a *Animation) SetSize(w, h float64) {
-	for i := range a.Sprites {
-		a.Sprites[i].SetSize(w, h)
+func NewAnimation(frames Frames, period int32) Animation {
+	return Animation{
+		frames:    frames,
+		StartTime: time.Now(),
+		Period:    period,
+		Box:       NewBox(frames[0]),
 	}
 }
 
-func (a *Animation) MultiplyScale(scale float64) {
-	for i := range a.Sprites {
-		a.Sprites[i].MultiplyScale(scale)
-	}
+func NewAnimationFromFile(fsys fs.FS, name string, period int32) Animation {
+	fs := NewFramesFromFile(fsys, name)
+	return NewAnimation(fs, period)
 }
 
-func (a *Animation) Locate(x, y float64, anchor Anchor) {
-	for i := range a.Sprites {
-		a.Sprites[i].Locate(x, y, anchor)
-	}
-}
+func (a *Animation) Reset() { a.StartTime = time.Now() }
 
-func (a *Animation) Move(x, y float64) {
-	for i := range a.Sprites {
-		a.Sprites[i].Move(x, y)
+func (a Animation) Draw(dst Image) {
+	if len(a.frames) == 0 {
+		return
 	}
-}
 
-func (a *Animation) Tick() {
-	if a.maxTick > 0 {
-		a.tick = (a.tick % a.maxTick) + 1
+	if a.Period == 0 {
+		a.Box.Draw(dst, a.frames[0])
+		return
 	}
-}
 
-func (a Animation) Frame() Sprite {
-	if len(a.Sprites) == 0 {
-		return Sprite{}
-	}
-	if a.maxTick == 0 {
-		return a.Sprites[0]
-	}
-	progress := float64(a.tick%a.maxTick) / float64(a.maxTick)
-	count := float64(len(a.Sprites))
+	d := time.Since(a.StartTime).Milliseconds()
+	progress := float64(d%int64(a.Period)) / float64(a.Period)
+	count := float64(len(a.frames))
 	index := int(progress * count)
-	return a.Sprites[index]
+	a.Box.Draw(dst, a.frames[index])
 }
-
-func (a Animation) Draw(screen Image) {
-	a.Frame().Draw(screen)
-}
-
-func (a Animation) IsEmpty() bool {
-	return len(a.Sprites) <= 1 && a.Sprites[0].Source.IsEmpty()
-}
-
-func (a *Animation) Reset() { a.tick = 0 }
