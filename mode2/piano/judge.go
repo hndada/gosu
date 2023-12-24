@@ -5,24 +5,6 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
-const (
-	maxFlow = 50
-	maxAcc  = 20
-)
-
-// Todo: FlowPoint
-type Scorer struct {
-	stagedNotes []*Note // ScenePlay has same slice.
-	flow        float64
-	acc         float64
-	judgments   []mode.Judgment // May change by mods.
-	unitScores  [3]float64
-
-	Combo          int
-	Score          float64
-	JudgmentCounts []int
-}
-
 // It is separated from ScenePlay because it can be used for score simulation.
 func (s ScenePlay) newScorer() Scorer {
 	unit := 1e6 / float64(len(s.Notes))

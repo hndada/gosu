@@ -22,7 +22,7 @@ const (
 	ScratchRight
 )
 
-type KeyOpts struct {
+type KeysOpts struct {
 	Count     int
 	StageWs   map[int]float64
 	stageW    float64
@@ -37,8 +37,8 @@ type KeyOpts struct {
 	xs        []float64
 }
 
-func NewKeyOpts() KeyOpts {
-	opts := KeyOpts{
+func NewKeysOpts() KeysOpts {
+	opts := KeysOpts{
 		Count: 4,
 		Mappings: map[int][]string{
 			1:  {"Space"},
@@ -97,7 +97,7 @@ func NewKeyOpts() KeyOpts {
 	return opts
 }
 
-func (opts *KeyOpts) setKeyWs() {
+func (opts *KeysOpts) setKeyWs() {
 	ws := make([]float64, opts.Count)
 	for k, kind := range opts.Order() {
 		ws[k] = opts.KindWs[kind]
@@ -117,7 +117,7 @@ func (opts *KeyOpts) setKeyWs() {
 }
 
 // KeyXs returns centered x positions.
-func (opts *KeyOpts) setXs() {
+func (opts *KeysOpts) setXs() {
 	xs := make([]float64, opts.Count)
 	ws := opts.ws
 	x := opts.StageX - opts.stageW/2
@@ -130,7 +130,7 @@ func (opts *KeyOpts) setXs() {
 }
 
 // I'm personally proud of this code.
-func (opts KeyOpts) Order() []KeyKind {
+func (opts KeysOpts) Order() []KeyKind {
 	order := opts.Orders[opts.Count]
 	order_1 := opts.Orders[opts.Count-1]
 
@@ -147,6 +147,6 @@ func (opts KeyOpts) Order() []KeyKind {
 
 // NoteExposureDuration returns time in milliseconds
 // that cursor takes to move 1 logical pixel.
-func (opts KeyOpts) NoteExposureDuration(speed float64) int32 {
+func (opts KeysOpts) NoteExposureDuration(speed float64) int32 {
 	return int32(opts.BaselineY / speed)
 }

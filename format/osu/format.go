@@ -396,3 +396,15 @@ func newRGB(chunks string) color.RGBA {
 	rgb.A = 255
 	return rgb
 }
+
+func (f Format) Duration() int {
+	if len(f.HitObjects) == 0 {
+		return 0
+	}
+
+	last := f.HitObjects[len(f.HitObjects)-1]
+	if last.NoteType&HitTypeNote == HitTypeNote {
+		return last.Time
+	}
+	return last.EndTime
+}

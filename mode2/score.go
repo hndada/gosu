@@ -15,7 +15,7 @@ const (
 )
 
 type ScoreRes struct {
-	imgs [13]draws.Image
+	imgs [13]draws.Image // numbers with sign (. , %)
 }
 
 func (res *ScoreRes) Load(fsys fs.FS) {

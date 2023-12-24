@@ -2,15 +2,18 @@ package piano
 
 import (
 	"fmt"
-	"io/fs"
 	"strings"
 	"time"
 
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/format/osr"
 	"github.com/hndada/gosu/input"
-	"github.com/hndada/gosu/mode"
+	mode "github.com/hndada/gosu/mode2"
+)
+
+const (
+	maxFlow = 50
+	maxAcc  = 20
 )
 
 // Alternative names of Mods:
@@ -18,72 +21,35 @@ import (
 // Occupied: Options, Settings, Configs
 // If Mods is gonna be used, it might be good to change "Mode".
 type ScenePlay struct {
-	*Config
-	*Asset
-	Mods
-	*Chart
-
-	mode.Timer
-	// Store a certain time point to now.
-	// Each Now() may yield different time point.
-	now int32
-	*input.Keyboard
-	input.KeyboardReader // for replay
-	musicPlayer          audios.MusicPlayer
-	audios.SoundMap
-	// Scorer also has stagedNotes.
-	// ScenePlay.stagedNotes is for playing samples.
-	stagedNotes []*Note
-
-	Scorer
-	Dynamic *mode.Dynamic // Todo: Dynamic -> dynamic
-
-	// draw
-	speedScale   float64
-	cursor       float64
-	highestBar   *Bar
-	highestNotes []*Note
+	// Todo: FlowPoint
+	flow       float64
+	acc        float64
+	unitScores [3]float64
 
 	isKeyPresseds []bool // for keys, key lightings, and hold lightings
 	isKeyHolds    []bool // for long note body, hold lightings
 	// isJudgeOKs         []bool // for 'hit' lighting
 	isLongNoteHoldings []bool // for long note body
-	worstJudgment      mode.Judgment
 
-	// draw: animation or transition
 	drawKeyTimers          []draws.Timer
-	drawNoteTimers         []draws.Timer
 	drawKeyLightingTimers  []draws.Timer
 	drawHitLightingTimers  []draws.Timer
 	drawHoldLightingTimers []draws.Timer
-	drawJudgmentTimer      draws.Timer
-	drawComboTimer         draws.Timer
-
-	drawScore func(draws.Image)
-	drawCombo func(draws.Image)
 }
 
-// Todo: initialize s.Asset with s.KeyCount, then set s.Chart.
-func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, replay *osr.Format) (s *ScenePlay, err error) {
-	s = &ScenePlay{Config: cfg}
+// Just assigning slice will shallow copy.
+// NewXxx returns struct, while LoadXxx doesn't.
+func NewScenePlay(res Resources, opts Options) (s ScenePlay, err error) {
+	c.Notes = NewNotes(format, c.KeyCount())
+	s.Bars = s.Dynamics.NewBars(c.Duration())
 
-	s.Chart, err = NewChart(fsys, name)
-	if err != nil {
-		return
-	}
+	c.setDynamicPositions()
+	c.setNotePositions()
+	c.setBarPositions()
 	s.Chart.updateTailPosition(cfg.TailExtraDuration)
-	if s.Chart.KeyCount == 0 {
-		return s, fmt.Errorf("key count is zero")
-	}
-
-	if _, ok := assets[s.KeyCount]; !ok {
-		assets[s.KeyCount] = NewAsset(s.Config, fsys, s.KeyCount, NoScratch)
-	}
-	s.Asset = assets[s.KeyCount]
 
 	const wait = 1100 * time.Millisecond
 	s.Timer = mode.NewTimer(*s.MusicOffset, wait)
-	s.now = s.Now()
 
 	if replay != nil {
 		s.KeyboardReader = replay.KeyboardReader(s.KeyCount)
@@ -102,19 +68,10 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, r
 	// https://go.dev/play/p/nn-peGAjawW
 	s.SoundMap.AppendSound("", s.DefaultHitSoundStreamer)
 
-	s.stagedNotes = s.newStagedNotes()
-
-	s.Scorer = s.newScorer()
 	s.Dynamic = s.Chart.Dynamics[0]
 
-	// draw
-	s.speedScale = 1
 	s.SetSpeedScale()
 	s.cursor = float64(s.now) * s.SpeedScale
-	s.highestBar = s.Chart.Bars[0]
-	// Just assigning slice will shallow copy.
-	s.highestNotes = make([]*Note, s.KeyCount)
-	copy(s.highestNotes, s.stagedNotes)
 
 	s.isKeyPresseds = make([]bool, s.KeyCount)
 	s.isKeyHolds = make([]bool, s.KeyCount)
@@ -124,66 +81,35 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, r
 	s.worstJudgment = s.kool()
 
 	s.drawKeyTimers = s.newDrawTimers(mode.ToTick(30), 0)
-	s.drawNoteTimers = s.newDrawTimers(0, mode.ToTick(400))
 	s.drawKeyLightingTimers = s.newDrawTimers(mode.ToTick(30), 0)
 	s.drawHitLightingTimers = s.newDrawTimers(mode.ToTick(150), mode.ToTick(150))
 	s.drawHoldLightingTimers = s.newDrawTimers(0, mode.ToTick(300))
-	s.drawJudgmentTimer = draws.NewTimer(mode.ToTick(250), mode.ToTick(40))
-	s.drawComboTimer = draws.NewTimer(mode.ToTick(2000), 0)
-
-	const comboBounce = 0.85
-	s.drawScore = mode.NewScoreDrawer(s.ScoreSprites, &s.Score, s.ScoreSpriteScale)
-	s.drawCombo = mode.NewComboDrawer(s.ComboSprites, &s.Combo, &s.drawComboTimer, s.ComboDigitGap, comboBounce)
 	return
 }
 
-func (s ScenePlay) newDrawTimers(maxTick, period int) []draws.Timer {
-	timers := make([]draws.Timer, s.KeyCount)
-	for k := range timers {
-		timers[k] = draws.NewTimer(maxTick, period)
-	}
-	return timers
-}
-
-func (s ScenePlay) ChartHeader() mode.ChartHeader { return s.Chart.ChartHeader }
-func (s ScenePlay) WindowTitle() string           { return s.Chart.WindowTitle() }
-func (s ScenePlay) Now() int32                    { return s.Timer.Now() }
-func (s ScenePlay) Speed() float64                { return s.Dynamic.Speed * s.SpeedScale }
-func (s ScenePlay) IsPaused() bool                { return s.Timer.IsPaused() }
-func (s ScenePlay) SetMusicVolume(vol float64)    { s.musicPlayer.SetVolume(vol) }
-
 // Need to re-calculate positions when Speed has changed.
-func (s *ScenePlay) SetSpeedScale() {
-	c := s.Chart
-	old := s.speedScale // Scene's field value
-	new := s.SpeedScale // Config's field value
+func (s *ScenePlay) SetSpeedScale(new, old float64) {
 	s.cursor *= new / old
-	for _, d := range c.Dynamics {
+	for _, d := range s.Dynamics {
 		d.Position *= new / old
 	}
-	for _, n := range c.Notes {
+	for _, n := range s.Notes {
 		n.Position *= new / old
 	}
-	for _, b := range c.Bars {
+	for _, b := range s.Bars {
 		b.Position *= new / old
 	}
-	s.speedScale = s.SpeedScale
 }
 
 func (s *ScenePlay) SetMusicOffset(offset int32) { s.Timer.SetMusicOffset(offset) }
 
-func (s *ScenePlay) Update() any {
-	s.now = s.Now()
-	s.tryPlayMusic()
-
-	var worstJudgment mode.Judgment
-	kas := s.readInput()
+func (s *ScenePlay) Update(kas []input.KeyboardAction) any {
 	for _, ka := range kas {
 		// Todo: solve this
-		if len(ka.KeyActions) != s.KeyCount {
-			fmt.Println("len(ka.KeyActions) != s.KeyCount")
-			continue
-		}
+		// if len(ka.KeyActions) != s.KeyCount {
+		// 	fmt.Println("len(ka.KeyActions) != s.KeyCount")
+		// 	continue
+		// }
 
 		missed := s.Scorer.flushStagedNotes(ka.Time)
 		if missed {
@@ -234,31 +160,10 @@ func (s *ScenePlay) Update() any {
 		// Todo: Use different color for error meter of Tail
 	}
 
-	// draw
-	s.updateCursor()
-	s.updateHighestBar()
-	s.updateHighestNotes()
-	s.tickerDrawTimers()
+	// update cursor
+	duration := float64(s.now - s.Dynamic.Time)
+	s.cursor = s.Dynamic.Position + duration*s.Speed()
 	return nil
-}
-
-// readInput guarantees that length of return value is at least one.
-// The receiver should be pointer for updating replay's index.
-func (s *ScenePlay) readInput() []input.KeyboardAction {
-	if s.Keyboard != nil {
-		return s.Keyboard.Read(s.now)
-	}
-	return s.KeyboardReader.Read(s.now)
-}
-
-func (s *ScenePlay) tryPlayMusic() {
-	if s.musicPlayer.IsPlayed() {
-		return
-	}
-	if s.now >= *s.MusicOffset && s.now < 300 {
-		s.musicPlayer.Play()
-		s.Timer.SetMusicPlayed(time.Now())
-	}
 }
 
 // No need to check whether staged note is Tail or not,
@@ -289,79 +194,6 @@ func (s ScenePlay) playSounds(ka input.KeyboardAction) {
 	}
 }
 
-func (s *ScenePlay) updateCursor() {
-	duration := float64(s.now - s.Dynamic.Time)
-	s.cursor = s.Dynamic.Position + duration*s.Speed()
-}
-
-// When speed changes from fast to slow, which means there are more bars
-// on the screen, updateHighestBar() will handle it optimally.
-// When speed changes from slow to fast, which means there are fewer bars
-// on the screen, updateHighestBar() actually does nothing, which is still
-// fine because that makes some unnecessary bars are drawn.
-// The same concept also applies to notes.
-func (s *ScenePlay) updateHighestBar() {
-	upperBound := s.cursor + s.ScreenSize.Y + 100
-	b := s.highestBar
-	for b != nil && b.Position < upperBound {
-		if b.Next == nil {
-			break
-		}
-		b = b.Next
-		s.highestBar = b
-	}
-}
-
-func (s *ScenePlay) updateHighestNotes() {
-	upperBound := s.cursor + s.ScreenSize.Y + 100
-	for k, n := range s.highestNotes {
-		// It is possible that n is nil when there is no notes in the whole lane.
-		for n != nil && n.Position < upperBound {
-			if n.Next == nil {
-				break
-			}
-			n = n.Next
-			s.highestNotes[k] = n
-		}
-		// Update Head to Tail since drawLongNoteBody uses Tail.
-		if n != nil && n.Type == Head {
-			s.highestNotes[k] = n.Next
-		}
-	}
-}
-
-func (s *ScenePlay) tickerDrawTimers() {
-	for k := 0; k < s.KeyCount; k++ {
-		s.drawKeyTimers[k].Ticker()
-		s.drawNoteTimers[k].Ticker()
-		s.drawKeyLightingTimers[k].Ticker()
-		s.drawHitLightingTimers[k].Ticker()
-		s.drawHoldLightingTimers[k].Ticker()
-	}
-	s.drawJudgmentTimer.Ticker()
-	s.drawComboTimer.Ticker()
-}
-
-func (s *ScenePlay) Pause() {
-	s.Timer.Pause()
-	s.musicPlayer.Pause()
-	s.Keyboard.Pause()
-}
-
-func (s *ScenePlay) Resume() {
-	s.Timer.Resume()
-	s.musicPlayer.Resume()
-	s.Keyboard.Resume()
-}
-
-func (s ScenePlay) Finish() any {
-	// s.musicPlayer.Close()
-	if s.Keyboard != nil {
-		s.Keyboard.Close()
-	}
-	return s.Scorer
-}
-
 func (s ScenePlay) DebugString() string {
 	var b strings.Builder
 	f := fmt.Fprintf
@@ -378,3 +210,15 @@ func (s ScenePlay) DebugString() string {
 	f(&b, "(Exposure time: %dms)\n", s.NoteExposureDuration(s.Speed()))
 	return b.String()
 }
+
+// func (s *ScenePlay) tickerDrawTimers() {
+// 	for k := 0; k < s.KeyCount; k++ {
+// 		s.drawKeyTimers[k].Ticker()
+// 		s.drawNoteTimers[k].Ticker()
+// 		s.drawKeyLightingTimers[k].Ticker()
+// 		s.drawHitLightingTimers[k].Ticker()
+// 		s.drawHoldLightingTimers[k].Ticker()
+// 	}
+// 	s.drawJudgmentTimer.Ticker()
+// 	s.drawComboTimer.Ticker()
+// }

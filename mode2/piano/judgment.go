@@ -26,10 +26,10 @@ type JudgmentOpts struct {
 	Y     float64
 }
 
-func NewJudgmentOpts(key KeyOpts) JudgmentOpts {
+func NewJudgmentOpts(keys KeysOpts) JudgmentOpts {
 	return JudgmentOpts{
 		Scale: 0.33,
-		x:     key.stageW,
+		x:     keys.stageW,
 		Y:     0.66 * mode.ScreenH,
 	}
 }

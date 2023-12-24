@@ -32,6 +32,12 @@ func NewAnimationFromFile(fsys fs.FS, name string, maxTick int) Animation {
 	return NewAnimation(NewFramesFromFilename(fsys, name), maxTick)
 }
 
+func (a *Animation) SetSize(w, h float64) {
+	for i := range a.Sprites {
+		a.Sprites[i].SetSize(w, h)
+	}
+}
+
 func (a *Animation) MultiplyScale(scale float64) {
 	for i := range a.Sprites {
 		a.Sprites[i].MultiplyScale(scale)
@@ -41,6 +47,12 @@ func (a *Animation) MultiplyScale(scale float64) {
 func (a *Animation) Locate(x, y float64, anchor Anchor) {
 	for i := range a.Sprites {
 		a.Sprites[i].Locate(x, y, anchor)
+	}
+}
+
+func (a *Animation) Move(x, y float64) {
+	for i := range a.Sprites {
+		a.Sprites[i].Move(x, y)
 	}
 }
 

@@ -11,16 +11,16 @@ import (
 )
 
 const (
-	GameModePiano = iota
-	GameModeDrum
-	GameModeSing
-	GameModeAll = -1
+	PlayModePiano = iota
+	PlayModeDrum
+	PlayModeSing
+	PlayModeAll = -1
 )
 
-type Chart interface {
-	Duration() int32
-	Difficulties() []float64
-}
+// type Chart interface {
+// 	Duration() int32
+// 	Difficulties() []float64
+// }
 
 func LoadChartFile(fsys fs.FS, name string) (format any, hash [16]byte, err error) {
 	f, err := fsys.Open(name)
@@ -39,9 +39,17 @@ func LoadChartFile(fsys fs.FS, name string) (format any, hash [16]byte, err erro
 	return
 }
 
+func Hash(r io.Reader) ([16]byte, error) {
+	dat, err := io.ReadAll(r)
+	if err != nil {
+		return [16]byte{}, err
+	}
+	return md5.Sum(dat), nil
+}
+
 // ChartHeader contains non-play information.
 // Changing ChartHeader's data will not affect integrity of the chart.
-// GameMode-specific fields are located to each Chart struct.
+// Play mode-specific fields are located to each Chart struct.
 type ChartHeader struct {
 	SetID int32 // Compatibility for osu.
 	ID    int32 // Compatibility for osu.
@@ -63,8 +71,8 @@ type ChartHeader struct {
 	VideoFilename      string
 	VideoTimeOffset    int32
 
-	GameMode    int
-	SubGameMode int
+	PlayMode    int
+	SubPlayMode int
 
 	// Hash works as id in database.
 	// Hash is not exported to file.
@@ -115,27 +123,19 @@ func newChartHeaderFromOsu(format *osu.Format) (c ChartHeader) {
 		c.MusicFilename = ""
 	}
 
-	c.GameMode = -1
+	c.PlayMode = -1
 	switch format.Mode {
 	case osu.ModeStandard:
 	case osu.ModeTaiko:
-		c.GameMode = GameModeDrum
+		c.PlayMode = PlayModeDrum
 	case osu.ModeCatch:
 	case osu.ModeMania:
-		c.GameMode = GameModePiano
-		c.SubGameMode = int(format.CircleSize)
+		c.PlayMode = PlayModePiano
+		c.SubPlayMode = int(format.CircleSize)
 	}
 	return
 }
 
 func (c ChartHeader) WindowTitle() string {
 	return fmt.Sprintf("gosu | %s - %s [%s] (%s) ", c.Artist, c.MusicName, c.ChartName, c.Charter)
-}
-
-func Hash(r io.Reader) ([16]byte, error) {
-	dat, err := io.ReadAll(r)
-	if err != nil {
-		return [16]byte{}, err
-	}
-	return md5.Sum(dat), nil
 }

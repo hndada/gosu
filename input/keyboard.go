@@ -11,7 +11,7 @@ import (
 // No additional adjustment for keyboard when offset has changed.
 // Both music and keyboard cannot seek at precise position once they start.
 type Keyboard struct {
-	KeyboardReader
+	Reader          KeyboardReader
 	keyStatesGetter func() []bool
 	pollingRate     time.Duration
 
@@ -39,7 +39,7 @@ func NewKeyboard(keys []Key, startTime time.Time) *Keyboard {
 	}
 
 	first := KeyboardState{kb.now(), make([]bool, len(keys))}
-	kb.states = append(kb.states, first)
+	kb.Reader.states = append(kb.Reader.states, first)
 	return kb
 }
 
@@ -57,7 +57,7 @@ func (kb *Keyboard) Listen() {
 
 				state := KeyboardState{kb.now(), kb.keyStatesGetter()}
 				kb.mu.Lock()
-				kb.states = append(kb.states, state)
+				kb.Reader.states = append(kb.Reader.states, state)
 				kb.mu.Unlock()
 
 				// It is fine to pass negative value to Sleep().

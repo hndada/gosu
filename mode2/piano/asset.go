@@ -7,28 +7,15 @@ import (
 
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/mode"
 )
 
-// For Asset.KeySprites
-const (
-	keyUp = iota
-	keyDown
-)
-
-// All names of fields in Asset ends with their types.
 type Asset struct {
 	// asset that are not affected by key count
-	ScoreSprites            [13]draws.Sprite // numbers with sign (. , %)
+	ScoreSprites            [13]draws.Sprite
 	ComboSprites            [10]draws.Sprite
 	JudgmentAnimations      [4]draws.Animation
 	DefaultHitSoundStreamer audios.StreamSeekCloser
 	DefaultHitSoundFormat   audios.Format
-
-	// asset for a field
-	FieldSprite draws.Sprite
-	HintSprite  draws.Sprite // bottom: hit position
-	BarSprite   draws.Sprite // bottom: hit position
 
 	// asset for each key
 	KeyKindNoteTypeAnimations [][4]draws.Animation // bottom: hit position
@@ -39,23 +26,14 @@ type Asset struct {
 	HoldLightingAnimations    []draws.Animation
 }
 
-// Todo: should Scratch be excluded from fieldWidth?
 func NewAsset(cfg *Config, fsys fs.FS, keyCount int, scratchMode ScratchMode) *Asset {
 	asset := &Asset{}
 
-	fieldWidth := cfg.FieldWidth(keyCount, scratchMode)
 	KeyPositionXs := cfg.KeyPositionXs(keyCount, scratchMode)
 	keyWidths := cfg.KeyWidths(keyCount, scratchMode)
 	keyKinds := KeyKinds(keyCount, scratchMode)
 
-	asset.setScoreSprites(cfg, fsys)
-	asset.setComboSprites(cfg, fsys)
-	asset.setJudgmentAnimations(cfg, fsys)
 	asset.setDefaultHitSound(cfg, fsys)
-
-	asset.setFieldSprite(cfg, fsys, fieldWidth)
-	asset.setHintSprite(cfg, fsys, fieldWidth)
-	asset.setBarSprite(cfg, fsys, fieldWidth)
 
 	asset.setKeyKindNoteTypeAnimations(cfg, fsys, KeyPositionXs, keyWidths, keyKinds)
 	asset.setKeySprites(cfg, fsys, KeyPositionXs, keyWidths)
@@ -66,57 +44,10 @@ func NewAsset(cfg *Config, fsys fs.FS, keyCount int, scratchMode ScratchMode) *A
 	return asset
 }
 
-func (asset *Asset) setScoreSprites(cfg *Config, fsys fs.FS) {
-	sprites := mode.NewScoreSprites(fsys, *cfg.ScreenSize, cfg.ScoreSpriteScale)
-	asset.ScoreSprites = sprites
-}
-
-func (asset *Asset) setComboSprites(cfg *Config, fsys fs.FS) {
-	var sprites [10]draws.Sprite
-	for i := 0; i < 10; i++ {
-		sprite := draws.NewSpriteFromFile(fsys, fmt.Sprintf("combo/%d.png", i))
-		sprite.MultiplyScale(cfg.ComboSpriteScale)
-		sprite.Locate(cfg.FieldPosition, cfg.ComboPosition, draws.CenterMiddle)
-		sprites[i] = sprite
-	}
-	asset.ComboSprites = sprites
-}
-
-func (asset *Asset) setJudgmentAnimations(cfg *Config, fsys fs.FS) {
-	var anims [4]draws.Animation
-	for i, name := range []string{"kool", "cool", "good", "miss"} {
-		anim := draws.NewAnimationFromFile(fsys, fmt.Sprintf("piano/judgment/%s.png", name))
-		for frame := range anim {
-			anim[frame].MultiplyScale(cfg.JudgmentSpriteScale)
-			anim[frame].Locate(cfg.FieldPosition, cfg.JudgmentPosition, draws.CenterMiddle)
-		}
-		anims[i] = anim
-	}
-	asset.JudgmentAnimations = anims
-}
-
 func (asset *Asset) setDefaultHitSound(cfg *Config, fsys fs.FS) {
 	streamer, format, _ := audios.DecodeFromFile(fsys, "piano/sound/hit.wav")
 	asset.DefaultHitSoundStreamer = streamer
 	asset.DefaultHitSoundFormat = format
-}
-
-func (asset *Asset) setBarSprite(cfg *Config, fsys fs.FS, fieldWidth float64) {
-	img := draws.NewImage(fieldWidth, 1)
-	img.Fill(color.White)
-
-	sprite := draws.NewSprite(img)
-	sprite.Locate(cfg.FieldPosition, cfg.HitPosition, draws.CenterBottom)
-	asset.BarSprite = sprite
-}
-
-func (asset *Asset) setHintSprite(cfg *Config, fsys fs.FS, fieldWidth float64) {
-	img := draws.NewImageFromFile(fsys, "piano/stage/hint.png")
-
-	sprite := draws.NewSprite(img)
-	sprite.SetSize(fieldWidth, cfg.HintHeight)
-	sprite.Locate(cfg.FieldPosition, cfg.HitPosition, draws.CenterBottom)
-	asset.HintSprite = sprite
 }
 
 func (asset *Asset) setFieldSprite(cfg *Config, fsys fs.FS, fieldWidth float64) {

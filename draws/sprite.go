@@ -4,11 +4,12 @@ import (
 	"io/fs"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/colorm"
 )
 
 // Unit of Position is pixel.
 // cf. Location: unit is percent.
-type Position = Vector2
+// type Position = Vector2
 
 // Sprite is an image or a text drawn in a screen based on its position and scale.
 // DrawImageOptions is not commutative. Do Translate at the final stage.
@@ -18,8 +19,9 @@ type Sprite struct {
 	Source   Source
 	Scale    Vector2
 	Filter   ebiten.Filter
-	Position Position
+	Position Vector2
 	Anchor   Anchor
+	Color    colorm.ColorM
 }
 
 func NewSprite(src Source) Sprite {

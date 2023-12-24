@@ -6,18 +6,22 @@ import (
 
 // Objective: manage UI components with each own struct.
 // Options is for passing from game to mode.
+// A field is plural form if is drawn per key.
 type Options struct {
 	// Music    mode.MusicOpts
 	// Sound    mode.SoundOpts
-	Key      KeyOpts
-	Field    FieldOpts
-	Hint     HintOpts
-	Bar      BarOpts
-	Note     NoteOpts
-	Light    LightOpts
-	Judgment JudgmentOpts
-	Combo    mode.ComboOpts
-	Score    mode.ScoreOpts
+	Key        KeyOpts
+	Field      FieldOpts
+	Hint       HintOpts
+	Bar        BarOpts
+	Notes      NotesOpts
+	KeyButtons KeyButtonOpts
+	Backlights BacklightOpts
+	HitLights  HitLightOpts
+	HoldLights HoldLightOpts
+	Judgment   JudgmentOpts
+	Combo      mode.ComboOpts
+	Score      mode.ScoreOpts
 }
 
 func NewOptions(keyCount int) Options {

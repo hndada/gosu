@@ -4,27 +4,18 @@ package mode
 type Bar struct {
 	Time     int32 // Times are in milliseconds.
 	Position float64
-	Next     *Bar
-	Prev     *Bar
 }
 
-func (ds Dynamics) NewBars(chartDuration int32) (bs []*Bar) {
+func (ds Dynamics) NewBars(chartDuration int32) (bs []Bar) {
 	// const useDefaultMeter = 0
 	times := ds.BeatTimes(chartDuration)
-	bs = make([]*Bar, 0, len(times))
+	bs = make([]Bar, 0, len(times))
 	for _, t := range times {
 		b := Bar{Time: t}
-		bs = append(bs, &b)
-	}
-
-	// linking
-	var prev *Bar
-	for _, b := range bs {
-		b.Prev = prev
-		if prev != nil {
-			prev.Next = b
-		}
-		prev = b
+		bs = append(bs, b)
 	}
 	return
 }
+
+// Drum and Piano modes have different bar drawing methods.
+// Hence, this method is not defined in mode.go.

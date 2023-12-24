@@ -4,7 +4,6 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
-	mode "github.com/hndada/gosu/mode2"
 )
 
 type HintRes struct {
@@ -24,12 +23,12 @@ type HintOpts struct {
 	y float64
 }
 
-func NewHintOpts(key KeyOpts) HintOpts {
+func NewHintOpts(keys KeysOpts) HintOpts {
 	return HintOpts{
-		w: key.stageW,
-		H: 0.05 * mode.ScreenH,
-		x: key.StageX,
-		y: key.BaselineY,
+		w: keys.stageW,
+		H: 24,
+		x: keys.StageX,
+		y: keys.BaselineY,
 	}
 }
 

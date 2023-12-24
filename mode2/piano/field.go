@@ -17,10 +17,10 @@ type FieldOpts struct {
 	Opacity float64
 }
 
-func NewFieldOpts(key KeyOpts) FieldOpts {
+func NewFieldOpts(keys KeysOpts) FieldOpts {
 	return FieldOpts{
-		w:       key.stageW,
-		x:       key.StageX,
+		w:       keys.stageW,
+		x:       keys.StageX,
 		Opacity: 0.8,
 	}
 }
