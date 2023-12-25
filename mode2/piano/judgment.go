@@ -58,10 +58,10 @@ func NewJudgmentComp(res JudgmentRes, opts JudgmentOpts) (comp JudgmentComp) {
 	}
 
 	tw := draws.Tween{}
-	tw.AppendTween(1.00, +0.15, 25, draws.EaseLinear)
-	tw.AppendTween(1.15, -0.15, 25, draws.EaseLinear)
-	tw.AppendTween(1.00, +0.0, 200, draws.EaseLinear)
-	tw.AppendTween(1.00, -0.25, 25, draws.EaseLinear)
+	tw.AddTween(1.00, +0.15, 25, draws.EaseLinear)
+	tw.AddTween(1.15, -0.15, 25, draws.EaseLinear)
+	tw.AddTween(1.00, +0.0, 200, draws.EaseLinear)
+	tw.AddTween(1.00, -0.25, 25, draws.EaseLinear)
 	comp.tween = tw
 	return
 }

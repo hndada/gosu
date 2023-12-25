@@ -96,7 +96,7 @@ func NewScenePlay(cfg *Config, assets map[int]*Asset, fsys fs.FS, name string, r
 	s.SoundMap = audios.NewSoundMap(fsys, s.DefaultHitSoundFormat, s.SoundVolume)
 	// It is possible for empty string to be a key of a map.
 	// https://go.dev/play/p/nn-peGAjawW
-	s.SoundMap.AppendSound("", s.DefaultHitSoundStreamer)
+	s.SoundMap.Add("", s.DefaultHitSoundStreamer)
 
 	s.stagedNotes = s.newStagedNotes()
 

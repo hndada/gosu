@@ -12,30 +12,47 @@ import (
 	mode "github.com/hndada/gosu/mode2"
 )
 
-func (asset *Asset) setDefaultHitSound(cfg *Config, fsys fs.FS) {
-	streamer, format, _ := audios.DecodeFromFile(fsys, "piano/sound/hit.wav")
-	asset.DefaultHitSoundStreamer = streamer
-	asset.DefaultHitSoundFormat = format
-}
+// Todo: mode.ErrorMeterComp
+type Scene struct {
+	mode.Scene
+	cursor     float64
+	field      FieldComp
+	bar        BarComp
+	hint       HintComp
+	notes      NotesComp
+	keyButtons KeyButtonsComp
+	backlights BacklightsComp
+	hitLights  HitLightsComp
+	holdLights HoldLightsComp
+	judgment   JudgmentComp
+	combo      mode.ComboComp
+	score      mode.ScoreComp
 
-type ScenePlay struct {
 	// Todo: Mods, FlowPoint (kind of HP)
 	judge         Judge
 	isKeyPresseds []bool // for keys, key lightings, and hold lightings
 	isKeyHolds    []bool // for long note body, hold lightings
 	// isJudgeOKs         []bool // for 'hit' lighting
 	isLongNoteHoldings []bool // for long note body
+}
 
-	notes NotesComp
-	score mode.ScoreComp
+func (s Scene) Draw(dst draws.Image) {
+	s.field.Draw(dst)
+	s.bar.Draw(dst)
+	s.hint.Draw(dst)
+	s.notes.Draw(dst)
+	s.keyButtons.Draw(dst)
+	s.backlights.Draw(dst)
+	s.hitLights.Draw(dst)
+	s.holdLights.Draw(dst)
+	s.judgment.Draw(dst)
+	s.combo.Draw(dst)
+	s.score.Draw(dst)
 }
 
 // Just assigning slice will shallow copy.
 // NewXxx returns struct, while LoadXxx doesn't.
-func NewScenePlay(res Resources, opts Options) (s ScenePlay, err error) {
-	c.Notes = NewNotes(format, c.KeyCount())
-	s.Bars = s.Dynamics.NewBars(c.Duration())
-
+func NewScene(res Resources, opts Options) (s Scene, err error) {
 	const wait = 1100 * time.Millisecond
 	s.Timer = mode.NewTimer(*s.MusicOffset, wait)
 
@@ -54,11 +71,8 @@ func NewScenePlay(res Resources, opts Options) (s ScenePlay, err error) {
 	s.SoundMap = audios.NewSoundMap(fsys, s.DefaultHitSoundFormat, s.SoundVolume)
 	// It is possible for empty string to be a key of a map.
 	// https://go.dev/play/p/nn-peGAjawW
-	s.SoundMap.AppendSound("", s.DefaultHitSoundStreamer)
+	s.SoundMap.AddSound("", s.DefaultHitSoundStreamer)
 
-	s.Dynamic = s.Chart.Dynamics[0]
-
-	s.SetSpeedScale()
 	s.cursor = float64(s.now) * s.SpeedScale
 
 	s.isKeyPresseds = make([]bool, s.KeyCount)
@@ -72,22 +86,30 @@ func NewScenePlay(res Resources, opts Options) (s ScenePlay, err error) {
 }
 
 // Need to re-calculate positions when Speed has changed.
-func (s *ScenePlay) SetSpeedScale(new, old float64) {
+func (s *Scene) SetSpeedScale(new float64) {
+	old := s.SpeedScale
+
 	s.cursor *= new / old
-	for _, d := range s.Dynamics {
-		d.Position *= new / old
+
+	ds := s.Dynamics.Dynamics
+	for i := range ds {
+		ds[i].Position *= new / old
 	}
-	for _, n := range s.Notes {
-		n.Position *= new / old
+	ns := s.notes.notes
+	for i := range ns {
+		ns[i].Position *= new / old
 	}
-	for _, b := range s.Bars {
-		b.Position *= new / old
+	bs := s.bar.bars
+	for i := range bs {
+		bs[i].Position *= new / old
 	}
+
+	s.SpeedScale = new
 }
 
-func (s *ScenePlay) SetMusicOffset(offset int32) { s.Timer.SetMusicOffset(offset) }
+func (s *Scene) SetMusicOffset(offset int32) { s.Timer.SetMusicOffset(offset) }
 
-func (s *ScenePlay) Update(kas []input.KeyboardAction) any {
+func (s *Scene) Update(kas []input.KeyboardAction) any {
 	for _, ka := range kas {
 		// Todo: solve this
 		// if len(ka.KeyActions) != s.KeyCount {
@@ -154,7 +176,7 @@ func (s *ScenePlay) Update(kas []input.KeyboardAction) any {
 // since Tail has no sample in advance.
 
 // Todo: set all sample volumes in advance?
-func (s ScenePlay) playSounds(ka input.KeyboardAction) {
+func (s Scene) playSounds(ka input.KeyboardAction) {
 	for k, n := range s.stagedNotes {
 		if n == nil {
 			continue
@@ -178,7 +200,7 @@ func (s ScenePlay) playSounds(ka input.KeyboardAction) {
 	}
 }
 
-func (s ScenePlay) DebugString() string {
+func (s Scene) DebugString() string {
 	var b strings.Builder
 	f := fmt.Fprintf
 
@@ -195,23 +217,10 @@ func (s ScenePlay) DebugString() string {
 	return b.String()
 }
 
-func (s ScenePlay) Draw(dst draws.Image) {
-	s.Field.Draw(dst)
-	s.Bars.Draw(dst)
-	s.Hint.Draw(dst)
-
-	s.LongNoteBodies.Draw(dst)
-	s.Notes.Draw(dst)
-
-	s.Keys.Draw(dst)
-	s.KeyLightings.Draw(dst)
-	s.HitLightings.Draw(dst)
-	s.HoldLightings.Draw(dst)
-
-	s.Judgment.Draw(dst)
-	s.Score.Draw(dst)
-	s.Combo.Draw(dst)
-	// Todo: s.drawMeter(dst)
+func (asset *Asset) setDefaultHitSound(cfg *Config, fsys fs.FS) {
+	streamer, format, _ := audios.DecodeFromFile(fsys, "piano/sound/hit.wav")
+	asset.DefaultHitSoundStreamer = streamer
+	asset.DefaultHitSoundFormat = format
 }
 
 // Alternative names of Mods:

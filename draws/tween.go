@@ -38,7 +38,7 @@ type Tween struct {
 }
 
 func NewTween(begin, change float64, duration int32, easing TweenFunc) (tw Tween) {
-	tw.AppendTween(begin, change, duration, easing)
+	tw.Add(begin, change, duration, easing)
 	return
 }
 
@@ -50,7 +50,8 @@ func (tw Tween) endTime() time.Time {
 	return last.startTime.Add(last.duration)
 }
 
-func (tw *Tween) AppendTween(begin, change float64, duration int32, easing TweenFunc) {
+// AppendXxx feels like to return a struct.
+func (tw *Tween) Add(begin, change float64, duration int32, easing TweenFunc) {
 	tw.units = append(tw.units, tween{
 		startTime: tw.endTime(),
 		begin:     begin,

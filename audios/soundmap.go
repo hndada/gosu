@@ -51,7 +51,7 @@ func NewSoundMap(fsys fs.FS, format beep.Format, volumeScale *float64) SoundMap 
 		// resampled = beep.Resample(quality, format.SampleRate, defaultSampleRate, f)
 		// }
 
-		sm.AppendSound(path, streamer)
+		sm.Add(path, streamer)
 		return nil
 	})
 	return sm
@@ -83,19 +83,19 @@ func isFileSizeSmall(fsys fs.FS, name string) bool {
 // Len returns the number of sounds in SoundMap.
 func (sm SoundMap) Len() int { return len(sm.startIndexMap) }
 
-func (sm *SoundMap) AppendSound(name string, streamer beep.StreamSeekCloser) {
+func (sm *SoundMap) Add(name string, streamer beep.StreamSeekCloser) {
 	sm.startIndexMap[name] = sm.buffer.Len()
 	sm.buffer.Append(streamer)
 	streamer.Close()
 	sm.endIndexMap[name] = sm.buffer.Len()
 }
 
-func (sm *SoundMap) AppendSoundFromFile(fsys fs.FS, name string) error {
+func (sm *SoundMap) AddFromFile(fsys fs.FS, name string) error {
 	streamer, _, err := DecodeFromFile(fsys, name)
 	if err != nil {
 		return err
 	}
-	sm.AppendSound(name, streamer)
+	sm.Add(name, streamer)
 	return nil
 }
 
