@@ -17,24 +17,6 @@ func (asset *Asset) setDefaultHitSound(cfg *Config, fsys fs.FS) {
 	asset.DefaultHitSoundStreamer = streamer
 	asset.DefaultHitSoundFormat = format
 }
-func (s ScenePlay) Draw(screen draws.Image) {
-	s.Field.Draw(screen)
-	s.Bars.Draw(screen)
-	s.Hint.Draw(screen)
-
-	s.LongNoteBodies.Draw(screen)
-	s.Notes.Draw(screen)
-
-	s.Keys.Draw(screen)
-	s.KeyLightings.Draw(screen)
-	s.HitLightings.Draw(screen)
-	s.HoldLightings.Draw(screen)
-
-	s.Judgment.Draw(screen)
-	s.Score.Draw(screen)
-	s.Combo.Draw(screen)
-	// Todo: s.drawMeter(screen)
-}
 
 type ScenePlay struct {
 	// Todo: Mods, FlowPoint (kind of HP)
@@ -44,9 +26,8 @@ type ScenePlay struct {
 	// isJudgeOKs         []bool // for 'hit' lighting
 	isLongNoteHoldings []bool // for long note body
 
-	notes   NotesComp
-	score   mode.ScoreComp
-	drawers []draws.Drawer
+	notes NotesComp
+	score mode.ScoreComp
 }
 
 // Just assigning slice will shallow copy.
@@ -54,11 +35,6 @@ type ScenePlay struct {
 func NewScenePlay(res Resources, opts Options) (s ScenePlay, err error) {
 	c.Notes = NewNotes(format, c.KeyCount())
 	s.Bars = s.Dynamics.NewBars(c.Duration())
-
-	c.setDynamicPositions()
-	c.setNotePositions()
-	c.setBarPositions()
-	s.Chart.updateTailPosition(cfg.TailExtraDuration)
 
 	const wait = 1100 * time.Millisecond
 	s.Timer = mode.NewTimer(*s.MusicOffset, wait)
@@ -92,16 +68,7 @@ func NewScenePlay(res Resources, opts Options) (s ScenePlay, err error) {
 	// s.kool() is just for placeholder.
 	s.worstJudgment = s.kool()
 
-	s.drawers = []draws.Drawer{
-		&s.notes,
-		&s.score,
-	}
 	return
-}
-func (s ScenePlay) Draw(dst draws.Image) {
-	for _, d := range s.drawers {
-		d.Draw(dst)
-	}
 }
 
 // Need to re-calculate positions when Speed has changed.
@@ -226,6 +193,25 @@ func (s ScenePlay) DebugString() string {
 	f(&b, "Speed scale (PageUp/Down): x%.2f (x%.2f)\n", s.SpeedScale, s.Speed())
 	f(&b, "(Exposure time: %dms)\n", s.NoteExposureDuration(s.Speed()))
 	return b.String()
+}
+
+func (s ScenePlay) Draw(dst draws.Image) {
+	s.Field.Draw(dst)
+	s.Bars.Draw(dst)
+	s.Hint.Draw(dst)
+
+	s.LongNoteBodies.Draw(dst)
+	s.Notes.Draw(dst)
+
+	s.Keys.Draw(dst)
+	s.KeyLightings.Draw(dst)
+	s.HitLightings.Draw(dst)
+	s.HoldLightings.Draw(dst)
+
+	s.Judgment.Draw(dst)
+	s.Score.Draw(dst)
+	s.Combo.Draw(dst)
+	// Todo: s.drawMeter(dst)
 }
 
 // Alternative names of Mods:

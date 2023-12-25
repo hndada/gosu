@@ -65,8 +65,8 @@ func NewBarOpts(keys KeysOpts) BarOpts {
 
 type BarComp struct {
 	bars   []Bar
-	idx    int
 	cursor float64
+	lowest int
 	sprite draws.Sprite
 }
 
@@ -87,22 +87,22 @@ func NewBarComp(res BarRes, opts BarOpts, bars []Bar) (comp BarComp) {
 // fine because that makes some unnecessary bars are drawn.
 // The same concept also applies to notes.
 func (comp *BarComp) Update(cursor float64) {
+	comp.cursor = cursor
 	lowerBound := cursor - mode.ScreenH
-	for i := comp.idx; i < len(comp.bars); i++ {
+	for i := comp.lowest; i < len(comp.bars); i++ {
 		b := comp.bars[i]
 		if b.Position > lowerBound {
 			break
 		}
 		// index should be updated outside of if block.
-		comp.idx = i
+		comp.lowest = i
 	}
-	comp.cursor = cursor
 }
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
 func (comp BarComp) Draw(dst draws.Image) {
 	upperBound := comp.cursor + mode.ScreenH
-	for i := comp.idx; i < len(comp.bars); i++ {
+	for i := comp.lowest; i < len(comp.bars); i++ {
 		b := comp.bars[i]
 		if b.Position > upperBound {
 			break
