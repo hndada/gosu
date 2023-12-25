@@ -2,90 +2,82 @@ package audios
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
+	"github.com/faiface/beep/speaker"
 	"github.com/faiface/beep/vorbis"
 	"github.com/faiface/beep/wav"
 )
 
-type Streamer = beep.Streamer
-type StreamSeekCloser = beep.StreamSeekCloser
-type Format = beep.Format
+const (
+	defaultSampleRate beep.SampleRate = 44100 // 48000
+	quality           int             = 4
+)
 
-func NewSilence(duration time.Duration) Streamer {
-	num := defaultSampleRate.N(duration)
-	return beep.Silence(num)
+func init() {
+	speaker.Init(defaultSampleRate, defaultSampleRate.N(time.Second/20))
 }
 
-func DecodeFromFile(fsys fs.FS, name string) (StreamSeekCloser, Format, error) {
-	var (
-		streamer beep.StreamSeekCloser
-		format   beep.Format
-		err      error
-	)
+// streamer as StreamerSeekCloser will close it.
+func Decode(rc io.ReadCloser, ext string) (beep.StreamSeekCloser, beep.Format, error) {
+	switch ext {
+	case ".mp3":
+		return mp3.Decode(rc)
+	case ".wav":
+		return wav.Decode(rc)
+	case ".ogg":
+		return vorbis.Decode(rc)
+	}
+	err := fmt.Errorf("decode %s: %s", ext, "unsupported extension")
+	return nil, beep.Format{}, err
+}
 
+func DecodeFromFile(fsys fs.FS, name string) (beep.StreamCloser, beep.Format, error) {
 	f, err := fsys.Open(name)
 	if err != nil {
-		err = &fs.PathError{Op: "open", Path: name, Err: err}
-		return streamer, format, err
+		// err = &fs.PathError{Op: "open", Path: name, Err: err}
+		return nil, beep.Format{}, err
 	}
-
-	// streamer as StreamerSeekCloser will close it.
-	ext := filepath.Ext(name)
-	switch strings.ToLower(ext) {
-	case ".mp3":
-		streamer, format, err = mp3.Decode(f)
-	case ".wav":
-		streamer, format, err = wav.Decode(f)
-	case ".ogg":
-		streamer, format, err = vorbis.Decode(f)
-	}
-	if err != nil {
-		err = fmt.Errorf("decode %s: %w", name, err)
-	}
-	return streamer, format, err
+	return Decode(f, filepath.Ext(name))
 }
 
-func isAudioFile(name string) bool {
-	ext := filepath.Ext(name)
-	switch strings.ToLower(ext) {
-	case ".mp3", ".wav", ".ogg":
-		return true
-	}
-	return false
-}
+// func isAudioFile(name string) bool {
+// 	ext := filepath.Ext(name)
+// 	switch strings.ToLower(ext) {
+// 	case ".mp3", ".wav", ".ogg":
+// 		return true
+// 	}
+// 	return false
+// }
 
-// FormatFromFS returns the format of the first audio file in the file system.
-// It is possible that there is no audio file in file system.
-func FormatFromFS(fsys fs.FS) (Format, error) {
-	var (
-		format beep.Format
-		err    error
-	)
-	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if d.IsDir() || !isAudioFile(path) || !isFileSizeSmall(fsys, path) {
-			return nil
-		}
+// // FormatFromFS returns the format of the first audio file in the file system.
+// // It is possible that there is no audio file in file system.
+// func FormatFromFS(fsys fs.FS) (Format, error) {
+// 	var (
+// 		format beep.Format
+// 		err    error
+// 	)
+// 	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
+// 		if err != nil {
+// 			return err
+// 		}
+// 		if d.IsDir() || !isAudioFile(path) || !isFileSizeSmall(fsys, path) {
+// 			return nil
+// 		}
 
-		_, format, err = DecodeFromFile(fsys, path)
-		if err != nil {
-			return err
-		}
-		return filepath.SkipDir // Skip further processing of directories
-	})
-	if err != nil {
-		err = fmt.Errorf("format from fs: %w", err)
-	}
-	return format, err
-}
-
-// vol: [0, 1] -> Volume: [-5, 0] => [1/32, 1]
-func beepVolume(vol float64) float64 { return vol*5 - 5 }
+// 		_, format, err = DecodeFromFile(fsys, path)
+// 		if err != nil {
+// 			return err
+// 		}
+// 		return filepath.SkipDir // Skip further processing of directories
+// 	})
+// 	if err != nil {
+// 		err = fmt.Errorf("format from fs: %w", err)
+// 	}
+// 	return format, err
+// }

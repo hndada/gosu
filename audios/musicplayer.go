@@ -2,7 +2,9 @@ package audios
 
 import (
 	"fmt"
+	"io"
 	"io/fs"
+	"path/filepath"
 	"time"
 
 	"github.com/faiface/beep"
@@ -10,125 +12,107 @@ import (
 	"github.com/faiface/beep/speaker"
 )
 
+// beepVolume converts volume from [0, 1] to [-5, 0].
+// [-5, 0] is log scale.
+func beepVolume(vol float64) float64 { return vol*5 - 5 }
+
+func NewSilence(duration time.Duration) beep.Streamer {
+	num := defaultSampleRate.N(duration)
+	return beep.Silence(num)
+}
+
 type MusicPlayer struct {
-	streamer  beep.StreamSeekCloser
-	ctrl      *beep.Ctrl
-	resampler *beep.Resampler
-	volume    *effects.Volume
-	done      chan bool
-	played    bool
+	seekCloser beep.StreamSeekCloser // for seek and close
+	format     beep.Format           // for duration
+	ctrl       *beep.Ctrl            // for pause
+	streamer   *beep.Resampler       // main streamer
+	volume     *effects.Volume       // for volume
 }
 
-const defaultSampleRate beep.SampleRate = 44100
-const quality = 4
-
-func init() {
-	speaker.Init(defaultSampleRate, defaultSampleRate.N(time.Second/20))
-}
-
-func NewMusicPlayer(f beep.StreamSeekCloser, format beep.Format, ratio float64) MusicPlayer {
-	done := make(chan bool)
-	callback := beep.Callback(func() { done <- true })
-	ctrl := &beep.Ctrl{Streamer: beep.Seq(f, callback)}
-
-	// No ratio change. Is is for applying ctrl.
-	resampler := beep.ResampleRatio(quality, 1, ctrl)
-	// Do the actual resample here if sample rate is different.
-	if format.SampleRate != defaultSampleRate {
-		resampler = beep.Resample(quality, format.SampleRate, defaultSampleRate, ctrl)
-	}
-	// Change the ratio if it is not 1.
-	if ratio != 1 {
-		resampler = beep.ResampleRatio(quality, ratio, resampler)
-	}
-
-	volume := &effects.Volume{Streamer: resampler, Base: 2}
-	return MusicPlayer{
-		streamer:  f,
-		ctrl:      ctrl,
-		resampler: resampler,
-		volume:    volume,
-		done:      done,
-	}
-}
-
-func NewMusicPlayerFromFile(fsys fs.FS, name string, ratio float64) (MusicPlayer, error) {
-	f, format, err := DecodeFromFile(fsys, name)
+func NewMusicPlayer(rc io.ReadCloser, ext string) (MusicPlayer, error) {
+	seekCloser, format, err := Decode(rc, ext)
 	if err != nil {
-		return MusicPlayer{}, fmt.Errorf("decode %s: %w", name, err)
+		return MusicPlayer{}, fmt.Errorf("decode %s: %w", ext, err)
 	}
-	return NewMusicPlayer(f, format, ratio), nil
+	// done := make(chan bool)
+	// callback := beep.Callback(func() { done <- true })
+	// ctrl := &beep.Ctrl{Streamer: beep.Seq(seekCloser, callback)}
+	ctrl := &beep.Ctrl{Streamer: seekCloser}
+	streamer := beep.Resample(quality, format.SampleRate, defaultSampleRate, ctrl)
+	volume := &effects.Volume{Streamer: streamer, Base: 2}
+	return MusicPlayer{
+		seekCloser: seekCloser,
+		format:     format,
+		ctrl:       ctrl,
+		streamer:   streamer,
+		volume:     volume,
+	}, nil
 }
+
+func NewMusicPlayerFromFile(fsys fs.FS, name string) (MusicPlayer, error) {
+	ext := filepath.Ext(name)
+	f, err := fsys.Open(name)
+	if err != nil {
+		return MusicPlayer{}, fmt.Errorf("open %s: %w", name, err)
+	}
+	return NewMusicPlayer(f, ext)
+}
+
+func (mp MusicPlayer) IsEmpty() bool { return mp.seekCloser == nil }
 
 func (mp *MusicPlayer) Play() {
 	if mp.IsEmpty() {
 		return
 	}
-	if mp.played {
-		return
-	}
-	// speaker.Lock()
 	speaker.Play(mp.volume)
-	mp.played = true
-	// speaker.Unlock()
 }
 
 func (mp *MusicPlayer) Rewind() {
-	speaker.Lock()
-	mp.streamer.Seek(0)
-	speaker.Unlock()
-}
-
-func (mp MusicPlayer) IsEmpty() bool { return mp.streamer == nil }
-
-func (mp MusicPlayer) IsPlayed() bool {
 	if mp.IsEmpty() {
-		return false
+		return
 	}
-	return mp.played
+	mp.seekCloser.Seek(0)
 }
 
-func (mp MusicPlayer) Time() time.Duration {
+func (mp MusicPlayer) Current() time.Duration {
 	if mp.IsEmpty() {
 		return 0
 	}
-	return defaultSampleRate.D(mp.streamer.Position())
+	sr := mp.format.SampleRate
+	return sr.D(mp.seekCloser.Position())
 }
 func (mp MusicPlayer) Duration() time.Duration {
 	if mp.IsEmpty() {
 		return 0
 	}
-	return defaultSampleRate.D(mp.streamer.Len())
+	sr := mp.format.SampleRate
+	return sr.D(mp.seekCloser.Len())
 }
 
 func (mp MusicPlayer) PlaybackRate() float64 {
 	if mp.IsEmpty() {
 		return 1
 	}
-	return mp.resampler.Ratio()
+	return mp.streamer.Ratio()
 }
 
-func (mp *MusicPlayer) SetPlaybackRate(ratio float64) {
+func (mp *MusicPlayer) SetPlaybackRate(rate float64) {
 	if mp.IsEmpty() {
 		return
 	}
-	speaker.Lock()
-	mp.resampler.SetRatio(ratio)
-	speaker.Unlock()
+	mp.streamer.SetRatio(rate)
 }
 
 func (mp *MusicPlayer) SetVolume(vol float64) {
 	if mp.IsEmpty() {
 		return
 	}
-	speaker.Lock()
 	mp.volume.Volume = beepVolume(vol)
 	if vol <= 0.001 { // 0.1%
 		mp.volume.Silent = true
 	} else {
 		mp.volume.Silent = false
 	}
-	speaker.Unlock()
 }
 
 func (mp MusicPlayer) IsPaused() bool {
@@ -138,6 +122,7 @@ func (mp MusicPlayer) IsPaused() bool {
 	return mp.ctrl.Paused
 }
 
+// Lock is required when modifying beep.Ctrl.
 func (mp *MusicPlayer) Pause() {
 	if mp.IsEmpty() {
 		return
@@ -147,6 +132,7 @@ func (mp *MusicPlayer) Pause() {
 	speaker.Unlock()
 }
 
+// Lock is required when modifying beep.Ctrl.
 func (mp *MusicPlayer) Resume() {
 	if mp.IsEmpty() {
 		return
@@ -161,5 +147,5 @@ func (mp *MusicPlayer) Close() {
 		return
 	}
 	speaker.Clear()
-	mp.streamer.Close()
+	mp.seekCloser.Close()
 }
