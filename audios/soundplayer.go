@@ -20,9 +20,9 @@ var defaultFormat = beep.Format{
 
 type SoundPlayer struct {
 	buffer       *beep.Buffer
-	keys         []string
 	starts       map[string]int // start index
 	ends         map[string]int // end index
+	keys         []string
 	PlaybackRate float64
 }
 
@@ -35,16 +35,15 @@ func NewSoundPlayer() SoundPlayer {
 	}
 }
 
-func (sp *SoundPlayer) Add(rc io.ReadCloser, fname string) error {
-	base := filepath.Base(fname)
-	ext := filepath.Ext(fname)
+func (sp *SoundPlayer) Add(rc io.ReadCloser, name string) error {
+	defer rc.Close()
 
 	// Declaring streamer's type explicitly is for
 	// assigning beep.Resampler to it.
 	var streamer beep.Streamer
-	streamer, format, err := Decode(rc, ext)
+	streamer, format, err := Decode(rc, filepath.Ext(name))
 	if err != nil {
-		return fmt.Errorf("decode %s: %w", ext, err)
+		return fmt.Errorf("decode %s: %w", name, err)
 	}
 	if format.SampleRate != defaultSampleRate {
 		old := format.SampleRate
@@ -52,13 +51,10 @@ func (sp *SoundPlayer) Add(rc io.ReadCloser, fname string) error {
 		streamer = beep.Resample(quality, old, new, streamer)
 	}
 
-	key := base
-	sp.keys = append(sp.keys, key)
-
-	sp.starts[key] = sp.buffer.Len()
+	sp.starts[name] = sp.buffer.Len()
 	sp.buffer.Append(streamer)
-	rc.Close()
-	sp.ends[key] = sp.buffer.Len()
+	sp.ends[name] = sp.buffer.Len()
+	sp.keys = append(sp.keys, name)
 	return nil
 }
 
