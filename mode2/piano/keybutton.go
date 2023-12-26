@@ -7,6 +7,7 @@ import (
 
 	"github.com/hndada/gosu/draws"
 	mode "github.com/hndada/gosu/mode2"
+	"github.com/hndada/gosu/times"
 )
 
 type KeyButtonsRes struct {
@@ -41,7 +42,7 @@ type KeyButtonsComp struct {
 	keyDowns    []bool
 	spritesList [][2]draws.Sprite
 	startTimes  []time.Time
-	minDuration int32 // milliseconds
+	minDuration time.Duration
 }
 
 func NewKeyButtonsComp(res KeyButtonsRes, opts KeyButtonsOpts) (comp KeyButtonsComp) {
@@ -56,7 +57,7 @@ func NewKeyButtonsComp(res KeyButtonsRes, opts KeyButtonsOpts) (comp KeyButtonsC
 		}
 	}
 	comp.startTimes = make([]time.Time, keyCount)
-	comp.minDuration = 30
+	comp.minDuration = 30 * time.Millisecond
 	return
 }
 
@@ -64,7 +65,7 @@ func (comp *KeyButtonsComp) Update(keyDowns []bool) {
 	comp.keyDowns = keyDowns
 	for k, down := range keyDowns {
 		if down {
-			comp.startTimes[k] = time.Now()
+			comp.startTimes[k] = times.Now()
 		}
 	}
 }
@@ -75,9 +76,9 @@ func (comp KeyButtonsComp) Draw(dst draws.Image) {
 		up   = 0
 		down = 1
 	)
-	elapsed := time.Since(comp.startTimes[0]).Milliseconds()
+	elapsed := times.Since(comp.startTimes[0])
 	for k, keyDown := range comp.keyDowns {
-		if keyDown || int32(elapsed) <= comp.minDuration {
+		if keyDown || elapsed <= comp.minDuration {
 			comp.spritesList[k][down].Draw(dst)
 		} else {
 			comp.spritesList[k][up].Draw(dst)

@@ -3,6 +3,8 @@ package draws
 import (
 	"math"
 	"time"
+
+	"github.com/hndada/gosu/times"
 )
 
 type tween struct {
@@ -19,11 +21,12 @@ type tween struct {
 type TweenFunc func(t time.Duration, b, c float64, d time.Duration) float64
 
 func (tw tween) isFinished() bool {
-	return tw.startTime.Add(tw.duration).Before(time.Now())
+	endTime := tw.startTime.Add(tw.duration)
+	return endTime.Before(times.Now())
 }
 
 func (tw tween) current() float64 {
-	return tw.easing(time.Since(tw.startTime), tw.begin, tw.change, tw.duration)
+	return tw.easing(times.Since(tw.startTime), tw.begin, tw.change, tw.duration)
 }
 
 // Tween calculates intermediate values between two values over a specified duration.
@@ -37,26 +40,26 @@ type Tween struct {
 	// backward bool // for yoyo
 }
 
-func NewTween(begin, change float64, duration int32, easing TweenFunc) (tw Tween) {
+func NewTween(begin, change float64, duration time.Duration, easing TweenFunc) (tw Tween) {
 	tw.Add(begin, change, duration, easing)
 	return
 }
 
 func (tw Tween) endTime() time.Time {
 	if len(tw.units) == 0 {
-		return time.Now()
+		return times.Now()
 	}
 	last := tw.units[len(tw.units)-1]
 	return last.startTime.Add(last.duration)
 }
 
 // AppendXxx feels like to return a struct.
-func (tw *Tween) Add(begin, change float64, duration int32, easing TweenFunc) {
+func (tw *Tween) Add(begin, change float64, duration time.Duration, easing TweenFunc) {
 	tw.units = append(tw.units, tween{
 		startTime: tw.endTime(),
 		begin:     begin,
 		change:    change,
-		duration:  time.Duration(duration) * time.Millisecond,
+		duration:  duration,
 		easing:    easing,
 	})
 }
@@ -89,7 +92,7 @@ func (tw Tween) IsFinished() bool {
 
 func (tw *Tween) Reset() {
 	for i := range tw.units {
-		tw.units[i].startTime = time.Now()
+		tw.units[i].startTime = times.Now()
 	}
 	tw.index = 0
 	tw.loop = 0

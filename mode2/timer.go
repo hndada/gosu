@@ -1,6 +1,10 @@
 package mode
 
-import "time"
+import (
+	"time"
+
+	"github.com/hndada/gosu/times"
+)
 
 // TPS affects only on Update(), not on Draw().
 var tps = float64(60) // ebitengine's default TPS
@@ -20,7 +24,7 @@ type Timer struct {
 
 func NewTimer(musicOffset int32, wait time.Duration) Timer {
 	return Timer{
-		startTime:   time.Now().Add(wait),
+		startTime:   times.Now().Add(wait),
 		musicOffset: musicOffset,
 	}
 }
@@ -32,7 +36,7 @@ func (t Timer) Now() int32 {
 	if t.paused {
 		duration = t.pauseTime.Sub(t.startTime)
 	} else {
-		duration = time.Since(t.startTime)
+		duration = times.Since(t.startTime)
 	}
 	return int32(duration.Milliseconds())
 }
@@ -74,19 +78,19 @@ func (t *Timer) SetMusicOffset(new int32) {
 }
 
 func (t *Timer) Pause() {
-	t.pauseTime = time.Now()
+	t.pauseTime = times.Now()
 	t.paused = true
 }
 
 func (t *Timer) Resume() {
-	elapsedTime := time.Since(t.pauseTime)
+	elapsedTime := times.Since(t.pauseTime)
 	t.startTime = t.startTime.Add(elapsedTime)
 	t.paused = false
 }
 
 // func (t *Timer) sync() {
 // 	const threshold = 30 * 1000
-// 	since := int32(time.Since(t.startTime).Milliseconds())
+// 	since := int32(times.Since(t.startTime).Milliseconds())
 // 	if e := since - t.Now(); e >= threshold {
 // 		fmt.Printf("%dms: adjusting time error (%dms)\n", since, e)
 // 		t.Tick += ToTick(e)

@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/hndada/gosu/audios"
+	"github.com/hndada/gosu/times"
 )
 
 const waitDuration = 150 * time.Millisecond
@@ -36,7 +37,7 @@ func (s *Scene) updatePreviewMusic() {
 	// MusicPlayer should be pointer so that it plays only once.
 	s.PreviewMusicPlayer = PreviewMusicPlayer{
 		MusicPlayer: &mp,
-		StartTime:   time.Now(),
+		StartTime:   times.Now(),
 		EffectMode:  EffectModeSilence,
 	}
 }
@@ -51,12 +52,12 @@ func (s *Scene) HandleEffect() {
 		return
 	}
 
-	t := time.Since(mp.StartTime)
+	t := times.Since(mp.StartTime)
 	switch mp.EffectMode {
 	case EffectModeSilence:
 		if t > waitDuration {
 			mp.Play()
-			mp.StartTime = time.Now()
+			mp.StartTime = times.Now()
 			mp.EffectMode = EffectModeFadeIn
 		}
 	case EffectModeFadeIn:
@@ -75,7 +76,7 @@ func (s *Scene) HandleEffect() {
 		vol := s.MusicVolume * size
 		mp.SetVolume(vol)
 		if t > mp.Duration() {
-			mp.StartTime = time.Now()
+			mp.StartTime = times.Now()
 			mp.Rewind()
 			mp.EffectMode = EffectModeSilence
 		}

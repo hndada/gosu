@@ -4,9 +4,9 @@ import (
 	"io/fs"
 	"math/rand"
 
-	"github.com/faiface/beep"
-	"github.com/faiface/beep/effects"
-	"github.com/faiface/beep/speaker"
+	"github.com/gopxl/beep"
+	"github.com/gopxl/beep/effects"
+	"github.com/gopxl/beep/speaker"
 )
 
 // SoundBag is for playing randomly one of the sounds.

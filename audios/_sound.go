@@ -3,9 +3,9 @@ package audios
 import (
 	"io/fs"
 
-	"github.com/faiface/beep"
-	"github.com/faiface/beep/effects"
-	"github.com/faiface/beep/speaker"
+	"github.com/gopxl/beep"
+	"github.com/gopxl/beep/effects"
+	"github.com/gopxl/beep/speaker"
 )
 
 // Sound is for playing simple sound effects.

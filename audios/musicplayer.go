@@ -7,19 +7,10 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/faiface/beep"
-	"github.com/faiface/beep/effects"
-	"github.com/faiface/beep/speaker"
+	"github.com/gopxl/beep"
+	"github.com/gopxl/beep/effects"
+	"github.com/gopxl/beep/speaker"
 )
-
-// beepVolume converts volume from [0, 1] to [-5, 0].
-// [-5, 0] is log scale.
-func beepVolume(vol float64) float64 { return vol*5 - 5 }
-
-func NewSilence(duration time.Duration) beep.Streamer {
-	num := defaultSampleRate.N(duration)
-	return beep.Silence(num)
-}
 
 type MusicPlayer struct {
 	seekCloser beep.StreamSeekCloser // for seek and close
@@ -103,6 +94,10 @@ func (mp *MusicPlayer) SetPlaybackRate(rate float64) {
 	mp.streamer.SetRatio(rate)
 }
 
+// beepVolume converts volume from [0, 1] to [-5, 0].
+// [-5, 0] is log scale.
+func beepVolume(vol float64) float64 { return vol*5 - 5 }
+
 func (mp *MusicPlayer) SetVolume(vol float64) {
 	if mp.IsEmpty() {
 		return
@@ -148,4 +143,9 @@ func (mp *MusicPlayer) Close() {
 	}
 	speaker.Clear()
 	mp.seekCloser.Close()
+}
+
+func NewSilence(duration time.Duration) beep.Streamer {
+	num := defaultSampleRate.N(duration)
+	return beep.Silence(num)
 }

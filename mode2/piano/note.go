@@ -78,7 +78,8 @@ func NewNotes(f any, dys mode.Dynamics, keyCount int) (ns []Note) {
 	for i, n := range ns {
 		dys.UpdateIndex(n.Time)
 		d := dys.Current()
-		ns[i].Position = d.Position + float64(n.Time-d.Time)*d.Speed
+		// Ratio (speed) first, then time difference.
+		ns[i].Position = d.Position + d.Speed*float64(n.Time-d.Time)
 
 		// Tail's Position should be always equal or larger than Head's.
 		if n.Type == Tail {

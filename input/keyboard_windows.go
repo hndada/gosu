@@ -2,11 +2,7 @@
 
 package input
 
-import (
-	"time"
-
-	"golang.org/x/sys/windows"
-)
+import "golang.org/x/sys/windows"
 
 // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeystate
 // Get'Async'KeyState would make the exectuable false-positive.
@@ -18,10 +14,11 @@ var (
 // Deprecated: whether the key was pressed after the previous call to GetKeyState
 // const wasPressed = 0x0001
 const isPressed = 0x8000
-const PollingRate = 1 * time.Millisecond
 
-// newKeyStatesGetter returns closure.
-func newKeyStatesGetter(keys []Key) func() []bool {
+// Fetch: most passive. It just gathers data without any modification.
+// Read: It is a bit more active than Fetch. It processes data.
+// Listen: It is the most active. It waits for event to happen.
+func newFetchKeyboardState(keys []Key) func() []bool {
 	vkcodes := make([]uint32, len(keys))
 	for k, ek := range keys {
 		vkcodes[k] = ToVirtualKey(ek)

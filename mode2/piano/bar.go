@@ -10,7 +10,7 @@ import (
 
 // Defining Bars is just redundant if it has no additional methods.
 type Bar struct {
-	Time     int32 // Times are in milliseconds.
+	Time     int32 // in milliseconds
 	Position float64
 }
 

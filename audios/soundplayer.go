@@ -7,9 +7,9 @@ import (
 	"math/rand"
 	"path/filepath"
 
-	"github.com/faiface/beep"
-	"github.com/faiface/beep/effects"
-	"github.com/faiface/beep/speaker"
+	"github.com/gopxl/beep"
+	"github.com/gopxl/beep/effects"
+	"github.com/gopxl/beep/speaker"
 )
 
 var defaultFormat = beep.Format{

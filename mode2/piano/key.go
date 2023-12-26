@@ -1,6 +1,10 @@
 package piano
 
-import mode "github.com/hndada/gosu/mode2"
+import (
+	"time"
+
+	mode "github.com/hndada/gosu/mode2"
+)
 
 // Convention: to organize types and structs in a file by
 // defining the dependencies first and
@@ -145,8 +149,12 @@ func (opts KeysOpts) Order() []KeyKind {
 	return nil
 }
 
-// NoteExposureDuration returns time in milliseconds
-// that cursor takes to move 1 logical pixel.
-func (opts KeysOpts) NoteExposureDuration(speed float64) int32 {
-	return int32(opts.BaselineY / speed)
+// NoteExposureDuration returns duration of note exposure:
+// the time that a note is visible on the screen.
+// The unit of speed is logical pixel per millisecond.
+func (opts KeysOpts) NoteExposureDuration(speed float64) time.Duration {
+	if speed == 0 {
+		return 1e2 * time.Hour
+	}
+	return time.Duration(opts.BaselineY/speed)*time.Millisecond + 1
 }

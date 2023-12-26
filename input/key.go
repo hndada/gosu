@@ -8,7 +8,6 @@ import (
 var IsKeyPressed = ebiten.IsKeyPressed
 var IsKeyJustPressed = inpututil.IsKeyJustPressed
 
-// type Key int
 type Key = ebiten.Key
 
 const KeyNone Key = -1

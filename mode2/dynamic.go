@@ -147,7 +147,7 @@ func (dys *Dynamics) setPositions() {
 			continue
 		}
 		prev := dys.Dynamics[i-1]
-		gain := float64(d.Time-prev.Time) * prev.Speed
+		gain := prev.Speed * float64(d.Time-prev.Time)
 		dys.Dynamics[i].Position = prev.Position + gain
 	}
 }
