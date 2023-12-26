@@ -20,13 +20,16 @@ type tween struct {
 // current time (t), begin (b), change (c), and duration (d).
 type TweenFunc func(t time.Duration, b, c float64, d time.Duration) float64
 
-func (tw tween) isFinished() bool {
-	endTime := tw.startTime.Add(tw.duration)
-	return endTime.Before(times.Now())
-}
-
 func (tw tween) current() float64 {
 	return tw.easing(times.Since(tw.startTime), tw.begin, tw.change, tw.duration)
+}
+
+func (tw tween) endTime() time.Time {
+	return tw.startTime.Add(tw.duration)
+}
+
+func (tw tween) isFinished() bool {
+	return tw.endTime().Before(times.Now())
 }
 
 // Tween calculates intermediate values between two values over a specified duration.
@@ -49,8 +52,8 @@ func (tw Tween) endTime() time.Time {
 	if len(tw.units) == 0 {
 		return times.Now()
 	}
-	last := tw.units[len(tw.units)-1]
-	return last.startTime.Add(last.duration)
+	lastTween := tw.units[len(tw.units)-1]
+	return lastTween.startTime.Add(lastTween.duration)
 }
 
 // AppendXxx feels like to return a struct.
@@ -77,7 +80,7 @@ func (tw *Tween) Current() float64 {
 		} else {
 			tw.loop++
 			if tw.loop < tw.maxLoop {
-				tw.index = 0
+				tw.rewind()
 			}
 		}
 	}
@@ -85,17 +88,26 @@ func (tw *Tween) Current() float64 {
 	return tw.units[tw.index].current()
 }
 
-// IsFinished returns false if the loop is infinite.
-func (tw Tween) IsFinished() bool {
-	return tw.maxLoop != 0 && tw.loop >= tw.maxLoop
+func (tw *Tween) rewind() {
+	for i := range tw.units {
+		if i == 0 {
+			tw.units[i].startTime = times.Now()
+		} else {
+			prev := tw.units[i-1]
+			tw.units[i].startTime = prev.endTime()
+		}
+	}
+	tw.index = 0
 }
 
 func (tw *Tween) Reset() {
-	for i := range tw.units {
-		tw.units[i].startTime = times.Now()
-	}
-	tw.index = 0
+	tw.rewind()
 	tw.loop = 0
+}
+
+// IsFinished returns false if the loop is infinite.
+func (tw Tween) IsFinished() bool {
+	return tw.maxLoop != 0 && tw.loop >= tw.maxLoop
 }
 
 // Easing functions
