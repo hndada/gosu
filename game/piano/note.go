@@ -130,7 +130,7 @@ func (res *NotesRes) Load(fsys fs.FS) {
 }
 
 type NotesOpts struct {
-	TailExtraDuration int32
+	TailOffset int32
 
 	ws []float64
 	H  float64 // Applies to all types of notes.
@@ -144,7 +144,7 @@ type NotesOpts struct {
 
 func NewNotesOpts(keys KeysOpts) NotesOpts {
 	return NotesOpts{
-		TailExtraDuration: 0,
+		TailOffset: 0,
 
 		ws: keys.ws,
 		H:  20,
@@ -176,7 +176,7 @@ type NotesComp struct {
 
 func NewNotesComp(res NotesRes, opts NotesOpts, ns []Note, dys base.Dynamics) (comp NotesComp) {
 	comp.notes = ns
-	comp.applyTailExtraDuration(opts.TailExtraDuration, dys)
+	comp.applyTailOffset(opts.TailOffset, dys)
 
 	keyCount := len(opts.ws)
 	comp.staged = make([]int, keyCount)
@@ -215,7 +215,7 @@ func NewNotesComp(res NotesRes, opts NotesOpts, ns []Note, dys base.Dynamics) (c
 	return
 }
 
-func (comp *NotesComp) applyTailExtraDuration(duration int32, dys base.Dynamics) {
+func (comp *NotesComp) applyTailOffset(duration int32, dys base.Dynamics) {
 	// dys.Index = 0
 	for i, n := range comp.notes {
 		if n.Type != Tail {
