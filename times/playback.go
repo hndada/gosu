@@ -52,8 +52,8 @@ func Since(t time.Time) time.Duration {
 		return log.elapsed + time.Duration(scaled)
 	}
 
-	// If the given time is before the first log,
-	// return the normal time difference.
+	// If the given time is before the first log, return
+	// the normal time difference. It is not likely to happen.
 	return time.Since(t)
 }
 
