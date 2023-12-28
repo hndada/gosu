@@ -3,9 +3,9 @@ package times
 import "time"
 
 type playbackRateLog struct {
-	time     time.Time
-	rate     float64
-	duration time.Duration
+	time    time.Time
+	rate    float64
+	elapsed time.Duration
 }
 
 // Set init time as standard: duration is 0.
@@ -19,6 +19,10 @@ func ClearPlaybackRateLogs() {
 	playbackRateLogs = []playbackRateLog{
 		{time.Now(), 1.0, 0},
 	}
+}
+
+func PlaybackRate() float64 {
+	return playbackRateLogs[len(playbackRateLogs)-1].rate
 }
 
 // time.Now().Sub(t) is not identical with Since(t)
@@ -45,7 +49,7 @@ func Since(t time.Time) time.Duration {
 		// https://go.dev/play/p/5HRusSw8qtP
 		td := t.Sub(log.time) // Time difference
 		scaled := log.rate * float64(td)
-		return log.duration + time.Duration(scaled)
+		return log.elapsed + time.Duration(scaled)
 	}
 
 	// If the given time is before the first log,
