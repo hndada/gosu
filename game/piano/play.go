@@ -3,7 +3,6 @@ package piano
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
@@ -90,7 +89,7 @@ func NewPlay(res Resources, opts Options, format any) (s Play, err error) {
 }
 
 // All components in Play use unified time.
-func (s *Play) Update(now time.Time, kas []game.KeyboardAction) any {
+func (s *Play) Update(now int32, kas []game.KeyboardAction) any {
 	for _, ka := range kas {
 		missed := s.flushStagedNotes(ka.Time)
 		if missed {

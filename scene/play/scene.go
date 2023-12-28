@@ -13,7 +13,7 @@ import (
 )
 
 type play interface {
-	Update(now time.Time, kas []game.KeyboardAction) any
+	Update(now int32, kas []game.KeyboardAction) any
 }
 
 // Todo: draw 4:3 screen on 16:9 screen
@@ -76,12 +76,14 @@ func (s Scene) WindowTitle() string {
 	return fmt.Sprintf("gosu | %s - %s [%s] (%s) ", c.Artist, c.MusicName, c.ChartName, c.Charter)
 }
 
-func (s Scene) Now() time.Duration {
+func (s Scene) Now() int32 {
+	var d time.Duration
 	if s.paused {
-		return s.pauseTime.Sub(s.startTime)
+		d = s.pauseTime.Sub(s.startTime)
 	} else {
-		return times.Since(s.startTime)
+		d = times.Since(s.startTime)
 	}
+	return int32(d.Milliseconds()) // + s.musicOffset
 }
 
 // TL;DR: If you tend to hit early, set positive offset.
@@ -90,44 +92,44 @@ func (s *Scene) SetMusicOffset(new int32) {
 	// Once the music starts, there isn't much we can do,
 	// since music is hard to seek precisely.
 	// Instead, we adjust the start time.
-
-	// Positive offset in music infers music is delayed.
-	// Delayed music is same as early start time.
-	// Hence, as offset increases, start time decreases.
 	if s.musicPlayed {
+		// Positive offset in music infers music is delayed.
+		// Delayed music is same as early start time.
+		// Hence, as offset increases, start time decreases.
+		// This leads to a instant, slight movement of notes.
+
+		// Changing offset might affect to indexing keyboard input,
+		// but it would be negligible because a player tend to
+		// hands off the keys for a while when setting offset.
+		// Maybe the fact that 'osu!' doesn't allow to change offset
+		// during pausing is related to this.
+
+		// No need to consider playback rate, since it is supported naturally.
+		// Times themselves are not affected, only now flows faster or slower.
 		old := s.musicOffset
 		diff := time.Duration(new-old) * time.Millisecond
 		s.startTime = s.startTime.Add(-diff)
 		s.musicOffset = new
-	}
-	// If the music has not played yet, we can adjust the offset
-	// and let the music played at given delayed time.
-	s.musicOffset = new
-
-	// Changing offset might affect to KeyboardState indexing,
-	// but it would be negligible because a player tend to hands off the keys
-	// when setting offset. Maybe the fact that osu! doesn't allow to change offset
-	// during pausing is related to this.
-}
-
-// No update t.startTime here, unless notes would look
-// like they suddenly teleport at the beginning.
-func (s *Scene) tryPlayMusic() {
-	if s.musicPlayer.IsPlayed() {
-		return
-	}
-	now := s.Now()
-	if now >= *s.musicOffset && now < 300 {
-		s.musicPlayer.Play()
-		s.musicPlayed = true
+	} else {
+		// If the music has not played yet, we can adjust the offset
+		// and let the music played at given delayed time.
+		s.musicOffset = new
 	}
 }
 
 func (s *Scene) Update() any {
-	s.tryPlayMusic()
-	kss := s.keyboard.Read(s.Now())
+	now := s.Now() // Use unified time.
+
+	// No update t.startTime when playing music, unless
+	// notes would look like they suddenly teleport at the beginning.
+	if !s.musicPlayed && now >= s.musicOffset {
+		s.musicPlayer.Play()
+		s.musicPlayed = true
+	}
+	nowTime := time.Duration(now) * time.Millisecond
+	kss := s.keyboard.Read(nowTime)
 	kas := game.KeyboardActions(kss)
-	return s.play.Update(kas)
+	return s.play.Update(now, kas)
 }
 
 func (s *Scene) Pause() {
@@ -146,8 +148,8 @@ func (s *Scene) Resume() {
 	s.paused = false
 }
 
+// Music keeps playing at result scene.
 func (s *Scene) Close() {
-	// Music keeps playing at result scene.
 	// s.MusicPlayer.Close()
 	s.keyboard.Stop()
 }
