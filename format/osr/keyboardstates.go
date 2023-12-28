@@ -1,18 +1,21 @@
 package osr
 
 import (
+	"time"
+
 	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/input"
 )
 
-func (f Format) KeyboardReader(keyCount int) input.KeyboardReader {
+func (f Format) KeyboardStates(keyCount int) []input.KeyboardState {
 	switch f.GameMode {
 	case osu.ModeMania:
-		return f.maniaKeyboardReader(keyCount)
+		return f.maniaKeyboardStates(keyCount)
 	case osu.ModeTaiko:
-		return f.taikoKeyboardReader()
+		// Key count of taiko mode is always 4.
+		return f.taikoKeyboardStates(4)
 	}
-	return input.KeyboardReader{}
+	return nil
 }
 
 // The first three replay actions of normal mania play:
@@ -26,7 +29,7 @@ func (f Format) KeyboardReader(keyCount int) input.KeyboardReader {
 // {W:1 X:0 Y:0 Z:0}
 
 // Replay format itself has no information about key count.
-func (f Format) maniaKeyboardReader(keyCount int) input.KeyboardReader {
+func (f Format) maniaKeyboardStates(keyCount int) []input.KeyboardState {
 	// Need to clean first two replay actions.
 	for i := 0; i < 2; i++ {
 		if i >= len(f.ReplayData) {
@@ -37,23 +40,28 @@ func (f Format) maniaKeyboardReader(keyCount int) input.KeyboardReader {
 		}
 	}
 
-	states := make([]input.KeyboardState, len(f.ReplayData)-1)
-	var t int32
-	for i, a := range f.ReplayData[:len(f.ReplayData)-1] {
-		t += int32(a.W)
-		ps := make([]bool, keyCount)
-		var k int
+	// Remove a data for RNG seed, which looks like this:
+	// -12345|0|0|seed
+	f.ReplayData = f.ReplayData[:len(f.ReplayData)-1]
+
+	var t time.Duration
+	states := make([]input.KeyboardState, len(f.ReplayData))
+	for i, a := range f.ReplayData {
+		t += time.Duration(a.W) * time.Millisecond
+
 		// From least significant bit to most significant bit.
-		// example: 13 = 1+0+4+8; all but 2nd key are pressed.
+		// Example: 13 = 1+0+4+8; all but 2nd key are pressed.
+		var k int
+		ps := make([]bool, keyCount)
 		for x := int(a.X); x > 0; x /= 2 {
 			if x%2 == 1 {
 				ps[k] = true
 			}
 			k++
 		}
-		states[i] = input.KeyboardState{Time: t, Presses: ps}
+		states[i] = input.KeyboardState{Time: t, PressedList: ps}
 	}
-	return input.NewKeyboardReader(states)
+	return states
 }
 
 // Reference 1: testdata/taiko.osr (Wizdomiot, koyomi's Oni)
@@ -80,25 +88,31 @@ func (f Format) maniaKeyboardReader(keyCount int) input.KeyboardReader {
 // X = 320: no hands hit.
 // X = 640: right hand hits.
 // X = 0: both hands hit. (beware: X = 0 again)
-func (f Format) taikoKeyboardReader() input.KeyboardReader {
+
+func (f Format) taikoKeyboardStates(keyCount int) []input.KeyboardState {
 	// Unlike mania, taiko doesn't need to clean first two replay actions.
 
-	states := make([]input.KeyboardState, len(f.ReplayData)-1)
-	var t int32
-	for i, a := range f.ReplayData[:len(f.ReplayData)-1] {
-		t += int32(a.W)
-		ps := make([]bool, 4) // Key count is always 4.
+	// Remove a data for RNG seed, which looks like this:
+	// -12345|0|0|seed
+	f.ReplayData = f.ReplayData[:len(f.ReplayData)-1]
 
-		// bit mask system
+	var t time.Duration
+	states := make([]input.KeyboardState, len(f.ReplayData))
+	for i, a := range f.ReplayData {
+		t += time.Duration(a.W) * time.Millisecond
+
+		// Format uses bit mask system.
 		// Sometimes, Z value is either 4 or 16 for same press.
-		// Better to use []int{2, 1, 4, 8} instead of []int{2, 1, 20, 8}.
+		// It is better to use []int{2, 1, 4, 8},
+		// instead of []int{2, 1, 20, 8}.
 		z := int(a.Z)
+		ps := make([]bool, keyCount)
 		for k, v := range []int{2, 1, 4, 8} {
 			if z&v != 0 {
 				ps[k] = true
 			}
 		}
-		states[i] = input.KeyboardState{Time: t, Presses: ps}
+		states[i] = input.KeyboardState{Time: t, PressedList: ps}
 	}
-	return input.NewKeyboardReader(states)
+	return states
 }

@@ -18,6 +18,12 @@ type KeyboardStateBuffer struct {
 	idx int
 }
 
+func NewKeyboardStateBuffer(buf []KeyboardState) KeyboardStateBuffer {
+	return KeyboardStateBuffer{
+		buf: buf,
+	}
+}
+
 // Read returns the last read state and unread states before given time.
 func (kb *KeyboardStateBuffer) Read(now time.Duration) (kss []KeyboardState) {
 	for _, state := range kb.buf[kb.idx:] {
