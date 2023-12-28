@@ -12,6 +12,16 @@ type KeyboardState struct {
 	PressedList []bool
 }
 
+func (a KeyboardState) isEqual(b KeyboardState) bool {
+	for k, ap := range a.PressedList {
+		bp := b.PressedList[k]
+		if ap != bp {
+			return false
+		}
+	}
+	return true
+}
+
 // KeyboardStateBuffer is supposed to have at least one state.
 type KeyboardStateBuffer struct {
 	buf []KeyboardState
@@ -44,7 +54,7 @@ func (kb *KeyboardStateBuffer) Trim() {
 
 	old := kb.buf[0]
 	for _, now := range kb.buf[1:] {
-		if isEqual(old, now) {
+		if old.isEqual(now) {
 			continue
 		}
 		trimmed = append(trimmed, now)
@@ -53,21 +63,12 @@ func (kb *KeyboardStateBuffer) Trim() {
 	kb.buf = trimmed
 }
 
-func isEqual(a, b KeyboardState) bool {
-	for k, ap := range a.PressedList {
-		bp := b.PressedList[k]
-		if ap != bp {
-			return false
-		}
-	}
-	return true
-}
-
 func (kb KeyboardStateBuffer) Output() []KeyboardState {
 	kb.Trim()
 	return kb.buf
 }
 
+// A primary purpose of keyboard is to provide pairs of {time, keyboard state}.
 type KeyboardReader interface {
 	Read(now time.Duration) []KeyboardState
 }
