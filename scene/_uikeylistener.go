@@ -1,4 +1,4 @@
-package ctrl
+package scene
 
 import "github.com/hndada/gosu/input"
 

@@ -164,14 +164,14 @@ func NewNotesOpts(keys KeysOpts) NotesOpts {
 }
 
 type NotesComp struct {
-	notes     []Note
-	staged    []int // targets of judging
-	cursor    float64
-	holds     []bool
-	lowests   []int // indexes of lowest notes
-	animsList [][4]draws.Animation
-	h         float64 // used for drawLongNoteBody
-	colors    []color.NRGBA
+	notes      []Note
+	stagedList []int // targets of judging
+	cursor     float64
+	holds      []bool
+	lowests    []int // indexes of lowest notes
+	animsList  [][4]draws.Animation
+	h          float64 // used for drawLongNoteBody
+	colors     []color.NRGBA
 }
 
 func NewNotesComp(res NotesRes, opts NotesOpts, ns []Note, dys game.Dynamics) (comp NotesComp) {
@@ -179,18 +179,18 @@ func NewNotesComp(res NotesRes, opts NotesOpts, ns []Note, dys game.Dynamics) (c
 	comp.applyTailOffset(opts.TailOffset, dys)
 
 	keyCount := len(opts.ws)
-	comp.staged = make([]int, keyCount)
-	for k := range comp.staged {
+	comp.stagedList = make([]int, keyCount)
+	for k := range comp.stagedList {
 		found := false
 		for i, n := range ns {
 			if k == n.Key {
-				comp.staged[n.Key] = i
+				comp.stagedList[n.Key] = i
 				found = true
 				break
 			}
 		}
 		if !found {
-			comp.staged[k] = len(ns)
+			comp.stagedList[k] = len(ns)
 		}
 	}
 

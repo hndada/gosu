@@ -1,4 +1,4 @@
-package ctrl
+package scene
 
 var (
 	shortTicks = 5

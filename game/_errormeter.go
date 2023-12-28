@@ -2,6 +2,8 @@ package game
 
 import "image/color"
 
+// Todo: Use different color for error meter of Tail
+
 // {244, 177, 0, 255},   // Yellow
 var judgmentColors = []color.NRGBA{
 	{0, 170, 242, 255},   // Blue

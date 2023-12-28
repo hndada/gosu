@@ -39,7 +39,7 @@ func NewKeyButtonsOpts(keys KeysOpts) KeyButtonsOpts {
 
 // Put suffix 'List' when suffix 's' is not available.
 type KeyButtonsComp struct {
-	keyDowns    []bool
+	pressedList []bool
 	spritesList [][2]draws.Sprite
 	startTimes  []time.Time
 	minDuration time.Duration
@@ -61,10 +61,10 @@ func NewKeyButtonsComp(res KeyButtonsRes, opts KeyButtonsOpts) (comp KeyButtonsC
 	return
 }
 
-func (comp *KeyButtonsComp) Update(keyDowns []bool) {
-	comp.keyDowns = keyDowns
-	for k, down := range keyDowns {
-		if down {
+func (comp *KeyButtonsComp) Update(pressedList []bool) {
+	comp.pressedList = pressedList
+	for k, pressed := range pressedList {
+		if pressed {
 			comp.startTimes[k] = times.Now()
 		}
 	}
@@ -77,8 +77,8 @@ func (comp KeyButtonsComp) Draw(dst draws.Image) {
 		down = 1
 	)
 	elapsed := times.Since(comp.startTimes[0])
-	for k, keyDown := range comp.keyDowns {
-		if keyDown || elapsed <= comp.minDuration {
+	for k, pressed := range comp.pressedList {
+		if pressed || elapsed <= comp.minDuration {
 			comp.spritesList[k][down].Draw(dst)
 		} else {
 			comp.spritesList[k][up].Draw(dst)

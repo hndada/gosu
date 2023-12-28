@@ -44,18 +44,18 @@ func (c *Chart) setSteps() {
 		time:  c.Notes[0].Time,
 		notes: make([]*Note, c.KeyCount()),
 	}
-	// It is guaranteed that n is in stagedNotes since it is sorted by time.
-	staged := c.newStagedNotes()
+	// It is guaranteed that n is in stagedListNotes since it is sorted by time.
+	stagedList := c.newStagedNotes()
 
 	for _, n := range c.Notes {
 		// Start with new step if the note is too far or the lane has occupied.
 		if n.Time-st.time > inStepThreshold || st.notes[n.Key] != nil {
 			// calculate strains of the step
 			st.setHands()
-			st.setHoldings(staged)
+			st.setHoldings(stagedList)
 			st.setChordStrains()
 			st.setJackStrains()
-			st.setBombStrains(staged)
+			st.setBombStrains(stagedList)
 			st.setWeights()
 
 			// append
@@ -67,7 +67,7 @@ func (c *Chart) setSteps() {
 		}
 		// set to the step
 		st.notes[n.Key] = n
-		staged[n.Key] = n.Next
+		stagedList[n.Key] = n.Next
 	}
 	c.steps = append(c.steps, st)
 }
@@ -115,9 +115,9 @@ func (st *step) setHands() {
 	}
 }
 
-func (st *step) setHoldings(staged []*Note) {
+func (st *step) setHoldings(stagedList []*Note) {
 	st.holdings = make([]bool, len(st.notes))
-	for k, sn := range staged {
+	for k, sn := range stagedList {
 		if sn == nil {
 			continue
 		}
@@ -189,9 +189,9 @@ func (st *step) setJackStrains() {
 
 // Bomb a virtual note that is not in a step, but should not be pressed.
 // If a bomb is pressed, it will judge the staged note with poor judgment.
-func (st *step) setBombStrains(staged []*Note) {
+func (st *step) setBombStrains(stagedList []*Note) {
 	st.bombStrains = make([]float64, len(st.notes))
-	for k, sn := range staged {
+	for k, sn := range stagedList {
 		n := st.notes[k]
 		if sn == nil {
 			continue

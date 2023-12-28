@@ -9,13 +9,16 @@ import (
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/input"
-	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/times"
 )
 
+type play interface {
+	Update(now time.Time, kas []game.KeyboardAction) any
+}
+
 // Todo: draw 4:3 screen on 16:9 screen
 type Scene struct {
-	chartHeader game.ChartHeader
+	game.ChartHeader
 
 	// Timer
 	startTime   time.Time
@@ -28,31 +31,35 @@ type Scene struct {
 	musicPlayer audios.MusicPlayer
 	soundPlayer audios.SoundPlayer
 
-	play scene.Scene
+	play play
 }
 
-func NewScene(fsys fs.FS, name string, replayFile fs.File) (s Scene, err error) {
+func NewScene(fsys fs.FS, name string) (s Scene, err error) {
 	format, hash, err := game.LoadChartFile(fsys, name)
 	if err != nil {
 		err = fmt.Errorf("failed to load chart file: %w", err)
 		return
 	}
-	s.chartHeader = game.NewChartHeader(format, hash)
+	s.ChartHeader = game.NewChartHeader(format, hash)
 
 	const wait = 1100 * time.Millisecond
 	s.startTime = times.Now().Add(wait)
 	s.musicOffset = musicOffset
 
-	if replayFile == nil {
+	if replay != nil {
+		s.keyboard = game.NewReplay(replayFile)
+	} else {
 		keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
 		s.keyboard = input.NewKeyboard(keys)
 		defer s.keyboard.Listen(s.startTime)
-	} else {
-		s.KeyboardReader = replay.KeyboardReader(s.KeyCount)
 	}
 
-	const ratio = 1
-	s.musicPlayer, _ = audios.NewMusicPlayerFromFile(fsys, s.MusicFilename, ratio)
+	mp, err := audios.NewMusicPlayerFromFile(fsys, s.MusicFilename)
+	if err != nil {
+		err = fmt.Errorf("failed to load music file: %w", err)
+		return
+	}
+	s.musicPlayer = mp
 	s.SetMusicVolume(*s.MusicVolume)
 
 	s.SoundMap = audios.NewSoundMap(fsys, s.DefaultHitSoundFormat, s.SoundVolume)
@@ -65,7 +72,7 @@ func NewScene(fsys fs.FS, name string, replayFile fs.File) (s Scene, err error) 
 }
 
 func (s Scene) WindowTitle() string {
-	c := s.chartHeader
+	c := s.ChartHeader
 	return fmt.Sprintf("gosu | %s - %s [%s] (%s) ", c.Artist, c.MusicName, c.ChartName, c.Charter)
 }
 
@@ -106,44 +113,43 @@ func (s *Scene) SetMusicOffset(new int32) {
 // No update t.startTime here, unless notes would look
 // like they suddenly teleport at the beginning.
 func (s *Scene) tryPlayMusic() {
-	if s.MusicPlayer.IsPlayed() {
+	if s.musicPlayer.IsPlayed() {
 		return
 	}
-	now := s.Timer.Now()
-	if now >= *s.MusicOffset && now < 300 {
-		s.MusicPlayer.Play()
+	now := s.Now()
+	if now >= *s.musicOffset && now < 300 {
+		s.musicPlayer.Play()
 		s.musicPlayed = true
 	}
 }
 
-// readInput guarantees that length of return value is at least one.
-// The receiver should be pointer for updating replay's index.
-func (s *Scene) readInput() []input.KeyboardAction {
-	if s.Keyboard != nil {
-		return s.Keyboard.Read(s.Timer.Now())
-	}
-	return s.Keyboard.Reader.Read(s.Timer.Now()) // for replay
-}
-
 func (s *Scene) Update() any {
 	s.tryPlayMusic()
-	s.readInput()
-	return s.Play.Update()
+	kss := s.keyboard.Read(s.Now())
+	kas := game.KeyboardActions(kss)
+	return s.play.Update(kas)
 }
 
 func (s *Scene) Pause() {
 	s.pauseTime = times.Now()
+	s.musicPlayer.Pause()
+	s.keyboard.Stop()
 	s.paused = true
-	s.MusicPlayer.Pause()
-	s.Keyboard.Stop()
+
 }
 
 func (s *Scene) Resume() {
-	elapsedTime := times.Since(t.pauseTime)
-	t.startTime = t.startTime.Add(elapsedTime)
-	t.paused = false
-	s.MusicPlayer.Resume()
-	s.Keyboard.Listen()
+	elapsedTime := times.Since(s.pauseTime)
+	s.startTime = s.startTime.Add(elapsedTime)
+	s.musicPlayer.Resume()
+	s.keyboard.Listen(s.startTime)
+	s.paused = false
+}
+
+func (s *Scene) Close() {
+	// Music keeps playing at result scene.
+	// s.MusicPlayer.Close()
+	s.keyboard.Stop()
 }
 
 // func (t *Timer) sync() {
@@ -154,9 +160,3 @@ func (s *Scene) Resume() {
 // 		t.Tick += ToTick(e)
 // 	}
 // }
-
-func (s *Scene) Close() {
-	// Music keeps playing at result scene.
-	// s.MusicPlayer.Close()
-	s.Keyboard.Stop()
-}

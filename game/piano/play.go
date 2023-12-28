@@ -3,6 +3,7 @@ package piano
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
@@ -10,9 +11,11 @@ import (
 )
 
 // Todo: game.ErrorMeterComp
+// Todo: FlowPoint (kind of HP)
 type Play struct {
-	Dynamics game.Dynamics
+	Scorer
 
+	dynamics   game.Dynamics
 	cursor     float64
 	field      FieldComp
 	bar        BarComp
@@ -26,8 +29,6 @@ type Play struct {
 	combo      game.ComboComp
 	score      game.ScoreComp
 
-	// Todo: Mods, FlowPoint (kind of HP)
-	judge         Judge
 	isKeyPresseds []bool // for keys, key lightings, and hold lightings
 	isKeyHolds    []bool // for long note body, hold lightings
 	// isJudgeOKs         []bool // for 'hit' lighting
@@ -36,24 +37,23 @@ type Play struct {
 
 // Need to re-calculate positions when Speed has changed.
 func (s *Play) SetSpeedScale(new float64) {
-	old := s.Dynamics.SpeedScale
+	old := s.dynamics.SpeedScale
+	s.dynamics.SpeedScale = new
 
-	s.cursor *= new / old
-
-	ds := s.Dynamics.Dynamics
+	scale := new / old
+	s.cursor *= scale
+	ds := s.dynamics.Dynamics
 	for i := range ds {
-		ds[i].Position *= new / old
+		ds[i].Position *= scale
 	}
 	ns := s.notes.notes
 	for i := range ns {
-		ns[i].Position *= new / old
+		ns[i].Position *= scale
 	}
 	bs := s.bar.bars
 	for i := range bs {
-		bs[i].Position *= new / old
+		bs[i].Position *= scale
 	}
-
-	s.Dynamics.SpeedScale = new
 }
 
 func (s Play) Draw(dst draws.Image) {
@@ -72,13 +72,13 @@ func (s Play) Draw(dst draws.Image) {
 
 // Just assigning slice will shallow copy.
 // NewXxx returns struct, while LoadXxx doesn't.
-func NewPlay(format any, res Resources, opts Options) (s Play, err error) {
-	s.Dynamics, err = game.NewDynamics(format)
+func NewPlay(res Resources, opts Options, format any) (s Play, err error) {
+	s.dynamics, err = game.NewDynamics(format)
 	if err != nil {
 		err = fmt.Errorf("failed to create dynamics: %w", err)
 		return
 	}
-	s.cursor = float64(s.now) * s.SpeedScale
+	s.cursor = s.Speed() * (2 * game.ScreenH)
 
 	s.isKeyPresseds = make([]bool, s.KeyCount)
 	s.isKeyHolds = make([]bool, s.KeyCount)
@@ -89,37 +89,31 @@ func NewPlay(format any, res Resources, opts Options) (s Play, err error) {
 	return
 }
 
-func (s *Play) Update(kas []input.KeyboardAction) any {
+// All components in Play use unified time.
+func (s *Play) Update(now time.Time, kas []game.KeyboardAction) any {
 	for _, ka := range kas {
-		// Todo: solve this
-		// if len(ka.KeyActions) != s.KeyCount {
-		// 	fmt.Println("len(ka.KeyActions) != s.KeyCount")
-		// 	continue
-		// }
-
-		missed := s.Scorer.flushStagedNotes(ka.Time)
+		missed := s.flushStagedNotes(ka.Time)
 		if missed {
 			worstJudgment = s.miss()
 		}
 
-		s.Dynamic = game.NextDynamics(s.Dynamic, ka.Time) // for Volume
 		s.playSounds(ka)
-		js := s.Scorer.tryJudge(ka)
+		js := s.tryJudge(ka)
 
 		// draw
 		for k, a := range ka.KeyActions {
 			switch a {
-			case input.Idle, input.Release:
+			case game.Idle, game.Release:
 				s.isKeyPresseds[k] = false
 				s.isKeyHolds[k] = false
 				s.isLongNoteHoldings[k] = false
-			case input.Hit:
+			case game.Hit:
 				s.isKeyPresseds[k] = true
 				s.drawKeyTimers[k].Reset()
 				s.drawKeyLightingTimers[k].Reset()
 				s.drawHitLightingTimers[k].Reset()
 				s.drawHoldLightingTimers[k].Reset()
-			case input.Hold:
+			case game.Hold:
 				s.isKeyPresseds[k] = true
 				s.isKeyHolds[k] = true
 				isLN := s.stagedNotes[k] != nil && s.stagedNotes[k].Type == Tail
@@ -142,13 +136,8 @@ func (s *Play) Update(kas []input.KeyboardAction) any {
 			s.worstJudgment = worstJudgment
 			s.drawJudgmentTimer.Reset()
 		}
-		// Todo: Add time error meter mark
-		// Todo: Use different color for error meter of Tail
 	}
-
-	// update cursor
-	duration := float64(s.now - s.Dynamic.Time)
-	s.cursor = s.Dynamic.Position + duration*s.Speed()
+	s.cursor = s.dynamics.Cursor(now)
 	return nil
 }
 
@@ -184,7 +173,7 @@ func (s Play) DebugString() string {
 	var b strings.Builder
 	f := fmt.Fprintf
 
-	f(&b, "Time: %.3fs/%.0fs\n", game.ToSecond(s.now), game.ToSecond(s.Duration()))
+	f(&b, "Time: %.3fs/%.0fs\n", s.Now(), game.ToSecond(s.Duration()))
 	f(&b, "\n")
 	f(&b, "Score: %.0f \n", s.Score)
 	f(&b, "Combo: %d\n", s.Combo)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"time"
 
 	"github.com/hndada/gosu/format/osu"
 )
@@ -217,4 +218,10 @@ func (dys Dynamics) Current() Dynamic { return dys.Dynamics[dys.index] }
 
 func (dys Dynamics) Speed() float64 {
 	return dys.Current().Speed * dys.SpeedScale
+}
+
+func (dys Dynamics) Cursor(now time.Duration) float64 {
+	nowTime := int32(now / time.Millisecond)
+	dy := dys.Current()
+	return dy.Position + dys.Speed()*float64(dy.Time-nowTime)
 }

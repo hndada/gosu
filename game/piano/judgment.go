@@ -82,10 +82,10 @@ func DefaultJudgments() []game.Judgment {
 	}
 }
 
-func (comp JudgmentComp) Kool() game.Judgment { return comp.Judgments[Kool] }
-func (comp JudgmentComp) Cool() game.Judgment { return comp.Judgments[Cool] }
-func (comp JudgmentComp) Good() game.Judgment { return comp.Judgments[Good] }
-func (comp JudgmentComp) Miss() game.Judgment { return comp.Judgments[Miss] }
+func (comp JudgmentComp) kool() game.Judgment { return comp.Judgments[Kool] }
+func (comp JudgmentComp) cool() game.Judgment { return comp.Judgments[Cool] }
+func (comp JudgmentComp) good() game.Judgment { return comp.Judgments[Good] }
+func (comp JudgmentComp) miss() game.Judgment { return comp.Judgments[Miss] }
 
 func (comp *JudgmentComp) Update(js []game.Judgment) {
 	comp.worst = game.Judgment{}
