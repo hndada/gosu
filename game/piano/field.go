@@ -4,7 +4,7 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
-	base "github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game"
 )
 
 type FieldRes struct {
@@ -13,7 +13,7 @@ type FieldRes struct {
 
 func (res *FieldRes) Load(fsys fs.FS) {
 	// Uses generated image.
-	res.img = draws.NewImage(base.ScreenW, base.ScreenH)
+	res.img = draws.NewImage(game.ScreenW, game.ScreenH)
 }
 
 type FieldOpts struct {
@@ -36,7 +36,7 @@ type FieldComp struct {
 
 func NewFieldComp(res FieldRes, opts FieldOpts) (comp FieldComp) {
 	s := draws.NewSprite(res.img)
-	s.SetSize(opts.w, base.ScreenH)
+	s.SetSize(opts.w, game.ScreenH)
 	s.Locate(opts.x, 0, draws.CenterTop)
 	s.ColorScale.Scale(1, 1, 1, opts.Opacity)
 	comp.sprite = s

@@ -5,7 +5,7 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
-	base "github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game"
 )
 
 type JudgmentRes struct {
@@ -30,16 +30,16 @@ func NewJudgmentOpts(keys KeysOpts) JudgmentOpts {
 	return JudgmentOpts{
 		Scale: 0.33,
 		x:     keys.stageW,
-		Y:     0.66 * base.ScreenH,
+		Y:     0.66 * game.ScreenH,
 	}
 }
 
 // Order of fields: logic -> drawing.
 // Try to keep the order of initializing consistent with the order of fields.
 type JudgmentComp struct {
-	Judgments [4]base.Judgment
+	Judgments [4]game.Judgment
 	Counts    [4]int
-	worst     base.Judgment // worst judgment
+	worst     game.Judgment // worst judgment
 	anims     [4]draws.Animation
 	tween     draws.Tween
 }
@@ -48,7 +48,7 @@ type JudgmentComp struct {
 // to avoid using opts' fields directly.
 func NewJudgmentComp(res JudgmentRes, opts JudgmentOpts) (comp JudgmentComp) {
 	js := DefaultJudgments()
-	comp.Judgments = [4]base.Judgment(js)
+	comp.Judgments = [4]game.Judgment(js)
 
 	for i, frames := range res.framesList {
 		a := draws.NewAnimation(frames, 40)
@@ -73,8 +73,8 @@ const (
 	Miss
 )
 
-func DefaultJudgments() []base.Judgment {
-	return []base.Judgment{
+func DefaultJudgments() []game.Judgment {
+	return []game.Judgment{
 		{Window: 20, Weight: 1},
 		{Window: 40, Weight: 1},
 		{Window: 80, Weight: 0.5},
@@ -82,13 +82,13 @@ func DefaultJudgments() []base.Judgment {
 	}
 }
 
-func (comp JudgmentComp) Kool() base.Judgment { return comp.Judgments[Kool] }
-func (comp JudgmentComp) Cool() base.Judgment { return comp.Judgments[Cool] }
-func (comp JudgmentComp) Good() base.Judgment { return comp.Judgments[Good] }
-func (comp JudgmentComp) Miss() base.Judgment { return comp.Judgments[Miss] }
+func (comp JudgmentComp) Kool() game.Judgment { return comp.Judgments[Kool] }
+func (comp JudgmentComp) Cool() game.Judgment { return comp.Judgments[Cool] }
+func (comp JudgmentComp) Good() game.Judgment { return comp.Judgments[Good] }
+func (comp JudgmentComp) Miss() game.Judgment { return comp.Judgments[Miss] }
 
-func (comp *JudgmentComp) Update(js []base.Judgment) {
-	comp.worst = base.Judgment{}
+func (comp *JudgmentComp) Update(js []game.Judgment) {
+	comp.worst = game.Judgment{}
 	for _, j := range js {
 		if comp.worst.Window < j.Window { // j is worse
 			comp.worst = j
@@ -109,7 +109,7 @@ func (comp JudgmentComp) index() int {
 	return len(comp.Judgments) // blank judgment
 }
 
-func (comp *JudgmentComp) Increment(j base.Judgment) {
+func (comp *JudgmentComp) Increment(j game.Judgment) {
 	for i, j2 := range comp.Judgments {
 		if j.Is(j2) {
 			comp.Counts[i]++

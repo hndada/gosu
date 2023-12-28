@@ -3,7 +3,7 @@ package piano
 import (
 	"time"
 
-	base "github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game"
 )
 
 // Convention: to organize types and structs in a file by
@@ -90,8 +90,8 @@ func NewKeysOpts() KeysOpts {
 			9:  400,
 			10: 420,
 		},
-		StageX:    0.50 * base.ScreenW,
-		BaselineY: 0.90 * base.ScreenH,
+		StageX:    0.50 * game.ScreenW,
+		BaselineY: 0.90 * game.ScreenH,
 	}
 
 	// Set derived fields.

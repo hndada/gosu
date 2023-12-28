@@ -1,7 +1,7 @@
 package piano
 
 import (
-	base "github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/input"
 )
 
@@ -62,8 +62,8 @@ func (s *Scorer) flushStagedNotes(now int32) (missed bool) { // return: for draw
 	return missed
 }
 
-func (s *Scorer) tryJudge(ka input.KeyboardAction) []base.Judgment {
-	js := make([]base.Judgment, len(s.stagedNotes)) // draw
+func (s *Scorer) tryJudge(ka input.KeyboardAction) []game.Judgment {
+	js := make([]game.Judgment, len(s.stagedNotes)) // draw
 	for k, n := range s.stagedNotes {
 		if n == nil || n.scored {
 			continue
@@ -78,10 +78,10 @@ func (s *Scorer) tryJudge(ka input.KeyboardAction) []base.Judgment {
 	return js
 }
 
-func (s Scorer) judge(noteType int, e int32, a input.KeyActionType) base.Judgment {
+func (s Scorer) judge(noteType int, e int32, a input.KeyActionType) game.Judgment {
 	switch noteType {
 	case Normal, Head:
-		return base.Judge(s.judgments, e, a)
+		return game.Judge(s.judgments, e, a)
 	case Tail:
 		return s.judgeTail(e, a)
 	default:
@@ -90,7 +90,7 @@ func (s Scorer) judge(noteType int, e int32, a input.KeyActionType) base.Judgmen
 }
 
 // Either Hold or Release when Tail is not scored
-func (s Scorer) judgeTail(e int32, a input.KeyActionType) base.Judgment {
+func (s Scorer) judgeTail(e int32, a input.KeyActionType) game.Judgment {
 	switch {
 	case e > s.miss().Window:
 		if a == input.Release {
@@ -100,18 +100,18 @@ func (s Scorer) judgeTail(e int32, a input.KeyActionType) base.Judgment {
 		return s.miss()
 	default: // In range
 		if a == input.Release { // a != Hold
-			j := base.Evaluate(s.judgments, e)
+			j := game.Evaluate(s.judgments, e)
 			if j.Is(s.cool()) { // Cool at Tail goes Kool
 				j = s.kool()
 			}
 			return j
 		}
 	}
-	return base.Judgment{}
+	return game.Judgment{}
 }
 
 // Todo: no getting Flow when hands off the long note
-func (s *Scorer) mark(n *Note, j base.Judgment) {
+func (s *Scorer) mark(n *Note, j game.Judgment) {
 	// Score consists of three parts: Flow, Acc, and Extra.
 	// Ratios of Flow and Acc to their max values are multiplied to unit scores.
 	// Flow drops to zero when Miss, and recovers when Kool, Cool, and Good.

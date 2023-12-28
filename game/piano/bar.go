@@ -5,7 +5,7 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
-	base "github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game"
 )
 
 // Defining Bars is just redundant if it has no additional methods.
@@ -14,7 +14,7 @@ type Bar struct {
 	Position float64
 }
 
-func NewBars(dys base.Dynamics) []Bar {
+func NewBars(dys game.Dynamics) []Bar {
 	// const useDefaultMeter = 0
 	times := dys.BeatTimes()
 	bs := make([]Bar, 0, len(times))
@@ -88,7 +88,7 @@ func NewBarComp(res BarRes, opts BarOpts, bars []Bar) (comp BarComp) {
 // The same concept also applies to notes.
 func (comp *BarComp) Update(cursor float64) {
 	comp.cursor = cursor
-	lowerBound := cursor - base.ScreenH
+	lowerBound := cursor - game.ScreenH
 	for i := comp.lowest; i < len(comp.bars); i++ {
 		b := comp.bars[i]
 		if b.Position > lowerBound {
@@ -101,7 +101,7 @@ func (comp *BarComp) Update(cursor float64) {
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
 func (comp BarComp) Draw(dst draws.Image) {
-	upperBound := comp.cursor + base.ScreenH
+	upperBound := comp.cursor + game.ScreenH
 	for i := comp.lowest; i < len(comp.bars); i++ {
 		b := comp.bars[i]
 		if b.Position > upperBound {

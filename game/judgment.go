@@ -1,4 +1,4 @@
-package base
+package game
 
 type Judgment struct {
 	Window int32

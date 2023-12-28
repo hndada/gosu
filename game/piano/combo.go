@@ -1,9 +1,9 @@
 package piano
 
-import base "github.com/hndada/gosu/game"
+import "github.com/hndada/gosu/game"
 
-func NewComboOpts(keys KeysOpts) base.ComboOpts {
-	opts := base.ComboOpts{
+func NewComboOpts(keys KeysOpts) game.ComboOpts {
+	opts := game.ComboOpts{
 		Scale:    0.75,
 		X:        keys.StageX,
 		Y:        keys.BaselineY,

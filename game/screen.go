@@ -1,4 +1,4 @@
-package base
+package game
 
 // Fixing screen size enables users to feel UI elements
 // are consistent regardless of the screen size.

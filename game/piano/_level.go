@@ -2,6 +2,8 @@ package piano
 
 import (
 	"sort"
+
+	"github.com/hndada/gosu/game"
 )
 
 type Level struct {
@@ -14,15 +16,15 @@ const inStepThreshold = 30
 
 // Strain is for calculating difficulty.
 var chordStrain = func(len float64) float64 { return 1.0/len + 0.1*(len-1) }
-var jackStrain = base.LinearInterpolate([]float64{0, 200}, []float64{1.5, 0})
-var bombStrain = base.LinearInterpolate([]float64{0, 200}, []float64{0.75, 0})
+var jackStrain = game.LinearInterpolate([]float64{0, 200}, []float64{1.5, 0})
+var bombStrain = game.LinearInterpolate([]float64{0, 200}, []float64{0.75, 0})
 
 const tailHoldBonus = 1.40
 const normalHoldBonus = 1.25
 
 // weight is for Tail's variadic weight based on its length.
 // For example, short long note does not require much strain to release.
-var tailStrain = base.LinearInterpolate(
+var tailStrain = game.LinearInterpolate(
 	[]float64{0, 50, 200, 800}, []float64{0.4, 0.1, 0.1, 0.7})
 
 type step struct {
@@ -267,7 +269,7 @@ const levelScale = 0.05
 // and using the same size of duration on each piece.
 // They will be alleviated into diffs.
 func (c *Chart) setLevel() {
-	// times, durations := base.DifficultyPieceTimes(c.Dynamics, c.Duration())
+	// times, durations := game.DifficultyPieceTimes(c.Dynamics, c.Duration())
 	// scale := standardDuration / float64(durations[i])
 	// diffs = append(diffs, diff*scale)
 	diffs := make([]float64, 0, len(c.steps))
@@ -285,7 +287,7 @@ func (c *Chart) setLevel() {
 	}
 
 	sort.Slice(diffs, func(i, j int) bool { return diffs[i] > diffs[j] })
-	difficulty := base.WeightedSum(diffs, decayFactor)
+	difficulty := game.WeightedSum(diffs, decayFactor)
 
 	// No additional Math.Pow; it would make a little change.
 	c.Level.Level = difficulty * levelScale

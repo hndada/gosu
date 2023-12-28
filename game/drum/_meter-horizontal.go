@@ -57,7 +57,7 @@ func NewMeterDrawer(js []Judgment, colors []color.NRGBA) (d MeterDrawer) {
 		}
 		i := ebiten.NewImageFromImage(src)
 		base := draws.NewSprite(draws.Image{Image: i})
-		base.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
+		game.Locate(ScreenSizeX/2, ScreenSizeY, draws.CenterBottom)
 		d.Meter = base
 	}
 	{

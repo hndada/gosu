@@ -1,4 +1,4 @@
-package base
+package game
 
 // Judge judges in normal style: Whether a player hits a key in time.
 // Late hit makes negative time error.

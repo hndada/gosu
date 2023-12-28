@@ -1,8 +1,7 @@
-package base
+package game
 
 import (
 	"crypto/md5"
-	"fmt"
 	"io"
 	"io/fs"
 	"path/filepath"
@@ -11,16 +10,11 @@ import (
 )
 
 const (
-	PlayModePiano = iota
-	PlayModeDrum
-	PlayModeSing
-	PlayModeAll = -1
+	ModePiano = iota
+	ModeDrum
+	ModeSing
+	ModeAll = -1
 )
-
-// type Chart interface {
-// 	Duration() int32
-// 	Difficulties() []float64
-// }
 
 func LoadChartFile(fsys fs.FS, name string) (format any, hash [16]byte, err error) {
 	f, err := fsys.Open(name)
@@ -71,8 +65,8 @@ type ChartHeader struct {
 	VideoFilename      string
 	VideoTimeOffset    int32
 
-	PlayMode    int
-	SubPlayMode int
+	Mode    int
+	SubMode int
 
 	// Hash works as id in database.
 	// Hash is not exported to file.
@@ -123,19 +117,15 @@ func newChartHeaderFromOsu(format *osu.Format) (c ChartHeader) {
 		c.MusicFilename = ""
 	}
 
-	c.PlayMode = -1
+	c.Mode = -1
 	switch format.Mode {
 	case osu.ModeStandard:
 	case osu.ModeTaiko:
-		c.PlayMode = PlayModeDrum
+		c.Mode = ModeDrum
 	case osu.ModeCatch:
 	case osu.ModeMania:
-		c.PlayMode = PlayModePiano
-		c.SubPlayMode = int(format.CircleSize)
+		c.Mode = ModePiano
+		c.SubMode = int(format.CircleSize)
 	}
 	return
-}
-
-func (c ChartHeader) WindowTitle() string {
-	return fmt.Sprintf("gosu | %s - %s [%s] (%s) ", c.Artist, c.MusicName, c.ChartName, c.Charter)
 }

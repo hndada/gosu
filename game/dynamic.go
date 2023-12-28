@@ -1,11 +1,15 @@
-package base
+package game
 
 import (
+	"fmt"
 	"math"
 	"sort"
 
 	"github.com/hndada/gosu/format/osu"
 )
+
+// int32 is enough for dealing with scene time in millisecond.
+// Maximum duration with int32 is around 24 days.
 
 // Except Volume, all fields in Dynamic are related in beat, or 'Pace'.
 // Tempo: Allergo, Adagio
@@ -34,20 +38,25 @@ func (d Dynamic) BeatDuration() float64 {
 
 // No two Dynamics have same Time.
 type Dynamics struct {
-	Dynamics []Dynamic
-	Index    int
-	duration int32
+	Dynamics   []Dynamic
+	index      int
+	span       int32 // total duration of the chart
+	SpeedScale float64
 }
 
 func NewDynamics(format any) (Dynamics, error) {
 	var ds []Dynamic
-	var duration int32
+	var span int32
 	switch format := format.(type) {
 	case *osu.Format:
 		ds = newDynamicListFromOsu(format)
-		duration = int32(format.Duration())
+		span = int32(format.Duration())
 	}
-	dys := Dynamics{Dynamics: ds, duration: duration}
+
+	if len(ds) == 0 {
+		return Dynamics{}, fmt.Errorf("no Dynamics in the chart")
+	}
+	dys := Dynamics{Dynamics: ds, span: span}
 	dys.setPositions()
 	return dys, nil
 }
@@ -105,7 +114,7 @@ func newDynamicListFromOsu(f *osu.Format) []Dynamic {
 
 // BPM with longest duration will be main BPM.
 // When there are multiple BPMs with same duration, larger one will be main BPM.
-func (dys Dynamics) BPMs(duration int32) (main, min, max float64) {
+func (dys Dynamics) BPMs() (main, min, max float64) {
 	bpmDurations := make(map[float64]int32)
 	for i, d := range dys.Dynamics {
 		if i == 0 {
@@ -114,7 +123,7 @@ func (dys Dynamics) BPMs(duration int32) (main, min, max float64) {
 		if i < len(dys.Dynamics)-1 {
 			bpmDurations[d.BPM] += dys.Dynamics[i+1].Time - d.Time
 		} else {
-			bpmDurations[d.BPM] += duration - d.Time // Bounds to final note time; confirmed with test.
+			bpmDurations[d.BPM] += dys.span - d.Time // Bounds to final note time; confirmed with test.
 		}
 	}
 	var maxDuration int32
@@ -138,7 +147,7 @@ func (dys Dynamics) BPMs(duration int32) (main, min, max float64) {
 
 func (dys *Dynamics) setPositions() {
 	// Brilliant idea: Make SpeedScale scaled by MainBPM.
-	mainBPM, _, _ := dys.BPMs(dys.duration)
+	mainBPM, _, _ := dys.BPMs()
 	bpmScale := dys.Dynamics[0].BPM / mainBPM
 	for i, d := range dys.Dynamics {
 		d.Speed *= bpmScale
@@ -181,7 +190,7 @@ func (dys Dynamics) BeatTimes() (times []int32) {
 	for i, nd := range newDys {
 		start = float64(nd.Time)
 		if i == len(newDys)-1 {
-			end = float64(dys.duration + bufferTime)
+			end = float64(dys.span + bufferTime)
 		} else {
 			end = float64(newDys[i+1].Time)
 		}
@@ -195,13 +204,17 @@ func (dys Dynamics) BeatTimes() (times []int32) {
 
 // Used in ScenePlay for fetching next Dynamic.
 func (dys *Dynamics) UpdateIndex(now int32) {
-	for i := dys.Index; i < len(dys.Dynamics); i++ {
+	for i := dys.index; i < len(dys.Dynamics); i++ {
 		// if-condition first, then update index.
 		if dys.Dynamics[i].Time > now {
 			break
 		}
-		dys.Index = i
+		dys.index = i
 	}
 }
 
-func (dys Dynamics) Current() Dynamic { return dys.Dynamics[dys.Index] }
+func (dys Dynamics) Current() Dynamic { return dys.Dynamics[dys.index] }
+
+func (dys Dynamics) Speed() float64 {
+	return dys.Current().Speed * dys.SpeedScale
+}

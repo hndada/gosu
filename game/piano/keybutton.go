@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/hndada/gosu/draws"
-	base "github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/times"
 )
 
@@ -31,7 +31,7 @@ type KeyButtonsOpts struct {
 func NewKeyButtonsOpts(keys KeysOpts) KeyButtonsOpts {
 	return KeyButtonsOpts{
 		ws: keys.ws,
-		h:  base.ScreenH - keys.BaselineY,
+		h:  game.ScreenH - keys.BaselineY,
 		xs: keys.xs,
 		y:  keys.BaselineY,
 	}

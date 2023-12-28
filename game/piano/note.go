@@ -8,7 +8,7 @@ import (
 
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osu"
-	base "github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game"
 )
 
 const (
@@ -22,7 +22,7 @@ type Note struct {
 	Time     int32
 	Type     int
 	Key      int
-	Sample   base.Sample
+	Sample   game.Sample
 	Duration int32
 
 	Position float64 // Scaled x or y value.
@@ -37,7 +37,7 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 		Time:   int32(f.Time),
 		Type:   Normal,
 		Key:    f.Column(keyCount),
-		Sample: base.NewSample(f),
+		Sample: game.NewSample(f),
 	}
 	if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
 		n.Type = Head
@@ -46,7 +46,7 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 			Time: n.Time + n.Duration,
 			Type: Tail,
 			Key:  n.Key,
-			// Sample: base.Sample{}, // Tail has no sample sound.
+			// Sample: game.Sample{}, // Tail has no sample sound.
 			// Duration: n.Duration, // Todo: 0 or n.Duration?
 		}
 		ns = append(ns, n, n2)
@@ -56,7 +56,7 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 	return ns
 }
 
-func NewNotes(f any, dys base.Dynamics, keyCount int) (ns []Note) {
+func NewNotes(f any, dys game.Dynamics, keyCount int) (ns []Note) {
 	switch f := f.(type) {
 	case *osu.Format:
 		ns = make([]Note, 0, len(f.HitObjects)*2)
@@ -174,7 +174,7 @@ type NotesComp struct {
 	colors    []color.NRGBA
 }
 
-func NewNotesComp(res NotesRes, opts NotesOpts, ns []Note, dys base.Dynamics) (comp NotesComp) {
+func NewNotesComp(res NotesRes, opts NotesOpts, ns []Note, dys game.Dynamics) (comp NotesComp) {
 	comp.notes = ns
 	comp.applyTailOffset(opts.TailOffset, dys)
 
@@ -215,7 +215,7 @@ func NewNotesComp(res NotesRes, opts NotesOpts, ns []Note, dys base.Dynamics) (c
 	return
 }
 
-func (comp *NotesComp) applyTailOffset(duration int32, dys base.Dynamics) {
+func (comp *NotesComp) applyTailOffset(duration int32, dys game.Dynamics) {
 	// dys.Index = 0
 	for i, n := range comp.notes {
 		if n.Type != Tail {
@@ -261,7 +261,7 @@ func (comp *NotesComp) Update(cursor float64, holds []bool) {
 }
 
 func (comp *NotesComp) updatePosition(cursor float64) {
-	lowerBound := cursor - base.ScreenH
+	lowerBound := cursor - game.ScreenH
 	for k, idx := range comp.lowests {
 		var n Note
 		for i := idx; i < len(comp.notes); i = n.Next {
@@ -284,7 +284,7 @@ func (comp *NotesComp) updatePosition(cursor float64) {
 
 // Notes are fixed. Lane itself moves, all notes move as same amount.
 func (comp NotesComp) Draw(dst draws.Image) {
-	upperBound := comp.cursor + base.ScreenH
+	upperBound := comp.cursor + game.ScreenH
 	for k, lowest := range comp.lowests {
 		idxs := []int{}
 		var n Note

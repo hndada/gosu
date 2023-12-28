@@ -1,13 +1,13 @@
 package piano
 
-import base "github.com/hndada/gosu/game"
+import "github.com/hndada/gosu/game"
 
 // Objective: manage UI components with each own struct.
 // Options is for passing from game to mode.
 // A field is plural form if is drawn per key.
 type Options struct {
-	// Music    base.MusicOpts
-	// Sound    base.SoundOpts
+	// Music    game.MusicOpts
+	// Sound    game.SoundOpts
 	Key        KeysOpts
 	Field      FieldOpts
 	Hint       HintOpts
@@ -18,8 +18,8 @@ type Options struct {
 	HitLights  HitLightsOpts
 	HoldLights HoldLightsOpts
 	Judgment   JudgmentOpts
-	Combo      base.ComboOpts
-	Score      base.ScoreOpts
+	Combo      game.ComboOpts
+	Score      game.ScoreOpts
 }
 
 // NewXxxComponent() requires multiple arguments.
