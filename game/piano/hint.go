@@ -6,25 +6,25 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-type HintRes struct {
+type HintResources struct {
 	img draws.Image
 }
 
-func (res *HintRes) Load(fsys fs.FS) {
+func (res *HintResources) Load(fsys fs.FS) {
 	fname := "piano/stage/hint.png"
 	res.img = draws.NewImageFromFile(fsys, fname)
 	return
 }
 
-type HintOpts struct {
+type HintOptions struct {
 	w float64
 	H float64
 	x float64
 	y float64 // center bottom
 }
 
-func NewHintOpts(stage StageOpts) HintOpts {
-	return HintOpts{
+func NewHintOptions(stage StageOptions) HintOptions {
+	return HintOptions{
 		w: stage.w,
 		H: 24,
 		x: stage.X,
@@ -32,18 +32,18 @@ func NewHintOpts(stage StageOpts) HintOpts {
 	}
 }
 
-type HintComp struct {
+type HintComponent struct {
 	sprite draws.Sprite
 }
 
-func NewHintComp(res HintRes, opts HintOpts) (comp HintComp) {
+func NewHintComponent(res HintResources, opts HintOptions) (cmp HintComponent) {
 	s := draws.NewSprite(res.img)
 	s.SetSize(opts.w, opts.H)
 	s.Locate(opts.x, opts.y, draws.CenterBottom)
-	comp.sprite = s
+	cmp.sprite = s
 	return
 }
 
-func (comp HintComp) Draw(dst draws.Image) {
-	comp.sprite.Draw(dst)
+func (cmp HintComponent) Draw(dst draws.Image) {
+	cmp.sprite.Draw(dst)
 }

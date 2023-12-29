@@ -6,24 +6,24 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-type KeysHoldLightRes struct {
+type KeysHoldLightResources struct {
 	frames draws.Frames
 }
 
-func (br *KeysHoldLightRes) Load(fsys fs.FS) {
+func (br *KeysHoldLightResources) Load(fsys fs.FS) {
 	fname := "piano/lighting/hold.png"
 	br.frames = draws.NewFramesFromFile(fsys, fname)
 }
 
-type KeysHoldLightOpts struct {
+type KeysHoldLightOptions struct {
 	Scale   float64
 	kx      []float64
 	y       float64
 	Opacity float32
 }
 
-func NewKeysHoldLightOpts(keys KeysOpts) KeysHoldLightOpts {
-	return KeysHoldLightOpts{
+func NewKeysHoldLightOptions(keys KeysOptions) KeysHoldLightOptions {
+	return KeysHoldLightOptions{
 		Scale:   1.0,
 		kx:      keys.kx,
 		y:       keys.y,
@@ -33,36 +33,36 @@ func NewKeysHoldLightOpts(keys KeysOpts) KeysHoldLightOpts {
 
 // field name: sprites, anims
 // local name: s, a
-type KeysHoldLightComp struct {
+type KeysHoldLightComponent struct {
 	anims       []draws.Animation
 	keysHolding []bool
 }
 
-func NewKeysHoldLightComp(res KeysHoldLightRes, opts KeysHoldLightOpts) (comp KeysHoldLightComp) {
+func NewKeysHoldLightComponent(res KeysHoldLightResources, opts KeysHoldLightOptions) (cmp KeysHoldLightComponent) {
 	keyCount := len(opts.kx)
-	comp.anims = make([]draws.Animation, keyCount)
-	for k := range comp.anims {
+	cmp.anims = make([]draws.Animation, keyCount)
+	for k := range cmp.anims {
 		a := draws.NewAnimation(res.frames, 300)
 		a.MultiplyScale(opts.Scale)
 		a.Locate(opts.kx[k], opts.y, draws.CenterBottom)
 		a.ColorScale.Scale(1, 1, 1, opts.Opacity)
-		comp.anims[k] = a
+		cmp.anims[k] = a
 	}
 	return
 }
 
-func (comp *KeysHoldLightComp) Update(kh []bool) {
-	olds := comp.keysHolding
+func (cmp *KeysHoldLightComponent) Update(kh []bool) {
+	olds := cmp.keysHolding
 	for k, new := range kh {
 		if new && !olds[k] {
-			comp.anims[k].Reset()
+			cmp.anims[k].Reset()
 		}
 	}
-	comp.keysHolding = kh
+	cmp.keysHolding = kh
 }
 
-func (comp KeysHoldLightComp) Draw(dst draws.Image) {
-	for _, a := range comp.anims {
+func (cmp KeysHoldLightComponent) Draw(dst draws.Image) {
+	for _, a := range cmp.anims {
 		a.Draw(dst)
 	}
 }

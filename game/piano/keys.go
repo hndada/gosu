@@ -17,7 +17,7 @@ const (
 	ScratchRight
 )
 
-type KeysOpts struct {
+type KeysOptions struct {
 	keyCount  int
 	Mappings  map[int][]string
 	Orders    map[int][]KeyKind
@@ -28,8 +28,8 @@ type KeysOpts struct {
 	y         float64   // center bottom
 }
 
-func NewKeysOpts(stage StageOpts) KeysOpts {
-	opts := KeysOpts{
+func NewKeysOptions(stage StageOptions) KeysOptions {
+	opts := KeysOptions{
 		keyCount: stage.keyCount,
 		Mappings: map[int][]string{
 			1:  {"Space"},
@@ -72,7 +72,7 @@ func NewKeysOpts(stage StageOpts) KeysOpts {
 }
 
 // I'm personally proud of this code.
-func (opts KeysOpts) Order() []KeyKind {
+func (opts KeysOptions) Order() []KeyKind {
 	order := opts.Orders[opts.keyCount]
 	order_1 := opts.Orders[opts.keyCount-1]
 
@@ -87,7 +87,7 @@ func (opts KeysOpts) Order() []KeyKind {
 	return nil
 }
 
-func (opts KeysOpts) newKeysW(stage StageOpts) []float64 {
+func (opts KeysOptions) newKeysW(stage StageOptions) []float64 {
 	kw := make([]float64, opts.keyCount)
 	for k, kind := range opts.Order() {
 		kw[k] = opts.KindWs[kind]
@@ -107,7 +107,7 @@ func (opts KeysOpts) newKeysW(stage StageOpts) []float64 {
 }
 
 // centered x positions
-func (opts *KeysOpts) newKeysX(stage StageOpts, kw []float64) []float64 {
+func (opts *KeysOptions) newKeysX(stage StageOptions, kw []float64) []float64 {
 	kx := make([]float64, opts.keyCount)
 	x := stage.X - stage.w/2
 	for k, w := range kw {

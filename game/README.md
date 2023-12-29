@@ -1,9 +1,16 @@
 # Naming Convention
 * Prefix keys- is put when the type is a slice with the length of keyCount.
 * Prefix k- for local variables of keys-.
+    * Put suffix 'List' when suffix 's' is not available.
+
 * Index variable ends with -i suffix.
 * It is fine to put plural suffix (-s) in the middle if putting the suffix at the last is not proper (e.g., adjective)
 * Suffix -t for local variable name of -Type
+
+* Avoid using abbreviation in struct name and field name 
+unless the name is explicitly supposed to be expressed in abbreviated form.  
+
+* Local variables are encouraged to be written in abbreviated form, which is up to 3 letters. 
 
 # Keyword
 ratio: two quantities with the same units

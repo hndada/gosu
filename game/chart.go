@@ -45,8 +45,8 @@ func Hash(r io.Reader) ([16]byte, error) {
 // Changing ChartHeader's data will not affect integrity of the chart.
 // Play mode-specific fields are located to each Chart struct.
 type ChartHeader struct {
-	SetID int32 // Compatibility for osu.
-	ID    int32 // Compatibility for osu.
+	SetID int32 // Compatibility with osu.
+	ID    int32 // Compatibility with osu.
 
 	MusicName     string
 	MusicUnicode  string

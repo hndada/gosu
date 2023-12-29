@@ -34,26 +34,26 @@ func NewBars(dys game.Dynamics) []Bar {
 
 // Drum and Piano modes have different bar drawing methods.
 // Hence, this method is not defined in mode.go.
-type BarsRes struct {
+type BarsResources struct {
 	img draws.Image
 }
 
-func (res *BarsRes) Load(fsys fs.FS) {
+func (res *BarsResources) Load(fsys fs.FS) {
 	// Uses generated image.
 	img := draws.NewImage(1, 1)
 	img.Fill(color.White)
 	res.img = img
 }
 
-type BarsOpts struct {
+type BarsOptions struct {
 	w float64
 	H float64
 	x float64
 	y float64 // center bottom
 }
 
-func NewBarsOpts(stage StageOpts) BarsOpts {
-	return BarsOpts{
+func NewBarsOptions(stage StageOptions) BarsOptions {
+	return BarsOptions{
 		w: stage.w,
 		H: 1,
 		x: stage.X,
@@ -61,20 +61,20 @@ func NewBarsOpts(stage StageOpts) BarsOpts {
 	}
 }
 
-type BarsComp struct {
+type BarsComponent struct {
 	bars   []Bar
 	cursor float64
 	lowest int
 	sprite draws.Sprite
 }
 
-func NewBarComp(res BarsRes, opts BarsOpts, bars []Bar) (comp BarsComp) {
-	comp.bars = bars
+func NewBarComponent(res BarsResources, opts BarsOptions, bars []Bar) (cmp BarsComponent) {
+	cmp.bars = bars
 
 	s := draws.NewSprite(res.img)
 	s.SetSize(opts.w, opts.H)
 	s.Locate(opts.x, opts.y, draws.CenterBottom)
-	comp.sprite = s
+	cmp.sprite = s
 	return
 }
 
@@ -84,30 +84,30 @@ func NewBarComp(res BarsRes, opts BarsOpts, bars []Bar) (comp BarsComp) {
 // on the screen, updateHighestBar() actually does nothing, which is still
 // fine because that makes some unnecessary bars are drawn.
 // The same concept also applies to notes.
-func (comp *BarsComp) Update(cursor float64) {
-	comp.cursor = cursor
+func (cmp *BarsComponent) Update(cursor float64) {
+	cmp.cursor = cursor
 	lowerBound := cursor - game.ScreenH
-	for i := comp.lowest; i < len(comp.bars); i++ {
-		b := comp.bars[i]
+	for i := cmp.lowest; i < len(cmp.bars); i++ {
+		b := cmp.bars[i]
 		if b.position > lowerBound {
 			break
 		}
 		// index should be updated outside of if block.
-		comp.lowest = i
+		cmp.lowest = i
 	}
 }
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
-func (comp BarsComp) Draw(dst draws.Image) {
-	upperBound := comp.cursor + game.ScreenH
-	for i := comp.lowest; i < len(comp.bars); i++ {
-		b := comp.bars[i]
+func (cmp BarsComponent) Draw(dst draws.Image) {
+	upperBound := cmp.cursor + game.ScreenH
+	for i := cmp.lowest; i < len(cmp.bars); i++ {
+		b := cmp.bars[i]
 		if b.position > upperBound {
 			break
 		}
 
-		s := comp.sprite
-		pos := b.position - comp.cursor
+		s := cmp.sprite
+		pos := b.position - cmp.cursor
 		s.Move(0, -pos)
 		s.Draw(dst)
 	}

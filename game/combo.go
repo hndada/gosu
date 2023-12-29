@@ -7,18 +7,18 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-type ComboRes struct {
+type ComboResources struct {
 	imgs [10]draws.Image
 }
 
-func (res *ComboRes) Load(fsys fs.FS) {
+func (res *ComboResources) Load(fsys fs.FS) {
 	for i := 0; i < 10; i++ {
 		fname := fmt.Sprintf("combo/%d.png", i)
 		res.imgs[i] = draws.NewImageFromFile(fsys, fname)
 	}
 }
 
-type ComboOpts struct {
+type ComboOptions struct {
 	Scale    float64
 	X        float64
 	Y        float64
@@ -27,7 +27,7 @@ type ComboOpts struct {
 	Persist  bool
 }
 
-type ComboComp struct {
+type ComboComponent struct {
 	Combo     *int
 	lastCombo int     // to reset tween
 	w         float64 // fixed width
@@ -35,16 +35,16 @@ type ComboComp struct {
 	tween     draws.Tween
 }
 
-func NewComboComp(res ComboRes, opts ComboOpts) (comp ComboComp) {
+func NewComboComponent(res ComboResources, opts ComboOptions) (cmp ComboComponent) {
 	for i := 0; i < 10; i++ {
 		sprite := draws.NewSprite(res.imgs[i])
 		sprite.MultiplyScale(opts.Scale)
 		sprite.Locate(opts.X, opts.Y, draws.CenterMiddle)
-		comp.sprites[i] = sprite
+		cmp.sprites[i] = sprite
 	}
 	// Size of the whole image is 0.5w + (n-1)(w+gap) + 0.5w.
 	// Since sprites are already at anchor, no need to care of two 0.5w.
-	comp.w = comp.sprites[0].W() + opts.DigitGap
+	cmp.w = cmp.sprites[0].W() + opts.DigitGap
 
 	tw := draws.Tween{}
 	tw.Add(0, opts.Bounce, 200, draws.EaseLinear)
@@ -56,34 +56,34 @@ func NewComboComp(res ComboRes, opts ComboOpts) (comp ComboComp) {
 	return
 }
 
-func (comp *ComboComp) Update() {
-	if comp.lastCombo != *comp.Combo {
-		comp.lastCombo = *comp.Combo
-		comp.tween.Reset()
+func (cmp *ComboComponent) Update() {
+	if cmp.lastCombo != *cmp.Combo {
+		cmp.lastCombo = *cmp.Combo
+		cmp.tween.Reset()
 	}
 }
 
 // Each number has different width. Number 0's width is used as standard.
 // ComboDrawer's Draw draws each number at constant x regardless of their widths.
-func (comp ComboComp) Draw(dst draws.Image) {
-	if comp.tween.IsFinished() {
+func (cmp ComboComponent) Draw(dst draws.Image) {
+	if cmp.tween.IsFinished() {
 		return
 	}
-	if *comp.Combo == 0 {
+	if *cmp.Combo == 0 {
 		return
 	}
 
 	vs := make([]int, 0)
-	for v := *comp.Combo; v > 0; v /= 10 {
+	for v := *cmp.Combo; v > 0; v /= 10 {
 		vs = append(vs, v%10) // Little endian.
 	}
 
-	tx := float64(len(vs)-1) * comp.w / 2
+	tx := float64(len(vs)-1) * cmp.w / 2
 	for _, v := range vs {
-		s := comp.sprites[v]
-		ty := comp.tween.Current() * s.H()
+		s := cmp.sprites[v]
+		ty := cmp.tween.Current() * s.H()
 		s.Move(tx, ty)
 		s.Draw(dst)
-		tx -= comp.w
+		tx -= cmp.w
 	}
 }

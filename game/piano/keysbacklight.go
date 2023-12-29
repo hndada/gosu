@@ -9,16 +9,16 @@ import (
 	"github.com/hndada/gosu/times"
 )
 
-type KeysBacklightRes struct {
+type KeysBacklightResources struct {
 	img draws.Image
 }
 
-func (br *KeysBacklightRes) Load(fsys fs.FS) {
+func (br *KeysBacklightResources) Load(fsys fs.FS) {
 	fname := "piano/key/backlight.png"
 	br.img = draws.NewImageFromFile(fsys, fname)
 }
 
-type KeysBacklightOpts struct {
+type KeysBacklightOptions struct {
 	keyCount int
 	kw       []float64
 	kx       []float64
@@ -27,8 +27,8 @@ type KeysBacklightOpts struct {
 	Colors   [4]color.NRGBA
 }
 
-func NewKeysBacklightOpts(keys KeysOpts) KeysBacklightOpts {
-	return KeysBacklightOpts{
+func NewKeysBacklightOptions(keys KeysOptions) KeysBacklightOptions {
+	return KeysBacklightOptions{
 		keyCount: keys.keyCount,
 		kw:       keys.kw,
 		kx:       keys.kx,
@@ -43,44 +43,44 @@ func NewKeysBacklightOpts(keys KeysOpts) KeysBacklightOpts {
 	}
 }
 
-type KeysBacklightComp struct {
+type KeysBacklightComponent struct {
 	keysPressed []bool
 	sprites     []draws.Sprite
 	startTimes  []time.Time
 	minDuration time.Duration
 }
 
-func NewKeysBacklightComp(res KeysBacklightRes, opts KeysBacklightOpts) (comp KeysBacklightComp) {
-	comp.sprites = make([]draws.Sprite, opts.keyCount)
-	for k := range comp.sprites {
+func NewKeysBacklightComponent(res KeysBacklightResources, opts KeysBacklightOptions) (cmp KeysBacklightComponent) {
+	cmp.sprites = make([]draws.Sprite, opts.keyCount)
+	for k := range cmp.sprites {
 		s := draws.NewSprite(res.img)
 		s.MultiplyScale(opts.kw[k] / s.W())
 		s.Locate(opts.kx[k], opts.y, draws.CenterBottom)
 		s.ColorScale.ScaleWithColor(opts.Colors[opts.order[k]])
-		comp.sprites[k] = s
+		cmp.sprites[k] = s
 	}
-	comp.startTimes = make([]time.Time, opts.keyCount)
-	comp.minDuration = 30 * time.Millisecond
+	cmp.startTimes = make([]time.Time, opts.keyCount)
+	cmp.minDuration = 30 * time.Millisecond
 	return
 }
 
-func (comp *KeysBacklightComp) Update(kp []bool) {
-	comp.keysPressed = kp
+func (cmp *KeysBacklightComponent) Update(kp []bool) {
+	cmp.keysPressed = kp
 	for k, down := range kp {
 		if down {
-			comp.startTimes[k] = times.Now()
+			cmp.startTimes[k] = times.Now()
 		}
 	}
 }
 
 // Draw backlights for a while even if the press is brief.
-func (comp KeysBacklightComp) Draw(dst draws.Image) {
-	elapsed := times.Since(comp.startTimes[0])
-	for k, p := range comp.keysPressed {
-		if p || elapsed <= comp.minDuration {
-			comp.sprites[k].Draw(dst)
+func (cmp KeysBacklightComponent) Draw(dst draws.Image) {
+	elapsed := times.Since(cmp.startTimes[0])
+	for k, p := range cmp.keysPressed {
+		if p || elapsed <= cmp.minDuration {
+			cmp.sprites[k].Draw(dst)
 		} else {
-			comp.sprites[k].Draw(dst)
+			cmp.sprites[k].Draw(dst)
 		}
 	}
 }

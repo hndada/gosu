@@ -3,10 +3,10 @@ package piano
 import "github.com/hndada/gosu/game"
 
 // e.g., Judgment counts
-type ScorerRes struct {
+type ScorerResources struct {
 }
 
-type ScorerOpts struct {
+type ScorerOptions struct {
 	keyCount int
 }
 
@@ -46,7 +46,7 @@ type Scorer struct {
 	Score          float64
 }
 
-func NewScorer(res ScorerRes, opts ScorerOpts, notes []Note, js [4]game.Judgment) (s Scorer) {
+func NewScorer(res ScorerResources, opts ScorerOptions, notes []Note, js [4]game.Judgment) (s Scorer) {
 	s.keyCount = opts.keyCount
 	s.notes = notes
 	s.keysFocusNoteIndex = s.newKeysFocusNoteIndex(opts.keyCount, notes)

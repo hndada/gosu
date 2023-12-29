@@ -7,42 +7,42 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
-type FieldRes struct {
+type FieldResources struct {
 	img draws.Image
 }
 
-func (res *FieldRes) Load(fsys fs.FS) {
+func (res *FieldResources) Load(fsys fs.FS) {
 	// Uses generated image.
 	res.img = draws.NewImage(game.ScreenW, game.ScreenH)
 }
 
-type FieldOpts struct {
+type FieldOptions struct {
 	w       float64
 	x       float64
 	Opacity float32
 }
 
-func NewFieldOpts(stage StageOpts) FieldOpts {
-	return FieldOpts{
+func NewFieldOptions(stage StageOptions) FieldOptions {
+	return FieldOptions{
 		w:       stage.w,
 		x:       stage.X,
 		Opacity: 0.8,
 	}
 }
 
-type FieldComp struct {
+type FieldComponent struct {
 	sprite draws.Sprite
 }
 
-func NewFieldComp(res FieldRes, opts FieldOpts) (comp FieldComp) {
+func NewFieldComponent(res FieldResources, opts FieldOptions) (cmp FieldComponent) {
 	s := draws.NewSprite(res.img)
 	s.SetSize(opts.w, game.ScreenH)
 	s.Locate(opts.x, 0, draws.CenterTop)
 	s.ColorScale.Scale(1, 1, 1, opts.Opacity)
-	comp.sprite = s
+	cmp.sprite = s
 	return
 }
 
-func (comp FieldComp) Draw(dst draws.Image) {
-	comp.sprite.Draw(dst)
+func (cmp FieldComponent) Draw(dst draws.Image) {
+	cmp.sprite.Draw(dst)
 }

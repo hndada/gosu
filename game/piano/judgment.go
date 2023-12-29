@@ -8,11 +8,11 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
-type JudgmentRes struct {
+type JudgmentResources struct {
 	framesList [4]draws.Frames
 }
 
-func (res *JudgmentRes) Load(fsys fs.FS) {
+func (res *JudgmentResources) Load(fsys fs.FS) {
 	for i, name := range []string{"kool", "cool", "good", "miss"} {
 		fname := fmt.Sprintf("piano/judgment/%s.png", name)
 		res.framesList[i] = draws.NewFramesFromFile(fsys, fname)
@@ -20,32 +20,32 @@ func (res *JudgmentRes) Load(fsys fs.FS) {
 	return
 }
 
-type JudgmentOpts struct {
+type JudgmentOptions struct {
 	Scale float64
 	x     float64
 	Y     float64
 }
 
-func NewJudgmentOpts(stage StageOpts) JudgmentOpts {
-	return JudgmentOpts{
+func NewJudgmentOptions(stage StageOptions) JudgmentOptions {
+	return JudgmentOptions{
 		Scale: 0.33,
 		x:     stage.w,
 		Y:     0.66 * game.ScreenH,
 	}
 }
 
-type JudgmentComp struct {
+type JudgmentComponent struct {
 	worst int // index of worst judgment
 	anims [4]draws.Animation
 	tween draws.Tween
 }
 
-func NewJudgmentComp(res JudgmentRes, opts JudgmentOpts) (comp JudgmentComp) {
+func NewJudgmentComponent(res JudgmentResources, opts JudgmentOptions) (cmp JudgmentComponent) {
 	for i, frames := range res.framesList {
 		a := draws.NewAnimation(frames, 40)
 		a.MultiplyScale(opts.Scale)
 		a.Locate(opts.x, opts.Y, draws.CenterMiddle)
-		comp.anims[i] = a
+		cmp.anims[i] = a
 	}
 
 	tw := draws.Tween{}
@@ -54,11 +54,11 @@ func NewJudgmentComp(res JudgmentRes, opts JudgmentOpts) (comp JudgmentComp) {
 	tw.Add(1.00, +0.0, 200, draws.EaseLinear)
 	tw.Add(1.00, -0.25, 25, draws.EaseLinear)
 	tw.Finish() // To avoid drawing at the beginning.
-	comp.tween = tw
+	cmp.tween = tw
 	return
 }
 
-func (comp *JudgmentComp) Update(jis []int) {
+func (cmp *JudgmentComponent) Update(jis []int) {
 	worst := blank // -1
 	for _, ji := range jis {
 		if worst < ji {
@@ -66,19 +66,19 @@ func (comp *JudgmentComp) Update(jis []int) {
 		}
 	}
 	if worst >= kool { // 0
-		comp.worst = worst
-		comp.anims[worst].Reset()
-		comp.tween.Reset()
+		cmp.worst = worst
+		cmp.anims[worst].Reset()
+		cmp.tween.Reset()
 	}
 }
 
-func (comp JudgmentComp) Draw(dst draws.Image) {
-	if comp.tween.IsFinished() {
+func (cmp JudgmentComponent) Draw(dst draws.Image) {
+	if cmp.tween.IsFinished() {
 		return
 	}
 	// worstJudgment is guaranteed not to be blank,
 	// hence no panicked by index out of range.
-	a := comp.anims[comp.worst]
-	a.MultiplyScale(comp.tween.Current())
+	a := cmp.anims[cmp.worst]
+	a.MultiplyScale(cmp.tween.Current())
 	a.Draw(dst)
 }

@@ -14,11 +14,11 @@ const (
 	ScorePercent
 )
 
-type ScoreRes struct {
+type ScoreResources struct {
 	imgs [13]draws.Image // numbers with sign (. , %)
 }
 
-func (res *ScoreRes) Load(fsys fs.FS) {
+func (res *ScoreResources) Load(fsys fs.FS) {
 	for i := 0; i < 10; i++ {
 		res.imgs[i] = draws.NewImageFromFile(fsys, fmt.Sprintf("score/%d.png", i))
 	}
@@ -27,19 +27,19 @@ func (res *ScoreRes) Load(fsys fs.FS) {
 	}
 }
 
-type ScoreOpts struct {
+type ScoreOptions struct {
 	Scale    float64
 	DigitGap float64
 }
 
-func NewScoreOpts() ScoreOpts {
-	return ScoreOpts{
+func NewScoreOptions() ScoreOptions {
+	return ScoreOptions{
 		Scale:    0.65,
 		DigitGap: 0,
 	}
 }
 
-type ScoreComp struct {
+type ScoreComponent struct {
 	Score     float64
 	lastScore float64 // to reset tween
 	w         float64 // Score's width is fixed.
@@ -49,7 +49,7 @@ type ScoreComp struct {
 }
 
 // Name of a function which returns closure ends with "-er".
-func NewScoreComp(res ScoreRes, opts ScoreOpts) (comp ScoreComp) {
+func NewScoreComponent(res ScoreResources, opts ScoreOptions) (cmp ScoreComponent) {
 	// h0 is the height of number 0. Other numbers are located at h0 - h.
 	// Score needs to set same base line, since
 	// each number might have different height.
@@ -58,36 +58,36 @@ func NewScoreComp(res ScoreRes, opts ScoreOpts) (comp ScoreComp) {
 		s0 := draws.NewSprite(res.imgs[0])
 		s0.MultiplyScale(opts.Scale)
 		h0 = s0.H()
-		comp.w = s0.W() + opts.DigitGap
+		cmp.w = s0.W() + opts.DigitGap
 	}
 
 	for i, img := range res.imgs {
 		sprite := draws.NewSprite(img)
 		sprite.MultiplyScale(opts.Scale)
 		sprite.Locate(ScreenW, h0-sprite.H(), draws.RightTop)
-		comp.sprites[i] = sprite
+		cmp.sprites[i] = sprite
 	}
 
-	comp.easing = draws.EaseOutExponential
-	comp.setTween()
+	cmp.easing = draws.EaseOutExponential
+	cmp.setTween()
 	return
 }
 
-func (comp *ScoreComp) setTween() {
-	begin := comp.tween.Current()
-	change := comp.Score - begin
-	comp.tween = draws.NewTween(begin, change, 400, comp.easing)
+func (cmp *ScoreComponent) setTween() {
+	begin := cmp.tween.Current()
+	change := cmp.Score - begin
+	cmp.tween = draws.NewTween(begin, change, 400, cmp.easing)
 }
 
-func (comp *ScoreComp) Update() {
-	if comp.lastScore != comp.Score {
-		comp.lastScore = comp.Score
-		comp.setTween()
+func (cmp *ScoreComponent) Update() {
+	if cmp.lastScore != cmp.Score {
+		cmp.lastScore = cmp.Score
+		cmp.setTween()
 	}
 }
 
-func (comp ScoreComp) Draw(screen draws.Image) {
-	tweenScore := int(math.Ceil(comp.tween.Current()))
+func (cmp ScoreComponent) Draw(screen draws.Image) {
+	tweenScore := int(math.Ceil(cmp.tween.Current()))
 	digits := make([]int, 0)
 	for v := tweenScore; v > 0; v /= 10 {
 		digits = append(digits, v%10) // Little endian.
@@ -101,11 +101,11 @@ func (comp ScoreComp) Draw(screen draws.Image) {
 
 	var tx float64
 	for _, d := range digits {
-		s := comp.sprites[d]
+		s := cmp.sprites[d]
 		s.Move(tx, 0)
 		// Need to set at center since anchor is RightTop.
-		s.Move(-comp.w/2+s.W()/2, 0)
+		s.Move(-cmp.w/2+s.W()/2, 0)
 		s.Draw(screen)
-		tx -= comp.w
+		tx -= cmp.w
 	}
 }

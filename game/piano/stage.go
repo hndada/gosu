@@ -4,7 +4,7 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
-type StageOpts struct {
+type StageOptions struct {
 	keyCount int
 	Ws       map[int]float64
 	w        float64
@@ -12,8 +12,8 @@ type StageOpts struct {
 	X        float64
 }
 
-func NewStageOpts(keyCount int) StageOpts {
-	opts := StageOpts{
+func NewStageOptions(keyCount int) StageOptions {
+	opts := StageOptions{
 		keyCount: keyCount,
 		Ws: map[int]float64{
 			1:  240,

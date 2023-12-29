@@ -9,7 +9,7 @@ type (
 	// Em    float64 // A unit of length in typography.
 )
 
-func (opts ScreenOpts) Px(rv any) draws.Px {
+func (opts ScreenOptions) Px(rv any) draws.Px {
 	switch rv := rv.(type) {
 	case draws.Px:
 		return rv

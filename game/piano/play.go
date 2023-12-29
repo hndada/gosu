@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
 )
 
-// Todo: game.ErrorMeterComp
+// Todo: game.ErrorMeterComponent
 // Todo: FlowPoint (kind of HP)
 type Play struct {
 	sampleBuffer []game.Sample
@@ -17,21 +16,8 @@ type Play struct {
 	dynamics     game.Dynamics
 	cursor       float64
 
-	keyCount int
-	stage    StageOpts
-	key      KeysOpts
-
-	field      FieldComp
-	bars       BarsComp
-	hint       HintComp
-	notes      NotesComp
-	keyButtons KeysButtonComp
-	backlights KeysBacklightComp
-	hitLights  KeysHitLightComp
-	holdLights KeysHoldLightComp
-	judgment   JudgmentComp
-	combo      game.ComboComp
-	score      game.ScoreComp
+	Options
+	Components
 }
 
 // Just assigning slice will shallow copy.
@@ -48,7 +34,7 @@ func NewPlay(res Resources, opts Options, format any) (s Play, err error) {
 // All components in Play use unified time.
 func (s *Play) Update(now int32, kas []game.KeyboardAction) any {
 	for _, ka := range kas {
-		kji := make([]int, s.keyCount)
+		kji := make([]int, s.Options.KeyCount)
 		s.Scorer.markKeysUntouchedNote(ka.Time, kji)
 		kn := s.Scorer.keysFocusNote()
 		s.addKeysSampleToBuffer(kn, ka)
@@ -71,7 +57,7 @@ func (s Play) addKeysSampleToBuffer(kn []Note, ka game.KeyboardAction) {
 }
 
 func (s Play) keysLongNoteHolding(kn []Note, ka game.KeyboardAction) []bool {
-	klnh := make([]bool, s.keyCount)
+	klnh := make([]bool, s.Options.KeyCount)
 	kh := ka.KeysHolding()
 	for k, n := range kn {
 		if n.valid && n.Type == Tail && kh[k] {
@@ -97,7 +83,7 @@ func (s *Play) SetSpeedScale(new float64) {
 	for i := range ds {
 		ds[i].Position *= scale
 	}
-	ns := s.notes.notes
+	ns := s.keysNotes.notes
 	for i := range ns {
 		ns[i].position *= scale
 	}
@@ -105,20 +91,6 @@ func (s *Play) SetSpeedScale(new float64) {
 	for i := range bs {
 		bs[i].position *= scale
 	}
-}
-
-func (s Play) Draw(dst draws.Image) {
-	s.field.Draw(dst)
-	s.bars.Draw(dst)
-	s.hint.Draw(dst)
-	s.notes.Draw(dst)
-	s.keyButtons.Draw(dst)
-	s.backlights.Draw(dst)
-	s.hitLights.Draw(dst)
-	s.holdLights.Draw(dst)
-	s.judgment.Draw(dst)
-	s.combo.Draw(dst)
-	s.score.Draw(dst)
 }
 
 func (s Play) DebugString() string {

@@ -2,8 +2,8 @@ package piano
 
 import "github.com/hndada/gosu/game"
 
-func NewComboOpts(stage StageOpts) game.ComboOpts {
-	opts := game.ComboOpts{
+func NewComboOptions(stage StageOptions) game.ComboOptions {
+	opts := game.ComboOptions{
 		Scale:    0.75,
 		X:        stage.X,
 		Y:        0.40,
