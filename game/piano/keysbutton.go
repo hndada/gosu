@@ -10,18 +10,18 @@ import (
 	"github.com/hndada/gosu/times"
 )
 
-type KeyButtonsRes struct {
+type KeysButtonRes struct {
 	imgs [2]draws.Image
 }
 
-func (kr *KeyButtonsRes) Load(fsys fs.FS) {
+func (kr *KeysButtonRes) Load(fsys fs.FS) {
 	for i, name := range []string{"up", "down"} {
 		fname := fmt.Sprintf("piano/key/%s.png", name)
 		kr.imgs[i] = draws.NewImageFromFile(fsys, fname)
 	}
 }
 
-type KeyButtonsOpts struct {
+type KeysButtonOpts struct {
 	keyCount int
 	kw       []float64
 	h        float64
@@ -29,8 +29,8 @@ type KeyButtonsOpts struct {
 	y        float64 // center top
 }
 
-func NewKeyButtonsOpts(keys KeysOpts) KeyButtonsOpts {
-	return KeyButtonsOpts{
+func NewKeysButtonOpts(keys KeysOpts) KeysButtonOpts {
+	return KeysButtonOpts{
 		keyCount: keys.keyCount,
 		kw:       keys.kw,
 		h:        game.ScreenH - keys.y,
@@ -40,14 +40,14 @@ func NewKeyButtonsOpts(keys KeysOpts) KeyButtonsOpts {
 }
 
 // Put suffix 'List' when suffix 's' is not available.
-type KeyButtonsComp struct {
+type KeysButtonComp struct {
 	pressedList []bool
 	spritesList [][2]draws.Sprite
 	startTimes  []time.Time
 	minDuration time.Duration
 }
 
-func NewKeyButtonsComp(res KeyButtonsRes, opts KeyButtonsOpts) (comp KeyButtonsComp) {
+func NewKeysButtonComp(res KeysButtonRes, opts KeysButtonOpts) (comp KeysButtonComp) {
 	comp.spritesList = make([][2]draws.Sprite, opts.keyCount)
 	for k := range comp.spritesList {
 		for i, img := range res.imgs {
@@ -62,7 +62,7 @@ func NewKeyButtonsComp(res KeyButtonsRes, opts KeyButtonsOpts) (comp KeyButtonsC
 	return
 }
 
-func (comp *KeyButtonsComp) Update(pressedList []bool) {
+func (comp *KeysButtonComp) Update(pressedList []bool) {
 	comp.pressedList = pressedList
 	for k, pressed := range pressedList {
 		if pressed {
@@ -72,7 +72,7 @@ func (comp *KeyButtonsComp) Update(pressedList []bool) {
 }
 
 // Draw key-down buttons for a while even if the press is brief.
-func (comp KeyButtonsComp) Draw(dst draws.Image) {
+func (comp KeysButtonComp) Draw(dst draws.Image) {
 	const (
 		up   = 0
 		down = 1

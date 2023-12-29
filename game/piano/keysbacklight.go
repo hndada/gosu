@@ -9,16 +9,16 @@ import (
 	"github.com/hndada/gosu/times"
 )
 
-type BacklightsRes struct {
+type KeysBacklightRes struct {
 	img draws.Image
 }
 
-func (br *BacklightsRes) Load(fsys fs.FS) {
+func (br *KeysBacklightRes) Load(fsys fs.FS) {
 	fname := "piano/key/backlight.png"
 	br.img = draws.NewImageFromFile(fsys, fname)
 }
 
-type BacklightsOpts struct {
+type KeysBacklightOpts struct {
 	keyCount int
 	kw       []float64
 	kx       []float64
@@ -27,8 +27,8 @@ type BacklightsOpts struct {
 	Colors   [4]color.NRGBA
 }
 
-func NewBacklightsOpts(keys KeysOpts) BacklightsOpts {
-	return BacklightsOpts{
+func NewKeysBacklightOpts(keys KeysOpts) KeysBacklightOpts {
+	return KeysBacklightOpts{
 		keyCount: keys.keyCount,
 		kw:       keys.kw,
 		kx:       keys.kx,
@@ -43,14 +43,14 @@ func NewBacklightsOpts(keys KeysOpts) BacklightsOpts {
 	}
 }
 
-type BacklightsComp struct {
+type KeysBacklightComp struct {
 	keysPressed []bool
 	sprites     []draws.Sprite
 	startTimes  []time.Time
 	minDuration time.Duration
 }
 
-func NewBacklightsComp(res BacklightsRes, opts BacklightsOpts) (comp BacklightsComp) {
+func NewKeysBacklightComp(res KeysBacklightRes, opts KeysBacklightOpts) (comp KeysBacklightComp) {
 	comp.sprites = make([]draws.Sprite, opts.keyCount)
 	for k := range comp.sprites {
 		s := draws.NewSprite(res.img)
@@ -64,7 +64,7 @@ func NewBacklightsComp(res BacklightsRes, opts BacklightsOpts) (comp BacklightsC
 	return
 }
 
-func (comp *BacklightsComp) Update(kp []bool) {
+func (comp *KeysBacklightComp) Update(kp []bool) {
 	comp.keysPressed = kp
 	for k, down := range kp {
 		if down {
@@ -74,7 +74,7 @@ func (comp *BacklightsComp) Update(kp []bool) {
 }
 
 // Draw backlights for a while even if the press is brief.
-func (comp BacklightsComp) Draw(dst draws.Image) {
+func (comp KeysBacklightComp) Draw(dst draws.Image) {
 	elapsed := times.Since(comp.startTimes[0])
 	for k, p := range comp.keysPressed {
 		if p || elapsed <= comp.minDuration {

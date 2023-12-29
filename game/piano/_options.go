@@ -8,18 +8,18 @@ import "github.com/hndada/gosu/game"
 type Options struct {
 	// Music    game.MusicOpts
 	// Sound    game.SoundOpts
-	Key        KeysOpts
-	Field      FieldOpts
-	Hint       HintOpts
-	Bar        BarsOpts
-	Notes      NotesOpts
-	KeyButtons KeyButtonsOpts
-	Backlights BacklightsOpts
-	HitLights  HitLightsOpts
-	HoldLights HoldLightsOpts
-	Judgment   JudgmentOpts
-	Combo      game.ComboOpts
-	Score      game.ScoreOpts
+	Key           KeysOpts
+	Field         FieldOpts
+	Hint          HintOpts
+	Bar           BarsOpts
+	Notes         NotesOpts
+	KeysButton    KeysButtonOpts
+	KeysBacklight KeysBacklightOpts
+	KeysHitLight  KeysHitLightOpts
+	KeysHoldLight KeysHoldLightOpts
+	Judgment      JudgmentOpts
+	Combo         game.ComboOpts
+	Score         game.ScoreOpts
 }
 
 // NewXxxComponent() requires multiple arguments.

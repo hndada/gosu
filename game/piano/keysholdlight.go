@@ -6,24 +6,24 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-type HoldLightsRes struct {
+type KeysHoldLightRes struct {
 	frames draws.Frames
 }
 
-func (br *HoldLightsRes) Load(fsys fs.FS) {
+func (br *KeysHoldLightRes) Load(fsys fs.FS) {
 	fname := "piano/lighting/hold.png"
 	br.frames = draws.NewFramesFromFile(fsys, fname)
 }
 
-type HoldLightsOpts struct {
+type KeysHoldLightOpts struct {
 	Scale   float64
 	kx      []float64
 	y       float64
 	Opacity float32
 }
 
-func NewHoldLightsOpts(keys KeysOpts) HoldLightsOpts {
-	return HoldLightsOpts{
+func NewKeysHoldLightOpts(keys KeysOpts) KeysHoldLightOpts {
+	return KeysHoldLightOpts{
 		Scale:   1.0,
 		kx:      keys.kx,
 		y:       keys.y,
@@ -33,12 +33,12 @@ func NewHoldLightsOpts(keys KeysOpts) HoldLightsOpts {
 
 // field name: sprites, anims
 // local name: s, a
-type HoldLightsComp struct {
+type KeysHoldLightComp struct {
 	anims       []draws.Animation
 	keysHolding []bool
 }
 
-func NewHoldLightsComp(res HoldLightsRes, opts HoldLightsOpts) (comp HoldLightsComp) {
+func NewKeysHoldLightComp(res KeysHoldLightRes, opts KeysHoldLightOpts) (comp KeysHoldLightComp) {
 	keyCount := len(opts.kx)
 	comp.anims = make([]draws.Animation, keyCount)
 	for k := range comp.anims {
@@ -51,7 +51,7 @@ func NewHoldLightsComp(res HoldLightsRes, opts HoldLightsOpts) (comp HoldLightsC
 	return
 }
 
-func (comp *HoldLightsComp) Update(kh []bool) {
+func (comp *KeysHoldLightComp) Update(kh []bool) {
 	olds := comp.keysHolding
 	for k, new := range kh {
 		if new && !olds[k] {
@@ -61,7 +61,7 @@ func (comp *HoldLightsComp) Update(kh []bool) {
 	comp.keysHolding = kh
 }
 
-func (comp HoldLightsComp) Draw(dst draws.Image) {
+func (comp KeysHoldLightComp) Draw(dst draws.Image) {
 	for _, a := range comp.anims {
 		a.Draw(dst)
 	}

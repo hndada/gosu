@@ -25,10 +25,10 @@ type Play struct {
 	bars       BarsComp
 	hint       HintComp
 	notes      NotesComp
-	keyButtons KeyButtonsComp
-	backlights BacklightsComp
-	hitLights  HitLightsComp
-	holdLights HoldLightsComp
+	keyButtons KeysButtonComp
+	backlights KeysBacklightComp
+	hitLights  KeysHitLightComp
+	holdLights KeysHoldLightComp
 	judgment   JudgmentComp
 	combo      game.ComboComp
 	score      game.ScoreComp
