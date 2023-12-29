@@ -26,25 +26,20 @@ type JudgmentOpts struct {
 	Y     float64
 }
 
-func NewJudgmentOpts(keys KeysOpts) JudgmentOpts {
+func NewJudgmentOpts(stage StageOpts) JudgmentOpts {
 	return JudgmentOpts{
 		Scale: 0.33,
-		x:     keys.stageW,
+		x:     stage.w,
 		Y:     0.66 * game.ScreenH,
 	}
 }
 
-// Order of fields: logic -> drawing.
-// Try to keep the order of initializing consistent with the order of fields.
 type JudgmentComp struct {
-	// Judgments [4]game.Judgment
 	worst int // index of worst judgment
 	anims [4]draws.Animation
 	tween draws.Tween
 }
 
-// Passing args instead of opts is preferred
-// to avoid using opts' fields directly.
 func NewJudgmentComp(res JudgmentRes, opts JudgmentOpts) (comp JudgmentComp) {
 	for i, frames := range res.framesList {
 		a := draws.NewAnimation(frames, 40)
@@ -58,6 +53,7 @@ func NewJudgmentComp(res JudgmentRes, opts JudgmentOpts) (comp JudgmentComp) {
 	tw.Add(1.15, -0.15, 25, draws.EaseLinear)
 	tw.Add(1.00, +0.0, 200, draws.EaseLinear)
 	tw.Add(1.00, -0.25, 25, draws.EaseLinear)
+	tw.Finish() // To avoid drawing at the beginning.
 	comp.tween = tw
 	return
 }
@@ -69,19 +65,19 @@ func (comp *JudgmentComp) Update(jis []int) {
 			worst = ji
 		}
 	}
-	if worst >= kool {
+	if worst >= kool { // 0
 		comp.worst = worst
 		comp.anims[worst].Reset()
 		comp.tween.Reset()
 	}
 }
 
-// worstJudgment is guaranteed not to be blank,
-// hence no panicked by index out of range.
 func (comp JudgmentComp) Draw(dst draws.Image) {
 	if comp.tween.IsFinished() {
 		return
 	}
+	// worstJudgment is guaranteed not to be blank,
+	// hence no panicked by index out of range.
 	a := comp.anims[comp.worst]
 	a.MultiplyScale(comp.tween.Current())
 	a.Draw(dst)

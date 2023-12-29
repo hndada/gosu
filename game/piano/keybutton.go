@@ -22,18 +22,20 @@ func (kr *KeyButtonsRes) Load(fsys fs.FS) {
 }
 
 type KeyButtonsOpts struct {
-	ws []float64
-	h  float64
-	xs []float64
-	y  float64 // center top
+	keyCount int
+	kw       []float64
+	h        float64
+	kx       []float64
+	y        float64 // center top
 }
 
 func NewKeyButtonsOpts(keys KeysOpts) KeyButtonsOpts {
 	return KeyButtonsOpts{
-		ws: keys.ws,
-		h:  game.ScreenH - keys.BaselineY,
-		xs: keys.xs,
-		y:  keys.BaselineY,
+		keyCount: keys.keyCount,
+		kw:       keys.kw,
+		h:        game.ScreenH - keys.y,
+		kx:       keys.kx,
+		y:        keys.y,
 	}
 }
 
@@ -46,17 +48,16 @@ type KeyButtonsComp struct {
 }
 
 func NewKeyButtonsComp(res KeyButtonsRes, opts KeyButtonsOpts) (comp KeyButtonsComp) {
-	keyCount := len(opts.ws)
-	comp.spritesList = make([][2]draws.Sprite, keyCount)
+	comp.spritesList = make([][2]draws.Sprite, opts.keyCount)
 	for k := range comp.spritesList {
 		for i, img := range res.imgs {
 			s := draws.NewSprite(img)
-			s.SetSize(opts.ws[k], opts.h)
-			s.Locate(opts.xs[k], opts.y, draws.CenterTop)
+			s.SetSize(opts.kw[k], opts.h)
+			s.Locate(opts.kx[k], opts.y, draws.CenterTop)
 			comp.spritesList[k][i] = s
 		}
 	}
-	comp.startTimes = make([]time.Time, keyCount)
+	comp.startTimes = make([]time.Time, opts.keyCount)
 	comp.minDuration = 30 * time.Millisecond
 	return
 }

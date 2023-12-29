@@ -11,14 +11,18 @@ import (
 // Todo: game.ErrorMeterComp
 // Todo: FlowPoint (kind of HP)
 type Play struct {
-	Scorer
-	now      int32
-	dynamics game.Dynamics
-	cursor   float64
-	stage    KeysOpts // Todo: KeysOpts -> StageOpts
+	sampleBuffer []game.Sample
+	Scorer       Scorer
+	now          int32
+	dynamics     game.Dynamics
+	cursor       float64
+
+	keyCount int
+	stage    StageOpts
+	key      KeysOpts
 
 	field      FieldComp
-	bar        BarComp
+	bars       BarsComp
 	hint       HintComp
 	notes      NotesComp
 	keyButtons KeyButtonsComp
@@ -45,22 +49,32 @@ func NewPlay(res Resources, opts Options, format any) (s Play, err error) {
 func (s *Play) Update(now int32, kas []game.KeyboardAction) any {
 	for _, ka := range kas {
 		kji := make([]int, s.keyCount)
-		s.updateKeysFocusNoteIndex(ka.Time, kji)
-		s.addKeysSampleToBuffer(ka)
-		s.tryJudge(ka, kji)
+		s.Scorer.markKeysUntouchedNote(ka.Time, kji)
+		kn := s.Scorer.keysFocusNote()
+		s.addKeysSampleToBuffer(kn, ka)
+		s.Scorer.tryJudge(ka, kji)
 
-		kn, kok := s.keysFocusNote()
-		klnh := s.keysLongNoteHolding(kn, kok, ka)
+		klnh := s.keysLongNoteHolding(kn, ka)
 		s.updateTime(ka.Time)
 	}
 	s.updateTime(now)
 	return nil
 }
 
-func (s Play) keysLongNoteHolding(kn []Note, kok []bool, ka game.KeyboardAction) []bool {
+func (s Play) addKeysSampleToBuffer(kn []Note, ka game.KeyboardAction) {
+	s.sampleBuffer = s.sampleBuffer[:0]
+	for k, n := range kn {
+		if n.valid && ka.KeysAction[k] == game.Hit {
+			s.sampleBuffer = append(s.sampleBuffer, n.Sample)
+		}
+	}
+}
+
+func (s Play) keysLongNoteHolding(kn []Note, ka game.KeyboardAction) []bool {
 	klnh := make([]bool, s.keyCount)
-	for k, hold := range ka.KeysHolding() {
-		if hold && kok[k] && kn[k].Type == Tail {
+	kh := ka.KeysHolding()
+	for k, n := range kn {
+		if n.valid && n.Type == Tail && kh[k] {
 			klnh[k] = true
 		}
 	}
@@ -87,7 +101,7 @@ func (s *Play) SetSpeedScale(new float64) {
 	for i := range ns {
 		ns[i].position *= scale
 	}
-	bs := s.bar.bars
+	bs := s.bars.bars
 	for i := range bs {
 		bs[i].position *= scale
 	}
@@ -95,7 +109,7 @@ func (s *Play) SetSpeedScale(new float64) {
 
 func (s Play) Draw(dst draws.Image) {
 	s.field.Draw(dst)
-	s.bar.Draw(dst)
+	s.bars.Draw(dst)
 	s.hint.Draw(dst)
 	s.notes.Draw(dst)
 	s.keyButtons.Draw(dst)
@@ -113,14 +127,14 @@ func (s Play) DebugString() string {
 
 	f(&b, "Time: %.3fs/%.0fs\n", s.now, s.notes.Span()/1000)
 	f(&b, "\n")
-	f(&b, "Score: %.0f \n", s.Score)
-	f(&b, "Combo: %d\n", s.Combo)
+	f(&b, "Score: %.0f \n", s.Scorer.Score)
+	f(&b, "Combo: %d\n", s.Scorer.Combo)
 	f(&b, "Flow: %.0f/%2d\n", s.Scorer.factors[flow], s.Scorer.maxFactors[flow])
 	f(&b, " Acc: %.0f/%2d\n", s.Scorer.factors[acc], s.Scorer.maxFactors[acc])
-	f(&b, "Judgment counts: %v\n", s.JudgmentCounts)
+	f(&b, "Judgment counts: %v\n", s.Scorer.JudgmentCounts)
 	f(&b, "\n")
 	f(&b, "Speed scale (PageUp/Down): x%.2f (x%.2f)\n", s.dynamics.SpeedScale, s.dynamics.Speed())
-	f(&b, "(Exposure time: %dms)\n", s.dynamics.NoteExposureDuration(s.stage.BaselineY))
+	f(&b, "(Exposure time: %dms)\n", s.dynamics.NoteExposureDuration(s.stage.H))
 	return b.String()
 }
 

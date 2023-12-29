@@ -11,7 +11,7 @@ type Options struct {
 	Key        KeysOpts
 	Field      FieldOpts
 	Hint       HintOpts
-	Bar        BarOpts
+	Bar        BarsOpts
 	Notes      NotesOpts
 	KeyButtons KeyButtonsOpts
 	Backlights BacklightsOpts

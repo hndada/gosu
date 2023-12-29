@@ -25,7 +25,7 @@ const (
 )
 
 type KeysOpts struct {
-	Count     int
+	KeyCount  int
 	StageWs   map[int]float64
 	stageW    float64
 	StageX    float64
@@ -41,7 +41,7 @@ type KeysOpts struct {
 
 func NewKeysOpts() KeysOpts {
 	opts := KeysOpts{
-		Count: 4,
+		KeyCount: 4,
 		Mappings: map[int][]string{
 			1:  {"Space"},
 			2:  {"F", "J"},

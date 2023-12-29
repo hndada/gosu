@@ -23,12 +23,12 @@ type HintOpts struct {
 	y float64 // center bottom
 }
 
-func NewHintOpts(keys KeysOpts) HintOpts {
+func NewHintOpts(stage StageOpts) HintOpts {
 	return HintOpts{
-		w: keys.stageW,
+		w: stage.w,
 		H: 24,
-		x: keys.StageX,
-		y: keys.BaselineY,
+		x: stage.X,
+		y: stage.H,
 	}
 }
 

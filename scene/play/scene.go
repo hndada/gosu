@@ -37,6 +37,7 @@ type Scene struct {
 	play play
 }
 
+// func NewScene(res, opts, fsys, name)
 func NewScene(fsys fs.FS, name string) (s Scene, err error) {
 	format, hash, err := game.LoadChartFile(fsys, name)
 	if err != nil {

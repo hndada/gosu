@@ -22,10 +22,10 @@ type FieldOpts struct {
 	Opacity float32
 }
 
-func NewFieldOpts(keys KeysOpts) FieldOpts {
+func NewFieldOpts(stage StageOpts) FieldOpts {
 	return FieldOpts{
-		w:       keys.stageW,
-		x:       keys.StageX,
+		w:       stage.w,
+		x:       stage.X,
 		Opacity: 0.8,
 	}
 }

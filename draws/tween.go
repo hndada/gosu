@@ -110,6 +110,12 @@ func (tw Tween) IsFinished() bool {
 	return tw.maxLoop != 0 && tw.loop >= tw.maxLoop
 }
 
+// Todo: need to be tested
+func (tw *Tween) Finish() {
+	tw.loop = tw.maxLoop
+	tw.index = len(tw.units) - 1
+}
+
 // Easing functions
 // begin + change*dx
 func EaseLinear(t time.Duration, b, c float64, d time.Duration) float64 {

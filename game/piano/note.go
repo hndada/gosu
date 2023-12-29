@@ -25,6 +25,7 @@ type Note struct {
 	Sample   game.Sample
 	Duration int32
 
+	valid    bool    // Indcate that note is not blank.
 	position float64 // Scaled x or y value.
 	next     int     // For updating staged notes.
 	prev     int     // For accessing to Head from Tail.
@@ -38,6 +39,7 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 		Type:   Normal,
 		Key:    f.Column(keyCount),
 		Sample: game.NewSample(f),
+		valid:  true,
 	}
 	if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
 		n.Type = Head
@@ -48,6 +50,7 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 			Key:  n.Key,
 			// Sample: game.Sample{}, // Tail has no sample sound.
 			// Duration: n.Duration, // Todo: 0 or n.Duration?
+			valid: true,
 		}
 		ns = append(ns, n, n2)
 	} else {
@@ -132,23 +135,25 @@ func (res *NotesRes) Load(fsys fs.FS) {
 type NotesOpts struct {
 	TailOffset int32
 
-	ws       []float64
+	keyCount int
+	kw       []float64
 	H        float64 // Applies to all types of notes.
-	xs       []float64
+	kx       []float64
 	y        float64 // center bottom
 	keyOrder []KeyKind
 	Colors   [4]color.NRGBA
 	// LongBodyStyle     int // Stretch or Attach.
 }
 
-func NewNotesOpts(keys KeysOpts) NotesOpts {
+func NewNotesOpts(stage StageOpts, keys KeysOpts) NotesOpts {
 	return NotesOpts{
 		TailOffset: 0,
 
-		ws: keys.ws,
-		H:  20,
-		xs: keys.xs,
-		y:  keys.BaselineY,
+		keyCount: stage.keyCount,
+		kw:       keys.kw,
+		H:        20,
+		kx:       keys.kx,
+		y:        keys.y,
 
 		keyOrder: keys.Order(),
 		// Colors are from each note's second outermost pixel.
@@ -194,22 +199,20 @@ func NewNotesComp(res NotesRes, opts NotesOpts, ns []Note, dys game.Dynamics) (c
 		}
 	}
 
-	keyCount := len(opts.ws)
-	comp.keysHold = make([]bool, keyCount)
-	comp.keysLowest = make([]int, keyCount)
-
-	comp.keysAnims = make([][4]draws.Animation, keyCount)
+	comp.keysHold = make([]bool, opts.keyCount)
+	comp.keysLowest = make([]int, opts.keyCount)
+	comp.keysAnims = make([][4]draws.Animation, opts.keyCount)
 	for k := range comp.keysAnims {
 		for nt, frames := range res.framesList {
 			a := draws.NewAnimation(frames, 400)
-			a.SetSize(opts.ws[k], opts.H)
-			a.Locate(opts.xs[k], opts.y, draws.CenterBottom)
+			a.SetSize(opts.kw[k], opts.H)
+			a.Locate(opts.kx[k], opts.y, draws.CenterBottom)
 			comp.keysAnims[k][nt] = a
 		}
 	}
 
 	comp.h = opts.H
-	comp.keysColor = make([]color.NRGBA, keyCount)
+	comp.keysColor = make([]color.NRGBA, opts.keyCount)
 	for k := range comp.keysColor {
 		comp.keysColor[k] = opts.Colors[opts.keyOrder[k]]
 	}

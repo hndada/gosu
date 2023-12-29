@@ -33,7 +33,6 @@ type Scorer struct {
 	keyCount           int
 	notes              []Note
 	keysFocusNoteIndex []int // targets of judging
-	sampleBuffer       []game.Sample
 
 	judgments  []game.Judgment // To use game.Judge, slice is preferred.
 	missWindow int32
@@ -94,58 +93,42 @@ func (Scorer) newKeysFocusNoteIndex(keyCount int, ns []Note) []int {
 	return kfni
 }
 
-// No need to check whether staged note is Tail or not,
-// since Tail has no sample in advance.
-func (s *Scorer) addKeysSampleToBuffer(ka game.KeyboardAction) {
-	s.sampleBuffer = s.sampleBuffer[:0]
-	for k, a := range ka.KeysAction {
-		if a != game.Hit {
-			continue
+// markKeysUntouchedNote marks the untouched note as missed.
+func (s *Scorer) markKeysUntouchedNote(now int32, kji []int) {
+	for k, start := range s.keysFocusNoteIndex {
+		n := s.notes[start]
+		for ni := start; ni < len(s.notes); ni = n.next {
+			if e := n.Time - now; e >= -s.missWindow {
+				break
+			}
+
+			// Tail note may remain in keysFocusNote even if it is missed.
+			if !n.scored {
+				s.mark(ni, miss)
+				kji[k] = miss
+			} else {
+				if n.Type != Tail {
+					panic("remained marked note is not Tail")
+				}
+				// Other notes go flushed at mark().
+				s.keysFocusNoteIndex[k] = n.next
+			}
 		}
-		ni := s.keysFocusNoteIndex[k]
-		if ni == len(s.notes) {
-			continue
-		}
-		n := s.notes[ni]
-		s.sampleBuffer = append(s.sampleBuffer, n.Sample)
 	}
 }
 
-func (s Scorer) keysFocusNote() ([]Note, []bool) {
+func (s Scorer) keysFocusNote() []Note {
 	kn := make([]Note, s.keyCount)
-	kok := make([]bool, s.keyCount)
 	for k, ni := range s.keysFocusNoteIndex {
 		if ni == len(s.notes) {
 			continue
 		}
-		kok[k] = true
 		kn[k] = s.notes[ni]
 	}
-	return kn, kok
+	return kn
 }
 
-func (s *Scorer) updateKeysFocusNoteIndex(t int32, kji []int) {
-	for k, start := range s.keysFocusNoteIndex {
-		n := s.notes[start]
-		for ni := start; ni < len(s.notes); ni = n.next {
-			if e := n.Time - t; e >= -s.missWindow {
-				// Tail note may remain in keysFocusNote even if it is missed.
-				if !n.scored {
-					s.mark(ni, miss)
-					kji[k] = miss
-				} else {
-					if n.Type != Tail {
-						panic("remained marked note is not Tail")
-					}
-					// Other notes go flushed at mark().
-					s.keysFocusNoteIndex[k] = n.next
-				}
-			}
-		}
-	}
-	return
-}
-
+// tryJudge requires index of the notes for marking them.
 func (s *Scorer) tryJudge(ka game.KeyboardAction, kji []int) {
 	for k, ni := range s.keysFocusNoteIndex {
 		n := s.notes[ni]
@@ -162,8 +145,8 @@ func (s *Scorer) tryJudge(ka game.KeyboardAction, kji []int) {
 	return
 }
 
-func (s Scorer) judge(noteType int, e int32, a game.KeyActionType) int {
-	switch noteType {
+func (s Scorer) judge(nt int, e int32, a game.KeyActionType) int {
+	switch nt {
 	case Normal, Head:
 		return game.Judge(s.judgments, e, a)
 	case Tail:
@@ -174,22 +157,22 @@ func (s Scorer) judge(noteType int, e int32, a game.KeyActionType) int {
 }
 
 // Either Hold or Released when Tail is not scored
-func (s Scorer) judgeTail(e int32, a game.KeyActionType) int {
+func (s Scorer) judgeTail(e int32, at game.KeyActionType) int {
 	switch {
 	case e > s.missWindow:
-		if a == game.Released {
+		if at == game.Released {
 			return miss
 		}
 	case e < -s.missWindow:
 		return miss
 	default: // In range
-		if a == game.Released { // a != Hold
-			j := game.Evaluate(s.judgments, e)
+		if at == game.Released { // a != Hold
+			ji := game.Evaluate(s.judgments, e)
 			// Beware: Cool at Tail note goes Kool.
-			if j == cool {
-				j = kool
+			if ji == cool {
+				ji = kool
 			}
-			return j
+			return ji
 		}
 	}
 	return blank
