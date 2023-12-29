@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/audios"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/times"
@@ -14,6 +15,8 @@ import (
 
 type play interface {
 	Update(now int32, kas []game.KeyboardAction) any
+	SampleBuffer() []game.Sample
+	Draw(dst draws.Image)
 }
 
 // Todo: draw 4:3 screen on 16:9 screen
@@ -129,7 +132,16 @@ func (s *Scene) Update() any {
 	nowTime := time.Duration(now) * time.Millisecond
 	kss := s.keyboard.Read(nowTime)
 	kas := game.KeyboardActions(kss)
-	return s.play.Update(now, kas)
+	r := s.play.Update(now, kas)
+	s.PlaySounds()
+	return r
+}
+
+func (s Scene) PlaySounds() {
+	for _, samp := range s.play.SampleBuffer() {
+		vol := samp.Volume * s.SoundVolumeScale
+		s.soundPlayer.Play(samp.Filename, vol)
+	}
 }
 
 func (s *Scene) Pause() {

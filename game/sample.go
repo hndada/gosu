@@ -7,14 +7,14 @@ type Sample struct {
 	Volume   float64
 }
 
-var DefaultSample = Sample{Filename: "", Volume: 0.5}
+var DefaultSample = Sample{Filename: "", Volume: 1.0}
 
 func NewSample(f any) (s Sample) {
 	switch f := f.(type) {
 	case osu.HitObject:
 		return newSampleFromOsu(f)
 	}
-	return Sample{}
+	return
 }
 
 func newSampleFromOsu(f osu.HitObject) (s Sample) {

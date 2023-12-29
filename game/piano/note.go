@@ -25,9 +25,9 @@ type Note struct {
 	Sample   game.Sample
 	Duration int32
 
-	Position float64 // Scaled x or y value.
-	Next     int     // For updating staged notes.
-	Prev     int     // For accessing to Head from Tail.
+	position float64 // Scaled x or y value.
+	next     int     // For updating staged notes.
+	prev     int     // For accessing to Head from Tail.
 	scored   bool
 }
 
@@ -79,13 +79,13 @@ func NewNotes(f any, dys game.Dynamics, keyCount int) (ns []Note) {
 		dys.UpdateIndex(n.Time)
 		d := dys.Current()
 		// Ratio (speed) first, then time difference.
-		ns[i].Position = d.Position + d.Speed*float64(n.Time-d.Time)
+		ns[i].position = d.Position + d.Speed*float64(n.Time-d.Time)
 
 		// Tail's Position should be always equal or larger than Head's.
 		if n.Type == Tail {
-			head := ns[n.Prev]
-			if n.Position < head.Position {
-				ns[i].Position = head.Position
+			head := ns[n.prev]
+			if n.position < head.position {
+				ns[i].position = head.position
 			}
 		}
 	}
@@ -95,20 +95,20 @@ func NewNotes(f any, dys game.Dynamics, keyCount int) (ns []Note) {
 	exists := make([]bool, keyCount)
 	for i, n := range ns {
 		prev := prevs[n.Key]
-		ns[i].Prev = prev
+		ns[i].prev = prev
 		if exists[n.Key] {
-			ns[prev].Next = i
+			ns[prev].next = i
 		}
 		prevs[n.Key] = i
 		exists[n.Key] = true
 	}
 
-	// Set each last note's Next.
+	// Set each last note's next.
 	for k, prev := range prevs {
 		if !exists[k] {
 			continue
 		}
-		ns[prev].Next = len(ns)
+		ns[prev].next = len(ns)
 	}
 	return
 }
@@ -132,11 +132,10 @@ func (res *NotesRes) Load(fsys fs.FS) {
 type NotesOpts struct {
 	TailOffset int32
 
-	ws []float64
-	H  float64 // Applies to all types of notes.
-	xs []float64
-	y  float64 // center bottom
-
+	ws       []float64
+	H        float64 // Applies to all types of notes.
+	xs       []float64
+	y        float64 // center bottom
 	keyOrder []KeyKind
 	Colors   [4]color.NRGBA
 	// LongBodyStyle     int // Stretch or Attach.
@@ -165,74 +164,59 @@ func NewNotesOpts(keys KeysOpts) NotesOpts {
 
 type NotesComp struct {
 	notes      []Note
-	stagedList []int // targets of judging
 	cursor     float64
-	holds      []bool
-	lowests    []int // indexes of lowest notes
-	animsList  [][4]draws.Animation
+	keysHold   []bool
+	keysLowest []int // indexes of lowest notes
+	keysAnims  [][4]draws.Animation
 	h          float64 // used for drawLongNoteBody
-	colors     []color.NRGBA
+	keysColor  []color.NRGBA
 }
 
 func NewNotesComp(res NotesRes, opts NotesOpts, ns []Note, dys game.Dynamics) (comp NotesComp) {
 	comp.notes = ns
-	comp.applyTailOffset(opts.TailOffset, dys)
-
-	keyCount := len(opts.ws)
-	comp.stagedList = make([]int, keyCount)
-	for k := range comp.stagedList {
-		found := false
-		for i, n := range ns {
-			if k == n.Key {
-				comp.stagedList[n.Key] = i
-				found = true
-				break
-			}
-		}
-		if !found {
-			comp.stagedList[k] = len(ns)
-		}
-	}
-
-	comp.holds = make([]bool, keyCount)
-	comp.lowests = make([]int, keyCount)
-
-	comp.animsList = make([][4]draws.Animation, keyCount)
-	for k := range comp.animsList {
-		for nt, frames := range res.framesList {
-			a := draws.NewAnimation(frames, 400)
-			a.SetSize(opts.ws[k], opts.H)
-			a.Locate(opts.xs[k], opts.y, draws.CenterBottom)
-			comp.animsList[k][nt] = a
-		}
-	}
-
-	comp.h = opts.H
-	comp.colors = make([]color.NRGBA, keyCount)
-	for k := range comp.colors {
-		comp.colors[k] = opts.Colors[opts.keyOrder[k]]
-	}
-	return
-}
-
-func (comp *NotesComp) applyTailOffset(duration int32, dys game.Dynamics) {
-	// dys.Index = 0
 	for i, n := range comp.notes {
 		if n.Type != Tail {
 			continue
 		}
 		dys.UpdateIndex(n.Time)
 		d := dys.Current()
-		comp.notes[i].Position += float64(duration) * d.Speed
 
+		// Apply TailOffset to Tail's Position.
 		// Tail's Position should be always equal or larger than Head's.
-		if head := comp.notes[n.Prev]; n.Position < head.Position {
-			comp.notes[i].Position = head.Position
+		comp.notes[i].position += float64(opts.TailOffset) * d.Speed
+		if head := comp.notes[n.prev]; n.position < head.position {
+			comp.notes[i].position = head.position
+		}
+
+		// Apply dynamics' volume to note's sample with blank volume.
+		if n.Sample.Volume == 0 {
+			comp.notes[i].Sample.Volume = d.Volume
 		}
 	}
+
+	keyCount := len(opts.ws)
+	comp.keysHold = make([]bool, keyCount)
+	comp.keysLowest = make([]int, keyCount)
+
+	comp.keysAnims = make([][4]draws.Animation, keyCount)
+	for k := range comp.keysAnims {
+		for nt, frames := range res.framesList {
+			a := draws.NewAnimation(frames, 400)
+			a.SetSize(opts.ws[k], opts.H)
+			a.Locate(opts.xs[k], opts.y, draws.CenterBottom)
+			comp.keysAnims[k][nt] = a
+		}
+	}
+
+	comp.h = opts.H
+	comp.keysColor = make([]color.NRGBA, keyCount)
+	for k := range comp.keysColor {
+		comp.keysColor[k] = opts.Colors[opts.keyOrder[k]]
+	}
+	return
 }
 
-func (comp NotesComp) Duration() int32 {
+func (comp NotesComp) Span() int32 {
 	if len(comp.notes) == 0 {
 		return 0
 	}
@@ -255,42 +239,38 @@ func (comp NotesComp) NoteCounts() []int {
 	return counts
 }
 
-func (comp *NotesComp) Update(cursor float64, holds []bool) {
-	comp.updatePosition(cursor)
-	comp.holds = holds
-}
-
-func (comp *NotesComp) updatePosition(cursor float64) {
+func (comp *NotesComp) Update(cursor float64, keysHold []bool) {
 	lowerBound := cursor - game.ScreenH
-	for k, idx := range comp.lowests {
+	for k, idx := range comp.keysLowest {
 		var n Note
-		for i := idx; i < len(comp.notes); i = n.Next {
+		for i := idx; i < len(comp.notes); i = n.next {
 			n = comp.notes[idx]
-			if n.Position > lowerBound {
+			if n.position > lowerBound {
 				break
 			}
 			// index should be updated outside of if block.
-			comp.lowests[k] = i
+			comp.keysLowest[k] = i
 		}
 
 		// When Head is off the screen but Tail is on,
 		// update Tail to Head since drawLongNote uses Head.
 		if n.Type == Tail {
-			comp.lowests[k] = n.Prev
+			comp.keysLowest[k] = n.prev
 		}
 	}
 	comp.cursor = cursor
+	comp.keysHold = keysHold
 }
 
 // Notes are fixed. Lane itself moves, all notes move as same amount.
 func (comp NotesComp) Draw(dst draws.Image) {
 	upperBound := comp.cursor + game.ScreenH
-	for k, lowest := range comp.lowests {
+	for k, lowest := range comp.keysLowest {
 		idxs := []int{}
 		var n Note
-		for i := lowest; i < len(comp.notes); i = n.Next {
+		for i := lowest; i < len(comp.notes); i = n.next {
 			n = comp.notes[i]
-			if n.Position > upperBound {
+			if n.position > upperBound {
 				break
 			}
 			idxs = append(idxs, i)
@@ -306,8 +286,8 @@ func (comp NotesComp) Draw(dst draws.Image) {
 				comp.drawLongNoteBody(dst, n)
 			}
 
-			a := comp.animsList[k][n.Type]
-			pos := n.Position - comp.cursor
+			a := comp.keysAnims[k][n.Type]
+			pos := n.position - comp.cursor
 			a.Move(0, -pos)
 			if n.scored {
 				// op.ColorM.ChangeHSV(0, 0.3, 0.3)
@@ -320,17 +300,17 @@ func (comp NotesComp) Draw(dst draws.Image) {
 
 // drawLongNoteBody draws stretched long note body sprite.
 func (comp NotesComp) drawLongNoteBody(dst draws.Image, head Note) {
-	tail := comp.notes[head.Next]
+	tail := comp.notes[head.next]
 	if head.Type != Head || tail.Type != Tail {
 		return
 	}
 
-	a := comp.animsList[head.Key][Body]
-	if comp.holds[head.Key] {
+	a := comp.keysAnims[head.Key][Body]
+	if comp.keysHold[head.Key] {
 		a.Reset()
 	}
 
-	length := tail.Position - head.Position
+	length := tail.position - head.position
 	length += comp.h
 	if length < 0 {
 		length = 0
@@ -338,7 +318,7 @@ func (comp NotesComp) drawLongNoteBody(dst draws.Image, head Note) {
 	a.SetSize(a.W(), length)
 
 	// Use head position because anchor is center bottom.
-	pos := head.Position - comp.cursor
+	pos := head.position - comp.cursor
 	a.Move(0, -pos)
 	if head.scored {
 		a.ColorScale.ScaleWithColor(color.Gray{128})

@@ -32,34 +32,35 @@ func NewHitLightsOpts(keys KeysOpts) HitLightsOpts {
 }
 
 type HitLightsComp struct {
-	anims []draws.Animation
+	keysAnim []draws.Animation
 }
 
 func NewHitLightsComp(res HitLightsRes, opts HitLightsOpts) (comp HitLightsComp) {
 	keyCount := len(opts.xs)
-	comp.anims = make([]draws.Animation, keyCount)
-	for k := range comp.anims {
+	comp.keysAnim = make([]draws.Animation, keyCount)
+	for k := range comp.keysAnim {
 		a := draws.NewAnimation(res.frames, 150)
 		a.MultiplyScale(opts.Scale)
 		a.Locate(opts.xs[k], opts.y, draws.CenterBottom) // -HintHeight
 		a.ColorScale.Scale(1, 1, 1, opts.Opacity)
 		a.SetLoop(1)
-		comp.anims[k] = a
+		comp.keysAnim[k] = a
 	}
 	return
 }
 
-func (comp *HitLightsComp) Update(keyOns []bool) {
-	for k, ok := range keyOns {
-		if ok {
-			comp.anims[k].Reset()
+// Tail also makes hit lighting on.
+func (comp *HitLightsComp) Update(kji []int) {
+	for k, ji := range kji {
+		if ji < miss {
+			comp.keysAnim[k].Reset()
 		}
 	}
 }
 
-// HitLightsComp.Draw draws hit lights when Normal is Hit or Tail is Release.
+// HitLightsComp.Draw draws hit lights when Normal is Hit or Tail is Released.
 func (comp HitLightsComp) Draw(dst draws.Image) {
-	for _, a := range comp.anims {
+	for _, a := range comp.keysAnim {
 		if a.IsFinished() {
 			continue
 		}

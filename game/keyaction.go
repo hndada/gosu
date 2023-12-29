@@ -1,8 +1,6 @@
 package game
 
 import (
-	"time"
-
 	"github.com/hndada/gosu/input"
 )
 
@@ -12,8 +10,8 @@ type KeyActionType = int
 const (
 	Idle KeyActionType = iota
 	Hit
-	Release
-	Hold
+	Released
+	Holding
 )
 
 func KeyAction(old, now bool) KeyActionType {
@@ -23,17 +21,17 @@ func KeyAction(old, now bool) KeyActionType {
 	case !old && now:
 		return Hit
 	case old && !now:
-		return Release
+		return Released
 	case old && now:
-		return Hold
+		return Holding
 	default:
 		panic("not reach")
 	}
 }
 
 type KeyboardAction struct {
-	Time       time.Duration
-	KeyActions []KeyActionType
+	Time       int32
+	KeysAction []KeyActionType
 }
 
 func KeyboardActions(kss []input.KeyboardState) []KeyboardAction {
@@ -45,8 +43,25 @@ func KeyboardActions(kss []input.KeyboardState) []KeyboardAction {
 		for k := range old {
 			as[k] = KeyAction(old[k], now[k])
 		}
-		kas[i] = KeyboardAction{Time: s.Time, KeyActions: as}
+		t := int32(s.Time.Milliseconds())
+		kas[i] = KeyboardAction{Time: t, KeysAction: as}
 		old = now
 	}
 	return kas
+}
+
+func (ka KeyboardAction) KeysPressed() []bool {
+	ps := make([]bool, len(ka.KeysAction))
+	for i, a := range ka.KeysAction {
+		ps[i] = a == Hit || a == Holding
+	}
+	return ps
+}
+
+func (ka KeyboardAction) KeysHolding() []bool {
+	hs := make([]bool, len(ka.KeysAction))
+	for i, a := range ka.KeysAction {
+		hs[i] = a == Holding
+	}
+	return hs
 }

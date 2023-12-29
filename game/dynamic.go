@@ -202,6 +202,30 @@ func (dys Dynamics) BeatTimes() (times []int32) {
 	return
 }
 
+func (dys Dynamics) Current() Dynamic { return dys.Dynamics[dys.index] }
+
+// The unit of speed is logical pixel per millisecond.
+func (dys Dynamics) Speed() float64 {
+	return dys.Current().Speed * dys.SpeedScale
+}
+
+func (dys Dynamics) Cursor(now int32) float64 {
+	// nowTime := int32(now / time.Millisecond)
+	dy := dys.Current()
+	return dy.Position + dys.Speed()*float64(dy.Time-now)
+}
+
+// NoteExposureDuration returns duration of note exposure:
+// the time that a note is visible on the screen.
+func (dys Dynamics) NoteExposureDuration(reach float64) int32 {
+	speed := dys.Speed()
+	if speed == 0 {
+		// This is not likely to happen.
+		return 1<<31 - 1
+	}
+	return int32(reach/speed) + 1
+}
+
 // Used in ScenePlay for fetching next Dynamic.
 func (dys *Dynamics) UpdateIndex(now int32) {
 	for i := dys.index; i < len(dys.Dynamics); i++ {
@@ -211,16 +235,4 @@ func (dys *Dynamics) UpdateIndex(now int32) {
 		}
 		dys.index = i
 	}
-}
-
-func (dys Dynamics) Current() Dynamic { return dys.Dynamics[dys.index] }
-
-func (dys Dynamics) Speed() float64 {
-	return dys.Current().Speed * dys.SpeedScale
-}
-
-func (dys Dynamics) Cursor(now int32) float64 {
-	// nowTime := int32(now / time.Millisecond)
-	dy := dys.Current()
-	return dy.Position + dys.Speed()*float64(dy.Time-now)
 }

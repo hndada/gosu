@@ -1,8 +1,6 @@
 package piano
 
 import (
-	"time"
-
 	"github.com/hndada/gosu/game"
 )
 
@@ -147,14 +145,4 @@ func (opts KeysOpts) Order() []KeyKind {
 		return append(order_1, Tip)
 	}
 	return nil
-}
-
-// NoteExposureDuration returns duration of note exposure:
-// the time that a note is visible on the screen.
-// The unit of speed is logical pixel per millisecond.
-func (opts KeysOpts) NoteExposureDuration(speed float64) time.Duration {
-	if speed == 0 {
-		return 1e2 * time.Hour
-	}
-	return time.Duration(opts.BaselineY/speed)*time.Millisecond + 1
 }
