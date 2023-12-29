@@ -4,6 +4,7 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/game"
 )
 
 type KeysHoldLightResources struct {
@@ -31,11 +32,9 @@ func NewKeysHoldLightOptions(keys KeysOptions) KeysHoldLightOptions {
 	}
 }
 
-// field name: sprites, anims
-// local name: s, a
 type KeysHoldLightComponent struct {
-	anims       []draws.Animation
-	keysHolding []bool
+	anims               []draws.Animation
+	keysLongNoteHolding []bool
 }
 
 func NewKeysHoldLightComponent(res KeysHoldLightResources, opts KeysHoldLightOptions) (cmp KeysHoldLightComponent) {
@@ -51,14 +50,28 @@ func NewKeysHoldLightComponent(res KeysHoldLightResources, opts KeysHoldLightOpt
 	return
 }
 
-func (cmp *KeysHoldLightComponent) Update(kh []bool) {
-	olds := cmp.keysHolding
-	for k, new := range kh {
-		if new && !olds[k] {
+func (cmp *KeysHoldLightComponent) Update(kn []Note, kh []bool, ka game.KeyboardAction) {
+	kln := make([]bool, len(kn))
+	for k, n := range kn {
+		if n.valid && n.Type == Tail {
+			kln[k] = true
+		}
+	}
+	klnh := make([]bool, len(kh))
+	for k, n := range kln {
+		if n && kh[k] {
+			klnh[k] = true
+		}
+	}
+
+	keysOld := cmp.keysLongNoteHolding
+	keysNew := klnh
+	for k := range klnh {
+		if !keysOld[k] && keysNew[k] {
 			cmp.anims[k].Reset()
 		}
 	}
-	cmp.keysHolding = kh
+	cmp.keysLongNoteHolding = klnh
 }
 
 func (cmp KeysHoldLightComponent) Draw(dst draws.Image) {

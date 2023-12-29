@@ -11,6 +11,8 @@
 unless the name is explicitly supposed to be expressed in abbreviated form.  
 
 * Local variables are encouraged to be written in abbreviated form, which is up to 3 letters. 
+    * field name: sprites, anims
+    * local name: s, a
 
 # Keyword
 ratio: two quantities with the same units

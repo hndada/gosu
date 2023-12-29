@@ -23,9 +23,9 @@ type KeysOptions struct {
 	Orders    map[int][]KeyKind
 	Scratches map[int]Scratch
 	KindWs    [4]float64
-	kw        []float64 // for convenience
-	kx        []float64 // for convenience
-	y         float64   // center bottom
+	kw        []float64
+	kx        []float64
+	y         float64 // center bottom
 }
 
 func NewKeysOptions(stage StageOptions) KeysOptions {
