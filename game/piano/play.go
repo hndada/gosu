@@ -36,8 +36,8 @@ type Options struct {
 // Todo: FlowPoint (kind of HP)
 type Play struct {
 	sampleBuffer []game.Sample
-	Scorer       Scorer
 	dynamics     game.Dynamics
+	Scorer       Scorer
 
 	keyCount   int
 	field      FieldComponent
@@ -71,9 +71,9 @@ func (s *Play) Update(now int32, kas []game.KeyboardAction) any {
 		kji := make([]int, s.keyCount)
 		s.Scorer.markKeysUntouchedNote(ka.Time, kji)
 		kn := s.Scorer.keysFocusNote()
+
 		s.addKeysSampleToBuffer(kn, ka)
 		s.Scorer.tryJudge(ka, kji)
-
 		cursor := s.dynamics.Cursor(now)
 	}
 	return nil
