@@ -7,24 +7,24 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
-type KeysHoldLightResources struct {
+type HoldLightsResources struct {
 	frames draws.Frames
 }
 
-func (br *KeysHoldLightResources) Load(fsys fs.FS) {
+func (br *HoldLightsResources) Load(fsys fs.FS) {
 	fname := "piano/lighting/hold.png"
 	br.frames = draws.NewFramesFromFile(fsys, fname)
 }
 
-type KeysHoldLightOptions struct {
+type HoldLightsOptions struct {
 	Scale   float64
 	kx      []float64
 	y       float64
 	Opacity float32
 }
 
-func NewKeysHoldLightOptions(keys KeysOptions) KeysHoldLightOptions {
-	return KeysHoldLightOptions{
+func NewHoldLightsOptions(keys KeysOptions) HoldLightsOptions {
+	return HoldLightsOptions{
 		Scale:   1.0,
 		kx:      keys.kx,
 		y:       keys.y,
@@ -32,12 +32,12 @@ func NewKeysHoldLightOptions(keys KeysOptions) KeysHoldLightOptions {
 	}
 }
 
-type KeysHoldLightComponent struct {
+type HoldLightsComponent struct {
 	anims               []draws.Animation
 	keysLongNoteHolding []bool
 }
 
-func NewKeysHoldLightComponent(res KeysHoldLightResources, opts KeysHoldLightOptions) (cmp KeysHoldLightComponent) {
+func NewHoldLightsComponent(res HoldLightsResources, opts HoldLightsOptions) (cmp HoldLightsComponent) {
 	keyCount := len(opts.kx)
 	cmp.anims = make([]draws.Animation, keyCount)
 	for k := range cmp.anims {
@@ -50,7 +50,7 @@ func NewKeysHoldLightComponent(res KeysHoldLightResources, opts KeysHoldLightOpt
 	return
 }
 
-func (cmp *KeysHoldLightComponent) Update(kn []Note, kh []bool, ka game.KeyboardAction) {
+func (cmp *HoldLightsComponent) Update(kn []Note, kh []bool, ka game.KeyboardAction) {
 	kln := make([]bool, len(kn))
 	for k, n := range kn {
 		if n.valid && n.Type == Tail {
@@ -74,7 +74,7 @@ func (cmp *KeysHoldLightComponent) Update(kn []Note, kh []bool, ka game.Keyboard
 	cmp.keysLongNoteHolding = klnh
 }
 
-func (cmp KeysHoldLightComponent) Draw(dst draws.Image) {
+func (cmp HoldLightsComponent) Draw(dst draws.Image) {
 	for _, a := range cmp.anims {
 		a.Draw(dst)
 	}

@@ -116,7 +116,7 @@ func NewNotes(f any, dys game.Dynamics, keyCount int) (ns []Note) {
 	return
 }
 
-type KeysNotesResources struct {
+type NotesResources struct {
 	framesList [4]draws.Frames
 }
 
@@ -125,14 +125,14 @@ type KeysNotesResources struct {
 // When note/tail image is not found, let it be blank.
 // When note/body image is not found, use user's note/normal.
 // Todo: remove key kind folders
-func (res *KeysNotesResources) Load(fsys fs.FS) {
+func (res *NotesResources) Load(fsys fs.FS) {
 	for nt, ntname := range []string{"normal", "head", "tail", "body"} {
 		name := fmt.Sprintf("piano/note/one/%s.png", ntname)
 		res.framesList[nt] = draws.NewFramesFromFile(fsys, name)
 	}
 }
 
-type KeysNotesOptions struct {
+type NotesOptions struct {
 	TailOffset int32
 
 	keyCount int
@@ -145,8 +145,8 @@ type KeysNotesOptions struct {
 	// LongBodyStyle     int // Stretch or Attach.
 }
 
-func NewKeysNotesOptions(stage StageOptions, keys KeysOptions) KeysNotesOptions {
-	return KeysNotesOptions{
+func NewNotesOptions(stage StageOptions, keys KeysOptions) NotesOptions {
+	return NotesOptions{
 		TailOffset: 0,
 
 		keyCount: stage.keyCount,
@@ -167,7 +167,7 @@ func NewKeysNotesOptions(stage StageOptions, keys KeysOptions) KeysNotesOptions 
 	}
 }
 
-type KeysNotesComponent struct {
+type NotesComponent struct {
 	notes       []Note
 	cursor      float64
 	keysHolding []bool
@@ -177,8 +177,8 @@ type KeysNotesComponent struct {
 	keysColor   []color.NRGBA
 }
 
-func NewKeysNotesComponent(res KeysNotesResources, opts KeysNotesOptions,
-	ns []Note, dys game.Dynamics) (cmp KeysNotesComponent) {
+func NewNotesComponent(res NotesResources, opts NotesOptions,
+	ns []Note, dys game.Dynamics) (cmp NotesComponent) {
 	cmp.notes = ns
 	for i, n := range cmp.notes {
 		if n.Type != Tail {
@@ -220,7 +220,7 @@ func NewKeysNotesComponent(res KeysNotesResources, opts KeysNotesOptions,
 	return
 }
 
-func (cmp KeysNotesComponent) Span() int32 {
+func (cmp NotesComponent) Span() int32 {
 	if len(cmp.notes) == 0 {
 		return 0
 	}
@@ -230,7 +230,7 @@ func (cmp KeysNotesComponent) Span() int32 {
 	return last.Time
 }
 
-func (cmp KeysNotesComponent) NoteCounts() []int {
+func (cmp NotesComponent) NoteCounts() []int {
 	counts := make([]int, 2)
 	for _, n := range cmp.notes {
 		switch n.Type {
@@ -243,7 +243,7 @@ func (cmp KeysNotesComponent) NoteCounts() []int {
 	return counts
 }
 
-func (cmp *KeysNotesComponent) Update(cursor float64, keysHolding []bool) {
+func (cmp *NotesComponent) Update(cursor float64, keysHolding []bool) {
 	lowerBound := cursor - game.ScreenH
 	for k, idx := range cmp.keysLowest {
 		var n Note
@@ -267,7 +267,7 @@ func (cmp *KeysNotesComponent) Update(cursor float64, keysHolding []bool) {
 }
 
 // Notes are fixed. Lane itself moves, all notes move as same amount.
-func (cmp KeysNotesComponent) Draw(dst draws.Image) {
+func (cmp NotesComponent) Draw(dst draws.Image) {
 	upperBound := cmp.cursor + game.ScreenH
 	for k, lowest := range cmp.keysLowest {
 		idxs := []int{}
@@ -303,7 +303,7 @@ func (cmp KeysNotesComponent) Draw(dst draws.Image) {
 }
 
 // drawLongNoteBody draws stretched long note body sprite.
-func (cmp KeysNotesComponent) drawLongNoteBody(dst draws.Image, head Note) {
+func (cmp NotesComponent) drawLongNoteBody(dst draws.Image, head Note) {
 	tail := cmp.notes[head.next]
 	if head.Type != Head || tail.Type != Tail {
 		return

@@ -10,18 +10,18 @@ import (
 	"github.com/hndada/gosu/times"
 )
 
-type KeysButtonResources struct {
+type KeyButtonsResources struct {
 	imgs [2]draws.Image
 }
 
-func (kr *KeysButtonResources) Load(fsys fs.FS) {
+func (kr *KeyButtonsResources) Load(fsys fs.FS) {
 	for i, name := range []string{"up", "down"} {
 		fname := fmt.Sprintf("piano/key/%s.png", name)
 		kr.imgs[i] = draws.NewImageFromFile(fsys, fname)
 	}
 }
 
-type KeysButtonOptions struct {
+type KeyButtonsOptions struct {
 	keyCount int
 	kw       []float64
 	h        float64
@@ -29,8 +29,8 @@ type KeysButtonOptions struct {
 	y        float64 // center top
 }
 
-func NewKeysButtonOptions(keys KeysOptions) KeysButtonOptions {
-	return KeysButtonOptions{
+func NewKeyButtonsOptions(keys KeysOptions) KeyButtonsOptions {
+	return KeyButtonsOptions{
 		keyCount: keys.keyCount,
 		kw:       keys.kw,
 		h:        game.ScreenH - keys.y,
@@ -39,14 +39,14 @@ func NewKeysButtonOptions(keys KeysOptions) KeysButtonOptions {
 	}
 }
 
-type KeysButtonComponent struct {
+type KeyButtonsComponent struct {
 	keysPressed []bool
 	keysSprites [][2]draws.Sprite
 	startTimes  []time.Time
 	minDuration time.Duration
 }
 
-func NewKeysButtonComponent(res KeysButtonResources, opts KeysButtonOptions) (cmp KeysButtonComponent) {
+func NewKeyButtonsComponent(res KeyButtonsResources, opts KeyButtonsOptions) (cmp KeyButtonsComponent) {
 	cmp.keysSprites = make([][2]draws.Sprite, opts.keyCount)
 	for k := range cmp.keysSprites {
 		for i, img := range res.imgs {
@@ -61,7 +61,7 @@ func NewKeysButtonComponent(res KeysButtonResources, opts KeysButtonOptions) (cm
 	return
 }
 
-func (cmp *KeysButtonComponent) Update(kp []bool) {
+func (cmp *KeyButtonsComponent) Update(kp []bool) {
 	cmp.keysPressed = kp
 	for k, p := range kp {
 		if p {
@@ -71,7 +71,7 @@ func (cmp *KeysButtonComponent) Update(kp []bool) {
 }
 
 // Draw key-down buttons for a while even if the press is brief.
-func (cmp KeysButtonComponent) Draw(dst draws.Image) {
+func (cmp KeyButtonsComponent) Draw(dst draws.Image) {
 	const (
 		up   = 0
 		down = 1

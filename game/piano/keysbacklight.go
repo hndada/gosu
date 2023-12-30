@@ -9,16 +9,16 @@ import (
 	"github.com/hndada/gosu/times"
 )
 
-type KeysBacklightResources struct {
+type BacklightsResources struct {
 	img draws.Image
 }
 
-func (br *KeysBacklightResources) Load(fsys fs.FS) {
+func (br *BacklightsResources) Load(fsys fs.FS) {
 	fname := "piano/key/backlight.png"
 	br.img = draws.NewImageFromFile(fsys, fname)
 }
 
-type KeysBacklightOptions struct {
+type BacklightsOptions struct {
 	keyCount int
 	kw       []float64
 	kx       []float64
@@ -27,8 +27,8 @@ type KeysBacklightOptions struct {
 	Colors   [4]color.NRGBA
 }
 
-func NewKeysBacklightOptions(keys KeysOptions) KeysBacklightOptions {
-	return KeysBacklightOptions{
+func NewBacklightsOptions(keys KeysOptions) BacklightsOptions {
+	return BacklightsOptions{
 		keyCount: keys.keyCount,
 		kw:       keys.kw,
 		kx:       keys.kx,
@@ -43,14 +43,14 @@ func NewKeysBacklightOptions(keys KeysOptions) KeysBacklightOptions {
 	}
 }
 
-type KeysBacklightComponent struct {
+type BacklightsComponent struct {
 	keysPressed []bool
 	sprites     []draws.Sprite
 	startTimes  []time.Time
 	minDuration time.Duration
 }
 
-func NewKeysBacklightComponent(res KeysBacklightResources, opts KeysBacklightOptions) (cmp KeysBacklightComponent) {
+func NewBacklightsComponent(res BacklightsResources, opts BacklightsOptions) (cmp BacklightsComponent) {
 	cmp.sprites = make([]draws.Sprite, opts.keyCount)
 	for k := range cmp.sprites {
 		s := draws.NewSprite(res.img)
@@ -64,7 +64,7 @@ func NewKeysBacklightComponent(res KeysBacklightResources, opts KeysBacklightOpt
 	return
 }
 
-func (cmp *KeysBacklightComponent) Update(kp []bool) {
+func (cmp *BacklightsComponent) Update(kp []bool) {
 	cmp.keysPressed = kp
 	for k, down := range kp {
 		if down {
@@ -74,7 +74,7 @@ func (cmp *KeysBacklightComponent) Update(kp []bool) {
 }
 
 // Draw backlights for a while even if the press is brief.
-func (cmp KeysBacklightComponent) Draw(dst draws.Image) {
+func (cmp BacklightsComponent) Draw(dst draws.Image) {
 	elapsed := times.Since(cmp.startTimes[0])
 	for k, p := range cmp.keysPressed {
 		if p || elapsed <= cmp.minDuration {

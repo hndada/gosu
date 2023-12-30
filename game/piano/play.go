@@ -19,17 +19,17 @@ type Options struct {
 	Stage    StageOptions
 	Key      KeysOptions
 
-	Field         FieldOptions
-	Bars          BarsOptions
-	Hint          HintOptions
-	KeysNotes     KeysNotesOptions
-	KeysButton    KeysButtonOptions
-	KeysBacklight KeysBacklightOptions
-	KeysHitLight  KeysHitLightOptions
-	KeysHoldLight KeysHoldLightOptions
-	Judgment      JudgmentOptions
-	Combo         game.ComboOptions
-	Score         game.ScoreOptions
+	Field      FieldOptions
+	Bars       BarsOptions
+	Hint       HintOptions
+	Notes      NotesOptions
+	KeyButtons KeyButtonsOptions
+	Backlights BacklightsOptions
+	HitLights  HitLightsOptions
+	HoldLights HoldLightsOptions
+	Judgment   JudgmentOptions
+	Combo      game.ComboOptions
+	Score      game.ScoreOptions
 }
 
 // Todo: game.ErrorMeterComponent
@@ -39,18 +39,18 @@ type Play struct {
 	Scorer       Scorer
 	dynamics     game.Dynamics
 
-	keyCount      int
-	field         FieldComponent
-	bars          BarsComponent
-	hint          HintComponent
-	keysNotes     KeysNotesComponent
-	keysButton    KeysButtonComponent
-	keysBacklight KeysBacklightComponent
-	keysHitLight  KeysHitLightComponent
-	keysHoldLight KeysHoldLightComponent
-	judgment      JudgmentComponent
-	combo         game.ComboComponent
-	score         game.ScoreComponent
+	keyCount   int
+	field      FieldComponent
+	bars       BarsComponent
+	hint       HintComponent
+	notes      NotesComponent
+	keyButtons KeyButtonsComponent
+	backlights BacklightsComponent
+	hitLights  HitLightsComponent
+	holdLights HoldLightsComponent
+	judgment   JudgmentComponent
+	combo      game.ComboComponent
+	score      game.ScoreComponent
 }
 
 // Just assigning slice will shallow copy.
@@ -98,7 +98,7 @@ func (s *Play) SetSpeedScale(new float64) {
 	for i := range ds {
 		ds[i].Position *= scale
 	}
-	ns := s.keysNotes.notes
+	ns := s.notes.notes
 	for i := range ns {
 		ns[i].position *= scale
 	}
@@ -112,11 +112,11 @@ func (p Play) Draw(dst draws.Image) {
 	p.field.Draw(dst)
 	p.bars.Draw(dst)
 	p.hint.Draw(dst)
-	p.keysNotes.Draw(dst)
-	p.keysButton.Draw(dst)
-	p.keysBacklight.Draw(dst)
-	p.keysHitLight.Draw(dst)
-	p.keysHoldLight.Draw(dst)
+	p.notes.Draw(dst)
+	p.keyButtons.Draw(dst)
+	p.backlights.Draw(dst)
+	p.hitLights.Draw(dst)
+	p.holdLights.Draw(dst)
 	p.judgment.Draw(dst)
 	p.combo.Draw(dst)
 	p.score.Draw(dst)
