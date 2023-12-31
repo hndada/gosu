@@ -26,6 +26,7 @@ const (
 	blank
 )
 
+// Todo: FlowPoint (kind of HP)
 type Scorer struct {
 	Notes
 	game.Judgments
@@ -37,9 +38,10 @@ type Scorer struct {
 	Score            float64
 }
 
-func NewScorer(ns Notes, js game.Judgments) (s Scorer) {
+func NewScorer(ns Notes, mods Mods) (s Scorer) {
 	s.Notes = ns
-	s.Judgments = js
+	js := mods.DefaultJudgments()
+	s.Judgments = game.NewJudgments(js)
 
 	unit := 1e6 / float64(len(ns.notes))
 	s.units = [3]float64{unit * 0.7, unit * 0.3, unit * 0.1}

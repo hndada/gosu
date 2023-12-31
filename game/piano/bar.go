@@ -65,12 +65,12 @@ type BarsComponent struct {
 	cursor float64
 }
 
-func NewBarComponent(res BarsResources, opts BarsOptions, bars Bars) (cmp BarsComponent) {
+func NewBarsComponent(res BarsResources, opts BarsOptions, dys game.Dynamics) (cmp BarsComponent) {
 	s := draws.NewSprite(res.img)
 	s.SetSize(opts.w, opts.H)
 	s.Locate(opts.x, opts.y, draws.CenterBottom)
 	cmp.sprite = s
-	cmp.Bars = bars
+	cmp.Bars = NewBars(dys)
 	return
 }
 

@@ -72,9 +72,9 @@ func (cmp *ScoreComponent) newTween() draws.Tween {
 	return draws.NewTween(begin, change, 400, draws.EaseOutExponential)
 }
 
-func (cmp *ScoreComponent) Update(new float64) {
-	if old := cmp.score; old != new {
-		cmp.score = new
+func (cmp *ScoreComponent) Update(newScore float64) {
+	if old := cmp.score; old != newScore {
+		cmp.score = newScore
 		cmp.tween = cmp.newTween()
 	}
 }

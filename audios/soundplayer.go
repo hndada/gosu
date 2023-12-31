@@ -35,6 +35,8 @@ func NewSoundPlayer() SoundPlayer {
 	}
 }
 
+// It is possible for empty string to be a key of a map.
+// https://go.dev/play/p/nn-peGAjawW
 func (sp *SoundPlayer) Add(rc io.ReadCloser, name string) error {
 	defer rc.Close()
 

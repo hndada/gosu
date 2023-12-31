@@ -24,11 +24,12 @@ type Scene struct {
 	game.ChartHeader
 
 	// Timer
-	startTime   time.Time
-	pauseTime   time.Time
-	paused      bool
-	musicOffset int32
-	musicPlayed bool // This really matters.
+	firstUpdated bool
+	startTime    time.Time
+	pauseTime    time.Time
+	paused       bool
+	musicOffset  int32
+	musicPlayed  bool // This really matters.
 
 	keyboard    input.Keyboard
 	musicPlayer audios.MusicPlayer
@@ -45,17 +46,13 @@ func NewScene(fsys fs.FS, name string) (s Scene, err error) {
 		return
 	}
 	s.ChartHeader = game.NewChartHeader(format, hash)
-
-	const wait = 1100 * time.Millisecond
-	s.startTime = times.Now().Add(wait)
-	s.musicOffset = musicOffset
+	ebiten.SetWindowTitle(s.WindowTitle())
 
 	if replay != nil {
-		s.keyboard = game.NewReplay(replayFile)
+		s.keyboard = game.NewReplay(replay)
 	} else {
 		keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
 		s.keyboard = input.NewKeyboard(keys)
-		defer s.keyboard.Listen(s.startTime)
 	}
 
 	mp, err := audios.NewMusicPlayerFromFile(fsys, s.MusicFilename)
@@ -64,14 +61,12 @@ func NewScene(fsys fs.FS, name string) (s Scene, err error) {
 		return
 	}
 	s.musicPlayer = mp
-	s.SetMusicVolume(*s.MusicVolume)
+	mp.SetVolume(*s.MusicVolume)
+	s.musicOffset = musicOffset
 
-	s.SoundMap = audios.NewSoundMap(fsys, s.DefaultHitSoundFormat, s.SoundVolume)
-	// It is possible for empty string to be a key of a map.
-	// https://go.dev/play/p/nn-peGAjawW
-	s.SoundMap.AddSound("", s.DefaultHitSoundStreamer)
+	sp := audios.NewSoundPlayer()
+	// sp.Add(, "")
 
-	ebiten.SetWindowTitle(s.WindowTitle())
 	return
 }
 
@@ -80,6 +75,7 @@ func (s Scene) WindowTitle() string {
 	return fmt.Sprintf("gosu | %s - %s [%s] (%s) ", c.Artist, c.MusicName, c.ChartName, c.Charter)
 }
 
+// Now returns current time in millisecond.
 func (s Scene) Now() int32 {
 	var d time.Duration
 	if s.paused {
@@ -92,7 +88,7 @@ func (s Scene) Now() int32 {
 
 // TL;DR: If you tend to hit early, set positive offset.
 // It leads to delayed music / early start time.
-func (s *Scene) SetMusicOffset(new int32) {
+func (s *Scene) SetMusicOffset(newOffset int32) {
 	// Once the music starts, there isn't much we can do,
 	// since music is hard to seek precisely.
 	// Instead, we adjust the start time.
@@ -110,18 +106,22 @@ func (s *Scene) SetMusicOffset(new int32) {
 
 		// No need to consider playback rate, since it is supported naturally.
 		// Times themselves are not affected, only now flows faster or slower.
-		old := s.musicOffset
-		diff := time.Duration(new-old) * time.Millisecond
+		oldOffset := s.musicOffset
+		diff := time.Duration(newOffset-oldOffset) * time.Millisecond
 		s.startTime = s.startTime.Add(-diff)
-		s.musicOffset = new
+		s.musicOffset = newOffset
 	} else {
 		// If the music has not played yet, we can adjust the offset
 		// and let the music played at given delayed time.
-		s.musicOffset = new
+		s.musicOffset = newOffset
 	}
 }
 
 func (s *Scene) Update() any {
+	if !s.firstUpdated {
+		s.firstUpdate()
+		s.firstUpdated = true
+	}
 	now := s.Now() // Use unified time.
 
 	// No update t.startTime when playing music, unless
@@ -136,6 +136,13 @@ func (s *Scene) Update() any {
 	r := s.play.Update(now, kas)
 	s.PlaySounds()
 	return r
+}
+
+func (s *Scene) firstUpdate() {
+	const wait = 1100 * time.Millisecond
+	s.startTime = times.Now().Add(wait)
+	s.keyboard.Listen(s.startTime)
+	s.startTime = times.Now()
 }
 
 func (s Scene) PlaySounds() {

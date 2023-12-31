@@ -160,8 +160,20 @@ func (ns Notes) Span() int32 {
 	return last.Time
 }
 
+func (ns Notes) keysFocusNote() []Note {
+	kn := make([]Note, ns.keyCount)
+	for k, ni := range ns.keysFocus {
+		if ni == ns.none {
+			continue
+		}
+		kn[k] = ns.notes[ni]
+	}
+	return kn
+}
+
 type NotesResources struct {
 	framesList [4]draws.Frames
+	// defaultSampleData []byte
 }
 
 // When note/normal image is not found, use default's note/normal.
@@ -173,6 +185,9 @@ func (res *NotesResources) Load(fsys fs.FS) {
 		name := fmt.Sprintf("piano/note/%s.png", nkn)
 		res.framesList[nk] = draws.NewFramesFromFile(fsys, name)
 	}
+
+	// wav, _ := fsys.Open("piano/hit.wav")
+	// res.defaultSampleData = wav
 }
 
 type NotesOptions struct {
@@ -232,10 +247,13 @@ func NewNotesComponent(res NotesResources, opts NotesOptions, ns Notes, dys game
 		}
 	}
 
-	// Apply dynamics' volume to note's sample with blank volume.
+	// Apply default sample values.
 	dys.Reset()
 	for i, n := range ns.notes {
 		d := dys.UpdateIndex(n.Time)
+		// if n.Sample.Filename == "" {
+		// 	ns.notes[i].Sample.Filename = res.defaultSampleName
+		// }
 		if n.Sample.Volume == 0 {
 			ns.notes[i].Sample.Volume = d.Volume
 		}
@@ -265,17 +283,6 @@ func NewNotesComponent(res NotesResources, opts NotesOptions, ns Notes, dys game
 	cmp.keysHolding = make([]bool, opts.keyCount)
 	// cmp.h = opts.H
 	return
-}
-
-func (cmp *NotesComponent) keysFocusNote() []Note {
-	kn := make([]Note, cmp.keyCount)
-	for k, ni := range cmp.keysFocus {
-		if ni == cmp.none {
-			continue
-		}
-		kn[k] = cmp.notes[ni]
-	}
-	return kn
 }
 
 func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {

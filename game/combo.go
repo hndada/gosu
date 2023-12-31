@@ -54,9 +54,9 @@ func NewComboComponent(res ComboResources, opts ComboOptions) (cmp ComboComponen
 	return
 }
 
-func (cmp *ComboComponent) Update(new int) {
-	if old := cmp.combo; old != new {
-		cmp.combo = new
+func (cmp *ComboComponent) Update(newCombo int) {
+	if old := cmp.combo; old != newCombo {
+		cmp.combo = newCombo
 		cmp.tween.Reset()
 	}
 }

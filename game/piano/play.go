@@ -4,121 +4,65 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
 )
 
-type Options struct {
-	KeyCount int
-	Stage    StageOptions
-	Key      KeysOptions
-
-	Field      FieldOptions
-	Bars       BarsOptions
-	Hint       HintOptions
-	Notes      NotesOptions
-	KeyButtons KeyButtonsOptions
-	Backlights BacklightsOptions
-	HitLights  HitLightsOptions
-	HoldLights HoldLightsOptions
-	Judgment   JudgmentOptions
-	Combo      game.ComboOptions
-	Score      game.ScoreOptions
-}
-
-// Todo: game.ErrorMeterComponent
-// Todo: FlowPoint (kind of HP)
 type Play struct {
-	now int32 // current time in millisecond
-	Scorer
 	game.Dynamics
-
-	field      FieldComponent
-	bars       BarsComponent
-	hint       HintComponent
-	notes      NotesComponent
-	keyButtons KeyButtonsComponent
-	backlights BacklightsComponent
-	hitLights  HitLightsComponent
-	holdLights HoldLightsComponent
-	judgment   JudgmentComponent
-	combo      game.ComboComponent
-	score      game.ScoreComponent
+	Scorer
+	Components
 }
 
-func NewPlay(res Resources, opts Options, format any) (s Play, err error) {
-	s.Dynamics, err = game.NewDynamics(format, opts.Stage.H)
+func NewPlay(res Resources, opts Options, chart any, mods Mods) (Play, error) {
+	dys, err := game.NewDynamics(chart, opts.Stage.H)
 	if err != nil {
-		err = fmt.Errorf("failed to create dynamics: %w", err)
-		return
+		return Play{}, fmt.Errorf("failed to create dynamics: %w", err)
 	}
-	return
+	ns := NewNotes(chart, dys)
+
+	return Play{
+		Dynamics:   dys,
+		Scorer:     NewScorer(ns, mods),
+		Components: NewComponents(res, opts, dys, ns),
+	}, nil
 }
 
-func (s *Play) Update(now int32, kas []game.KeyboardAction) any {
+func (p *Play) Update(now int32, kas []game.KeyboardAction) any {
 	for _, ka := range kas {
-		s.now = ka.Time
-		s.Scorer.update(ka)
-
-		cursor := s.Position(s.now)
-		s.field.Update()
-		s.bars.Update(cursor)
-		s.hint.Update()
-		s.notes.Update(ka, cursor)
-		s.keyButtons.Update(ka)
-		s.backlights.Update(ka)
-		s.hitLights.Update(s.keysJudgmentKind)
-		s.holdLights.Update(ka, s.notes.keysFocusNote())
-		s.judgment.Update(s.keysJudgmentKind)
-		s.combo.Update(s.Combo)
-		s.score.Update(s.Score)
+		p.Scorer.update(ka)
+		p.Components.Update(ka, p.Dynamics, p.Scorer)
 	}
-	s.now = now
 	return nil
 }
 
-func (p Play) Draw(dst draws.Image) {
-	p.field.Draw(dst)
-	p.bars.Draw(dst)
-	p.hint.Draw(dst)
-	p.notes.Draw(dst)
-	p.keyButtons.Draw(dst)
-	p.backlights.Draw(dst)
-	p.hitLights.Draw(dst)
-	p.holdLights.Draw(dst)
-	p.judgment.Draw(dst)
-	p.combo.Draw(dst)
-	p.score.Draw(dst)
-}
-
 // Need to re-calculate positions when Speed has changed.
-func (s *Play) SetSpeedScale(new float64) {
-	old := s.SpeedScale
-	scale := new / old
-	s.SpeedScale = new
+func (p *Play) SetSpeedScale(newScale float64) {
+	oldScale := p.SpeedScale
+	scale := newScale / oldScale
+	p.SpeedScale = newScale
 
-	ds := s.Dynamics.Dynamics()
+	ds := p.Dynamics.Dynamics()
 	for i := range ds {
 		ds[i].Position *= scale
 	}
-	ns := s.notes.notes
+	ns := p.notes.notes
 	for i := range ns {
 		ns[i].position *= scale
 	}
-	bs := s.bars.bars
+	bs := p.bars.bars
 	for i := range bs {
 		bs[i].position *= scale
 	}
 }
 
-func (s Play) DebugString() string {
+func (p Play) DebugString() string {
 	var b strings.Builder
 	f := fmt.Fprintf
 
-	f(&b, "Time: %ds/%ds\n", s.now/1000, s.Span()/1000)
+	// f(&b, "Time: %ds/%ds\n", s.now/1000, s.Span()/1000)
 	f(&b, "\n")
-	f(&b, s.Scorer.DebugString())
-	f(&b, "Speed scale (PageUp/Down): x%.2f (x%.2f)\n", s.SpeedScale, s.Speed())
-	f(&b, "(Exposure time: %dms)\n", s.NoteExposureDuration())
+	f(&b, p.Scorer.DebugString())
+	f(&b, "Speed scale (PageUp/Down): x%.2f (x%.2f)\n", p.SpeedScale, p.Speed())
+	f(&b, "(Exposure time: %dms)\n", p.NoteExposureDuration())
 	return b.String()
 }

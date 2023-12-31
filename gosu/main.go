@@ -83,14 +83,9 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
-	// In 240Hz monitor, TPS is 60 and FPS is 240 at start.
-	// SetTPS will set TPS to FPS, hence TPS will be 240 too.
-	// issue: TPS becomes literally -1 when setting with ebiten.SyncWithFPS.
-	// ebiten.SetTPS(ebiten.SyncWithFPS)
-	scene.SetTPS(480)
-
 	// issue: It jitters when Vsync is enabled.
-	ebiten.SetVsyncEnabled(false)
+	// ebiten.SetVsyncEnabled(false)
+	ebiten.SetTPS(ebiten.SyncWithFPS)
 
 	dir, err := os.Getwd()
 	if err != nil {
