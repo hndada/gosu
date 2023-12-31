@@ -181,9 +181,9 @@ type NotesOptions struct {
 	TailOffset int32
 
 	keyCount int
-	kw       []float64
+	keysW    []float64
 	H        float64 // Applies to all types of notes.
-	kx       []float64
+	keysX    []float64
 	y        float64 // center bottom
 	keyOrder []KeyKind
 	Colors   [4]color.NRGBA
@@ -195,9 +195,9 @@ func NewNotesOptions(stage StageOptions, keys KeysOptions) NotesOptions {
 		TailOffset: 0,
 
 		keyCount: stage.keyCount,
-		kw:       keys.kw,
+		keysW:    keys.w,
 		H:        20,
-		kx:       keys.kx,
+		keysX:    keys.x,
 		y:        keys.y,
 
 		keyOrder: keys.Order(),
@@ -248,8 +248,8 @@ func NewNotesComponent(res NotesResources, opts NotesOptions, ns Notes, dys game
 	for k := range cmp.keysAnims {
 		for nt, frames := range res.framesList {
 			a := draws.NewAnimation(frames, 400)
-			a.SetSize(opts.kw[k], opts.H)
-			a.Locate(opts.kx[k], opts.y, draws.CenterBottom)
+			a.SetSize(opts.keysW[k], opts.H)
+			a.Locate(opts.keysX[k], opts.y, draws.CenterBottom)
 			cmp.keysAnims[k][nt] = a
 		}
 	}
@@ -289,7 +289,7 @@ func (cmp *NotesComponent) Update(cursor float64, keysHolding []bool) {
 func (cmp NotesComponent) Draw(dst draws.Image) {
 	uppermost := cmp.cursor + game.ScreenH
 	for k, lowest := range cmp.keysLowest {
-		idxs := []int{}
+		var idxs []int
 		var n Note
 		for i := lowest; i < len(cmp.notes.notes); i = n.next {
 			n = cmp.notes.notes[i]
@@ -300,7 +300,7 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 		}
 
 		// Make farther notes overlapped by nearer notes.
-		sort.Reverse(sort.IntSlice(idxs))
+		sort.Sort(sort.Reverse(sort.IntSlice(idxs)))
 
 		for _, i := range idxs {
 			n := cmp.notes.notes[i]

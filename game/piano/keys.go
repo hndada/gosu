@@ -23,8 +23,8 @@ type KeysOptions struct {
 	Orders    map[int][]KeyKind
 	Scratches map[int]Scratch
 	KindWs    [4]float64
-	kw        []float64
-	kx        []float64 // center
+	w         []float64
+	x         []float64 // center
 	y         float64   // bottom
 }
 
@@ -66,8 +66,8 @@ func NewKeysOptions(stage StageOptions) KeysOptions {
 		},
 		y: stage.H,
 	}
-	opts.kw = opts.newKeysW(stage)
-	opts.kx = opts.newKeysX(stage, opts.kw)
+	opts.w = opts.newW(stage)
+	opts.x = opts.newX(stage, opts.w)
 	return opts
 }
 
@@ -87,32 +87,32 @@ func (opts KeysOptions) Order() []KeyKind {
 	return nil
 }
 
-func (opts KeysOptions) newKeysW(stage StageOptions) []float64 {
-	kw := make([]float64, opts.keyCount)
+func (opts KeysOptions) newW(stage StageOptions) []float64 {
+	keysW := make([]float64, opts.keyCount)
 	for k, kind := range opts.Order() {
-		kw[k] = opts.KindWs[kind]
+		keysW[k] = opts.KindWs[kind]
 	}
 
 	// Adjust key width to fit the stage width.
 	var rawSum float64
-	for _, w := range kw {
+	for _, w := range keysW {
 		rawSum += w
 	}
 	scale := stage.w / rawSum
 
-	for k := range kw {
-		kw[k] *= scale
+	for k := range keysW {
+		keysW[k] *= scale
 	}
-	return kw
+	return keysW
 }
 
-func (opts KeysOptions) newKeysX(stage StageOptions, kw []float64) []float64 {
-	kx := make([]float64, opts.keyCount)
+func (opts KeysOptions) newX(stage StageOptions, keysW []float64) []float64 {
+	keysX := make([]float64, opts.keyCount)
 	x := stage.X - stage.w/2
-	for k, w := range kw {
+	for k, w := range keysW {
 		x += w / 2
-		kx[k] = x
+		keysX[k] = x
 		x += w / 2
 	}
-	return kx
+	return keysX
 }

@@ -16,18 +16,20 @@ func (br *HitLightsResources) Load(fsys fs.FS) {
 }
 
 type HitLightsOptions struct {
-	Scale   float64
-	kx      []float64
-	y       float64
-	Opacity float32
+	keyCount int
+	Scale    float64
+	keysX    []float64
+	y        float64
+	Opacity  float32
 }
 
 func NewHitLightsOptions(keys KeysOptions) HitLightsOptions {
 	return HitLightsOptions{
-		Scale:   1.0,
-		kx:      keys.kx,
-		y:       keys.y,
-		Opacity: 0.5,
+		keyCount: keys.keyCount,
+		Scale:    1.0,
+		keysX:    keys.x,
+		y:        keys.y,
+		Opacity:  0.5,
 	}
 }
 
@@ -36,12 +38,11 @@ type HitLightsComponent struct {
 }
 
 func NewHitLightsComponent(res HitLightsResources, opts HitLightsOptions) (cmp HitLightsComponent) {
-	keyCount := len(opts.kx)
-	cmp.keysAnim = make([]draws.Animation, keyCount)
+	cmp.keysAnim = make([]draws.Animation, opts.keyCount)
 	for k := range cmp.keysAnim {
 		a := draws.NewAnimation(res.frames, 150)
 		a.MultiplyScale(opts.Scale)
-		a.Locate(opts.kx[k], opts.y, draws.CenterBottom) // -HintHeight
+		a.Locate(opts.keysX[k], opts.y, draws.CenterBottom)
 		a.ColorScale.Scale(1, 1, 1, opts.Opacity)
 		a.SetLoop(1)
 		cmp.keysAnim[k] = a

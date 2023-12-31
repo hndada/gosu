@@ -20,20 +20,20 @@ func (br *BacklightsResources) Load(fsys fs.FS) {
 
 type BacklightsOptions struct {
 	keyCount int
-	kw       []float64
-	kx       []float64
-	y        float64 // center bottom
 	order    []KeyKind
+	keysW    []float64
+	keysX    []float64
+	y        float64 // center bottom
 	Colors   [4]color.NRGBA
 }
 
 func NewBacklightsOptions(keys KeysOptions) BacklightsOptions {
 	return BacklightsOptions{
 		keyCount: keys.keyCount,
-		kw:       keys.kw,
-		kx:       keys.kx,
-		y:        keys.y,
 		order:    keys.Order(),
+		keysW:    keys.w,
+		keysX:    keys.x,
+		y:        keys.y,
 		Colors: [4]color.NRGBA{
 			{224, 224, 224, 64}, // One: white
 			{255, 170, 204, 64}, // Two: pink
@@ -44,8 +44,8 @@ func NewBacklightsOptions(keys KeysOptions) BacklightsOptions {
 }
 
 type BacklightsComponent struct {
-	keysPressed []bool
 	sprites     []draws.Sprite
+	keysPressed []bool
 	startTimes  []time.Time
 	minDuration time.Duration
 }
@@ -54,11 +54,12 @@ func NewBacklightsComponent(res BacklightsResources, opts BacklightsOptions) (cm
 	cmp.sprites = make([]draws.Sprite, opts.keyCount)
 	for k := range cmp.sprites {
 		s := draws.NewSprite(res.img)
-		s.MultiplyScale(opts.kw[k] / s.W())
-		s.Locate(opts.kx[k], opts.y, draws.CenterBottom)
+		s.MultiplyScale(opts.keysW[k] / s.W())
+		s.Locate(opts.keysX[k], opts.y, draws.CenterBottom)
 		s.ColorScale.ScaleWithColor(opts.Colors[opts.order[k]])
 		cmp.sprites[k] = s
 	}
+	cmp.keysPressed = make([]bool, opts.keyCount)
 	cmp.startTimes = make([]time.Time, opts.keyCount)
 	cmp.minDuration = 30 * time.Millisecond
 	return
@@ -66,8 +67,8 @@ func NewBacklightsComponent(res BacklightsResources, opts BacklightsOptions) (cm
 
 func (cmp *BacklightsComponent) Update(kp []bool) {
 	cmp.keysPressed = kp
-	for k, down := range kp {
-		if down {
+	for k, p := range kp {
+		if p {
 			cmp.startTimes[k] = times.Now()
 		}
 	}

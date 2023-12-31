@@ -17,18 +17,20 @@ func (br *HoldLightsResources) Load(fsys fs.FS) {
 }
 
 type HoldLightsOptions struct {
-	Scale   float64
-	kx      []float64
-	y       float64
-	Opacity float32
+	keyCount int
+	Scale    float64
+	keysX    []float64
+	y        float64
+	Opacity  float32
 }
 
 func NewHoldLightsOptions(keys KeysOptions) HoldLightsOptions {
 	return HoldLightsOptions{
-		Scale:   1.0,
-		kx:      keys.kx,
-		y:       keys.y,
-		Opacity: 1.2,
+		keyCount: keys.keyCount,
+		Scale:    1.0,
+		keysX:    keys.x,
+		y:        keys.y,
+		Opacity:  1.2,
 	}
 }
 
@@ -38,40 +40,37 @@ type HoldLightsComponent struct {
 }
 
 func NewHoldLightsComponent(res HoldLightsResources, opts HoldLightsOptions) (cmp HoldLightsComponent) {
-	keyCount := len(opts.kx)
-	cmp.anims = make([]draws.Animation, keyCount)
+	cmp.anims = make([]draws.Animation, opts.keyCount)
 	for k := range cmp.anims {
 		a := draws.NewAnimation(res.frames, 300)
 		a.MultiplyScale(opts.Scale)
-		a.Locate(opts.kx[k], opts.y, draws.CenterBottom)
+		a.Locate(opts.keysX[k], opts.y, draws.CenterBottom)
 		a.ColorScale.Scale(1, 1, 1, opts.Opacity)
 		cmp.anims[k] = a
 	}
 	return
 }
 
-func (cmp *HoldLightsComponent) Update(kn []Note, kh []bool, ka game.KeyboardAction) {
-	kln := make([]bool, len(kn))
-	for k, n := range kn {
-		if n.valid && n.Type == Tail {
-			kln[k] = true
-		}
-	}
-	klnh := make([]bool, len(kh))
-	for k, n := range kln {
-		if n && kh[k] {
-			klnh[k] = true
-		}
-	}
-
+func (cmp *HoldLightsComponent) Update(ka game.KeyboardAction, kn []Note) {
 	keysOld := cmp.keysLongNoteHolding
-	keysNew := klnh
-	for k := range klnh {
-		if !keysOld[k] && keysNew[k] {
+	keysNew := cmp.newKeysLongNoteHolding(ka, kn)
+	for k, new := range keysNew {
+		old := keysOld[k]
+		if !old && new {
 			cmp.anims[k].Reset()
 		}
 	}
-	cmp.keysLongNoteHolding = klnh
+	cmp.keysLongNoteHolding = keysNew
+}
+
+func (cmp HoldLightsComponent) newKeysLongNoteHolding(ka game.KeyboardAction, kn []Note) []bool {
+	klnh := make([]bool, len(kn))
+	for k, holding := range ka.KeysHolding() {
+		if holding && kn[k].Type == Tail {
+			klnh[k] = true
+		}
+	}
+	return klnh
 }
 
 func (cmp HoldLightsComponent) Draw(dst draws.Image) {

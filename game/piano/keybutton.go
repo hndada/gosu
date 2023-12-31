@@ -23,25 +23,25 @@ func (kr *KeyButtonsResources) Load(fsys fs.FS) {
 
 type KeyButtonsOptions struct {
 	keyCount int
-	kw       []float64
+	keysW    []float64
 	h        float64
-	kx       []float64
+	keysX    []float64
 	y        float64 // center top
 }
 
 func NewKeyButtonsOptions(keys KeysOptions) KeyButtonsOptions {
 	return KeyButtonsOptions{
 		keyCount: keys.keyCount,
-		kw:       keys.kw,
+		keysW:    keys.w,
 		h:        game.ScreenH - keys.y,
-		kx:       keys.kx,
+		keysX:    keys.x,
 		y:        keys.y,
 	}
 }
 
 type KeyButtonsComponent struct {
-	keysPressed []bool
 	keysSprites [][2]draws.Sprite
+	keysPressed []bool
 	startTimes  []time.Time
 	minDuration time.Duration
 }
@@ -51,19 +51,19 @@ func NewKeyButtonsComponent(res KeyButtonsResources, opts KeyButtonsOptions) (cm
 	for k := range cmp.keysSprites {
 		for i, img := range res.imgs {
 			s := draws.NewSprite(img)
-			s.SetSize(opts.kw[k], opts.h)
-			s.Locate(opts.kx[k], opts.y, draws.CenterTop)
+			s.SetSize(opts.keysW[k], opts.h)
+			s.Locate(opts.keysX[k], opts.y, draws.CenterTop)
 			cmp.keysSprites[k][i] = s
 		}
 	}
+	cmp.keysPressed = make([]bool, opts.keyCount)
 	cmp.startTimes = make([]time.Time, opts.keyCount)
 	cmp.minDuration = 30 * time.Millisecond
 	return
 }
 
-func (cmp *KeyButtonsComponent) Update(kp []bool) {
-	cmp.keysPressed = kp
-	for k, p := range kp {
+func (cmp *KeyButtonsComponent) Update(ka game.KeyboardAction) {
+	for k, p := range ka.KeysPressed() {
 		if p {
 			cmp.startTimes[k] = times.Now()
 		}

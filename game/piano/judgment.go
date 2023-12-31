@@ -17,7 +17,6 @@ func (res *JudgmentResources) Load(fsys fs.FS) {
 		fname := fmt.Sprintf("piano/judgment/%s.png", name)
 		res.framesList[i] = draws.NewFramesFromFile(fsys, fname)
 	}
-	return
 }
 
 type JudgmentOptions struct {
@@ -76,8 +75,7 @@ func (cmp JudgmentComponent) Draw(dst draws.Image) {
 	if cmp.tween.IsFinished() {
 		return
 	}
-	// worstJudgment is guaranteed not to be blank,
-	// hence no panicked by index out of range.
+	// worst is guaranteed not to be out of range.
 	a := cmp.anims[cmp.worst]
 	a.MultiplyScale(cmp.tween.Current())
 	a.Draw(dst)
