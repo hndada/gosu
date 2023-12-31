@@ -34,7 +34,7 @@ func NewJudgmentOptions(stage StageOptions) JudgmentOptions {
 }
 
 type JudgmentComponent struct {
-	worst int // index of worst judgment
+	worst game.JudgmentKind
 	anims [4]draws.Animation
 	tween draws.Tween
 }
@@ -57,11 +57,11 @@ func NewJudgmentComponent(res JudgmentResources, opts JudgmentOptions) (cmp Judg
 	return
 }
 
-func (cmp *JudgmentComponent) Update(kji []int) {
+func (cmp *JudgmentComponent) Update(kjk []game.JudgmentKind) {
 	worst := blank
-	for _, ji := range kji {
-		if worst == blank || worst < ji {
-			worst = ji
+	for _, jk := range kjk {
+		if worst == blank || worst < jk {
+			worst = jk
 		}
 	}
 	if worst <= miss {

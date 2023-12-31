@@ -67,9 +67,9 @@ func (s *Play) Update(now int32, kas []game.KeyboardAction) any {
 		s.notes.Update(ka, cursor)
 		s.keyButtons.Update(ka)
 		s.backlights.Update(ka)
-		s.hitLights.Update(s.keysJudgment)
+		s.hitLights.Update(s.keysJudgmentKind)
 		s.holdLights.Update(ka, s.notes.keysFocusNote())
-		s.judgment.Update(s.keysJudgment)
+		s.judgment.Update(s.keysJudgmentKind)
 		s.combo.Update(s.Combo)
 		s.score.Update(s.Score)
 	}

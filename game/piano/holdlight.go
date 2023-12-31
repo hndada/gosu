@@ -66,7 +66,7 @@ func (cmp *HoldLightsComponent) Update(ka game.KeyboardAction, kn []Note) {
 func (cmp HoldLightsComponent) newKeysLongNoteHolding(ka game.KeyboardAction, kn []Note) []bool {
 	klnh := make([]bool, len(kn))
 	for k, holding := range ka.KeysHolding() {
-		if holding && kn[k].Type == Tail {
+		if holding && kn[k].Kind == Tail {
 			klnh[k] = true
 		}
 	}

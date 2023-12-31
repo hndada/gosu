@@ -4,6 +4,7 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/game"
 )
 
 type HitLightsResources struct {
@@ -51,8 +52,8 @@ func NewHitLightsComponent(res HitLightsResources, opts HitLightsOptions) (cmp H
 }
 
 // Tail also makes hit lighting on.
-func (cmp *HitLightsComponent) Update(kji []int) {
-	for k, ji := range kji {
+func (cmp *HitLightsComponent) Update(kjk []game.JudgmentKind) {
+	for k, ji := range kjk {
 		if ji <= good {
 			cmp.keysAnim[k].Reset()
 		}

@@ -1,5 +1,7 @@
 package game
 
+type JudgmentKind int
+
 type Judgment struct {
 	Window int32
 	Weight float64
@@ -7,8 +9,8 @@ type Judgment struct {
 
 type Judgments struct {
 	Judgments  []Judgment
-	blank      int
-	miss       int
+	blank      JudgmentKind
+	miss       JudgmentKind
 	missWindow int32
 	Counts     []int
 }
@@ -17,8 +19,8 @@ type Judgments struct {
 func NewJudgments(js []Judgment) Judgments {
 	return Judgments{
 		Judgments:  js,
-		blank:      len(js),
-		miss:       len(js) - 1,
+		blank:      JudgmentKind(len(js)),
+		miss:       JudgmentKind(len(js) - 1),
 		missWindow: js[len(js)-1].Window,
 		Counts:     make([]int, len(js)),
 	}
@@ -34,7 +36,7 @@ func (js Judgments) IsInRange(e int32) bool {
 
 // Judge returns index of judgment.
 // Judge judges in normal style: Whether a player hits a key in time.
-func (js Judgments) Judge(e int32, at KeyActionType) int {
+func (js Judgments) Judge(e int32, at KeyActionType) JudgmentKind {
 	switch {
 	case js.IsTooEarly(e):
 		return js.blank
@@ -48,13 +50,13 @@ func (js Judgments) Judge(e int32, at KeyActionType) int {
 	return js.blank
 }
 
-func (js Judgments) Evaluate(e int32) int {
+func (js Judgments) Evaluate(e int32) JudgmentKind {
 	if e < 0 {
 		e *= -1
 	}
-	for i, j := range js.Judgments {
+	for kind, j := range js.Judgments {
 		if e <= j.Window {
-			return i
+			return JudgmentKind(kind)
 		}
 	}
 	return js.blank

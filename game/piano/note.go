@@ -11,8 +11,10 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
+type NoteKind int
+
 const (
-	Normal = iota
+	Normal NoteKind = iota
 	Head
 	Tail
 	Body
@@ -20,10 +22,9 @@ const (
 
 type Note struct {
 	Time   int32
-	Type   int
+	Kind   NoteKind
 	Key    int
 	Sample game.Sample
-	// Duration int32
 
 	position float64 // Scaled x or y value.
 	next     int     // For updating staged notes.
@@ -35,16 +36,16 @@ type Note struct {
 func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 	n := Note{
 		Time:   int32(f.Time),
-		Type:   Normal,
+		Kind:   Normal,
 		Key:    f.Column(keyCount),
 		Sample: game.NewSample(f),
 	}
 	if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
-		n.Type = Head
+		n.Kind = Head
 		d := int32(f.EndTime) - n.Time
 		n2 := Note{
 			Time: n.Time + d,
-			Type: Tail,
+			Kind: Tail,
 			Key:  n.Key,
 			// Tail has no sample sound.
 		}
@@ -88,7 +89,7 @@ func NewNotes(chart any, dys game.Dynamics) Notes {
 		ns[i].position = d.Position + d.Speed*float64(n.Time-d.Time)
 
 		// Tail's Position should be always equal or larger than Head's.
-		if n.Type == Tail {
+		if n.Kind == Tail {
 			head := ns[n.prev]
 			if n.position < head.position {
 				ns[i].position = head.position
@@ -137,7 +138,7 @@ func NewNotes(chart any, dys game.Dynamics) Notes {
 func (ns Notes) NoteCounts() []int {
 	counts := make([]int, 2)
 	for _, n := range ns.notes {
-		switch n.Type {
+		switch n.Kind {
 		case Normal:
 			counts[0]++
 		case Head:
@@ -219,20 +220,20 @@ func NewNotesComponent(res NotesResources, opts NotesOptions, ns Notes, dys game
 	cmp.keyCount = opts.keyCount
 	cmp.keysAnims = make([][4]draws.Animation, opts.keyCount)
 	for k := range cmp.keysAnims {
-		for nt, frames := range res.framesList {
+		for nk, frames := range res.framesList {
 			a := draws.NewAnimation(frames, 400)
 			a.SetSize(opts.keysW[k], opts.H)
-			if nt == Body {
+			if nk == int(Body) {
 				a.Locate(opts.keysX[k], opts.y, draws.CenterTop)
 			} else {
 				a.Locate(opts.keysX[k], opts.y, draws.CenterBottom)
 			}
-			cmp.keysAnims[k][nt] = a
+			cmp.keysAnims[k][nk] = a
 		}
 	}
 
 	for i, n := range ns.notes {
-		if n.Type != Tail {
+		if n.Kind != Tail {
 			continue
 		}
 
@@ -287,7 +288,7 @@ func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {
 
 		// When Head is off the screen but Tail is on,
 		// update Tail to Head since drawLongNote uses Head.
-		if n.Type == Tail {
+		if n.Kind == Tail {
 			cmp.keysLowest[k] = n.prev
 		}
 	}
@@ -315,11 +316,11 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 		for _, i := range idxs {
 			n := cmp.notes[i]
 			// Make long note's body overlapped by its Head and Tail.
-			if n.Type == Head {
+			if n.Kind == Head {
 				cmp.drawLongNoteBody(dst, n)
 			}
 
-			a := cmp.keysAnims[k][n.Type]
+			a := cmp.keysAnims[k][n.Kind]
 			pos := n.position - cmp.cursor
 			a.Move(0, -pos)
 			if n.scored {
@@ -334,7 +335,7 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 // drawLongNoteBody draws stretched long note body sprite.
 func (cmp NotesComponent) drawLongNoteBody(dst draws.Image, head Note) {
 	tail := cmp.notes[head.next]
-	if head.Type != Head || tail.Type != Tail {
+	if head.Kind != Head || tail.Kind != Tail {
 		return
 	}
 
