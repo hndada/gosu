@@ -17,8 +17,8 @@ func (br *HoldLightsResources) Load(fsys fs.FS) {
 }
 
 type HoldLightsOptions struct {
-	keyCount int
 	Scale    float64
+	keyCount int
 	keysX    []float64
 	y        float64
 	Opacity  float32
@@ -26,8 +26,8 @@ type HoldLightsOptions struct {
 
 func NewHoldLightsOptions(keys KeysOptions) HoldLightsOptions {
 	return HoldLightsOptions{
-		keyCount: keys.keyCount,
 		Scale:    1.0,
+		keyCount: keys.keyCount,
 		keysX:    keys.x,
 		y:        keys.y,
 		Opacity:  1.2,

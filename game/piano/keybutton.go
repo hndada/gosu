@@ -26,7 +26,7 @@ type KeyButtonsOptions struct {
 	keysW    []float64
 	h        float64
 	keysX    []float64
-	y        float64 // center top
+	y        float64
 }
 
 func NewKeyButtonsOptions(keys KeysOptions) KeyButtonsOptions {

@@ -24,7 +24,7 @@ type BacklightsOptions struct {
 	order    []KeyKind
 	keysW    []float64
 	keysX    []float64
-	y        float64 // center bottom
+	y        float64
 	Colors   [4]color.NRGBA
 }
 

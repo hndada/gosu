@@ -6,10 +6,10 @@ func NewComboOptions(stage StageOptions) game.ComboOptions {
 	opts := game.ComboOptions{
 		Scale:    0.75,
 		X:        stage.X,
-		Y:        0.40,
 		DigitGap: -1,
-		Bounce:   0.85,
+		Y:        0.40,
 		Persist:  false,
+		Bounce:   0.85,
 	}
 	return opts
 }

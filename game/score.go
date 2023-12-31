@@ -3,7 +3,6 @@ package game
 import (
 	"fmt"
 	"io/fs"
-	"math"
 
 	"github.com/hndada/gosu/draws"
 )
@@ -40,10 +39,9 @@ func NewScoreOptions() ScoreOptions {
 }
 
 type ScoreComponent struct {
+	sprites [13]draws.Sprite
 	score   float64
 	w       float64 // Score's width is fixed.
-	sprites [13]draws.Sprite
-	easing  draws.TweenFunc
 	tween   draws.Tween
 }
 
@@ -53,12 +51,10 @@ func NewScoreComponent(res ScoreResources, opts ScoreOptions) (cmp ScoreComponen
 	// Score needs to set same base line, since
 	// each number might have different height.
 	var h0 float64
-	{
-		s0 := draws.NewSprite(res.imgs[0])
-		s0.MultiplyScale(opts.Scale)
-		h0 = s0.H()
-		cmp.w = s0.W() + opts.DigitGap
-	}
+	s0 := draws.NewSprite(res.imgs[0])
+	s0.MultiplyScale(opts.Scale)
+	h0 = s0.H()
+	cmp.w = s0.W() + opts.DigitGap
 
 	for i, img := range res.imgs {
 		sprite := draws.NewSprite(img)
@@ -66,29 +62,27 @@ func NewScoreComponent(res ScoreResources, opts ScoreOptions) (cmp ScoreComponen
 		sprite.Locate(ScreenW, h0-sprite.H(), draws.RightTop)
 		cmp.sprites[i] = sprite
 	}
-
-	cmp.easing = draws.EaseOutExponential
-	cmp.setTween()
+	// cmp.tween = cmp.newTween()
 	return
 }
 
-func (cmp *ScoreComponent) setTween() {
+func (cmp *ScoreComponent) newTween() draws.Tween {
 	begin := cmp.tween.Current()
 	change := cmp.score - begin
-	cmp.tween = draws.NewTween(begin, change, 400, cmp.easing)
+	return draws.NewTween(begin, change, 400, draws.EaseOutExponential)
 }
 
 func (cmp *ScoreComponent) Update(new float64) {
 	if old := cmp.score; old != new {
 		cmp.score = new
-		cmp.tween.Reset()
+		cmp.tween = cmp.newTween()
 	}
 }
 
 func (cmp ScoreComponent) Draw(screen draws.Image) {
-	tweenScore := int(math.Ceil(cmp.tween.Current()))
+	score := int(cmp.tween.Current())
 	digits := make([]int, 0)
-	for v := tweenScore; v > 0; v /= 10 {
+	for v := score; v > 0; v /= 10 {
 		digits = append(digits, v%10) // Little endian.
 	}
 

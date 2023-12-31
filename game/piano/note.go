@@ -19,13 +19,12 @@ const (
 )
 
 type Note struct {
-	Time     int32
-	Type     int
-	Key      int
-	Sample   game.Sample
-	Duration int32
+	Time   int32
+	Type   int
+	Key    int
+	Sample game.Sample
+	// Duration int32
 
-	// valid    bool    // Indcate that note is not blank.
 	position float64 // Scaled x or y value.
 	next     int     // For updating staged notes.
 	prev     int     // For accessing to Head from Tail.
@@ -39,18 +38,15 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 		Type:   Normal,
 		Key:    f.Column(keyCount),
 		Sample: game.NewSample(f),
-		// valid:  true,
 	}
 	if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
 		n.Type = Head
-		n.Duration = int32(f.EndTime) - n.Time
+		d := int32(f.EndTime) - n.Time
 		n2 := Note{
-			Time: n.Time + n.Duration,
+			Time: n.Time + d,
 			Type: Tail,
 			Key:  n.Key,
-			// Sample: game.Sample{}, // Tail has no sample sound.
-			// Duration: n.Duration, // Todo: 0 or n.Duration?
-			// valid: true,
+			// Tail has no sample sound.
 		}
 		ns = append(ns, n, n2)
 	} else {
@@ -178,29 +174,26 @@ func (res *NotesResources) Load(fsys fs.FS) {
 }
 
 type NotesOptions struct {
+	keyCount   int
+	keyOrder   []KeyKind
+	keysW      []float64
+	H          float64 // Applies to all types of notes.
+	keysX      []float64
+	y          float64 // center bottom
 	TailOffset int32
-
-	keyCount int
-	keysW    []float64
-	H        float64 // Applies to all types of notes.
-	keysX    []float64
-	y        float64 // center bottom
-	keyOrder []KeyKind
-	Colors   [4]color.NRGBA
+	Colors     [4]color.NRGBA
 	// LongBodyStyle     int // Stretch or Attach.
 }
 
 func NewNotesOptions(stage StageOptions, keys KeysOptions) NotesOptions {
 	return NotesOptions{
+		keyCount:   stage.keyCount,
+		keyOrder:   keys.Order(),
+		keysW:      keys.w,
+		H:          20,
+		keysX:      keys.x,
+		y:          keys.y,
 		TailOffset: 0,
-
-		keyCount: stage.keyCount,
-		keysW:    keys.w,
-		H:        20,
-		keysX:    keys.x,
-		y:        keys.y,
-
-		keyOrder: keys.Order(),
 		// Colors are from each note's second outermost pixel.
 		Colors: [4]color.NRGBA{
 			{255, 255, 255, 255}, // One: white
@@ -213,17 +206,31 @@ func NewNotesOptions(stage StageOptions, keys KeysOptions) NotesOptions {
 }
 
 type NotesComponent struct {
-	notes       Notes
-	cursor      float64
-	keyCount    int
-	keysHolding []bool
+	keysAnims [][4]draws.Animation
+	Notes
 	keysLowest  []int // indexes of lowest notes
-	keysAnims   [][4]draws.Animation
-	h           float64 // used for drawLongNoteBody
+	cursor      float64
 	keysColor   []color.NRGBA
+	keysHolding []bool
+	// h           float64 // used for drawLongNoteBody
 }
 
 func NewNotesComponent(res NotesResources, opts NotesOptions, ns Notes, dys game.Dynamics) (cmp NotesComponent) {
+	cmp.keyCount = opts.keyCount
+	cmp.keysAnims = make([][4]draws.Animation, opts.keyCount)
+	for k := range cmp.keysAnims {
+		for nt, frames := range res.framesList {
+			a := draws.NewAnimation(frames, 400)
+			a.SetSize(opts.keysW[k], opts.H)
+			if nt == Body {
+				a.Locate(opts.keysX[k], opts.y, draws.CenterTop)
+			} else {
+				a.Locate(opts.keysX[k], opts.y, draws.CenterBottom)
+			}
+			cmp.keysAnims[k][nt] = a
+		}
+	}
+
 	for i, n := range ns.notes {
 		if n.Type != Tail {
 			continue
@@ -242,35 +249,25 @@ func NewNotesComponent(res NotesResources, opts NotesOptions, ns Notes, dys game
 			ns.notes[i].Sample.Volume = d.Volume
 		}
 	}
-	cmp.notes = ns
-	cmp.keyCount = opts.keyCount
-	cmp.keysHolding = make([]bool, opts.keyCount)
+	cmp.Notes = ns
 	cmp.keysLowest = make([]int, opts.keyCount)
-	cmp.keysAnims = make([][4]draws.Animation, opts.keyCount)
-	for k := range cmp.keysAnims {
-		for nt, frames := range res.framesList {
-			a := draws.NewAnimation(frames, 400)
-			a.SetSize(opts.keysW[k], opts.H)
-			a.Locate(opts.keysX[k], opts.y, draws.CenterBottom)
-			cmp.keysAnims[k][nt] = a
-		}
-	}
 
-	cmp.h = opts.H
 	cmp.keysColor = make([]color.NRGBA, opts.keyCount)
 	for k := range cmp.keysColor {
 		cmp.keysColor[k] = opts.Colors[opts.keyOrder[k]]
 	}
+	cmp.keysHolding = make([]bool, opts.keyCount)
+	// cmp.h = opts.H
 	return
 }
 
 func (cmp *NotesComponent) keysFocusNote() []Note {
 	ns := make([]Note, cmp.keyCount)
-	for k, i := range cmp.notes.keysFocus {
-		if i == len(cmp.notes.notes) {
+	for k, i := range cmp.keysFocus {
+		if i == len(cmp.notes) {
 			continue
 		}
-		ns[k] = cmp.notes.notes[i]
+		ns[k] = cmp.notes[i]
 	}
 	return ns
 }
@@ -279,8 +276,8 @@ func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {
 	lowermost := cursor - game.ScreenH
 	for k, idx := range cmp.keysLowest {
 		var n Note
-		for i := idx; i < len(cmp.notes.notes); i = n.next {
-			n = cmp.notes.notes[idx]
+		for i := idx; i < len(cmp.notes); i = n.next {
+			n = cmp.notes[idx]
 			if n.position > lowermost {
 				break
 			}
@@ -304,8 +301,8 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 	for k, lowest := range cmp.keysLowest {
 		var idxs []int
 		var n Note
-		for i := lowest; i < len(cmp.notes.notes); i = n.next {
-			n = cmp.notes.notes[i]
+		for i := lowest; i < len(cmp.notes); i = n.next {
+			n = cmp.notes[i]
 			if n.position > uppermost {
 				break
 			}
@@ -316,7 +313,7 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 		sort.Sort(sort.Reverse(sort.IntSlice(idxs)))
 
 		for _, i := range idxs {
-			n := cmp.notes.notes[i]
+			n := cmp.notes[i]
 			// Make long note's body overlapped by its Head and Tail.
 			if n.Type == Head {
 				cmp.drawLongNoteBody(dst, n)
@@ -336,7 +333,7 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 
 // drawLongNoteBody draws stretched long note body sprite.
 func (cmp NotesComponent) drawLongNoteBody(dst draws.Image, head Note) {
-	tail := cmp.notes.notes[head.next]
+	tail := cmp.notes[head.next]
 	if head.Type != Head || tail.Type != Tail {
 		return
 	}
@@ -347,7 +344,7 @@ func (cmp NotesComponent) drawLongNoteBody(dst draws.Image, head Note) {
 	}
 
 	length := tail.position - head.position
-	length += cmp.h
+	// length += cmp.h
 	if length < 0 {
 		length = 0
 	}

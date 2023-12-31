@@ -15,6 +15,7 @@
 
 * Avoid using abbreviation in struct name and field name 
 unless the name is explicitly supposed to be expressed in abbreviated form.  
+    * Exception: img, anim, whxy
 
 * Local variables are encouraged to be written in abbreviated form, which is up to 3 letters. 
     * field name: sprites, anims
@@ -42,16 +43,23 @@ rate: two quantities with the different units
 ## Field order
 User would look multiple struct's fields in a time. Hence, putting common fields first would be more readable.
 
-### Component
-1. Drawer: Sprite, Animation, TextBox
-2. Size and Position: Drawer's WHXY
-3. Cursor: For calculating drawer's relative XY
-4. Condition: When drawer to draw 
-5. Lifetime: When drawer will not draw 
-Put index right after any iterable fields.
-
 ### Sprite
 1. WH
 2. XY
 3. Color
 4. Tween
+
+### Options
+1. The number of drawers (e.g., key count)
+2. Arrangement (e.g., order)
+3. Sprite options
+
+### Component
+1. The number of drawers (e.g., key count)
+2. Drawer (e.g., Sprite, Animation)
+3. Source of drawer's size and position (e.g., notes)
+4. Index of sources: Put index right after any iterable fields
+5. Reference point for drawer's position (e.g., cursor)
+6. Drawing condition (e.g., keysPressed)
+7. Drawer lifetime (e.g., tween, min duration) 
+

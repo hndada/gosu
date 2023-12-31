@@ -8,14 +8,18 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
-// Defining Bars is just redundant if it has no additional methods.
 type Bar struct {
 	time     int32
 	position float64
 }
 
+type Bars struct {
+	bars  []Bar
+	index int
+}
+
 // Given Dynamics' index is 0 and it is fine to modify it.
-func NewBars(dys game.Dynamics) []Bar {
+func NewBars(dys game.Dynamics) Bars {
 	// const useDefaultMeter = 0
 	times := dys.BeatTimes()
 	bs := make([]Bar, 0, len(times))
@@ -28,7 +32,7 @@ func NewBars(dys game.Dynamics) []Bar {
 		d := dys.UpdateIndex(b.time)
 		bs[i].position = d.Position + float64(b.time-d.Time)*d.Speed
 	}
-	return bs
+	return Bars{bars: bs}
 }
 
 // Drum and Piano modes have different bar drawing methods.
@@ -48,7 +52,7 @@ type BarsOptions struct {
 	w float64
 	H float64
 	x float64
-	y float64 // center bottom
+	y float64
 }
 
 func NewBarsOptions(stage StageOptions) BarsOptions {
@@ -62,17 +66,16 @@ func NewBarsOptions(stage StageOptions) BarsOptions {
 
 type BarsComponent struct {
 	sprite draws.Sprite
-	bars   []Bar // for position
-	idx    int
-	cursor float64 // for position
+	Bars
+	cursor float64
 }
 
-func NewBarComponent(res BarsResources, opts BarsOptions, bars []Bar) (cmp BarsComponent) {
+func NewBarComponent(res BarsResources, opts BarsOptions, bars Bars) (cmp BarsComponent) {
 	s := draws.NewSprite(res.img)
 	s.SetSize(opts.w, opts.H)
 	s.Locate(opts.x, opts.y, draws.CenterBottom)
 	cmp.sprite = s
-	cmp.bars = bars
+	cmp.Bars = bars
 	return
 }
 
@@ -85,20 +88,20 @@ func NewBarComponent(res BarsResources, opts BarsOptions, bars []Bar) (cmp BarsC
 func (cmp *BarsComponent) Update(cursor float64) {
 	cmp.cursor = cursor
 	lowermost := cursor - game.ScreenH
-	for i := cmp.idx; i < len(cmp.bars); i++ {
+	for i := cmp.index; i < len(cmp.bars); i++ {
 		b := cmp.bars[i]
 		if b.position > lowermost {
 			break
 		}
 		// index should be updated outside of if block.
-		cmp.idx = i
+		cmp.index = i
 	}
 }
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
 func (cmp BarsComponent) Draw(dst draws.Image) {
 	uppermost := cmp.cursor + game.ScreenH
-	for i := cmp.idx; i < len(cmp.bars); i++ {
+	for i := cmp.index; i < len(cmp.bars); i++ {
 		b := cmp.bars[i]
 		if b.position > uppermost {
 			break

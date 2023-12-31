@@ -21,16 +21,16 @@ func (res *ComboResources) Load(fsys fs.FS) {
 type ComboOptions struct {
 	Scale    float64
 	X        float64
-	Y        float64
 	DigitGap float64
-	Bounce   float64
+	Y        float64
 	Persist  bool
+	Bounce   float64
 }
 
 type ComboComponent struct {
-	combo   int
-	w       float64 // fixed width
 	sprites [10]draws.Sprite
+	combo   int
+	w       float64
 	tween   draws.Tween
 }
 
@@ -44,7 +44,6 @@ func NewComboComponent(res ComboResources, opts ComboOptions) (cmp ComboComponen
 	// Size of the whole image is 0.5w + (n-1)(w+gap) + 0.5w.
 	// Since sprites are already at anchor, no need to care of two 0.5w.
 	cmp.w = cmp.sprites[0].W() + opts.DigitGap
-
 	tw := draws.Tween{}
 	tw.Add(0, opts.Bounce, 200, draws.EaseLinear)
 	tw.Add(opts.Bounce, -opts.Bounce, 100, draws.EaseLinear)

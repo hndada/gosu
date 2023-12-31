@@ -16,8 +16,8 @@ func (br *HitLightsResources) Load(fsys fs.FS) {
 }
 
 type HitLightsOptions struct {
-	keyCount int
 	Scale    float64
+	keyCount int
 	keysX    []float64
 	y        float64
 	Opacity  float32
@@ -25,8 +25,8 @@ type HitLightsOptions struct {
 
 func NewHitLightsOptions(keys KeysOptions) HitLightsOptions {
 	return HitLightsOptions{
-		keyCount: keys.keyCount,
 		Scale:    1.0,
+		keyCount: keys.keyCount,
 		keysX:    keys.x,
 		y:        keys.y,
 		Opacity:  0.5,

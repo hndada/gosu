@@ -101,7 +101,7 @@ func (s *Play) SetSpeedScale(new float64) {
 	for i := range ds {
 		ds[i].Position *= scale
 	}
-	ns := s.notes.notes.notes
+	ns := s.notes.notes
 	for i := range ns {
 		ns[i].position *= scale
 	}
