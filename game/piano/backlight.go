@@ -15,7 +15,7 @@ type BacklightsResources struct {
 }
 
 func (br *BacklightsResources) Load(fsys fs.FS) {
-	fname := "piano/key/backlight.png"
+	fname := "piano/light/back.png"
 	br.img = draws.NewImageFromFile(fsys, fname)
 }
 

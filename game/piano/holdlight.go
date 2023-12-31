@@ -12,7 +12,7 @@ type HoldLightsResources struct {
 }
 
 func (br *HoldLightsResources) Load(fsys fs.FS) {
-	fname := "piano/lighting/hold.png"
+	fname := "piano/light/hold.png"
 	br.frames = draws.NewFramesFromFile(fsys, fname)
 }
 

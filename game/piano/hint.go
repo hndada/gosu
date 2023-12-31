@@ -11,7 +11,7 @@ type HintResources struct {
 }
 
 func (res *HintResources) Load(fsys fs.FS) {
-	fname := "piano/stage/hint.png"
+	fname := "piano/hint.png"
 	res.img = draws.NewImageFromFile(fsys, fname)
 }
 
@@ -19,7 +19,7 @@ type HintOptions struct {
 	w float64
 	H float64
 	x float64
-	y float64 // center bottom
+	y float64
 }
 
 func NewHintOptions(stage StageOptions) HintOptions {

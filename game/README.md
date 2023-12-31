@@ -2,6 +2,7 @@
 * Slice is often tricky
     * Just assigning slice will shallow copy.
     * When ranging over slice, setting value to copied element has no effect.
+* All structs and variables in cmd/* package should be unexported.
 
 # Objective
 * Manage UI cmponents with each own struct.

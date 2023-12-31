@@ -8,8 +8,9 @@ type StageOptions struct {
 	keyCount int
 	Ws       map[int]float64
 	w        float64
-	H        float64 // center bottom
+	H        float64
 	X        float64
+	y        float64 // bottom
 }
 
 func NewStageOptions(keyCount int) StageOptions {
@@ -29,6 +30,7 @@ func NewStageOptions(keyCount int) StageOptions {
 		},
 		H: 0.90 * game.ScreenH,
 		X: 0.50 * game.ScreenW,
+		y: 0.90 * game.ScreenH,
 	}
 	opts.w = opts.Ws[opts.keyCount]
 	return opts

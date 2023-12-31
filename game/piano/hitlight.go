@@ -12,7 +12,7 @@ type HitLightsResources struct {
 }
 
 func (br *HitLightsResources) Load(fsys fs.FS) {
-	fname := "piano/lighting/hit.png"
+	fname := "piano/light/hit.png"
 	br.frames = draws.NewFramesFromFile(fsys, fname)
 }
 

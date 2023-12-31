@@ -168,10 +168,9 @@ type NotesResources struct {
 // When note/head image is not found, use user's note/normal.
 // When note/tail image is not found, let it be blank.
 // When note/body image is not found, use user's note/normal.
-// Todo: remove key kind folders
 func (res *NotesResources) Load(fsys fs.FS) {
 	for nk, nkn := range []string{"normal", "head", "tail", "body"} {
-		name := fmt.Sprintf("piano/note/one/%s.png", nkn)
+		name := fmt.Sprintf("piano/note/%s.png", nkn)
 		res.framesList[nk] = draws.NewFramesFromFile(fsys, name)
 	}
 }
