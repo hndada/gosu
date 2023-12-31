@@ -207,6 +207,20 @@ func (dys Dynamics) BeatTimes() (times []int32) {
 	return
 }
 
+// UpdateIndex update index of Dynamics and returns current Dynamic.
+func (dys *Dynamics) UpdateIndex(now int32) Dynamic {
+	for i := dys.idx; i < len(dys.dynamics); i++ {
+		// if-condition first, then update index.
+		if dys.dynamics[i].Time > now {
+			break
+		}
+		dys.idx = i
+	}
+	return dys.Current()
+}
+
+func (dys *Dynamics) Reset() { dys.idx = 0 }
+
 func (dys Dynamics) Current() Dynamic { return dys.dynamics[dys.idx] }
 
 // The unit of speed is logical pixel per millisecond.
@@ -214,10 +228,9 @@ func (dys Dynamics) Speed() float64 {
 	return dys.Current().Speed * dys.SpeedScale
 }
 
-func (dys Dynamics) Cursor(now int32) float64 {
-	// nowTime := int32(now / time.Millisecond)
+func (dys Dynamics) Position(t int32) float64 {
 	dy := dys.Current()
-	return dy.Position + dys.Speed()*float64(dy.Time-now)
+	return dy.Position + dys.Speed()*float64(t-dy.Time)
 }
 
 // NoteExposureDuration returns duration of note exposure:
@@ -229,16 +242,4 @@ func (dys Dynamics) NoteExposureDuration() int32 {
 		return 1<<31 - 1
 	}
 	return int32(dys.reach/speed) + 1
-}
-
-// UpdateIndex update index of Dynamics. and returns current Dynamic.
-func (dys *Dynamics) UpdateIndex(now int32) Dynamic {
-	for i := dys.idx; i < len(dys.dynamics); i++ {
-		// if-condition first, then update index.
-		if dys.dynamics[i].Time > now {
-			break
-		}
-		dys.idx = i
-	}
-	return dys.Current()
 }

@@ -9,7 +9,6 @@ import (
 )
 
 type Bar struct {
-	time     int32
 	position float64
 }
 
@@ -22,15 +21,11 @@ type Bars struct {
 func NewBars(dys game.Dynamics) Bars {
 	// const useDefaultMeter = 0
 	times := dys.BeatTimes()
-	bs := make([]Bar, 0, len(times))
-	for _, t := range times {
-		b := Bar{time: t}
-		bs = append(bs, b)
-	}
-
-	for i, b := range bs {
-		d := dys.UpdateIndex(b.time)
-		bs[i].position = d.Position + float64(b.time-d.Time)*d.Speed
+	bs := make([]Bar, len(times))
+	dys.Reset()
+	for i, t := range times {
+		dys.UpdateIndex(t)
+		bs[i] = Bar{position: dys.Position(t)}
 	}
 	return Bars{bars: bs}
 }

@@ -60,7 +60,7 @@ func (s *Play) Update(now int32, kas []game.KeyboardAction) any {
 		s.now = ka.Time
 		s.Scorer.update(ka)
 
-		cursor := s.Cursor(s.now)
+		cursor := s.Position(s.now)
 		s.field.Update()
 		s.bars.Update(cursor)
 		s.hint.Update()

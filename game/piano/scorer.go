@@ -63,11 +63,10 @@ func (s *Scorer) update(ka game.KeyboardAction) {
 	s.markKeysUntouchedNote(ka.Time)
 
 	for k, ni := range s.keysFocus {
-		if ni == len(s.notes) {
+		if ni == s.none {
 			continue
 		}
 		n := s.notes[ni]
-
 		if ka.KeysAction[k] == game.Hit {
 			s.sampleBuffer = append(s.sampleBuffer, n.Sample)
 		}

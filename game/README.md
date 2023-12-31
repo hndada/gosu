@@ -1,5 +1,7 @@
 # Beware
-* Just assigning slice will shallow copy.
+* Slice is often tricky
+    * Just assigning slice will shallow copy.
+    * When ranging over slice, setting value to copied element has no effect.
 
 # Objective
 * Manage UI cmponents with each own struct.

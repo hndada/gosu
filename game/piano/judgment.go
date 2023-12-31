@@ -58,6 +58,7 @@ func NewJudgmentComponent(res JudgmentResources, opts JudgmentOptions) (cmp Judg
 }
 
 func (cmp *JudgmentComponent) Update(kjk []game.JudgmentKind) {
+	// worst is guaranteed not to be out of range.
 	worst := blank
 	for _, jk := range kjk {
 		if worst == blank || worst < jk {
@@ -75,7 +76,6 @@ func (cmp JudgmentComponent) Draw(dst draws.Image) {
 	if cmp.tween.IsFinished() {
 		return
 	}
-	// worst is guaranteed not to be out of range.
 	a := cmp.anims[cmp.worst]
 	a.MultiplyScale(cmp.tween.Current())
 	a.Draw(dst)

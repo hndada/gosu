@@ -58,6 +58,7 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 
 type Notes struct {
 	notes        []Note
+	none         int // index of none value. It is same as len(notes).
 	keyCount     int
 	keysFocus    []int // indexes of focused notes
 	sampleBuffer []game.Sample
@@ -84,58 +85,59 @@ func NewNotes(chart any, dys game.Dynamics) Notes {
 
 	// Position calculation is based on Dynamics.
 	// Farther note has larger position.
+	dys.Reset()
 	for i, n := range ns {
-		d := dys.UpdateIndex(n.Time)
-		ns[i].position = d.Position + d.Speed*float64(n.Time-d.Time)
+		dys.UpdateIndex(n.Time)
+		ns[i].position = dys.Position(n.Time)
 
 		// Tail's Position should be always equal or larger than Head's.
 		if n.Kind == Tail {
-			head := ns[n.prev]
-			if n.position < head.position {
+			if head := ns[n.prev]; n.position < head.position {
 				ns[i].position = head.position
 			}
 		}
 	}
 
 	// linking
-	prevs := make([]int, keyCount)
-	exists := make([]bool, keyCount)
+	none := len(ns)
+	keysNone := make([]int, keyCount)
+	for k := range keysNone {
+		keysNone[k] = none
+	}
+	keysFocus := make([]int, keyCount)
+	copy(keysFocus, keysNone)
+	keysPrev := make([]int, keyCount)
+	copy(keysPrev, keysNone)
+
 	for i, n := range ns {
-		prev := prevs[n.Key]
+		prev := keysPrev[n.Key]
 		ns[i].prev = prev
-		if exists[n.Key] {
+		if prev != none {
 			ns[prev].next = i
 		}
-		prevs[n.Key] = i
-		exists[n.Key] = true
-	}
-	// Set each last note's next with the none value: length of notes.
-	for k, prev := range prevs {
-		if !exists[k] {
-			continue
-		}
-		ns[prev].next = len(ns)
-	}
+		keysPrev[n.Key] = i
 
-	// Set key focus indexes.
-	// Initialize with the max none value: length of notes.
-	kfni := make([]int, keyCount)
-	for k := range kfni {
-		kfni[k] = len(ns)
+		if keysFocus[n.Key] == none {
+			keysFocus[n.Key] = i
+		}
 	}
-	for k := range kfni {
-		for i, n := range ns {
-			if k == n.Key {
-				kfni[n.Key] = i
-				break
-			}
+	// Set each last note's next with none.
+	for _, last := range keysPrev {
+		if last != none {
+			ns[last].next = none
 		}
 	}
 
-	return Notes{ns, keyCount, kfni, nil}
+	return Notes{
+		notes:        ns,
+		none:         none,
+		keyCount:     keyCount,
+		keysFocus:    keysFocus,
+		sampleBuffer: nil,
+	}
 }
 
-func (ns Notes) NoteCounts() []int {
+func (ns Notes) Counts() []int {
 	counts := make([]int, 2)
 	for _, n := range ns.notes {
 		switch n.Kind {
@@ -168,9 +170,9 @@ type NotesResources struct {
 // When note/body image is not found, use user's note/normal.
 // Todo: remove key kind folders
 func (res *NotesResources) Load(fsys fs.FS) {
-	for nt, ntn := range []string{"normal", "head", "tail", "body"} {
-		name := fmt.Sprintf("piano/note/one/%s.png", ntn)
-		res.framesList[nt] = draws.NewFramesFromFile(fsys, name)
+	for nk, nkn := range []string{"normal", "head", "tail", "body"} {
+		name := fmt.Sprintf("piano/note/one/%s.png", nkn)
+		res.framesList[nk] = draws.NewFramesFromFile(fsys, name)
 	}
 }
 
@@ -217,7 +219,6 @@ type NotesComponent struct {
 }
 
 func NewNotesComponent(res NotesResources, opts NotesOptions, ns Notes, dys game.Dynamics) (cmp NotesComponent) {
-	cmp.keyCount = opts.keyCount
 	cmp.keysAnims = make([][4]draws.Animation, opts.keyCount)
 	for k := range cmp.keysAnims {
 		for nk, frames := range res.framesList {
@@ -232,27 +233,32 @@ func NewNotesComponent(res NotesResources, opts NotesOptions, ns Notes, dys game
 		}
 	}
 
+	// Apply dynamics' volume to note's sample with blank volume.
+	dys.Reset()
 	for i, n := range ns.notes {
-		if n.Kind != Tail {
-			continue
-		}
-
-		// Apply TailOffset to Tail's Position.
-		// Tail's Position should be always equal or larger than Head's.
 		d := dys.UpdateIndex(n.Time)
-		ns.notes[i].position += float64(opts.TailOffset) * d.Speed
-		if head := ns.notes[n.prev]; n.position < head.position {
-			ns.notes[i].position = head.position
-		}
-
-		// Apply dynamics' volume to note's sample with blank volume.
 		if n.Sample.Volume == 0 {
 			ns.notes[i].Sample.Volume = d.Volume
 		}
 	}
-	cmp.Notes = ns
-	cmp.keysLowest = make([]int, opts.keyCount)
 
+	// Apply TailOffset to Tail's Position.
+	dys.Reset()
+	for i, n := range ns.notes {
+		if n.Kind != Tail {
+			continue
+		}
+		d := dys.UpdateIndex(n.Time)
+		ns.notes[i].position += float64(opts.TailOffset) * d.Speed
+
+		// Tail's Position should be always equal or larger than Head's.
+		if head := ns.notes[n.prev]; n.position < head.position {
+			ns.notes[i].position = head.position
+		}
+	}
+	cmp.Notes = ns
+
+	cmp.keysLowest = make([]int, opts.keyCount)
 	cmp.keysColor = make([]color.NRGBA, opts.keyCount)
 	for k := range cmp.keysColor {
 		cmp.keysColor[k] = opts.Colors[opts.keyOrder[k]]
@@ -263,14 +269,14 @@ func NewNotesComponent(res NotesResources, opts NotesOptions, ns Notes, dys game
 }
 
 func (cmp *NotesComponent) keysFocusNote() []Note {
-	ns := make([]Note, cmp.keyCount)
+	kn := make([]Note, cmp.keyCount)
 	for k, ni := range cmp.keysFocus {
-		if ni == len(cmp.notes) {
+		if ni == cmp.none {
 			continue
 		}
-		ns[k] = cmp.notes[ni]
+		kn[k] = cmp.notes[ni]
 	}
-	return ns
+	return kn
 }
 
 func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {

@@ -36,16 +36,17 @@ type KeyboardAction struct {
 
 func KeyboardActions(kss []input.KeyboardState) []KeyboardAction {
 	kas := make([]KeyboardAction, len(kss)-1)
-	old := kss[0].PressedList
-	for i, s := range kss[1:] {
-		now := s.PressedList
-		as := make([]int, len(now))
-		for k := range old {
-			as[k] = KeyAction(old[k], now[k])
+	keysOld := kss[0].PressedList
+	for i, ks := range kss[1:] {
+		keysNew := ks.PressedList
+		as := make([]int, len(keysNew))
+		for k, old := range keysOld {
+			new := keysNew[k]
+			as[k] = KeyAction(old, new)
 		}
-		t := int32(s.Time.Milliseconds())
+		t := int32(ks.Time.Milliseconds())
 		kas[i] = KeyboardAction{Time: t, KeysAction: as}
-		old = now
+		keysOld = keysNew
 	}
 	return kas
 }
