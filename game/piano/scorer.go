@@ -83,9 +83,9 @@ func (s *Scorer) update(ka game.KeyboardAction) {
 
 // marks the untouched note as missed.
 func (s Scorer) markKeysUntouchedNote(now int32) {
-	for k, start := range s.keysFocus {
-		n := s.notes[start]
-		for ni := start; ni < len(s.notes); ni = n.next {
+	for k, lowest := range s.keysFocus {
+		for ni := lowest; ni < len(s.notes); ni = s.notes[ni].next {
+			n := s.notes[ni]
 			if e := n.Time - now; s.IsTooLate(e) {
 				break
 			}

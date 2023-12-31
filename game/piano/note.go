@@ -119,20 +119,20 @@ func NewNotes(chart any, dys game.Dynamics) Notes {
 
 	// Set key focus indexes.
 	// Initialize with the max none value: length of notes.
-	kfi := make([]int, keyCount)
-	for k := range kfi {
-		kfi[k] = len(ns)
+	kfni := make([]int, keyCount)
+	for k := range kfni {
+		kfni[k] = len(ns)
 	}
-	for k := range kfi {
+	for k := range kfni {
 		for i, n := range ns {
 			if k == n.Key {
-				kfi[n.Key] = i
+				kfni[n.Key] = i
 				break
 			}
 		}
 	}
 
-	return Notes{ns, keyCount, kfi, nil}
+	return Notes{ns, keyCount, kfni, nil}
 }
 
 func (ns Notes) NoteCounts() []int {
@@ -264,31 +264,30 @@ func NewNotesComponent(res NotesResources, opts NotesOptions, ns Notes, dys game
 
 func (cmp *NotesComponent) keysFocusNote() []Note {
 	ns := make([]Note, cmp.keyCount)
-	for k, i := range cmp.keysFocus {
-		if i == len(cmp.notes) {
+	for k, ni := range cmp.keysFocus {
+		if ni == len(cmp.notes) {
 			continue
 		}
-		ns[k] = cmp.notes[i]
+		ns[k] = cmp.notes[ni]
 	}
 	return ns
 }
 
 func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {
 	lowermost := cursor - game.ScreenH
-	for k, idx := range cmp.keysLowest {
-		var n Note
-		for i := idx; i < len(cmp.notes); i = n.next {
-			n = cmp.notes[idx]
+	for k, lowest := range cmp.keysLowest {
+		for ni := lowest; ni < len(cmp.notes); ni = cmp.notes[ni].next {
+			n := cmp.notes[lowest]
 			if n.position > lowermost {
 				break
 			}
 			// index should be updated outside of if block.
-			cmp.keysLowest[k] = i
+			cmp.keysLowest[k] = ni
 		}
-
 		// When Head is off the screen but Tail is on,
 		// update Tail to Head since drawLongNote uses Head.
-		if n.Kind == Tail {
+		ni := cmp.keysLowest[k]
+		if n := cmp.notes[ni]; n.Kind == Tail {
 			cmp.keysLowest[k] = n.prev
 		}
 	}
@@ -300,21 +299,20 @@ func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {
 func (cmp NotesComponent) Draw(dst draws.Image) {
 	uppermost := cmp.cursor + game.ScreenH
 	for k, lowest := range cmp.keysLowest {
-		var idxs []int
-		var n Note
-		for i := lowest; i < len(cmp.notes); i = n.next {
-			n = cmp.notes[i]
+		var nis []int
+		for ni := lowest; ni < len(cmp.notes); ni = cmp.notes[ni].next {
+			n := cmp.notes[ni]
 			if n.position > uppermost {
 				break
 			}
-			idxs = append(idxs, i)
+			nis = append(nis, ni)
 		}
 
 		// Make farther notes overlapped by nearer notes.
-		sort.Sort(sort.Reverse(sort.IntSlice(idxs)))
+		sort.Sort(sort.Reverse(sort.IntSlice(nis)))
 
-		for _, i := range idxs {
-			n := cmp.notes[i]
+		for _, ni := range nis {
+			n := cmp.notes[ni]
 			// Make long note's body overlapped by its Head and Tail.
 			if n.Kind == Head {
 				cmp.drawLongNoteBody(dst, n)
