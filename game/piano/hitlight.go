@@ -53,8 +53,8 @@ func NewHitLightsComponent(res HitLightsResources, opts HitLightsOptions) (cmp H
 
 // Tail also makes hit lighting on.
 func (cmp *HitLightsComponent) Update(kjk []game.JudgmentKind) {
-	for k, ji := range kjk {
-		if ji <= good {
+	for k, jk := range kjk {
+		if jk <= good {
 			cmp.keysAnim[k].Reset()
 		}
 	}

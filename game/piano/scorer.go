@@ -75,8 +75,8 @@ func (s *Scorer) update(ka game.KeyboardAction) {
 			continue
 		}
 		e := n.Time - ka.Time
-		if ji := s.judge(n.Kind, e, ka.KeysAction[k]); ji != blank {
-			s.markNote(ni, ji)
+		if jk := s.judge(n.Kind, e, ka.KeysAction[k]); jk != blank {
+			s.markNote(ni, jk)
 		}
 	}
 }
@@ -127,11 +127,11 @@ func (s Scorer) judgeTail(e int32, at game.KeyActionType) game.JudgmentKind {
 	case s.IsInRange(e):
 		if at == game.Released {
 			// Cool goes Kool when judging Tail note.
-			ji := s.Evaluate(e)
-			if ji == cool {
-				ji = kool
+			jk := s.Evaluate(e)
+			if jk == cool {
+				jk = kool
 			}
-			return ji
+			return jk
 		}
 	}
 	return blank
