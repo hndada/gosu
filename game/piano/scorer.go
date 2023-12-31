@@ -1,6 +1,11 @@
 package piano
 
-import "github.com/hndada/gosu/game"
+import (
+	"fmt"
+	"strings"
+
+	"github.com/hndada/gosu/game"
+)
 
 // There are three kinds of factors: Flow, Acc, and Extra.
 // Ratios of Flow and Acc to their max values are multiplied to unit scores.
@@ -14,15 +19,15 @@ const (
 )
 
 const (
-	blank = iota - 1
-	kool
+	kool = iota
 	cool
 	good
 	miss
+	blank
 )
 
 type Scorer struct {
-	notes Notes
+	Notes
 	game.Judgments
 	keysJudgment []int
 	Combo        int
@@ -33,9 +38,7 @@ type Scorer struct {
 }
 
 func NewScorer(ns Notes, js game.Judgments) (s Scorer) {
-	s.notes = ns
-	// s.judgments = js
-	// s.missWindow = js[miss].Window
+	s.Notes = ns
 	s.Judgments = js
 
 	unit := 1e6 / float64(len(ns.notes))
@@ -52,20 +55,21 @@ func NewScorer(ns Notes, js game.Judgments) (s Scorer) {
 
 // update returns the indices of the judgments.
 func (s *Scorer) update(ka game.KeyboardAction) {
-	s.keysJudgment = make([]int, s.notes.keyCount)
+	s.keysJudgment = make([]int, s.keyCount)
 	for k := range s.keysJudgment {
 		s.keysJudgment[k] = blank
 	}
 
 	s.markKeysUntouchedNote(ka.Time)
-	for k, ni := range s.notes.keysFocus {
-		if ni == len(s.notes.notes) {
+
+	for k, ni := range s.keysFocus {
+		if ni == len(s.notes) {
 			continue
 		}
-		n := s.notes.notes[ni]
+		n := s.notes[ni]
 
 		if ka.KeysAction[k] == game.Hit {
-			s.notes.sampleBuffer = append(s.notes.sampleBuffer, n.Sample)
+			s.sampleBuffer = append(s.sampleBuffer, n.Sample)
 		}
 		if n.scored {
 			continue
@@ -79,9 +83,9 @@ func (s *Scorer) update(ka game.KeyboardAction) {
 
 // marks the untouched note as missed.
 func (s Scorer) markKeysUntouchedNote(now int32) {
-	for k, start := range s.notes.keysFocus {
-		n := s.notes.notes[start]
-		for ni := start; ni < len(s.notes.notes); ni = n.next {
+	for k, start := range s.keysFocus {
+		n := s.notes[start]
+		for ni := start; ni < len(s.notes); ni = n.next {
 			if e := n.Time - now; s.IsTooLate(e) {
 				break
 			}
@@ -89,7 +93,7 @@ func (s Scorer) markKeysUntouchedNote(now int32) {
 				// Tail note may be focused even after being marked.
 				// Other types of note should not.
 				if n.Type == Tail {
-					s.notes.keysFocus[k] = n.next
+					s.keysFocus[k] = n.next
 				} else {
 					panic("remained marked note is not Tail")
 				}
@@ -135,7 +139,7 @@ func (s Scorer) judgeTail(e int32, at game.KeyActionType) int {
 
 // Todo: no getting Flow when hands off the long note
 func (s *Scorer) markNote(ni int, ji int) {
-	n := s.notes.notes[ni]
+	n := s.notes[ni]
 	j := s.Judgments.Judgments[ji]
 	switch ji {
 	case kool:
@@ -165,7 +169,7 @@ func (s *Scorer) markNote(ni int, ji int) {
 		score := j.Weight * (ratio * unit)
 		s.Score += score
 	}
-	s.notes.notes[ni].scored = true
+	s.notes[ni].scored = true
 	s.Judgments.Counts[ji]++
 
 	// when Head is missed, its tail goes missed as well.
@@ -175,7 +179,7 @@ func (s *Scorer) markNote(ni int, ji int) {
 
 	// Tail is flushed separately at markKeysUntouchedNote.
 	if n.Type != Tail {
-		s.notes.keysFocus[n.Key] = n.next
+		s.keysFocus[n.Key] = n.next
 	}
 
 	s.keysJudgment[n.Key] = ji
@@ -185,13 +189,15 @@ func (s *Scorer) incrementFactor(fi int) {
 	s.factors[fi] = min(s.factors[fi]+1, s.maxFactors[fi])
 }
 
-// func (s Scorer) keysFocusNote() []Note {
-// 	kn := make([]Note, s.notes.keyCount)
-// 	for k, ni := range s.notes.keysFocus {
-// 		if ni == len(s.notes.notes) {
-// 			continue
-// 		}
-// 		kn[k] = s.notes.notes[ni]
-// 	}
-// 	return kn
-// }
+func (s Scorer) DebugString() string {
+	var b strings.Builder
+	f := fmt.Fprintf
+
+	f(&b, "Score: %.0f \n", s.Score)
+	f(&b, "Combo: %d\n", s.Combo)
+	f(&b, "Flow: %.0f/%.0f\n", s.factors[flow], s.maxFactors[flow])
+	f(&b, " Acc: %.0f/%.0f\n", s.factors[acc], s.maxFactors[acc])
+	f(&b, "Judgment counts: %v\n", s.Judgments.Counts)
+	f(&b, "\n")
+	return b.String()
+}

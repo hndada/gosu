@@ -30,8 +30,9 @@ type Options struct {
 // Todo: game.ErrorMeterComponent
 // Todo: FlowPoint (kind of HP)
 type Play struct {
-	scorer   Scorer
-	dynamics game.Dynamics
+	now int32 // current time in millisecond
+	Scorer
+	game.Dynamics
 
 	field      FieldComponent
 	bars       BarsComponent
@@ -48,7 +49,7 @@ type Play struct {
 
 // Just assigning slice will shallow copy.
 func NewPlay(res Resources, opts Options, format any) (s Play, err error) {
-	s.dynamics, err = game.NewDynamics(format)
+	s.Dynamics, err = game.NewDynamics(format, opts.Stage.H)
 	if err != nil {
 		err = fmt.Errorf("failed to create dynamics: %w", err)
 		return
@@ -56,23 +57,26 @@ func NewPlay(res Resources, opts Options, format any) (s Play, err error) {
 	return
 }
 
+// isKeyPresseds []bool // for keys, key lightings, and hold lightings
+// isKeyHolds    []bool // for long note body, hold lightings
+
 // All components in Play use unified time.
 func (s *Play) Update(now int32, kas []game.KeyboardAction) any {
 	for _, ka := range kas {
-		s.scorer.update(ka)
-		// cursor := s.dynamics.Cursor(ka.Time)
+		s.now = ka.Time
+		s.Scorer.update(ka)
+		// cursor := s.dynamics.Cursor(s.now)
 	}
 	return nil
 }
 
 // Need to re-calculate positions when Speed has changed.
 func (s *Play) SetSpeedScale(new float64) {
-	old := s.dynamics.SpeedScale
-	s.dynamics.SpeedScale = new
+	old := s.SpeedScale
 	scale := new / old
+	s.SpeedScale = new
 
-	// s.cursor *= scale
-	ds := s.dynamics.Dynamics
+	ds := s.Dynamics.Dynamics()
 	for i := range ds {
 		ds[i].Position *= scale
 	}
@@ -104,18 +108,10 @@ func (s Play) DebugString() string {
 	var b strings.Builder
 	f := fmt.Fprintf
 
-	// f(&b, "Time: %.3fs/%.0fs\n", s.now, s.notes.Span()/1000)
+	f(&b, "Time: %ds/%ds\n", s.now/1000, s.Span()/1000)
 	f(&b, "\n")
-	f(&b, "Score: %.0f \n", s.scorer.Score)
-	f(&b, "Combo: %d\n", s.scorer.Combo)
-	f(&b, "Flow: %.0f/%.0f\n", s.scorer.factors[flow], s.scorer.maxFactors[flow])
-	f(&b, " Acc: %.0f/%.0f\n", s.scorer.factors[acc], s.scorer.maxFactors[acc])
-	f(&b, "Judgment counts: %v\n", s.scorer.Judgments.Counts)
-	f(&b, "\n")
-	f(&b, "Speed scale (PageUp/Down): x%.2f (x%.2f)\n", s.dynamics.SpeedScale, s.dynamics.Speed())
-	// f(&b, "(Exposure time: %dms)\n", s.dynamics.NoteExposureDuration(s.stage.H))
+	f(&b, s.Scorer.DebugString())
+	f(&b, "Speed scale (PageUp/Down): x%.2f (x%.2f)\n", s.SpeedScale, s.Speed())
+	f(&b, "(Exposure time: %dms)\n", s.NoteExposureDuration())
 	return b.String()
 }
-
-// isKeyPresseds []bool // for keys, key lightings, and hold lightings
-// isKeyHolds    []bool // for long note body, hold lightings

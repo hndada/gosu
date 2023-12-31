@@ -13,15 +13,13 @@ type Judgments struct {
 	Counts     []int
 }
 
-// blank is preferred to be -1,
-// so that windows of Judgments are in order.
+// blank is preferred to be len(js), so that blank comes after miss.
 func NewJudgments(js []Judgment) Judgments {
-	miss := len(js) - 1
 	return Judgments{
 		Judgments:  js,
-		blank:      -1,
-		miss:       miss,
-		missWindow: js[miss].Window,
+		blank:      len(js),
+		miss:       len(js) - 1,
+		missWindow: js[len(js)-1].Window,
 		Counts:     make([]int, len(js)),
 	}
 }
