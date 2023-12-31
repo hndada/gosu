@@ -7,6 +7,7 @@ import "github.com/hndada/gosu/game"
 // Occupied: Options, Settings, Configs
 // If Mods is gonna be used, it might be good to change "Mode".
 
+// the ideal number of Judgments is: 3 + 1
 func (Scorer) DefaultJudgments() []game.Judgment {
 	return []game.Judgment{
 		{Window: 20, Weight: 1},

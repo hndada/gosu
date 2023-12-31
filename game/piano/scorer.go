@@ -21,25 +21,23 @@ const (
 	miss
 )
 
-// keysFocusNoteIndex []int // targets of judging
 type Scorer struct {
-	notes      Notes
-	judgments  []game.Judgment // To use game.Judge, slice is preferred.
-	missWindow int32
-	units      [3]float64
-	factors    [3]float64
-	maxFactors [3]float64
-
-	judgmentBuffer []int
-	JudgmentCounts [4]int
-	Combo          float64
-	Score          float64
+	notes Notes
+	game.Judgments
+	keysJudgment []int
+	Combo        int
+	units        [3]float64
+	factors      [3]float64
+	maxFactors   [3]float64
+	Score        float64
 }
 
-func NewScorer(ns Notes, js []game.Judgment) (s Scorer) {
+func NewScorer(ns Notes, js game.Judgments) (s Scorer) {
 	s.notes = ns
-	s.judgments = js
-	s.missWindow = js[miss].Window
+	// s.judgments = js
+	// s.missWindow = js[miss].Window
+	s.Judgments = js
+
 	unit := 1e6 / float64(len(ns.notes))
 	s.units = [3]float64{unit * 0.7, unit * 0.3, unit * 0.1}
 	s.maxFactors = [3]float64{50, 20, 1}
@@ -52,8 +50,13 @@ func NewScorer(ns Notes, js []game.Judgment) (s Scorer) {
 	return
 }
 
+// update returns the indices of the judgments.
 func (s *Scorer) update(ka game.KeyboardAction) {
-	s.judgmentBuffer = s.judgmentBuffer[:0]
+	s.keysJudgment = make([]int, s.notes.keyCount)
+	for k := range s.keysJudgment {
+		s.keysJudgment[k] = blank
+	}
+
 	s.markKeysUntouchedNote(ka.Time)
 	for k, ni := range s.notes.keysFocus {
 		if ni == len(s.notes.notes) {
@@ -79,7 +82,7 @@ func (s Scorer) markKeysUntouchedNote(now int32) {
 	for k, start := range s.notes.keysFocus {
 		n := s.notes.notes[start]
 		for ni := start; ni < len(s.notes.notes); ni = n.next {
-			if e := n.Time - now; e >= -s.missWindow {
+			if e := n.Time - now; s.IsTooLate(e) {
 				break
 			}
 			if n.scored {
@@ -100,7 +103,7 @@ func (s Scorer) markKeysUntouchedNote(now int32) {
 func (s Scorer) judge(nt int, e int32, a game.KeyActionType) int {
 	switch nt {
 	case Normal, Head:
-		return game.Judge(s.judgments, e, a)
+		return s.Judge(e, a)
 	case Tail:
 		return s.judgeTail(e, a)
 	default:
@@ -111,16 +114,16 @@ func (s Scorer) judge(nt int, e int32, a game.KeyActionType) int {
 // Either Hold or Released when Tail is not scored
 func (s Scorer) judgeTail(e int32, at game.KeyActionType) int {
 	switch {
-	case e > s.missWindow:
+	case s.IsTooEarly(e):
 		if at == game.Released {
 			return miss
 		}
-	case e < -s.missWindow:
+	case s.IsTooLate(e):
 		return miss
-	default: // In range
-		if at == game.Released { // a != Hold
-			ji := game.Evaluate(s.judgments, e)
-			// Beware: Cool at Tail note goes Kool.
+	case s.IsInRange(e):
+		if at == game.Released {
+			// Cool goes Kool when judging Tail note.
+			ji := s.Evaluate(e)
 			if ji == cool {
 				ji = kool
 			}
@@ -133,7 +136,7 @@ func (s Scorer) judgeTail(e int32, at game.KeyActionType) int {
 // Todo: no getting Flow when hands off the long note
 func (s *Scorer) markNote(ni int, ji int) {
 	n := s.notes.notes[ni]
-	j := s.judgments[ji]
+	j := s.Judgments.Judgments[ji]
 	switch ji {
 	case kool:
 		s.Combo++
@@ -163,18 +166,19 @@ func (s *Scorer) markNote(ni int, ji int) {
 		s.Score += score
 	}
 	s.notes.notes[ni].scored = true
-	s.JudgmentCounts[ji]++
+	s.Judgments.Counts[ji]++
 
 	// when Head is missed, its tail goes missed as well.
 	if n.Type == Head && ji == miss {
 		s.markNote(n.next, miss)
 	}
 
-	// Tail is flushed separately at updateKeysFocusNote().
+	// Tail is flushed separately at markKeysUntouchedNote.
 	if n.Type != Tail {
 		s.notes.keysFocus[n.Key] = n.next
 	}
-	s.judgmentBuffer = append(s.judgmentBuffer, ji)
+
+	s.keysJudgment[n.Key] = ji
 }
 
 func (s *Scorer) incrementFactor(fi int) {

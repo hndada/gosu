@@ -30,10 +30,9 @@ type Options struct {
 // Todo: game.ErrorMeterComponent
 // Todo: FlowPoint (kind of HP)
 type Play struct {
-	dynamics game.Dynamics
 	scorer   Scorer
+	dynamics game.Dynamics
 
-	// keyCount   int
 	field      FieldComponent
 	bars       BarsComponent
 	hint       HintComponent
@@ -111,7 +110,7 @@ func (s Play) DebugString() string {
 	f(&b, "Combo: %d\n", s.scorer.Combo)
 	f(&b, "Flow: %.0f/%.0f\n", s.scorer.factors[flow], s.scorer.maxFactors[flow])
 	f(&b, " Acc: %.0f/%.0f\n", s.scorer.factors[acc], s.scorer.maxFactors[acc])
-	f(&b, "Judgment counts: %v\n", s.scorer.JudgmentCounts)
+	f(&b, "Judgment counts: %v\n", s.scorer.Judgments.Counts)
 	f(&b, "\n")
 	f(&b, "Speed scale (PageUp/Down): x%.2f (x%.2f)\n", s.dynamics.SpeedScale, s.dynamics.Speed())
 	// f(&b, "(Exposure time: %dms)\n", s.dynamics.NoteExposureDuration(s.stage.H))
