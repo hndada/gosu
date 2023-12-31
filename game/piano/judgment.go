@@ -57,14 +57,14 @@ func NewJudgmentComponent(res JudgmentResources, opts JudgmentOptions) (cmp Judg
 	return
 }
 
-func (cmp *JudgmentComponent) Update(jis []int) {
-	worst := blank // -1
-	for _, ji := range jis {
-		if worst < ji {
+func (cmp *JudgmentComponent) Update(kji []int) {
+	worst := blank
+	for _, ji := range kji {
+		if worst == blank || worst < ji {
 			worst = ji
 		}
 	}
-	if worst >= kool { // 0
+	if worst <= miss {
 		cmp.worst = worst
 		cmp.anims[worst].Reset()
 		cmp.tween.Reset()

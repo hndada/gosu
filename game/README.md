@@ -1,3 +1,6 @@
+# Beware
+* Just assigning slice will shallow copy.
+
 # Objective
 * Manage UI cmponents with each own struct.
 

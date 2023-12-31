@@ -43,6 +43,10 @@ func NewHintComponent(res HintResources, opts HintOptions) (cmp HintComponent) {
 	return
 }
 
+func (cmp *HintComponent) Update() {
+	// Do nothing.
+}
+
 func (cmp HintComponent) Draw(dst draws.Image) {
 	cmp.sprite.Draw(dst)
 }

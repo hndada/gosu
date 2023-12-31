@@ -28,11 +28,10 @@ type ComboOptions struct {
 }
 
 type ComboComponent struct {
-	Combo     *int
-	lastCombo int     // to reset tween
-	w         float64 // fixed width
-	sprites   [10]draws.Sprite
-	tween     draws.Tween
+	combo   int
+	w       float64 // fixed width
+	sprites [10]draws.Sprite
+	tween   draws.Tween
 }
 
 func NewComboComponent(res ComboResources, opts ComboOptions) (cmp ComboComponent) {
@@ -56,9 +55,9 @@ func NewComboComponent(res ComboResources, opts ComboOptions) (cmp ComboComponen
 	return
 }
 
-func (cmp *ComboComponent) Update() {
-	if cmp.lastCombo != *cmp.Combo {
-		cmp.lastCombo = *cmp.Combo
+func (cmp *ComboComponent) Update(new int) {
+	if old := cmp.combo; old != new {
+		cmp.combo = new
 		cmp.tween.Reset()
 	}
 }
@@ -69,12 +68,12 @@ func (cmp ComboComponent) Draw(dst draws.Image) {
 	if cmp.tween.IsFinished() {
 		return
 	}
-	if *cmp.Combo == 0 {
+	if cmp.combo == 0 {
 		return
 	}
 
 	vs := make([]int, 0)
-	for v := *cmp.Combo; v > 0; v /= 10 {
+	for v := cmp.combo; v > 0; v /= 10 {
 		vs = append(vs, v%10) // Little endian.
 	}
 

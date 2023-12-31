@@ -8,7 +8,6 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
-// Options is for passing from game to mode.
 type Options struct {
 	KeyCount int
 	Stage    StageOptions
@@ -47,7 +46,6 @@ type Play struct {
 	score      game.ScoreComponent
 }
 
-// Just assigning slice will shallow copy.
 func NewPlay(res Resources, opts Options, format any) (s Play, err error) {
 	s.Dynamics, err = game.NewDynamics(format, opts.Stage.H)
 	if err != nil {
@@ -57,17 +55,40 @@ func NewPlay(res Resources, opts Options, format any) (s Play, err error) {
 	return
 }
 
-// isKeyPresseds []bool // for keys, key lightings, and hold lightings
-// isKeyHolds    []bool // for long note body, hold lightings
-
-// All components in Play use unified time.
 func (s *Play) Update(now int32, kas []game.KeyboardAction) any {
 	for _, ka := range kas {
 		s.now = ka.Time
 		s.Scorer.update(ka)
-		// cursor := s.dynamics.Cursor(s.now)
+
+		cursor := s.Cursor(s.now)
+		s.field.Update()
+		s.bars.Update(cursor)
+		s.hint.Update()
+		s.notes.Update(ka, cursor)
+		s.keyButtons.Update(ka)
+		s.backlights.Update(ka)
+		s.hitLights.Update(s.keysJudgment)
+		s.holdLights.Update(ka, s.notes.keysFocusNote())
+		s.judgment.Update(s.keysJudgment)
+		s.combo.Update(s.Combo)
+		s.score.Update(s.Score)
 	}
+	s.now = now
 	return nil
+}
+
+func (p Play) Draw(dst draws.Image) {
+	p.field.Draw(dst)
+	p.bars.Draw(dst)
+	p.hint.Draw(dst)
+	p.notes.Draw(dst)
+	p.keyButtons.Draw(dst)
+	p.backlights.Draw(dst)
+	p.hitLights.Draw(dst)
+	p.holdLights.Draw(dst)
+	p.judgment.Draw(dst)
+	p.combo.Draw(dst)
+	p.score.Draw(dst)
 }
 
 // Need to re-calculate positions when Speed has changed.
@@ -88,20 +109,6 @@ func (s *Play) SetSpeedScale(new float64) {
 	for i := range bs {
 		bs[i].position *= scale
 	}
-}
-
-func (p Play) Draw(dst draws.Image) {
-	p.field.Draw(dst)
-	p.bars.Draw(dst)
-	p.hint.Draw(dst)
-	p.notes.Draw(dst)
-	p.keyButtons.Draw(dst)
-	p.backlights.Draw(dst)
-	p.hitLights.Draw(dst)
-	p.holdLights.Draw(dst)
-	p.judgment.Draw(dst)
-	p.combo.Draw(dst)
-	p.score.Draw(dst)
 }
 
 func (s Play) DebugString() string {

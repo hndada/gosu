@@ -40,12 +40,11 @@ func NewScoreOptions() ScoreOptions {
 }
 
 type ScoreComponent struct {
-	Score     float64
-	lastScore float64 // to reset tween
-	w         float64 // Score's width is fixed.
-	sprites   [13]draws.Sprite
-	easing    draws.TweenFunc
-	tween     draws.Tween
+	score   float64
+	w       float64 // Score's width is fixed.
+	sprites [13]draws.Sprite
+	easing  draws.TweenFunc
+	tween   draws.Tween
 }
 
 // Name of a function which returns closure ends with "-er".
@@ -75,14 +74,14 @@ func NewScoreComponent(res ScoreResources, opts ScoreOptions) (cmp ScoreComponen
 
 func (cmp *ScoreComponent) setTween() {
 	begin := cmp.tween.Current()
-	change := cmp.Score - begin
+	change := cmp.score - begin
 	cmp.tween = draws.NewTween(begin, change, 400, cmp.easing)
 }
 
-func (cmp *ScoreComponent) Update() {
-	if cmp.lastScore != cmp.Score {
-		cmp.lastScore = cmp.Score
-		cmp.setTween()
+func (cmp *ScoreComponent) Update(new float64) {
+	if old := cmp.score; old != new {
+		cmp.score = new
+		cmp.tween.Reset()
 	}
 }
 

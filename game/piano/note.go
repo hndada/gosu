@@ -215,6 +215,7 @@ func NewNotesOptions(stage StageOptions, keys KeysOptions) NotesOptions {
 type NotesComponent struct {
 	notes       Notes
 	cursor      float64
+	keyCount    int
 	keysHolding []bool
 	keysLowest  []int // indexes of lowest notes
 	keysAnims   [][4]draws.Animation
@@ -242,6 +243,7 @@ func NewNotesComponent(res NotesResources, opts NotesOptions, ns Notes, dys game
 		}
 	}
 	cmp.notes = ns
+	cmp.keyCount = opts.keyCount
 	cmp.keysHolding = make([]bool, opts.keyCount)
 	cmp.keysLowest = make([]int, opts.keyCount)
 	cmp.keysAnims = make([][4]draws.Animation, opts.keyCount)
@@ -262,7 +264,18 @@ func NewNotesComponent(res NotesResources, opts NotesOptions, ns Notes, dys game
 	return
 }
 
-func (cmp *NotesComponent) Update(cursor float64, keysHolding []bool) {
+func (cmp *NotesComponent) keysFocusNote() []Note {
+	ns := make([]Note, cmp.keyCount)
+	for k, i := range cmp.notes.keysFocus {
+		if i == len(cmp.notes.notes) {
+			continue
+		}
+		ns[k] = cmp.notes.notes[i]
+	}
+	return ns
+}
+
+func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {
 	lowermost := cursor - game.ScreenH
 	for k, idx := range cmp.keysLowest {
 		var n Note
@@ -282,7 +295,7 @@ func (cmp *NotesComponent) Update(cursor float64, keysHolding []bool) {
 		}
 	}
 	cmp.cursor = cursor
-	cmp.keysHolding = keysHolding
+	cmp.keysHolding = ka.KeysHolding()
 }
 
 // Notes are fixed. Lane itself moves, all notes move as same amount.
@@ -329,7 +342,7 @@ func (cmp NotesComponent) drawLongNoteBody(dst draws.Image, head Note) {
 	}
 
 	a := cmp.keysAnims[head.Key][Body]
-	if cmp.keysHolding[head.Key] {
+	if !cmp.keysHolding[head.Key] {
 		a.Reset()
 	}
 

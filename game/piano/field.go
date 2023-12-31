@@ -43,6 +43,10 @@ func NewFieldComponent(res FieldResources, opts FieldOptions) (cmp FieldComponen
 	return
 }
 
+func (cmp *FieldComponent) Update() {
+	// Do nothing.
+}
+
 func (cmp FieldComponent) Draw(dst draws.Image) {
 	cmp.sprite.Draw(dst)
 }
