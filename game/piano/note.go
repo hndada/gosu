@@ -25,7 +25,7 @@ type Note struct {
 	Sample   game.Sample
 	Duration int32
 
-	valid    bool    // Indcate that note is not blank.
+	// valid    bool    // Indcate that note is not blank.
 	position float64 // Scaled x or y value.
 	next     int     // For updating staged notes.
 	prev     int     // For accessing to Head from Tail.
@@ -39,7 +39,7 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 		Type:   Normal,
 		Key:    f.Column(keyCount),
 		Sample: game.NewSample(f),
-		valid:  true,
+		// valid:  true,
 	}
 	if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
 		n.Type = Head
@@ -50,7 +50,7 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 			Key:  n.Key,
 			// Sample: game.Sample{}, // Tail has no sample sound.
 			// Duration: n.Duration, // Todo: 0 or n.Duration?
-			valid: true,
+			// valid: true,
 		}
 		ns = append(ns, n, n2)
 	} else {
@@ -59,13 +59,23 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 	return ns
 }
 
-func NewNotes(f any, dys game.Dynamics, keyCount int) (ns []Note) {
-	switch f := f.(type) {
+type Notes struct {
+	notes        []Note
+	keyCount     int
+	keysFocus    []int // indexes of focused notes
+	sampleBuffer []game.Sample
+}
+
+func NewNotes(chart any, dys game.Dynamics) Notes {
+	var ns []Note
+	var keyCount int
+	switch chart := chart.(type) {
 	case *osu.Format:
-		ns = make([]Note, 0, len(f.HitObjects)*2)
-		for _, ho := range f.HitObjects {
+		ns = make([]Note, 0, len(chart.HitObjects)*2)
+		for _, ho := range chart.HitObjects {
 			ns = append(ns, newNoteFromOsu(ho, keyCount)...)
 		}
+		keyCount = int(chart.CircleSize)
 	}
 
 	sort.Slice(ns, func(i, j int) bool {
@@ -77,11 +87,8 @@ func NewNotes(f any, dys game.Dynamics, keyCount int) (ns []Note) {
 
 	// Position calculation is based on Dynamics.
 	// Farther note has larger position.
-	// dys.Index = 0
 	for i, n := range ns {
-		dys.UpdateIndex(n.Time)
-		d := dys.Current()
-		// Ratio (speed) first, then time difference.
+		d := dys.UpdateIndex(n.Time)
 		ns[i].position = d.Position + d.Speed*float64(n.Time-d.Time)
 
 		// Tail's Position should be always equal or larger than Head's.
@@ -105,15 +112,53 @@ func NewNotes(f any, dys game.Dynamics, keyCount int) (ns []Note) {
 		prevs[n.Key] = i
 		exists[n.Key] = true
 	}
-
-	// Set each last note's next.
+	// Set each last note's next with the none value: length of notes.
 	for k, prev := range prevs {
 		if !exists[k] {
 			continue
 		}
 		ns[prev].next = len(ns)
 	}
-	return
+
+	// Set key focus indexes.
+	// Initialize with the max none value: length of notes.
+	kfi := make([]int, keyCount)
+	for k := range kfi {
+		kfi[k] = len(ns)
+	}
+	for k := range kfi {
+		for i, n := range ns {
+			if k == n.Key {
+				kfi[n.Key] = i
+				break
+			}
+		}
+	}
+
+	return Notes{ns, keyCount, kfi, nil}
+}
+
+func (ns Notes) NoteCounts() []int {
+	counts := make([]int, 2)
+	for _, n := range ns.notes {
+		switch n.Type {
+		case Normal:
+			counts[0]++
+		case Head:
+			counts[1]++
+		}
+	}
+	return counts
+}
+
+func (ns Notes) Span() int32 {
+	if len(ns.notes) == 0 {
+		return 0
+	}
+	last := ns.notes[len(ns.notes)-1]
+	// No need to add last.Duration, since last is
+	// always either Normal or Tail.
+	return last.Time
 }
 
 type NotesResources struct {
@@ -126,8 +171,8 @@ type NotesResources struct {
 // When note/body image is not found, use user's note/normal.
 // Todo: remove key kind folders
 func (res *NotesResources) Load(fsys fs.FS) {
-	for nt, ntname := range []string{"normal", "head", "tail", "body"} {
-		name := fmt.Sprintf("piano/note/one/%s.png", ntname)
+	for nt, ntn := range []string{"normal", "head", "tail", "body"} {
+		name := fmt.Sprintf("piano/note/one/%s.png", ntn)
 		res.framesList[nt] = draws.NewFramesFromFile(fsys, name)
 	}
 }
@@ -168,7 +213,7 @@ func NewNotesOptions(stage StageOptions, keys KeysOptions) NotesOptions {
 }
 
 type NotesComponent struct {
-	notes       []Note
+	notes       Notes
 	cursor      float64
 	keysHolding []bool
 	keysLowest  []int // indexes of lowest notes
@@ -177,29 +222,26 @@ type NotesComponent struct {
 	keysColor   []color.NRGBA
 }
 
-func NewNotesComponent(res NotesResources, opts NotesOptions,
-	ns []Note, dys game.Dynamics) (cmp NotesComponent) {
-	cmp.notes = ns
-	for i, n := range cmp.notes {
+func NewNotesComponent(res NotesResources, opts NotesOptions, ns Notes, dys game.Dynamics) (cmp NotesComponent) {
+	for i, n := range ns.notes {
 		if n.Type != Tail {
 			continue
 		}
-		dys.UpdateIndex(n.Time)
-		d := dys.Current()
 
 		// Apply TailOffset to Tail's Position.
 		// Tail's Position should be always equal or larger than Head's.
-		cmp.notes[i].position += float64(opts.TailOffset) * d.Speed
-		if head := cmp.notes[n.prev]; n.position < head.position {
-			cmp.notes[i].position = head.position
+		d := dys.UpdateIndex(n.Time)
+		ns.notes[i].position += float64(opts.TailOffset) * d.Speed
+		if head := ns.notes[n.prev]; n.position < head.position {
+			ns.notes[i].position = head.position
 		}
 
 		// Apply dynamics' volume to note's sample with blank volume.
 		if n.Sample.Volume == 0 {
-			cmp.notes[i].Sample.Volume = d.Volume
+			ns.notes[i].Sample.Volume = d.Volume
 		}
 	}
-
+	cmp.notes = ns
 	cmp.keysHolding = make([]bool, opts.keyCount)
 	cmp.keysLowest = make([]int, opts.keyCount)
 	cmp.keysAnims = make([][4]draws.Animation, opts.keyCount)
@@ -220,36 +262,13 @@ func NewNotesComponent(res NotesResources, opts NotesOptions,
 	return
 }
 
-func (cmp NotesComponent) Span() int32 {
-	if len(cmp.notes) == 0 {
-		return 0
-	}
-	last := cmp.notes[len(cmp.notes)-1]
-	// No need to add last.Duration, since last is
-	// always either Normal or Tail.
-	return last.Time
-}
-
-func (cmp NotesComponent) NoteCounts() []int {
-	counts := make([]int, 2)
-	for _, n := range cmp.notes {
-		switch n.Type {
-		case Normal:
-			counts[0]++
-		case Head:
-			counts[1]++
-		}
-	}
-	return counts
-}
-
 func (cmp *NotesComponent) Update(cursor float64, keysHolding []bool) {
-	lowerBound := cursor - game.ScreenH
+	lowermost := cursor - game.ScreenH
 	for k, idx := range cmp.keysLowest {
 		var n Note
-		for i := idx; i < len(cmp.notes); i = n.next {
-			n = cmp.notes[idx]
-			if n.position > lowerBound {
+		for i := idx; i < len(cmp.notes.notes); i = n.next {
+			n = cmp.notes.notes[idx]
+			if n.position > lowermost {
 				break
 			}
 			// index should be updated outside of if block.
@@ -268,13 +287,13 @@ func (cmp *NotesComponent) Update(cursor float64, keysHolding []bool) {
 
 // Notes are fixed. Lane itself moves, all notes move as same amount.
 func (cmp NotesComponent) Draw(dst draws.Image) {
-	upperBound := cmp.cursor + game.ScreenH
+	uppermost := cmp.cursor + game.ScreenH
 	for k, lowest := range cmp.keysLowest {
 		idxs := []int{}
 		var n Note
-		for i := lowest; i < len(cmp.notes); i = n.next {
-			n = cmp.notes[i]
-			if n.position > upperBound {
+		for i := lowest; i < len(cmp.notes.notes); i = n.next {
+			n = cmp.notes.notes[i]
+			if n.position > uppermost {
 				break
 			}
 			idxs = append(idxs, i)
@@ -284,7 +303,7 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 		sort.Reverse(sort.IntSlice(idxs))
 
 		for _, i := range idxs {
-			n := cmp.notes[i]
+			n := cmp.notes.notes[i]
 			// Make long note's body overlapped by its Head and Tail.
 			if n.Type == Head {
 				cmp.drawLongNoteBody(dst, n)
@@ -304,7 +323,7 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 
 // drawLongNoteBody draws stretched long note body sprite.
 func (cmp NotesComponent) drawLongNoteBody(dst draws.Image, head Note) {
-	tail := cmp.notes[head.next]
+	tail := cmp.notes.notes[head.next]
 	if head.Type != Head || tail.Type != Tail {
 		return
 	}

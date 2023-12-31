@@ -10,7 +10,7 @@ import (
 
 // Defining Bars is just redundant if it has no additional methods.
 type Bar struct {
-	Time     int32 // in milliseconds
+	time     int32
 	position float64
 }
 
@@ -20,14 +20,13 @@ func NewBars(dys game.Dynamics) []Bar {
 	times := dys.BeatTimes()
 	bs := make([]Bar, 0, len(times))
 	for _, t := range times {
-		b := Bar{Time: t}
+		b := Bar{time: t}
 		bs = append(bs, b)
 	}
 
 	for i, b := range bs {
-		dys.UpdateIndex(b.Time)
-		d := dys.Current()
-		bs[i].position = d.Position + float64(b.Time-d.Time)*d.Speed
+		d := dys.UpdateIndex(b.time)
+		bs[i].position = d.Position + float64(b.time-d.Time)*d.Speed
 	}
 	return bs
 }
@@ -62,19 +61,18 @@ func NewBarsOptions(stage StageOptions) BarsOptions {
 }
 
 type BarsComponent struct {
-	bars   []Bar
-	cursor float64
-	lowest int
 	sprite draws.Sprite
+	bars   []Bar // for position
+	idx    int
+	cursor float64 // for position
 }
 
 func NewBarComponent(res BarsResources, opts BarsOptions, bars []Bar) (cmp BarsComponent) {
-	cmp.bars = bars
-
 	s := draws.NewSprite(res.img)
 	s.SetSize(opts.w, opts.H)
 	s.Locate(opts.x, opts.y, draws.CenterBottom)
 	cmp.sprite = s
+	cmp.bars = bars
 	return
 }
 
@@ -86,23 +84,23 @@ func NewBarComponent(res BarsResources, opts BarsOptions, bars []Bar) (cmp BarsC
 // The same concept also applies to notes.
 func (cmp *BarsComponent) Update(cursor float64) {
 	cmp.cursor = cursor
-	lowerBound := cursor - game.ScreenH
-	for i := cmp.lowest; i < len(cmp.bars); i++ {
+	lowermost := cursor - game.ScreenH
+	for i := cmp.idx; i < len(cmp.bars); i++ {
 		b := cmp.bars[i]
-		if b.position > lowerBound {
+		if b.position > lowermost {
 			break
 		}
 		// index should be updated outside of if block.
-		cmp.lowest = i
+		cmp.idx = i
 	}
 }
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
 func (cmp BarsComponent) Draw(dst draws.Image) {
-	upperBound := cmp.cursor + game.ScreenH
-	for i := cmp.lowest; i < len(cmp.bars); i++ {
+	uppermost := cmp.cursor + game.ScreenH
+	for i := cmp.idx; i < len(cmp.bars); i++ {
 		b := cmp.bars[i]
-		if b.position > upperBound {
+		if b.position > uppermost {
 			break
 		}
 

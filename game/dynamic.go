@@ -39,7 +39,7 @@ func (d Dynamic) BeatDuration() float64 {
 // No two Dynamics have same Time.
 type Dynamics struct {
 	Dynamics   []Dynamic
-	index      int
+	idx        int
 	span       int32 // total duration of the chart
 	SpeedScale float64
 }
@@ -202,7 +202,7 @@ func (dys Dynamics) BeatTimes() (times []int32) {
 	return
 }
 
-func (dys Dynamics) Current() Dynamic { return dys.Dynamics[dys.index] }
+func (dys Dynamics) Current() Dynamic { return dys.Dynamics[dys.idx] }
 
 // The unit of speed is logical pixel per millisecond.
 func (dys Dynamics) Speed() float64 {
@@ -226,13 +226,14 @@ func (dys Dynamics) NoteExposureDuration(reach float64) int32 {
 	return int32(reach/speed) + 1
 }
 
-// Used in ScenePlay for fetching next Dynamic.
-func (dys *Dynamics) UpdateIndex(now int32) {
-	for i := dys.index; i < len(dys.Dynamics); i++ {
+// UpdateIndex update index of Dynamics. and returns current Dynamic.
+func (dys *Dynamics) UpdateIndex(now int32) Dynamic {
+	for i := dys.idx; i < len(dys.Dynamics); i++ {
 		// if-condition first, then update index.
 		if dys.Dynamics[i].Time > now {
 			break
 		}
-		dys.index = i
+		dys.idx = i
 	}
+	return dys.Current()
 }

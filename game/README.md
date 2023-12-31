@@ -1,3 +1,6 @@
+# Objective
+* Manage UI cmponents with each own struct.
+
 # Naming Convention
 * Prefix keys- is put when the type is a slice with the length of keyCount.
 * Prefix k- for local variables of keys-.
@@ -14,6 +17,8 @@ unless the name is explicitly supposed to be expressed in abbreviated form.
     * field name: sprites, anims
     * local name: s, a
 
+* NewXxx returns struct, while LoadXxx doesn't.
+
 # Keyword
 ratio: two quantities with the same units
 rate: two quantities with the different units
@@ -26,7 +31,24 @@ rate: two quantities with the different units
 
 * If you find any helpful information, commenting is preferred. Grammar check is not necessary at this stage. 
 
+* No XxxArgs. It just makes the code too verbose.
+* Introducing interface as a field would make the code too verbose.
+
+* Ratio (speed) first, then time difference.
+
 ## Field order
-### V1
-// Order of fields: logic -> drawing.
-// Try to keep the order of initializing consistent with the order of fields.
+User would look multiple struct's fields in a time. Hence, putting common fields first would be more readable.
+
+### Component
+1. Drawer: Sprite, Animation, TextBox
+2. Size and Position: Drawer's WHXY
+3. Cursor: For calculating drawer's relative XY
+4. Condition: When drawer to draw 
+5. Lifetime: When drawer will not draw 
+Put index right after any iterable fields.
+
+### Sprite
+1. WH
+2. XY
+3. Color
+4. Tween

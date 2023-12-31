@@ -24,8 +24,8 @@ type KeysOptions struct {
 	Scratches map[int]Scratch
 	KindWs    [4]float64
 	kw        []float64
-	kx        []float64
-	y         float64 // center bottom
+	kx        []float64 // center
+	y         float64   // bottom
 }
 
 func NewKeysOptions(stage StageOptions) KeysOptions {
@@ -106,8 +106,7 @@ func (opts KeysOptions) newKeysW(stage StageOptions) []float64 {
 	return kw
 }
 
-// centered x positions
-func (opts *KeysOptions) newKeysX(stage StageOptions, kw []float64) []float64 {
+func (opts KeysOptions) newKeysX(stage StageOptions, kw []float64) []float64 {
 	kx := make([]float64, opts.keyCount)
 	x := stage.X - stage.w/2
 	for k, w := range kw {
