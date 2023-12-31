@@ -59,7 +59,7 @@ func (f Format) maniaKeyboardStates(keyCount int) []input.KeyboardState {
 			}
 			k++
 		}
-		states[i] = input.KeyboardState{Time: t, PressedList: ps}
+		states[i] = input.KeyboardState{Time: t, KeysPressed: ps}
 	}
 	return states
 }
@@ -112,7 +112,7 @@ func (f Format) taikoKeyboardStates(keyCount int) []input.KeyboardState {
 				ps[k] = true
 			}
 		}
-		states[i] = input.KeyboardState{Time: t, PressedList: ps}
+		states[i] = input.KeyboardState{Time: t, KeysPressed: ps}
 	}
 	return states
 }

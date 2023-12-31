@@ -9,12 +9,12 @@ import (
 // type Keystrokes struct?
 type KeyboardState struct {
 	Time        time.Duration // Stands for elapsed time.
-	PressedList []bool
+	KeysPressed []bool
 }
 
 func (a KeyboardState) isEqual(b KeyboardState) bool {
-	for k, ap := range a.PressedList {
-		bp := b.PressedList[k]
+	for k, ap := range a.KeysPressed {
+		bp := b.KeysPressed[k]
 		if ap != bp {
 			return false
 		}
