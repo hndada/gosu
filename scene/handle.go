@@ -7,9 +7,6 @@ import (
 	"github.com/hndada/gosu/mode"
 )
 
-var LeftRightKeys = [2]input.Key{input.KeyArrowLeft, input.KeyArrowRight}
-var UpDownKeys = [2]input.Key{input.KeyArrowUp, input.KeyArrowDown}
-
 func IsEnterJustPressed() bool {
 	return input.IsKeyJustPressed(input.KeyEnter) || input.IsKeyJustPressed(input.KeyNumpadEnter)
 }
@@ -19,14 +16,9 @@ func IsEscapeJustPressed() bool {
 
 func NewMusicVolumeKeyHandler(cfg *Config, asset *Asset) func() bool {
 	handler := ctrl.KeyHandler{
-		Handler: ctrl.FloatHandler{
-			Value: &cfg.MusicVolume,
-			Min:   0,
-			Max:   1,
-			Unit:  0.05,
-		},
+		Handler:  ctrl.NewValueHandler[float64](&cfg.MusicVolume, 0, 1, 0.05),
 		Modifier: input.KeyControlLeft,
-		Keys:     LeftRightKeys,
+		Keys:     ctrl.KeysLeftRight,
 		Sounds:   asset.ToggleSounds,
 		Volume:   &cfg.SoundVolume,
 	}
@@ -35,14 +27,9 @@ func NewMusicVolumeKeyHandler(cfg *Config, asset *Asset) func() bool {
 
 func NewSoundVolumeKeyHandler(cfg *Config, asset *Asset) func() bool {
 	handler := ctrl.KeyHandler{
-		Handler: ctrl.FloatHandler{
-			Value: &cfg.SoundVolume,
-			Min:   0,
-			Max:   1,
-			Unit:  0.05,
-		},
+		Handler:  ctrl.NewValueHandler[float64](&cfg.SoundVolume, 0, 1, 0.05),
 		Modifier: input.KeyAltLeft,
-		Keys:     LeftRightKeys,
+		Keys:     ctrl.KeysLeftRight,
 		Sounds:   asset.ToggleSounds,
 		Volume:   &cfg.SoundVolume,
 	}
@@ -51,15 +38,9 @@ func NewSoundVolumeKeyHandler(cfg *Config, asset *Asset) func() bool {
 
 func NewMusicOffsetKeyHandler(cfg *Config, asset *Asset) func() bool {
 	handler := ctrl.KeyHandler{
-		Handler: ctrl.Int32Handler{
-			Value: &cfg.MusicOffset,
-			Min:   -200,
-			Max:   200,
-			Loop:  false,
-			Unit:  1,
-		},
+		Handler:  ctrl.NewValueHandler[int](&cfg.MusicOffset, -200, 200, 1),
 		Modifier: input.KeyShiftLeft,
-		Keys:     LeftRightKeys,
+		Keys:     ctrl.KeysLeftRight,
 		Sounds:   asset.TransitionSounds,
 		Volume:   &cfg.SoundVolume,
 	}
@@ -68,12 +49,7 @@ func NewMusicOffsetKeyHandler(cfg *Config, asset *Asset) func() bool {
 
 func NewBackgroundBrightnessKeyHandler(cfg *Config, asset *Asset) func() bool {
 	handler := ctrl.KeyHandler{
-		Handler: ctrl.FloatHandler{
-			Value: &cfg.BackgroundBrightness,
-			Min:   0,
-			Max:   1,
-			Unit:  0.1,
-		},
+		Handler:  ctrl.NewValueHandler[float64](&cfg.BackgroundBrightness, 0, 1, 0.1),
 		Modifier: input.KeyControlLeft,
 		Keys:     [2]input.Key{input.KeyO, input.KeyP},
 		Sounds:   asset.ToggleSounds,

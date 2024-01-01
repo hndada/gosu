@@ -5,6 +5,9 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
+var KeysLeftRight = [2]input.Key{input.KeyArrowLeft, input.KeyArrowRight}
+var KeysUpDown = [2]input.Key{input.KeyArrowUp, input.KeyArrowDown}
+
 // short: 0.1s
 // long: 0.5s
 

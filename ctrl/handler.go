@@ -38,6 +38,15 @@ type ValueHandler[T Number] struct {
 	Unit  T
 }
 
+func NewValueHandler[T Number](value *T, min, max, unit T) *ValueHandler[T] {
+	return &ValueHandler[T]{
+		Value: value,
+		Min:   min,
+		Max:   max,
+		Unit:  unit,
+	}
+}
+
 func (h *ValueHandler[T]) Decrease() {
 	newValue := *h.Value - h.Unit
 	if newValue < h.Min {
