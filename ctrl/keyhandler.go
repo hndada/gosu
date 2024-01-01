@@ -1,9 +1,12 @@
-package scene
+package ctrl
 
 import (
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/input"
 )
+
+// short: 0.1s
+// long: 0.5s
 
 // Todo: Modifiers work strangely when there are plural modifiers.
 // Todo: support modifiers for KeyHandler

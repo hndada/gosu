@@ -11,10 +11,11 @@ import (
 )
 
 type KeyButtonsResources struct {
-	imgs [2]draws.Image
+	imgs []draws.Image
 }
 
 func (kr *KeyButtonsResources) Load(fsys fs.FS) {
+	kr.imgs = make([]draws.Image, 2)
 	for i, name := range []string{"up", "down"} {
 		fname := fmt.Sprintf("piano/key/%s.png", name)
 		kr.imgs[i] = draws.NewImageFromFile(fsys, fname)

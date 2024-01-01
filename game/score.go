@@ -14,10 +14,11 @@ const (
 )
 
 type ScoreResources struct {
-	imgs [13]draws.Image // numbers with sign (. , %)
+	imgs []draws.Image // numbers with sign (. , %)
 }
 
 func (res *ScoreResources) Load(fsys fs.FS) {
+	res.imgs = make([]draws.Image, 13)
 	for i := 0; i < 10; i++ {
 		res.imgs[i] = draws.NewImageFromFile(fsys, fmt.Sprintf("score/%d.png", i))
 	}
@@ -39,7 +40,7 @@ func NewScoreOptions() ScoreOptions {
 }
 
 type ScoreComponent struct {
-	sprites [13]draws.Sprite
+	sprites []draws.Sprite
 	score   float64
 	w       float64 // Score's width is fixed.
 	tween   draws.Tween
@@ -47,6 +48,7 @@ type ScoreComponent struct {
 
 // Name of a function which returns closure ends with "-er".
 func NewScoreComponent(res ScoreResources, opts ScoreOptions) (cmp ScoreComponent) {
+	cmp.sprites = make([]draws.Sprite, 13)
 	// h0 is the height of number 0. Other numbers are located at h0 - h.
 	// Score needs to set same base line, since
 	// each number might have different height.
@@ -55,7 +57,6 @@ func NewScoreComponent(res ScoreResources, opts ScoreOptions) (cmp ScoreComponen
 	s0.MultiplyScale(opts.Scale)
 	h0 = s0.H()
 	cmp.w = s0.W() + opts.DigitGap
-
 	for i, img := range res.imgs {
 		sprite := draws.NewSprite(img)
 		sprite.MultiplyScale(opts.Scale)

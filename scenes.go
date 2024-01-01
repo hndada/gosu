@@ -11,11 +11,11 @@ import (
 )
 
 type Scenes struct {
-	Scenes []scene.Scene
+	scenes []scene.Scene
 	idx    int
 }
 
-func (scs Scenes) Scene() scene.Scene { return scs.Scenes[scs.idx] }
+func (scs Scenes) Scene() scene.Scene { return scs.scenes[scs.idx] }
 
 const (
 	SceneChoose = iota
@@ -24,7 +24,7 @@ const (
 
 func (scs *Scenes) Update() error {
 	if scs.Scene == nil {
-		scs.Scenes = scs.Scenes["choose"]
+		scs.scenes = scs.scenes["choose"]
 	}
 
 	sc := scs.Scene()

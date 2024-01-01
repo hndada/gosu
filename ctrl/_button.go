@@ -1,4 +1,4 @@
-package draws
+package ctrl
 
 import (
 	"github.com/hajimehoshi/ebiten/v2"

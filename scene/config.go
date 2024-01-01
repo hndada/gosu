@@ -5,13 +5,10 @@ import (
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/ctrl"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/mode"
 	"github.com/hndada/gosu/mode/piano"
 )
-
-// Todo: MusicVolume -> MusicVolumeScale?
 
 // *piano.Config wins piano.Config
 // 1. Easier to pass to function.
@@ -31,13 +28,11 @@ type Config struct {
 	DebugPrint           bool
 	Replay               bool
 
-	CursorSpriteScale   float64
 	ChartTreeNodeWidth  float64
 	ChartTreeNodeHeight float64
 	ChartTreeNodeShrink float64 // Nodes are not focused will be shrinked.
 	SearchBoxWidth      float64
 	SearchBoxHeight     float64
-	ClearSpriteScale    float64
 
 	Mode        int
 	SubMode     int
@@ -57,7 +52,6 @@ func NewConfig() *Config {
 		DebugPrint:           true,
 		Replay:               false,
 
-		CursorSpriteScale:   0.1,
 		ChartTreeNodeWidth:  550, // 400(card) + 150(list)
 		ChartTreeNodeHeight: 40,
 		ChartTreeNodeShrink: 0.05 * 550,
@@ -97,12 +91,6 @@ func (c *Config) NormalizeMusicRoots() {
 		name = strings.TrimPrefix(name, "\\")
 		c.MusicRoots[i] = name
 	}
-}
-
-func SetTPS(tps float64) {
-	ebiten.SetTPS(int(tps))
-	ctrl.UpdateTPS(tps)
-	mode.SetTPS(tps)
 }
 
 func (cfg Config) DebugString() string {

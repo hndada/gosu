@@ -7,22 +7,11 @@ import (
 
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/mode/piano"
 )
 
-const (
-	CursorBase = iota
-	CursorAdditive
-	CursorTrail
-)
-
-// Asset is previously known as Skin.
 type Asset struct {
-	CursorSprites           [3]draws.Sprite
 	DefaultBackgroundSprite draws.Sprite
 	BoxMaskSprite           draws.Sprite
-	ClearSprite             draws.Sprite
-	IntroSprite             draws.Sprite
 	LoadingSprite           draws.Sprite
 	SearchBoxSprite         draws.Sprite
 
@@ -31,18 +20,12 @@ type Asset struct {
 	TapSoundPod      audios.SoundPlayer
 	ToggleSounds     [2]audios.SoundPlayer
 	TransitionSounds [2]audios.SoundPlayer
-
-	// Each key count has different asset in piano mode.
-	PianoAssets map[int]*piano.Asset
 }
 
 func NewAsset(cfg *Config, fsys fs.FS) *Asset {
 	asset := &Asset{}
-	asset.setCursorSprites(cfg, fsys)
 	asset.setDefaultBackgroundSprite(cfg, fsys)
 	asset.setBoxMaskSprite(cfg, fsys)
-	asset.setClearSprite(cfg, fsys)
-	asset.setIntroSprite(cfg, fsys)
 	asset.setLoadingSprite(cfg, fsys)
 	asset.setSearchBoxSprite(cfg, fsys)
 
@@ -51,23 +34,7 @@ func NewAsset(cfg *Config, fsys fs.FS) *Asset {
 	asset.setTapSoundPod(cfg, fsys)
 	asset.setToggleSounds(cfg, fsys)
 	asset.setTransitionSounds(cfg, fsys)
-
-	asset.PianoAssets = make(map[int]*piano.Asset)
-	for _, keyCount := range []int{4, 7} {
-		pianoAsset := piano.NewAsset(cfg.PianoConfig, fsys, keyCount, piano.NoScratch)
-		asset.PianoAssets[keyCount] = pianoAsset
-	}
 	return asset
-}
-
-// Cursor should be at CenterMiddle in circle mode (in far future)
-func (asset *Asset) setCursorSprites(cfg *Config, fsys fs.FS) {
-	for i, name := range []string{"base", "additive", "trail"} {
-		s := draws.NewSpriteFromFile(fsys, fmt.Sprintf("cursor/%s.png", name))
-		s.MultiplyScale(cfg.CursorSpriteScale)
-		s.Locate(cfg.ScreenSize.X/2, cfg.ScreenSize.Y/2, draws.LeftTop)
-		asset.CursorSprites[i] = s
-	}
 }
 
 func (asset *Asset) setDefaultBackgroundSprite(cfg *Config, fsys fs.FS) {
@@ -82,19 +49,6 @@ func (asset *Asset) setBoxMaskSprite(cfg *Config, fsys fs.FS) {
 	s.Locate(cfg.ScreenSize.X, cfg.ScreenSize.Y/2, draws.RightMiddle)
 	s.SetSize(cfg.ChartTreeNodeWidth, cfg.ChartTreeNodeHeight)
 	asset.BoxMaskSprite = s
-}
-
-func (asset *Asset) setClearSprite(cfg *Config, fsys fs.FS) {
-	s := draws.NewSpriteFromFile(fsys, "interface/clear.png")
-	s.Locate(cfg.ScreenSize.X/2, cfg.ScreenSize.Y/2, draws.CenterMiddle)
-	s.MultiplyScale(cfg.ClearSpriteScale)
-	asset.ClearSprite = s
-}
-
-func (asset *Asset) setIntroSprite(cfg *Config, fsys fs.FS) {
-	s := draws.NewSpriteFromFile(fsys, "interface/intro.png")
-	s.Locate(cfg.ScreenSize.X/2, cfg.ScreenSize.Y/2, draws.CenterMiddle)
-	asset.IntroSprite = s
 }
 
 func (asset *Asset) setLoadingSprite(cfg *Config, fsys fs.FS) {

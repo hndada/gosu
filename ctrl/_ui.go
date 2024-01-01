@@ -1,4 +1,4 @@
-package draws
+package ctrl
 
 // Focus should be handled by parent. Only one element can be focused.
 // Cursor shape should be changed by Scene.

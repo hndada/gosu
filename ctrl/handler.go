@@ -1,4 +1,4 @@
-package scene
+package ctrl
 
 import "golang.org/x/exp/constraints"
 

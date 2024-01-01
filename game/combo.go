@@ -8,10 +8,11 @@ import (
 )
 
 type ComboResources struct {
-	imgs [10]draws.Image
+	imgs []draws.Image
 }
 
 func (res *ComboResources) Load(fsys fs.FS) {
+	res.imgs = make([]draws.Image, 10)
 	for i := 0; i < 10; i++ {
 		fname := fmt.Sprintf("combo/%d.png", i)
 		res.imgs[i] = draws.NewImageFromFile(fsys, fname)
@@ -28,13 +29,14 @@ type ComboOptions struct {
 }
 
 type ComboComponent struct {
-	sprites [10]draws.Sprite
+	sprites []draws.Sprite
 	combo   int
 	w       float64
 	tween   draws.Tween
 }
 
 func NewComboComponent(res ComboResources, opts ComboOptions) (cmp ComboComponent) {
+	cmp.sprites = make([]draws.Sprite, 10)
 	for i := 0; i < 10; i++ {
 		sprite := draws.NewSprite(res.imgs[i])
 		sprite.MultiplyScale(opts.Scale)

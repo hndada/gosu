@@ -6,6 +6,8 @@ import (
 	"golang.org/x/image/font/gofont/goregular"
 )
 
+const dpi = 72
+
 // Typeface: a style.
 // Type Family: a set of relating styles.
 // Font: a file of Typeface.
@@ -35,26 +37,31 @@ func init() {
 	Fonts[DefaultFontKey] = f
 	DefaultFont = f
 }
+
 func NewFace(fontKey FontKey, size float64) font.Face {
 	var (
-		_font *truetype.Font
-		face  font.Face
-		ok    bool
+		ttf  *truetype.Font
+		face font.Face
+		ok   bool
 	)
+
 	faceKey := FaceKey{fontKey, size}
 	face, ok = Faces[faceKey]
 	if !ok {
-		_font, ok = Fonts[fontKey]
+		ttf, ok = Fonts[fontKey]
 		if !ok {
-			_font = DefaultFont
+			ttf = DefaultFont
 		}
-		face = truetype.NewFace(_font, &truetype.Options{
-			Size: size,
+		face = truetype.NewFace(ttf, &truetype.Options{
+			Size:    size,
+			DPI:     dpi,
+			Hinting: font.HintingFull,
 		})
 		Faces[faceKey] = face
 	}
 	return face
 }
+
 func DefaultFace(size float64) font.Face {
 	return NewFace(DefaultFontKey, size)
 }

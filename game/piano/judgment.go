@@ -9,10 +9,11 @@ import (
 )
 
 type JudgmentResources struct {
-	framesList [4]draws.Frames
+	framesList []draws.Frames
 }
 
 func (res *JudgmentResources) Load(fsys fs.FS) {
+	res.framesList = make([]draws.Frames, 4)
 	for i, name := range []string{"kool", "cool", "good", "miss"} {
 		fname := fmt.Sprintf("piano/judgment/%s.png", name)
 		res.framesList[i] = draws.NewFramesFromFile(fsys, fname)
@@ -34,12 +35,13 @@ func NewJudgmentOptions(stage StageOptions) JudgmentOptions {
 }
 
 type JudgmentComponent struct {
+	anims []draws.Animation
 	worst game.JudgmentKind
-	anims [4]draws.Animation
 	tween draws.Tween
 }
 
 func NewJudgmentComponent(res JudgmentResources, opts JudgmentOptions) (cmp JudgmentComponent) {
+	cmp.anims = make([]draws.Animation, 4)
 	for i, frames := range res.framesList {
 		a := draws.NewAnimation(frames, 40)
 		a.MultiplyScale(opts.Scale)
