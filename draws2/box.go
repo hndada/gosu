@@ -1,23 +1,23 @@
 package draws
 
-import "github.com/hajimehoshi/ebiten/v2"
-
-// colorm.ColorM is overkill for this package.
-type Op = ebiten.DrawImageOptions
+import (
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/text/v2"
+)
 
 // Image, Frames, Text implement Source.
 type Source interface {
 	Size() Vector2
 	IsEmpty() bool
-	Draw(dst Image, op *Op)
 }
 
 // Box contains information to draw an 2D entity.
 // Boxes consist of a tree structure, which is a flexible way to manage entities.
 // Node vs Box: Node feels like for logical ones, Box feels like for visual ones.
 type Box struct {
-	Parent   *Box
-	Children []*Box
+	Parent  *Box
+	Befores []*Box
+	Afters  []*Box
 
 	Source     Source
 	w, h       Length
@@ -27,6 +27,7 @@ type Box struct {
 	ColorScale ebiten.ColorScale
 	Blend      ebiten.Blend
 	Filter     ebiten.Filter
+	Visible    bool
 }
 
 func NewBox(src Source) Box {
@@ -104,22 +105,58 @@ func (b Box) Max() Vector2 { return b.Min().Add(b.Size()) }
 // Only four methods are required: Scale, Rotate, Translate, and ScaleWithColor.
 // DrawImageOptions is not commutative: Do Translate at the final stage.
 func (b Box) Draw(dst Image) {
-	for _, child := range b.Children {
-		child.Draw(dst)
+	if !b.Visible {
+		return
 	}
 
+	for _, child := range b.Befores {
+		child.Draw(dst)
+	}
+	b.draw(dst)
+	for _, child := range b.Afters {
+		child.Draw(dst)
+	}
+}
+
+func (b Box) draw(dst Image) {
 	if b.Source.IsEmpty() {
 		return
 	}
+	switch src := b.Source.(type) {
+	case Image:
+		dst.DrawImage(src.Image, b.Op())
+	case Frames:
+		frame := src.Images[src.Index()]
+		dst.DrawImage(frame.Image, b.Op())
+	case Filler:
+		sub := dst.Sub(b.Min(), b.Max())
+		sub.Fill(src.Color)
+	case Text:
+		op := text.DrawOptions{
+			DrawImageOptions: *b.Op(),
+			LayoutOptions: text.LayoutOptions{
+				LineSpacingInPixels: src.LineSpacing,
+			},
+		}
+		text.Draw(dst.Image, src.Text, src.face, &op)
+	}
+}
+
+// colorm.ColorM is overkill for this package.
+type Op = ebiten.DrawImageOptions
+
+// Passing by pointer is economical because
+// Op is big and passed several times.
+func (b Box) Op() *Op {
 	geom := ebiten.GeoM{}
 	scale := b.Size().Div(b.Source.Size())
 	geom.Scale(scale.XY())
 	geom.Rotate(b.Theta)
 	geom.Translate(b.Min().XY())
-	b.Source.Draw(dst, &Op{
+	return &Op{
 		GeoM:       geom,
 		ColorScale: b.ColorScale,
 		Blend:      b.Blend,
 		Filter:     b.Filter,
-	})
+	}
 }

@@ -60,11 +60,13 @@ func (i Image) Size() Vector2 {
 	return NewVector2FromInts(size.X, size.Y)
 }
 
-// Passing by pointer is economical because
-// Op is big and passed several times.
-func (i Image) Draw(dst Image, op *Op) {
+func (i Image) Sub(min, max Vector2) Image {
 	if i.IsEmpty() {
-		return
+		return Image{}
 	}
-	dst.DrawImage(i.Image, op)
+	rect := image.Rectangle{
+		Min: image.Pt(min.XYInts()),
+		Max: image.Pt(max.XYInts()),
+	}
+	return i.SubImage(rect).(Image)
 }

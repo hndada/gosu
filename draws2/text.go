@@ -173,15 +173,3 @@ func (t Text) IsEmpty() bool { return len(t.Text) == 0 }
 func (t Text) Size() Vector2 {
 	return Vec2(text.Measure(t.Text, t.face, t.LineSpacing))
 }
-
-func (t Text) Draw(dst Image, op *Op) {
-	if t.IsEmpty() {
-		return
-	}
-	text.Draw(dst.Image, t.Text, t.face, &text.DrawOptions{
-		DrawImageOptions: *op,
-		LayoutOptions: text.LayoutOptions{
-			LineSpacingInPixels: t.LineSpacing,
-		},
-	})
-}

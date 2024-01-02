@@ -106,6 +106,24 @@ func (fs Frames) Loop() int {
 
 func (fs Frames) IsEmpty() bool { return len(fs.Images) == 0 }
 
+func (fs Frames) Index() int {
+	if fs.Period == 0 {
+		return 0
+	}
+	r := times.Since(fs.StartTime) % fs.Period
+	progress := float64(r) / float64(fs.Period)
+	count := float64(len(fs.Images))
+	index := int(progress * count)
+	return index
+}
+
+func (fs Frames) Size() Vector2 {
+	if fs.IsEmpty() {
+		return Vector2{}
+	}
+	return fs.Images[fs.Index()].Size()
+}
+
 func (fs Frames) IsFinished() bool {
 	if fs.Period == 0 || fs.MaxLoop == 0 {
 		return false
@@ -114,18 +132,3 @@ func (fs Frames) IsFinished() bool {
 }
 
 func (fs *Frames) Reset() { fs.StartTime = times.Now() }
-
-func (fs Frames) Draw(dst Image, op *Op) {
-	if fs.IsEmpty() {
-		return
-	}
-	if fs.Period == 0 {
-		fs.Images[0].Draw(dst, op)
-		return
-	}
-	r := times.Since(fs.StartTime) % fs.Period
-	progress := float64(r) / float64(fs.Period)
-	count := float64(len(fs.Images))
-	index := int(progress * count)
-	fs.Images[index].Draw(dst, op)
-}
