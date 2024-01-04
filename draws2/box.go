@@ -11,18 +11,29 @@ type Source interface {
 	IsEmpty() bool
 }
 
+// All of these are for defining size and position.
+type Box interface {
+	Root() Box
+	Size() Length2
+	Position() Length2
+	Draw(dst Image)
+}
+
+type Length2 struct{ X, Y Length }
+
 // Box contains information to draw an 2D entity.
 // Boxes consist of a tree structure, which is a flexible way to manage entities.
 // Node vs Box: Node feels like for logical ones, Box feels like for visual ones.
-type Box struct {
-	Parent  *Box
-	Befores []*Box
-	Afters  []*Box
+type BaseBox struct {
+	Parent  Box
+	Befores []Box
+	Afters  []Box
 
-	Source     Source
-	w, h       Length
+	Draw func(dst Image)
+	// Source     Source
+	Size       Length2
 	Theta      float64
-	x, y       Length
+	Position   Length2
 	Aligns     Aligns
 	ColorScale ebiten.ColorScale
 	Blend      ebiten.Blend
@@ -30,33 +41,25 @@ type Box struct {
 	Visible    bool
 }
 
-func NewBox(src Source) Box {
-	size := src.Size()
-	return Box{
-		Source: src,
-		w:      Length{size.X, Pixel},
-		h:      Length{size.Y, Pixel},
+func NewBaseBox() BaseBox {
+	return BaseBox{
 		// Default filter value is FilterNearest in ebitengine,
 		// but FilterLinear is more natural in my opinion.
 		Filter: ebiten.FilterLinear,
 	}
 }
 
-func (b Box) Root() *Box {
+func (b BaseBox) Root() Box {
 	if b.Parent == nil {
 		return &b
 	}
 	return b.Parent.Root()
 }
 
-func (b Box) W() float64                 { return b.Size().X }
-func (b Box) H() float64                 { return b.Size().Y }
-func (b Box) X() float64                 { return b.Position().X }
-func (b Box) Y() float64                 { return b.Position().X }
-func (b *Box) SetW(w float64, unit Unit) { b.w = Length{w, unit} }
-func (b *Box) SetH(h float64, unit Unit) { b.h = Length{h, unit} }
-func (b *Box) SetX(x float64, unit Unit) { b.x = Length{x, unit} }
-func (b *Box) SetY(y float64, unit Unit) { b.y = Length{y, unit} }
+func (b BaseBox) W() float64 { return b.Size().X }
+func (b BaseBox) H() float64 { return b.Size().Y }
+func (b BaseBox) X() float64 { return b.Position().X }
+func (b BaseBox) Y() float64 { return b.Position().X }
 
 const (
 	w = iota
@@ -65,7 +68,7 @@ const (
 	y
 )
 
-func (b Box) whxy(kind int) float64 {
+func (b BaseBox) whxy(kind int) float64 {
 	l := [4]Length{b.w, b.h, b.x, b.y}[kind]
 	switch l.Unit {
 	case Pixel:
@@ -82,16 +85,16 @@ func (b Box) whxy(kind int) float64 {
 	return l.Value
 }
 
-func (b Box) Size() Vector2                    { return Vec2(b.whxy(w), b.whxy(h)) }
-func (b *Box) SetSize(w, h float64, unit Unit) { b.SetW(w, unit); b.SetH(h, unit) }
-func (b *Box) Scale(scale float64)             { b.w.Value *= scale; b.h.Value *= scale }
+func (b BaseBox) Size() Vector2                    { return Vec2(b.whxy(w), b.whxy(h)) }
+func (b *BaseBox) SetSize(w, h float64, unit Unit) { b.SetW(w, unit); b.SetH(h, unit) }
+func (b *BaseBox) Scale(scale float64)             { b.w.Value *= scale; b.h.Value *= scale }
 
-func (b Box) Position() Vector2                    { return Vec2(b.whxy(x), b.whxy(y)) }
-func (b *Box) SetPosition(x, y float64, unit Unit) { b.SetX(x, unit); b.SetY(y, unit) }
-func (b *Box) Move(x, y float64)                   { b.x.Value += x; b.y.Value += y }
+func (b BaseBox) Position() Vector2                    { return Vec2(b.whxy(x), b.whxy(y)) }
+func (b *BaseBox) SetPosition(x, y float64, unit Unit) { b.SetX(x, unit); b.SetY(y, unit) }
+func (b *BaseBox) Move(x, y float64)                   { b.x.Value += x; b.y.Value += y }
 
 // Min is the left-top position of the box.
-func (b Box) Min() Vector2 {
+func (b BaseBox) Min() Vector2 {
 	min := b.Position()
 	min.X -= []float64{0, b.W() / 2, b.W()}[b.Aligns.X]
 	min.Y -= []float64{0, b.H() / 2, b.H()}[b.Aligns.Y]
@@ -100,11 +103,11 @@ func (b Box) Min() Vector2 {
 	}
 	return min
 }
-func (b Box) Max() Vector2 { return b.Min().Add(b.Size()) }
+func (b BaseBox) Max() Vector2 { return b.Min().Add(b.Size()) }
 
 // Only four methods are required: Scale, Rotate, Translate, and ScaleWithColor.
 // DrawImageOptions is not commutative: Do Translate at the final stage.
-func (b Box) Draw(dst Image) {
+func (b BaseBox) Draw(dst Image) {
 	if !b.Visible {
 		return
 	}
@@ -118,7 +121,7 @@ func (b Box) Draw(dst Image) {
 	}
 }
 
-func (b Box) draw(dst Image) {
+func (b BaseBox) draw(dst Image) {
 	if b.Source.IsEmpty() {
 		return
 	}
@@ -145,11 +148,15 @@ func (b Box) draw(dst Image) {
 // colorm.ColorM is overkill for this package.
 type Op = ebiten.DrawImageOptions
 
+func (b BaseBox) SizeInPixel() Vector2 {
+	return b.Size().Mul(b.Source.Size())
+}
+
 // Passing by pointer is economical because
 // Op is big and passed several times.
-func (b Box) Op() *Op {
+func (b BaseBox) Op(src Source) *Op {
 	geom := ebiten.GeoM{}
-	scale := b.Size().Div(b.Source.Size())
+	scale := b.SizeInPixel().Div(src.Size())
 	geom.Scale(scale.XY())
 	geom.Rotate(b.Theta)
 	geom.Translate(b.Min().XY())
@@ -159,4 +166,17 @@ func (b Box) Op() *Op {
 		Blend:      b.Blend,
 		Filter:     b.Filter,
 	}
+}
+
+type Sprite struct {
+	Image
+	BaseBox
+}
+
+func (s Sprite) Draw(dst Image) {
+	if !s.Visible {
+		return
+	}
+	src := s.Image
+	dst.DrawImage(src.Image, s.Op(src))
 }
