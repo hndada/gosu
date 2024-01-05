@@ -1,27 +1,26 @@
 package draws
 
-import "image/color"
+import (
+	"image/color"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 // Sprite, Label, Animation, Filler implement Drawable.
 type Drawable interface {
-	Draw(dst Image)
-	ZIndex() int
+	Draw(dst Image, imgOp *ebiten.DrawImageOptions)
 }
 
 // Separate types are required to use Source's methods.
-type Sprite struct {
-	Image
-	Box
-}
+type Sprite Box[Image]
 
 func NewSprite(img Image) Sprite {
-	return Sprite{img, NewBox(img)}
+
 }
 
-type Label struct {
-	Text
-	Box
-}
+// l := Box[Text]{}
+// l.Source.Text = "Hello, World!" // It works!
+type Label Box[Text]
 
 func NewLabel(txt Text) Label {
 	return Label{txt, NewBox(txt)}

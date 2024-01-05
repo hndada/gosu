@@ -76,3 +76,10 @@ func (i Image) In(p Vector2) bool {
 	return 0 <= p.X && p.X < max.X &&
 		0 <= p.Y && p.Y < max.Y
 }
+
+func (i Image) Draw(dst Image, op *ebiten.DrawImageOptions) {
+	if i.IsEmpty() {
+		return
+	}
+	dst.DrawImage(i.Image, op)
+}
