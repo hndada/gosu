@@ -11,15 +11,12 @@ type source interface {
 	IsEmpty() bool
 }
 
-// Sprite, Label, Animation, Filler implement Drawable.
-// type Drawable interface {}
-
 // Box contains information to draw an 2D entity.
 // Boxes consist of a tree structure, which is a flexible way to manage entities.
 // Node vs Box: Node feels like for logical ones, Box feels like for visual ones.
 type Box struct {
-	Befores []Box
-	Afters  []Box
+	befores []Drawable
+	afters  []Drawable
 
 	// source is not embedded for avoiding ambiguous method calls.
 	source source
@@ -27,6 +24,7 @@ type Box struct {
 	ColorScale ebiten.ColorScale
 	Blend      ebiten.Blend
 	Filter     ebiten.Filter
+	zIndex     int
 	Visible    bool
 }
 
@@ -40,7 +38,33 @@ func NewBox(src source) Box {
 	}
 }
 
-// colorm.ColorM is overkill for this package.
+func (b Box) ZIndex() int { return b.zIndex }
+func (b *Box) SetZIndex(z int) {
+	// Interpolate box into appropriate position.
+	// for i, child := range b.befores {
+	// 	if child.ZIndex() > z {
+	// 		b.befores = append(b.befores[:i], append([]Drawable{b}, b.befores[i:]...)...)
+	// 		return
+	// 	}
+	// }
+	// for i, child := range b.afters {
+	// 	if child.ZIndex() > z {
+	// 		b.afters = append(b.afters[:i], append([]Drawable{b}, b.afters[i:]...)...)
+	// 		return
+	// 	}
+	// }
+	b.zIndex = z
+}
+
+type ExpandOptions struct {
+	Spacing   Length
+	Direction int
+	Collapse  bool
+}
+
+func (b *Box) Expand(children []Drawable, opts ExpandOptions) {
+
+}
 
 // Passing by pointer is economical because
 // Op is big and passed several times.
@@ -56,30 +80,20 @@ func (b Box) imageOp() *ebiten.DrawImageOptions {
 // Only four methods are required: Scale, Rotate, Translate, and ScaleWithColor.
 // DrawImageOptions is not commutative: Do Translate at the final stage.
 func (b Box) Draw(dst Image) {
-	if !b.Visible {
-		return
+	for _, child := range b.befores {
+		child.Draw(dst)
 	}
-	dr := NewRectangle(dst.Size().XY())
-
-	for _, child := range b.Befores {
-		if child.Intersect(dr) {
-			child.Draw(dst)
-		}
-	}
-
 	b.draw(dst)
-
-	for _, child := range b.Afters {
-		if child.Intersect(dr) {
-			child.Draw(dst)
-		}
+	for _, child := range b.afters {
+		child.Draw(dst)
 	}
 }
 
+// colorm.ColorM is overkill for this package.
 // Abandoned: Draw(dst Image, draw func(dst Image)):
 // This requires type assertion on every child.Draw(dst, child.draw).
 func (b Box) draw(dst Image) {
-	if b.source.IsEmpty() {
+	if b.source.IsEmpty() || !b.Visible || !b.Exposed(dst) {
 		return
 	}
 	switch src := b.source.(type) {

@@ -6,27 +6,9 @@ import (
 	draws "github.com/hndada/gosu/draws2"
 )
 
-// type BaseBox[T any] struct {
-// 	Parent  *BaseBox[T]
-// 	Befores []*BaseBox[T]
-// 	Afters  []*BaseBox[T]
-// }
+type Box draws.Box
 
-// type Box BaseBox[struct{}]
-
-type Widget struct {
-	Parent *Widget
-	Before []*Widget
-	After  []*Widget
-
-	draws.Box
-}
-
-func NewButton() Widget {
-	return Widget{
-		Box: draws.Box{},
-	}
-}
+// func NewButton() Box {}
 
 type EventHandler func() any
 

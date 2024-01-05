@@ -19,13 +19,6 @@ func NewRectangle(w, h float64) Rectangle {
 	}
 }
 
-func (r Rectangle) root() *Rectangle {
-	if r.Parent == nil {
-		return &r
-	}
-	return r.Parent.root()
-}
-
 type whxyKind int
 
 const (
@@ -48,8 +41,19 @@ func (r Rectangle) pixel(kind whxyKind) float64 {
 		if root := r.root(); root != nil {
 			return l.Value * root.pixel(kind) / 100.0
 		}
+	case Extra:
+		if r.Parent != nil {
+			return r.Parent.pixel(kind) + l.Value
+		}
 	}
 	return l.Value
+}
+
+func (r Rectangle) root() *Rectangle {
+	if r.Parent == nil {
+		return &r
+	}
+	return r.Parent.root()
 }
 
 func (r Rectangle) w() float64 { return r.pixel(kindW) }
@@ -101,16 +105,20 @@ func (r Rectangle) Min() Vector2 {
 }
 func (r Rectangle) Max() Vector2 { return r.Min().Add(r.Size()) }
 
-func (r Rectangle) In(p Vector2) bool {
-	min := r.Min()
-	max := r.Max()
-	return min.X <= p.X && p.X < max.X &&
-		min.Y <= p.Y && p.Y < max.Y
+func (r Rectangle) Exposed(dst Image) bool {
+	return dst.In(r.Min()) || dst.In(r.Max())
 }
 
-func (r1 Rectangle) Intersect(r2 Rectangle) bool {
-	return r1.In(r2.Min()) || r1.In(r2.Max())
-}
+// func (r Rectangle) In(p Vector2) bool {
+// 	min := r.Min()
+// 	max := r.Max()
+// 	return min.X <= p.X && p.X < max.X &&
+// 		min.Y <= p.Y && p.Y < max.Y
+// }
+
+// func (r1 Rectangle) Intersect(r2 Rectangle) bool {
+// 	return r1.In(r2.Min()) || r1.In(r2.Max())
+// }
 
 // Rectangle implements Shape.
 // type Shape interface {

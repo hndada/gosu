@@ -71,12 +71,8 @@ func (i Image) Sub(min, max Vector2) Image {
 	return i.SubImage(rect).(Image)
 }
 
-// Separate types are required to use Source's methods.
-type Sprite struct {
-	Image
-	Box
-}
-
-func NewSprite(img Image) Sprite {
-	return Sprite{Image: img, Box: NewBox(img)}
+func (i Image) In(p Vector2) bool {
+	max := i.Size()
+	return 0 <= p.X && p.X < max.X &&
+		0 <= p.Y && p.Y < max.Y
 }
