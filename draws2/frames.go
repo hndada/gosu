@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/times"
 )
 
@@ -91,44 +92,52 @@ func framePaths(fsys fs.FS, dirName string) []string {
 	return paths
 }
 
-func (fs *Frames) SetLoop(maxLoop int) { fs.MaxLoop = maxLoop }
-func (fs Frames) Loop() int {
-	if fs.Period == 0 {
+func (frms *Frames) SetLoop(maxLoop int) { frms.MaxLoop = maxLoop }
+func (frms Frames) Loop() int {
+	if frms.Period == 0 {
 		return 0
 	}
 
-	loop := int(times.Since(fs.StartTime) / fs.Period)
-	if loop > fs.MaxLoop {
-		loop = fs.MaxLoop
+	loop := int(times.Since(frms.StartTime) / frms.Period)
+	if loop > frms.MaxLoop {
+		loop = frms.MaxLoop
 	}
 	return loop
 }
 
-func (fs Frames) IsEmpty() bool { return len(fs.Images) == 0 }
+func (frms Frames) IsEmpty() bool { return len(frms.Images) == 0 }
 
-func (fs Frames) Index() int {
-	if fs.Period == 0 {
+func (frms Frames) Index() int {
+	if frms.Period == 0 {
 		return 0
 	}
-	r := times.Since(fs.StartTime) % fs.Period
-	progress := float64(r) / float64(fs.Period)
-	count := float64(len(fs.Images))
+	r := times.Since(frms.StartTime) % frms.Period
+	progress := float64(r) / float64(frms.Period)
+	count := float64(len(frms.Images))
 	index := int(progress * count)
 	return index
 }
 
-func (fs Frames) Size() Vector2 {
-	if fs.IsEmpty() {
+func (frms Frames) Size() Vector2 {
+	if frms.IsEmpty() {
 		return Vector2{}
 	}
-	return fs.Images[fs.Index()].Size()
+	return frms.Images[frms.Index()].Size()
 }
 
-func (fs Frames) IsFinished() bool {
-	if fs.Period == 0 || fs.MaxLoop == 0 {
+func (frms Frames) IsFinished() bool {
+	if frms.Period == 0 || frms.MaxLoop == 0 {
 		return false
 	}
-	return fs.Loop() >= fs.MaxLoop
+	return frms.Loop() >= frms.MaxLoop
 }
 
-func (fs *Frames) Reset() { fs.StartTime = times.Now() }
+func (frms *Frames) Reset() { frms.StartTime = times.Now() }
+
+func (frms Frames) Draw(dst Image, op *ebiten.DrawImageOptions) {
+	if frms.IsEmpty() {
+		return
+	}
+	frame := frms.Images[frms.Index()]
+	dst.DrawImage(frame.Image, op)
+}

@@ -97,9 +97,9 @@ func (r Rectangle) Min() Vector2 {
 	min.Y -= []float64{0, r.h() / 2, r.h()}[r.Aligns.Y]
 	if r.Parent != nil {
 		min = min.Add(r.Parent.Min())
-	}
-	if r.Viewport != nil {
-		min = min.Sub(r.Viewport.Min())
+		if r.Parent.Viewport != nil {
+			min = min.Sub(r.Parent.Viewport.Min())
+		}
 	}
 	return min
 }

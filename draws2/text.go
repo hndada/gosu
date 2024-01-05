@@ -5,7 +5,6 @@ import (
 	"io"
 	"io/fs"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"golang.org/x/image/font"
 	"golang.org/x/image/font/gofont/goregular"
@@ -173,20 +172,4 @@ func (t Text) IsEmpty() bool { return len(t.Text) == 0 }
 
 func (t Text) Size() Vector2 {
 	return Vec2(text.Measure(t.Text, t.face, t.LineSpacing))
-}
-
-func (t Text) Draw(dst Image, imgOp *ebiten.DrawImageOptions) {
-	if t.IsEmpty() {
-		return
-	}
-	text.Draw(dst.Image, t.Text, t.face, t.op(imgOp))
-}
-
-func (t Text) op(imgOp *ebiten.DrawImageOptions) *text.DrawOptions {
-	return &text.DrawOptions{
-		DrawImageOptions: *imgOp,
-		LayoutOptions: text.LayoutOptions{
-			LineSpacingInPixels: t.LineSpacing,
-		},
-	}
 }
