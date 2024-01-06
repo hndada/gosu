@@ -1,17 +1,30 @@
 package ctrl
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"time"
 
-// Type, Kind, State
+	"github.com/hajimehoshi/ebiten/v2"
+)
+
+type Event struct {
+	From *Box
+	Time time.Time
+	Type EventType
+}
+
+// It would be better to handle events in each struct.
+// type EventHandler func() any
+
+// Type, Button value, State
 // User may implement their own custom events.
-type Event [3]int
+type EventType [3]int
 
 const (
 	TypeKeyButton = iota
 	TypeMouseButton
 	TypeMouseCursor
-	TypeMouseScroll
-	TypeWidget
+	TypeMouseWheel
+	TypeBox
 )
 
 // MouseButton: input package
@@ -46,19 +59,19 @@ const (
 )
 
 var (
-	KeyButtonPressed          = Event{TypeKeyButton, Any, Pressed}
-	KeyButtonReleased         = Event{TypeKeyButton, Any, Released}
-	MouseClick                = Event{TypeMouseButton, Any, Pressed}
-	MouseButtonLeftPressed    = Event{TypeMouseButton, MouseButtonLeft, Pressed}
-	MouseButtonLeftReleased   = Event{TypeMouseButton, MouseButtonLeft, Released}
-	MouseButtonMiddlePressed  = Event{TypeMouseButton, MouseButtonMiddle, Pressed}
-	MouseButtonMiddleReleased = Event{TypeMouseButton, MouseButtonMiddle, Released}
-	MouseButtonRightPressed   = Event{TypeMouseButton, MouseButtonRight, Pressed}
-	MouseButtonRightReleased  = Event{TypeMouseButton, MouseButtonRight, Released}
-	MouseCursorIn             = Event{TypeMouseCursor, Any, In}
-	MouseCursorOut            = Event{TypeMouseCursor, Any, Out}
-	MouseScrollUp             = Event{TypeMouseScroll, Any, Up}
-	MouseScrollDown           = Event{TypeMouseScroll, Any, Down}
-	WidgetFocus               = Event{TypeWidget, Focus, On}
-	WidgetUnfocus             = Event{TypeWidget, Focus, Off}
+	KeyButtonPressed          = EventType{TypeKeyButton, Any, Pressed}
+	KeyButtonReleased         = EventType{TypeKeyButton, Any, Released}
+	MouseClick                = EventType{TypeMouseButton, Any, Pressed}
+	MouseButtonLeftPressed    = EventType{TypeMouseButton, MouseButtonLeft, Pressed}
+	MouseButtonLeftReleased   = EventType{TypeMouseButton, MouseButtonLeft, Released}
+	MouseButtonMiddlePressed  = EventType{TypeMouseButton, MouseButtonMiddle, Pressed}
+	MouseButtonMiddleReleased = EventType{TypeMouseButton, MouseButtonMiddle, Released}
+	MouseButtonRightPressed   = EventType{TypeMouseButton, MouseButtonRight, Pressed}
+	MouseButtonRightReleased  = EventType{TypeMouseButton, MouseButtonRight, Released}
+	MouseCursorIn             = EventType{TypeMouseCursor, Any, In}
+	MouseCursorOut            = EventType{TypeMouseCursor, Any, Out}
+	MouseScrollUp             = EventType{TypeMouseWheel, Any, Up}
+	MouseScrollDown           = EventType{TypeMouseWheel, Any, Down}
+	WidgetFocus               = EventType{TypeBox, Focus, On}
+	WidgetUnfocus             = EventType{TypeBox, Focus, Off}
 )

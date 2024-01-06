@@ -1,39 +1,22 @@
 package ctrl
 
 import (
-	"time"
-
 	"github.com/hndada/gosu/draws"
 )
 
-type Box2 struct {
+type Box struct {
 	draws.Box
 	BoxOptions
 }
 
-func (b *Box2) Update() []Event2 {
-	if b.Draggable {
-		b.updateDrag()
-	}
-	if b.Resizable {
-		b.updateResize()
-	}
-	if b.Scrollable {
-		b.updateScroll()
-	}
-	return nil
-}
-
-func (b *Box2) updateDrag() {
-	// If cursor is in the box, and mouse is just pressed, and so on
-}
-
 type BoxOptions struct {
-	Draggable bool
-	ResizableOptions
 	Scrollable bool
-	// It would be better to handle events in each struct.
-	// EventHandler map[EventType]func()
+	// Draggable  bool
+	// ResizableOptions
+}
+
+func NewBox(dbox draws.Box, opts BoxOptions) *Box {
+	return &Box{Box: dbox, BoxOptions: opts}
 }
 
 // Event types: MouseDown, MouseUp, MouseMove, MouseEnter, MouseLeave, MouseScroll,
@@ -47,8 +30,13 @@ type ResizableOptions struct {
 	MaxSize   draws.Vector2
 }
 
-type Event2 struct {
-	From *Box
-	Time time.Time
-	Type EventType
+func (b *Box) Update() []Event {
+	if b.Scrollable {
+		b.updateScroll()
+	}
+	return nil
+}
+
+func (b *Box) updateScroll() {
+	// If cursor is in the box, and mouse is just pressed, and so on
 }
