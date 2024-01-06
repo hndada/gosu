@@ -19,6 +19,13 @@ func NewRectangle(w, h float64) Rectangle {
 	}
 }
 
+func (r Rectangle) root() *Rectangle {
+	if r.Parent == nil {
+		return &r
+	}
+	return r.Parent.root()
+}
+
 type whxyKind int
 
 const (
@@ -35,11 +42,13 @@ func (r Rectangle) pixel(kind whxyKind) float64 {
 		return l.Value
 	case Percent:
 		if r.Parent != nil {
-			return l.Value * r.Parent.pixel(kind) / 100.0
+			ratio := l.Value / 100.0
+			return ratio * r.Parent.pixel(kind)
 		}
 	case RootPercent:
 		if root := r.root(); root != nil {
-			return l.Value * root.pixel(kind) / 100.0
+			ratio := l.Value / 100.0
+			return ratio * root.pixel(kind)
 		}
 	case Extra:
 		if r.Parent != nil {
@@ -49,17 +58,35 @@ func (r Rectangle) pixel(kind whxyKind) float64 {
 	return l.Value
 }
 
-func (r Rectangle) root() *Rectangle {
-	if r.Parent == nil {
-		return &r
-	}
-	return r.Parent.root()
-}
-
 func (r Rectangle) w() float64 { return r.pixel(kindW) }
 func (r Rectangle) h() float64 { return r.pixel(kindH) }
 func (r Rectangle) x() float64 { return r.pixel(kindX) }
 func (r Rectangle) y() float64 { return r.pixel(kindY) }
+
+func (r *Rectangle) addPixel(kind whxyKind, pixel float64) {
+	l := [4]Length{r.W, r.H, r.X, r.Y}[kind]
+	switch l.Unit {
+	case Pixel:
+		l.Value += pixel
+	case Percent:
+		if r.Parent != nil {
+			ratio := pixel / r.Parent.pixel(kind)
+			l.Value += ratio * 100.0
+		}
+	case RootPercent:
+		if root := r.root(); root != nil {
+			ratio := pixel / root.pixel(kind)
+			l.Value += ratio * 100.0
+		}
+	case Extra:
+		l.Value += pixel
+	}
+}
+
+func (r *Rectangle) AddPixelToW(pixel float64) { r.addPixel(kindW, pixel) }
+func (r *Rectangle) AddPixelToH(pixel float64) { r.addPixel(kindH, pixel) }
+func (r *Rectangle) AddPixelToX(pixel float64) { r.addPixel(kindX, pixel) }
+func (r *Rectangle) AddPixelToY(pixel float64) { r.addPixel(kindY, pixel) }
 
 func (r Rectangle) Size() Vector2 { return Vec2(r.w(), r.h()) }
 func (r *Rectangle) SetSize(w, h float64, unit Unit) {
@@ -104,6 +131,13 @@ func (r Rectangle) Min() Vector2 {
 	return min
 }
 func (r Rectangle) Max() Vector2 { return r.Min().Add(r.Size()) }
+
+func (r Rectangle) In(p Vector2) bool {
+	min := r.Min()
+	max := r.Max()
+	return min.X <= p.X && p.X < max.X &&
+		min.Y <= p.Y && p.Y < max.Y
+}
 
 func (r Rectangle) Exposed(dst Image) bool {
 	return dst.In(r.Min()) || dst.In(r.Max())

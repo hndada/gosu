@@ -5,6 +5,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 )
 
+// functions
 var IsKeyPressed = ebiten.IsKeyPressed
 var IsKeyJustPressed = inpututil.IsKeyJustPressed
 
@@ -14,115 +15,115 @@ const KeyNone Key = -1
 
 // The order is consistent with Ebiten.
 const (
-	KeyA Key = iota
-	KeyB
-	KeyC
-	KeyD
-	KeyE
-	KeyF
-	KeyG
-	KeyH
-	KeyI
-	KeyJ
-	KeyK
-	KeyL
-	KeyM
-	KeyN
-	KeyO
-	KeyP
-	KeyQ
-	KeyR
-	KeyS
-	KeyT
-	KeyU
-	KeyV
-	KeyW
-	KeyX
-	KeyY
-	KeyZ
-	KeyAltLeft
-	KeyAltRight
-	KeyArrowDown
-	KeyArrowLeft
-	KeyArrowRight
-	KeyArrowUp
-	KeyBackquote
-	KeyBackslash
-	KeyBackspace
-	KeyBracketLeft
-	KeyBracketRight
-	KeyCapsLock
-	KeyComma
-	KeyContextMenu
-	KeyControlLeft
-	KeyControlRight
-	KeyDelete
-	KeyDigit0
-	KeyDigit1
-	KeyDigit2
-	KeyDigit3
-	KeyDigit4
-	KeyDigit5
-	KeyDigit6
-	KeyDigit7
-	KeyDigit8
-	KeyDigit9
-	KeyEnd
-	KeyEnter
-	KeyEqual
-	KeyEscape
-	KeyF1
-	KeyF2
-	KeyF3
-	KeyF4
-	KeyF5
-	KeyF6
-	KeyF7
-	KeyF8
-	KeyF9
-	KeyF10
-	KeyF11
-	KeyF12
-	KeyHome
-	KeyInsert
-	KeyMetaLeft
-	KeyMetaRight
-	KeyMinus
-	KeyNumLock
-	KeyNumpad0
-	KeyNumpad1
-	KeyNumpad2
-	KeyNumpad3
-	KeyNumpad4
-	KeyNumpad5
-	KeyNumpad6
-	KeyNumpad7
-	KeyNumpad8
-	KeyNumpad9
-	KeyNumpadAdd
-	KeyNumpadDecimal
-	KeyNumpadDivide
-	KeyNumpadEnter
-	KeyNumpadEqual
-	KeyNumpadMultiply
-	KeyNumpadSubtract
-	KeyPageDown
-	KeyPageUp
-	KeyPause
-	KeyPeriod
-	KeyPrintScreen
-	KeyQuote
-	KeyScrollLock
-	KeySemicolon
-	KeyShiftLeft
-	KeyShiftRight
-	KeySlash
-	KeySpace
-	KeyTab
-	KeyReserved0
-	KeyReserved1
-	KeyReserved2
-	KeyReserved3
+	KeyA              Key = ebiten.KeyA
+	KeyB              Key = ebiten.KeyB
+	KeyC              Key = ebiten.KeyC
+	KeyD              Key = ebiten.KeyD
+	KeyE              Key = ebiten.KeyE
+	KeyF              Key = ebiten.KeyF
+	KeyG              Key = ebiten.KeyG
+	KeyH              Key = ebiten.KeyH
+	KeyI              Key = ebiten.KeyI
+	KeyJ              Key = ebiten.KeyJ
+	KeyK              Key = ebiten.KeyK
+	KeyL              Key = ebiten.KeyL
+	KeyM              Key = ebiten.KeyM
+	KeyN              Key = ebiten.KeyN
+	KeyO              Key = ebiten.KeyO
+	KeyP              Key = ebiten.KeyP
+	KeyQ              Key = ebiten.KeyQ
+	KeyR              Key = ebiten.KeyR
+	KeyS              Key = ebiten.KeyS
+	KeyT              Key = ebiten.KeyT
+	KeyU              Key = ebiten.KeyU
+	KeyV              Key = ebiten.KeyV
+	KeyW              Key = ebiten.KeyW
+	KeyX              Key = ebiten.KeyX
+	KeyY              Key = ebiten.KeyY
+	KeyZ              Key = ebiten.KeyZ
+	KeyAltLeft        Key = ebiten.KeyAltLeft
+	KeyAltRight       Key = ebiten.KeyAltRight
+	KeyArrowDown      Key = ebiten.KeyArrowDown
+	KeyArrowLeft      Key = ebiten.KeyArrowLeft
+	KeyArrowRight     Key = ebiten.KeyArrowRight
+	KeyArrowUp        Key = ebiten.KeyArrowUp
+	KeyBackquote      Key = ebiten.KeyBackquote
+	KeyBackslash      Key = ebiten.KeyBackslash
+	KeyBackspace      Key = ebiten.KeyBackspace
+	KeyBracketLeft    Key = ebiten.KeyBracketLeft
+	KeyBracketRight   Key = ebiten.KeyBracketRight
+	KeyCapsLock       Key = ebiten.KeyCapsLock
+	KeyComma          Key = ebiten.KeyComma
+	KeyContextMenu    Key = ebiten.KeyContextMenu
+	KeyControlLeft    Key = ebiten.KeyControlLeft
+	KeyControlRight   Key = ebiten.KeyControlRight
+	KeyDelete         Key = ebiten.KeyDelete
+	KeyDigit0         Key = ebiten.KeyDigit0
+	KeyDigit1         Key = ebiten.KeyDigit1
+	KeyDigit2         Key = ebiten.KeyDigit2
+	KeyDigit3         Key = ebiten.KeyDigit3
+	KeyDigit4         Key = ebiten.KeyDigit4
+	KeyDigit5         Key = ebiten.KeyDigit5
+	KeyDigit6         Key = ebiten.KeyDigit6
+	KeyDigit7         Key = ebiten.KeyDigit7
+	KeyDigit8         Key = ebiten.KeyDigit8
+	KeyDigit9         Key = ebiten.KeyDigit9
+	KeyEnd            Key = ebiten.KeyEnd
+	KeyEnter          Key = ebiten.KeyEnter
+	KeyEqual          Key = ebiten.KeyEqual
+	KeyEscape         Key = ebiten.KeyEscape
+	KeyF1             Key = ebiten.KeyF1
+	KeyF2             Key = ebiten.KeyF2
+	KeyF3             Key = ebiten.KeyF3
+	KeyF4             Key = ebiten.KeyF4
+	KeyF5             Key = ebiten.KeyF5
+	KeyF6             Key = ebiten.KeyF6
+	KeyF7             Key = ebiten.KeyF7
+	KeyF8             Key = ebiten.KeyF8
+	KeyF9             Key = ebiten.KeyF9
+	KeyF10            Key = ebiten.KeyF10
+	KeyF11            Key = ebiten.KeyF11
+	KeyF12            Key = ebiten.KeyF12
+	KeyHome           Key = ebiten.KeyHome
+	KeyInsert         Key = ebiten.KeyInsert
+	KeyMetaLeft       Key = ebiten.KeyMetaLeft
+	KeyMetaRight      Key = ebiten.KeyMetaRight
+	KeyMinus          Key = ebiten.KeyMinus
+	KeyNumLock        Key = ebiten.KeyNumLock
+	KeyNumpad0        Key = ebiten.KeyNumpad0
+	KeyNumpad1        Key = ebiten.KeyNumpad1
+	KeyNumpad2        Key = ebiten.KeyNumpad2
+	KeyNumpad3        Key = ebiten.KeyNumpad3
+	KeyNumpad4        Key = ebiten.KeyNumpad4
+	KeyNumpad5        Key = ebiten.KeyNumpad5
+	KeyNumpad6        Key = ebiten.KeyNumpad6
+	KeyNumpad7        Key = ebiten.KeyNumpad7
+	KeyNumpad8        Key = ebiten.KeyNumpad8
+	KeyNumpad9        Key = ebiten.KeyNumpad9
+	KeyNumpadAdd      Key = ebiten.KeyNumpadAdd
+	KeyNumpadDecimal  Key = ebiten.KeyNumpadDecimal
+	KeyNumpadDivide   Key = ebiten.KeyNumpadDivide
+	KeyNumpadEnter    Key = ebiten.KeyNumpadEnter
+	KeyNumpadEqual    Key = ebiten.KeyNumpadEqual
+	KeyNumpadMultiply Key = ebiten.KeyNumpadMultiply
+	KeyNumpadSubtract Key = ebiten.KeyNumpadSubtract
+	KeyPageDown       Key = ebiten.KeyPageDown
+	KeyPageUp         Key = ebiten.KeyPageUp
+	KeyPause          Key = ebiten.KeyPause
+	KeyPeriod         Key = ebiten.KeyPeriod
+	KeyPrintScreen    Key = ebiten.KeyPrintScreen
+	KeyQuote          Key = ebiten.KeyQuote
+	KeyScrollLock     Key = ebiten.KeyScrollLock
+	KeySemicolon      Key = ebiten.KeySemicolon
+	KeyShiftLeft      Key = ebiten.KeyShiftLeft
+	KeyShiftRight     Key = ebiten.KeyShiftRight
+	KeySlash          Key = ebiten.KeySlash
+	KeySpace          Key = ebiten.KeySpace
+	KeyTab            Key = ebiten.KeyTab
+	// KeyReserved0      Key = ebiten.KeyReserved0
+	// KeyReserved1      Key = ebiten.KeyReserved1
+	// KeyReserved2      Key = ebiten.KeyReserved2
+	// KeyReserved3      Key = ebiten.KeyReserved3
 )
 
 func NamesToKeys(names []string) []Key {
@@ -353,14 +354,14 @@ func NameToKey(name string) Key {
 		return KeySpace
 	case "Tab":
 		return KeyTab
-	case "Reserved0":
-		return KeyReserved0
-	case "Reserved1":
-		return KeyReserved1
-	case "Reserved2":
-		return KeyReserved2
-	case "Reserved3":
-		return KeyReserved3
+		// case "Reserved0":
+		// 	return KeyReserved0
+		// case "Reserved1":
+		// 	return KeyReserved1
+		// case "Reserved2":
+		// 	return KeyReserved2
+		// case "Reserved3":
+		// 	return KeyReserved3
 	}
 	return KeyNone
 }
@@ -578,14 +579,14 @@ func KeyToName(k Key) string {
 		return "Space"
 	case KeyTab:
 		return "Tab"
-	case KeyReserved0:
-		return "Reserved0"
-	case KeyReserved1:
-		return "Reserved1"
-	case KeyReserved2:
-		return "Reserved2"
-	case KeyReserved3:
-		return "Reserved3"
+		// case KeyReserved0:
+		// 	return "Reserved0"
+		// case KeyReserved1:
+		// 	return "Reserved1"
+		// case KeyReserved2:
+		// 	return "Reserved2"
+		// case KeyReserved3:
+		// 	return "Reserved3"
 	}
 	return "(None)"
 }
@@ -811,10 +812,10 @@ func ToVirtualKey(k Key) uint32 {
 		return 0x20
 	case KeyTab:
 		return 0x09
-	case KeyReserved0:
-	case KeyReserved1:
-	case KeyReserved2:
-	case KeyReserved3:
+		// case KeyReserved0:
+		// case KeyReserved1:
+		// case KeyReserved2:
+		// case KeyReserved3:
 	}
 	return 0x00 // Unknown
 }

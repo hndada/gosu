@@ -2,24 +2,11 @@ package ctrl
 
 import "golang.org/x/exp/constraints"
 
-type Handler interface {
-	Decrease()
-	Increase()
-}
-
-const (
-	none = iota - 1
-	decrease
-	increase
-)
-
-type BoolHandler struct {
+type BoolControl struct {
 	Value *bool
 }
 
-func (h BoolHandler) Decrease() { h.swap() }
-func (h BoolHandler) Increase() { h.swap() }
-func (h BoolHandler) swap() {
+func (h *BoolControl) Switch() {
 	if !*h.Value {
 		*h.Value = true
 	} else {
@@ -31,15 +18,15 @@ type Number interface {
 	constraints.Integer | constraints.Float
 }
 
-type ValueHandler[T Number] struct {
+type NumberControl[T Number] struct {
 	Value *T
 	Min   T
 	Max   T
 	Unit  T
 }
 
-func NewValueHandler[T Number](value *T, min, max, unit T) *ValueHandler[T] {
-	return &ValueHandler[T]{
+func NewNumberControl[T Number](value *T, min, max, unit T) *NumberControl[T] {
+	return &NumberControl[T]{
 		Value: value,
 		Min:   min,
 		Max:   max,
@@ -47,7 +34,7 @@ func NewValueHandler[T Number](value *T, min, max, unit T) *ValueHandler[T] {
 	}
 }
 
-func (h *ValueHandler[T]) Decrease() {
+func (h *NumberControl[T]) Decrease() {
 	newValue := *h.Value - h.Unit
 	if newValue < h.Min {
 		*h.Value = h.Min
@@ -56,7 +43,7 @@ func (h *ValueHandler[T]) Decrease() {
 	}
 }
 
-func (h *ValueHandler[T]) Increase() {
+func (h *NumberControl[T]) Increase() {
 	newValue := *h.Value + h.Unit
 	if newValue > h.Max {
 		*h.Value = h.Max

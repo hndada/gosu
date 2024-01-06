@@ -18,8 +18,8 @@ func NewRootPaths() RootPaths {
 
 type Root struct {
 	ResourcesList []fs.FS
-	Musics        []fs.FS
-	Replays       []fs.FS
+	MusicList     []fs.FS
+	ReplaysList   []fs.FS
 }
 
 func NewRoot(root fs.FS, rootPaths RootPaths) (r Root) {
