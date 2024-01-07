@@ -20,8 +20,8 @@
 # Go workspace file
 go.work
 
-music/*
-!music/cYsmix - triangles
-!music/nekodex - circles!
+cmd/gosu/music/*
+!cmd/gosu/music/cYsmix - triangles
+!cmd/gosu/music/nekodex - circles!
 
 gosu/replays/*
