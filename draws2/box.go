@@ -1,8 +1,6 @@
 package draws
 
 import (
-	"image/color"
-
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
@@ -45,6 +43,24 @@ func NewBox[T Source](src T) Box[T] {
 		// but FilterLinear is more natural in my opinion.
 		Filter: ebiten.FilterLinear,
 	}
+}
+
+// Extend vs Expand
+// Extend: Make something larger by adding to it.
+// Expand: Make something larger by stretching it
+type ExtendOptions struct {
+	Spacing          Length
+	Direction        int
+	CollapseFirstBox bool
+}
+
+// Extend works as FlexBox.
+// X, Y, Aligns, Parent will be newly set.
+// Y: Height + Spacing
+func (b *Box[T]) Extend(children []Drawable, opts ExtendOptions) {
+	// for i := range children {
+	// 	child := children[i].(Box[Source])
+	// }
 }
 
 // Only four methods are required: Scale, Rotate, Translate, and ScaleWithColor.
@@ -116,39 +132,3 @@ func NewLabel(txt Text) Label { return NewBox[Text](txt) }
 type Animation = Box[Frames]
 
 func NewAnimation(frms Frames) Animation { return NewBox[Frames](frms) }
-
-// Filler can realize background shadow, and maybe border too.
-// By introducing an image, API becomes much simpler than Web's.
-// However, it is hard to adjust the size of fillers automatically
-// when its parent's size changes. Nevertheless, it won't be a problem
-// UI components would not change their size drastically.
-type Filler = Box[Color]
-
-func NewFiller(clr color.Color, extra float64) Filler {
-	return Box[Color]{
-		Source: NewColor(clr),
-		Rectangle: Rectangle{
-			W:      Length{extra, Extra},
-			H:      Length{extra, Extra},
-			Aligns: CenterMiddle,
-		},
-	}
-}
-
-// Extend vs Expand
-// Extend: Make something larger by adding to it.
-// Expand: Make something larger by stretching it
-type ExtendOptions struct {
-	Spacing          Length
-	Direction        int
-	CollapseFirstBox bool
-}
-
-// Extend works as FlexBox.
-// X, Y, Aligns, Parent will be newly set.
-// Y: Height + Spacing
-func (b *Box[T]) Extend(children []Drawable, opts ExtendOptions) {
-	// for i := range children {
-	// 	child := children[i].(Box[Source])
-	// }
-}
