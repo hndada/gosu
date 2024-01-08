@@ -2,7 +2,6 @@ package scene
 
 import (
 	"fmt"
-	"io/fs"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -42,10 +41,6 @@ type RootOptions struct {
 }
 
 func (opts *RootOptions) Normalize() {
-	if len(opts.MusicRoots) == 0 {
-		opts.MusicRoots = []string{"musics"}
-	}
-
 	// Leading dot and slash is not allowed in fs.
 	for i, path := range opts.MusicPaths {
 		path = strings.TrimPrefix(path, "..")
@@ -111,42 +106,6 @@ func NewOptions() *Options {
 			ScoreImageScale: 1.0,
 		},
 	}
-}
-
-type Root struct {
-	ResourcesList []fs.FS
-	MusicList     []fs.FS
-	ReplaysList   []fs.FS
-}
-
-func NewRoot(root fs.FS, rootPaths RootPaths) (r Root) {
-	r.ResourcesList = make([]fs.FS, len(rootPaths.ResourcesList))
-	for i, path := range rootPaths.ResourcesList {
-		fsys, err := fs.Sub(root, path)
-		if err != nil {
-			continue
-		}
-		r.ResourcesList[i] = fsys
-	}
-
-	r.Musics = make([]fs.FS, len(rootPaths.Musics))
-	for i, path := range rootPaths.Musics {
-		fsys, err := fs.Sub(root, path)
-		if err != nil {
-			continue
-		}
-		r.Musics[i] = fsys
-	}
-
-	r.Replays = make([]fs.FS, len(rootPaths.Replays))
-	for i, path := range rootPaths.Replays {
-		fsys, err := fs.Sub(root, path)
-		if err != nil {
-			continue
-		}
-		r.Replays[i] = fsys
-	}
-	return r
 }
 
 func (opts Options) DebugString() string {
