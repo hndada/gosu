@@ -1,6 +1,8 @@
 package draws
 
 import (
+	"sort"
+
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
@@ -20,19 +22,16 @@ type Drawable interface {
 // Box contains information to draw an 2D entity.
 // Boxes consist of a tree structure, which is a flexible way to manage entities.
 // Node vs Box: Node feels like for logical ones, Box feels like for visual ones.
-
-// Z-index is not implemented because it is rather complicated:
-// It might need to see all the children's z-indexes to determine drawing orders.
 type Box[T Source] struct {
 	Source T
 	Rectangle
 	ColorScale ebiten.ColorScale
 	Blend      ebiten.Blend
 	Filter     ebiten.Filter
-	Visible    bool
+	Collapsed  bool
 
-	Befores []Drawable
-	Afters  []Drawable
+	Children []Drawable
+	ZIndex   float64
 }
 
 func NewBox[T Source](src T) Box[T] {
@@ -66,16 +65,28 @@ func (b *Box[T]) Extend(children []Drawable, opts ExtendOptions) {
 // Only four methods are required: Scale, Rotate, Translate, and ScaleWithColor.
 // DrawImageOptions is not commutative: Do Translate at the final stage.
 func (b Box[T]) Draw(dst Image) {
-	if !b.Visible || !b.Exposed(dst) {
+	if !b.Collapsed || !b.Exposed(dst) {
 		return
 	}
 
-	for _, child := range b.Befores {
-		child.Draw(dst)
+	// Draw children in order.
+	idxs := make([]int, len(b.Children))
+	for i := range idxs {
+		idxs[i] = i
 	}
-	b.draw(dst)
-	for _, child := range b.Afters {
-		child.Draw(dst)
+	sort.Slice(idxs, func(i, j int) bool {
+		b1 := b.Children[idxs[i]].(Box[T])
+		b2 := b.Children[idxs[j]].(Box[T])
+		return b1.ZIndex < b2.ZIndex
+	})
+
+	after := false
+	for _, idx := range idxs {
+		if !after && b.Children[idx].(Box[T]).ZIndex >= 0 {
+			after = true
+			b.draw(dst)
+		}
+		b.Children[idx].Draw(dst)
 	}
 }
 

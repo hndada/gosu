@@ -98,11 +98,10 @@ func (s *Scene) SetMusicOffset(newOffset int32) {
 		// Hence, as offset increases, start time decreases.
 		// This leads to a instant, slight movement of notes.
 
-		// Changing offset might affect to indexing keyboard input,
-		// but it would be negligible because a player tend to
-		// hands off the keys for a while when setting offset.
-		// Maybe the fact that 'osu!' doesn't allow to change offset
-		// during pausing is related to this.
+		// Changing offset is fine even in pausing. KeyboardStateBuffer
+		// won't return any redundant states except the current index,
+		// which is not contained in KeyboardAction.
+		// c.f. 'osu!' doesn't allow players to change offset during pausing.
 
 		// No need to consider playback rate, since it is supported naturally.
 		// Times themselves are not affected, only now flows faster or slower.

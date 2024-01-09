@@ -8,7 +8,6 @@ import (
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/piano"
-	"github.com/hndada/gosu/mode"
 )
 
 // Options passed to each scene.
@@ -114,7 +113,7 @@ func (opts Options) DebugString() string {
 
 	var speedScale float64
 	switch opts.Mode {
-	case mode.ModePiano:
+	case game.ModePiano:
 		speedScale = opts.PianoOptions.SpeedScale
 	}
 

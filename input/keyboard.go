@@ -35,8 +35,11 @@ func NewKeyboardStateBuffer(buf []KeyboardState) KeyboardStateBuffer {
 }
 
 // Read returns the last read state and unread states before given time.
+// Read is guaranteed to return at least one state.
 func (kb *KeyboardStateBuffer) Read(now time.Duration) (kss []KeyboardState) {
-	for _, state := range kb.buf[kb.idx:] {
+	kss = append(kss, kb.buf[kb.idx])
+	// It is fine to pass index up to len(buf): kb.idx+1 <= len(buf).
+	for _, state := range kb.buf[kb.idx+1:] {
 		if state.Time > now {
 			break
 		}

@@ -7,7 +7,7 @@ import (
 )
 
 // Todo: implement non-playing score simulator
-// Todo: re-wrap mode.Replay; include osr.Format's header part.
+// Todo: re-wrap game.Replay; include osr.Format's header part.
 func newReplays(fsys fs.FS, charts map[string]*Chart) map[string]*osr.Format {
 	replays := make(map[string]*osr.Format)
 

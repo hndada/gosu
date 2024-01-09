@@ -10,8 +10,7 @@ import (
 	"time"
 
 	"github.com/hndada/gosu/format/osu"
-	"github.com/hndada/gosu/mode"
-	"github.com/hndada/gosu/mode/piano"
+	"github.com/hndada/gosu/game/piano"
 )
 
 // Chart contains information of a chart.
@@ -22,7 +21,7 @@ type Chart struct {
 	Filename string
 	Hash     string // md5 with 16 bytes
 
-	mode.ChartHeader
+	game.ChartHeader
 	Duration         int32
 	MainBPM          float64
 	MinBPM           float64
@@ -115,7 +114,7 @@ func NewCharts(root fs.FS) (map[string]*Chart, []error) {
 					Base:        me.Name(),
 					Filename:    ce.Name(),
 					Hash:        string(hash[:]),
-					ChartHeader: mode.NewChartHeader(f),
+					ChartHeader: game.NewChartHeader(f),
 				}
 
 				switch f.Mode {
@@ -126,7 +125,7 @@ func NewCharts(root fs.FS) (map[string]*Chart, []error) {
 						continue
 					}
 					c.Duration = cp.Duration()
-					c.MainBPM, c.MinBPM, c.MaxBPM = mode.BPMs(cp.Dynamics, cp.Duration())
+					c.MainBPM, c.MinBPM, c.MaxBPM = game.BPMs(cp.Dynamics, cp.Duration())
 					c.Level = cp.Level
 					c.NoteCounts = cp.NoteCounts()
 				}

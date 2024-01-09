@@ -1,11 +1,13 @@
 package gosu
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game/piano"
+	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/scene/choose"
 	"github.com/hndada/gosu/scene/play"
 )
@@ -16,10 +18,10 @@ const (
 )
 
 type Game struct {
-	scene.Resources
-	scene.Options
-	scenes []scene.Scene
-	idx    int
+	resources *scene.Resources
+	options   *scene.Options
+	scenes    []scene.Scene
+	idx       int
 }
 
 func NewGame(root Root) (g *Game) {
@@ -29,6 +31,10 @@ func NewGame(root Root) (g *Game) {
 	ebiten.SetWindowSize(g.ScreenSize.XYInts())
 	ebiten.SetWindowTitle("gosu")
 
+	g.loadOptions()
+	g.scenes = make([]scene.Scene, 2)
+	g.idx = SceneChoose
+
 	g.Scenes["choose"], err = choose.NewScene(g.Config, g.Asset, root)
 	if err != nil {
 		panic(err)
@@ -37,20 +43,25 @@ func NewGame(root Root) (g *Game) {
 	return g
 }
 
-func (g *Game) Update() error {
-	if scs.Scene == nil {
-		scs.scenes = scs.scenes["choose"]
+func (g *Game) loadOptions() {
+	jsonData := g.loadOptionsData()
+	err := json.Unmarshal(jsonData, g.options)
+	if err != nil {
+		panic(err)
 	}
+	g.options.Normalize()
+}
 
-	sc := scs.Scene()
+func (g *Game) Update() error {
+	sc := g.scenes[g.idx]
 	switch args := sc.Update().(type) {
 	case error:
 		fmt.Println("play scene error:", args)
-		scs.scene = scs.scenes["choose"]
+		g.idx = SceneChoose
 	case piano.Scorer:
 		ebiten.SetWindowTitle("gosu")
+		g.idx = SceneChoose
 		// debug.SetGCPercent(100)
-		scs.scene = scs.scenes["choose"]
 	case scene.PlayArgs:
 		fsys := args.MusicFS
 		name := args.ChartFilename
@@ -58,10 +69,11 @@ func (g *Game) Update() error {
 		scene, err := play.NewScene(g.Config, g.Asset, fsys, name, replay)
 		if err != nil {
 			fmt.Println("play scene error:", args)
-			scs.scene = scs.scenes["choose"]
+			g.idx = SceneChoose
 		} else {
+			g.idx = ScenePlay
+			g.scenes[g.idx] = scene
 			// debug.SetGCPercent(0)
-			scs.scene = scene
 		}
 	}
 	return nil

@@ -9,6 +9,7 @@ require (
 	github.com/gopxl/beep v1.3.0
 	github.com/hajimehoshi/ebiten/v2 v2.7.0-alpha.4
 	github.com/ulikunitz/xz v0.5.11
+	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b
 	golang.org/x/image v0.14.0
 	golang.org/x/sys v0.14.0
 )
@@ -22,7 +23,7 @@ require (
 	github.com/jfreymuth/oggvorbis v1.0.5 // indirect
 	github.com/jfreymuth/vorbis v1.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b // indirect
+	golang.org/x/exp/shiny v0.0.0-20230817173708-d852ddb80c63 // indirect
 	golang.org/x/mobile v0.0.0-20231108233038-35478a0c49da // indirect
 	golang.org/x/sync v0.5.0 // indirect
 	golang.org/x/text v0.14.0 // indirect

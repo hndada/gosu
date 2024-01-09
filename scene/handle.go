@@ -3,8 +3,8 @@ package scene
 import (
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/ctrl"
+	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/input"
-	"github.com/hndada/gosu/mode"
 )
 
 func IsEnterJustPressed() bool {
@@ -74,7 +74,7 @@ func NewDebugPrintKeyHandler(cfg *Config, asset *Asset) func() bool {
 func NewSpeedScaleKeyHandler(cfg *Config, asset *Asset, _mode int) func() bool {
 	var ptr *float64
 	switch _mode {
-	case mode.ModePiano:
+	case game.ModePiano:
 		ptr = &cfg.PianoConfig.SpeedScale
 	}
 
@@ -97,8 +97,8 @@ func NewModeKeyHandler(cfg *Config, asset *Asset) func() bool {
 	handler := ctrl.KeyHandler{
 		Handler: ctrl.IntHandler{
 			Value: &cfg.Mode,
-			Min:   mode.ModeAll,   // modeAll
-			Max:   mode.ModePiano, // modePiano only so far
+			Min:   game.ModeAll,   // modeAll
+			Max:   game.ModePiano, // modePiano only so far
 			Loop:  true,
 		},
 		Modifier: input.KeyNone,
@@ -112,7 +112,7 @@ func NewModeKeyHandler(cfg *Config, asset *Asset) func() bool {
 func NewSubModeKeyHandler(cfg *Config, asset *Asset) func() bool {
 	min, max := 0, 0
 	switch cfg.Mode {
-	case mode.ModePiano:
+	case game.ModePiano:
 		min, max = 4, 10
 	}
 	handler := ctrl.KeyHandler{
