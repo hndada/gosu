@@ -86,6 +86,7 @@ func NewChartHeader(format any, hash [16]byte) (c ChartHeader) {
 	c.ChartHash = hash
 	return
 }
+
 func newChartHeaderFromOsu(format *osu.Format) (c ChartHeader) {
 	const unknownID = -1
 	c = ChartHeader{

@@ -1,4 +1,12 @@
-package choose
+package selects
+
+import (
+	"fmt"
+	"image/color"
+	"strings"
+
+	"github.com/hajimehoshi/ebiten/text"
+)
 
 // no database. just search data linearly.
 
