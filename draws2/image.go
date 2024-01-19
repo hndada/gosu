@@ -48,9 +48,7 @@ func CreateImage(w, h float64) Image {
 	return Image{ebiten.NewImage(int(w), int(h))}
 }
 
-func (i Image) IsEmpty() bool {
-	return i.Image == nil
-}
+func (i Image) IsEmpty() bool { return i.Image == nil }
 
 func (i Image) Size() Vector2 {
 	if i.IsEmpty() {
@@ -75,11 +73,4 @@ func (i Image) In(p Vector2) bool {
 	max := i.Size()
 	return 0 <= p.X && p.X < max.X &&
 		0 <= p.Y && p.Y < max.Y
-}
-
-func (i Image) Draw(dst Image, op *ebiten.DrawImageOptions) {
-	if i.IsEmpty() {
-		return
-	}
-	dst.DrawImage(i.Image, op)
 }

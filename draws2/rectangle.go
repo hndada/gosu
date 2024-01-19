@@ -2,27 +2,23 @@ package draws
 
 import "github.com/hajimehoshi/ebiten/v2"
 
+type sizer interface{ Size() Vector2 }
+
 // All of these are for defining size and position.
 type Rectangle struct {
 	Base     *Rectangle
 	Viewport *Rectangle
+	src      sizer
 	Size     Length2
-	// Width    Length
-	// Height   Length
-	// W, H     Length
 	Theta    float64
 	Position Length2
-	// PositionX Length
-	// PositionY Length
-	// X, Y     Length
-	Aligns Aligns
+	Aligns   Aligns
 }
 
-func NewRectangle(w, h float64) Rectangle {
+func NewRectangle(src sizer) Rectangle {
+	w, h := src.Size().XY()
 	return Rectangle{
 		Size: NewLength2(nil, w, h, Pixel),
-		// W: Length{nil, w, Pixel},
-		// H: Length{nil, h, Pixel},
 	}
 }
 
@@ -126,9 +122,9 @@ func (r Rectangle) Min() Vector2 {
 }
 func (r Rectangle) Max() Vector2 { return r.Min().Add(r.Size.Pixel()) }
 
-func (r Rectangle) geoM(srcSize Vector2) ebiten.GeoM {
+func (r Rectangle) geoM() ebiten.GeoM {
 	geom := ebiten.GeoM{}
-	scale := r.Size.Pixel().Div(srcSize)
+	scale := r.Size.Pixel().Div(r.src.Size())
 	geom.Scale(scale.XY())
 	geom.Rotate(r.Theta)
 	geom.Translate(r.Min().XY())

@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/times"
 )
 
@@ -107,7 +106,7 @@ func (frms Frames) Loop() int {
 
 func (frms Frames) IsEmpty() bool { return len(frms.Images) == 0 }
 
-func (frms Frames) Index() int {
+func (frms Frames) index() int {
 	if frms.Period == 0 {
 		return 0
 	}
@@ -118,11 +117,18 @@ func (frms Frames) Index() int {
 	return index
 }
 
+func (frms Frames) Frame() Image {
+	if frms.IsEmpty() {
+		return Image{}
+	}
+	return frms.Images[frms.index()]
+}
+
 func (frms Frames) Size() Vector2 {
 	if frms.IsEmpty() {
 		return Vector2{}
 	}
-	return frms.Images[frms.Index()].Size()
+	return frms.Frame().Size()
 }
 
 func (frms Frames) IsFinished() bool {
@@ -133,11 +139,3 @@ func (frms Frames) IsFinished() bool {
 }
 
 func (frms *Frames) Reset() { frms.StartTime = times.Now() }
-
-func (frms Frames) Draw(dst Image, op *ebiten.DrawImageOptions) {
-	if frms.IsEmpty() {
-		return
-	}
-	frame := frms.Images[frms.Index()]
-	dst.DrawImage(frame.Image, op)
-}

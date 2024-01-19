@@ -61,51 +61,6 @@ func DefaultFontOptions() FontOptions {
 	}
 }
 
-// // E.g.: gomonobolditalic
-// func (k FontOptions) String() string {
-// 	var (
-// 		mono   string
-// 		weight string
-// 		style  string
-// 	)
-// 	if k.Mono {
-// 		mono = "mono"
-// 	}
-// 	switch k.Weight {
-// 	case font.WeightThin: // -3
-// 		weight = "thin"
-// 	case font.WeightExtraLight:
-// 		weight = "ultralight"
-// 	case font.WeightLight:
-// 		weight = "light"
-// 	case font.WeightNormal: // 0; CSS: 400
-// 		weight = ""
-// 	case font.WeightMedium:
-// 		weight = "medium"
-// 	case font.WeightSemiBold:
-// 		weight = "semibold"
-// 	case font.WeightBold:
-// 		weight = "bold"
-// 	case font.WeightExtraBold:
-// 		weight = "extrabold"
-// 	case font.WeightBlack:
-// 		weight = "black"
-// 	}
-// 	switch k.Style {
-// 	case font.StyleNormal:
-// 		style = ""
-// 	case font.StyleItalic:
-// 		style = "italic"
-// 	case font.StyleOblique:
-// 		style = "oblique"
-// 	}
-// 	suffix := mono + weight + style
-// 	if len(suffix) == 0 {
-// 		suffix = "regular"
-// 	}
-// 	return strings.ToLower(k.Family) + suffix
-// }
-
 // TrueType vs OpenType: OpenType is an extension of TrueType.
 var cachedFonts = make(map[FontOptions]Font)
 
@@ -173,3 +128,48 @@ func (t Text) IsEmpty() bool { return len(t.Text) == 0 }
 func (t Text) Size() Vector2 {
 	return Vec2(text.Measure(t.Text, t.face, t.LineSpacing))
 }
+
+// // E.g.: gomonobolditalic
+// func (k FontOptions) String() string {
+// 	var (
+// 		mono   string
+// 		weight string
+// 		style  string
+// 	)
+// 	if k.Mono {
+// 		mono = "mono"
+// 	}
+// 	switch k.Weight {
+// 	case font.WeightThin: // -3
+// 		weight = "thin"
+// 	case font.WeightExtraLight:
+// 		weight = "ultralight"
+// 	case font.WeightLight:
+// 		weight = "light"
+// 	case font.WeightNormal: // 0; CSS: 400
+// 		weight = ""
+// 	case font.WeightMedium:
+// 		weight = "medium"
+// 	case font.WeightSemiBold:
+// 		weight = "semibold"
+// 	case font.WeightBold:
+// 		weight = "bold"
+// 	case font.WeightExtraBold:
+// 		weight = "extrabold"
+// 	case font.WeightBlack:
+// 		weight = "black"
+// 	}
+// 	switch k.Style {
+// 	case font.StyleNormal:
+// 		style = ""
+// 	case font.StyleItalic:
+// 		style = "italic"
+// 	case font.StyleOblique:
+// 		style = "oblique"
+// 	}
+// 	suffix := mono + weight + style
+// 	if len(suffix) == 0 {
+// 		suffix = "regular"
+// 	}
+// 	return strings.ToLower(k.Family) + suffix
+// }
