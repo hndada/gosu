@@ -1,14 +1,5 @@
-
-// This is still not very flexible.
-type Box struct {
-}
-
 type BoxOptions struct {
 	BackgroundColor Color
-}
-
-func NewBox(options BoxOptions) (box Box) {
-
 }
 
 func (b Box[T]) Draw(dst Image) {
