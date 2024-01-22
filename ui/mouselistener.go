@@ -1,28 +1,32 @@
-package ctrl
+package ui
 
 import (
-	draws "github.com/hndada/gosu/draws2"
+	draws "github.com/hndada/gosu/draws5"
 	"github.com/hndada/gosu/input"
 )
+
+// draws package is for drawing.
+// ui: draws + input
+// ui package is defining some well-known widgets.
 
 // Cursor, Button, Wheel
 // Focus should be handled by scene. Only one box can be focused.
 type MouseListener struct {
-	rect               *draws.Rectangle
+	box                *draws.Box
 	lastCursorIn       bool
 	cursorIn           bool
 	lastButtonsPressed [3]bool
 	buttonsPressed     [3]bool
-	lastWheelPosition  draws.Vector2
-	wheelPosition      draws.Vector2
+	lastWheelPosition  draws.XY
+	wheelPosition      draws.XY
 	// scrollable         bool
 	// scrollScale        float64
 }
 
 // Returning pointer would be better for manipulating
-// the same rectangle from other places.
-func NewMouseListener(rect *draws.Rectangle) *MouseListener {
-	return &MouseListener{rect: rect}
+// the same box from other places.
+func NewMouseListener(box *draws.Box) *MouseListener {
+	return &MouseListener{box: box}
 }
 
 // func (ml *MouseListener) SetScrollOptions(scrollable bool, scale float64) {
@@ -37,11 +41,11 @@ func (ml *MouseListener) Update() {
 }
 
 func (ml *MouseListener) updateCursor() {
-	cp := draws.Vec2(input.MouseCursorPosition())
+	cp := draws.NewXY(input.MouseCursorPosition())
 	ml.lastCursorIn = ml.cursorIn
-	ml.cursorIn = ml.rect.In(cp)
+	ml.cursorIn = ml.box.In(cp)
 	if ml.cursorIn {
-		wp := draws.Vec2(input.MouseWheelPosition())
+		wp := draws.NewXY(input.MouseWheelPosition())
 		ml.lastWheelPosition = wp
 	}
 }
@@ -65,12 +69,12 @@ func (ml *MouseListener) updateWheel() {
 		return
 	}
 	ml.lastWheelPosition = ml.wheelPosition
-	wp := draws.Vec2(input.MouseWheelPosition())
+	wp := draws.NewXY(input.MouseWheelPosition())
 	ml.wheelPosition = wp
 
 	// dx, dy := input.MouseWheelPosition()
-	// ml.rect.AddPixelToX(dx * ml.scrollScale)
-	// ml.rect.AddPixelToY(dy * ml.scrollScale)
+	// ml.box.AddPixelToX(dx * ml.scrollScale)
+	// ml.box.AddPixelToY(dy * ml.scrollScale)
 }
 
 // There are 4 * 2 = 8 basic functions.
@@ -120,7 +124,7 @@ func (ml MouseListener) IsClicked(kind input.MouseButton) bool {
 	return ml.IsButtonJustReleased(kind)
 }
 
-func (ml MouseListener) MouseWheelMovement() draws.Vector2 {
+func (ml MouseListener) MouseWheelMovement() draws.XY {
 	return ml.wheelPosition.Sub(ml.lastWheelPosition)
 }
 

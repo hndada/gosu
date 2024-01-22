@@ -2,7 +2,7 @@ package draws
 
 type XY struct{ X, Y float64 }
 
-// func Vec2(x, y float64) XY          { return XY{x, y} }
+func NewXY(x, y float64) XY             { return XY{x, y} }
 func NewXYFromInts(x, y int) XY         { return XY{float64(x), float64(y)} }
 func NewXYFromScalar(v float64) XY      { return XY{v, v} }
 func (a XY) Add(b XY) XY                { return XY{a.X + b.X, a.Y + b.Y} }

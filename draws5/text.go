@@ -104,8 +104,7 @@ func (t *Text) SetFace(opts FaceOptions) {
 // func (t Text) IsEmpty() bool { return len(t.Text) == 0 }
 
 func (t Text) Size() XY {
-	x, y := text.Measure(t.Text, t.face, t.LineSpacing)
-	return XY{x, y}
+	return NewXY(text.Measure(t.Text, t.face, t.LineSpacing))
 }
 
 func (t Text) Draw(dst Image) {

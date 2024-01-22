@@ -14,9 +14,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 )
 
-type Image struct {
-	*ebiten.Image
-}
+type Image struct{ *ebiten.Image }
 
 // NewImage returns non-nil value even when fails to load file from given path.
 // ebiten.NewImageFromImage will panic when input is nil.

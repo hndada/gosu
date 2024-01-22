@@ -1,4 +1,4 @@
-package ctrl
+package ui
 
 import (
 	"github.com/hndada/gosu/draws"

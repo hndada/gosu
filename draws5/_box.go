@@ -1,3 +1,4 @@
+// This looks like pseudo-CSS
 type BoxOptions struct {
 	BackgroundColor Color
 }
