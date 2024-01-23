@@ -29,9 +29,10 @@ func NewNineSlice(img Image, w0, h0, w2, h2 float64) NineSlice {
 		w2: w2, h2: h2,
 		Box: NewBox(img),
 	}
-	// for i := 0; i < 9; i++ {
-	// 	ns.subs[i].Base = &ns.Box
-	// }
+
+	for i := 0; i < 9; i++ {
+		ns.subs[i].SetOrigin(&ns.Box)
+	}
 	ns.SetSize(w, h)
 	return ns
 }
@@ -65,8 +66,8 @@ func (ns *NineSlice) SetSize(w, h float64) {
 		case 2:
 			w, x = w2, w1+w0
 		}
-		ns.subs[i].Box.Size = NewLength2(&ns.Box.Size, w, h, Pixel)
-		ns.subs[i].Box.Position = NewLength2(&ns.Box.Position, x, y, Pixel)
+		ns.subs[i].Box.Size.SetValues(w, h)
+		ns.subs[i].Box.Position.SetValues(x, y)
 	}
 }
 

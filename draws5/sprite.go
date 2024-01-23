@@ -1,21 +1,21 @@
 package draws
 
 type Sprite struct {
-	Image
+	Source Image
 	Box
 }
 
 func NewSprite(img Image) Sprite {
 	return Sprite{
-		Image: img,
-		Box:   NewBox(img),
+		Source: img,
+		Box:    NewBox(img),
 	}
 }
 
 // sub.Fill might fill the destination image permanently.
 func (s Sprite) Draw(dst Image) {
-	if s.IsEmpty() {
+	if s.Source.IsEmpty() {
 		return
 	}
-	dst.DrawImage(s.Image.Image, s.op())
+	dst.DrawImage(s.Source.Image, s.op())
 }

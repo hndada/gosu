@@ -6,10 +6,12 @@ type Unit int
 
 const (
 	Pixel Unit = iota
-	Percent
-	// RootPercent
 
-	// Em // A unit of length in typography.
+	// Percent is a unit of relative length of the viewport.
+	Percent
+
+	// Em is a unit of length in typography.
+	// Em
 	// RootEm
 
 	// Extra stands for additional size to parent's size.
@@ -24,11 +26,15 @@ type Length struct {
 	Unit  Unit
 }
 
-// Default unit is Pixel.
-// func NewLength(value float64) Length { return Length{nil, value, Pixel} }
-func NewLength(base *Length, value float64, unit Unit) Length {
-	return Length{base, value, unit}
+func NewLength(v float64) Length {
+	return Length{Value: v, Unit: Pixel}
 }
+
+func (l *Length) SetBase(base *Length, unit Unit) {
+	l.Base = base
+	l.Unit = unit
+}
+
 func (l Length) String() string {
 	switch l.Unit {
 	case Pixel:
@@ -70,27 +76,37 @@ func (l *Length) Add(px float64) {
 
 type Length2 struct{ X, Y Length }
 
-func NewLength2(base *Length2, x, y float64, unit Unit) Length2 {
+func NewLength2(x, y float64) Length2 {
 	return Length2{
-		X: NewLength(&base.X, x, unit),
-		Y: NewLength(&base.Y, y, unit),
+		Length{Value: x},
+		Length{Value: y},
 	}
+}
+
+func (l2 *Length2) SetValues(x, y float64) {
+	l2.X.Value = x
+	l2.Y.Value = y
+}
+
+func (l2 *Length2) SetBase(base *Length2, unit Unit) {
+	l2.X.SetBase(&base.X, unit)
+	l2.Y.SetBase(&base.Y, unit)
 }
 
 func (l Length2) String() string {
 	return fmt.Sprintf("{%s, %s}", l.X, l.Y)
 }
 
-func (l Length2) Pixel() XY {
+func (l Length2) Pixels() XY {
 	return XY{l.X.Pixel(), l.Y.Pixel()}
 }
 
-func (l *Length2) Add(px XY) {
-	l.X.Add(px.X)
-	l.Y.Add(px.Y)
+func (l *Length2) Add(vs XY) {
+	l.X.Value += vs.X
+	l.Y.Value += vs.Y
 }
 
-func (l *Length2) Mul(scale XY) {
-	l.X.Value *= scale.X
-	l.Y.Value *= scale.Y
+func (l *Length2) Mul(scales XY) {
+	l.X.Value *= scales.X
+	l.Y.Value *= scales.Y
 }

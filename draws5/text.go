@@ -91,7 +91,7 @@ func NewText(txt string) Text {
 		LineSpacing: 1.6,
 	}
 	t.SetFace(NewFaceOptions())
-	t.Box = NewBox(t)
+	t.Box = NewBox(&t)
 	return t
 }
 
