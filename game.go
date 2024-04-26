@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/draws"
+	draws "github.com/hndada/gosu/draws5"
 	"github.com/hndada/gosu/game/piano"
 	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/scene/choose"
@@ -82,7 +82,9 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	g.scenes[g.idx].Draw(draws.Image{Image: screen})
 }
-
+func (g Game) ScreenSize() draws.XY {
+	return g.options.Screen.Resolution
+}
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return g.ScreenSize.XYInts()
+	return g.options.Screen.Layout()
 }

@@ -32,8 +32,10 @@ type Box struct {
 func NewBox(src source) Box {
 	size := NewLength2(src.Size().Values())
 	size.SetBase(&Screen.Size, Pixel)
-	pos := NewLength2(Screen.Size.X.Value/2, Screen.Size.Y.Value/2)
-	pos.SetBase(&Screen.Size, Pixel)
+	// Set relative position so that the box is centered regardless of the screen size change.
+	pos := NewLength2(0.5, 0.5)
+	pos.SetBase(&Screen.Size, Percent)
+	// pos := NewLength2(Screen.Size.X.Value/2, Screen.Size.Y.Value/2)
 	return Box{
 		src:      src,
 		Viewport: &Screen,

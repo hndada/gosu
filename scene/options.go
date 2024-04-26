@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/draws"
+	draws "github.com/hndada/gosu/draws5"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/piano"
 )
@@ -53,10 +53,15 @@ func (opts *RootOptions) Normalize() {
 type ScreenOptions struct {
 	// Resolution is the physical size of the screen,
 	// whereas ScreenSize is the logical size of the screen.
-	Resolution           draws.Vector2
+	Resolution           draws.XY
 	Fullscreen           bool
 	BackgroundBrightness float64
 	DebugPrint           bool
+}
+
+// Layout implements ebiten.Game interface.
+func (opts ScreenOptions) Layout() (int, int) {
+	return int(opts.Resolution.X), int(opts.Resolution.Y)
 }
 
 type AudioOptions struct {
@@ -74,7 +79,7 @@ type GameOptions struct {
 	SubMode         int
 	ErrorMeterScale float64
 	ScoreImageScale float64
-	Piano           piano.Options
+	Pianos          map[int]piano.Options
 }
 
 func NewOptions() *Options {
@@ -85,7 +90,7 @@ func NewOptions() *Options {
 			ReplaysPaths:   []string{"replays"},
 		},
 		Screen: ScreenOptions{
-			Resolution:           draws.Vec2(1600, 900),
+			Resolution:           draws.NewXY(game.ScreenW, game.ScreenH),
 			Fullscreen:           false,
 			BackgroundBrightness: 0.6,
 			DebugPrint:           true,
@@ -103,6 +108,10 @@ func NewOptions() *Options {
 			SubMode:         4,
 			ErrorMeterScale: 1.0,
 			ScoreImageScale: 1.0,
+			Pianos: map[int]piano.Options{
+				4: piano.NewOptions(4),
+				7: piano.NewOptions(7),
+			},
 		},
 	}
 }
@@ -112,21 +121,22 @@ func (opts Options) DebugString() string {
 	var b strings.Builder
 
 	var speedScale float64
-	switch opts.Mode {
+	switch opts.Game.Mode {
 	case game.ModePiano:
-		speedScale = opts.PianoOptions.SpeedScale
+		subMode := opts.Game.SubMode
+		speedScale = opts.Game.Pianos[subMode].SpeedScale
 	}
 
 	f(&b, "FPS: %.2f\n", ebiten.ActualFPS())
 	f(&b, "TPS: %.2f\n", ebiten.ActualTPS())
 	f(&b, "\n")
 	// issue: percent literal (%%) does not work.
-	f(&b, "Music volume (Ctrl+ Left/Right): %.0f\n", opts.MusicVolume*100)
-	f(&b, "Sound volume (Alt+ Left/Right): %.0f\n", opts.SoundVolume*100)
-	f(&b, "Music offset (Shift+ Left/Right): %dms\n", opts.MusicOffset)
-	f(&b, "Background brightness: (Ctrl+ O/P): %.0f\n", opts.BackgroundBrightness*100)
-	f(&b, "Debug print (F12): %v\n", opts.DebugPrint)
-	f(&b, "Replay (F11): %v\n", opts.Replay)
+	f(&b, "Music volume (Ctrl+ Left/Right): %.0f\n", opts.Audio.MusicVolume*100)
+	f(&b, "Sound volume (Alt+ Left/Right): %.0f\n", opts.Audio.SoundVolumeScale*100)
+	f(&b, "Music offset (Shift+ Left/Right): %dms\n", opts.Audio.MusicOffset)
+	f(&b, "Background brightness: (Ctrl+ O/P): %.0f\n", opts.Screen.BackgroundBrightness*100)
+	f(&b, "Debug print (F12): %v\n", opts.Screen.DebugPrint)
+	// f(&b, "Replay (F11): %v\n", opts.Replay)
 	f(&b, "\n")
 	// f(&b, "Mode (F1): %d\n", opts.Mode)
 	// f(&b, "Sub mode (F2/F3): %d\n", opts.SubMode)

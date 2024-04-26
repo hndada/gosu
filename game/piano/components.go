@@ -37,9 +37,10 @@ func NewResources(fsys fs.FS) (res Resources) {
 }
 
 type Options struct {
-	KeyCount int
-	Stage    StageOptions
-	Key      KeysOptions
+	KeyCount   int
+	SpeedScale float64 // Added
+	Stage      StageOptions
+	Key        KeysOptions
 
 	Field      FieldOptions
 	Bars       BarsOptions
@@ -59,9 +60,10 @@ func NewOptions(keyCount int) (opts Options) {
 	stage := NewStageOptions(keyCount)
 	keys := NewKeysOptions(stage)
 	return Options{
-		KeyCount: keyCount,
-		Stage:    stage,
-		Key:      keys,
+		KeyCount:   keyCount,
+		SpeedScale: 1.0,
+		Stage:      stage,
+		Key:        keys,
 
 		Field:      NewFieldOptions(stage),
 		Bars:       NewBarsOptions(stage),

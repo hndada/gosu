@@ -1,7 +1,8 @@
 package draws
 
+// Screen is the root Box for the screen.
 var Screen = Box{
-	Size: NewLength2(1280, 720),
+	Size: NewLength2(640, 480),
 }
 
 // func ScreenSize() XY {
