@@ -37,10 +37,10 @@ func NewResources(fsys fs.FS) (res Resources) {
 }
 
 type Options struct {
-	KeyCount   int
-	SpeedScale float64 // Added
-	Stage      StageOptions
-	Key        KeysOptions
+	CurrentKeyCount int             // Current key count
+	SpeedScales     map[int]float64 // Added
+	Stage           StageOptions
+	Key             KeysOptions
 
 	Field      FieldOptions
 	Bars       BarsOptions
@@ -55,16 +55,20 @@ type Options struct {
 	Score      game.ScoreOptions
 }
 
-// Todo: differnt key count has different options.
-func NewOptions(keyCount int) (opts Options) {
+// piano.Options has all key count options so that
+// it can handle scratch options smoothly.
+func NewOptions(currentKeyCount int) (opts Options) {
 	// const defaultKeyCount = 4
-	stage := NewStageOptions(keyCount)
+	stage := NewStageOptions(currentKeyCount)
 	keys := NewKeysOptions(stage)
 	return Options{
-		KeyCount:   keyCount,
-		SpeedScale: 1.0,
-		Stage:      stage,
-		Key:        keys,
+		CurrentKeyCount: currentKeyCount,
+		SpeedScales: map[int]float64{
+			4: 1.0,
+			7: 1.0,
+		},
+		Stage: stage,
+		Key:   keys,
 
 		Field:      NewFieldOptions(stage),
 		Bars:       NewBarsOptions(stage),

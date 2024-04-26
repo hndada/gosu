@@ -76,28 +76,30 @@ type GameOptions struct {
 	SubMode         int
 	ErrorMeterScale float64
 	ScoreImageScale float64
-	Pianos          map[int]piano.Options
+	Piano           piano.Options
 
 	replayFS       fs.FS
 	replayFilename string
 }
 
-func (opts GameOptions) Keyboard() (input.Keyboard, error) {
+func (opts GameOptions) Keyboard() (input.KeyboardReader, error) {
 	var keyCount int
 	var keyNames []string
 	switch opts.Mode {
 	case game.ModePiano:
 		keyCount = opts.SubMode
-		keyNames = opts.Pianos[keyCount].Key.Mappings[keyCount]
+		keyNames = opts.Piano.Key.Mappings[keyCount]
 	case game.ModeDrum:
 		keyCount = 4
+		// keyNames = []string{"D", "F", "J", "K"}
 	}
 
-	if opts.replayFS != nil {
-		return game.NewReplay(opts.replayFS, opts.replayFilename, keyCount)
+	if fsys := opts.replayFS; fsys != nil {
+		fname := opts.replayFilename
+		return game.NewReplay(fsys, fname, keyCount)
 	}
-	keys := input.NamesToKeys()
-	return input.NewKeyboard()
+	keys := input.NamesToKeys(keyNames)
+	return input.NewKeyboard(keys), nil
 }
 
 func NewOptions() *Options {
@@ -126,10 +128,7 @@ func NewOptions() *Options {
 			SubMode:         4,
 			ErrorMeterScale: 1.0,
 			ScoreImageScale: 1.0,
-			Pianos: map[int]piano.Options{
-				4: piano.NewOptions(4),
-				7: piano.NewOptions(7),
-			},
+			Piano:           piano.NewOptions(4),
 		},
 	}
 }
@@ -142,7 +141,7 @@ func (opts Options) DebugString() string {
 	switch opts.Game.Mode {
 	case game.ModePiano:
 		subMode := opts.Game.SubMode
-		speedScale = opts.Game.Pianos[subMode].SpeedScale
+		speedScale = opts.Game.Piano.SpeedScales[subMode]
 	}
 
 	f(&b, "FPS: %.2f\n", ebiten.ActualFPS())

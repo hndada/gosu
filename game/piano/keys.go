@@ -18,52 +18,46 @@ const (
 )
 
 type KeysOptions struct {
-	keyCount int
-	Mappings []string
-	Orders   []KeyKind
-	Scratch  Scratch
-	KindWs   [4]float64
-	w        []float64
-	x        []float64 // center
-	y        float64   // bottom
-}
-
-var defaultKeyMappings = map[int][]string{
-	1:  {"Space"},
-	2:  {"F", "J"},
-	3:  {"F", "Space", "J"},
-	4:  {"D", "F", "J", "K"},
-	5:  {"D", "F", "Space", "J", "K"},
-	6:  {"S", "D", "F", "J", "K", "L"},
-	7:  {"S", "D", "F", "Space", "J", "K", "L"},
-	8:  {"A", "S", "D", "F", "Space", "J", "K", "L"},
-	9:  {"A", "S", "D", "F", "Space", "J", "K", "L", "Semicolon"},
-	10: {"A", "S", "D", "F", "V", "N", "J", "K", "L", "Semicolon"},
-}
-
-var defaultOrders = map[int][]KeyKind{
-	1:  {Mid},
-	2:  {One, One},
-	3:  {One, Mid, One},
-	4:  {One, Two, Two, One},
-	5:  {One, Two, Mid, Two, One},
-	6:  {One, Two, One, One, Two, One},
-	7:  {One, Two, One, Mid, One, Two, One},
-	8:  {Tip, One, Two, One, One, Two, One, Tip},
-	9:  {Tip, One, Two, One, Mid, One, Two, One, Tip},
-	10: {Tip, One, Two, One, Mid, Mid, One, Two, One, Tip},
+	keyCount  int
+	Mappings  map[int][]string
+	Orders    map[int][]KeyKind
+	Scratches map[int]Scratch
+	KindWs    [4]float64
+	w         []float64
+	x         []float64 // center
+	y         float64   // bottom
 }
 
 func NewKeysOptions(stage StageOptions) KeysOptions {
-	var scratch Scratch = ScratchNone
-	if stage.keyCount == 8 {
-		scratch = ScratchLeft
-	}
 	opts := KeysOptions{
 		keyCount: stage.keyCount,
-		Mappings: defaultKeyMappings[stage.keyCount],
-		Orders:   defaultOrders[stage.keyCount],
-		Scratch:  scratch,
+		Mappings: map[int][]string{
+			1:  {"Space"},
+			2:  {"F", "J"},
+			3:  {"F", "Space", "J"},
+			4:  {"D", "F", "J", "K"},
+			5:  {"D", "F", "Space", "J", "K"},
+			6:  {"S", "D", "F", "J", "K", "L"},
+			7:  {"S", "D", "F", "Space", "J", "K", "L"},
+			8:  {"A", "S", "D", "F", "Space", "J", "K", "L"},
+			9:  {"A", "S", "D", "F", "Space", "J", "K", "L", "Semicolon"},
+			10: {"A", "S", "D", "F", "V", "N", "J", "K", "L", "Semicolon"},
+		},
+		Orders: map[int][]KeyKind{
+			1:  {Mid},
+			2:  {One, One},
+			3:  {One, Mid, One},
+			4:  {One, Two, Two, One},
+			5:  {One, Two, Mid, Two, One},
+			6:  {One, Two, One, One, Two, One},
+			7:  {One, Two, One, Mid, One, Two, One},
+			8:  {Tip, One, Two, One, One, Two, One, Tip},
+			9:  {Tip, One, Two, One, Mid, One, Two, One, Tip},
+			10: {Tip, One, Two, One, Mid, Mid, One, Two, One, Tip},
+		},
+		Scratches: map[int]Scratch{
+			8: ScratchLeft,
+		},
 		KindWs: [4]float64{
 			32, // One
 			31, // Two
@@ -82,7 +76,7 @@ func (opts KeysOptions) Order() []KeyKind {
 	order := opts.Orders[opts.keyCount]
 	order_1 := opts.Orders[opts.keyCount-1]
 
-	switch opts.Scratch {
+	switch opts.Scratches[opts.keyCount] {
 	case ScratchNone:
 		return order
 	case ScratchLeft:

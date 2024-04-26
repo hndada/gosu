@@ -28,8 +28,8 @@ type KeyboardStateBuffer struct {
 	idx int
 }
 
-func NewKeyboardStateBuffer(buf []KeyboardState) KeyboardStateBuffer {
-	return KeyboardStateBuffer{
+func NewKeyboardStateBuffer(buf []KeyboardState) *KeyboardStateBuffer {
+	return &KeyboardStateBuffer{
 		buf: buf,
 	}
 }
@@ -50,7 +50,6 @@ func (kb *KeyboardStateBuffer) Read(now time.Duration) (kss []KeyboardState) {
 	return kss
 }
 
-// Output trims redundant states then returns the states.
 func (kb *KeyboardStateBuffer) Trim() {
 	trimmed := make([]KeyboardState, 1, len(kb.buf))
 	copy(trimmed, kb.buf)
@@ -66,6 +65,7 @@ func (kb *KeyboardStateBuffer) Trim() {
 	kb.buf = trimmed
 }
 
+// Output trims redundant states then returns the states.
 func (kb KeyboardStateBuffer) Output() []KeyboardState {
 	kb.Trim()
 	return kb.buf
@@ -76,15 +76,15 @@ type KeyboardReader interface {
 	Read(now time.Duration) []KeyboardState
 }
 
-type KeyboardListener interface {
-	Listen()
-	Stop()
-}
+// type KeyboardListener interface {
+// 	Listen()
+// 	Stop()
+// }
 
 // Keyboard should not require additional adjustment when offset has changed,
 // Because Keyboard cannot seek at precise position once it starts. Same goes for music.
 type Keyboard struct {
-	KeyboardStateBuffer
+	*KeyboardStateBuffer
 	// mu                 *sync.Mutex // for lock
 	fetchKeyboardState func() []bool
 	startTime          time.Time
@@ -92,8 +92,8 @@ type Keyboard struct {
 	stop               chan struct{}
 }
 
-func NewKeyboard(keys []Key) Keyboard {
-	kb := Keyboard{
+func NewKeyboard(keys []Key) *Keyboard {
+	kb := &Keyboard{
 		fetchKeyboardState: newFetchKeyboardState(keys),
 		// mu:                 &sync.Mutex{},
 		stop: make(chan struct{}),

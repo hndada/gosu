@@ -16,8 +16,8 @@ type Replay = input.KeyboardStateBuffer
 // by :=, at least one of the variables on the left side must be newly declared.
 // It will work just as = for already existing variables.
 // https://go.dev/play/p/5SUt9uyrncD
-func NewReplay(fsys fs.FS, name string, keyCount int) (Replay, error) {
-	var r Replay
+func NewReplay(fsys fs.FS, name string, keyCount int) (*Replay, error) {
+	var r *Replay
 	file, err := fsys.Open(name)
 	if err != nil {
 		err = fmt.Errorf("failed to open replay file: %s", err)

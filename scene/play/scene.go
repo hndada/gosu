@@ -32,7 +32,7 @@ type Scene struct {
 	musicOffset  int32
 	musicPlayed  bool // This really matters.
 
-	keyboard    input.Keyboard
+	keyboard    input.KeyboardReader
 	musicPlayer audios.MusicPlayer
 	soundPlayer audios.SoundPlayer
 
@@ -41,7 +41,7 @@ type Scene struct {
 }
 
 // func NewScene(res, opts, fsys, name)
-func NewScene(fsys fs.FS, name string) (s Scene, err error) {
+func NewScene(res scene.Resources, opts scene.Options, fsys fs.FS, name string) (s Scene, err error) {
 	format, hash, err := game.LoadChartFile(fsys, name)
 	if err != nil {
 		err = fmt.Errorf("failed to load chart file: %w", err)
