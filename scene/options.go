@@ -2,12 +2,14 @@ package scene
 
 import (
 	"fmt"
+	"io/fs"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	draws "github.com/hndada/gosu/draws5"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/piano"
+	"github.com/hndada/gosu/input"
 )
 
 // Options passed to each scene.
@@ -59,11 +61,6 @@ type ScreenOptions struct {
 	DebugPrint           bool
 }
 
-// Layout implements ebiten.Game interface.
-func (opts ScreenOptions) Layout() (int, int) {
-	return int(opts.Resolution.X), int(opts.Resolution.Y)
-}
-
 type AudioOptions struct {
 	MusicVolume      float64
 	SoundVolumeScale float64
@@ -80,6 +77,27 @@ type GameOptions struct {
 	ErrorMeterScale float64
 	ScoreImageScale float64
 	Pianos          map[int]piano.Options
+
+	replayFS       fs.FS
+	replayFilename string
+}
+
+func (opts GameOptions) Keyboard() (input.Keyboard, error) {
+	var keyCount int
+	var keyNames []string
+	switch opts.Mode {
+	case game.ModePiano:
+		keyCount = opts.SubMode
+		keyNames = opts.Pianos[keyCount].Key.Mappings[keyCount]
+	case game.ModeDrum:
+		keyCount = 4
+	}
+
+	if opts.replayFS != nil {
+		return game.NewReplay(opts.replayFS, opts.replayFilename, keyCount)
+	}
+	keys := input.NamesToKeys()
+	return input.NewKeyboard()
 }
 
 func NewOptions() *Options {

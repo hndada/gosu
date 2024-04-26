@@ -10,6 +10,7 @@ import (
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/input"
+	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/times"
 )
 
@@ -35,6 +36,7 @@ type Scene struct {
 	musicPlayer audios.MusicPlayer
 	soundPlayer audios.SoundPlayer
 
+	*scene.Options
 	play play
 }
 
@@ -61,8 +63,8 @@ func NewScene(fsys fs.FS, name string) (s Scene, err error) {
 		return
 	}
 	s.musicPlayer = mp
-	mp.SetVolume(*s.MusicVolume)
-	s.musicOffset = musicOffset
+	mp.SetVolume(s.Audio.MusicVolume)
+	s.musicOffset = s.Audio.MusicOffset
 
 	sp := audios.NewSoundPlayer()
 	// sp.Add(, "")
@@ -146,7 +148,7 @@ func (s *Scene) firstUpdate() {
 
 func (s Scene) PlaySounds() {
 	for _, samp := range s.play.SampleBuffer() {
-		vol := samp.Volume * s.SoundVolumeScale
+		vol := samp.Volume * s.Audio.SoundVolumeScale
 		s.soundPlayer.Play(samp.Filename, vol)
 	}
 }

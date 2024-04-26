@@ -55,6 +55,7 @@ type Options struct {
 	Score      game.ScoreOptions
 }
 
+// Todo: differnt key count has different options.
 func NewOptions(keyCount int) (opts Options) {
 	// const defaultKeyCount = 4
 	stage := NewStageOptions(keyCount)

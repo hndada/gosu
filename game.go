@@ -8,12 +8,12 @@ import (
 	draws "github.com/hndada/gosu/draws5"
 	"github.com/hndada/gosu/game/piano"
 	"github.com/hndada/gosu/scene"
-	"github.com/hndada/gosu/scene/choose"
 	"github.com/hndada/gosu/scene/play"
+	"github.com/hndada/gosu/scene/selects"
 )
 
 const (
-	SceneChoose = iota
+	SceneSelect = iota
 	ScenePlay
 )
 
@@ -28,18 +28,18 @@ func NewGame(root Root) (g *Game) {
 	// issue: It jitters when Vsync is enabled.
 	// ebiten.SetVsyncEnabled(false)
 	ebiten.SetTPS(ebiten.SyncWithFPS)
-	ebiten.SetWindowSize(g.ScreenSize.XYInts())
+	ebiten.SetWindowSize(g.ScreenSize().IntValues())
 	ebiten.SetWindowTitle("gosu")
 
 	g.loadOptions()
 	g.scenes = make([]scene.Scene, 2)
-	g.idx = SceneChoose
+	g.idx = SceneSelect
 
-	g.Scenes["choose"], err = choose.NewScene(g.Config, g.Asset, root)
+	sc, err := selects.NewScene(g.Config, g.Asset, root)
 	if err != nil {
 		panic(err)
 	}
-
+	g.scenes[SceneSelect] = sc
 	return g
 }
 
@@ -57,10 +57,10 @@ func (g *Game) Update() error {
 	switch args := sc.Update().(type) {
 	case error:
 		fmt.Println("play scene error:", args)
-		g.idx = SceneChoose
+		g.idx = SceneSelect
 	case piano.Scorer:
 		ebiten.SetWindowTitle("gosu")
-		g.idx = SceneChoose
+		g.idx = SceneSelect
 		// debug.SetGCPercent(100)
 	case scene.PlayArgs:
 		fsys := args.MusicFS
@@ -69,7 +69,7 @@ func (g *Game) Update() error {
 		scene, err := play.NewScene(g.Config, g.Asset, fsys, name, replay)
 		if err != nil {
 			fmt.Println("play scene error:", args)
-			g.idx = SceneChoose
+			g.idx = SceneSelect
 		} else {
 			g.idx = ScenePlay
 			g.scenes[g.idx] = scene
@@ -82,9 +82,10 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	g.scenes[g.idx].Draw(draws.Image{Image: screen})
 }
+
 func (g Game) ScreenSize() draws.XY {
 	return g.options.Screen.Resolution
 }
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return g.options.Screen.Layout()
+	return g.ScreenSize().IntValues()
 }
