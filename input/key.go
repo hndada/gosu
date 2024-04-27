@@ -125,6 +125,7 @@ const (
 	// KeyReserved2      Key = ebiten.KeyReserved2
 	// KeyReserved3      Key = ebiten.KeyReserved3
 )
+const KeyFinal Key = KeyTab + 1 // For iterating keys
 
 func NamesToKeys(names []string) []Key {
 	keys := make([]Key, len(names))

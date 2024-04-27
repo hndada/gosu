@@ -82,7 +82,7 @@ type GameOptions struct {
 	replayFilename string
 }
 
-func (opts GameOptions) Keyboard() (input.KeyboardReader, error) {
+func (opts GameOptions) NewKeyboardReader() (input.KeyboardReader, error) {
 	var keyCount int
 	var keyNames []string
 	switch opts.Mode {
@@ -91,7 +91,7 @@ func (opts GameOptions) Keyboard() (input.KeyboardReader, error) {
 		keyNames = opts.Piano.Key.Mappings[keyCount]
 	case game.ModeDrum:
 		keyCount = 4
-		// keyNames = []string{"D", "F", "J", "K"}
+		// keyNames = opts.Drum.Key.Mappings
 	}
 
 	if fsys := opts.replayFS; fsys != nil {
@@ -140,8 +140,7 @@ func (opts Options) DebugString() string {
 	var speedScale float64
 	switch opts.Game.Mode {
 	case game.ModePiano:
-		subMode := opts.Game.SubMode
-		speedScale = opts.Game.Piano.SpeedScales[subMode]
+		speedScale = opts.Game.Piano.SpeedScale
 	}
 
 	f(&b, "FPS: %.2f\n", ebiten.ActualFPS())

@@ -19,19 +19,21 @@ var defaultFormat = beep.Format{
 }
 
 type SoundPlayer struct {
-	buffer       *beep.Buffer
-	starts       map[string]int // start index
-	ends         map[string]int // end index
-	keys         []string
-	PlaybackRate float64
+	buffer           *beep.Buffer
+	starts           map[string]int // start index
+	ends             map[string]int // end index
+	keys             []string       // map keys
+	soundVolumeScale *float64
+	PlaybackRate     float64
 }
 
-func NewSoundPlayer() SoundPlayer {
+func NewSoundPlayer(scale *float64) SoundPlayer {
 	return SoundPlayer{
-		buffer:       beep.NewBuffer(defaultFormat),
-		starts:       make(map[string]int),
-		ends:         make(map[string]int),
-		PlaybackRate: 1,
+		buffer:           beep.NewBuffer(defaultFormat),
+		starts:           make(map[string]int),
+		ends:             make(map[string]int),
+		soundVolumeScale: scale,
+		PlaybackRate:     1,
 	}
 }
 
@@ -71,18 +73,20 @@ func (sp *SoundPlayer) AddFromFile(fsys fs.FS, name string) error {
 // Count returns the number of sounds in SoundPlayer.
 func (sp SoundPlayer) Count() int { return len(sp.starts) }
 
-func (sp SoundPlayer) Play(name string, vol float64) {
+func (sp SoundPlayer) Play(name string) { sp.PlayWithVolume(name, 1) }
+func (sp SoundPlayer) PlayWithVolume(name string, vol float64) {
 	var s beep.Streamer = sp.buffer.Streamer(sp.starts[name], sp.ends[name])
 	if sp.PlaybackRate != 1 {
 		s = beep.ResampleRatio(quality, sp.PlaybackRate, s)
 	}
+	vol *= *sp.soundVolumeScale
 	volume := &effects.Volume{Streamer: s, Base: 2, Volume: beepVolume(vol)}
 	speaker.Play(volume)
 }
 
-func (sp SoundPlayer) PlayRandom(vol float64) {
+func (sp SoundPlayer) PlayRandom() {
 	i := rand.Intn(len(sp.keys))
-	sp.Play(sp.keys[i], vol)
+	sp.Play(sp.keys[i])
 }
 
 // func isFileSizeSmall(fsys fs.FS, name string) bool {

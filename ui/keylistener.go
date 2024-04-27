@@ -6,11 +6,27 @@ import (
 	"github.com/hndada/gosu/input"
 )
 
+func IsEnterJustPressed() bool {
+	return input.IsKeyJustPressed(input.KeyEnter) || input.IsKeyJustPressed(input.KeyNumpadEnter)
+}
+func IsEscapeJustPressed() bool {
+	return input.IsKeyJustPressed(input.KeyEscape)
+}
+
 // KeyListener and MouseListener just tell whether the key or mouse is pressed.
 // What to do when they are fired is up to each scene:
 // Play sound, change volume, draw something, etc.
+
+// It is common that key listeners check the very last key press.
+// Tested with Ctrl+B and Ctrl+N in VS Code:
+// Ctrl+B+N: opened a new tab repeatedly.
+// Ctrl+N+B: collapsed the sidebar and uncollapsed it repeatedly.
 type KeyListener struct {
-	keys           []input.Key
+	*KeyboardStatus
+	Modifiers []input.Key
+	Controls  []Control
+	keys      []input.Key
+	// Keys           []input.Key
 	fireCount      int // Number of consecutive fires.
 	firstFiredTime time.Time
 
@@ -20,50 +36,67 @@ type KeyListener struct {
 	shortDuration time.Duration
 }
 
-func NewKeyListener(ks ...input.Key) *KeyListener {
+func NewKeyListener(ks *KeyboardStatus, mods []input.Key, ctrls []Control) *KeyListener {
+	keys := make([]input.Key, len(ctrls))
+	for i, c := range ctrls {
+		keys[i] = c.Key
+	}
+
 	return &KeyListener{
-		keys:          ks,
-		longDuration:  500 * time.Millisecond,
-		shortDuration: 100 * time.Millisecond,
+		KeyboardStatus: ks,
+		Modifiers:      mods,
+		Controls:       ctrls,
+		keys:           keys,
+		longDuration:   500 * time.Millisecond,
+		shortDuration:  100 * time.Millisecond,
 	}
 }
 
 // Avoid using goroutine, it is very hard to sync other Update functions.
-func (kl *KeyListener) Update() (fired bool) {
-	if !kl.allKeysPressed() {
-		kl.fireCount = 0
-		return false
+// Declaring local functions in a method instead of separating them as methods seems fine.
+func (kh *KeyListener) Update() (Control, bool) {
+	reset := func() (Control, bool) {
+		kh.fireCount = 0
+		return Control{}, false
 	}
+	if !kh.AreAllKeysPressed(kh.Modifiers) {
+		return reset()
+	}
+
+	k, ok := kh.AreAnyKeysPressed(kh.keys)
+	if !ok {
+		return reset()
+	}
+
+	var c Control
+	for i := 0; i < len(kh.keys); i++ {
+		if k == kh.keys[i] {
+			c = kh.Controls[i]
+			break
+		}
+	}
+
+	fire := func() (Control, bool) {
+		kh.fireCount++
+		return c, true
+	}
+
 	// Now key listener is active.
-	switch kl.fireCount {
+	switch kh.fireCount {
 	case 0:
 		// If it was not active, it is instantly fired.
-		kl.firstFiredTime = time.Now()
-		return kl.fire()
+		kh.firstFiredTime = time.Now()
+		return fire()
 	case 1:
-		if time.Since(kl.firstFiredTime) > kl.longDuration {
-			return kl.fire()
+		if time.Since(kh.firstFiredTime) > kh.longDuration {
+			return fire()
 		}
 	default:
-		minDuration := kl.longDuration +
-			time.Duration(kl.fireCount-1)*kl.shortDuration
-		if time.Since(kl.firstFiredTime) > minDuration {
-			return kl.fire()
+		minDuration := kh.longDuration +
+			time.Duration(kh.fireCount-1)*kh.shortDuration
+		if time.Since(kh.firstFiredTime) > minDuration {
+			return fire()
 		}
 	}
-	return false
-}
-
-func (kl *KeyListener) allKeysPressed() bool {
-	for _, k := range kl.keys {
-		if !input.IsKeyPressed(k) {
-			return false
-		}
-	}
-	return true
-}
-
-func (kl *KeyListener) fire() bool {
-	kl.fireCount++
-	return true
+	return Control{}, false
 }

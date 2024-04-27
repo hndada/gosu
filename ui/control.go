@@ -1,53 +1,38 @@
 package ui
 
-import "golang.org/x/exp/constraints"
+import (
+	"github.com/hndada/gosu/input"
+)
 
-type BoolControl struct {
-	Value *bool
+type ControlType int
+
+const (
+	Decrease ControlType = iota
+	Increase
+)
+
+const (
+	Toggle ControlType = iota
+)
+
+type Control struct {
+	Key           input.Key
+	Type          ControlType
+	SoundFilename string
 }
 
-func (h *BoolControl) Switch() {
-	if !*h.Value {
-		*h.Value = true
-	} else {
-		*h.Value = false
-	}
-}
+// const decreaseSoundFilename = "interface/sound/toggle/off.wav"
+// const increaseSoundFilename = "interface/sound/toggle/on.wav"
 
-type Number interface {
-	constraints.Integer | constraints.Float
-}
+// var DecreaseControl = Control{
+// 	Key:           input.KeyArrowLeft,
+// 	Type:          Decrease,
+// 	SoundFilename: decreaseSoundFilename,
+// }
+// var IncreaseControl = Control{
+// 	Key:           input.KeyArrowRight,
+// 	Type:          Increase,
+// 	SoundFilename: increaseSoundFilename,
+// }
 
-type NumberControl[T Number] struct {
-	Value *T
-	Min   T
-	Max   T
-	Unit  T
-}
-
-func NewNumberControl[T Number](value *T, min, max, unit T) *NumberControl[T] {
-	return &NumberControl[T]{
-		Value: value,
-		Min:   min,
-		Max:   max,
-		Unit:  unit,
-	}
-}
-
-func (h *NumberControl[T]) Decrease() {
-	newValue := *h.Value - h.Unit
-	if newValue < h.Min {
-		*h.Value = h.Min
-	} else {
-		*h.Value = newValue
-	}
-}
-
-func (h *NumberControl[T]) Increase() {
-	newValue := *h.Value + h.Unit
-	if newValue > h.Max {
-		*h.Value = h.Max
-	} else {
-		*h.Value = newValue
-	}
-}
+// var DefaultControls = []Control{DecreaseControl, IncreaseControl}

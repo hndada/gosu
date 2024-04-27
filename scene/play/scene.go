@@ -50,12 +50,12 @@ func NewScene(res scene.Resources, opts scene.Options, fsys fs.FS, name string) 
 	s.ChartHeader = game.NewChartHeader(format, hash)
 	ebiten.SetWindowTitle(s.WindowTitle())
 
-	if replay != nil {
-		s.keyboard = game.NewReplay(replay)
-	} else {
-		keys := input.NamesToKeys(s.KeySettings[s.KeyCount])
-		s.keyboard = input.NewKeyboard(keys)
+	kb, err := opts.Game.NewKeyboardReader()
+	if err != nil {
+		err = fmt.Errorf("failed to create keyboard reader: %w", err)
+		return
 	}
+	s.keyboard = kb
 
 	mp, err := audios.NewMusicPlayerFromFile(fsys, s.MusicFilename)
 	if err != nil {
@@ -67,7 +67,9 @@ func NewScene(res scene.Resources, opts scene.Options, fsys fs.FS, name string) 
 	s.musicOffset = s.Audio.MusicOffset
 
 	sp := audios.NewSoundPlayer()
+	// Todo: add default sound
 	// sp.Add(, "")
+	s.soundPlayer = sp
 
 	return
 }
@@ -142,7 +144,9 @@ func (s *Scene) Update() any {
 func (s *Scene) firstUpdate() {
 	const wait = 1100 * time.Millisecond
 	s.startTime = times.Now().Add(wait)
-	s.keyboard.Listen(s.startTime)
+	if kb, ok := s.keyboard.(*input.Keyboard); ok {
+		kb.Listen(s.startTime)
+	}
 	s.startTime = times.Now()
 }
 
@@ -156,23 +160,28 @@ func (s Scene) PlaySounds() {
 func (s *Scene) Pause() {
 	s.pauseTime = times.Now()
 	s.musicPlayer.Pause()
-	s.keyboard.Stop()
+	if kb, ok := s.keyboard.(*input.Keyboard); ok {
+		kb.Stop()
+	}
 	s.paused = true
-
 }
 
 func (s *Scene) Resume() {
 	elapsedTime := times.Since(s.pauseTime)
 	s.startTime = s.startTime.Add(elapsedTime)
 	s.musicPlayer.Resume()
-	s.keyboard.Listen(s.startTime)
+	if kb, ok := s.keyboard.(*input.Keyboard); ok {
+		kb.Listen(s.startTime)
+	}
 	s.paused = false
 }
 
 // Music keeps playing at result scene.
 func (s *Scene) Close() {
 	// s.MusicPlayer.Close()
-	s.keyboard.Stop()
+	if kb, ok := s.keyboard.(*input.Keyboard); ok {
+		kb.Stop()
+	}
 }
 
 // func (t *Timer) sync() {

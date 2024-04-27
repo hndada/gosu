@@ -36,9 +36,12 @@ func NewResources(fsys fs.FS) (res Resources) {
 	return
 }
 
+// SpeedScale is universal for all key counts.
+// If a player wants to use different speed scales for different key counts,
+// use 'Option Profile' feature.
 type Options struct {
-	CurrentKeyCount int             // Current key count
-	SpeedScales     map[int]float64 // Added
+	CurrentKeyCount int     // Current key count
+	SpeedScale      float64 // Added
 	Stage           StageOptions
 	Key             KeysOptions
 
@@ -63,12 +66,9 @@ func NewOptions(currentKeyCount int) (opts Options) {
 	keys := NewKeysOptions(stage)
 	return Options{
 		CurrentKeyCount: currentKeyCount,
-		SpeedScales: map[int]float64{
-			4: 1.0,
-			7: 1.0,
-		},
-		Stage: stage,
-		Key:   keys,
+		SpeedScale:      1.0,
+		Stage:           stage,
+		Key:             keys,
 
 		Field:      NewFieldOptions(stage),
 		Bars:       NewBarsOptions(stage),
