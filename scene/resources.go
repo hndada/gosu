@@ -1,6 +1,10 @@
 package scene
 
-type Resources struct{}
+import "github.com/hndada/gosu/game/piano"
+
+type Resources struct {
+	Piano *piano.Resources
+}
 
 // Todo: deal with two kinds of values: file path and directory path.
 const (

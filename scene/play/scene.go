@@ -8,7 +8,7 @@ import (
 	"github.com/hndada/gosu/audios"
 	draws "github.com/hndada/gosu/draws5"
 	"github.com/hndada/gosu/game"
-	"github.com/hndada/gosu/game/piano"
+	piano "github.com/hndada/gosu/game/piano2"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/times"
@@ -24,8 +24,8 @@ type play interface {
 type Scene struct {
 	*scene.Options
 
-	game.ChartHeader
-	chart       game.ChartFormat
+	// game.ChartHeader
+	// chart       game.ChartFormat
 	keyboard    input.KeyboardReader
 	musicPlayer audios.MusicPlayer
 	soundPlayer audios.SoundPlayer
@@ -45,16 +45,27 @@ type Scene struct {
 // (s *Scene, err error) is typically used for methods attached to structs.
 
 // func NewScene(res, opts, fsys, name)
-func NewScene(res scene.Resources, opts scene.Options, fsys fs.FS, name string) (*Scene, error) {
-	s := &Scene{Options: &opts}
+func NewScene(res *scene.Resources, opts *scene.Options,
+	chartFS fs.FS, cname string, replayFS fs.FS, rname string, mods game.Mods) (*Scene, error) {
+	s := &Scene{Options: opts}
 
-	format, hash, err := game.LoadChartFile(fsys, name)
-	if err != nil {
-		err = fmt.Errorf("failed to load chart file: %w", err)
-		return nil, err
+	switch s.Mode {
+	case game.ModePiano:
+		play, err := piano.NewPlay(res.Piano, opts.Piano, chartFS, cname, mods.(piano.Mods))
+		if err != nil {
+			err = fmt.Errorf("failed to create play scene: %w", err)
+			return nil, err
+		}
+		s.play = play
 	}
-	s.chart = format
-	s.ChartHeader = game.NewChartHeader(format, hash)
+
+	// format, hash, err := game.LoadChartFormat(fsys, name)
+	// if err != nil {
+	// 	err = fmt.Errorf("failed to load chart file: %w", err)
+	// 	return nil, err
+	// }
+	// s.chart = format
+	// s.ChartHeader = game.NewChartHeader(format, hash)
 
 	kb, err := opts.Game.NewKeyboardReader()
 	if err != nil {
@@ -77,22 +88,32 @@ func NewScene(res scene.Resources, opts scene.Options, fsys fs.FS, name string) 
 	// sp.Add(, "")
 	s.soundPlayer = sp
 
-	switch s.Mode {
-	case game.ModePiano:
-		scenePlay, err := piano.NewPlay(res.Piano, s.Options.Game.Piano, s.chart, piano.Mods{})
-		if err != nil {
-			err = fmt.Errorf("failed to create play scene: %w", err)
-			return nil, err
-		}
-		s.play = scenePlay
-	}
-
 	return s, nil
 }
 
-func (s Scene) WindowTitle() string {
-	c := s.ChartHeader
-	return fmt.Sprintf("gosu | %s - %s [%s] (%s) ", c.Artist, c.MusicName, c.ChartName, c.Charter)
+// type GameOptions struct {
+// 	replayFS       fs.FS
+// 	replayFilename string
+// }
+
+func (opts GameOptions) NewKeyboardReader() (input.KeyboardReader, error) {
+	var keyCount int
+	var keyNames []string
+	switch opts.Mode {
+	case game.ModePiano:
+		keyCount = opts.SubMode
+		keyNames = opts.Piano.Key.Mappings[keyCount]
+	case game.ModeDrum:
+		keyCount = 4
+		// keyNames = opts.Drum.Key.Mappings
+	}
+
+	if fsys := opts.replayFS; fsys != nil {
+		fname := opts.replayFilename
+		return game.NewReplay(fsys, fname, keyCount)
+	}
+	keys := input.NamesToKeys(keyNames)
+	return input.NewKeyboard(keys), nil
 }
 
 // Now returns current time in millisecond.

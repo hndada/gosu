@@ -18,7 +18,7 @@ type Play struct {
 	Components
 }
 
-func NewPlay(res *Resources, opts *Options, fsys fs.FS, name string, mods Mods) (Play, error) {
+func NewPlay(res *Resources, opts *Options, fsys fs.FS, name string, mods Mods) (*Play, error) {
 	// dys, err := game.NewDynamics(chart, opts.Stage.H)
 	// if err != nil {
 	// 	return Play{}, fmt.Errorf("failed to create dynamics: %w", err)
@@ -27,10 +27,10 @@ func NewPlay(res *Resources, opts *Options, fsys fs.FS, name string, mods Mods) 
 
 	c, err := NewChart(fsys, name, mods)
 	if err != nil {
-		return Play{}, fmt.Errorf("failed to create chart: %w", err)
+		return nil, fmt.Errorf("failed to create chart: %w", err)
 	}
 
-	return Play{
+	return &Play{
 		Chart: c,
 		// Mods may affect judgment range.
 		Scorer:     NewScorer(c.Notes, mods),

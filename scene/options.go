@@ -2,14 +2,12 @@ package scene
 
 import (
 	"fmt"
-	"io/fs"
 	"strings"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	draws "github.com/hndada/gosu/draws5"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/piano"
-	"github.com/hndada/gosu/input"
 )
 
 // Options passed to each scene.
@@ -18,16 +16,6 @@ import (
 // Options vs Settings:
 // Options consider both game-specific and user-specific options.
 // While Settings are for user-specific options only.
-type Options struct {
-	// These are likely to be modified by the user manually,
-	// hence it is at the top of the struct.
-	Root RootOptions
-
-	Screen ScreenOptions
-	Audio  AudioOptions
-	UI     UIOptions
-	Game   GameOptions
-}
 
 // Roots is a list of root directories to search for files
 // such as music, resources, and replays. Each root directory contains
@@ -35,13 +23,34 @@ type Options struct {
 
 // Load server first, then local.
 // In web mode, server is the only option.
-type RootOptions struct {
+type Options struct {
+	// These are likely to be modified by the user manually,
+	// hence it is at the top of the struct.
 	ResourcesPaths []string
 	MusicPaths     []string
 	ReplaysPaths   []string
+
+	// Resolution is the physical size of the screen,
+	// whereas ScreenSize is the logical size of the screen.
+	Resolution           draws.XY
+	IsFullscreen         bool
+	BackgroundBrightness float32
+	DebugPrint           bool
+
+	MusicVolume      float64
+	SoundVolumeScale float64
+	MusicOffset      int32
+
+	MouseCursorScale float64
+
+	Mode            int
+	SubMode         int
+	ErrorMeterScale float64
+	ScoreImageScale float64
+	Piano           *piano.Options
 }
 
-func (opts *RootOptions) Normalize() {
+func (opts *Options) Normalize() {
 	// Leading dot and slash is not allowed in fs.
 	for i, path := range opts.MusicPaths {
 		path = strings.TrimPrefix(path, "..")
@@ -52,84 +61,28 @@ func (opts *RootOptions) Normalize() {
 	}
 }
 
-type ScreenOptions struct {
-	// Resolution is the physical size of the screen,
-	// whereas ScreenSize is the logical size of the screen.
-	Resolution           draws.XY
-	Fullscreen           bool
-	BackgroundBrightness float32
-	DebugPrint           bool
-}
-
-type AudioOptions struct {
-	MusicVolume      float64
-	SoundVolumeScale float64
-	MusicOffset      int32
-}
-
-type UIOptions struct {
-	MouseCursorScale float64
-}
-
-type GameOptions struct {
-	Mode            int
-	SubMode         int
-	ErrorMeterScale float64
-	ScoreImageScale float64
-	Piano           piano.Options
-
-	replayFS       fs.FS
-	replayFilename string
-}
-
-func (opts GameOptions) NewKeyboardReader() (input.KeyboardReader, error) {
-	var keyCount int
-	var keyNames []string
-	switch opts.Mode {
-	case game.ModePiano:
-		keyCount = opts.SubMode
-		keyNames = opts.Piano.Key.Mappings[keyCount]
-	case game.ModeDrum:
-		keyCount = 4
-		// keyNames = opts.Drum.Key.Mappings
-	}
-
-	if fsys := opts.replayFS; fsys != nil {
-		fname := opts.replayFilename
-		return game.NewReplay(fsys, fname, keyCount)
-	}
-	keys := input.NamesToKeys(keyNames)
-	return input.NewKeyboard(keys), nil
-}
-
 func NewOptions() *Options {
 	return &Options{
-		Root: RootOptions{
-			ResourcesPaths: []string{"resources"},
-			MusicPaths:     []string{"music"},
-			ReplaysPaths:   []string{"replays"},
-		},
-		Screen: ScreenOptions{
-			Resolution:           draws.NewXY(game.ScreenW, game.ScreenH),
-			Fullscreen:           false,
-			BackgroundBrightness: 0.6,
-			DebugPrint:           true,
-		},
-		Audio: AudioOptions{
-			MusicVolume:      0.60,
-			SoundVolumeScale: 0.60,
-			MusicOffset:      -20,
-		},
-		UI: UIOptions{
-			MouseCursorScale: 1.0,
-		},
-		Game: GameOptions{
-			Mode:            game.ModePiano,
-			SubMode:         4,
-			ErrorMeterScale: 1.0,
-			ScoreImageScale: 1.0,
-			Piano:           piano.NewOptions(4),
-		},
+		ResourcesPaths: []string{"resources"},
+		MusicPaths:     []string{"music"},
+		ReplaysPaths:   []string{"replays"},
+
+		Resolution:           draws.NewXY(game.ScreenSizeX, game.ScreenSizeY),
+		IsFullscreen:         false,
+		BackgroundBrightness: 0.6,
+		DebugPrint:           true,
+
+		MusicVolume:      0.60,
+		SoundVolumeScale: 0.60,
+		MusicOffset:      -20,
+
+		MouseCursorScale: 1.0,
+
+		Mode:            game.ModePiano,
+		SubMode:         4,
+		ErrorMeterScale: 1.0,
+		ScoreImageScale: 1.0,
+		Piano:           piano.NewOptions(4),
 	}
 }
 
