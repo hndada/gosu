@@ -2,7 +2,6 @@ package piano
 
 import (
 	"fmt"
-	"io/fs"
 	"strings"
 
 	"github.com/hndada/gosu/audios"
@@ -15,33 +14,21 @@ type Play struct {
 	*Resources
 	*Options
 	*Chart
-	soundPlayer audios.SoundPlayer
 	Scorer
 	Components
+	// soundPlayer *audios.SoundPlayer
 }
 
-func NewPlay(res *Resources, opts *Options, svScale *float64, fsys fs.FS, name string, mods Mods) (*Play, error) {
-	// dys, err := game.NewDynamics(chart, opts.Stage.H)
-	// if err != nil {
-	// 	return Play{}, fmt.Errorf("failed to create dynamics: %w", err)
-	// }
-	// ns := NewNotes(chart, dys)
-
-	c, err := NewChart(fsys, name, mods)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create chart: %w", err)
-	}
-
-	sp := audios.NewSoundPlayer(svScale)
-
+func NewPlay(res *Resources, opts *Options, c *Chart, mods Mods, sp *audios.SoundPlayer) (*Play, error) {
 	return &Play{
-		Resources:   res,
-		Options:     opts,
-		Chart:       c,
-		soundPlayer: sp,
+		Resources: res,
+		Options:   opts,
+		Chart:     c,
 		// Mods may affect judgment range.
-		Scorer:     NewScorer(&c.Notes, mods, &sp),
+		// Scorer plays a corresponding sample when a key is hit.
+		Scorer:     NewScorer(&c.Notes, mods, sp),
 		Components: NewComponents(res, opts, c),
+		// soundPlayer: sp,
 	}, nil
 }
 

@@ -22,9 +22,10 @@ type play interface {
 
 // Todo: draw 4:3 screen on 16:9 screen
 type Scene struct {
+	*scene.Resources
 	*scene.Options
 
-	// game.ChartHeader
+	*game.ChartHeader
 	// chart       game.ChartFormat
 	keyboard    input.KeyboardReader
 	musicPlayer audios.MusicPlayer
@@ -47,11 +48,27 @@ type Scene struct {
 // func NewScene(res, opts, fsys, name)
 func NewScene(res *scene.Resources, opts *scene.Options,
 	chartFS fs.FS, cname string, replayFS fs.FS, rname string, mods game.Mods) (*Scene, error) {
-	s := &Scene{Options: opts}
 
-	switch s.Mode {
+	s := &Scene{
+		Resources: res,
+		Options:   opts,
+	}
+
+	sp := audios.NewSoundPlayer(&opts.SoundVolumeScale)
+	// Todo: add default sound
+	// sp.Add(, "")
+	s.soundPlayer = sp
+
+	switch opts.Mode {
 	case game.ModePiano:
-		play, err := piano.NewPlay(res.Piano, opts.Piano, chartFS, cname, mods.(piano.Mods))
+		c, err := piano.NewChart(chartFS, cname, mods.(piano.Mods))
+		if err != nil {
+			err = fmt.Errorf("failed to create chart: %w", err)
+			return nil, err
+		}
+		s.ChartHeader = &c.ChartHeader
+
+		play, err := piano.NewPlay(res.Piano, opts.Piano, c, mods.(piano.Mods), &sp)
 		if err != nil {
 			err = fmt.Errorf("failed to create play scene: %w", err)
 			return nil, err
@@ -59,22 +76,7 @@ func NewScene(res *scene.Resources, opts *scene.Options,
 		s.play = play
 	}
 
-	// format, hash, err := game.LoadChartFormat(fsys, name)
-	// if err != nil {
-	// 	err = fmt.Errorf("failed to load chart file: %w", err)
-	// 	return nil, err
-	// }
-	// s.chart = format
-	// s.ChartHeader = game.NewChartHeader(format, hash)
-
-	kb, err := opts.NewKeyboardReader()
-	if err != nil {
-		err = fmt.Errorf("failed to create keyboard reader: %w", err)
-		return nil, err
-	}
-	s.keyboard = kb
-
-	mp, err := audios.NewMusicPlayerFromFile(fsys, s.MusicFilename)
+	mp, err := audios.NewMusicPlayerFromFile(chartFS, s.MusicFilename)
 	if err != nil {
 		err = fmt.Errorf("failed to load music file: %w", err)
 		return nil, err
@@ -83,32 +85,30 @@ func NewScene(res *scene.Resources, opts *scene.Options,
 	mp.SetVolume(s.MusicVolume)
 	s.musicOffset = s.MusicOffset
 
-	sp := audios.NewSoundPlayer(&opts.SoundVolumeScale)
-	// Todo: add default sound
-	// sp.Add(, "")
-	s.soundPlayer = sp
-
-	return s, nil
-}
-
-func NewKeyboardReader() (input.KeyboardReader, error) {
 	var keyCount int
 	var keyNames []string
 	switch opts.Mode {
 	case game.ModePiano:
 		keyCount = opts.SubMode
-		keyNames = opts.Piano.Key.Mappings[keyCount]
+		keyNames = opts.Piano.KeyMappings[keyCount]
 	case game.ModeDrum:
 		keyCount = 4
 		// keyNames = opts.Drum.Key.Mappings
 	}
 
-	if fsys := opts.replayFS; fsys != nil {
-		fname := opts.replayFilename
-		return game.NewReplay(fsys, fname, keyCount)
+	if replayFS != nil {
+		kb, err := game.NewReplay(replayFS, rname, keyCount)
+		if err != nil {
+			err = fmt.Errorf("failed to load replay file: %w", err)
+			return nil, err
+		}
+		s.keyboard = kb
+	} else {
+		keys := input.NamesToKeys(keyNames)
+		s.keyboard = input.NewKeyboard(keys)
 	}
-	keys := input.NamesToKeys(keyNames)
-	return input.NewKeyboard(keys), nil
+
+	return s, nil
 }
 
 // Now returns current time in millisecond.

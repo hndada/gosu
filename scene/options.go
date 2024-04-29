@@ -30,8 +30,9 @@ type Options struct {
 	MusicPaths     []string
 	ReplaysPaths   []string
 
-	// Resolution is the physical size of the screen,
-	// whereas ScreenSize is the logical size of the screen.
+	// screenSize is the logical size of the screen, and
+	// Resolution is the physical size of the screen.
+	screenSize           draws.XY
 	Resolution           draws.XY
 	IsFullscreen         bool
 	BackgroundBrightness float32
@@ -41,7 +42,7 @@ type Options struct {
 	SoundVolumeScale float64
 	MusicOffset      int32
 
-	MouseCursorScale float64
+	MouseCursorImageScale float64
 
 	Mode            int
 	SubMode         int
@@ -61,12 +62,15 @@ func (opts *Options) Normalize() {
 	}
 }
 
+// Todo: *Options vs Options
+// But I think, to use pointer, *Options is inevitable.
 func NewOptions() *Options {
 	return &Options{
 		ResourcesPaths: []string{"resources"},
 		MusicPaths:     []string{"music"},
 		ReplaysPaths:   []string{"replays"},
 
+		screenSize:           draws.NewXY(game.ScreenSizeX, game.ScreenSizeY),
 		Resolution:           draws.NewXY(game.ScreenSizeX, game.ScreenSizeY),
 		IsFullscreen:         false,
 		BackgroundBrightness: 0.6,
@@ -76,7 +80,7 @@ func NewOptions() *Options {
 		SoundVolumeScale: 0.60,
 		MusicOffset:      -20,
 
-		MouseCursorScale: 1.0,
+		MouseCursorImageScale: 1.0,
 
 		Mode:            game.ModePiano,
 		SubMode:         4,

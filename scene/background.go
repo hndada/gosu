@@ -6,53 +6,37 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-type BackgroundResources struct {
-	defaultImage draws.Image
-}
-
-func (res *BackgroundResources) Load(fsys fs.FS) {
-	fname := "interface/default-bg.png"
-	res.defaultImage = draws.NewImageFromFile(fsys, fname)
-}
-
-type BackgroundOptions struct {
-	Brightness   float32
-	screenWidth  *float64
-	screenHeight *float64
-}
-
-// Todo: *Options vs Options
-// But I think, to use pointer, *Options is inevitable.
-func NewBackgroundOptions(opts *Options) BackgroundOptions {
-	return BackgroundOptions{
-		Brightness:   0.8,
-		screenWidth:  &opts.Resolution.X,
-		screenHeight: &opts.Resolution.Y,
-	}
-}
-
 type BackgroundComponent struct {
-	sprite     draws.Sprite
-	brightness *float32
+	defaultSprite draws.Sprite
+	screenSize    draws.XY
+	sprite        draws.Sprite
+	brightness    *float32
 }
 
-func NewBackgroundComponent(res BackgroundResources, opts BackgroundOptions) (cmp BackgroundComponent) {
-	// s := draws.NewSprite(res.defaultImage)
-	s := draws.NewSpriteFromFile(fsys, name)
-	if s.IsEmpty() {
-		s = asset.DefaultBackgroundSprite
-	}
+func (cmp BackgroundComponent) newSprite(img draws.Image) draws.Sprite {
+	s := draws.NewSprite(img)
+	s.Scale(cmp.screenSize.X / s.W())
+	s.Locate(cmp.screenSize.X/2, cmp.screenSize.Y/2, draws.CenterMiddle)
+	return s
+}
 
-	s.MultiplyScale(opts.screenWidth / s.Width())
-	s.Locate(*opts.screenWidth/2, *opts.screenHeight/2, draws.CenterMiddle)
-	cmp.sprite = s
-	cmp.brightness = &opts.Brightness
+func NewBackgroundComponent(res *Resources, opts *Options) (cmp BackgroundComponent) {
+	cmp.defaultSprite = cmp.newSprite(res.DefaultBackgroundImage)
+	cmp.brightness = &opts.BackgroundBrightness
 	return
+}
+
+func (cmp *BackgroundComponent) UpdateBackground(fsys fs.FS, name string) {
+	img := draws.NewImageFromFile(fsys, name)
+	if img.IsEmpty() {
+		cmp.sprite = cmp.defaultSprite
+	} else {
+		cmp.sprite = cmp.newSprite(img)
+	}
 }
 
 func (cmp BackgroundComponent) Draw(dst draws.Image) {
 	// op.ColorM.ChangeHSV(0, 1, opts.Brightness)
-	a := cmp.sprite.ColorScale.A()
-	cmp.sprite.ColorScale.SetA(a * *cmp.brightness)
+	cmp.sprite.ColorScale.ScaleAlpha(*cmp.brightness)
 	cmp.sprite.Draw(dst)
 }

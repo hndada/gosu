@@ -1,10 +1,11 @@
 package scene
 
-import "github.com/hndada/gosu/game/piano"
+import (
+	"io/fs"
 
-type Resources struct {
-	Piano *piano.Resources
-}
+	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/game/piano"
+)
 
 // Todo: deal with two kinds of values: file path and directory path.
 const (
@@ -15,3 +16,35 @@ const (
 	SoundTaps           = "interface/sound/tap/"
 	SoundSwipes         = "interface/sound/swipe/"
 )
+
+type Resources struct {
+	DefaultBackgroundImage draws.Image
+	CursorBase             draws.Image
+	CursorAdditive         draws.Image
+	CursorTrail            draws.Image
+
+	Piano *piano.Resources
+}
+
+func NewResources(fsys fs.FS) (res *Resources) {
+	res = &Resources{}
+	{
+		fname := "interface/default-bg.png"
+		res.DefaultBackgroundImage = draws.NewImageFromFile(fsys, fname)
+	}
+
+	{
+		fname := "interface/cursor/base.png"
+		res.CursorBase = draws.NewImageFromFile(fsys, fname)
+	}
+	{
+		fname := "interface/cursor/additive.png"
+		res.CursorAdditive = draws.NewImageFromFile(fsys, fname)
+	}
+	{
+		fname := "interface/cursor/trail.png"
+		res.CursorTrail = draws.NewImageFromFile(fsys, fname)
+	}
+	res.Piano = piano.NewResources(fsys)
+	return
+}
