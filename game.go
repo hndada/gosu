@@ -2,6 +2,7 @@ package gosu
 
 import (
 	"fmt"
+	"io/fs"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
@@ -14,18 +15,18 @@ import (
 type Game struct {
 	resources *scene.Resources
 	options   *scene.Options
-	// scenes       []scene.Scene
+
+	currentScene scene.Scene
 	sceneSelect  *selects.Scene
 	scenePlay    *play.Scene
-	currentScene scene.Scene
 }
 
-func NewGame(root Root) *Game {
+func NewGame(fsys fs.FS) *Game {
 	g := &Game{}
-	g.loadResources()
+	g.resources = scene.NewResources(fsys)
 	g.loadOptions()
 
-	sceneSelect, err := selects.NewScene(g.Config, g.Asset, root)
+	sceneSelect, err := selects.NewScene(g.resources, g.options)
 	if err != nil {
 		panic(err)
 	}
@@ -53,10 +54,7 @@ func (g *Game) Update() error {
 		// debug.SetGCPercent(100)
 
 	case scene.PlayArgs:
-		fsys := args.MusicFS
-		name := args.ChartFilename
-		replay := args.Replay
-		scenePlay, err := play.NewScene(g.Config, g.Asset, fsys, name, replay)
+		scenePlay, err := play.NewScene(g.resources, g.options, args)
 		if err != nil {
 			fmt.Println("play scene error:", args)
 			g.currentScene = g.sceneSelect
@@ -75,7 +73,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 }
 
 func (g Game) screenSize() draws.XY {
-	return g.options.Screen.Resolution
+	return g.options.Resolution
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

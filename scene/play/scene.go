@@ -42,9 +42,8 @@ type Scene struct {
 
 // (*Scene, error) is typically used for regular functions that operate on struct pointers.
 // (s *Scene, err error) is typically used for methods attached to structs.
-func NewScene(res *scene.Resources, opts *scene.Options,
-	chartFS fs.FS, cname string, replayFS fs.FS, rname string, mods game.Mods) (*Scene, error) {
-
+// chartFS fs.FS, cname string, replayFS fs.FS, rname string, mods game.Mods) (*Scene, error) {
+func NewScene(res *scene.Resources, opts *scene.Options, args scene.PlayArgs) (*Scene, error) {
 	s := &Scene{
 		Resources: res,
 		Options:   opts,
@@ -52,7 +51,8 @@ func NewScene(res *scene.Resources, opts *scene.Options,
 
 	switch opts.Mode {
 	case game.ModePiano:
-		c, err := piano.NewChart(chartFS, cname, mods.(piano.Mods))
+		mods := args.Mods.(piano.Mods)
+		c, err := piano.NewChart(args.ChartFS, args.ChartFilename, mods)
 		if err != nil {
 			err = fmt.Errorf("failed to create chart: %w", err)
 			return nil, err
@@ -61,9 +61,9 @@ func NewScene(res *scene.Resources, opts *scene.Options,
 		s.ChartHeader = &c.ChartHeader
 		// Todo: add default sound
 		// soft-hitnormal.wav
-		sp := s.newSamplePlayer(chartFS, s.MusicFilename)
+		sp := s.newSamplePlayer(args.ChartFS, s.MusicFilename)
 
-		play, err := piano.NewPlay(res.Piano, opts.Piano, c, mods.(piano.Mods), &sp)
+		play, err := piano.NewPlay(res.Piano, opts.Piano, c, mods, &sp)
 		if err != nil {
 			err = fmt.Errorf("failed to create play scene: %w", err)
 			return nil, err
@@ -71,7 +71,7 @@ func NewScene(res *scene.Resources, opts *scene.Options,
 		s.play = play
 	}
 
-	mp, err := audios.NewMusicPlayerFromFile(chartFS, s.MusicFilename)
+	mp, err := audios.NewMusicPlayerFromFile(args.ChartFS, s.MusicFilename)
 	if err != nil {
 		err = fmt.Errorf("failed to load music file: %w", err)
 		return nil, err
@@ -91,8 +91,8 @@ func NewScene(res *scene.Resources, opts *scene.Options,
 		// keyNames = opts.Drum.Key.Mappings
 	}
 
-	if replayFS != nil {
-		kb, err := game.NewReplay(replayFS, rname, keyCount)
+	if args.ReplayFS != nil {
+		kb, err := game.NewReplay(args.ReplayFS, args.ReplayFilename, keyCount)
 		if err != nil {
 			err = fmt.Errorf("failed to load replay file: %w", err)
 			return nil, err

@@ -4,7 +4,7 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/format/osr"
+	"github.com/hndada/gosu/game"
 )
 
 // const (
@@ -19,7 +19,11 @@ type Scene interface {
 }
 
 type PlayArgs struct {
-	MusicFS       fs.FS
-	ChartFilename string
-	Replay        *osr.Format
+	ChartFS        fs.FS
+	ChartFilename  string
+	ReplayFS       fs.FS
+	ReplayFilename string
+	Mods           game.Mods
+	// MusicFS        fs.FS
+	// Replay         *osr.Format
 }
