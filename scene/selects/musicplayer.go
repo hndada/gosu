@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/hndada/gosu/audios"
-	draws "github.com/hndada/gosu/draws2"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/times"
 )
 

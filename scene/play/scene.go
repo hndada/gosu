@@ -3,6 +3,7 @@ package play
 import (
 	"fmt"
 	"io/fs"
+	"path/filepath"
 	"time"
 
 	"github.com/hndada/gosu/audios"
@@ -26,10 +27,9 @@ type Scene struct {
 	*scene.Options
 
 	*game.ChartHeader
-	// chart       game.ChartFormat
-	keyboard    input.KeyboardReader
+	play        play
 	musicPlayer audios.MusicPlayer
-	soundPlayer audios.SoundPlayer
+	keyboard    input.KeyboardReader
 
 	// Timer
 	firstUpdated bool
@@ -38,14 +38,10 @@ type Scene struct {
 	paused       bool
 	musicOffset  int32
 	musicPlayed  bool // This really matters.
-
-	play play
 }
 
 // (*Scene, error) is typically used for regular functions that operate on struct pointers.
 // (s *Scene, err error) is typically used for methods attached to structs.
-
-// func NewScene(res, opts, fsys, name)
 func NewScene(res *scene.Resources, opts *scene.Options,
 	chartFS fs.FS, cname string, replayFS fs.FS, rname string, mods game.Mods) (*Scene, error) {
 
@@ -54,11 +50,6 @@ func NewScene(res *scene.Resources, opts *scene.Options,
 		Options:   opts,
 	}
 
-	sp := audios.NewSoundPlayer(&opts.SoundVolumeScale)
-	// Todo: add default sound
-	// sp.Add(, "")
-	s.soundPlayer = sp
-
 	switch opts.Mode {
 	case game.ModePiano:
 		c, err := piano.NewChart(chartFS, cname, mods.(piano.Mods))
@@ -66,7 +57,11 @@ func NewScene(res *scene.Resources, opts *scene.Options,
 			err = fmt.Errorf("failed to create chart: %w", err)
 			return nil, err
 		}
+
 		s.ChartHeader = &c.ChartHeader
+		// Todo: add default sound
+		// soft-hitnormal.wav
+		sp := s.newSamplePlayer(chartFS, s.MusicFilename)
 
 		play, err := piano.NewPlay(res.Piano, opts.Piano, c, mods.(piano.Mods), &sp)
 		if err != nil {
@@ -109,6 +104,35 @@ func NewScene(res *scene.Resources, opts *scene.Options,
 	}
 
 	return s, nil
+}
+
+func (s Scene) newSamplePlayer(fsys fs.FS, musicFilename string) audios.SoundPlayer {
+	sp := audios.NewSoundPlayer(&s.SoundVolumeScale)
+	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		f, err := fsys.Open(path)
+		if err != nil {
+			return err
+		}
+		info, err := f.Stat()
+		if err != nil {
+			return err
+		}
+
+		// Skip music file.
+		if info.Name() == musicFilename {
+			return nil
+		}
+
+		switch ext := filepath.Ext(path); ext {
+		case ".wav", ".ogg", ".mp3", ".OGG", ".WAV", ".MP3":
+			sp.AddFile(fsys, path)
+		}
+		return nil
+	})
+	return sp
 }
 
 // Now returns current time in millisecond.

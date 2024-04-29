@@ -38,7 +38,7 @@ type Scorer struct {
 	maxFactors       [3]float64
 	Score            float64
 
-	soundPlayer *audios.SoundPlayer
+	samplePlayer *audios.SoundPlayer
 }
 
 func NewScorer(ns *Notes, mods Mods, sp *audios.SoundPlayer) (s Scorer) {
@@ -56,7 +56,7 @@ func NewScorer(ns *Notes, mods Mods, sp *audios.SoundPlayer) (s Scorer) {
 	// we initialize the score with a small value in advance.
 	s.Score = 0.01
 
-	s.soundPlayer = sp
+	s.samplePlayer = sp
 	return
 }
 
@@ -89,7 +89,7 @@ func (s *Scorer) update(ka game.KeyboardAction) {
 }
 
 func (s Scorer) playSample(smp game.Sample) {
-	s.soundPlayer.PlayWithVolume(smp.Filename, smp.Volume)
+	s.samplePlayer.PlayWithVolume(smp.Filename, smp.Volume)
 }
 
 // marks the untouched note as missed.
