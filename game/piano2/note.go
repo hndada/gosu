@@ -82,6 +82,7 @@ func NewNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) Notes {
 
 	// Position calculation is based on Dynamics.
 	// Farther note has larger position.
+	// Todo: dys.Reset() looks not pretty.
 	dys.Reset()
 	for i, n := range ns {
 		dys.UpdateIndex(n.Time)
@@ -132,17 +133,6 @@ func NewNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) Notes {
 		keysFocus:    keysFocus,
 		sampleBuffer: nil,
 	}
-}
-
-func (ns Notes) keysFocusNote() []Note {
-	kn := make([]Note, ns.keyCount)
-	for k, ni := range ns.keysFocus {
-		if ni == len(ns.data) {
-			continue
-		}
-		kn[k] = ns.data[ni]
-	}
-	return kn
 }
 
 type NotesComponent struct {
