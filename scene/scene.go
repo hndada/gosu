@@ -3,9 +3,14 @@ package scene
 import (
 	"io/fs"
 
-	"github.com/hndada/gosu/draws"
+	draws "github.com/hndada/gosu/draws5"
 	"github.com/hndada/gosu/format/osr"
 )
+
+// const (
+// 	SceneSelect = iota
+// 	ScenePlay
+// )
 
 type Scene interface {
 	Update() any

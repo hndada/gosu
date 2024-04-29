@@ -37,7 +37,7 @@ type Handlers struct {
 	MusicVolume          ui.KeyNumberHandler[float64]
 	SoundVolumeScale     ui.KeyNumberHandler[float64]
 	MusicOffset          ui.KeyNumberHandler[int32]
-	BackgroundBrightness ui.KeyNumberHandler[float64]
+	BackgroundBrightness ui.KeyNumberHandler[float32]
 	DebugPrint           ui.KeyBoolHandler
 
 	Mode        ui.KeyNumberHandler[int]
@@ -113,9 +113,9 @@ func newMusicOffsetHandler(opts Options, states States) ui.KeyNumberHandler[int3
 	}
 }
 
-func newBackgroundBrightnessHandler(opts Options, states States) ui.KeyNumberHandler[float64] {
-	return ui.KeyNumberHandler[float64]{
-		NumberController: ui.NumberController[float64]{
+func newBackgroundBrightnessHandler(opts Options, states States) ui.KeyNumberHandler[float32] {
+	return ui.KeyNumberHandler[float32]{
+		NumberController: ui.NumberController[float32]{
 			Value: &opts.Screen.BackgroundBrightness,
 			Min:   0,
 			Max:   1,

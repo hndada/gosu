@@ -16,11 +16,24 @@ func (res *BackgroundResources) Load(fsys fs.FS) {
 }
 
 type BackgroundOptions struct {
-	Brightness float64
+	Brightness   float32
+	screenWidth  *float64
+	screenHeight *float64
+}
+
+// Todo: *Options vs Options
+// But I think, to use pointer, *Options is inevitable.
+func NewBackgroundOptions(opts *Options) BackgroundOptions {
+	return BackgroundOptions{
+		Brightness:   0.8,
+		screenWidth:  &opts.Screen.Resolution.X,
+		screenHeight: &opts.Screen.Resolution.Y,
+	}
 }
 
 type BackgroundComponent struct {
-	sprite draws.Sprite
+	sprite     draws.Sprite
+	brightness *float32
 }
 
 func NewBackgroundComponent(res BackgroundResources, opts BackgroundOptions) (cmp BackgroundComponent) {
@@ -30,14 +43,16 @@ func NewBackgroundComponent(res BackgroundResources, opts BackgroundOptions) (cm
 		s = asset.DefaultBackgroundSprite
 	}
 
-	s.MultiplyScale(cfg.ScreenSize.X / s.Width())
-	s.Locate(cfg.ScreenSize.X/2, cfg.ScreenSize.Y/2, draws.CenterMiddle)
-	value := cfg.BackgroundBrightness
-	op.ColorM.ChangeHSV(0, 1, value)
+	s.MultiplyScale(opts.screenWidth / s.Width())
+	s.Locate(*opts.screenWidth/2, *opts.screenHeight/2, draws.CenterMiddle)
 	cmp.sprite = s
+	cmp.brightness = &opts.Brightness
 	return
 }
 
 func (cmp BackgroundComponent) Draw(dst draws.Image) {
+	// op.ColorM.ChangeHSV(0, 1, opts.Brightness)
+	a := cmp.sprite.ColorScale.A()
+	cmp.sprite.ColorScale.SetA(a * *cmp.brightness)
 	cmp.sprite.Draw(dst)
 }

@@ -60,7 +60,7 @@ func NewScoreComponent(res ScoreResources, opts ScoreOptions) (cmp ScoreComponen
 	for i, img := range res.imgs {
 		sprite := draws.NewSprite(img)
 		sprite.MultiplyScale(opts.Scale)
-		sprite.Locate(ScreenW, h0-sprite.H(), draws.RightTop)
+		sprite.Locate(ScreenSizeX, h0-sprite.H(), draws.RightTop)
 		cmp.sprites[i] = sprite
 	}
 	// cmp.tween = cmp.newTween()

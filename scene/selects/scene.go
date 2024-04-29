@@ -1,6 +1,9 @@
 package selects
 
-import "github.com/hndada/gosu/scene"
+import (
+	draws "github.com/hndada/gosu/draws5"
+	"github.com/hndada/gosu/scene"
+)
 
 // Component is basically EventHandler.
 type Scene struct {
@@ -13,6 +16,13 @@ type Scene struct {
 
 // Avoid embedding scene.Options directly.
 // Pass options as pointers for syncing and saving memory.
-func NewScene(res *scene.Resources, opts *scene.Options) *Scene {
-	return &Scene{}
+func NewScene(res *scene.Resources, opts *scene.Options) (*Scene, error) {
+	return &Scene{}, nil
+}
+
+func (sc *Scene) Update() any {
+	return nil
+}
+
+func (sc *Scene) Draw(dst draws.Image) {
 }

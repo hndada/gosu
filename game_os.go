@@ -10,7 +10,20 @@ import (
 	"github.com/hndada/gosu/scene"
 )
 
-func (g Game) loadOptionsData() []byte {
+func (Game) createOptionsFile(fname string) {
+	options := scene.NewOptions()
+	data, err := json.Marshal(options)
+	if err != nil {
+		panic(err)
+	}
+	err = os.WriteFile(fname, data, 0644)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("Generated %s with default values.\n", fname)
+}
+
+func (g *Game) loadOptions() {
 	const fname = "options.json"
 
 	// Try to create the file if it doesn't exist.
@@ -24,18 +37,11 @@ func (g Game) loadOptionsData() []byte {
 	if err != nil {
 		panic(err)
 	}
-	return data
-}
 
-func (Game) createOptionsFile(fname string) {
-	options := scene.NewOptions()
-	data, err := json.Marshal(options)
+	err = json.Unmarshal(data, g.options)
 	if err != nil {
 		panic(err)
 	}
-	err = os.WriteFile(fname, data, 0644)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Generated %s with default values.\n", fname)
+
+	// g.options.Normalize()
 }

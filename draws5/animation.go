@@ -12,6 +12,8 @@ import (
 	"github.com/hndada/gosu/times"
 )
 
+type Frames = []Image
+
 // NewFramesFromFile read a sequence of images if there is a directory
 // and the directory has entries. Otherwise, read a single image
 // if there is no directory or the directory has no entries.

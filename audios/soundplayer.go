@@ -1,6 +1,7 @@
 package audios
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"io/fs"
@@ -39,8 +40,9 @@ func NewSoundPlayer(scale *float64) SoundPlayer {
 
 // It is possible for empty string to be a key of a map.
 // https://go.dev/play/p/nn-peGAjawW
-func (sp *SoundPlayer) Add(rc io.ReadCloser, name string) error {
-	defer rc.Close()
+func (sp *SoundPlayer) Add(data []byte, name string) error {
+	r := bytes.NewReader(data)
+	rc := io.NopCloser(r)
 
 	// Declaring streamer's type explicitly is for
 	// assigning beep.Resampler to it.
@@ -63,11 +65,11 @@ func (sp *SoundPlayer) Add(rc io.ReadCloser, name string) error {
 }
 
 func (sp *SoundPlayer) AddFromFile(fsys fs.FS, name string) error {
-	f, err := fsys.Open(name)
+	data, err := fs.ReadFile(fsys, name)
 	if err != nil {
-		return fmt.Errorf("open %s: %w", name, err)
+		return fmt.Errorf("read file %s: %w", name, err)
 	}
-	return sp.Add(f, name)
+	return sp.Add(data, name)
 }
 
 // Count returns the number of sounds in SoundPlayer.

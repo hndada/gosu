@@ -2,28 +2,39 @@ package piano
 
 import (
 	"fmt"
+	"io/fs"
 	"strings"
 
+	draws "github.com/hndada/gosu/draws5"
 	"github.com/hndada/gosu/game"
 )
 
+// Struct Play goes a part of ScenePlay.
 type Play struct {
-	game.Dynamics
+	*Resources
+	*Options
+	*Chart
 	Scorer
-	Components
+	*Components
 }
 
-func NewPlay(res Resources, opts Options, chart game.ChartFormat, mods Mods) (Play, error) {
-	dys, err := game.NewDynamics(chart, opts.Stage.H)
+func NewPlay(res Resources, opts Options, fsys fs.FS, name string, mods Mods) (Play, error) {
+	// dys, err := game.NewDynamics(chart, opts.Stage.H)
+	// if err != nil {
+	// 	return Play{}, fmt.Errorf("failed to create dynamics: %w", err)
+	// }
+	// ns := NewNotes(chart, dys)
+
+	c, err := NewChart(fsys, name, mods)
 	if err != nil {
-		return Play{}, fmt.Errorf("failed to create dynamics: %w", err)
+		return Play{}, fmt.Errorf("failed to create chart: %w", err)
 	}
-	ns := NewNotes(chart, dys)
 
 	return Play{
-		Dynamics:   dys,
-		Scorer:     NewScorer(ns, mods),
-		Components: NewComponents(res, opts, dys, ns),
+		Chart: c,
+		// Mods may affect judgment range.
+		Scorer:     NewScorer(c.Notes, mods),
+		Components: NewComponents(res, opts, c),
 	}, nil
 }
 
@@ -53,6 +64,14 @@ func (p *Play) SetSpeedScale(newScale float64) {
 	for i := range bs {
 		bs[i].position *= scale
 	}
+}
+
+func (p Play) Draw(dst draws.Image) {
+	p.Components.Draw(dst)
+}
+
+func (p Play) NoteExposureDuration() int32 {
+	return p.Chart.NoteExposureDuration(p.StageBasePosition)
 }
 
 func (p Play) DebugString() string {

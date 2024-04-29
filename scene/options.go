@@ -57,7 +57,7 @@ type ScreenOptions struct {
 	// whereas ScreenSize is the logical size of the screen.
 	Resolution           draws.XY
 	Fullscreen           bool
-	BackgroundBrightness float64
+	BackgroundBrightness float32
 	DebugPrint           bool
 }
 

@@ -42,10 +42,10 @@ type Dynamics struct {
 	idx        int
 	span       int32 // total duration of the chart
 	SpeedScale float64
-	reach      float64 // the distance that a note travels
+	// Reach      float64
 }
 
-func NewDynamics(chart any, reach float64) (Dynamics, error) {
+func NewDynamics(chart any) (Dynamics, error) {
 	var ds []Dynamic
 	var span int32
 	switch chart := chart.(type) {
@@ -60,14 +60,12 @@ func NewDynamics(chart any, reach float64) (Dynamics, error) {
 	dys := Dynamics{dynamics: ds, span: span}
 	dys.setPositions()
 	dys.SpeedScale = 1
-	dys.reach = reach
 	return dys, nil
 }
 
 // When gathering Dynamics from osu.Format, it should input the whole slice.
 // It is because osu.Format.TimingPoints brings some value from previous TimingPoint.
 // First BPM is used as temporary main BPM.
-
 func newDynamicListFromOsu(f *osu.Format) []Dynamic {
 	sort.SliceStable(f.TimingPoints, func(i int, j int) bool {
 		if f.TimingPoints[i].Time == f.TimingPoints[j].Time {
@@ -235,11 +233,13 @@ func (dys Dynamics) Position(t int32) float64 {
 
 // NoteExposureDuration returns duration of note exposure:
 // the time that a note is visible on the screen.
-func (dys Dynamics) NoteExposureDuration() int32 {
+
+// reach stands for the distance that a note travels.
+func (dys Dynamics) NoteExposureDuration(reach float64) int32 {
 	speed := dys.Speed()
 	if speed == 0 {
 		// This is not likely to happen.
 		return 1<<31 - 1
 	}
-	return int32(dys.reach/speed) + 1
+	return int32(reach/speed) + 1
 }

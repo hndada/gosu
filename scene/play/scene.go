@@ -5,10 +5,10 @@ import (
 	"io/fs"
 	"time"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/audios"
-	"github.com/hndada/gosu/draws"
+	draws "github.com/hndada/gosu/draws5"
 	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/piano"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/times"
@@ -22,7 +22,13 @@ type play interface {
 
 // Todo: draw 4:3 screen on 16:9 screen
 type Scene struct {
+	*scene.Options
+
 	game.ChartHeader
+	chart       game.ChartFormat
+	keyboard    input.KeyboardReader
+	musicPlayer audios.MusicPlayer
+	soundPlayer audios.SoundPlayer
 
 	// Timer
 	firstUpdated bool
@@ -32,46 +38,56 @@ type Scene struct {
 	musicOffset  int32
 	musicPlayed  bool // This really matters.
 
-	keyboard    input.KeyboardReader
-	musicPlayer audios.MusicPlayer
-	soundPlayer audios.SoundPlayer
-
-	*scene.Options
 	play play
 }
 
+// (*Scene, error) is typically used for regular functions that operate on struct pointers.
+// (s *Scene, err error) is typically used for methods attached to structs.
+
 // func NewScene(res, opts, fsys, name)
-func NewScene(res scene.Resources, opts scene.Options, fsys fs.FS, name string) (s Scene, err error) {
+func NewScene(res scene.Resources, opts scene.Options, fsys fs.FS, name string) (*Scene, error) {
+	s := &Scene{Options: &opts}
+
 	format, hash, err := game.LoadChartFile(fsys, name)
 	if err != nil {
 		err = fmt.Errorf("failed to load chart file: %w", err)
-		return
+		return nil, err
 	}
+	s.chart = format
 	s.ChartHeader = game.NewChartHeader(format, hash)
-	ebiten.SetWindowTitle(s.WindowTitle())
 
 	kb, err := opts.Game.NewKeyboardReader()
 	if err != nil {
 		err = fmt.Errorf("failed to create keyboard reader: %w", err)
-		return
+		return nil, err
 	}
 	s.keyboard = kb
 
 	mp, err := audios.NewMusicPlayerFromFile(fsys, s.MusicFilename)
 	if err != nil {
 		err = fmt.Errorf("failed to load music file: %w", err)
-		return
+		return nil, err
 	}
 	s.musicPlayer = mp
 	mp.SetVolume(s.Audio.MusicVolume)
 	s.musicOffset = s.Audio.MusicOffset
 
-	sp := audios.NewSoundPlayer()
+	sp := audios.NewSoundPlayer(&opts.Audio.SoundVolumeScale)
 	// Todo: add default sound
 	// sp.Add(, "")
 	s.soundPlayer = sp
 
-	return
+	switch s.Mode {
+	case game.ModePiano:
+		scenePlay, err := piano.NewPlay(res.Piano, s.Options.Game.Piano, s.chart, piano.Mods{})
+		if err != nil {
+			err = fmt.Errorf("failed to create play scene: %w", err)
+			return nil, err
+		}
+		s.play = scenePlay
+	}
+
+	return s, nil
 }
 
 func (s Scene) WindowTitle() string {
@@ -120,6 +136,15 @@ func (s *Scene) SetMusicOffset(newOffset int32) {
 	}
 }
 
+func (s *Scene) firstUpdate() {
+	const wait = 1100 * time.Millisecond
+	s.startTime = times.Now().Add(wait)
+	if kb, ok := s.keyboard.(*input.Keyboard); ok {
+		kb.Listen(s.startTime)
+	}
+	s.startTime = times.Now()
+}
+
 func (s *Scene) Update() any {
 	if !s.firstUpdated {
 		s.firstUpdate()
@@ -141,19 +166,10 @@ func (s *Scene) Update() any {
 	return r
 }
 
-func (s *Scene) firstUpdate() {
-	const wait = 1100 * time.Millisecond
-	s.startTime = times.Now().Add(wait)
-	if kb, ok := s.keyboard.(*input.Keyboard); ok {
-		kb.Listen(s.startTime)
-	}
-	s.startTime = times.Now()
-}
-
 func (s Scene) PlaySounds() {
 	for _, samp := range s.play.SampleBuffer() {
 		vol := samp.Volume * s.Audio.SoundVolumeScale
-		s.soundPlayer.Play(samp.Filename, vol)
+		s.soundPlayer.PlayWithVolume(samp.Filename, vol)
 	}
 }
 
@@ -182,6 +198,10 @@ func (s *Scene) Close() {
 	if kb, ok := s.keyboard.(*input.Keyboard); ok {
 		kb.Stop()
 	}
+}
+
+func (s Scene) Draw(dst draws.Image) {
+	s.play.Draw(dst)
 }
 
 // func (t *Timer) sync() {
