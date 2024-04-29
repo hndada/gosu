@@ -2,28 +2,46 @@ package piano
 
 import (
 	"fmt"
+	"io/fs"
 	"strings"
 
+	"github.com/hndada/gosu/audios"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
 )
 
+// Struct Play goes a part of ScenePlay.
 type Play struct {
-	game.Dynamics
+	*Resources
+	*Options
+	*Chart
+	soundPlayer audios.SoundPlayer
 	Scorer
 	Components
 }
 
-func NewPlay(res Resources, opts Options, chart game.ChartFormat, mods Mods) (Play, error) {
-	dys, err := game.NewDynamics(chart, opts.Stage.H)
-	if err != nil {
-		return Play{}, fmt.Errorf("failed to create dynamics: %w", err)
-	}
-	ns := NewNotes(chart, dys)
+func NewPlay(res *Resources, opts *Options, svScale *float64, fsys fs.FS, name string, mods Mods) (*Play, error) {
+	// dys, err := game.NewDynamics(chart, opts.Stage.H)
+	// if err != nil {
+	// 	return Play{}, fmt.Errorf("failed to create dynamics: %w", err)
+	// }
+	// ns := NewNotes(chart, dys)
 
-	return Play{
-		Dynamics:   dys,
-		Scorer:     NewScorer(ns, mods),
-		Components: NewComponents(res, opts, dys, ns),
+	c, err := NewChart(fsys, name, mods)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create chart: %w", err)
+	}
+
+	sp := audios.NewSoundPlayer(svScale)
+
+	return &Play{
+		Resources:   res,
+		Options:     opts,
+		Chart:       c,
+		soundPlayer: sp,
+		// Mods may affect judgment range.
+		Scorer:     NewScorer(&c.Notes, mods, &sp),
+		Components: NewComponents(res, opts, c),
 	}, nil
 }
 
@@ -45,14 +63,22 @@ func (p *Play) SetSpeedScale(newScale float64) {
 	for i := range ds {
 		ds[i].Position *= scale
 	}
-	ns := p.notes.notes
+	ns := p.Chart.Notes.data
 	for i := range ns {
 		ns[i].position *= scale
 	}
-	bs := p.bars.bars
+	bs := p.bars.bars.data
 	for i := range bs {
 		bs[i].position *= scale
 	}
+}
+
+func (p Play) Draw(dst draws.Image) {
+	p.Components.Draw(dst)
+}
+
+func (p Play) NoteExposureDuration() int32 {
+	return p.Chart.NoteExposureDuration(p.KeyPositionY)
 }
 
 func (p Play) DebugString() string {

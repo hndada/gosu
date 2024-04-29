@@ -1,7 +1,7 @@
 package selects
 
 import (
-	draws "github.com/hndada/gosu/draws5"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/scene"
 )
 

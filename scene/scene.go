@@ -3,7 +3,7 @@ package scene
 import (
 	"io/fs"
 
-	draws "github.com/hndada/gosu/draws5"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
 )
 

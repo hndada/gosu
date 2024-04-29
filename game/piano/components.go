@@ -1,88 +1,12 @@
 package piano
 
 import (
-	"io/fs"
-
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
 )
 
-type Resources struct {
-	field      FieldResources
-	bars       BarsResources
-	hint       HintResources
-	notes      NotesResources
-	keyButtons KeyButtonsResources
-	backlights BacklightsResources
-	hitLights  HitLightsResources
-	holdLights HoldLightsResources
-	judgment   JudgmentResources
-	combo      game.ComboResources
-	score      game.ScoreResources
-}
-
-func NewResources(fsys fs.FS) (res Resources) {
-	res.field.Load(fsys)
-	res.bars.Load(fsys)
-	res.hint.Load(fsys)
-	res.notes.Load(fsys)
-	res.keyButtons.Load(fsys)
-	res.backlights.Load(fsys)
-	res.hitLights.Load(fsys)
-	res.holdLights.Load(fsys)
-	res.judgment.Load(fsys)
-	res.combo.Load(fsys)
-	res.score.Load(fsys)
-	return
-}
-
-// SpeedScale is universal for all key counts.
-// If a player wants to use different speed scales for different key counts,
-// use 'Option Profile' feature.
-type Options struct {
-	CurrentKeyCount int     // Current key count
-	SpeedScale      float64 // Added
-	Stage           StageOptions
-	Key             KeysOptions
-
-	Field      FieldOptions
-	Bars       BarsOptions
-	Hint       HintOptions
-	Notes      NotesOptions
-	KeyButtons KeyButtonsOptions
-	Backlights BacklightsOptions
-	HitLights  HitLightsOptions
-	HoldLights HoldLightsOptions
-	Judgment   JudgmentOptions
-	Combo      game.ComboOptions
-	Score      game.ScoreOptions
-}
-
-// piano.Options has all key count options so that
-// it can handle scratch options smoothly.
-func NewOptions(currentKeyCount int) (opts Options) {
-	// const defaultKeyCount = 4
-	stage := NewStageOptions(currentKeyCount)
-	keys := NewKeysOptions(stage)
-	return Options{
-		CurrentKeyCount: currentKeyCount,
-		SpeedScale:      1.0,
-		Stage:           stage,
-		Key:             keys,
-
-		Field:      NewFieldOptions(stage),
-		Bars:       NewBarsOptions(stage),
-		Hint:       NewHintOptions(stage),
-		Notes:      NewNotesOptions(stage, keys),
-		KeyButtons: NewKeyButtonsOptions(keys),
-		Backlights: NewBacklightsOptions(keys),
-		HitLights:  NewHitLightsOptions(keys),
-		HoldLights: NewHoldLightsOptions(keys),
-		Judgment:   NewJudgmentOptions(stage),
-		Combo:      NewComboOptions(stage),
-		Score:      game.NewScoreOptions(),
-	}
-}
+// Too dedicated structs harms readability.
+// Resources, Options, and other arguments, explicity.
 
 // Todo: game.ErrorMeterComponent
 // Todo: game.TimerComponent
@@ -100,18 +24,18 @@ type Components struct {
 	score      game.ScoreComponent
 }
 
-func NewComponents(res Resources, opts Options, dys game.Dynamics, ns Notes) (cmps Components) {
-	cmps.field = NewFieldComponent(res.field, opts.Field)
-	cmps.bars = NewBarsComponent(res.bars, opts.Bars, dys)
-	cmps.hint = NewHintComponent(res.hint, opts.Hint)
-	cmps.notes = NewNotesComponent(res.notes, opts.Notes, ns, dys)
-	cmps.keyButtons = NewKeyButtonsComponent(res.keyButtons, opts.KeyButtons)
-	cmps.backlights = NewBacklightsComponent(res.backlights, opts.Backlights)
-	cmps.hitLights = NewHitLightsComponent(res.hitLights, opts.HitLights)
-	cmps.holdLights = NewHoldLightsComponent(res.holdLights, opts.HoldLights)
-	cmps.judgment = NewJudgmentComponent(res.judgment, opts.Judgment)
-	cmps.combo = game.NewComboComponent(res.combo, opts.Combo)
-	cmps.score = game.NewScoreComponent(res.score, opts.Score)
+func NewComponents(res *Resources, opts *Options, c *Chart) (cmps Components) {
+	cmps.field = NewFieldComponent(res, opts, c.keyCount)
+	cmps.bars = NewBarsComponent(res, opts, c)
+	cmps.hint = NewHintComponent(res, opts, c.keyCount)
+	cmps.notes = NewNotesComponent(res, opts, c)
+	cmps.keyButtons = NewKeyButtonsComponent(res, opts, c.keyCount)
+	cmps.backlights = NewBacklightsComponent(res, opts, c.keyCount)
+	cmps.hitLights = NewHitLightsComponent(res, opts, c.keyCount)
+	cmps.holdLights = NewHoldLightsComponent(res, opts, c)
+	cmps.judgment = NewJudgmentComponent(res, opts)
+	cmps.combo = game.NewComboComponent(res.ComboImages, &opts.Combo)
+	cmps.score = game.NewScoreComponent(res.ScoreImages, &opts.Score)
 	return
 }
 
@@ -124,7 +48,7 @@ func (cmps *Components) Update(ka game.KeyboardAction, dys game.Dynamics, s Scor
 	cmps.keyButtons.Update(ka)
 	cmps.backlights.Update(ka)
 	cmps.hitLights.Update(s.keysJudgmentKind)
-	cmps.holdLights.Update(ka, s.keysFocusNote())
+	cmps.holdLights.Update(ka)
 	cmps.judgment.Update(s.keysJudgmentKind)
 	cmps.combo.Update(s.Combo)
 	cmps.score.Update(s.Score)

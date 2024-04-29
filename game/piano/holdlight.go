@@ -1,59 +1,42 @@
 package piano
 
 import (
-	"io/fs"
-
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
 )
 
-type HoldLightsResources struct {
-	frames draws.Frames
-}
-
-func (br *HoldLightsResources) Load(fsys fs.FS) {
-	fname := "piano/light/hold.png"
-	br.frames = draws.NewFramesFromFile(fsys, fname)
-}
-
-type HoldLightsOptions struct {
-	Scale    float64
-	keyCount int
-	keysX    []float64
-	y        float64
-	Opacity  float32
-}
-
-func NewHoldLightsOptions(keys KeysOptions) HoldLightsOptions {
-	return HoldLightsOptions{
-		Scale:    1.0,
-		keyCount: keys.keyCount,
-		keysX:    keys.x,
-		y:        keys.y,
-		Opacity:  1.2,
-	}
-}
-
 type HoldLightsComponent struct {
 	anims               []draws.Animation
 	keysLongNoteHolding []bool
+	notes               *Notes
 }
 
-func NewHoldLightsComponent(res HoldLightsResources, opts HoldLightsOptions) (cmp HoldLightsComponent) {
-	cmp.anims = make([]draws.Animation, opts.keyCount)
+func NewHoldLightsComponent(res *Resources, opts *Options, c *Chart) (cmp HoldLightsComponent) {
+	cmp.anims = make([]draws.Animation, c.keyCount)
+	xs := opts.keyPositionXsMap[c.keyCount]
 	for k := range cmp.anims {
-		a := draws.NewAnimation(res.frames, 300)
-		a.MultiplyScale(opts.Scale)
-		a.Locate(opts.keysX[k], opts.y, draws.CenterBottom)
-		a.ColorScale.Scale(1, 1, 1, opts.Opacity)
+		a := draws.NewAnimation(res.HoldLightsFrames, 300)
+		a.Scale(opts.HoldLightImageScale)
+		a.Locate(xs[k], opts.KeyPositionY, draws.CenterBottom)
+		a.ColorScale.Scale(1, 1, 1, opts.HoldLightOpacity)
 		cmp.anims[k] = a
 	}
+	cmp.notes = &c.Notes
 	return
 }
 
-func (cmp *HoldLightsComponent) Update(ka game.KeyboardAction, kn []Note) {
+// draws only when a long note is holding.
+func (cmp *HoldLightsComponent) Update(ka game.KeyboardAction) {
+	kfns := make([]Note, cmp.notes.keyCount) // key focused notes
+	for k, ni := range cmp.notes.keysFocus {
+		if ni == len(cmp.notes.data) {
+			continue
+		}
+		kfns[k] = cmp.notes.data[ni]
+	}
+
 	keysOld := cmp.keysLongNoteHolding
-	keysNew := cmp.newKeysLongNoteHolding(ka, kn)
+	keysNew := cmp.newKeysLongNoteHolding(ka, kfns)
 	for k, new := range keysNew {
 		old := keysOld[k]
 		if !old && new {

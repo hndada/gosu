@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/hndada/gosu/audios"
-	draws "github.com/hndada/gosu/draws5"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
-	piano "github.com/hndada/gosu/game/piano2"
+	"github.com/hndada/gosu/game/piano"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/times"
@@ -16,7 +16,7 @@ import (
 
 type play interface {
 	Update(now int32, kas []game.KeyboardAction) any
-	SampleBuffer() []game.Sample
+	// PopSamples() []game.Sample
 	Draw(dst draws.Image)
 }
 
@@ -67,7 +67,7 @@ func NewScene(res *scene.Resources, opts *scene.Options,
 	// s.chart = format
 	// s.ChartHeader = game.NewChartHeader(format, hash)
 
-	kb, err := opts.Game.NewKeyboardReader()
+	kb, err := opts.NewKeyboardReader()
 	if err != nil {
 		err = fmt.Errorf("failed to create keyboard reader: %w", err)
 		return nil, err
@@ -80,10 +80,10 @@ func NewScene(res *scene.Resources, opts *scene.Options,
 		return nil, err
 	}
 	s.musicPlayer = mp
-	mp.SetVolume(s.Audio.MusicVolume)
-	s.musicOffset = s.Audio.MusicOffset
+	mp.SetVolume(s.MusicVolume)
+	s.musicOffset = s.MusicOffset
 
-	sp := audios.NewSoundPlayer(&opts.Audio.SoundVolumeScale)
+	sp := audios.NewSoundPlayer(&opts.SoundVolumeScale)
 	// Todo: add default sound
 	// sp.Add(, "")
 	s.soundPlayer = sp
@@ -91,12 +91,7 @@ func NewScene(res *scene.Resources, opts *scene.Options,
 	return s, nil
 }
 
-// type GameOptions struct {
-// 	replayFS       fs.FS
-// 	replayFilename string
-// }
-
-func (opts GameOptions) NewKeyboardReader() (input.KeyboardReader, error) {
+func NewKeyboardReader() (input.KeyboardReader, error) {
 	var keyCount int
 	var keyNames []string
 	switch opts.Mode {
@@ -183,16 +178,16 @@ func (s *Scene) Update() any {
 	kss := s.keyboard.Read(nowTime)
 	kas := game.KeyboardActions(kss)
 	r := s.play.Update(now, kas)
-	s.PlaySounds()
+	// s.PlaySounds()
 	return r
 }
 
-func (s Scene) PlaySounds() {
-	for _, samp := range s.play.SampleBuffer() {
-		vol := samp.Volume * s.Audio.SoundVolumeScale
-		s.soundPlayer.PlayWithVolume(samp.Filename, vol)
-	}
-}
+// func (s Scene) PlaySounds() {
+// 	for _, samp := range s.play.SampleBuffer() {
+// 		vol := samp.Volume * s.Audio.SoundVolumeScale
+// 		s.soundPlayer.PlayWithVolume(samp.Filename, vol)
+// 	}
+// }
 
 func (s *Scene) Pause() {
 	s.pauseTime = times.Now()

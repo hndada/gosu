@@ -1,19 +1,21 @@
 package draws
 
-// Since Box is initialized with given Image,
-// Source such as image or text should be unexported.
 type Sprite struct {
-	img Image
+	Source Image
 	Box
 }
 
 func NewSprite(img Image) Sprite {
 	return Sprite{
-		img: img,
-		Box: NewBox(img),
+		Source: img,
+		Box:    NewBox(img),
 	}
 }
 
+// sub.Fill might fill the destination image permanently.
 func (s Sprite) Draw(dst Image) {
-	s.Box.Draw(dst, s.img)
+	if s.Source.IsEmpty() {
+		return
+	}
+	dst.DrawImage(s.Source.Image, s.op())
 }

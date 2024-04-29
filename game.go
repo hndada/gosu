@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	draws "github.com/hndada/gosu/draws5"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game/piano"
 	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/scene/play"

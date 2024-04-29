@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"io/fs"
 
-	draws "github.com/hndada/gosu/draws6"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
 )
 

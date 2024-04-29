@@ -26,8 +26,8 @@ type BackgroundOptions struct {
 func NewBackgroundOptions(opts *Options) BackgroundOptions {
 	return BackgroundOptions{
 		Brightness:   0.8,
-		screenWidth:  &opts.Screen.Resolution.X,
-		screenHeight: &opts.Screen.Resolution.Y,
+		screenWidth:  &opts.Resolution.X,
+		screenHeight: &opts.Resolution.Y,
 	}
 }
 

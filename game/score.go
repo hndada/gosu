@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io/fs"
 
-	draws "github.com/hndada/gosu/draws6"
+	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/times"
 )
 

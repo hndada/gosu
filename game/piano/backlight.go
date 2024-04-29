@@ -1,48 +1,12 @@
 package piano
 
 import (
-	"image/color"
-	"io/fs"
 	"time"
 
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/times"
 )
-
-type BacklightsResources struct {
-	img draws.Image
-}
-
-func (br *BacklightsResources) Load(fsys fs.FS) {
-	fname := "piano/light/back.png"
-	br.img = draws.NewImageFromFile(fsys, fname)
-}
-
-type BacklightsOptions struct {
-	keyCount int
-	order    []KeyKind
-	keysW    []float64
-	keysX    []float64
-	y        float64
-	Colors   [4]color.NRGBA
-}
-
-func NewBacklightsOptions(keys KeysOptions) BacklightsOptions {
-	return BacklightsOptions{
-		keyCount: keys.keyCount,
-		order:    keys.Order(),
-		keysW:    keys.w,
-		keysX:    keys.x,
-		y:        keys.y,
-		Colors: [4]color.NRGBA{
-			{224, 224, 224, 64}, // One: white
-			{255, 170, 204, 64}, // Two: pink
-			{224, 224, 0, 64},   // Mid: yellow
-			{255, 0, 0, 64},     // Tip: red
-		},
-	}
-}
 
 type BacklightsComponent struct {
 	sprites     []draws.Sprite
@@ -51,17 +15,20 @@ type BacklightsComponent struct {
 	minDuration time.Duration
 }
 
-func NewBacklightsComponent(res BacklightsResources, opts BacklightsOptions) (cmp BacklightsComponent) {
-	cmp.sprites = make([]draws.Sprite, opts.keyCount)
+func NewBacklightsComponent(res *Resources, opts *Options, keyCount int) (cmp BacklightsComponent) {
+	cmp.sprites = make([]draws.Sprite, keyCount)
+	ws := opts.keyWidthsMap[keyCount]
+	xs := opts.keyPositionXsMap[keyCount]
+	orders := opts.KeyOrders[keyCount]
 	for k := range cmp.sprites {
-		s := draws.NewSprite(res.img)
-		s.MultiplyScale(opts.keysW[k] / s.W())
-		s.Locate(opts.keysX[k], opts.y, draws.CenterBottom)
-		s.ColorScale.ScaleWithColor(opts.Colors[opts.order[k]])
+		s := draws.NewSprite(res.BacklightsImage)
+		s.Scale(ws[k] / s.W())
+		s.Locate(xs[k], opts.KeyPositionY, draws.CenterBottom)
+		s.ColorScale.ScaleWithColor(opts.BacklightColors[orders[k]])
 		cmp.sprites[k] = s
 	}
-	cmp.keysPressed = make([]bool, opts.keyCount)
-	cmp.startTimes = make([]time.Time, opts.keyCount)
+	cmp.keysPressed = make([]bool, keyCount)
+	cmp.startTimes = make([]time.Time, keyCount)
 	cmp.minDuration = 30 * time.Millisecond
 	return
 }

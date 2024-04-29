@@ -1,44 +1,12 @@
 package piano
 
 import (
-	"fmt"
-	"io/fs"
 	"time"
 
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/times"
 )
-
-type KeyButtonsResources struct {
-	imgs []draws.Image
-}
-
-func (kr *KeyButtonsResources) Load(fsys fs.FS) {
-	kr.imgs = make([]draws.Image, 2)
-	for i, name := range []string{"up", "down"} {
-		fname := fmt.Sprintf("piano/key/%s.png", name)
-		kr.imgs[i] = draws.NewImageFromFile(fsys, fname)
-	}
-}
-
-type KeyButtonsOptions struct {
-	keyCount int
-	keysW    []float64
-	h        float64
-	keysX    []float64
-	y        float64
-}
-
-func NewKeyButtonsOptions(keys KeysOptions) KeyButtonsOptions {
-	return KeyButtonsOptions{
-		keyCount: keys.keyCount,
-		keysW:    keys.w,
-		h:        game.ScreenH - keys.y,
-		keysX:    keys.x,
-		y:        keys.y,
-	}
-}
 
 type KeyButtonsComponent struct {
 	keysSprites [][2]draws.Sprite
@@ -47,18 +15,19 @@ type KeyButtonsComponent struct {
 	minDuration time.Duration
 }
 
-func NewKeyButtonsComponent(res KeyButtonsResources, opts KeyButtonsOptions) (cmp KeyButtonsComponent) {
-	cmp.keysSprites = make([][2]draws.Sprite, opts.keyCount)
+func NewKeyButtonsComponent(res *Resources, opts *Options, keyCount int) (cmp KeyButtonsComponent) {
+	cmp.keysSprites = make([][2]draws.Sprite, keyCount)
+	ws := opts.keyWidthsMap[keyCount]
 	for k := range cmp.keysSprites {
-		for i, img := range res.imgs {
+		for i, img := range res.KeyButtonsImages {
 			s := draws.NewSprite(img)
-			s.SetSize(opts.keysW[k], opts.h)
-			s.Locate(opts.keysX[k], opts.y, draws.CenterTop)
+			s.SetSize(opts.StageWidths[keyCount], opts.keyButtonHeight)
+			s.Locate(ws[k], opts.KeyPositionY, draws.CenterTop)
 			cmp.keysSprites[k][i] = s
 		}
 	}
-	cmp.keysPressed = make([]bool, opts.keyCount)
-	cmp.startTimes = make([]time.Time, opts.keyCount)
+	cmp.keysPressed = make([]bool, keyCount)
+	cmp.startTimes = make([]time.Time, keyCount)
 	cmp.minDuration = 30 * time.Millisecond
 	return
 }

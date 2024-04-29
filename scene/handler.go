@@ -64,7 +64,7 @@ func NewHandlers(opts Options, states States) *Handlers {
 func newMusicVolumeHandler(opts Options, states States) ui.KeyNumberHandler[float64] {
 	return ui.KeyNumberHandler[float64]{
 		NumberController: ui.NumberController[float64]{
-			Value: &opts.Audio.MusicVolume,
+			Value: &opts.MusicVolume,
 			Min:   0,
 			Max:   1,
 			Unit:  0.05,
@@ -80,7 +80,7 @@ func newMusicVolumeHandler(opts Options, states States) ui.KeyNumberHandler[floa
 func newSoundVolumeScaleHandler(opts Options, states States) ui.KeyNumberHandler[float64] {
 	return ui.KeyNumberHandler[float64]{
 		NumberController: ui.NumberController[float64]{
-			Value: &opts.Audio.SoundVolumeScale,
+			Value: &opts.SoundVolumeScale,
 			Min:   0,
 			Max:   1,
 			Unit:  0.05,
@@ -100,7 +100,7 @@ func newMusicOffsetHandler(opts Options, states States) ui.KeyNumberHandler[int3
 
 	return ui.KeyNumberHandler[int32]{
 		NumberController: ui.NumberController[int32]{
-			Value: &opts.Audio.MusicOffset,
+			Value: &opts.MusicOffset,
 			Min:   -200,
 			Max:   200,
 			Unit:  1,
@@ -116,7 +116,7 @@ func newMusicOffsetHandler(opts Options, states States) ui.KeyNumberHandler[int3
 func newBackgroundBrightnessHandler(opts Options, states States) ui.KeyNumberHandler[float32] {
 	return ui.KeyNumberHandler[float32]{
 		NumberController: ui.NumberController[float32]{
-			Value: &opts.Screen.BackgroundBrightness,
+			Value: &opts.BackgroundBrightness,
 			Min:   0,
 			Max:   1,
 			Unit:  0.1,
@@ -137,7 +137,7 @@ func newDebugPrintHandler(opts Options, states States) ui.KeyBoolHandler {
 	}
 	return ui.KeyBoolHandler{
 		BoolController: ui.BoolController{
-			Value: &opts.Screen.DebugPrint,
+			Value: &opts.DebugPrint,
 		},
 		KeyListener: *ui.NewKeyListener(
 			states.KeyboardStatus,
@@ -156,7 +156,7 @@ func newModeHandler(opts Options, states States) ui.KeyNumberHandler[int] {
 	}
 	return ui.KeyNumberHandler[int]{
 		NumberController: ui.NumberController[int]{
-			Value: &opts.Game.Mode,
+			Value: &opts.Mode,
 			Min:   game.ModeAll,
 			Max:   game.ModePiano,
 			Unit:  1,
@@ -195,7 +195,7 @@ func newSubModeHandlers(opts Options, states States) []ui.KeyNumberHandler[int] 
 
 		hs = append(hs, ui.KeyNumberHandler[int]{
 			NumberController: ui.NumberController[int]{
-				Value: &opts.Game.SubMode,
+				Value: &opts.SubMode,
 				Min:   min,
 				Max:   max,
 				Unit:  1,
@@ -230,7 +230,7 @@ func newSpeedScaleHandlers(opts Options, states States) []ui.KeyNumberHandler[fl
 		var ptr *float64
 		switch mode {
 		case game.ModePiano:
-			ptr = &opts.Game.Piano.SpeedScale
+			ptr = &opts.Piano.SpeedScale
 		}
 		hs = append(hs, ui.KeyNumberHandler[float64]{
 			NumberController: ui.NumberController[float64]{
