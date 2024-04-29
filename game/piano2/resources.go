@@ -5,7 +5,7 @@ import (
 	"image/color"
 	"io/fs"
 
-	draws "github.com/hndada/gosu/draws5"
+	draws "github.com/hndada/gosu/draws6"
 	"github.com/hndada/gosu/game"
 )
 
@@ -24,28 +24,28 @@ type Resources struct {
 	HitLightsFrames    draws.Frames
 	HoldLightsFrames   draws.Frames
 	JudgmentFramesList [4]draws.Frames
+	HitSound           []byte
 	ComboImages        []draws.Image // 10
 	ScoreImages        []draws.Image // 13
-	HitSound           []byte
 }
 
-func newFieldImage() draws.Image {
+func loadFieldImage() draws.Image {
 	img := draws.CreateImage(game.ScreenSizeX, game.ScreenSizeY)
 	return img
 }
 
-func newBarImage() draws.Image {
+func loadBarImage() draws.Image {
 	img := draws.CreateImage(1, 1)
 	img.Fill(color.White)
 	return img
 }
 
-func newHintImage(fsys fs.FS) draws.Image {
+func loadHintImage(fsys fs.FS) draws.Image {
 	fname := "piano/hint.png"
 	return draws.NewImageFromFile(fsys, fname)
 }
 
-func newNoteFramesList(fsys fs.FS) [4]draws.Frames {
+func loadNoteFramesList(fsys fs.FS) [4]draws.Frames {
 	var framesList [4]draws.Frames
 	for nk, nkn := range []string{"normal", "head", "tail", "body"} {
 		name := fmt.Sprintf("piano/note/%s.png", nkn)
@@ -54,7 +54,7 @@ func newNoteFramesList(fsys fs.FS) [4]draws.Frames {
 	return framesList
 }
 
-func newKeyButtonImages(fsys fs.FS) [2]draws.Image {
+func loadKeyButtonImages(fsys fs.FS) [2]draws.Image {
 	var imgs [2]draws.Image
 	for i, name := range []string{"up", "down"} {
 		fname := fmt.Sprintf("piano/key/%s.png", name)
@@ -63,22 +63,22 @@ func newKeyButtonImages(fsys fs.FS) [2]draws.Image {
 	return imgs
 }
 
-func newBacklightImage(fsys fs.FS) draws.Image {
+func loadBacklightImage(fsys fs.FS) draws.Image {
 	fname := "piano/light/back.png"
 	return draws.NewImageFromFile(fsys, fname)
 }
 
-func newHitLightFrames(fsys fs.FS) draws.Frames {
+func loadHitLightFrames(fsys fs.FS) draws.Frames {
 	fname := "piano/light/hit.png"
 	return draws.NewFramesFromFile(fsys, fname)
 }
 
-func newHoldLightFrames(fsys fs.FS) draws.Frames {
+func loadHoldLightFrames(fsys fs.FS) draws.Frames {
 	fname := "piano/light/hold.png"
 	return draws.NewFramesFromFile(fsys, fname)
 }
 
-func newJudgmentFramesList(fsys fs.FS) [4]draws.Frames {
+func loadJudgmentFramesList(fsys fs.FS) [4]draws.Frames {
 	var framesList [4]draws.Frames
 	for i, name := range []string{"kool", "cool", "good", "miss"} {
 		fname := fmt.Sprintf("piano/judgment/%s.png", name)
@@ -87,31 +87,7 @@ func newJudgmentFramesList(fsys fs.FS) [4]draws.Frames {
 	return framesList
 }
 
-// game/combo.go
-func newComboImages(fsys fs.FS) []draws.Image {
-	imgs := make([]draws.Image, 10)
-	for i := 0; i < 10; i++ {
-		fname := fmt.Sprintf("combo/%d.png", i)
-		imgs[i] = draws.NewImageFromFile(fsys, fname)
-	}
-	return imgs
-}
-
-// game/score.go
-func newScoreImages(fsys fs.FS) []draws.Image {
-	imgs := make([]draws.Image, 13)
-	for i := 0; i < 10; i++ {
-		fname := fmt.Sprintf("score/%d.png", i)
-		imgs[i] = draws.NewImageFromFile(fsys, fname)
-	}
-	for i, name := range []string{"dot", "comma", "percent"} {
-		fname := fmt.Sprintf("score/%s.png", name)
-		imgs[i+10] = draws.NewImageFromFile(fsys, fname)
-	}
-	return imgs
-}
-
-func newHitSound(fsys fs.FS) []byte {
+func loadHitSound(fsys fs.FS) []byte {
 	fname := "piano/hit.wav"
 	data, _ := fs.ReadFile(fsys, fname)
 	return data
@@ -119,16 +95,17 @@ func newHitSound(fsys fs.FS) []byte {
 
 func NewResources(fsys fs.FS) *Resources {
 	return &Resources{
-		FieldImage:         newFieldImage(),
-		BarImage:           newBarImage(),
-		HintImage:          newHintImage(fsys),
-		NotesFramesList:    newNoteFramesList(fsys),
-		KeyButtonsImages:   newKeyButtonImages(fsys),
-		BacklightsImage:    newBacklightImage(fsys),
-		HitLightsFrames:    newHitLightFrames(fsys),
-		HoldLightsFrames:   newHoldLightFrames(fsys),
-		JudgmentFramesList: newJudgmentFramesList(fsys),
-		ComboImages:        newComboImages(fsys),
-		ScoreImages:        newScoreImages(fsys),
+		FieldImage:         loadFieldImage(),
+		BarImage:           loadBarImage(),
+		HintImage:          loadHintImage(fsys),
+		NotesFramesList:    loadNoteFramesList(fsys),
+		KeyButtonsImages:   loadKeyButtonImages(fsys),
+		BacklightsImage:    loadBacklightImage(fsys),
+		HitLightsFrames:    loadHitLightFrames(fsys),
+		HoldLightsFrames:   loadHoldLightFrames(fsys),
+		JudgmentFramesList: loadJudgmentFramesList(fsys),
+		HitSound:           loadHitSound(fsys),
+		ComboImages:        game.LoadComboImages(fsys),
+		ScoreImages:        game.LoadScoreImages(fsys),
 	}
 }

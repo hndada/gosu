@@ -4,53 +4,51 @@ import (
 	"fmt"
 	"io/fs"
 
-	"github.com/hndada/gosu/draws"
+	draws "github.com/hndada/gosu/draws6"
+	"github.com/hndada/gosu/times"
 )
 
-type ComboResources struct {
-	imgs []draws.Image
-}
-
-func (res *ComboResources) Load(fsys fs.FS) {
-	res.imgs = make([]draws.Image, 10)
+func LoadComboImages(fsys fs.FS) []draws.Image {
+	imgs := make([]draws.Image, 10)
 	for i := 0; i < 10; i++ {
 		fname := fmt.Sprintf("combo/%d.png", i)
-		res.imgs[i] = draws.NewImageFromFile(fsys, fname)
+		imgs[i] = draws.NewImageFromFile(fsys, fname)
 	}
+	return imgs
 }
 
 type ComboOptions struct {
-	Scale    float64
-	X        float64
-	DigitGap float64
-	Y        float64
-	Persist  bool
-	Bounce   float64
+	ImageScale float64
+	PositionX  float64
+	DigitGap   float64
+	PositionY  float64
+	IsPersist  bool
+	Bounce     float64
 }
 
 type ComboComponent struct {
 	sprites []draws.Sprite
 	combo   int
 	w       float64
-	tween   draws.Tween
+	tween   times.Tween
 }
 
-func NewComboComponent(res ComboResources, opts ComboOptions) (cmp ComboComponent) {
+func NewComboComponent(imgs []draws.Image, opts *ComboOptions) (cmp ComboComponent) {
 	cmp.sprites = make([]draws.Sprite, 10)
 	for i := 0; i < 10; i++ {
-		sprite := draws.NewSprite(res.imgs[i])
-		sprite.MultiplyScale(opts.Scale)
-		sprite.Locate(opts.X, opts.Y, draws.CenterMiddle)
+		sprite := draws.NewSprite(imgs[i])
+		sprite.Scale(opts.ImageScale)
+		sprite.Locate(opts.PositionX, opts.PositionY, draws.CenterMiddle)
 		cmp.sprites[i] = sprite
 	}
 	// Size of the whole image is 0.5w + (n-1)(w+gap) + 0.5w.
 	// Since sprites are already at anchor, no need to care of two 0.5w.
 	cmp.w = cmp.sprites[0].W() + opts.DigitGap
-	tw := draws.Tween{}
-	tw.Add(0, opts.Bounce, 200, draws.EaseLinear)
-	tw.Add(opts.Bounce, -opts.Bounce, 100, draws.EaseLinear)
-	tw.Add(0, 0, 1500, draws.EaseLinear)
-	if !opts.Persist {
+	tw := times.Tween{}
+	tw.Add(0, opts.Bounce, 200, times.EaseLinear)
+	tw.Add(opts.Bounce, -opts.Bounce, 100, times.EaseLinear)
+	tw.Add(0, 0, 1500, times.EaseLinear)
+	if !opts.IsPersist {
 		tw.SetLoop(1)
 	}
 	return

@@ -1,7 +1,7 @@
 package piano
 
 import (
-	draws "github.com/hndada/gosu/draws5"
+	draws "github.com/hndada/gosu/draws6"
 	"github.com/hndada/gosu/game"
 )
 
@@ -12,7 +12,7 @@ type Bar struct {
 }
 
 type Bars struct {
-	bars  []Bar
+	data  []Bar
 	index int
 }
 
@@ -26,37 +26,23 @@ func NewBars(dys game.Dynamics) Bars {
 		dys.UpdateIndex(t)
 		bs[i] = Bar{position: dys.Position(t)}
 	}
-	return Bars{bars: bs}
-}
-
-type BarsOptions struct {
-	w float64
-	H float64
-	x float64
-	y float64
-}
-
-func NewBarsOptions(stage StageOptions) BarsOptions {
-	return BarsOptions{
-		w: stage.w,
-		H: 1,
-		x: stage.X,
-		y: stage.H,
-	}
+	return Bars{data: bs}
 }
 
 type BarsComponent struct {
+	bars   Bars
 	sprite draws.Sprite
-	Bars
 	cursor float64
+	reach  float64 // the distance from the top of the screen to the stage base position.
 }
 
-func NewBarsComponent(res BarsResources, opts BarsOptions, dys game.Dynamics) (cmp BarsComponent) {
-	s := draws.NewSprite(res.img)
-	s.SetSize(opts.w, opts.H)
-	s.Locate(opts.x, opts.y, draws.CenterBottom)
+func NewBarsComponent(res *Resources, opts *Options, c *Chart) (cmp BarsComponent) {
+	s := draws.NewSprite(res.BarImage)
+	s.SetSize(opts.StageWidths[c.keyCount], opts.BarHeight)
+	s.Locate(opts.StagePositionX, opts.KeyPositionY, draws.CenterBottom)
 	cmp.sprite = s
-	cmp.Bars = NewBars(dys)
+	cmp.bars = NewBars(c.Dynamics)
+	cmp.reach = opts.KeyPositionY
 	return
 }
 
@@ -68,22 +54,22 @@ func NewBarsComponent(res BarsResources, opts BarsOptions, dys game.Dynamics) (c
 // The same concept also applies to notes.
 func (cmp *BarsComponent) Update(cursor float64) {
 	cmp.cursor = cursor
-	lowermost := cursor - game.ScreenH
-	for i := cmp.index; i < len(cmp.bars); i++ {
-		b := cmp.bars[i]
+	lowermost := cursor - cmp.reach // game.ScreenH
+	for i := cmp.bars.index; i < len(cmp.bars.data); i++ {
+		b := cmp.bars.data[i]
 		if b.position > lowermost {
 			break
 		}
 		// index should be updated outside of if block.
-		cmp.index = i
+		cmp.bars.index = i
 	}
 }
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
 func (cmp BarsComponent) Draw(dst draws.Image) {
-	uppermost := cmp.cursor + game.ScreenH
-	for i := cmp.index; i < len(cmp.bars); i++ {
-		b := cmp.bars[i]
+	uppermost := cmp.cursor + cmp.reach // game.ScreenH
+	for i := cmp.bars.index; i < len(cmp.bars.data); i++ {
+		b := cmp.bars.data[i]
 		if b.position > uppermost {
 			break
 		}

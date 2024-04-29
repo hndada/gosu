@@ -38,7 +38,7 @@ func (d Dynamic) BeatDuration() float64 {
 
 // No two Dynamics have same Time.
 type Dynamics struct {
-	dynamics   []Dynamic
+	data       []Dynamic
 	idx        int
 	span       int32 // total duration of the chart
 	SpeedScale float64
@@ -57,7 +57,7 @@ func NewDynamics(chart any) (Dynamics, error) {
 	if len(ds) == 0 {
 		return Dynamics{}, fmt.Errorf("no Dynamics in the chart")
 	}
-	dys := Dynamics{dynamics: ds, span: span}
+	dys := Dynamics{data: ds, span: span}
 	dys.setPositions()
 	dys.SpeedScale = 1
 	return dys, nil
@@ -113,18 +113,18 @@ func newDynamicListFromOsu(f *osu.Format) []Dynamic {
 	return ds
 }
 
-func (dys Dynamics) Dynamics() []Dynamic { return dys.dynamics }
+func (dys Dynamics) Dynamics() []Dynamic { return dys.data }
 
 // BPM with longest duration will be main BPM.
 // When there are multiple BPMs with same duration, larger one will be main BPM.
 func (dys Dynamics) BPMs() (main, min, max float64) {
 	bpmDurations := make(map[float64]int32)
-	for i, d := range dys.dynamics {
+	for i, d := range dys.data {
 		if i == 0 {
 			bpmDurations[d.BPM] += d.Time
 		}
-		if i < len(dys.dynamics)-1 {
-			bpmDurations[d.BPM] += dys.dynamics[i+1].Time - d.Time
+		if i < len(dys.data)-1 {
+			bpmDurations[d.BPM] += dys.data[i+1].Time - d.Time
 		} else {
 			bpmDurations[d.BPM] += dys.span - d.Time // Bounds to final note time; confirmed with test.
 		}
@@ -151,16 +151,16 @@ func (dys Dynamics) BPMs() (main, min, max float64) {
 func (dys *Dynamics) setPositions() {
 	// Brilliant idea: Make SpeedScale scaled by MainBPM.
 	mainBPM, _, _ := dys.BPMs()
-	bpmScale := dys.dynamics[0].BPM / mainBPM
-	for i, d := range dys.dynamics {
+	bpmScale := dys.data[0].BPM / mainBPM
+	for i, d := range dys.data {
 		d.Speed *= bpmScale
 		if i == 0 {
-			dys.dynamics[i].Position = float64(d.Time) * d.Speed
+			dys.data[i].Position = float64(d.Time) * d.Speed
 			continue
 		}
-		prev := dys.dynamics[i-1]
+		prev := dys.data[i-1]
 		gain := prev.Speed * float64(d.Time-prev.Time)
-		dys.dynamics[i].Position = prev.Position + gain
+		dys.data[i].Position = prev.Position + gain
 	}
 }
 
@@ -170,12 +170,12 @@ func (dys Dynamics) BeatTimes() (times []int32) {
 	const bufferTime = 5000
 
 	// times before first Dynamic
-	start = float64(dys.dynamics[0].Time)
+	start = float64(dys.data[0].Time)
 	end = start
 	if end > -bufferTime {
 		end = -bufferTime
 	}
-	step = dys.dynamics[0].BeatDuration()
+	step = dys.data[0].BeatDuration()
 	for t := start; t >= end; t -= step {
 		times = append([]int32{int32(t)}, times...)
 	}
@@ -184,7 +184,7 @@ func (dys Dynamics) BeatTimes() (times []int32) {
 
 	// times after first Dynamic
 	var newDys []Dynamic
-	for _, d := range dys.dynamics {
+	for _, d := range dys.data {
 		if d.NewBeat {
 			newDys = append(newDys, d)
 		}
@@ -207,9 +207,9 @@ func (dys Dynamics) BeatTimes() (times []int32) {
 
 // UpdateIndex update index of Dynamics and returns current Dynamic.
 func (dys *Dynamics) UpdateIndex(now int32) Dynamic {
-	for i := dys.idx; i < len(dys.dynamics); i++ {
+	for i := dys.idx; i < len(dys.data); i++ {
 		// if-condition first, then update index.
-		if dys.dynamics[i].Time > now {
+		if dys.data[i].Time > now {
 			break
 		}
 		dys.idx = i
@@ -217,9 +217,26 @@ func (dys *Dynamics) UpdateIndex(now int32) Dynamic {
 	return dys.Current()
 }
 
+// Closure
+// For one-time iteration over data.
+func (dys Dynamics) FuncCurrentDynamic() func(now int32) Dynamic {
+	i := 0
+	return func(now int32) Dynamic {
+		// if-condition first, then update index
+		// so that index is not updated when Time is larger than now.
+		for i := dys.idx; i < len(dys.data); i++ {
+			if dys.data[i].Time > now {
+				break
+			}
+			i++
+		}
+		return dys.data[i]
+	}
+}
+
 func (dys *Dynamics) Reset() { dys.idx = 0 }
 
-func (dys Dynamics) Current() Dynamic { return dys.dynamics[dys.idx] }
+func (dys Dynamics) Current() Dynamic { return dys.data[dys.idx] }
 
 // The unit of speed is logical pixel per millisecond.
 func (dys Dynamics) Speed() float64 {

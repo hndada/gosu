@@ -1,7 +1,7 @@
 package piano
 
 import (
-	draws "github.com/hndada/gosu/draws5"
+	draws "github.com/hndada/gosu/draws6"
 	"github.com/hndada/gosu/game"
 )
 
@@ -24,18 +24,18 @@ type Components struct {
 	score      game.ScoreComponent
 }
 
-func NewComponents(res *Resources, opts *Options, c *Chart) (cmps *Components) {
-	cmps.field = NewFieldComponent(res.field, opts.Field)
-	cmps.bars = NewBarsComponent(res.bars, opts.Bars, dys)
-	cmps.hint = NewHintComponent(res.hint, opts.Hint)
-	cmps.notes = NewNotesComponent(res.notes, opts.Notes, ns, dys)
-	cmps.keyButtons = NewKeyButtonsComponent(res.keyButtons, opts.KeyButtons)
-	cmps.backlights = NewBacklightsComponent(res.backlights, opts.Backlights)
-	cmps.hitLights = NewHitLightsComponent(res.hitLights, opts.HitLights)
-	cmps.holdLights = NewHoldLightsComponent(res.holdLights, opts.HoldLights)
-	cmps.judgment = NewJudgmentComponent(res.judgment, opts.Judgment)
-	cmps.combo = game.NewComboComponent(res.combo, opts.Combo)
-	cmps.score = game.NewScoreComponent(res.score, opts.Score)
+func NewComponents(res *Resources, opts *Options, c *Chart) (cmps Components) {
+	cmps.field = NewFieldComponent(res, opts, c.keyCount)
+	cmps.bars = NewBarsComponent(res, opts, c)
+	cmps.hint = NewHintComponent(res, opts, c.keyCount)
+	cmps.notes = NewNotesComponent(res, opts, c)
+	cmps.keyButtons = NewKeyButtonsComponent(res, opts, c.keyCount)
+	cmps.backlights = NewBacklightsComponent(res, opts, c.keyCount)
+	cmps.hitLights = NewHitLightsComponent(res, opts, c.keyCount)
+	cmps.holdLights = NewHoldLightsComponent(res, opts, c.keyCount)
+	cmps.judgment = NewJudgmentComponent(res, opts)
+	cmps.combo = game.NewComboComponent(res.ComboImages, &opts.Combo)
+	cmps.score = game.NewScoreComponent(res.ScoreImages, &opts.Score)
 	return
 }
 

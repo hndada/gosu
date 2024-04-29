@@ -43,7 +43,7 @@ func NewScorer(ns Notes, mods Mods) (s Scorer) {
 	js := mods.DefaultJudgments()
 	s.Judgments = game.NewJudgments(js)
 
-	unit := 1e6 / float64(len(ns.notes))
+	unit := 1e6 / float64(len(ns.data))
 	s.units = [3]float64{unit * 0.7, unit * 0.3, unit * 0.1}
 	s.maxFactors = [3]float64{50, 20, 1}
 	s.factors = s.maxFactors
@@ -65,10 +65,10 @@ func (s *Scorer) update(ka game.KeyboardAction) {
 	s.markKeysUntouchedNote(ka.Time)
 
 	for k, ni := range s.keysFocus {
-		if ni == len(s.notes) {
+		if ni == len(s.data) {
 			continue
 		}
-		n := s.notes[ni]
+		n := s.data[ni]
 		if ka.KeysAction[k] == game.Hit {
 			s.sampleBuffer = append(s.sampleBuffer, n.Sample)
 		}
@@ -85,8 +85,8 @@ func (s *Scorer) update(ka game.KeyboardAction) {
 // marks the untouched note as missed.
 func (s Scorer) markKeysUntouchedNote(now int32) {
 	for k, lowest := range s.keysFocus {
-		for ni := lowest; ni < len(s.notes); ni = s.notes[ni].next {
-			n := s.notes[ni]
+		for ni := lowest; ni < len(s.data); ni = s.data[ni].next {
+			n := s.data[ni]
 			if e := n.Time - now; s.IsTooLate(e) {
 				break
 			}
@@ -140,7 +140,7 @@ func (s Scorer) judgeTail(e int32, at game.KeyActionType) game.JudgmentKind {
 
 // Todo: no getting Flow when hands off the long note
 func (s *Scorer) markNote(ni int, jk game.JudgmentKind) {
-	n := s.notes[ni]
+	n := s.data[ni]
 	j := s.Judgments.Judgments[jk]
 	switch jk {
 	case kool:
@@ -170,7 +170,7 @@ func (s *Scorer) markNote(ni int, jk game.JudgmentKind) {
 		score := j.Weight * (ratio * unit)
 		s.Score += score
 	}
-	s.notes[ni].scored = true
+	s.data[ni].scored = true
 	s.Judgments.Counts[jk]++
 
 	// when Head is missed, its tail goes missed as well.

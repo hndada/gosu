@@ -1,12 +1,10 @@
 package piano
 
 import (
-	"fmt"
 	"image/color"
-	"io/fs"
 	"sort"
 
-	draws "github.com/hndada/gosu/draws5"
+	draws "github.com/hndada/gosu/draws6"
 	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/game"
 )
@@ -58,21 +56,21 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 
 type Notes struct {
 	keyCount     int
-	notes        []Note
+	data         []Note
 	keysFocus    []int // indexes of focused notes
 	sampleBuffer []game.Sample
 	// none         int   // index of none value. It is same as len(notes).
 }
 
-func NewNotes(keyCount int, dys game.Dynamics, chart game.ChartFormat) Notes {
+func NewNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) Notes {
 	var ns []Note
-	switch chart := chart.(type) {
+	switch format := format.(type) {
 	case *osu.Format:
-		ns = make([]Note, 0, len(chart.HitObjects)*2)
-		for _, ho := range chart.HitObjects {
+		ns = make([]Note, 0, len(format.HitObjects)*2)
+		for _, ho := range format.HitObjects {
 			ns = append(ns, newNoteFromOsu(ho, keyCount)...)
 		}
-		// keyCount = int(chart.CircleSize)
+		// keyCount = int(format.CircleSize)
 	}
 
 	sort.Slice(ns, func(i, j int) bool {
@@ -96,6 +94,7 @@ func NewNotes(keyCount int, dys game.Dynamics, chart game.ChartFormat) Notes {
 			}
 		}
 	}
+	dys.Reset()
 
 	// linking
 	none := len(ns)
@@ -128,9 +127,8 @@ func NewNotes(keyCount int, dys game.Dynamics, chart game.ChartFormat) Notes {
 	}
 
 	return Notes{
-		keyCount: keyCount,
-		notes:    ns,
-		// none:         none,
+		keyCount:     keyCount,
+		data:         ns,
 		keysFocus:    keysFocus,
 		sampleBuffer: nil,
 	}
@@ -139,65 +137,17 @@ func NewNotes(keyCount int, dys game.Dynamics, chart game.ChartFormat) Notes {
 func (ns Notes) keysFocusNote() []Note {
 	kn := make([]Note, ns.keyCount)
 	for k, ni := range ns.keysFocus {
-		if ni == len(ns.notes) {
+		if ni == len(ns.data) {
 			continue
 		}
-		kn[k] = ns.notes[ni]
+		kn[k] = ns.data[ni]
 	}
 	return kn
 }
 
-type NotesResources struct {
-	framesList [4]draws.Frames
-	// defaultSampleData []byte
-}
-
-// When note/normal image is not found, use default's note/normal.
-// When note/head image is not found, use user's note/normal.
-// When note/tail image is not found, let it be blank.
-// When note/body image is not found, use user's note/normal.
-func (res *NotesResources) Load(fsys fs.FS) {
-	for nk, nkn := range []string{"normal", "head", "tail", "body"} {
-		name := fmt.Sprintf("piano/note/%s.png", nkn)
-		res.framesList[nk] = draws.NewFramesFromFile(fsys, name)
-	}
-}
-
-type NotesOptions struct {
-	keyCount   int
-	keyOrder   []KeyKind
-	keysW      []float64
-	H          float64 // Applies to all types of notes.
-	keysX      []float64
-	y          float64 // center bottom
-	TailOffset int32
-	Colors     [4]color.NRGBA
-	// LongBodyStyle     int // Stretch or Attach.
-}
-
-func NewNotesOptions(stage StageOptions, keys KeysOptions) NotesOptions {
-	return NotesOptions{
-		keyCount:   stage.keyCount,
-		keyOrder:   keys.Order(),
-		keysW:      keys.w,
-		H:          20,
-		keysX:      keys.x,
-		y:          keys.y,
-		TailOffset: 0,
-		// Colors are from each note's second outermost pixel.
-		Colors: [4]color.NRGBA{
-			{255, 255, 255, 255}, // One: white
-			{239, 191, 226, 255}, // Two: pink
-			{218, 215, 103, 255}, // Mid: yellow
-			{224, 0, 0, 255},     // Tip: red
-		},
-		// LongBodyStyle: 0,
-	}
-}
-
 type NotesComponent struct {
-	keysAnims [][4]draws.Animation
-	Notes
+	notes       Notes
+	keysAnims   [][4]draws.Animation
 	keysLowest  []int // indexes of lowest notes
 	cursor      float64
 	keysColor   []color.NRGBA
@@ -205,55 +155,65 @@ type NotesComponent struct {
 	// h           float64 // used for drawLongNoteBody
 }
 
-func NewNotesComponent(res *Resources, opts *Options, c *Chart) (cmp *NotesComponent) {
+func NewNotesComponent(res *Resources, opts *Options, c *Chart) (cmp NotesComponent) {
 	cmp.keysAnims = make([][4]draws.Animation, c.keyCount)
 	for k := range cmp.keysAnims {
 		for nk, frames := range res.NotesFramesList {
 			a := draws.NewAnimation(frames, 400)
-			a.SetSize(opts.keysW[k], opts.H)
+			w := opts.keyWidthsMap[c.keyCount][k]
+			h := opts.NoteHeight
+			a.SetSize(w, h)
+
+			x := opts.keyPositionXsMap[c.keyCount][k]
+			y := opts.KeyPositionY
 			if nk == int(Body) {
-				a.Locate(opts.keysX[k], opts.y, draws.CenterTop)
+				a.Locate(x, y, draws.CenterTop)
 			} else {
-				a.Locate(opts.keysX[k], opts.y, draws.CenterBottom)
+				a.Locate(x, y, draws.CenterBottom)
 			}
 			cmp.keysAnims[k][nk] = a
 		}
 	}
 
 	// Apply default sample values.
-	dys.Reset()
-	for i, n := range ns.notes {
-		d := dys.UpdateIndex(n.Time)
+	cd := c.FuncCurrentDynamic()
+	// dys.Reset()
+	for i, n := range c.data {
+		d := cd(n.Time)
+		// d := c.Dynamics.UpdateIndex(n.Time)
 		// if n.Sample.Filename == "" {
-		// 	ns.notes[i].Sample.Filename = res.defaultSampleName
+		// 	c.notes.data[i].Sample.Filename = res.defaultSampleName
 		// }
 		if n.Sample.Volume == 0 {
-			ns.notes[i].Sample.Volume = d.Volume
+			c.data[i].Sample.Volume = d.Volume
 		}
 	}
 
 	// Apply TailOffset to Tail's Position.
-	dys.Reset()
-	for i, n := range ns.notes {
+	cd = c.FuncCurrentDynamic()
+	// dys.Reset()
+	for i, n := range c.Notes.data {
 		if n.Kind != Tail {
 			continue
 		}
-		d := dys.UpdateIndex(n.Time)
-		ns.notes[i].position += float64(opts.TailOffset) * d.Speed
+		d := cd(n.Time)
+		// d := dys.UpdateIndex(n.Time)
+		c.Notes.data[i].position += float64(opts.TailNoteOffset) * d.Speed
 
 		// Tail's Position should be always equal or larger than Head's.
-		if head := ns.notes[n.prev]; n.position < head.position {
-			ns.notes[i].position = head.position
+		if head := c.Notes.data[n.prev]; n.position < head.position {
+			c.Notes.data[i].position = head.position
 		}
 	}
-	cmp.Notes = ns
 
-	cmp.keysLowest = make([]int, opts.keyCount)
-	cmp.keysColor = make([]color.NRGBA, opts.keyCount)
+	cmp.notes = c.Notes
+	cmp.keysLowest = make([]int, c.keyCount)
+	cmp.keysColor = make([]color.NRGBA, c.keyCount)
+	order := opts.KeyOrders[c.keyCount]
 	for k := range cmp.keysColor {
-		cmp.keysColor[k] = opts.Colors[opts.keyOrder[k]]
+		cmp.keysColor[k] = opts.NoteColors[order[k]]
 	}
-	cmp.keysHolding = make([]bool, opts.keyCount)
+	cmp.keysHolding = make([]bool, c.keyCount)
 	// cmp.h = opts.H
 	return
 }
@@ -261,8 +221,8 @@ func NewNotesComponent(res *Resources, opts *Options, c *Chart) (cmp *NotesCompo
 func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {
 	lowermost := cursor - game.ScreenSizeY
 	for k, lowest := range cmp.keysLowest {
-		for ni := lowest; ni < len(cmp.notes); ni = cmp.notes[ni].next {
-			n := cmp.notes[lowest]
+		for ni := lowest; ni < len(cmp.notes.data); ni = cmp.notes.data[ni].next {
+			n := cmp.notes.data[lowest]
 			if n.position > lowermost {
 				break
 			}
@@ -272,7 +232,7 @@ func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {
 		// When Head is off the screen but Tail is on,
 		// update Tail to Head since drawLongNote uses Head.
 		ni := cmp.keysLowest[k]
-		if n := cmp.notes[ni]; n.Kind == Tail {
+		if n := cmp.notes.data[ni]; n.Kind == Tail {
 			cmp.keysLowest[k] = n.prev
 		}
 	}
@@ -285,8 +245,8 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 	uppermost := cmp.cursor + game.ScreenSizeY
 	for k, lowest := range cmp.keysLowest {
 		var nis []int
-		for ni := lowest; ni < len(cmp.notes); ni = cmp.notes[ni].next {
-			n := cmp.notes[ni]
+		for ni := lowest; ni < len(cmp.notes.data); ni = cmp.notes.data[ni].next {
+			n := cmp.notes.data[ni]
 			if n.position > uppermost {
 				break
 			}
@@ -297,7 +257,7 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 		sort.Sort(sort.Reverse(sort.IntSlice(nis)))
 
 		for _, ni := range nis {
-			n := cmp.notes[ni]
+			n := cmp.notes.data[ni]
 			// Make long note's body overlapped by its Head and Tail.
 			if n.Kind == Head {
 				cmp.drawLongNoteBody(dst, n)
@@ -317,7 +277,7 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 
 // drawLongNoteBody draws stretched long note body sprite.
 func (cmp NotesComponent) drawLongNoteBody(dst draws.Image, head Note) {
-	tail := cmp.notes[head.next]
+	tail := cmp.notes.data[head.next]
 	if head.Kind != Head || tail.Kind != Tail {
 		return
 	}

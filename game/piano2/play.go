@@ -5,7 +5,7 @@ import (
 	"io/fs"
 	"strings"
 
-	draws "github.com/hndada/gosu/draws5"
+	draws "github.com/hndada/gosu/draws6"
 	"github.com/hndada/gosu/game"
 )
 
@@ -15,10 +15,10 @@ type Play struct {
 	*Options
 	*Chart
 	Scorer
-	*Components
+	Components
 }
 
-func NewPlay(res Resources, opts Options, fsys fs.FS, name string, mods Mods) (Play, error) {
+func NewPlay(res *Resources, opts *Options, fsys fs.FS, name string, mods Mods) (Play, error) {
 	// dys, err := game.NewDynamics(chart, opts.Stage.H)
 	// if err != nil {
 	// 	return Play{}, fmt.Errorf("failed to create dynamics: %w", err)
@@ -56,11 +56,11 @@ func (p *Play) SetSpeedScale(newScale float64) {
 	for i := range ds {
 		ds[i].Position *= scale
 	}
-	ns := p.notes.notes
+	ns := p.notes.notes.data
 	for i := range ns {
 		ns[i].position *= scale
 	}
-	bs := p.bars.bars
+	bs := p.bars.bars.data
 	for i := range bs {
 		bs[i].position *= scale
 	}
@@ -71,7 +71,7 @@ func (p Play) Draw(dst draws.Image) {
 }
 
 func (p Play) NoteExposureDuration() int32 {
-	return p.Chart.NoteExposureDuration(p.StageBasePosition)
+	return p.Chart.NoteExposureDuration(p.KeyPositionY)
 }
 
 func (p Play) DebugString() string {

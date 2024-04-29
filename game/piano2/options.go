@@ -3,7 +3,6 @@ package piano
 import (
 	"image/color"
 
-	draws "github.com/hndada/gosu/draws5"
 	"github.com/hndada/gosu/game"
 )
 
@@ -11,29 +10,34 @@ import (
 // If a player wants to use different speed scales for different key counts,
 // use 'Option Profile' feature.
 type Options struct {
-	// CurrentKeyCount int     // old: KeyCount
+	screenSizeX float64
+	screenSizeY float64
+	// KeyCount   int     // Current key count
 	SpeedScale float64 // Added
 
-	StageWidths       map[int]float64
-	StageBasePosition float64 // virtual value; nor X or Y
-	StagePositionX    float64
+	StageWidths    map[int]float64
+	StagePositionX float64
 
 	// If there are multiple iterable types in a single type,
 	// The name should expose such information; e.g., XxxsMap
 	// Unless the name itself contains the information.
-	KeyMappings      map[int][]string
-	KeyOrders        map[int][]KeyKind
-	KeyScratchModes  map[int]ScratchMode
-	KeyKindWidths    [4]float64
+	KeyMappings     map[int][]string
+	KeyOrders       map[int][]KeyKind
+	KeyScratchModes map[int]ScratchMode
+	KeyKindWidths   [4]float64
+	KeyPositionY    float64
+
 	keyWidthsMap     map[int][]float64 // derived
+	keyButtonHeight  float64           // derived
 	keyPositionXsMap map[int][]float64 // derived
 
-	FieldOpacity        float32
-	BarHeight           float64
-	HintHeight          float64
-	NoteHeight          float64
-	TailNoteOffset      int32
-	NoteColors          [4]color.NRGBA
+	FieldOpacity   float32
+	BarHeight      float64
+	HintHeight     float64
+	NoteHeight     float64
+	TailNoteOffset int32
+	NoteColors     [4]color.NRGBA
+	// LongBodyStyle     int // Stretch or Attach.
 	BacklightColors     [4]color.NRGBA
 	HitLightImageScale  float64
 	HitLightOpacity     float32
@@ -41,24 +45,8 @@ type Options struct {
 	HoldLightOpacity    float32
 	JudgmentImageScale  float64
 	JudgmentPositionY   float64
-	Combo               ComboOptions
-	Score               ScoreOptions
-}
-
-// gosu/game
-type ComboOptions struct {
-	ImageScale float64
-	PositionX  float64
-	DigitGap   float64
-	PositionY  float64
-	IsPersist  bool
-	Bounce     float64
-}
-
-// gosu/game
-type ScoreOptions struct {
-	ImageScale float64
-	DigitGap   float64
+	Combo               game.ComboOptions
+	Score               game.ScoreOptions
 }
 
 type KeyKind int
@@ -81,28 +69,24 @@ const (
 // piano.Options has all key count options so that
 // it can handle scratch options smoothly.
 func NewOptions() *Options {
-	halfScreen := draws.XY{
-		X: game.ScreenSizeX / 2,
-		Y: game.ScreenSizeY / 2,
-	}
-
 	opts := &Options{
-		SpeedScale: 1.0,
+		screenSizeX: game.ScreenSizeX,
+		screenSizeY: game.ScreenSizeY,
+		SpeedScale:  1.0,
 
 		StageWidths: map[int]float64{
-			1:  halfScreen.X - 80,
-			2:  halfScreen.X - 60,
-			3:  halfScreen.X - 40,
-			4:  halfScreen.X - 20,
-			5:  halfScreen.X,
-			6:  halfScreen.X + 20,
-			7:  halfScreen.X + 40,
-			8:  halfScreen.X + 60,
-			9:  halfScreen.X + 80,
-			10: halfScreen.X + 100,
+			1:  game.ScreenSizeX/2 - 80,
+			2:  game.ScreenSizeX/2 - 60,
+			3:  game.ScreenSizeX/2 - 40,
+			4:  game.ScreenSizeX/2 - 20,
+			5:  game.ScreenSizeX / 2,
+			6:  game.ScreenSizeX/2 + 20,
+			7:  game.ScreenSizeX/2 + 40,
+			8:  game.ScreenSizeX/2 + 60,
+			9:  game.ScreenSizeX/2 + 80,
+			10: game.ScreenSizeX/2 + 100,
 		},
-		StageBasePosition: 0.90 * game.ScreenSizeY,
-		StagePositionX:    halfScreen.X,
+		StagePositionX: game.ScreenSizeX / 2,
 
 		KeyMappings: map[int][]string{
 			1:  {"Space"},
@@ -137,6 +121,7 @@ func NewOptions() *Options {
 			33, // Mid
 			33, // Tip
 		},
+		KeyPositionY: 0.90 * game.ScreenSizeY,
 
 		FieldOpacity:   0.8,
 		BarHeight:      1,
@@ -161,30 +146,31 @@ func NewOptions() *Options {
 		HoldLightOpacity:    1.2,
 		JudgmentImageScale:  0.33,
 		JudgmentPositionY:   0.66 * game.ScreenSizeY,
-		Combo: ComboOptions{
+		Combo: game.ComboOptions{
 			ImageScale: 0.75,
 			// PositionX should not be set by user.
 			// It will be handled at Normalize().
-			PositionX: halfScreen.X,
+			PositionX: game.ScreenSizeX / 2,
 			DigitGap:  -1,
 			PositionY: 0.40 * game.ScreenSizeY,
 			IsPersist: false,
 			Bounce:    0.85,
 		},
-		Score: ScoreOptions{
+		Score: game.ScoreOptions{
 			ImageScale: 0.65,
 			DigitGap:   0,
 		},
 	}
 
+	// derived
 	opts.keyWidthsMap = make(map[int][]float64)
+	opts.keyButtonHeight = game.ScreenSizeY - opts.KeyPositionY
 	opts.keyPositionXsMap = make(map[int][]float64)
 	for keyCount := 1; keyCount <= 10; keyCount++ {
 		ws := opts.keyWidths(keyCount)
 		opts.keyWidthsMap[keyCount] = ws
 		opts.keyPositionXsMap[keyCount] = opts.keyPositionXs(keyCount, ws)
 	}
-
 	return opts
 }
 

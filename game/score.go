@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"io/fs"
 
-	"github.com/hndada/gosu/draws"
+	draws "github.com/hndada/gosu/draws6"
+	"github.com/hndada/gosu/times"
 )
 
 const (
@@ -13,53 +14,45 @@ const (
 	ScorePercent
 )
 
-type ScoreResources struct {
-	imgs []draws.Image // numbers with sign (. , %)
-}
-
-func (res *ScoreResources) Load(fsys fs.FS) {
-	res.imgs = make([]draws.Image, 13)
+func LoadScoreImages(fsys fs.FS) []draws.Image {
+	imgs := make([]draws.Image, 13)
 	for i := 0; i < 10; i++ {
-		res.imgs[i] = draws.NewImageFromFile(fsys, fmt.Sprintf("score/%d.png", i))
+		fname := fmt.Sprintf("score/%d.png", i)
+		imgs[i] = draws.NewImageFromFile(fsys, fname)
 	}
 	for i, name := range []string{"dot", "comma", "percent"} {
-		res.imgs[i+10] = draws.NewImageFromFile(fsys, fmt.Sprintf("score/%s.png", name))
+		fname := fmt.Sprintf("score/%s.png", name)
+		imgs[i+10] = draws.NewImageFromFile(fsys, fname)
 	}
+	return imgs
 }
 
 type ScoreOptions struct {
-	Scale    float64
-	DigitGap float64
-}
-
-func NewScoreOptions() ScoreOptions {
-	return ScoreOptions{
-		Scale:    0.65,
-		DigitGap: 0,
-	}
+	ImageScale float64
+	DigitGap   float64
 }
 
 type ScoreComponent struct {
 	sprites []draws.Sprite
 	score   float64
 	w       float64 // Score's width is fixed.
-	tween   draws.Tween
+	tween   times.Tween
 }
 
 // Name of a function which returns closure ends with "-er".
-func NewScoreComponent(res ScoreResources, opts ScoreOptions) (cmp ScoreComponent) {
+func NewScoreComponent(imgs []draws.Image, opts *ScoreOptions) (cmp ScoreComponent) {
 	cmp.sprites = make([]draws.Sprite, 13)
 	// h0 is the height of number 0. Other numbers are located at h0 - h.
 	// Score needs to set same base line, since
 	// each number might have different height.
 	var h0 float64
-	s0 := draws.NewSprite(res.imgs[0])
-	s0.MultiplyScale(opts.Scale)
+	s0 := draws.NewSprite(imgs[0])
+	s0.Scale(opts.ImageScale)
 	h0 = s0.H()
 	cmp.w = s0.W() + opts.DigitGap
-	for i, img := range res.imgs {
+	for i, img := range imgs {
 		sprite := draws.NewSprite(img)
-		sprite.MultiplyScale(opts.Scale)
+		sprite.Scale(opts.ImageScale)
 		sprite.Locate(ScreenSizeX, h0-sprite.H(), draws.RightTop)
 		cmp.sprites[i] = sprite
 	}
@@ -67,10 +60,10 @@ func NewScoreComponent(res ScoreResources, opts ScoreOptions) (cmp ScoreComponen
 	return
 }
 
-func (cmp *ScoreComponent) newTween() draws.Tween {
+func (cmp *ScoreComponent) newTween() times.Tween {
 	begin := cmp.tween.Current()
 	change := cmp.score - begin
-	return draws.NewTween(begin, change, 400, draws.EaseOutExponential)
+	return times.NewTween(begin, change, 400, times.EaseOutExponential)
 }
 
 func (cmp *ScoreComponent) Update(newScore float64) {

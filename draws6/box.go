@@ -35,8 +35,18 @@ func NewBox(src source) Box {
 		Filter: ebiten.FilterLinear,
 	}
 }
+func (b Box) W() float64 { return b.Size.X }
+func (b Box) H() float64 { return b.Size.Y }
+func (b Box) X() float64 { return b.Position.X }
+func (b Box) Y() float64 { return b.Position.Y }
 
-func (b *Box) Scale(s float64)   { b.Size = b.Size.Mul(XY{s, s}) }
+func (b *Box) SetSize(w, h float64) { b.Size = XY{w, h} }
+func (b *Box) Scale(s float64)      { b.Size = b.Size.Mul(XY{s, s}) }
+
+func (b *Box) Locate(x, y float64, aligns Aligns) {
+	b.Position = XY{x, y}
+	b.Aligns = aligns
+}
 func (b *Box) Move(x, y float64) { b.Position = b.Position.Add(XY{x, y}) }
 
 // Min is the left-top position of the box.

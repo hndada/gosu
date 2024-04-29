@@ -34,13 +34,13 @@ func NewChart(fsys fs.FS, name string, mods Mods) (*Chart, error) {
 	c.Dynamics = dys
 
 	keyCount := c.SubMode
-	c.Notes = NewNotes(keyCount, dys, format)
+	c.Notes = NewNotes(keyCount, format, dys)
 	return c, nil
 }
 
 func (c Chart) NoteCounts() []int {
 	counts := make([]int, 2)
-	for _, n := range c.Notes.notes {
+	for _, n := range c.Notes.data {
 		switch n.Kind {
 		case Normal:
 			counts[0]++
@@ -52,7 +52,7 @@ func (c Chart) NoteCounts() []int {
 }
 
 func (c Chart) TotalDuration() int32 {
-	ns := c.Notes.notes
+	ns := c.Notes.data
 	if len(ns) == 0 {
 		return 0
 	}
