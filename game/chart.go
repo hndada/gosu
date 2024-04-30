@@ -1,11 +1,11 @@
 package game
 
 import (
-	"crypto/md5"
 	"io/fs"
 	"path/filepath"
 
 	"github.com/hndada/gosu/format/osu"
+	"github.com/hndada/gosu/util"
 )
 
 const (
@@ -30,11 +30,12 @@ type Chart interface {
 }
 
 type ChartFormat any
+type Hash = string
 
-func LoadChartFormat(fsys fs.FS, name string) (ChartFormat, [16]byte, error) {
+func LoadChartFormat(fsys fs.FS, name string) (ChartFormat, Hash, error) {
 	data, err := fs.ReadFile(fsys, name)
 	if err != nil {
-		return nil, [16]byte{}, err
+		return nil, "", err
 	}
 
 	var format ChartFormat
@@ -42,10 +43,8 @@ func LoadChartFormat(fsys fs.FS, name string) (ChartFormat, [16]byte, error) {
 	case ".osu", ".OSU":
 		format, err = osu.NewFormat(data)
 		if err != nil {
-			return nil, [16]byte{}, err
+			return nil, "", err
 		}
 	}
-
-	hash := md5.Sum(data)
-	return format, hash, nil
+	return format, util.MD5(data), nil
 }

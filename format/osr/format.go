@@ -3,10 +3,8 @@ package osr
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"io"
-	"io/fs"
 	"strconv"
 	"strings"
 
@@ -16,7 +14,7 @@ import (
 type Format struct {
 	GameMode    int8
 	GameVersion int32
-	BeatmapMD5  string
+	BeatmapMD5  string // 32 hexadecimal characters
 	PlayerName  string
 	ReplayMD5   string
 	Num300      int16
@@ -55,13 +53,8 @@ type Action struct {
 // func Read(b []byte) (n int, err error)
 // func ReadByte() (byte, error)
 // The simplest way is doing io.ReadAll then bytes.NewReader.
-func NewFormat(file fs.File) (f *Format, err error) {
+func NewFormat(dat []byte) (f *Format, err error) {
 	f = &Format{}
-
-	dat, err := io.ReadAll(file)
-	if err != nil {
-		return
-	}
 	r := bytes.NewReader(dat)
 
 	if err = read(r, &f.GameMode); err != nil {
@@ -209,19 +202,6 @@ func readReplayData(r io.Reader, dst *[]Action) error {
 	return nil
 }
 
-// f.BeatmapMD5 is a string, consisting of 32 hexadecimal characters.
-// It needs to be converted from 32 hexadecimal characters to 16 bytes.
-// strconv.ParseUint(string(f.BeatmapMD5[i*2:(i+1)*2]), 16, 8) // byte
-func (f Format) MD5() (hash string, err error) {
-	var hashBytes []byte
-	hashBytes, err = hex.DecodeString(f.BeatmapMD5)
-	if err != nil {
-		return
-	}
-	hash = string(hashBytes)
-	return
-}
-
 // The easiest way to check whether the replay is auto or not is
 // checking the last action data: {W:-12345 X:0 Y:0 Z:0}
 func (f Format) IsAuto() bool {
@@ -230,3 +210,13 @@ func (f Format) IsAuto() bool {
 	}
 	return f.ReplayData[len(f.ReplayData)-1].Z == 0
 }
+
+// func (f Format) MD5() (hash string, err error) {
+// 	var hashBytes []byte
+// 	hashBytes, err = hex.DecodeString(f.BeatmapMD5)
+// 	if err != nil {
+// 		return
+// 	}
+// 	hash = string(hashBytes)
+// 	return
+// }

@@ -35,15 +35,16 @@ type ChartHeader struct {
 
 	// Hash works as id in database.
 	// Hash is not exported to file.
-	ChartHash [16]byte // MD5
+	// ChartHash [16]byte // MD5
+	ChartHash Hash
 
 	// MusicHash is used to check for music updates.
 	// A player may replace the music file with another,
 	// such as a higher-quality version.
-	MusicHash [16]byte // MD5
+	MusicHash Hash
 }
 
-func NewChartHeader(format any, hash [16]byte) (c ChartHeader) {
+func NewChartHeader(format any, hash string) (c ChartHeader) {
 	switch format := format.(type) {
 	case *osu.Format:
 		c = newChartHeaderFromOsu(format)

@@ -16,13 +16,12 @@ import (
 func TestNewFormat(t *testing.T) {
 	for _, name := range []string{"circles(7k).osr"} {
 		path := filepath.Join("testdata", name)
-		f, err := os.Open(path)
+		dat, err := os.ReadFile(path)
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer f.Close()
 
-		r, err := NewFormat(f)
+		r, err := NewFormat(dat)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -39,18 +38,17 @@ func TestNewFormat(t *testing.T) {
 
 func TestMD5(t *testing.T) {
 	for _, name := range []string{"4k.osr", "7k.osr", "4k_nc.osr"} {
-		f, err := os.Open(name)
+		dat, err := os.ReadFile(name)
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer f.Close()
 
-		r, err := NewFormat(f)
+		r, err := NewFormat(dat)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		fmt.Println(r.BeatmapMD5)
-		fmt.Println(r.MD5())
+		// fmt.Println(r.MD5())
 	}
 }
