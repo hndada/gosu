@@ -58,7 +58,7 @@ func NewScene(res *scene.Resources, opts *scene.Options, args scene.PlayArgs) (*
 			return nil, err
 		}
 
-		s.ChartHeader = &c.ChartHeader
+		s.ChartHeader = c.ChartHeader
 		// Todo: add default sound
 		// soft-hitnormal.wav
 		sp := s.newSamplePlayer(args.ChartFS, s.MusicFilename)

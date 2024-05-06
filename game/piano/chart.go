@@ -9,7 +9,7 @@ import (
 // Todo: make fields unexported?
 type Chart struct {
 	Mods Mods
-	game.ChartHeader
+	*game.ChartHeader
 	game.Dynamics
 	Notes
 	// KeyCount int
@@ -24,7 +24,8 @@ func NewChart(fsys fs.FS, name string, mods Mods) (*Chart, error) {
 	if err != nil {
 		return c, err
 	}
-	c.ChartHeader = game.NewChartHeader(format, hash)
+	header := game.NewChartHeaderFromFormat(format, hash)
+	c.ChartHeader = header
 	// c.KeyCount = c.SubMode
 
 	dys, err := game.NewDynamics(format)

@@ -48,7 +48,7 @@ func NewChartDB(fsys fs.FS, dirName string) ([]ChartRow, error) {
 			continue
 		}
 
-		c, hash, err := game.LoadChartFormat(fsys, filepath.Join(dirName, f.Name()))
+		c, err := game.NewChartHeaderFromFile(fsys, filepath.Join(dirName, f.Name()))
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 			continue
@@ -64,8 +64,8 @@ func NewChartDB(fsys fs.FS, dirName string) ([]ChartRow, error) {
 			ChartName: c.ChartName,
 			Mode:      c.Mode,
 			SubMode:   c.SubMode,
-			ChartHash: c.Hash,
-			Level:     c.Level,
+			ChartHash: c.ChartHash,
+			// Level:     c.Level,
 		})
 	}
 
