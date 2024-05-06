@@ -21,23 +21,23 @@ type Replay = *input.KeyboardStateBuffer
 // https://go.dev/play/p/5SUt9uyrncD
 
 // If directory path is passed in fs.ReadFile, it will return an error.
-func NewReplay(fsys fs.FS, name string, keyCount int) (Replay, error) {
+func NewReplay(fsys fs.FS, name string, keyCount int) (Replay, string, error) {
 	dat, err := fs.ReadFile(fsys, name)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	switch strings.ToLower(filepath.Ext(name)) {
 	case ".osr":
-		f, err := osr.NewFormat(dat)
+		format, err := osr.NewFormat(dat)
 		if err != nil {
 			err = fmt.Errorf("failed to parse replay file: %s", err)
-			return nil, err
+			return nil, "", err
 		}
-		states := f.KeyboardStates(keyCount)
+		states := format.KeyboardStates(keyCount)
 		r := input.NewKeyboardStateBuffer(states)
 		r.Trim()
-		return r, nil
+		return r, format.BeatmapMD5, nil
 	}
-	return nil, fmt.Errorf("unsupported replay file format")
+	return nil, "", fmt.Errorf("unsupported replay file format")
 }

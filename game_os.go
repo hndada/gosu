@@ -5,12 +5,9 @@ package gosu
 import (
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"os"
 
-	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/scene"
-	"github.com/hndada/gosu/util"
 )
 
 func (Game) createOptionsFile(fname string) {
@@ -47,23 +44,4 @@ func (g *Game) loadOptions() {
 	}
 
 	// g.options.Normalize()
-}
-
-// load functions should not load the entire file system into memory.
-// Instead, they should load the path to the file and read the file when needed.
-
-// 1. Parse the whole file system.
-// 2. Save header data to map with file path as a key.
-func loadReplays(fsys fs.FS) map[string]game.Replay {
-	replays := make(map[string]game.Replay)
-
-	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		r, err := game.NewReplay(fsys, path, 4)
-		replays[util.MD5(dat)] = r
-		return nil
-	})
-	return replays
 }
