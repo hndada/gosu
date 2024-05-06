@@ -39,6 +39,8 @@ type ReplayRow struct {
 	ChartHash string
 }
 
+// NewMusicDB reads only first depth of root for directory.
+// Then it will read all charts in each directory.
 func NewMusicDB(fsys fs.FS) ([]MusicRow, error) {
 	dirs, err := fs.ReadDir(fsys, ".")
 	if err != nil {

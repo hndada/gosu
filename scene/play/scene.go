@@ -40,6 +40,8 @@ type Scene struct {
 	musicPlayed  bool // This really matters.
 }
 
+// Memo: 'name' is a officially used name as file path in io/fs.
+
 // (*Scene, error) is typically used for regular functions that operate on struct pointers.
 // (s *Scene, err error) is typically used for methods attached to structs.
 // chartFS fs.FS, cname string, replayFS fs.FS, rname string, mods game.Mods) (*Scene, error) {
