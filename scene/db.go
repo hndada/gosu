@@ -7,6 +7,11 @@ type FileKey struct {
 	Name string
 }
 
+type MusicRow struct {
+	FileKey
+	// FolderName string
+}
+
 // Pseudo database
 type ChartRow struct {
 	FileKey
