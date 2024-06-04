@@ -5,6 +5,7 @@ import (
 	"io/fs"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game/piano"
 	"github.com/hndada/gosu/scene"
@@ -70,6 +71,9 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	g.currentScene.Draw(draws.Image{Image: screen})
+	if g.options.DebugPrint {
+		ebitenutil.DebugPrint(screen, g.options.DebugString())
+	}
 }
 
 func (g Game) screenSize() draws.XY {

@@ -19,11 +19,11 @@ type Scene interface {
 }
 
 type PlayArgs struct {
-	ChartFS        fs.FS
-	ChartFilename  string
-	ReplayFS       fs.FS
-	ReplayFilename string
-	Mods           game.Mods
+	ChartFS       fs.FS
+	ChartFilename string
+	// ReplayFS       fs.FS
+	// ReplayFilename string
+	Mods game.Mods
 	// MusicFS        fs.FS
 	// Replay         *osr.Format
 }

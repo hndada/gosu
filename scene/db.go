@@ -132,3 +132,46 @@ func NewReplayDB(fsys fs.FS) ([]ReplayRow, error) {
 	}
 	return list, nil
 }
+
+type Databases struct {
+	Music  []MusicRow
+	Chart  map[FileKey][]ChartRow
+	Replay []ReplayRow
+}
+
+func NewDatabases(fsys fs.FS) (Databases, error) {
+	var dbs Databases
+	var err error
+
+	dbs.Music, err = NewMusicDB(fsys)
+	if err != nil {
+		return dbs, err
+	}
+
+	dbs.Chart = make(map[FileKey][]ChartRow)
+	for _, m := range dbs.Music {
+		cdb, err := NewChartDB(m.FS, m.Name)
+		if err != nil {
+			return dbs, err
+		}
+
+		dbs.Chart[m.FileKey] = cdb
+	}
+
+	dbs.Replay, err = NewReplayDB(fsys)
+	if err != nil {
+		return dbs, err
+	}
+
+	return dbs, nil
+}
+
+// Memo: archive/zip.OpenReader returns ReadSeeker, which implements Read.
+// Both Read and fs.Open are same in type: (name string) (fs.File, error)
+// func zipFS(path string) (fs.FS, error) {
+// 	r, err := zip.OpenReader(path)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return r, nil
+// }

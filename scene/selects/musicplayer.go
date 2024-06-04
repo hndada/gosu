@@ -10,7 +10,7 @@ import (
 
 // musicPlayer loops music with fade in/out.
 // (old memo: MusicPlayer should be pointer so that it plays only once.)
-type musicPlayer struct {
+type PreviewMusicPlayer struct {
 	audios.MusicPlayer
 	volume       *float64
 	waitDuration time.Duration
@@ -18,7 +18,7 @@ type musicPlayer struct {
 	startTime    time.Time
 }
 
-func newMusicPlayer(fsys fs.FS, name string, volume *float64) (*musicPlayer, error) {
+func NewPreviewMusicPlayer(fsys fs.FS, name string, volume *float64) (*PreviewMusicPlayer, error) {
 	const waitDuration = 150 * time.Millisecond
 	tw := times.Tween{}
 	tw.Add(0, 0, waitDuration, times.EaseLinear)   // wait
@@ -31,7 +31,7 @@ func newMusicPlayer(fsys fs.FS, name string, volume *float64) (*musicPlayer, err
 		return nil, err
 	}
 
-	return &musicPlayer{
+	return &PreviewMusicPlayer{
 		MusicPlayer:  mp,
 		volume:       volume,
 		waitDuration: waitDuration,
@@ -40,7 +40,7 @@ func newMusicPlayer(fsys fs.FS, name string, volume *float64) (*musicPlayer, err
 	}, nil
 }
 
-func (mp *musicPlayer) update() {
+func (mp *PreviewMusicPlayer) Update() {
 	vol := *mp.volume * mp.tween.Current()
 	mp.SetVolume(vol)
 
