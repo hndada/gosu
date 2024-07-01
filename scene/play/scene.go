@@ -94,7 +94,7 @@ func NewScene(res *scene.Resources, opts *scene.Options, args scene.PlayArgs) (*
 	}
 
 	if args.ReplayFS != nil {
-		kb, err := game.NewReplay(args.ReplayFS, args.ReplayFilename, keyCount)
+		kb, _, err := game.NewReplay(args.ReplayFS, args.ReplayFilename, keyCount)
 		if err != nil {
 			err = fmt.Errorf("failed to load replay file: %w", err)
 			return nil, err

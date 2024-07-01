@@ -17,6 +17,8 @@ const (
 	SoundSwipes         = "interface/sound/swipe/"
 )
 
+// SearchBoxSprite's Color: RGBA{128, 128, 128, 128}
+// SearchBoxSprite's Height: 25
 type Resources struct {
 	DefaultBackgroundImage draws.Image
 	CursorBase             draws.Image
