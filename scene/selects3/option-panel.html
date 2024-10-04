@@ -1,0 +1,10 @@
+{{define "option-panel"}}
+<div class="overlay" id="overlay" onclick="toggleOptionsPanel()"></div>
+<div class="options-panel" id="options-panel">
+    <h3>Options</h3>
+    <p><strong>Pattern</strong>: <span id="pattern">Mirror</span></p>
+    <p><strong>Vision</strong>: <span id="vision">Hidden</span></p>
+    <p><strong>Effects</strong>: LN, Staccato</p>
+    <button onclick="toggleOptionsPanel()">Close</button>
+</div>
+{{end}}

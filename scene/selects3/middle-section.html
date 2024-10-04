@@ -1,0 +1,142 @@
+{{define "middle-section"}}
+<div class="middle" style="overflow-y: hidden; height: 100vh; display: flex; flex-direction: column;">
+    <div class="search-box">
+        <input type="text" id="search-input" placeholder="Search for charts...">
+    </div>
+    <div class="folder-list" id="folder-list" style="flex: 1; overflow-y: auto; position: relative;">
+        <ul id="folder-list-ul">
+            <!-- Folder items go here dynamically -->
+        </ul>
+        <button id="filter-button" class="filter-button">Filter</button>
+    </div>
+</div>
+
+<style>
+    /* Add styles to enhance readability and aesthetics */
+    .folder-list {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        overflow-y: hidden; /* Prevents scrollbar */
+    }
+
+    #folder-list-ul {
+        list-style-type: none; /* Remove default list styling */
+        padding: 0;
+        margin: 0;
+        width: 100%; /* Makes the folder list take full width */
+    }
+
+    .folder-item, .chart-item {
+        padding: 10px;
+        margin: 5px 0;
+        background-color: #000000; /* Light background for folders and charts */
+        border: 1px solid #be1818; /* Border for clarity */
+        border-radius: 5px;
+        width: 90%; /* Adjust width as needed */
+        text-align: center; /* Center align text */
+        transition: background-color 0.3s; /* Smooth hover effect */
+    }
+
+    .folder-item:hover, .chart-item:hover {
+        background-color: #413636; /* Darker on hover */
+    }
+
+    .filter-button {
+        position: absolute;
+        bottom: 10px; /* Position at the bottom */
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 10px 20px;
+        background-color: #007BFF; /* Bootstrap primary color */
+        color: rgb(3, 52, 111);
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .filter-button:hover {
+        background-color: #0056b3; /* Darker shade on hover */
+    }
+</style>
+
+<script>
+    // Sample JSON data for folders and charts
+    const musicData = {
+        "folders": [
+            {
+                "folderName": "Pop Hits",
+                "charts": [
+                    { "title": "Chart A", "artist": "Artist 1", "duration": "3:45", "bpm": 120, "pattern": "Straight" },
+                    { "title": "Chart B", "artist": "Artist 2", "duration": "4:15", "bpm": 130, "pattern": "Mirror" }
+                ]
+            },
+            {
+                "folderName": "Rock Classics",
+                "charts": [
+                    { "title": "Chart C", "artist": "Artist 3", "duration": "5:00", "bpm": 140, "pattern": "Straight" },
+                    { "title": "Chart D", "artist": "Artist 4", "duration": "4:30", "bpm": 135, "pattern": "Mirror" }
+                ]
+            }
+        ]
+    };
+
+    let currentCharts = null; // To store the current charts when navigating
+
+    function displayFolders() {
+        const folderListUl = document.getElementById('folder-list-ul');
+        folderListUl.innerHTML = ''; // Clear previous items
+
+        musicData.folders.forEach(folder => {
+            const folderItem = document.createElement('li');
+            folderItem.className = 'folder-item';
+            folderItem.textContent = folder.folderName;
+            folderItem.onclick = () => displayCharts(folder.charts); // Load charts for selected folder
+            folderListUl.appendChild(folderItem);
+        });
+    }
+
+    function displayCharts(charts) {
+        const folderListUl = document.getElementById('folder-list-ul');
+        folderListUl.innerHTML = ''; // Clear folders
+        currentCharts = charts; // Store current charts for navigation
+
+        charts.forEach(chart => {
+            const chartItem = document.createElement('li');
+            chartItem.className = 'chart-item';
+            chartItem.textContent = `${chart.title}\tby ${chart.artist}\t(${chart.duration})\tBPM: ${chart.bpm}\tPattern: ${chart.pattern}`;
+            chartItem.onclick = () => selectChart(chart); // Event listener for chart selection
+            folderListUl.appendChild(chartItem);
+        });
+
+        // Add back the filter button
+        const filterButton = document.createElement('button');
+        filterButton.className = 'filter-button';
+        filterButton.textContent = 'Filter';
+        folderListUl.appendChild(filterButton);
+    }
+
+    function selectChart(chart) {
+        alert(`Selected: ${chart.title} by ${chart.artist}`);
+        // Add additional functionality for selected chart if needed
+    }
+
+    function goBackToFolders() {
+        displayFolders(); // Display the folder list again
+        currentCharts = null; // Clear current charts
+    }
+
+    // Add event listener for ESC key
+    document.addEventListener('keydown', (event) => {
+        if (event.key === "Escape") {
+            if (currentCharts) {
+                goBackToFolders(); // Call to go back if charts are currently displayed
+            }
+        }
+    });
+
+    // Call to display folders on page load
+    displayFolders();
+</script>
+{{end}}
