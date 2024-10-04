@@ -1,0 +1,55 @@
+{{define "script"}}
+<script>
+    let searchResults = []; // Array to store search results
+
+    document.getElementById('searchButton').addEventListener('click', () => {
+        const searchTerm = document.getElementById('searchInput').value;
+
+        // Fetch or generate search results based on the search term
+        fetch(`/search?query=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(data => {
+                searchResults = data; // Store results in the variable
+                renderResults(); // Call function to render results
+            })
+            .catch(error => console.error('Error fetching search results:', error));
+    });
+
+    function renderResults() {
+        const resultList = document.getElementById('resultList');
+        resultList.innerHTML = ''; // Clear previous results
+
+        searchResults.forEach(result => {
+            const listItem = document.createElement('li'); // Create a new list item
+            listItem.textContent = result; // Set the text content
+            resultList.appendChild(listItem); // Append the list item to the result list
+        });
+    }
+
+    function toggleOptionsPanel() {
+        const panel = document.getElementById('options-panel');
+        const overlay = document.getElementById('overlay');
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        overlay.style.display = overlay.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function switchLeaderboard(type) {
+        const leaderboardList = document.getElementById('leaderboard-list');
+        leaderboardList.innerHTML = '';
+        const scores = {
+            local: ["Player1: 1200", "Player2: 1100", "Player3: 1000"],
+            global: ["PlayerA: 1500", "PlayerB: 1400", "PlayerC: 1300"],
+            rival: ["RivalX: 1350", "RivalY: 1280", "RivalZ: 1230"]
+        };
+        scores[type].forEach(score => {
+            let li = document.createElement('li');
+            li.textContent = score;
+            leaderboardList.appendChild(li);
+        });
+    }
+
+    function filterCharts(difficulty) {
+        alert(`Filtering charts by ${difficulty}`);
+    }
+</script>
+{{end}}

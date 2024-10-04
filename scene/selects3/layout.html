@@ -1,0 +1,17 @@
+{{define "layout"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }}</title>
+    {{ template "style" . }}
+    {{ template "script" . }}
+</head>
+<body>
+    {{ template "left-section" . }}
+    {{ template "middle-section" . }}
+    {{ template "option-panel" . }}
+</body>
+</html>
+{{end}}
