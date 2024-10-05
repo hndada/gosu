@@ -9,6 +9,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/piano"
 	"github.com/hndada/gosu/resources"
 	"github.com/hndada/gosu/scene"
@@ -39,6 +40,7 @@ func NewGame(fsys fs.FS) *Game {
 	}
 
 	g.loadOptions()
+
 	dbs, err := NewDatabases(fsys)
 	if err != nil {
 		panic(err)
@@ -58,7 +60,8 @@ func NewGame(fsys fs.FS) *Game {
 	g.scene = scenePlay
 
 	ebiten.SetTPS(ebiten.SyncWithFPS)
-	ebiten.SetWindowSize(g.screenSize().IntValues())
+
+	ebiten.SetWindowSize(g.options.Resolution.IntValues())
 	ebiten.SetWindowTitle("gosu")
 	// issue: It jitters when Vsync is enabled.
 	// ebiten.SetVsyncEnabled(false)
@@ -103,10 +106,6 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	}
 }
 
-func (g Game) screenSize() draws.XY {
-	return g.options.Resolution
-}
-
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-	return g.screenSize().IntValues()
+	return game.ScreenSizeX, game.ScreenSizeY
 }

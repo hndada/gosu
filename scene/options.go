@@ -71,7 +71,7 @@ func NewOptions() *Options {
 		ReplaysPaths:   []string{"replays"},
 
 		screenSize:           draws.NewXY(game.ScreenSizeX, game.ScreenSizeY),
-		Resolution:           draws.NewXY(game.ScreenSizeX, game.ScreenSizeY),
+		Resolution:           draws.NewXY(1600, 900),
 		IsFullscreen:         false,
 		BackgroundBrightness: 0.6,
 		DebugPrint:           true,

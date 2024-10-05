@@ -35,7 +35,12 @@ type KeyboardAction struct {
 }
 
 func KeyboardActions(kss []input.KeyboardState) []KeyboardAction {
+	// This is a wrong code.
+	// if len(kss) == 1 {
+	// 	kss = append(kss, kss[0])
+	// }
 	kas := make([]KeyboardAction, len(kss)-1)
+
 	keysOld := kss[0].KeysPressed
 	for i, ks := range kss[1:] {
 		keysNew := ks.KeysPressed
