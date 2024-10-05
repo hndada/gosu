@@ -32,7 +32,6 @@ func (g *Game) loadOptions() {
 		g.createOptionsFile(fname)
 	}
 
-	// Read the file.
 	data, err := os.ReadFile(fname)
 	if err != nil {
 		panic(err)
