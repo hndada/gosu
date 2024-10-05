@@ -25,3 +25,4 @@ cmd/gosu/music/*
 !cmd/gosu/music/nekodex - circles!
 
 gosu/replays/*
+cmd/gosu/options.json

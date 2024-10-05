@@ -114,7 +114,7 @@ func (t Text) Draw(dst Image) {
 	text.Draw(dst.Image, t.Text, t.face, &text.DrawOptions{
 		DrawImageOptions: *t.op(),
 		LayoutOptions: text.LayoutOptions{
-			LineSpacingInPixels: t.LineSpacing,
+			LineSpacing: t.LineSpacing,
 		},
 	})
 }
