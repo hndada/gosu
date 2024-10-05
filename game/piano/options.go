@@ -162,16 +162,19 @@ func NewOptions() *Options {
 		},
 	}
 
-	// derived
+	opts.SetDerived()
+	return opts
+}
+
+func (opts *Options) SetDerived() {
 	opts.keyWidthsMap = make(map[int][]float64)
-	opts.keyButtonHeight = game.ScreenSizeY - opts.KeyPositionY
+	opts.keyButtonHeight = opts.screenSizeY - opts.KeyPositionY
 	opts.keyPositionXsMap = make(map[int][]float64)
 	for keyCount := 1; keyCount <= 10; keyCount++ {
 		ws := opts.keyWidths(keyCount)
 		opts.keyWidthsMap[keyCount] = ws
 		opts.keyPositionXsMap[keyCount] = opts.keyPositionXs(keyCount, ws)
 	}
-	return opts
 }
 
 // I'm personally proud of this code.

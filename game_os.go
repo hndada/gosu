@@ -12,7 +12,7 @@ import (
 
 func (Game) createOptionsFile(fname string) {
 	options := scene.NewOptions()
-	data, err := json.Marshal(options)
+	data, err := json.MarshalIndent(options, "", "  ")
 	if err != nil {
 		panic(err)
 	}
@@ -37,10 +37,11 @@ func (g *Game) loadOptions() {
 		panic(err)
 	}
 
-	err = json.Unmarshal(data, g.options)
+	err = json.Unmarshal(data, &g.options)
 	if err != nil {
 		panic(err)
 	}
 
+	g.options.Piano.SetDerived()
 	// g.options.Normalize()
 }

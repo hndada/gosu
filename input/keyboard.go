@@ -94,7 +94,8 @@ type Keyboard struct {
 
 func NewKeyboard(keys []Key) *Keyboard {
 	kb := &Keyboard{
-		fetchKeyboardState: newFetchKeyboardState(keys),
+		KeyboardStateBuffer: &KeyboardStateBuffer{},
+		fetchKeyboardState:  newFetchKeyboardState(keys),
 		// mu:                 &sync.Mutex{},
 		stop: make(chan struct{}),
 	}
