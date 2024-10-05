@@ -27,9 +27,10 @@ type Scene struct {
 	*scene.Options
 
 	*game.ChartHeader
-	play        play
-	musicPlayer audios.MusicPlayer
-	keyboard    input.KeyboardReader
+	play              play
+	musicPlayer       audios.MusicPlayer
+	keyboard          input.KeyboardReader
+	lastKeyboardState input.KeyboardState
 
 	// Timer
 	firstUpdated bool
@@ -201,9 +202,13 @@ func (s *Scene) Update() any {
 		s.musicPlayed = true
 	}
 	nowTime := time.Duration(now) * time.Millisecond
+
+	// kss's length is mostly 1.
 	kss := s.keyboard.Read(nowTime)
+	kss = append([]input.KeyboardState{s.lastKeyboardState}, kss...)
 	kas := game.KeyboardActions(kss)
 	r := s.play.Update(now, kas)
+	s.lastKeyboardState = kss[len(kss)-1]
 	// s.PlaySounds()
 	return r
 }

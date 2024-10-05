@@ -18,11 +18,12 @@ type KeyButtonsComponent struct {
 func NewKeyButtonsComponent(res *Resources, opts *Options, keyCount int) (cmp KeyButtonsComponent) {
 	cmp.keysSprites = make([][2]draws.Sprite, keyCount)
 	ws := opts.keyWidthsMap[keyCount]
+	xs := opts.keyPositionXsMap[keyCount]
 	for k := range cmp.keysSprites {
 		for i, img := range res.KeyButtonsImages {
 			s := draws.NewSprite(img)
-			s.SetSize(opts.StageWidths[keyCount], opts.keyButtonHeight)
-			s.Locate(ws[k], opts.KeyPositionY, draws.CenterTop)
+			s.SetSize(ws[k], opts.keyButtonHeight)
+			s.Locate(xs[k], opts.KeyPositionY, draws.CenterTop)
 			cmp.keysSprites[k][i] = s
 		}
 	}

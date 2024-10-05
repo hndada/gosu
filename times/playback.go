@@ -1,7 +1,10 @@
 package times
 
-import "time"
+import (
+	"time"
+)
 
+// This is for changing speed multiple times during playing replay.
 type playbackRateLog struct {
 	time    time.Time
 	rate    float64
@@ -37,7 +40,9 @@ func Now() time.Time {
 func Since(t time.Time) time.Duration {
 	for i := len(playbackRateLogs) - 1; i >= 0; i-- {
 		log := playbackRateLogs[i]
-		if log.time.After(t) {
+		if log.time.After(t) && i > 0 {
+			// log's time is just for choosing the proper index.
+			// After this block, log.time is not used.
 			continue
 		}
 		// Same analogy as speed, time, and distance:
@@ -47,7 +52,7 @@ func Since(t time.Time) time.Duration {
 
 		// Multiplying 1.0 does not harm precision.
 		// https://go.dev/play/p/5HRusSw8qtP
-		td := t.Sub(log.time) // Time difference
+		td := Now().Sub(t) // Time difference
 		scaled := log.rate * float64(td)
 		return log.elapsed + time.Duration(scaled)
 	}

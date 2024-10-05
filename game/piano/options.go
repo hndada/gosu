@@ -70,9 +70,7 @@ const (
 // it can handle scratch options smoothly.
 func NewOptions() *Options {
 	opts := &Options{
-		screenSizeX: game.ScreenSizeX,
-		screenSizeY: game.ScreenSizeY,
-		SpeedScale:  1.0,
+		SpeedScale: 1.0,
 
 		StageWidths: map[int]float64{
 			1:  game.ScreenSizeX/2 - 80,
@@ -167,6 +165,9 @@ func NewOptions() *Options {
 }
 
 func (opts *Options) SetDerived() {
+	opts.screenSizeX = game.ScreenSizeX
+	opts.screenSizeY = game.ScreenSizeY
+
 	opts.keyWidthsMap = make(map[int][]float64)
 	opts.keyButtonHeight = opts.screenSizeY - opts.KeyPositionY
 	opts.keyPositionXsMap = make(map[int][]float64)
