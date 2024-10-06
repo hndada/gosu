@@ -89,8 +89,8 @@ func NewNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) Notes {
 		ns[i].position = dys.Position(n.Time)
 
 		// Tail's Position should be always equal or larger than Head's.
-		if n.Kind == Tail {
-			if head := ns[n.prev]; n.position < head.position {
+		if ns[i].Kind == Tail {
+			if head := ns[n.prev]; ns[i].position < head.position {
 				ns[i].position = head.position
 			}
 		}
@@ -98,7 +98,8 @@ func NewNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) Notes {
 	dys.Reset()
 
 	// linking
-	none := len(ns)
+	// none := len(ns)
+	none := -1
 	keysNone := make([]int, keyCount)
 	for k := range keysNone {
 		keysNone[k] = none
@@ -190,13 +191,18 @@ func NewNotesComponent(res *Resources, opts *Options, c *Chart) (cmp NotesCompon
 		c.Notes.data[i].position += float64(opts.TailNoteOffset) * d.Speed
 
 		// Tail's Position should be always equal or larger than Head's.
+		if n.prev == -1 {
+			continue
+		}
 		if head := c.Notes.data[n.prev]; n.position < head.position {
 			c.Notes.data[i].position = head.position
 		}
 	}
 
 	cmp.notes = c.Notes
+	// copy from c.Notes.keysFocus
 	cmp.keysLowest = make([]int, c.keyCount)
+	copy(cmp.keysLowest, cmp.notes.keysFocus)
 	cmp.keysColor = make([]color.NRGBA, c.keyCount)
 	order := opts.KeyOrders[c.keyCount]
 	for k := range cmp.keysColor {
@@ -204,6 +210,7 @@ func NewNotesComponent(res *Resources, opts *Options, c *Chart) (cmp NotesCompon
 	}
 	cmp.keysHolding = make([]bool, c.keyCount)
 	// cmp.h = opts.H
+
 	return
 }
 
@@ -211,7 +218,10 @@ func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {
 	lowermost := cursor - game.ScreenSizeY
 	for k, lowest := range cmp.keysLowest {
 		for ni := lowest; ni < len(cmp.notes.data); ni = cmp.notes.data[ni].next {
-			n := cmp.notes.data[lowest]
+			if ni < 0 {
+				break
+			}
+			n := cmp.notes.data[ni]
 			if n.position > lowermost {
 				break
 			}
@@ -221,6 +231,9 @@ func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {
 		// When Head is off the screen but Tail is on,
 		// update Tail to Head since drawLongNote uses Head.
 		ni := cmp.keysLowest[k]
+		if ni < 0 {
+			continue
+		}
 		if n := cmp.notes.data[ni]; n.Kind == Tail {
 			cmp.keysLowest[k] = n.prev
 		}
@@ -235,6 +248,9 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 	for k, lowest := range cmp.keysLowest {
 		var nis []int
 		for ni := lowest; ni < len(cmp.notes.data); ni = cmp.notes.data[ni].next {
+			if ni < 0 {
+				break
+			}
 			n := cmp.notes.data[ni]
 			if n.position > uppermost {
 				break
@@ -246,6 +262,9 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 		sort.Sort(sort.Reverse(sort.IntSlice(nis)))
 
 		for _, ni := range nis {
+			if ni < 0 {
+				break
+			}
 			n := cmp.notes.data[ni]
 			// Make long note's body overlapped by its Head and Tail.
 			if n.Kind == Head {

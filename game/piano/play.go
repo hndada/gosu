@@ -32,13 +32,13 @@ func NewPlay(res *Resources, opts *Options, c *Chart, mods Mods, sp *audios.Soun
 	}, nil
 }
 
-var count = 0
+// var count = 0
 
 func (p *Play) Update(now int32, kas []game.KeyboardAction) any {
-	count += 1
-	fmt.Println(count)
+	// count += 1
+	// fmt.Println(count)
 	for _, ka := range kas {
-		fmt.Printf("ka: %v\n", ka)
+		// fmt.Printf("ka: %v\n", ka)
 		p.Scorer.update(ka)
 		p.Components.Update(ka, p.Dynamics, p.Scorer)
 	}

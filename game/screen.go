@@ -5,6 +5,6 @@ package game
 
 // In game option screen, display the values of screen size.
 const (
-	ScreenSizeX = 640
-	ScreenSizeY = 480
+	ScreenSizeX = 1280 // 640
+	ScreenSizeY = 720  // 480
 )
