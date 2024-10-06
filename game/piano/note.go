@@ -136,12 +136,13 @@ func NewNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) Notes {
 }
 
 type NotesComponent struct {
-	notes       Notes
-	keysAnims   [][4]draws.Animation
-	keysLowest  []int // indexes of lowest notes
-	cursor      float64
-	keysColor   []color.NRGBA
-	keysHolding []bool
+	notes            Notes
+	keysAnims        [][4]draws.Animation
+	keysLowest       []int // indexes of lowest notes
+	cursor           float64
+	scaledScreenSize float64 // added in 241006
+	keysColor        []color.NRGBA
+	keysHolding      []bool
 	// h           float64 // used for drawLongNoteBody
 }
 
@@ -200,9 +201,10 @@ func NewNotesComponent(res *Resources, opts *Options, c *Chart) (cmp NotesCompon
 	}
 
 	cmp.notes = c.Notes
-	// copy from c.Notes.keysFocus
 	cmp.keysLowest = make([]int, c.keyCount)
 	copy(cmp.keysLowest, cmp.notes.keysFocus)
+	cmp.scaledScreenSize = opts.screenSizeY * opts.SpeedScale
+
 	cmp.keysColor = make([]color.NRGBA, c.keyCount)
 	order := opts.KeyOrders[c.keyCount]
 	for k := range cmp.keysColor {
@@ -215,7 +217,7 @@ func NewNotesComponent(res *Resources, opts *Options, c *Chart) (cmp NotesCompon
 }
 
 func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {
-	lowermost := cursor - game.ScreenSizeY
+	lowermost := cursor - cmp.scaledScreenSize
 	for k, lowest := range cmp.keysLowest {
 		for ni := lowest; ni < len(cmp.notes.data); ni = cmp.notes.data[ni].next {
 			if ni < 0 {
@@ -244,7 +246,7 @@ func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {
 
 // Notes are fixed. Lane itself moves, all notes move as same amount.
 func (cmp NotesComponent) Draw(dst draws.Image) {
-	uppermost := cmp.cursor + game.ScreenSizeY
+	uppermost := cmp.cursor + cmp.scaledScreenSize
 	for k, lowest := range cmp.keysLowest {
 		var nis []int
 		for ni := lowest; ni < len(cmp.notes.data); ni = cmp.notes.data[ni].next {
@@ -302,8 +304,7 @@ func (cmp NotesComponent) drawLongNoteBody(dst draws.Image, head Note) {
 	}
 	a.SetSize(a.W(), length)
 
-	// Use head position because anchor is center bottom.
-	pos := head.position - cmp.cursor
+	pos := tail.position - cmp.cursor
 	a.Move(0, -pos)
 	if head.scored {
 		a.ColorScale.ScaleWithColor(color.Gray{128})

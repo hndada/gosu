@@ -55,10 +55,14 @@ func (p *Play) SetSpeedScale(newScale float64) {
 	for i := range ds {
 		ds[i].Position *= scale
 	}
+
 	ns := p.Chart.Notes.data
 	for i := range ns {
 		ns[i].position *= scale
 	}
+	// for lowermost and uppermost
+	p.Components.notes.scaledScreenSize = game.ScreenSizeY * scale
+
 	bs := p.bars.bars.data
 	for i := range bs {
 		bs[i].position *= scale
