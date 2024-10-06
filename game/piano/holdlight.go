@@ -21,6 +21,7 @@ func NewHoldLightsComponent(res *Resources, opts *Options, c *Chart) (cmp HoldLi
 		a.ColorScale.Scale(1, 1, 1, opts.HoldLightOpacity)
 		cmp.anims[k] = a
 	}
+	cmp.keysLongNoteHolding = make([]bool, c.keyCount)
 	cmp.notes = &c.Notes
 	return
 }

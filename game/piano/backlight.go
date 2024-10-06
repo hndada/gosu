@@ -35,21 +35,20 @@ func NewBacklightsComponent(res *Resources, opts *Options, keyCount int) (cmp Ba
 
 func (cmp *BacklightsComponent) Update(ka game.KeyboardAction) {
 	kp := ka.KeysPressed()
-	cmp.keysPressed = kp
 	for k, p := range kp {
-		if p {
+		lp := cmp.keysPressed[k]
+		if !lp && p {
 			cmp.startTimes[k] = times.Now()
 		}
 	}
+	cmp.keysPressed = kp
 }
 
 // Draw backlights for a while even if the press is brief.
 func (cmp BacklightsComponent) Draw(dst draws.Image) {
-	elapsed := times.Since(cmp.startTimes[0])
 	for k, p := range cmp.keysPressed {
-		if p || elapsed <= cmp.minDuration {
-			cmp.sprites[k].Draw(dst)
-		} else {
+		elapsed := times.Since(cmp.startTimes[k])
+		if p || (elapsed >= 0 && elapsed <= cmp.minDuration) {
 			cmp.sprites[k].Draw(dst)
 		}
 	}
