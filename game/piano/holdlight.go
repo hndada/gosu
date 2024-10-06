@@ -58,7 +58,9 @@ func (cmp HoldLightsComponent) newKeysLongNoteHolding(ka game.KeyboardAction, kn
 }
 
 func (cmp HoldLightsComponent) Draw(dst draws.Image) {
-	for _, a := range cmp.anims {
-		a.Draw(dst)
+	for k, a := range cmp.anims {
+		if cmp.keysLongNoteHolding[k] {
+			a.Draw(dst)
+		}
 	}
 }
