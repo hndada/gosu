@@ -276,9 +276,10 @@ func (cmp NotesComponent) Draw(dst draws.Image) {
 			a := cmp.keysAnims[k][n.Kind]
 			pos := n.position - cmp.cursor
 			a.Move(0, -pos)
+			a.ColorScale.ScaleWithColor(cmp.keysColor[k])
 			if n.scored {
-				// op.ColorM.ChangeHSV(0, 0.3, 0.3)
 				a.ColorScale.ScaleWithColor(color.Gray{128})
+				// op.ColorM.ChangeHSV(0, 0.3, 0.3)
 			}
 			a.Draw(dst)
 		}
@@ -306,6 +307,7 @@ func (cmp NotesComponent) drawLongNoteBody(dst draws.Image, head Note) {
 
 	pos := tail.position - cmp.cursor
 	a.Move(0, -pos)
+	a.ColorScale.ScaleWithColor(cmp.keysColor[tail.Key])
 	if head.scored {
 		a.ColorScale.ScaleWithColor(color.Gray{128})
 	}
