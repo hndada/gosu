@@ -27,10 +27,11 @@ func (g *Game) loadOptions() {
 	const fname = "options.json"
 
 	// Try to create the file if it doesn't exist.
-	_, err := os.Stat(fname)
-	if os.IsNotExist(err) {
-		g.createOptionsFile(fname)
-	}
+	// _, err := os.Stat(fname)
+	// if os.IsNotExist(err) {
+	// 	g.createOptionsFile(fname)
+	// }
+	g.createOptionsFile(fname)
 
 	data, err := os.ReadFile(fname)
 	if err != nil {

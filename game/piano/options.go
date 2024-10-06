@@ -73,16 +73,16 @@ func NewOptions() *Options {
 		SpeedScale: 1.0,
 
 		StageWidths: map[int]float64{
-			1:  game.ScreenSizeX/2 - 80,
-			2:  game.ScreenSizeX/2 - 60,
-			3:  game.ScreenSizeX/2 - 40,
-			4:  game.ScreenSizeX/2 - 20,
-			5:  game.ScreenSizeX / 2,
-			6:  game.ScreenSizeX/2 + 20,
-			7:  game.ScreenSizeX/2 + 40,
-			8:  game.ScreenSizeX/2 + 60,
-			9:  game.ScreenSizeX/2 + 80,
-			10: game.ScreenSizeX/2 + 100,
+			1:  game.ScreenSizeX / 2 * 0.50,
+			2:  game.ScreenSizeX / 2 * 0.55,
+			3:  game.ScreenSizeX / 2 * 0.60,
+			4:  game.ScreenSizeX / 2 * 0.65,
+			5:  game.ScreenSizeX / 2 * 0.70,
+			6:  game.ScreenSizeX / 2 * 0.75,
+			7:  game.ScreenSizeX / 2 * 0.80,
+			8:  game.ScreenSizeX / 2 * 0.85,
+			9:  game.ScreenSizeX / 2 * 0.90,
+			10: game.ScreenSizeX / 2 * 0.95,
 		},
 		StagePositionX: game.ScreenSizeX / 2,
 
@@ -119,12 +119,12 @@ func NewOptions() *Options {
 			33, // Mid
 			33, // Tip
 		},
-		KeyPositionY: 0.90 * game.ScreenSizeY,
+		KeyPositionY: 0.88 * game.ScreenSizeY,
 
 		FieldOpacity:   0.8,
 		BarHeight:      1,
-		HintHeight:     24,
-		NoteHeight:     20,
+		HintHeight:     50,
+		NoteHeight:     40,
 		TailNoteOffset: 0,
 		NoteColors: [4]color.NRGBA{
 			{255, 255, 255, 255}, // One: white

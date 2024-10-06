@@ -70,7 +70,7 @@ func (s *Scorer) update(ka game.KeyboardAction) {
 	s.markKeysUntouchedNote(ka.Time)
 
 	for k, ni := range s.notes.keysFocus {
-		if ni == len(s.notes.data) {
+		if ni < 0 || ni == len(s.notes.data) {
 			continue
 		}
 		n := s.notes.data[ni]
@@ -96,6 +96,9 @@ func (s Scorer) playSample(smp game.Sample) {
 func (s Scorer) markKeysUntouchedNote(now int32) {
 	for k, lowest := range s.notes.keysFocus {
 		for ni := lowest; ni < len(s.notes.data); ni = s.notes.data[ni].next {
+			if ni < 0 {
+				break
+			}
 			n := s.notes.data[ni]
 			if e := n.Time - now; s.IsTooLate(e) {
 				break

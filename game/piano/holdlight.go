@@ -29,7 +29,7 @@ func NewHoldLightsComponent(res *Resources, opts *Options, c *Chart) (cmp HoldLi
 func (cmp *HoldLightsComponent) Update(ka game.KeyboardAction) {
 	kfns := make([]Note, cmp.notes.keyCount) // key focused notes
 	for k, ni := range cmp.notes.keysFocus {
-		if ni == len(cmp.notes.data) {
+		if ni < 0 || ni == len(cmp.notes.data) {
 			continue
 		}
 		kfns[k] = cmp.notes.data[ni]
