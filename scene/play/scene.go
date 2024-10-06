@@ -135,18 +135,20 @@ func (s Scene) newSamplePlayer(fsys fs.FS, musicFilename string) audios.SoundPla
 		}
 		return nil
 	})
+	times.Now()
 	return sp
 }
 
 // Now returns current time in millisecond.
-func (s Scene) Now() int32 {
+func (s Scene) Now() time.Duration {
 	var d time.Duration
 	if s.paused {
 		d = s.pauseTime.Sub(s.startTime)
 	} else {
 		d = times.Since(s.startTime)
 	}
-	return int32(d.Milliseconds()) // + s.musicOffset
+	return d
+	// return int32(d.Milliseconds()) // + s.musicOffset
 }
 
 // TL;DR: If you tend to hit early, set positive offset.
@@ -193,21 +195,24 @@ func (s *Scene) Update() any {
 		s.firstUpdate()
 		s.firstUpdated = true
 	}
-	now := s.Now() // Use unified time.
+
+	// Use unified time.
+	now := s.Now()
+	nowMS := int32(now.Milliseconds())
+	// nowDuration := time.Duration(now) * time.Millisecond
 
 	// No update t.startTime when playing music, unless
 	// notes would look like they suddenly teleport at the beginning.
-	if !s.musicPlayed && now >= s.musicOffset {
+	if !s.musicPlayed && nowMS >= s.musicOffset {
 		s.musicPlayer.Play()
 		s.musicPlayed = true
 	}
 
 	// kss's length is mostly 1.
-	nowTime := time.Duration(now) * time.Millisecond
-	kss := s.keyboard.Read(nowTime)
+	kss := s.keyboard.Read(now)
 	kss = append([]input.KeyboardState{s.lastKeyboardState}, kss...)
 	kas := game.KeyboardActions(kss)
-	r := s.play.Update(now, kas)
+	r := s.play.Update(nowMS, kas)
 	s.lastKeyboardState = kss[len(kss)-1]
 
 	// s.PlaySounds()
