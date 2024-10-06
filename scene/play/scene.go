@@ -185,7 +185,7 @@ func (s *Scene) firstUpdate() {
 	if kb, ok := s.keyboard.(*input.Keyboard); ok {
 		kb.Listen(s.startTime)
 	}
-	s.startTime = times.Now()
+	// s.startTime = times.Now() // TODO: OK to comment out?
 }
 
 func (s *Scene) Update() any {
@@ -201,14 +201,15 @@ func (s *Scene) Update() any {
 		s.musicPlayer.Play()
 		s.musicPlayed = true
 	}
-	nowTime := time.Duration(now) * time.Millisecond
 
 	// kss's length is mostly 1.
+	nowTime := time.Duration(now) * time.Millisecond
 	kss := s.keyboard.Read(nowTime)
 	kss = append([]input.KeyboardState{s.lastKeyboardState}, kss...)
 	kas := game.KeyboardActions(kss)
 	r := s.play.Update(now, kas)
 	s.lastKeyboardState = kss[len(kss)-1]
+
 	// s.PlaySounds()
 	return r
 }

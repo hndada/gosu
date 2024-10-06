@@ -48,6 +48,8 @@ func NewGame(fsys fs.FS) *Game {
 	g.dbs = dbs
 
 	scenePlay, err := play.NewScene(g.resources, g.options, scene.PlayArgs{
+		// ChartFS:       os.DirFS("C:/Users/hndada/Documents/GitHub/gosu/cmd/gosu/music/nekodex - circles!"),
+		// ChartFilename: "nekodex - circles! (MuangMuangE) [Hard].osu",
 		ChartFS:       os.DirFS("C:/Users/hndada/Documents/GitHub/gosu/cmd/gosu/music/cYsmix - triangles"),
 		ChartFilename: "cYsmix - triangles (MuangMuangE) [Easy].osu",
 		Mods:          piano.Mods{},
@@ -60,7 +62,6 @@ func NewGame(fsys fs.FS) *Game {
 	g.scene = scenePlay
 
 	ebiten.SetTPS(ebiten.SyncWithFPS)
-
 	ebiten.SetWindowSize(g.options.Resolution.IntValues())
 	ebiten.SetWindowTitle("gosu")
 	// issue: It jitters when Vsync is enabled.
