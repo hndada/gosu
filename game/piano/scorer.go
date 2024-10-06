@@ -100,7 +100,8 @@ func (s Scorer) markKeysUntouchedNote(now int32) {
 				break
 			}
 			n := s.notes.data[ni]
-			if e := n.Time - now; s.IsTooLate(e) {
+			e := n.Time - now
+			if !s.IsTooLate(e) {
 				break
 			}
 			if n.scored {
