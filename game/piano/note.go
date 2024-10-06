@@ -99,10 +99,9 @@ func NewNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) Notes {
 
 	// linking
 	// none := len(ns)
-	none := -1
 	keysNone := make([]int, keyCount)
 	for k := range keysNone {
-		keysNone[k] = none
+		keysNone[k] = -1
 	}
 	keysFocus := make([]int, keyCount)
 	copy(keysFocus, keysNone)
@@ -112,19 +111,19 @@ func NewNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) Notes {
 	for i, n := range ns {
 		prev := keysPrev[n.Key]
 		ns[i].prev = prev
-		if prev != none {
+		if prev != -1 {
 			ns[prev].next = i
 		}
 		keysPrev[n.Key] = i
 
-		if keysFocus[n.Key] == none {
+		if keysFocus[n.Key] == -1 {
 			keysFocus[n.Key] = i
 		}
 	}
 	// Set each last note's next with none.
 	for _, last := range keysPrev {
-		if last != none {
-			ns[last].next = none
+		if last != -1 {
+			ns[last].next = len(ns)
 		}
 	}
 

@@ -43,6 +43,7 @@ func (g *Game) loadOptions() {
 		panic(err)
 	}
 
+	// It is always necessary to set derived values.
 	g.options.Piano.SetDerived()
 	// g.options.Normalize()
 }
