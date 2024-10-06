@@ -29,6 +29,9 @@ func NewKeyButtonsComponent(res *Resources, opts *Options, keyCount int) (cmp Ke
 	}
 	cmp.keysPressed = make([]bool, keyCount)
 	cmp.startTimes = make([]time.Time, keyCount)
+	for k := range cmp.startTimes {
+		cmp.startTimes[k] = times.Now()
+	}
 	cmp.minDuration = 30 * time.Millisecond
 	return
 }
@@ -47,8 +50,8 @@ func (cmp KeyButtonsComponent) Draw(dst draws.Image) {
 		up   = 0
 		down = 1
 	)
-	elapsed := times.Since(cmp.startTimes[0])
 	for k, p := range cmp.keysPressed {
+		elapsed := times.Since(cmp.startTimes[k])
 		if p || elapsed <= cmp.minDuration {
 			cmp.keysSprites[k][down].Draw(dst)
 		} else {
