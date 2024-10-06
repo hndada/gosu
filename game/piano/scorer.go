@@ -75,7 +75,7 @@ func (s *Scorer) update(ka game.KeyboardAction) {
 		}
 		n := s.notes.data[ni]
 		if ka.KeysAction[k] == game.Hit {
-			s.playSample(n.Sample)
+			// s.playSample(n.Sample)
 			// s.sampleBuffer = append(s.sampleBuffer, n.Sample)
 		}
 		if n.scored {

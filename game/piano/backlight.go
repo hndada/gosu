@@ -23,6 +23,8 @@ func NewBacklightsComponent(res *Resources, opts *Options, keyCount int) (cmp Ba
 	for k := range cmp.sprites {
 		s := draws.NewSprite(res.BacklightsImage)
 		s.Scale(ws[k] / s.W())
+		// I thank to the past time of myself,
+		// who had found the following parameters.
 		s.Locate(xs[k], opts.KeyPositionY, draws.CenterBottom)
 		s.ColorScale.ScaleWithColor(opts.BacklightColors[orders[k]])
 		cmp.sprites[k] = s
@@ -40,7 +42,7 @@ func (cmp *BacklightsComponent) Update(ka game.KeyboardAction) {
 	kp := ka.KeysPressed()
 	for k, p := range kp {
 		lp := cmp.keysPressed[k]
-		if !lp && p {
+		if (!lp && p) || (lp && !p) {
 			cmp.startTimes[k] = times.Now()
 		}
 	}

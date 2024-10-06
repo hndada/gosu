@@ -307,7 +307,7 @@ func (cmp NotesComponent) drawLongNoteBody(dst draws.Image, head Note) {
 	pos := tail.position - cmp.cursor
 	a.Move(0, -pos)
 	a.ColorScale.ScaleWithColor(cmp.keysColor[tail.Key])
-	if head.scored {
+	if tail.scored {
 		a.ColorScale.ScaleWithColor(color.Gray{128})
 	}
 	a.Draw(dst)

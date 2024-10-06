@@ -17,7 +17,7 @@ func NewHoldLightsComponent(res *Resources, opts *Options, c *Chart) (cmp HoldLi
 	for k := range cmp.anims {
 		a := draws.NewAnimation(res.HoldLightsFrames, 300)
 		a.Scale(opts.HoldLightImageScale)
-		a.Locate(xs[k], opts.KeyPositionY, draws.CenterBottom)
+		a.Locate(xs[k], opts.KeyPositionY-opts.HintHeight/2, draws.CenterMiddle)
 		a.ColorScale.Scale(1, 1, 1, opts.HoldLightOpacity)
 		cmp.anims[k] = a
 	}
@@ -40,7 +40,7 @@ func (cmp *HoldLightsComponent) Update(ka game.KeyboardAction) {
 	keysNew := cmp.newKeysLongNoteHolding(ka, kfns)
 	for k, new := range keysNew {
 		old := keysOld[k]
-		if !old && new {
+		if (old && !new) || (!old && new) {
 			cmp.anims[k].Reset()
 		}
 	}
