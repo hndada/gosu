@@ -49,7 +49,7 @@ func (cmps *Components) Update(ka game.KeyboardAction, dys game.Dynamics, s Scor
 	cmps.backlights.Update(ka)
 	cmps.hitLights.Update(s.keysJudgmentKind)
 	cmps.holdLights.Update(ka)
-	// cmps.judgment.Update(s.keysJudgmentKind)
+	cmps.judgment.Update(s.keysJudgmentKind)
 	// cmps.combo.Update(s.Combo)
 	// cmps.score.Update(s.Score)
 	return nil
