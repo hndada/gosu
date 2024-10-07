@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+// times should use nano second as the unit.
+const Millisecond = time.Millisecond
+
 type tweenUnit struct {
 	startTime time.Time
 	begin     float64
@@ -46,6 +49,17 @@ func NewTween(begin, change float64, duration time.Duration, easing TweenFunc) (
 	return
 }
 
+func (tw *Tween) SetStartTime(startTime time.Time) {
+	for i := range tw.units {
+		if i == 0 {
+			tw.units[i].startTime = startTime
+		} else {
+			prev := tw.units[i-1]
+			tw.units[i].startTime = prev.endTime()
+		}
+	}
+}
+
 // AppendXxx feels like to return a struct.
 func (tw *Tween) Add(begin, change float64, duration time.Duration, easing TweenFunc) {
 	tw.units = append(tw.units, tweenUnit{
@@ -73,6 +87,10 @@ func (tw *Tween) Current() float64 {
 	}
 
 	for tw.units[tw.index].isFinished() {
+		if tw.units[tw.index].duration <= 0 {
+			break // Prevent infinite loop
+		}
+
 		if tw.index < len(tw.units)-1 {
 			tw.index++
 		} else {
@@ -80,12 +98,15 @@ func (tw *Tween) Current() float64 {
 			if tw.loop < tw.maxLoop {
 				tw.rewind()
 			}
+			break
 		}
 	}
 
 	return tw.units[tw.index].current()
 }
 
+// rewind rewinds the time of each tweenUnit.
+// rewind does not change the loop.
 func (tw *Tween) rewind() {
 	for i := range tw.units {
 		if i == 0 {
@@ -112,12 +133,16 @@ func (tw Tween) IsFinished() bool {
 func (tw *Tween) Finish() {
 	tw.loop = tw.maxLoop
 	tw.index = len(tw.units) - 1
+
+	d := tw.units[tw.index].duration
+	tw.units[tw.index].startTime = Now().Add(-d)
 }
 
 // Easing functions
 // begin + change*dx
 func EaseLinear(t time.Duration, b, c float64, d time.Duration) float64 {
-	dx := float64(t) / float64(d)
+	// Convert nanoseconds to seconds to reduce imprecision.
+	dx := t.Seconds() / d.Seconds()
 	return b + c*dx
 }
 
@@ -132,7 +157,7 @@ func EaseOutExponential(t time.Duration, b, c float64, d time.Duration) float64 
 	// k := math.Log(math.Abs(change)) // delayed.go
 
 	const k = -6.93 // exp(-6.93) ~= pow(2, -10)
-	dx := float64(t) / float64(d)
+	dx := t.Seconds() / d.Seconds()
 	return b + c*(1-math.Exp(-k*dx))
 }
 
