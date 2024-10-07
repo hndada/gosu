@@ -15,9 +15,9 @@ func NewHitLightsComponent(res *Resources, opts *Options, keyCount int) (cmp Hit
 	for k := range cmp.keysAnim {
 		a := draws.NewAnimation(res.HitLightsFrames, 150)
 		a.Scale(opts.HitLightImageScale)
-		a.Locate(xs[k], opts.KeyPositionY, draws.CenterBottom)
+		a.Locate(xs[k], opts.KeyPositionY-opts.HintHeight/2, draws.CenterMiddle)
 		a.ColorScale.Scale(1, 1, 1, opts.HitLightOpacity)
-		a.SetMaxLoop(1)
+		a.MaxLoop = 1
 		cmp.keysAnim[k] = a
 	}
 	return

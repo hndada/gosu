@@ -38,11 +38,11 @@ type Animation struct {
 	Box
 }
 
-func NewAnimation(frames []Image, period time.Duration) Animation {
+func NewAnimation(frames []Image, periodMS time.Duration) Animation {
 	a := Animation{
 		Frames:    frames,
 		StartTime: times.Now(),
-		Period:    period,
+		Period:    periodMS * time.Millisecond,
 	}
 	if len(frames) > 0 {
 		a.Box = NewBox(frames[0])
@@ -50,7 +50,6 @@ func NewAnimation(frames []Image, period time.Duration) Animation {
 	return a
 }
 
-func (a *Animation) SetMaxLoop(maxLoop int) { a.MaxLoop = maxLoop }
 func (a Animation) Loop() int {
 	if a.Period == 0 {
 		return 0
@@ -70,10 +69,10 @@ func (a Animation) index() int {
 		return 0
 	}
 	r := times.Since(a.StartTime) % a.Period
-	progress := float64(r) / float64(a.Period)
+	progress := r.Seconds() / a.Period.Seconds()
 	count := float64(len(a.Frames))
-	index := int(progress * count)
-	return index
+	idx := int(progress * count)
+	return idx
 }
 
 func (a Animation) Size() XY {

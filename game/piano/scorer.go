@@ -93,7 +93,7 @@ func (s Scorer) playSample(smp game.Sample) {
 }
 
 // marks the untouched note as missed.
-func (s Scorer) markKeysUntouchedNote(now int32) {
+func (s *Scorer) markKeysUntouchedNote(now int32) {
 	for k, lowest := range s.notes.keysFocus {
 		for ni := lowest; ni < len(s.notes.data); ni = s.notes.data[ni].next {
 			if ni < 0 {
