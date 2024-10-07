@@ -78,7 +78,7 @@ func (p Play) DebugString() string {
 	f := fmt.Fprintf
 
 	// f(&b, "Time: %ds/%ds\n", s.now/1000, s.Span()/1000)
-	f(&b, "\n")
+	// f(&b, "\n")
 	f(&b, p.Scorer.DebugString())
 	f(&b, "Speed scale (PageUp/Down): x%.2f (x%.2f)\n", p.SpeedScale, p.Speed())
 	f(&b, "(Exposure time: %dms)\n", p.NoteExposureDuration())

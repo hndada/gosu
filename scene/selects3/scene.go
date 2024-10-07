@@ -94,3 +94,7 @@ func (s *Scene) Update() any {
 func (s Scene) Draw(dst draws.Image) {
 	return
 }
+
+func (s Scene) DebugString() string {
+	return "selects3"
+}
