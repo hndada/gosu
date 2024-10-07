@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"io/fs"
+	"time"
 
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/tween"
@@ -45,9 +46,10 @@ func NewComboComponent(imgs []draws.Image, opts *ComboOptions) (cmp ComboCompone
 	// Since sprites are already at anchor, no need to care of two 0.5w.
 	cmp.w = cmp.sprites[0].W() + opts.DigitGap
 	tw := tween.Tween{}
-	tw.Add(0, opts.Bounce, 200, tween.EaseLinear)
-	tw.Add(opts.Bounce, -opts.Bounce, 100, tween.EaseLinear)
-	tw.Add(0, 0, 1500, tween.EaseLinear)
+	b := opts.Bounce
+	tw.Add(0, b, 150*time.Millisecond, tween.EaseLinear)
+	tw.Add(b, -b, 100*time.Millisecond, tween.EaseLinear)
+	tw.Add(0, 0, 1500*time.Millisecond, tween.EaseLinear)
 	if !opts.IsPersist {
 		tw.MaxLoop = 1
 	}
@@ -60,6 +62,7 @@ func (cmp *ComboComponent) Update(newCombo int) {
 		cmp.combo = newCombo
 		cmp.tween.Start()
 	}
+
 	if !cmp.tween.IsFinished() {
 		cmp.tween.Update()
 	}

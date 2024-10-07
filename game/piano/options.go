@@ -152,7 +152,7 @@ func NewOptions() *Options {
 			DigitGap:  -1,
 			PositionY: 0.40 * game.ScreenSizeY,
 			IsPersist: false,
-			Bounce:    0.85,
+			Bounce:    0.08,
 		},
 		Score: game.ScoreOptions{
 			ImageScale: 0.65,

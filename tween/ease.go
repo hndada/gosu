@@ -23,8 +23,8 @@ func EaseOutExponential(t time.Duration, b, c float64, d time.Duration) float64 
 	// k, steepness, is regardless of the number of steps.
 	// https://go.dev/play/p/NnGiHCfPfD-
 	// k := math.Log(math.Abs(change)) // delayed.go
+	const k = -6.93 // exp(-6.93) is approximately pow(2, -10)
 
-	const k = -6.93 // exp(-6.93) ~= pow(2, -10)
 	dx := t.Seconds() / d.Seconds()
-	return b + c*(1-math.Exp(-k*dx))
+	return b + c*(1-math.Exp(k*dx))
 }

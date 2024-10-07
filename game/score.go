@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"io/fs"
+	"time"
 
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/tween"
@@ -63,12 +64,11 @@ func (cmp *ScoreComponent) Update(newScore float64) {
 	if old := cmp.score; old != newScore {
 		cmp.score = newScore
 
-		tw := tween.Tween{MaxLoop: 1}
 		begin := cmp.tween.Value()
-		change := cmp.score - begin
-		tw.Add(begin, change, 400, tween.EaseOutExponential)
-		cmp.tween = tw
-		cmp.tween.Start()
+		change := newScore - begin
+		cmp.tween = tween.Tween{MaxLoop: 1}
+		cmp.tween.Add(begin, change, 400*time.Millisecond, tween.EaseOutExponential)
+		// cmp.tween.Start()
 	}
 	// Score is persistent, so no need to check if it is finished.
 	cmp.tween.Update()
