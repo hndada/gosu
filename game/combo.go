@@ -51,6 +51,7 @@ func NewComboComponent(imgs []draws.Image, opts *ComboOptions) (cmp ComboCompone
 	if !opts.IsPersist {
 		tw.MaxLoop = 1
 	}
+	cmp.tween = tw
 	return
 }
 
@@ -58,6 +59,9 @@ func (cmp *ComboComponent) Update(newCombo int) {
 	if old := cmp.combo; old != newCombo {
 		cmp.combo = newCombo
 		cmp.tween.Start()
+	}
+	if !cmp.tween.IsFinished() {
+		cmp.tween.Update()
 	}
 }
 
