@@ -5,7 +5,6 @@ import (
 	"io/fs"
 	"os"
 
-	"github.com/coder/websocket"
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/draws"
@@ -14,14 +13,16 @@ import (
 	"github.com/hndada/gosu/resources"
 	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/scene/play"
-	"github.com/hndada/gosu/scene/selects3"
+	"github.com/hndada/gosu/scene/selects"
 )
 
 type Game struct {
 	resources *scene.Resources
 	options   *scene.Options
+	states    *scene.States
+	handlers  *scene.Handlers
 	dbs       *scene.Databases
-	ws        *websocket.Conn
+	// ws        *websocket.Conn
 
 	scene scene.Scene
 	// currentScene scene.Scene
@@ -32,7 +33,6 @@ type Game struct {
 
 func NewGame(fsys fs.FS) *Game {
 	g := &Game{}
-
 	if _, err := fs.Stat(fsys, "resources"); err != nil {
 		g.resources = scene.NewResources(resources.DefaultFS)
 	} else {
@@ -40,8 +40,10 @@ func NewGame(fsys fs.FS) *Game {
 	}
 
 	g.loadOptions()
+	g.states = scene.NewStates()
+	g.handlers = scene.NewHandlers(g.options, g.states)
 
-	dbs, err := NewDatabases(fsys)
+	dbs, err := scene.NewDatabases(fsys)
 	if err != nil {
 		panic(err)
 	}
@@ -60,6 +62,7 @@ func NewGame(fsys fs.FS) *Game {
 		panic(err)
 	}
 	g.scene = scenePlay
+	// g.setSceneSelect()
 
 	ebiten.SetTPS(ebiten.SyncWithFPS)
 	ebiten.SetWindowSize(g.options.Resolution.IntValues())
@@ -85,12 +88,7 @@ func (g *Game) Update() error {
 		// debug.SetGCPercent(0)
 	case piano.Scorer:
 		// TODO: result page
-		sceneSelect, err := selects3.NewScene(g.resources, g.options, g.dbs, g.ws)
-		if err != nil {
-			panic(err)
-		}
-		g.scene = sceneSelect
-
+		g.setSceneSelect()
 		ebiten.SetWindowTitle("gosu")
 		// debug.SetGCPercent(100)
 	case error:
@@ -98,6 +96,15 @@ func (g *Game) Update() error {
 		panic(args)
 	}
 	return nil
+}
+
+func (g *Game) setSceneSelect() {
+	sceneSelect, err := selects.NewScene(
+		g.resources, g.options, g.states, g.handlers, g.dbs)
+	if err != nil {
+		panic(err)
+	}
+	g.scene = sceneSelect
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {

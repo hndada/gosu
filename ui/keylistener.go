@@ -22,11 +22,10 @@ func IsEscapeJustPressed() bool {
 // Ctrl+B+N: opened a new tab repeatedly.
 // Ctrl+N+B: collapsed the sidebar and uncollapsed it repeatedly.
 type KeyListener struct {
-	*KeyboardStatus
-	Modifiers []input.Key
-	Controls  []Control
-	keys      []input.Key
-	// Keys           []input.Key
+	state          *KeyboardState
+	modifiers      []input.Key
+	controls       []Control
+	keys           []input.Key
 	fireCount      int // Number of consecutive fires.
 	firstFiredTime time.Time
 
@@ -36,65 +35,65 @@ type KeyListener struct {
 	shortDuration time.Duration
 }
 
-func NewKeyListener(ks *KeyboardStatus, mods []input.Key, ctrls []Control) *KeyListener {
+func NewKeyListener(ks *KeyboardState, mods []input.Key, ctrls []Control) *KeyListener {
 	keys := make([]input.Key, len(ctrls))
 	for i, c := range ctrls {
 		keys[i] = c.Key
 	}
 
 	return &KeyListener{
-		KeyboardStatus: ks,
-		Modifiers:      mods,
-		Controls:       ctrls,
-		keys:           keys,
-		longDuration:   500 * time.Millisecond,
-		shortDuration:  100 * time.Millisecond,
+		state:         ks,
+		modifiers:     mods,
+		controls:      ctrls,
+		keys:          keys,
+		longDuration:  500 * time.Millisecond,
+		shortDuration: 100 * time.Millisecond,
 	}
 }
 
 // Avoid using goroutine, it is very hard to sync other Update functions.
 // Declaring local functions in a method instead of separating them as methods seems fine.
-func (kh *KeyListener) Update() (Control, bool) {
+func (kl *KeyListener) Update() (Control, bool) {
 	reset := func() (Control, bool) {
-		kh.fireCount = 0
+		kl.fireCount = 0
 		return Control{}, false
 	}
-	if !kh.AreAllKeysPressed(kh.Modifiers) {
+	if !kl.state.AreAllKeysPressed(kl.modifiers) {
 		return reset()
 	}
 
-	k, ok := kh.AreAnyKeysPressed(kh.keys)
+	k, ok := kl.state.AreAnyKeysPressed(kl.keys)
 	if !ok {
 		return reset()
 	}
 
 	var c Control
-	for i := 0; i < len(kh.keys); i++ {
-		if k == kh.keys[i] {
-			c = kh.Controls[i]
+	for i := 0; i < len(kl.keys); i++ {
+		if k == kl.keys[i] {
+			c = kl.controls[i]
 			break
 		}
 	}
 
 	fire := func() (Control, bool) {
-		kh.fireCount++
+		kl.fireCount++
 		return c, true
 	}
 
 	// Now key listener is active.
-	switch kh.fireCount {
+	switch kl.fireCount {
 	case 0:
 		// If it was not active, it is instantly fired.
-		kh.firstFiredTime = time.Now()
+		kl.firstFiredTime = time.Now()
 		return fire()
 	case 1:
-		if time.Since(kh.firstFiredTime) > kh.longDuration {
+		if time.Since(kl.firstFiredTime) > kl.longDuration {
 			return fire()
 		}
 	default:
-		minDuration := kh.longDuration +
-			time.Duration(kh.fireCount-1)*kh.shortDuration
-		if time.Since(kh.firstFiredTime) > minDuration {
+		minDuration := kl.longDuration +
+			time.Duration(kl.fireCount-1)*kl.shortDuration
+		if time.Since(kl.firstFiredTime) > minDuration {
 			return fire()
 		}
 	}

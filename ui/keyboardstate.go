@@ -13,17 +13,17 @@ const minUpdateInterval = 500 * time.Millisecond
 // the order in which the modifier keys are pressed. So, for example,
 // Ctrl+Alt+A might perform a different action than Alt+Ctrl+A.
 // This implies that game should store a state of the keyboard globally.
-type KeyboardStatus struct {
+type KeyboardState struct {
 	lastUpdateTime time.Time
 	pressedKeys    []input.Key
 }
 
-func NewKeyboardStatus() *KeyboardStatus {
-	return &KeyboardStatus{}
+func NewKeyboardState() *KeyboardState {
+	return &KeyboardState{}
 }
 
 // AreAllKeysPressed is used for checking modifier keys.
-func (ks *KeyboardStatus) AreAllKeysPressed(keys []input.Key) bool {
+func (ks *KeyboardState) AreAllKeysPressed(keys []input.Key) bool {
 	if times.Now().Sub(ks.lastUpdateTime) > minUpdateInterval {
 		ks.update()
 	}
@@ -37,7 +37,7 @@ func (ks *KeyboardStatus) AreAllKeysPressed(keys []input.Key) bool {
 }
 
 // AreAnyKeysPressed is used for checking non-modifier keys.
-func (ks *KeyboardStatus) AreAnyKeysPressed(keys []input.Key) (input.Key, bool) {
+func (ks *KeyboardState) AreAnyKeysPressed(keys []input.Key) (input.Key, bool) {
 	if times.Now().Sub(ks.lastUpdateTime) > minUpdateInterval {
 		ks.update()
 	}
@@ -50,7 +50,7 @@ func (ks *KeyboardStatus) AreAnyKeysPressed(keys []input.Key) (input.Key, bool) 
 	return 0, false
 }
 
-func (ks *KeyboardStatus) update() {
+func (ks *KeyboardState) update() {
 	newPressedKeys := make([]input.Key, 0, len(ks.pressedKeys))
 	for _, pk := range ks.pressedKeys {
 		if input.IsKeyPressed(pk) {

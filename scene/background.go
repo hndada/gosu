@@ -20,6 +20,8 @@ func (cmp BackgroundComponent) newSprite(img draws.Image) draws.Sprite {
 	return s
 }
 
+// In osu!, background brightness at Song selectis 60% (153 / 255).
+// However, for the sake of simplicity, gosu will use the option value.
 func NewBackgroundComponent(res *Resources, opts *Options) (cmp BackgroundComponent) {
 	cmp.defaultSprite = cmp.newSprite(res.DefaultBackgroundImage)
 	cmp.brightness = &opts.BackgroundBrightness

@@ -2,137 +2,59 @@ package selects
 
 import (
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/scene"
 )
 
+// TODO: list key handler: double click left/right to open advanced options
 // Component is basically EventHandler.
 type Scene struct {
 	*scene.Resources
 	*scene.Options
+	*scene.States
 	*scene.Handlers
 	*scene.Databases
-	query              string
-	musicList          []scene.MusicRow
-	musicListIndex     int
-	chartList          []scene.ChartRow
-	chartListIndex     int
-	previewMusicPlayer *PreviewMusicPlayer
+
+	list               ListComponent
 	background         scene.BackgroundComponent
+	previewMusicPlayer *PreviewMusicPlayer
+	// chartInfo  ChartInfoComponent
+	// searchBox  SearchBoxComponent
 }
 
-// It is fine to call Close at blank MusicPlayer.
-
-// It is safe to call len() at nil slice.
-// https://go.dev/play/p/-1VWc9iDgMl
-
-// Avoid embedding scene.Options directly.
-// Pass options as pointers for syncing and saving memory.
-func NewScene(res *scene.Resources, opts *scene.Options, hds *scene.Handlers, dbs *scene.Databases) (*Scene, error) {
+func NewScene(res *scene.Resources, opts *scene.Options,
+	states *scene.States, hds *scene.Handlers, dbs *scene.Databases) (*Scene, error) {
 	return &Scene{
 		Resources: res,
 		Options:   opts,
+		States:    states,
 		Handlers:  hds,
 		Databases: dbs,
 	}, nil
 }
 
-// music list, chart list, preview music player, background
-// update preview and background
-// list key handler
-
-// Node is all in choose scene.
 func (s *Scene) Update() any {
-	oldChart := s.chart()
+	// 1. Listen key input, then update list
+	// : ESC, Enter (+NumpadEnter), ArrowUp, ArrowDown, ArrowLeft, ArrowRight
+	// Left and Right is for advanced options. (by double click)
+	// 2. Update preview music and background
+	// 3. render list
 
-	key := s.UIKeyListener.Listen()
-	if key != input.KeyNone {
-		s.SwipeSoundPod.Play(s.SoundVolume)
-	}
-	switch key {
-	case input.KeyEnter, input.KeyNumpadEnter:
-		s.chartTreeNode = s.chartTreeNode.FirstChild
-	case input.KeyEscape:
-		// Todo: return to intro screen when
-		// escape is pressed on root node.
-		if s.chartTreeNode.Type != FolderNode {
-			s.chartTreeNode = s.chartTreeNode.Parent
-		}
-	// case input.KeyArrowLeft:
-	// 	// Arrow left has no effect on root node.
-	// 	if s.chartTreeNode.Type == ChartNode {
-	// 		s.chartTreeNode = s.chartTreeNode.Parent
-	// 	}
-	// case input.KeyArrowRight:
-	// 	// Arrow right has no effect on leaf node.
-	// 	if s.chartTreeNode.Type != LeafNode {
-	// 		s.chartTreeNode = s.chartTreeNode.FirstChild
-	// 	}
-	case input.KeyArrowUp:
-		if prev := s.chartTreeNode.Prev(); prev != nil && prev.Type != RootNode {
-			s.chartTreeNode = prev
-		}
-	case input.KeyArrowDown:
-		if next := s.chartTreeNode.Next(); next != nil {
-			s.chartTreeNode = next
-		}
-	}
+	s.Handlers.MusicVolume.Handle()
+	s.Handlers.SoundVolumeScale.Handle()
+	s.Handlers.MusicOffset.Handle()
+	s.Handlers.BackgroundBrightness.Handle()
+	s.Handlers.DebugPrint.Handle()
 
-	if s.chartTreeNode.Type == LeafNode {
-		return s.playChart()
-	}
-
-	newChart := s.chart()
-	var (
-		isMusicChanged      bool
-		isBackgroundChanged bool
-	)
-	if newChart.Base != oldChart.Base {
-		isMusicChanged = true
-		isBackgroundChanged = true
-	} else {
-		if newChart.MusicFilename != oldChart.MusicFilename {
-			isMusicChanged = true
-		}
-		if newChart.BackgroundFilename != oldChart.BackgroundFilename {
-			isBackgroundChanged = true
-		}
-	}
-
-	if isMusicChanged {
-		s.updatePreviewMusic()
-	}
-	if isBackgroundChanged {
-		s.updateBackground()
-	}
-
-	s.HandleEffect()
-	if s.KeyHandleMusicVolume() {
-		if !s.MusicPlayer.IsEmpty() {
-			s.MusicPlayer.SetVolume(s.MusicVolume)
-		}
-	}
-	s.KeyHandleSoundVolume()
-	s.KeyHandleMusicOffset()
-	s.KeyHandleBackgroundBrightness()
-	s.KeyHandleDebugPrint()
-	// s.KeyHandleMode()
-	// s.KeyHandleSubMode()
-	s.KeyHandleSpeedScale()
+	s.Handlers.Mode.Handle()
+	s.Handlers.SubMode.Handle()
+	mode := *s.Handlers.Mode.Value
+	s.Handlers.SpeedScales[mode].Handle()
 	return nil
-}
-
-func (s *Scene) updateBackground() {
-	c := s.chart()
-	fsys := c.MusicFS
-	name := c.BackgroundFilename
-	s.drawBackground = scene.NewBackgroundDrawer(s.Config, s.Asset, fsys, name)
 }
 
 func (s *Scene) playChart() any {
 	s.previewMusicPlayer.Close()
-	c := s.chartList[s.chartListIndex]
-
+	c := s.list.charts[s.list.i][s.list.j]
 	return scene.PlayArgs{
 		ChartFS:       c.FS,
 		ChartFilename: c.Name,
@@ -140,8 +62,23 @@ func (s *Scene) playChart() any {
 	}
 }
 
-// Todo: s.drawSearchBox(screen)
-// Todo: s.drawPanel(screen)
-func (s *Scene) Draw(dst draws.Image) {
-	s.Components.Draw(dst)
+func (s Scene) Draw(dst draws.Image) {
+	s.background.Draw(dst)
+	s.list.Draw(dst)
 }
+
+func (s Scene) DebugString() string {
+	return ""
+}
+
+// It is fine to call Close at blank MusicPlayer.
+
+// It is safe to call len() at nil slice.
+// https://go.dev/play/p/-1VWc9iDgMl
+
+// Memo: 'name' is a officially used name as file path in io/fs.
+
+// Memo: make([]T, len) and make([]T, 0, len) is prone to be erroneous.
+
+// Avoid embedding scene.Options directly.
+// Pass options as pointers for syncing and saving memory.

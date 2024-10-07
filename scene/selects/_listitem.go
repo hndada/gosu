@@ -1,34 +1,6 @@
 package selects
 
-import (
-	"fmt"
-	"image/color"
-
-	"github.com/hndada/gosu/game"
-)
-
-// Music name itself may be duplicated.
-// Artist + Title (Music name) may be unique.
-func FolderText(c *game.ChartHeader) string {
-	return fmt.Sprintf("%s - %s", c.MusicName, c.Artist)
-}
-
-// Todo: add level database. attach level info to the text.
-// Then, sort by the level.
-
-// Memo: make([]T, len) and make([]T, 0, len) is prone to be erroneous.
-func ItemText(c *game.ChartHeader) string {
-	// return fmt.Sprintf("[Lv. %.0f] %s [%s]", c.Level, c.MusicName, c.ChartName) // [Lv. %4.2f]
-	return fmt.Sprintf("%s [%s]", c.MusicName, c.ChartName)
-}
-
-// Background brightness at Song select: 60% (153 / 255), confirmed.
-// Score box color: Gray128 with 50% transparent
-// Hovered Score box color: Gray96 with 50% transparent
-func (s Scene) Draw(screen draws.Image) {
-	s.drawBackground(screen)
-	s.drawChartTree(screen)
-}
+import "image/color"
 
 func (s Scene) drawChartTree(dst draws.Image) {
 	half := s.ChartTreeNodeCount()/2 + 1

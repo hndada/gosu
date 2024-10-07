@@ -26,3 +26,4 @@ cmd/gosu/music/*
 
 gosu/replays/*
 cmd/gosu/options.json
+*.zip

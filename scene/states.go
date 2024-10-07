@@ -8,5 +8,11 @@ import "github.com/hndada/gosu/ui"
 // States are generated when runtime, and not saved.
 
 type States struct {
-	KeyboardStatus *ui.KeyboardStatus
+	Keyboard *ui.KeyboardState
+}
+
+func NewStates() *States {
+	return &States{
+		Keyboard: ui.NewKeyboardState(),
+	}
 }
