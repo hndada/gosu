@@ -70,6 +70,8 @@ func (cmp *ScoreComponent) Update(newScore float64) {
 		cmp.tween = tw
 		cmp.tween.Start()
 	}
+	// Score is persistent, so no need to check if it is finished.
+	cmp.tween.Update()
 }
 
 func (cmp ScoreComponent) Draw(screen draws.Image) {

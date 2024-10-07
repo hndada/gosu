@@ -25,7 +25,7 @@ func NewJudgmentComponent(res *Resources, opts *Options) (cmp JudgmentComponent)
 		cmp.anims[i] = a
 	}
 
-	tw := tween.Tween{}
+	tw := tween.Tween{MaxLoop: 1}
 	tw.Add(1.00, +0.15, 25*time.Millisecond, tween.EaseLinear)
 	tw.Add(1.15, -0.15, 25*time.Millisecond, tween.EaseLinear)
 	tw.Add(1.00, +0.0, 200*time.Millisecond, tween.EaseLinear)
@@ -35,18 +35,25 @@ func NewJudgmentComponent(res *Resources, opts *Options) (cmp JudgmentComponent)
 	return
 }
 
-func (cmp *JudgmentComponent) Update(kjk []game.JudgmentKind) {
+func (cmp *JudgmentComponent) Update(keysJudgmentKind []game.JudgmentKind) {
 	// worst is guaranteed not to be out of range.
 	worst := blank
-	for _, jk := range kjk {
+	for _, jk := range keysJudgmentKind {
+		if jk == blank {
+			continue
+		}
 		if worst == blank || worst < jk {
 			worst = jk
 		}
 	}
+
 	if worst <= miss {
 		cmp.worst = worst
 		cmp.anims[worst].Reset()
 		cmp.tween.Start()
+	}
+	if !cmp.tween.IsFinished() {
+		cmp.tween.Update()
 	}
 }
 

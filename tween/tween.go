@@ -1,6 +1,10 @@
 package tween
 
-import "time"
+import (
+	"time"
+
+	"github.com/hndada/gosu/times"
+)
 
 // Tween (in-betweening) calculates a value between two values at a certain time.
 // Unit is a single tweening operation.
@@ -50,14 +54,14 @@ func (tw *Tween) Start() {
 		tw.ends[i] = t
 	}
 }
+
+// Index is the only factor that determines if the tween is finished.
 func (tw *Tween) Stop()           { tw.index = len(tw.Units) }
 func (tw Tween) IsFinished() bool { return tw.index >= len(tw.Units) }
+func (tw *Tween) Index() int      { return tw.index }
 
-// Value calculates the current tween value based on the elapsed time.
-func (tw *Tween) Value() float64 {
-	if len(tw.Units) == 0 {
-		return 0 // No units to tween
-	}
+// Update calculates the current tween value based on the elapsed time.
+func (tw *Tween) Update() {
 	if len(tw.starts) != len(tw.Units) {
 		tw.Start()
 	}
@@ -67,24 +71,34 @@ func (tw *Tween) Value() float64 {
 	for tw.index < len(tw.Units) {
 		if elapsed < tw.ends[tw.index] {
 			// Current unit is still in progress
-			unitElapsed := elapsed - tw.starts[tw.index]
-			return tw.Units[tw.index].Value(unitElapsed)
+			return
 		}
 
 		// Move to the next unit
 		tw.index++
-		if tw.index >= len(tw.Units) {
-			// If all units are done, check for looping
-			if tw.MaxLoop == 0 || tw.loop < tw.MaxLoop-1 {
-				tw.index = 0
-				tw.loop++
-				tw.Start() // Restart the tween sequence for the new loop
-				elapsed = time.Since(tw.startTime)
-			} else {
-				// If finished all loops, return the final value of the last unit
-				break
-			}
+		if tw.index < len(tw.Units) {
+			continue
 		}
+
+		// If all units are done, check for looping
+		if tw.MaxLoop == 0 || tw.loop < tw.MaxLoop-1 {
+			tw.loop++
+			tw.index = 0
+			tw.startTime = tw.startTime.Add(tw.ends[len(tw.ends)-1])
+			elapsed = time.Since(tw.startTime)
+		}
+	}
+}
+
+func (tw Tween) Value() float64 {
+	if len(tw.Units) == 0 {
+		return 0
+	}
+
+	if tw.index < len(tw.Units) {
+		elapsed := times.Since(tw.startTime)
+		unitElapsed := elapsed - tw.starts[tw.index]
+		return tw.Units[tw.index].Value(unitElapsed)
 	}
 
 	last := tw.Units[len(tw.Units)-1]
