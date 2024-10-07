@@ -1,15 +1,17 @@
 package piano
 
 import (
+	"time"
+
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
-	"github.com/hndada/gosu/times"
+	"github.com/hndada/gosu/tween"
 )
 
 type JudgmentComponent struct {
 	anims []draws.Animation
 	worst game.JudgmentKind
-	tween times.Tween
+	tween tween.Tween
 }
 
 func NewJudgmentComponent(res *Resources, opts *Options) (cmp JudgmentComponent) {
@@ -23,12 +25,12 @@ func NewJudgmentComponent(res *Resources, opts *Options) (cmp JudgmentComponent)
 		cmp.anims[i] = a
 	}
 
-	tw := times.Tween{}
-	tw.Add(1.00, +0.15, 25, times.EaseLinear)
-	tw.Add(1.15, -0.15, 25, times.EaseLinear)
-	tw.Add(1.00, +0.0, 200, times.EaseLinear)
-	tw.Add(1.00, -0.25, 25, times.EaseLinear)
-	tw.Finish() // To avoid drawing at the beginning.
+	tw := tween.Tween{}
+	tw.Add(1.00, +0.15, 25*time.Millisecond, tween.EaseLinear)
+	tw.Add(1.15, -0.15, 25*time.Millisecond, tween.EaseLinear)
+	tw.Add(1.00, +0.0, 200*time.Millisecond, tween.EaseLinear)
+	tw.Add(1.00, -0.25, 25*time.Millisecond, tween.EaseLinear)
+	tw.Stop() // To make sure judgment is invisible at the beginning.
 	cmp.tween = tw
 	return
 }
@@ -44,7 +46,7 @@ func (cmp *JudgmentComponent) Update(kjk []game.JudgmentKind) {
 	if worst <= miss {
 		cmp.worst = worst
 		cmp.anims[worst].Reset()
-		cmp.tween.Reset()
+		cmp.tween.Start()
 	}
 }
 
@@ -53,6 +55,6 @@ func (cmp JudgmentComponent) Draw(dst draws.Image) {
 		return
 	}
 	a := cmp.anims[cmp.worst]
-	a.Scale(cmp.tween.Current())
+	a.Scale(cmp.tween.Value())
 	a.Draw(dst)
 }

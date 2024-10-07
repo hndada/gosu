@@ -50,8 +50,8 @@ func (cmps *Components) Update(ka game.KeyboardAction, dys game.Dynamics, s Scor
 	cmps.hitLights.Update(s.keysJudgmentKind)
 	cmps.holdLights.Update(ka)
 	cmps.judgment.Update(s.keysJudgmentKind)
-	// cmps.combo.Update(s.Combo)
-	// cmps.score.Update(s.Score)
+	cmps.combo.Update(s.Combo)
+	cmps.score.Update(s.Score)
 	return nil
 }
 
@@ -64,7 +64,7 @@ func (cmps Components) Draw(dst draws.Image) {
 	cmps.backlights.Draw(dst)
 	cmps.hitLights.Draw(dst)
 	cmps.holdLights.Draw(dst)
-	// cmps.judgment.Draw(dst)
-	// cmps.combo.Draw(dst)
-	// cmps.score.Draw(dst)
+	cmps.judgment.Draw(dst)
+	cmps.combo.Draw(dst)
+	cmps.score.Draw(dst)
 }

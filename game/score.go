@@ -5,7 +5,7 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/times"
+	"github.com/hndada/gosu/tween"
 )
 
 const (
@@ -36,7 +36,7 @@ type ScoreComponent struct {
 	sprites []draws.Sprite
 	score   float64
 	w       float64 // Score's width is fixed.
-	tween   times.Tween
+	tween   tween.Tween
 }
 
 // Name of a function which returns closure ends with "-er".
@@ -56,25 +56,24 @@ func NewScoreComponent(imgs []draws.Image, opts *ScoreOptions) (cmp ScoreCompone
 		sprite.Locate(ScreenSizeX, h0-sprite.H(), draws.RightTop)
 		cmp.sprites[i] = sprite
 	}
-	// cmp.tween = cmp.newTween()
 	return
-}
-
-func (cmp *ScoreComponent) newTween() times.Tween {
-	begin := cmp.tween.Current()
-	change := cmp.score - begin
-	return times.NewTween(begin, change, 400, times.EaseOutExponential)
 }
 
 func (cmp *ScoreComponent) Update(newScore float64) {
 	if old := cmp.score; old != newScore {
 		cmp.score = newScore
-		cmp.tween = cmp.newTween()
+
+		tw := tween.Tween{MaxLoop: 1}
+		begin := cmp.tween.Value()
+		change := cmp.score - begin
+		tw.Add(begin, change, 400, tween.EaseOutExponential)
+		cmp.tween = tw
+		cmp.tween.Start()
 	}
 }
 
 func (cmp ScoreComponent) Draw(screen draws.Image) {
-	score := int(cmp.tween.Current())
+	score := int(cmp.tween.Value())
 	digits := make([]int, 0)
 	for v := score; v > 0; v /= 10 {
 		digits = append(digits, v%10) // Little endian.
