@@ -15,7 +15,7 @@ import (
 type Scene interface {
 	Update() any
 	Draw(screen draws.Image)
-	// DebugString() string
+	DebugString() string
 }
 
 type PlayArgs struct {

@@ -102,9 +102,11 @@ func (g *Game) Update() error {
 
 func (g *Game) Draw(screen *ebiten.Image) {
 	g.scene.Draw(draws.Image{Image: screen})
+	s := g.scene.DebugString()
 	if g.options.DebugPrint {
-		ebitenutil.DebugPrint(screen, g.options.DebugString())
+		s += "\n" + g.options.DebugString()
 	}
+	ebitenutil.DebugPrint(screen, s)
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {

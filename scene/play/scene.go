@@ -19,6 +19,7 @@ type play interface {
 	Update(now int32, kas []game.KeyboardAction) any
 	// PopSamples() []game.Sample
 	Draw(dst draws.Image)
+	DebugString() string
 }
 
 // Todo: draw 4:3 screen on 16:9 screen
@@ -182,7 +183,7 @@ func (s *Scene) SetMusicOffset(newOffset int32) {
 }
 
 func (s *Scene) firstUpdate() {
-	const wait = 1100 * time.Millisecond
+	const wait = 1800 * time.Millisecond
 	s.startTime = times.Now().Add(wait)
 	if kb, ok := s.keyboard.(*input.Keyboard); ok {
 		kb.Listen(s.startTime)
@@ -255,6 +256,10 @@ func (s *Scene) Close() {
 
 func (s Scene) Draw(dst draws.Image) {
 	s.play.Draw(dst)
+}
+
+func (s Scene) DebugString() string {
+	return s.play.DebugString()
 }
 
 // func (t *Timer) sync() {
