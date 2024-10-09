@@ -18,10 +18,6 @@ type KeyboardState struct {
 	pressedKeys    []input.Key
 }
 
-func NewKeyboardState() *KeyboardState {
-	return &KeyboardState{}
-}
-
 // AreAllKeysPressed is used for checking modifier keys.
 func (ks *KeyboardState) AreAllKeysPressed(keys []input.Key) bool {
 	if times.Now().Sub(ks.lastUpdateTime) > minUpdateInterval {

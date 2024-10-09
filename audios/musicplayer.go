@@ -20,10 +20,12 @@ type MusicPlayer struct {
 	volume     *effects.Volume       // for volume
 }
 
-func NewMusicPlayer(rc io.ReadCloser, ext string) (MusicPlayer, error) {
+// I guess NewMusicPlayer should return pointer, so that
+// it can be controlled by pointer receiver.
+func NewMusicPlayer(rc io.ReadCloser, ext string) (*MusicPlayer, error) {
 	seekCloser, format, err := Decode(rc, ext)
 	if err != nil {
-		return MusicPlayer{}, fmt.Errorf("decode %s: %w", ext, err)
+		return nil, fmt.Errorf("decode %s: %w", ext, err)
 	}
 	// done := make(chan bool)
 	// callback := beep.Callback(func() { done <- true })
@@ -31,7 +33,7 @@ func NewMusicPlayer(rc io.ReadCloser, ext string) (MusicPlayer, error) {
 	ctrl := &beep.Ctrl{Streamer: seekCloser}
 	streamer := beep.Resample(quality, format.SampleRate, defaultSampleRate, ctrl)
 	volume := &effects.Volume{Streamer: streamer, Base: 2}
-	return MusicPlayer{
+	return &MusicPlayer{
 		seekCloser: seekCloser,
 		format:     format,
 		ctrl:       ctrl,
@@ -40,11 +42,11 @@ func NewMusicPlayer(rc io.ReadCloser, ext string) (MusicPlayer, error) {
 	}, nil
 }
 
-func NewMusicPlayerFromFile(fsys fs.FS, name string) (MusicPlayer, error) {
+func NewMusicPlayerFromFile(fsys fs.FS, name string) (*MusicPlayer, error) {
 	ext := filepath.Ext(name)
 	f, err := fsys.Open(name)
 	if err != nil {
-		return MusicPlayer{}, fmt.Errorf("open %s: %w", name, err)
+		return nil, fmt.Errorf("open %s: %w", name, err)
 	}
 	return NewMusicPlayer(f, ext)
 }

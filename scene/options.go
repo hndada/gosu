@@ -23,6 +23,11 @@ import (
 
 // Load server first, then local.
 // In web mode, server is the only option.
+const (
+	ScreenSizeX = game.ScreenSizeX
+	ScreenSizeY = game.ScreenSizeY
+)
+
 type Options struct {
 	// These are likely to be modified by the user manually,
 	// hence it is at the top of the struct.

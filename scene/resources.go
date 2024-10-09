@@ -21,9 +21,10 @@ const (
 // SearchBoxSprite's Height: 25
 type Resources struct {
 	DefaultBackgroundImage draws.Image
-	CursorBase             draws.Image
-	CursorAdditive         draws.Image
-	CursorTrail            draws.Image
+	BoxMaskImage           draws.Image
+	CursorBaseImage        draws.Image
+	CursorAdditiveImage    draws.Image
+	CursorTrailImage       draws.Image
 
 	Piano *piano.Resources
 }
@@ -34,18 +35,21 @@ func NewResources(fsys fs.FS) (res *Resources) {
 		fname := "interface/default-bg.jpg"
 		res.DefaultBackgroundImage = draws.NewImageFromFile(fsys, fname)
 	}
-
+	{
+		fname := "interface/box-mask.png"
+		res.BoxMaskImage = draws.NewImageFromFile(fsys, fname)
+	}
 	{
 		fname := "interface/cursor/base.png"
-		res.CursorBase = draws.NewImageFromFile(fsys, fname)
+		res.CursorBaseImage = draws.NewImageFromFile(fsys, fname)
 	}
 	{
 		fname := "interface/cursor/additive.png"
-		res.CursorAdditive = draws.NewImageFromFile(fsys, fname)
+		res.CursorAdditiveImage = draws.NewImageFromFile(fsys, fname)
 	}
 	{
 		fname := "interface/cursor/trail.png"
-		res.CursorTrail = draws.NewImageFromFile(fsys, fname)
+		res.CursorTrailImage = draws.NewImageFromFile(fsys, fname)
 	}
 	res.Piano = piano.NewResources(fsys)
 	return

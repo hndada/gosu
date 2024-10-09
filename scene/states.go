@@ -9,10 +9,14 @@ import "github.com/hndada/gosu/ui"
 
 type States struct {
 	Keyboard *ui.KeyboardState
+	// SceneSelect
+	// ChartListQuery        string
+	// ChartListOuterIndex   int   // i
+	// ChartListInnerIndexes []int // js
 }
 
 func NewStates() *States {
 	return &States{
-		Keyboard: ui.NewKeyboardState(),
+		Keyboard: &ui.KeyboardState{},
 	}
 }

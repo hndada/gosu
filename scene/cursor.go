@@ -13,17 +13,17 @@ type CursorComponent struct {
 // Cursor should be at CenterMiddle in circle mode (in far future)
 func NewCursorComponent(res *Resources, opts *Options) (cmp CursorComponent) {
 	{
-		s := draws.NewSprite(res.CursorBase)
+		s := draws.NewSprite(res.CursorBaseImage)
 		s.Scale(opts.MouseCursorImageScale)
 		cmp.base = s
 	}
 	{
-		s := draws.NewSprite(res.CursorAdditive)
+		s := draws.NewSprite(res.CursorAdditiveImage)
 		s.Scale(opts.MouseCursorImageScale)
 		cmp.additive = s
 	}
 	{
-		s := draws.NewSprite(res.CursorTrail)
+		s := draws.NewSprite(res.CursorTrailImage)
 		s.Scale(opts.MouseCursorImageScale)
 		cmp.trail = s
 	}

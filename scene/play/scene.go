@@ -29,7 +29,7 @@ type Scene struct {
 
 	*game.ChartHeader
 	play              play
-	musicPlayer       audios.MusicPlayer
+	musicPlayer       *audios.MusicPlayer
 	keyboard          input.KeyboardReader
 	lastKeyboardState input.KeyboardState
 

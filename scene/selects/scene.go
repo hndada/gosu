@@ -2,6 +2,8 @@ package selects
 
 import (
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/piano"
 	"github.com/hndada/gosu/scene"
 )
 
@@ -14,31 +16,47 @@ type Scene struct {
 	*scene.Handlers
 	*scene.Databases
 
+	boxSprite          draws.Sprite
 	list               ListComponent
+	lastChart          *scene.ChartRow
 	background         scene.BackgroundComponent
-	previewMusicPlayer *PreviewMusicPlayer
+	volume             *float64
+	previewMusicPlayer PreviewMusicPlayer
 	// chartInfo  ChartInfoComponent
 	// searchBox  SearchBoxComponent
+
+	// Score box color: Gray128 with 50% transparent
+	// Hovered Score box color: Gray96 with 50% transparent
+	// leaderboard
 }
 
-func NewScene(res *scene.Resources, opts *scene.Options,
-	states *scene.States, hds *scene.Handlers, dbs *scene.Databases) (*Scene, error) {
-	return &Scene{
+const (
+	listBoxWidth  = 400
+	listBoxHeight = 100
+	listBoxCount  = scene.ScreenSizeY/listBoxHeight + 1
+)
+
+func NewScene(res *scene.Resources, opts *scene.Options, states *scene.States, hds *scene.Handlers, dbs *scene.Databases) (*Scene, error) {
+	scn := &Scene{
 		Resources: res,
 		Options:   opts,
 		States:    states,
 		Handlers:  hds,
 		Databases: dbs,
-	}, nil
+	}
+
+	s := draws.NewSprite(res.BoxMaskImage)
+	s.SetSize(listBoxWidth, listBoxHeight)
+	s.Locate(game.ScreenSizeX/2, game.ScreenSizeY/2, draws.CenterMiddle)
+	scn.boxSprite = s
+
+	// cmp.lastChart = charts[0][0]
+	return scn, nil
 }
 
+// (+NumpadEnter)
+// Left and Right arrows are for advanced options. (by double click)
 func (s *Scene) Update() any {
-	// 1. Listen key input, then update list
-	// : ESC, Enter (+NumpadEnter), ArrowUp, ArrowDown, ArrowLeft, ArrowRight
-	// Left and Right is for advanced options. (by double click)
-	// 2. Update preview music and background
-	// 3. render list
-
 	s.Handlers.MusicVolume.Handle()
 	s.Handlers.SoundVolumeScale.Handle()
 	s.Handlers.MusicOffset.Handle()
@@ -47,18 +65,37 @@ func (s *Scene) Update() any {
 
 	s.Handlers.Mode.Handle()
 	s.Handlers.SubMode.Handle()
-	mode := *s.Handlers.Mode.Value
-	s.Handlers.SpeedScales[mode].Handle()
+	s.Handlers.SpeedScales[s.mode()].Handle()
+
+	c, isPlay := s.list.update()
+	if c != nil && isPlay {
+		return s.playChart(c)
+	}
+
+	lc := s.lastChart
+	if lc == nil || lc.MusicName != c.MusicName {
+		s.previewMusicPlayer.Close()
+		pmp, err := NewPreviewMusicPlayer(c.FS, c.MusicName, s.volume)
+		if err == nil { // music file may not exist
+			s.previewMusicPlayer = pmp
+		}
+	}
+	if lc == nil || lc.BackgroundFilename != c.BackgroundFilename {
+		s.background = scene.NewBackgroundComponent(s.Resources, s.Options)
+	}
+	s.lastChart = c
 	return nil
 }
 
-func (s *Scene) playChart() any {
+func (s Scene) mode() int { return *s.Handlers.Mode.Value }
+
+func (s *Scene) playChart(row *scene.ChartRow) any {
 	s.previewMusicPlayer.Close()
-	c := s.list.charts[s.list.i][s.list.j]
+	mods := []game.Mods{piano.Mods{}}[s.mode()]
 	return scene.PlayArgs{
-		ChartFS:       c.FS,
-		ChartFilename: c.Name,
-		Mods:          nil,
+		ChartFS:       row.FS,
+		ChartFilename: row.Name,
+		Mods:          mods,
 	}
 }
 
