@@ -31,14 +31,14 @@ const (
 	listBoxCount  = game.ScreenSizeY/listBoxHeight + 1
 )
 
-func NewScene(g *game.Game) (*Scene, error) {
+func (Scene) New(g *game.Game, args game.Args) (game.Scene, error) {
 	scn := &Scene{Game: g}
+
 	s := draws.NewSprite(g.Resources.BoxMaskImage)
 	s.SetSize(listBoxWidth, listBoxHeight)
 	s.Locate(plays.ScreenSizeX/2, plays.ScreenSizeY/2, draws.CenterMiddle)
 	scn.boxSprite = s
 
-	// cmp.lastChart = charts[0][0]
 	return scn, nil
 }
 
@@ -91,6 +91,8 @@ func (s Scene) Draw(dst draws.Image) {
 	s.background.Draw(dst)
 	s.list.Draw(dst)
 }
+
+func (s Scene) WindowTitle() string { return "gosu" }
 
 func (s Scene) DebugString() string {
 	return ""

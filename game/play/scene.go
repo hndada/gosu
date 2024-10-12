@@ -44,7 +44,8 @@ type Scene struct {
 // (*Scene, error) is typically used for regular functions that operate on struct pointers.
 // (s *Scene, err error) is typically used for methods attached to structs.
 // chartFS fs.FS, cname string, replayFS fs.FS, rname string, mods plays.Mods) (*Scene, error) {
-func NewScene(g *game.Game, args game.PlayArgs) (*Scene, error) {
+func (Scene) New(g *game.Game, _args game.Args) (game.Scene, error) {
+	args := _args.(game.PlayArgs)
 	s := &Scene{Game: g}
 	switch g.Options.Mode {
 	case plays.ModePiano:
@@ -134,7 +135,7 @@ func (s Scene) newSamplePlayer(fsys fs.FS, musicFilename string) audios.SoundPla
 }
 
 // Now returns current time in millisecond.
-func (s Scene) Now() time.Duration {
+func (s Scene) now() time.Duration {
 	var d time.Duration
 	if s.paused {
 		d = s.pauseTime.Sub(s.startTime)
@@ -191,7 +192,7 @@ func (s *Scene) Update() any {
 	}
 
 	// Use unified time.
-	now := s.Now()
+	now := s.now()
 	nowMS := int32(now.Milliseconds())
 	// nowDuration := time.Duration(now) * time.Millisecond
 

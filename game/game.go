@@ -31,9 +31,9 @@ type Game struct {
 	Handlers  *Handlers
 	Databases *Databases
 
-	CurrentScene Scene
 	SceneSelect  Scene
 	ScenePlay    Scene
+	CurrentScene Scene
 }
 
 func NewGame(fsys fs.FS) (*Game, error) {
@@ -41,22 +41,17 @@ func NewGame(fsys fs.FS) (*Game, error) {
 		KeyboardState: &ui.KeyboardState{},
 	}
 
-	if _, err := fs.Stat(fsys, "resources"); err != nil {
-		s.Resources = NewResources(resources.DefaultFS)
+	if resFS, err := fs.Sub(fsys, "resources"); err == nil {
+		s.Resources = NewResources(resFS)
 	} else {
-		s.Resources = NewResources(fsys)
+		s.Resources = NewResources(resources.DefaultFS)
 	}
 
 	// NewOptions is always called, as there
 	// might be omitted fields on a local option file.
 	s.Options = NewOptions()
-	if _, err := fs.Stat(fsys, "options.json"); err == nil {
-		data, err := fs.ReadFile(fsys, "options.json")
-		if err != nil {
-			return nil, err
-		}
-		err = json.Unmarshal(data, s.Options)
-		if err != nil {
+	if data, err := fs.ReadFile(fsys, "options.json"); err == nil {
+		if err := json.Unmarshal(data, s.Options); err != nil {
 			fmt.Printf("Failed to unmarshal options.json: %v\n", err)
 		}
 	}
@@ -65,6 +60,7 @@ func NewGame(fsys fs.FS) (*Game, error) {
 	s.Options.Piano.SetDerived()
 
 	s.Handlers = NewHandlers(s.Options, s.KeyboardState)
+
 	dbs, err := NewDatabases(fsys)
 	if err != nil {
 		panic(err)
@@ -94,7 +90,7 @@ func (g *Game) Update() error {
 		// debug.SetGCPercent(0)
 	case piano.Scorer:
 		g.CurrentScene = g.SceneSelect
-		ebiten.SetWindowTitle("gosu")
+		ebiten.SetWindowTitle(g.CurrentScene.WindowTitle())
 		// debug.SetGCPercent(100)
 	case error:
 		fmt.Println("play scene error:", args)
