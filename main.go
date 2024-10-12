@@ -4,11 +4,9 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu"
+	"github.com/hndada/gosu/game"
 )
 
-// Separate main function from game.go to avoid collapsing the game package.
-// Music directory is moved to cmd/gosu, because it is not a part of the game logic.
 func main() {
 	dir, err := os.Getwd()
 	if err != nil {
@@ -16,7 +14,11 @@ func main() {
 	}
 	root := os.DirFS(dir)
 
-	g := gosu.NewGame(root)
+	g, err := game.NewGame(root)
+	if err != nil {
+		panic(err)
+	}
+
 	if err := ebiten.RunGame(g); err != nil {
 		panic(err)
 	}

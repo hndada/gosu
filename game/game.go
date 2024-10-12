@@ -8,32 +8,36 @@ import (
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/plays/piano"
 	"github.com/hndada/gosu/resources"
 	"github.com/hndada/gosu/ui"
 )
 
-// Resources, Options, States.
 // Resources are loaded from file system.
 // Options are set by user and saved to file system.
-// States are generated when runtime, and not saved.
+type Scene interface {
+	New(*Game, Args) (Scene, error)
+	Update() any
+	Draw(screen draws.Image)
+	WindowTitle() string
+	DebugString() string
+}
 
-// I would keep os package not to be in scene package.
-
-type States struct {
+type Game struct {
 	*ui.KeyboardState
-	// ws        *websocket.Conn
 
 	Resources *Resources
 	Options   *Options
 	Handlers  *Handlers
 	Databases *Databases
 
-	Scene       Scene
-	SceneSelect Scene
+	CurrentScene Scene
+	SceneSelect  Scene
+	ScenePlay    Scene
 }
 
-func NewStates(fsys fs.FS) (*States, error) {
-	s := &States{
+func NewGame(fsys fs.FS) (*Game, error) {
+	s := &Game{
 		KeyboardState: &ui.KeyboardState{},
 	}
 
@@ -75,15 +79,43 @@ func NewStates(fsys fs.FS) (*States, error) {
 	return s, nil
 }
 
-func (s States) Draw(screen *ebiten.Image) {
-	s.Scene.Draw(draws.Image{Image: screen})
-	str := s.Scene.DebugString()
+// TODO: result page
+func (g *Game) Update() error {
+	var err error
+	switch args := g.CurrentScene.Update().(type) {
+	case PlayArgs:
+		g.ScenePlay, err = g.ScenePlay.New(g, args)
+		if err != nil {
+			fmt.Println("play scene error:", args)
+			return nil
+		}
+		g.CurrentScene = g.ScenePlay
+		ebiten.SetWindowTitle(g.CurrentScene.WindowTitle())
+		// debug.SetGCPercent(0)
+	case piano.Scorer:
+		g.CurrentScene = g.SceneSelect
+		ebiten.SetWindowTitle("gosu")
+		// debug.SetGCPercent(100)
+	case error:
+		fmt.Println("play scene error:", args)
+		panic(args)
+	}
+	return nil
+}
+
+func (s Game) Draw(screen *ebiten.Image) {
+	s.CurrentScene.Draw(draws.Image{Image: screen})
+	str := s.CurrentScene.DebugString()
 	if s.Options.DebugPrint {
 		str += "\n" + s.Options.DebugString()
 	}
 	ebitenutil.DebugPrint(screen, str)
 }
 
-func (s States) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+func (s Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return ScreenSizeX, ScreenSizeY
 }
+
+// I would keep os package not to be in scene package.
+// json.MarshalIndent(options, "", "  ")
+// os.WriteFile(fname, data, 0644)

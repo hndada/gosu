@@ -10,12 +10,7 @@ import (
 // TODO: list key handler: double click left/right to open advanced options
 // Component is basically EventHandler.
 type Scene struct {
-	*game.Resources
-	*game.Options
-	*game.States
-	*game.Handlers
-	*game.Databases
-
+	*game.Game
 	boxSprite          draws.Sprite
 	list               ListComponent
 	lastChart          *game.ChartRow
@@ -36,16 +31,9 @@ const (
 	listBoxCount  = game.ScreenSizeY/listBoxHeight + 1
 )
 
-func NewScene(res *game.Resources, opts *game.Options, states *game.States, hds *game.Handlers, dbs *game.Databases) (*Scene, error) {
-	scn := &Scene{
-		Resources: res,
-		Options:   opts,
-		States:    states,
-		Handlers:  hds,
-		Databases: dbs,
-	}
-
-	s := draws.NewSprite(res.BoxMaskImage)
+func NewScene(g *game.Game) (*Scene, error) {
+	scn := &Scene{Game: g}
+	s := draws.NewSprite(g.Resources.BoxMaskImage)
 	s.SetSize(listBoxWidth, listBoxHeight)
 	s.Locate(plays.ScreenSizeX/2, plays.ScreenSizeY/2, draws.CenterMiddle)
 	scn.boxSprite = s

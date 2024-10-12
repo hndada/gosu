@@ -24,8 +24,7 @@ type play interface {
 
 // Todo: draw 4:3 screen on 16:9 screen
 type Scene struct {
-	*game.Resources
-	*game.Options
+	*game.Game
 
 	*plays.ChartHeader
 	play              play
@@ -45,13 +44,9 @@ type Scene struct {
 // (*Scene, error) is typically used for regular functions that operate on struct pointers.
 // (s *Scene, err error) is typically used for methods attached to structs.
 // chartFS fs.FS, cname string, replayFS fs.FS, rname string, mods plays.Mods) (*Scene, error) {
-func NewScene(res *game.Resources, opts *game.Options, args game.PlayArgs) (*Scene, error) {
-	s := &Scene{
-		Resources: res,
-		Options:   opts,
-	}
-
-	switch opts.Mode {
+func NewScene(g *game.Game, args game.PlayArgs) (*Scene, error) {
+	s := &Scene{Game: g}
+	switch g.Options.Mode {
 	case plays.ModePiano:
 		mods := args.Mods.(piano.Mods)
 		c, err := piano.NewChart(args.ChartFS, args.ChartFilename, mods)
@@ -65,7 +60,7 @@ func NewScene(res *game.Resources, opts *game.Options, args game.PlayArgs) (*Sce
 		// soft-hitnormal.wav
 		sp := s.newSamplePlayer(args.ChartFS, s.MusicFilename)
 
-		play, err := piano.NewPlay(res.Piano, opts.Piano, c, mods, &sp)
+		play, err := piano.NewPlay(s.Resources.Piano, s.Options.Piano, c, mods, &sp)
 		if err != nil {
 			err = fmt.Errorf("failed to create play scene: %w", err)
 			return nil, err
@@ -79,15 +74,15 @@ func NewScene(res *game.Resources, opts *game.Options, args game.PlayArgs) (*Sce
 		return nil, err
 	}
 	s.musicPlayer = mp
-	mp.SetVolume(s.MusicVolume)
-	s.musicOffset = s.MusicOffset
+	mp.SetVolume(s.Options.MusicVolume)
+	s.musicOffset = s.Options.MusicOffset
 
 	var keyCount int
 	var keyNames []string
-	switch opts.Mode {
+	switch s.Options.Mode {
 	case plays.ModePiano:
-		keyCount = opts.SubMode
-		keyNames = opts.Piano.KeyMappings[keyCount]
+		keyCount = s.Options.SubMode
+		keyNames = s.Options.Piano.KeyMappings[keyCount]
 	case plays.ModeDrum:
 		keyCount = 4
 		// keyNames = opts.Drum.Key.Mappings
@@ -109,7 +104,7 @@ func NewScene(res *game.Resources, opts *game.Options, args game.PlayArgs) (*Sce
 }
 
 func (s Scene) newSamplePlayer(fsys fs.FS, musicFilename string) audios.SoundPlayer {
-	sp := audios.NewSoundPlayer(&s.SoundVolumeScale)
+	sp := audios.NewSoundPlayer(&s.Options.SoundVolumeScale)
 	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
