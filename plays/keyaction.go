@@ -1,8 +1,6 @@
-package game
+package plays
 
-import (
-	"github.com/hndada/gosu/input"
-)
+import "github.com/hndada/gosu/input"
 
 type KeyActionType = int
 

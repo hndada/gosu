@@ -2,7 +2,7 @@ package piano
 
 import (
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/plays"
 )
 
 type HitLightsComponent struct {
@@ -24,7 +24,7 @@ func NewHitLightsComponent(res *Resources, opts *Options, keyCount int) (cmp Hit
 }
 
 // Tail also makes hit lighting on.
-func (cmp *HitLightsComponent) Update(kjk []game.JudgmentKind) {
+func (cmp *HitLightsComponent) Update(kjk []plays.JudgmentKind) {
 	for k, jk := range kjk {
 		if jk <= good {
 			cmp.keysAnim[k].Reset()

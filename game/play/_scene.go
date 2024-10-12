@@ -9,9 +9,9 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osr"
-	"github.com/hndada/gosu/game/piano"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/mode"
+	"github.com/hndada/gosu/plays/piano"
 	"github.com/hndada/gosu/scene"
 )
 

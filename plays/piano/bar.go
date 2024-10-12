@@ -2,7 +2,7 @@ package piano
 
 import (
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/plays"
 )
 
 // Drum and Piano modes have different bar drawing methods.
@@ -17,7 +17,7 @@ type Bars struct {
 }
 
 // Given Dynamics' index is 0 and it is fine to modify it.
-func NewBars(dys game.Dynamics) Bars {
+func NewBars(dys plays.Dynamics) Bars {
 	// const useDefaultMeter = 0
 	times := dys.BeatTimes()
 	bs := make([]Bar, len(times))
@@ -54,7 +54,7 @@ func NewBarsComponent(res *Resources, opts *Options, c *Chart) (cmp BarsComponen
 // The same concept also applies to notes.
 func (cmp *BarsComponent) Update(cursor float64) {
 	cmp.cursor = cursor
-	lowermost := cursor - cmp.reach // game.ScreenH
+	lowermost := cursor - cmp.reach // plays.ScreenH
 	for i := cmp.bars.index; i < len(cmp.bars.data); i++ {
 		b := cmp.bars.data[i]
 		if b.position > lowermost {
@@ -67,7 +67,7 @@ func (cmp *BarsComponent) Update(cursor float64) {
 
 // Bars are fixed. Lane itself moves, all bars move as same amount.
 func (cmp BarsComponent) Draw(dst draws.Image) {
-	uppermost := cmp.cursor + cmp.reach // game.ScreenH
+	uppermost := cmp.cursor + cmp.reach // plays.ScreenH
 	for i := cmp.bars.index; i < len(cmp.bars.data); i++ {
 		b := cmp.bars.data[i]
 		if b.position > uppermost {

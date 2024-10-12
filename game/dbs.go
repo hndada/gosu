@@ -1,11 +1,11 @@
-package scene
+package game
 
 import (
 	"fmt"
 	"io/fs"
 	"path/filepath"
 
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/plays"
 )
 
 // A function which load database should not load the entire file system into memory.
@@ -138,7 +138,7 @@ func NewChartDB(fsys fs.FS, dirName string) ([]ChartRow, error) {
 			continue
 		}
 
-		c, err := game.NewChartHeaderFromFile(fsys, filepath.Join(dirName, f.Name()))
+		c, err := plays.NewChartHeaderFromFile(fsys, filepath.Join(dirName, f.Name()))
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 			continue
@@ -174,7 +174,7 @@ func NewReplayDB(fsys fs.FS) ([]ReplayRow, error) {
 			continue
 		}
 
-		_, hash, err := game.NewReplay(fsys, f.Name(), 4)
+		_, hash, err := plays.NewReplay(fsys, f.Name(), 4)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 			continue

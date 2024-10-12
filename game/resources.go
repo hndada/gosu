@@ -1,10 +1,10 @@
-package scene
+package game
 
 import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/game/piano"
+	"github.com/hndada/gosu/plays/piano"
 )
 
 // Todo: deal with two kinds of values: file path and directory path.

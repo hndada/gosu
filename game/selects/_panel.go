@@ -2,10 +2,8 @@ package choose
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/scene"
 )
 
 // list: 150x150

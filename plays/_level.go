@@ -1,4 +1,4 @@
-package game
+package plays
 
 func DifficultyPieceTimes(dys []*Dynamic, chartDuration int32) (times []int32, durations []int32) {
 	const (

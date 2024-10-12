@@ -1,8 +1,8 @@
-package scene
+package game
 
 import (
-	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/input"
+	"github.com/hndada/gosu/plays"
 	"github.com/hndada/gosu/ui"
 )
 
@@ -158,8 +158,8 @@ func newModeHandler(opts *Options, kbs *ui.KeyboardState) ui.KeyNumberHandler[in
 	return ui.KeyNumberHandler[int]{
 		NumberController: ui.NumberController[int]{
 			Value: &opts.Mode,
-			Min:   game.ModeAll,
-			Max:   game.ModePiano,
+			Min:   plays.ModeAll,
+			Max:   plays.ModePiano,
 			Unit:  1,
 		},
 		KeyListener: *ui.NewKeyListener(
@@ -187,10 +187,10 @@ func newSubModeHandlers(opts *Options, kbs *ui.KeyboardState) []ui.KeyNumberHand
 	}
 
 	hs := make([]ui.KeyNumberHandler[int], 0, 3)
-	for mode := game.ModePiano; mode <= game.ModePiano; mode++ {
+	for mode := plays.ModePiano; mode <= plays.ModePiano; mode++ {
 		min, max := 0, 0
 		switch mode {
-		case game.ModePiano:
+		case plays.ModePiano:
 			min, max = 4, 10
 		}
 
@@ -227,10 +227,10 @@ func newSpeedScaleHandlers(opts *Options, kbs *ui.KeyboardState) []ui.KeyNumberH
 	}
 
 	hs := make([]ui.KeyNumberHandler[float64], 0, 3)
-	for mode := game.ModePiano; mode <= game.ModePiano; mode++ {
+	for mode := plays.ModePiano; mode <= plays.ModePiano; mode++ {
 		var ptr *float64
 		switch mode {
-		case game.ModePiano:
+		case plays.ModePiano:
 			ptr = &opts.Piano.SpeedScale
 		}
 		hs = append(hs, ui.KeyNumberHandler[float64]{

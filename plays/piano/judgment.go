@@ -4,13 +4,13 @@ import (
 	"time"
 
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/plays"
 	"github.com/hndada/gosu/tween"
 )
 
 type JudgmentComponent struct {
 	anims []draws.Animation
-	worst game.JudgmentKind
+	worst plays.JudgmentKind
 	tween tween.Tween
 }
 
@@ -35,7 +35,7 @@ func NewJudgmentComponent(res *Resources, opts *Options) (cmp JudgmentComponent)
 	return
 }
 
-func (cmp *JudgmentComponent) Update(keysJudgmentKind []game.JudgmentKind) {
+func (cmp *JudgmentComponent) Update(keysJudgmentKind []plays.JudgmentKind) {
 	// worst is guaranteed not to be out of range.
 	worst := blank
 	for _, jk := range keysJudgmentKind {

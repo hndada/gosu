@@ -1,4 +1,4 @@
-package game
+package plays
 
 import "github.com/hndada/gosu/format/osu"
 

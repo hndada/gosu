@@ -3,7 +3,7 @@ package piano
 import (
 	"image/color"
 
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/plays"
 )
 
 // SpeedScale is universal for all key counts.
@@ -45,8 +45,8 @@ type Options struct {
 	HoldLightOpacity    float32
 	JudgmentImageScale  float64
 	JudgmentPositionY   float64
-	Combo               game.ComboOptions
-	Score               game.ScoreOptions
+	Combo               plays.ComboOptions
+	Score               plays.ScoreOptions
 }
 
 type KeyKind int
@@ -73,18 +73,18 @@ func NewOptions() *Options {
 		SpeedScale: 1.0,
 
 		StageWidths: map[int]float64{
-			1:  game.ScreenSizeX / 2 * 0.50,
-			2:  game.ScreenSizeX / 2 * 0.55,
-			3:  game.ScreenSizeX / 2 * 0.60,
-			4:  game.ScreenSizeX / 2 * 0.65,
-			5:  game.ScreenSizeX / 2 * 0.70,
-			6:  game.ScreenSizeX / 2 * 0.75,
-			7:  game.ScreenSizeX / 2 * 0.80,
-			8:  game.ScreenSizeX / 2 * 0.85,
-			9:  game.ScreenSizeX / 2 * 0.90,
-			10: game.ScreenSizeX / 2 * 0.95,
+			1:  plays.ScreenSizeX / 2 * 0.50,
+			2:  plays.ScreenSizeX / 2 * 0.55,
+			3:  plays.ScreenSizeX / 2 * 0.60,
+			4:  plays.ScreenSizeX / 2 * 0.65,
+			5:  plays.ScreenSizeX / 2 * 0.70,
+			6:  plays.ScreenSizeX / 2 * 0.75,
+			7:  plays.ScreenSizeX / 2 * 0.80,
+			8:  plays.ScreenSizeX / 2 * 0.85,
+			9:  plays.ScreenSizeX / 2 * 0.90,
+			10: plays.ScreenSizeX / 2 * 0.95,
 		},
-		StagePositionX: game.ScreenSizeX / 2,
+		StagePositionX: plays.ScreenSizeX / 2,
 
 		KeyMappings: map[int][]string{
 			1:  {"Space"},
@@ -119,7 +119,7 @@ func NewOptions() *Options {
 			33, // Mid
 			33, // Tip
 		},
-		KeyPositionY: 0.88 * game.ScreenSizeY,
+		KeyPositionY: 0.88 * plays.ScreenSizeY,
 
 		FieldOpacity:   0.8,
 		BarHeight:      1,
@@ -143,18 +143,18 @@ func NewOptions() *Options {
 		HoldLightImageScale: 1.0,
 		HoldLightOpacity:    1.2,
 		JudgmentImageScale:  0.33,
-		JudgmentPositionY:   0.66 * game.ScreenSizeY,
-		Combo: game.ComboOptions{
+		JudgmentPositionY:   0.66 * plays.ScreenSizeY,
+		Combo: plays.ComboOptions{
 			ImageScale: 0.75,
 			// PositionX should not be set by user.
 			// It will be handled at Normalize().
-			PositionX: game.ScreenSizeX / 2,
+			PositionX: plays.ScreenSizeX / 2,
 			DigitGap:  -1,
-			PositionY: 0.40 * game.ScreenSizeY,
+			PositionY: 0.40 * plays.ScreenSizeY,
 			IsPersist: false,
 			Bounce:    0.08,
 		},
-		Score: game.ScoreOptions{
+		Score: plays.ScoreOptions{
 			ImageScale: 0.65,
 			DigitGap:   0,
 		},
@@ -165,8 +165,8 @@ func NewOptions() *Options {
 }
 
 func (opts *Options) SetDerived() {
-	opts.screenSizeX = game.ScreenSizeX
-	opts.screenSizeY = game.ScreenSizeY
+	opts.screenSizeX = plays.ScreenSizeX
+	opts.screenSizeY = plays.ScreenSizeY
 
 	opts.keyWidthsMap = make(map[int][]float64)
 	opts.keyButtonHeight = opts.screenSizeY - opts.KeyPositionY

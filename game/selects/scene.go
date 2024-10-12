@@ -3,23 +3,23 @@ package selects
 import (
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
-	"github.com/hndada/gosu/game/piano"
-	"github.com/hndada/gosu/scene"
+	"github.com/hndada/gosu/plays"
+	"github.com/hndada/gosu/plays/piano"
 )
 
 // TODO: list key handler: double click left/right to open advanced options
 // Component is basically EventHandler.
 type Scene struct {
-	*scene.Resources
-	*scene.Options
-	*scene.States
-	*scene.Handlers
-	*scene.Databases
+	*game.Resources
+	*game.Options
+	*game.States
+	*game.Handlers
+	*game.Databases
 
 	boxSprite          draws.Sprite
 	list               ListComponent
-	lastChart          *scene.ChartRow
-	background         scene.BackgroundComponent
+	lastChart          *game.ChartRow
+	background         game.BackgroundComponent
 	volume             *float64
 	previewMusicPlayer PreviewMusicPlayer
 	// chartInfo  ChartInfoComponent
@@ -33,10 +33,10 @@ type Scene struct {
 const (
 	listBoxWidth  = 400
 	listBoxHeight = 100
-	listBoxCount  = scene.ScreenSizeY/listBoxHeight + 1
+	listBoxCount  = game.ScreenSizeY/listBoxHeight + 1
 )
 
-func NewScene(res *scene.Resources, opts *scene.Options, states *scene.States, hds *scene.Handlers, dbs *scene.Databases) (*Scene, error) {
+func NewScene(res *game.Resources, opts *game.Options, states *game.States, hds *game.Handlers, dbs *game.Databases) (*Scene, error) {
 	scn := &Scene{
 		Resources: res,
 		Options:   opts,
@@ -47,7 +47,7 @@ func NewScene(res *scene.Resources, opts *scene.Options, states *scene.States, h
 
 	s := draws.NewSprite(res.BoxMaskImage)
 	s.SetSize(listBoxWidth, listBoxHeight)
-	s.Locate(game.ScreenSizeX/2, game.ScreenSizeY/2, draws.CenterMiddle)
+	s.Locate(plays.ScreenSizeX/2, plays.ScreenSizeY/2, draws.CenterMiddle)
 	scn.boxSprite = s
 
 	// cmp.lastChart = charts[0][0]
@@ -81,7 +81,7 @@ func (s *Scene) Update() any {
 		}
 	}
 	if lc == nil || lc.BackgroundFilename != c.BackgroundFilename {
-		s.background = scene.NewBackgroundComponent(s.Resources, s.Options)
+		s.background = game.NewBackgroundComponent(s.Resources, s.Options)
 	}
 	s.lastChart = c
 	return nil
@@ -89,10 +89,10 @@ func (s *Scene) Update() any {
 
 func (s Scene) mode() int { return *s.Handlers.Mode.Value }
 
-func (s *Scene) playChart(row *scene.ChartRow) any {
+func (s *Scene) playChart(row *game.ChartRow) any {
 	s.previewMusicPlayer.Close()
-	mods := []game.Mods{piano.Mods{}}[s.mode()]
-	return scene.PlayArgs{
+	mods := []plays.Mods{piano.Mods{}}[s.mode()]
+	return game.PlayArgs{
 		ChartFS:       row.FS,
 		ChartFilename: row.Name,
 		Mods:          mods,
@@ -117,5 +117,5 @@ func (s Scene) DebugString() string {
 
 // Memo: make([]T, len) and make([]T, 0, len) is prone to be erroneous.
 
-// Avoid embedding scene.Options directly.
+// Avoid embedding game.Options directly.
 // Pass options as pointers for syncing and saving memory.

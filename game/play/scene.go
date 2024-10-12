@@ -9,25 +9,25 @@ import (
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/game"
-	"github.com/hndada/gosu/game/piano"
 	"github.com/hndada/gosu/input"
-	"github.com/hndada/gosu/scene"
+	"github.com/hndada/gosu/plays"
+	"github.com/hndada/gosu/plays/piano"
 	"github.com/hndada/gosu/times"
 )
 
 type play interface {
-	Update(now int32, kas []game.KeyboardAction) any
-	// PopSamples() []game.Sample
+	Update(now int32, kas []plays.KeyboardAction) any
+	// PopSamples() []plays.Sample
 	Draw(dst draws.Image)
 	DebugString() string
 }
 
 // Todo: draw 4:3 screen on 16:9 screen
 type Scene struct {
-	*scene.Resources
-	*scene.Options
+	*game.Resources
+	*game.Options
 
-	*game.ChartHeader
+	*plays.ChartHeader
 	play              play
 	musicPlayer       *audios.MusicPlayer
 	keyboard          input.KeyboardReader
@@ -44,15 +44,15 @@ type Scene struct {
 
 // (*Scene, error) is typically used for regular functions that operate on struct pointers.
 // (s *Scene, err error) is typically used for methods attached to structs.
-// chartFS fs.FS, cname string, replayFS fs.FS, rname string, mods game.Mods) (*Scene, error) {
-func NewScene(res *scene.Resources, opts *scene.Options, args scene.PlayArgs) (*Scene, error) {
+// chartFS fs.FS, cname string, replayFS fs.FS, rname string, mods plays.Mods) (*Scene, error) {
+func NewScene(res *game.Resources, opts *game.Options, args game.PlayArgs) (*Scene, error) {
 	s := &Scene{
 		Resources: res,
 		Options:   opts,
 	}
 
 	switch opts.Mode {
-	case game.ModePiano:
+	case plays.ModePiano:
 		mods := args.Mods.(piano.Mods)
 		c, err := piano.NewChart(args.ChartFS, args.ChartFilename, mods)
 		if err != nil {
@@ -85,16 +85,16 @@ func NewScene(res *scene.Resources, opts *scene.Options, args scene.PlayArgs) (*
 	var keyCount int
 	var keyNames []string
 	switch opts.Mode {
-	case game.ModePiano:
+	case plays.ModePiano:
 		keyCount = opts.SubMode
 		keyNames = opts.Piano.KeyMappings[keyCount]
-	case game.ModeDrum:
+	case plays.ModeDrum:
 		keyCount = 4
 		// keyNames = opts.Drum.Key.Mappings
 	}
 
 	if args.ReplayFS != nil {
-		kb, _, err := game.NewReplay(args.ReplayFS, args.ReplayFilename, keyCount)
+		kb, _, err := plays.NewReplay(args.ReplayFS, args.ReplayFilename, keyCount)
 		if err != nil {
 			err = fmt.Errorf("failed to load replay file: %w", err)
 			return nil, err
@@ -210,7 +210,7 @@ func (s *Scene) Update() any {
 	// kss's length is mostly 1.
 	kss := s.keyboard.Read(now)
 	kss = append([]input.KeyboardState{s.lastKeyboardState}, kss...)
-	kas := game.KeyboardActions(kss)
+	kas := plays.KeyboardActions(kss)
 	r := s.play.Update(nowMS, kas)
 	s.lastKeyboardState = kss[len(kss)-1]
 

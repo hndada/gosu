@@ -1,4 +1,4 @@
-package game
+package plays
 
 func LinearInterpolate(xs, ys []float64) func(float64) float64 {
 	return func(x float64) float64 {

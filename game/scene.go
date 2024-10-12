@@ -1,10 +1,10 @@
-package scene
+package game
 
 import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/plays"
 )
 
 // const (
@@ -21,7 +21,7 @@ type Scene interface {
 type PlayArgs struct {
 	ChartFS        fs.FS // Music file exists in the same directory.
 	ChartFilename  string
-	Mods           game.Mods
+	Mods           plays.Mods
 	ReplayFS       fs.FS
 	ReplayFilename string
 }

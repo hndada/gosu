@@ -1,4 +1,4 @@
-package scene
+package game
 
 import (
 	"github.com/hndada/gosu/draws"

@@ -2,14 +2,14 @@ package piano
 
 import (
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/plays"
 )
 
 // Too dedicated structs harms readability.
 // Resources, Options, and other arguments, explicity.
 
-// Todo: game.ErrorMeterComponent
-// Todo: game.TimerComponent
+// Todo: plays.ErrorMeterComponent
+// Todo: plays.TimerComponent
 type Components struct {
 	field      FieldComponent
 	bars       BarsComponent
@@ -20,8 +20,8 @@ type Components struct {
 	hitLights  HitLightsComponent
 	holdLights HoldLightsComponent
 	judgment   JudgmentComponent
-	combo      game.ComboComponent
-	score      game.ScoreComponent
+	combo      plays.ComboComponent
+	score      plays.ScoreComponent
 }
 
 func NewComponents(res *Resources, opts *Options, c *Chart) (cmps Components) {
@@ -34,12 +34,12 @@ func NewComponents(res *Resources, opts *Options, c *Chart) (cmps Components) {
 	cmps.hitLights = NewHitLightsComponent(res, opts, c.keyCount)
 	cmps.holdLights = NewHoldLightsComponent(res, opts, c)
 	cmps.judgment = NewJudgmentComponent(res, opts)
-	cmps.combo = game.NewComboComponent(res.ComboImages, &opts.Combo)
-	cmps.score = game.NewScoreComponent(res.ScoreImages, &opts.Score)
+	cmps.combo = plays.NewComboComponent(res.ComboImages, &opts.Combo)
+	cmps.score = plays.NewScoreComponent(res.ScoreImages, &opts.Score)
 	return
 }
 
-func (cmps *Components) Update(ka game.KeyboardAction, dys game.Dynamics, s Scorer) any {
+func (cmps *Components) Update(ka plays.KeyboardAction, dys plays.Dynamics, s Scorer) any {
 	cursor := dys.Position(ka.Time)
 	cmps.field.Update()
 	cmps.bars.Update(cursor)

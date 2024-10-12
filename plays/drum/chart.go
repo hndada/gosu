@@ -159,14 +159,14 @@ func ScaledBPM(bpm float64) float64 {
 	return bpm
 }
 
-// func LoadChartInfo(cpath string) (info game.ChartInfo, err error) {
+// func LoadChartInfo(cpath string) (info plays.ChartInfo, err error) {
 // 	c, err := LoadChart(cpath)
 // 	if err != nil {
 // 		return
 // 	}
-// 	// mode := game.ModeDrum
+// 	// mode := plays.ModeDrum
 // 	main, min, max := c.BPMs()
-// 	info = game.ChartInfo{
+// 	info = plays.ChartInfo{
 // 		Path: cpath,
 // 		// Mods:       mods,
 // 		ChartHeader: c.ChartHeader,

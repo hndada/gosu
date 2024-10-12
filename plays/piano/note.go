@@ -6,7 +6,7 @@ import (
 
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osu"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/plays"
 )
 
 type NoteKind int
@@ -22,7 +22,7 @@ type Note struct {
 	Time   int32
 	Kind   NoteKind
 	Key    int
-	Sample game.Sample
+	Sample plays.Sample
 
 	position float64 // Scaled x or y value.
 	next     int     // For updating staged notes.
@@ -36,7 +36,7 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 		Time:   int32(f.Time),
 		Kind:   Normal,
 		Key:    f.Column(keyCount),
-		Sample: game.NewSample(f),
+		Sample: plays.NewSample(f),
 	}
 	if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
 		n.Kind = Head
@@ -58,11 +58,11 @@ type Notes struct {
 	keyCount  int
 	data      []Note
 	keysFocus []int // indexes of focused notes
-	// sampleBuffer []game.Sample
+	// sampleBuffer []plays.Sample
 	// none         int   // index of none value. It is same as len(notes).
 }
 
-func NewNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) Notes {
+func NewNotes(keyCount int, format plays.ChartFormat, dys plays.Dynamics) Notes {
 	var ns []Note
 	switch format := format.(type) {
 	case *osu.Format:
@@ -215,7 +215,7 @@ func NewNotesComponent(res *Resources, opts *Options, c *Chart) (cmp NotesCompon
 	return
 }
 
-func (cmp *NotesComponent) Update(ka game.KeyboardAction, cursor float64) {
+func (cmp *NotesComponent) Update(ka plays.KeyboardAction, cursor float64) {
 	lowermost := cursor - cmp.scaledScreenSize
 	for k, lowest := range cmp.keysLowest {
 		for ni := lowest; ni < len(cmp.notes.data); ni = cmp.notes.data[ni].next {

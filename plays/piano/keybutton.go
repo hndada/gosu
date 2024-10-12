@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/plays"
 	"github.com/hndada/gosu/times"
 )
 
@@ -36,7 +36,7 @@ func NewKeyButtonsComponent(res *Resources, opts *Options, keyCount int) (cmp Ke
 	return
 }
 
-func (cmp *KeyButtonsComponent) Update(ka game.KeyboardAction) {
+func (cmp *KeyButtonsComponent) Update(ka plays.KeyboardAction) {
 	for k, p := range ka.KeysPressed() {
 		if p {
 			cmp.startTimes[k] = times.Now()

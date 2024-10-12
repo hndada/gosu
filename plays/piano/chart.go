@@ -3,14 +3,14 @@ package piano
 import (
 	"io/fs"
 
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/plays"
 )
 
 // Todo: make fields unexported?
 type Chart struct {
 	Mods Mods
-	*game.ChartHeader
-	game.Dynamics
+	*plays.ChartHeader
+	plays.Dynamics
 	Notes
 	// KeyCount int
 }
@@ -20,15 +20,15 @@ func NewChart(fsys fs.FS, name string, mods Mods) (*Chart, error) {
 		Mods: mods,
 	}
 
-	format, hash, err := game.LoadChartFormat(fsys, name)
+	format, hash, err := plays.LoadChartFormat(fsys, name)
 	if err != nil {
 		return c, err
 	}
-	header := game.NewChartHeaderFromFormat(format, hash)
+	header := plays.NewChartHeaderFromFormat(format, hash)
 	c.ChartHeader = header
 	// c.KeyCount = c.SubMode
 
-	dys, err := game.NewDynamics(format)
+	dys, err := plays.NewDynamics(format)
 	if err != nil {
 		return c, err
 	}

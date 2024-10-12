@@ -2,7 +2,7 @@ package piano
 
 import (
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/plays"
 )
 
 type HoldLightsComponent struct {
@@ -27,7 +27,7 @@ func NewHoldLightsComponent(res *Resources, opts *Options, c *Chart) (cmp HoldLi
 }
 
 // draws only when a long note is holding.
-func (cmp *HoldLightsComponent) Update(ka game.KeyboardAction) {
+func (cmp *HoldLightsComponent) Update(ka plays.KeyboardAction) {
 	kfns := make([]Note, cmp.notes.keyCount) // key focused notes
 	for k, ni := range cmp.notes.keysFocus {
 		if ni < 0 || ni == len(cmp.notes.data) {
@@ -47,7 +47,7 @@ func (cmp *HoldLightsComponent) Update(ka game.KeyboardAction) {
 	cmp.keysLongNoteHolding = keysNew
 }
 
-func (cmp HoldLightsComponent) newKeysLongNoteHolding(ka game.KeyboardAction, kn []Note) []bool {
+func (cmp HoldLightsComponent) newKeysLongNoteHolding(ka plays.KeyboardAction, kn []Note) []bool {
 	klnh := make([]bool, len(kn))
 	for k, holding := range ka.KeysHolding() {
 		if holding && kn[k].Kind == Tail {

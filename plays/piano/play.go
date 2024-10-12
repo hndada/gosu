@@ -6,7 +6,7 @@ import (
 
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/plays"
 )
 
 // Struct Play goes a part of ScenePlay.
@@ -32,7 +32,7 @@ func NewPlay(res *Resources, opts *Options, c *Chart, mods Mods, sp *audios.Soun
 	}, nil
 }
 
-func (p *Play) Update(now int32, kas []game.KeyboardAction) any {
+func (p *Play) Update(now int32, kas []plays.KeyboardAction) any {
 	for _, ka := range kas {
 		// fmt.Printf("ka: %v\n", ka)
 		p.Scorer.update(ka)
@@ -57,7 +57,7 @@ func (p *Play) SetSpeedScale(newScale float64) {
 		ns[i].position *= scale
 	}
 	// for lowermost and uppermost
-	p.Components.notes.scaledScreenSize = game.ScreenSizeY * scale
+	p.Components.notes.scaledScreenSize = plays.ScreenSizeY * scale
 
 	bs := p.bars.bars.data
 	for i := range bs {

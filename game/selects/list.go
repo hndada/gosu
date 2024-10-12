@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/input"
-	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/tween"
 	"github.com/hndada/gosu/ui"
 )
@@ -23,7 +23,7 @@ type ListComponent struct {
 	// h      float64      // Height of a list item
 	tween tween.Tween // Tween of the list's cursor position
 
-	charts       [][]scene.ChartRow
+	charts       [][]game.ChartRow
 	folderTexts  []draws.Text
 	chartTexts   [][]draws.Text
 	i            int   // outer index
@@ -33,7 +33,7 @@ type ListComponent struct {
 	depthHandler ui.KeyNumberHandler[int]
 }
 
-func NewListComponent(boxSprite draws.Sprite, kbs *ui.KeyboardState, t1 []draws.Text, t2 [][]draws.Text, cs [][]scene.ChartRow) (cmp ListComponent) {
+func NewListComponent(boxSprite draws.Sprite, kbs *ui.KeyboardState, t1 []draws.Text, t2 [][]draws.Text, cs [][]game.ChartRow) (cmp ListComponent) {
 	cmp.sprite = boxSprite
 	// cmp.h = boxSprite.H()
 
@@ -47,9 +47,9 @@ func NewListComponent(boxSprite draws.Sprite, kbs *ui.KeyboardState, t1 []draws.
 }
 
 func (ListComponent) newIndexHandler(i *int, maxLen int, kbs *ui.KeyboardState) ui.KeyNumberHandler[int] {
-	ctrls := scene.DownUpControls
-	ctrls[ui.Decrease].SoundFilename = scene.SoundTransitionDown
-	ctrls[ui.Increase].SoundFilename = scene.SoundTransitionUp
+	ctrls := game.DownUpControls
+	ctrls[ui.Decrease].SoundFilename = game.SoundTransitionDown
+	ctrls[ui.Increase].SoundFilename = game.SoundTransitionUp
 
 	return ui.KeyNumberHandler[int]{
 		NumberController: ui.NumberController[int]{
@@ -71,12 +71,12 @@ func (ListComponent) newDepthHandler(depth *int, kbs *ui.KeyboardState) ui.KeyNu
 		{
 			Key:           input.KeyEscape,
 			Type:          ui.Decrease,
-			SoundFilename: scene.SoundTransitionDown,
+			SoundFilename: game.SoundTransitionDown,
 		},
 		{
 			Key:           input.KeyEnter,
 			Type:          ui.Increase,
-			SoundFilename: scene.SoundTransitionUp,
+			SoundFilename: game.SoundTransitionUp,
 		},
 	}
 
@@ -95,10 +95,10 @@ func (ListComponent) newDepthHandler(depth *int, kbs *ui.KeyboardState) ui.KeyNu
 	}
 }
 
-func (cmp ListComponent) j() int                 { return cmp.js[cmp.i] }
-func (cmp ListComponent) chart() *scene.ChartRow { return &cmp.charts[cmp.i][cmp.j()] }
+func (cmp ListComponent) j() int                { return cmp.js[cmp.i] }
+func (cmp ListComponent) chart() *game.ChartRow { return &cmp.charts[cmp.i][cmp.j()] }
 
-func (cmp *ListComponent) update() (r *scene.ChartRow, isPlay bool) {
+func (cmp *ListComponent) update() (r *game.ChartRow, isPlay bool) {
 	if _, ok := cmp.depthHandler.Update(); ok {
 		cmp.updateIndexHandler()
 		cmp.updateTween()
@@ -158,13 +158,13 @@ func (cmp ListComponent) Draw(dst draws.Image) {
 
 	// List items' positions are fixed; Only the cursor of the list is changed.
 	cursor := cmp.tween.Value()
-	top := cursor - float64(scene.ScreenSizeY/2)
+	top := cursor - float64(game.ScreenSizeY/2)
 	first := int(top/listBoxHeight) - 1
 	if first < 0 {
 		first = 0
 	}
 
-	bottom := cursor + float64(scene.ScreenSizeY/2)
+	bottom := cursor + float64(game.ScreenSizeY/2)
 	last := int(bottom/listBoxHeight) + 1
 	if last >= maxLen {
 		last = maxLen - 1

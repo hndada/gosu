@@ -8,7 +8,6 @@ import (
 
 	"github.com/coder/websocket"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/scene"
 )
 
 // embed all template files
@@ -30,7 +29,7 @@ type Scene struct {
 // Suppose the web socket has already been established.
 // The scene will listen to the web socket.
 // When the web socket receives a message, the scene will parse the json
-// and return the PlayArgs to the game.
+// and return the PlayArgs to the plays.
 // NewScene initializes a new scene with the provided resources, options, handlers, and databases.
 func NewScene(res *scene.Resources, opts *scene.Options, dbs *scene.Databases, ws *websocket.Conn) (*Scene, error) {
 	s := &Scene{

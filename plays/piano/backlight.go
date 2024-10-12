@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/plays"
 	"github.com/hndada/gosu/times"
 )
 
@@ -38,7 +38,7 @@ func NewBacklightsComponent(res *Resources, opts *Options, keyCount int) (cmp Ba
 	return
 }
 
-func (cmp *BacklightsComponent) Update(ka game.KeyboardAction) {
+func (cmp *BacklightsComponent) Update(ka plays.KeyboardAction) {
 	kp := ka.KeysPressed()
 	for k, p := range kp {
 		lp := cmp.keysPressed[k]

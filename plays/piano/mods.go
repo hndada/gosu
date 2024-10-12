@@ -1,6 +1,6 @@
 package piano
 
-import "github.com/hndada/gosu/game"
+import "github.com/hndada/gosu/plays"
 
 type Mods struct {
 }
@@ -11,8 +11,8 @@ type Mods struct {
 // If Mods is gonna be used, it might be good to change "Mode".
 
 // the ideal number of Judgments is: 3 + 1
-func (Mods) DefaultJudgments() []game.Judgment {
-	return []game.Judgment{
+func (Mods) DefaultJudgments() []plays.Judgment {
+	return []plays.Judgment{
 		{Window: 20, Weight: 1},
 		{Window: 40, Weight: 1},
 		{Window: 80, Weight: 0.5},
