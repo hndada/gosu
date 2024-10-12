@@ -43,7 +43,7 @@ func (sp *SoundPlayer) AddFile(fsys fs.FS, name string) error {
 // AddDir adds audio files in the directory to SoundPlayer.
 func (sp *SoundPlayer) AddDir(fsys fs.FS, name string) error {
 	base := strings.TrimSuffix(name, filepath.Ext(name))
-	paths := util.DirElements(fsys, base)
+	paths := util.BatchElements(fsys, base)
 	if len(paths) == 0 {
 		return sp.AddFile(fsys, name)
 	}

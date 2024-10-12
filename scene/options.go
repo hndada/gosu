@@ -56,21 +56,10 @@ type Options struct {
 	Piano           *piano.Options
 }
 
-func (opts *Options) Normalize() {
-	// Leading dot and slash is not allowed in fs.
-	for i, path := range opts.MusicPaths {
-		path = strings.TrimPrefix(path, "..")
-		path = strings.TrimPrefix(path, ".")
-		path = strings.TrimPrefix(path, "/")
-		path = strings.TrimPrefix(path, "\\")
-		opts.MusicPaths[i] = path
-	}
-}
-
 // Todo: *Options vs Options
 // But I think, to use pointer, *Options is inevitable.
 func NewOptions() *Options {
-	return &Options{
+	opts := &Options{
 		ResourcesPaths: []string{"resources"},
 		MusicPaths:     []string{"music"},
 		ReplaysPaths:   []string{"replays"},
@@ -92,6 +81,19 @@ func NewOptions() *Options {
 		ErrorMeterScale: 1.0,
 		ScoreImageScale: 1.0,
 		Piano:           piano.NewOptions(),
+	}
+	opts.Piano.SetDerived()
+	return opts
+}
+
+func (opts *Options) Normalize() {
+	// Leading dot and slash is not allowed in fs.
+	for i, path := range opts.MusicPaths {
+		path = strings.TrimPrefix(path, "..")
+		path = strings.TrimPrefix(path, ".")
+		path = strings.TrimPrefix(path, "/")
+		path = strings.TrimPrefix(path, "\\")
+		opts.MusicPaths[i] = path
 	}
 }
 

@@ -17,7 +17,7 @@ type Frames = []Image
 // if there is no directory or the directory has no entries.
 func NewFramesFromFile(fsys fs.FS, name string) []Image {
 	base := strings.TrimSuffix(name, filepath.Ext(name))
-	paths := util.DirElements(fsys, base)
+	paths := util.BatchElements(fsys, base)
 	if len(paths) == 0 {
 		one := NewImageFromFile(fsys, name)
 		return []Image{one}

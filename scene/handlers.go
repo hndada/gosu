@@ -46,23 +46,23 @@ type Handlers struct {
 	SpeedScales []ui.KeyNumberHandler[float64]
 }
 
-func NewHandlers(opts *Options, states *States) *Handlers {
+func NewHandlers(opts *Options, kbs *ui.KeyboardState) *Handlers {
 	return &Handlers{
-		MusicVolume:          newMusicVolumeHandler(opts, states),
-		SoundVolumeScale:     newSoundVolumeScaleHandler(opts, states),
-		MusicOffset:          newMusicOffsetHandler(opts, states),
-		BackgroundBrightness: newBackgroundBrightnessHandler(opts, states),
-		DebugPrint:           newDebugPrintHandler(opts, states),
+		MusicVolume:          newMusicVolumeHandler(opts, kbs),
+		SoundVolumeScale:     newSoundVolumeScaleHandler(opts, kbs),
+		MusicOffset:          newMusicOffsetHandler(opts, kbs),
+		BackgroundBrightness: newBackgroundBrightnessHandler(opts, kbs),
+		DebugPrint:           newDebugPrintHandler(opts, kbs),
 
-		Mode:        newModeHandler(opts, states),
-		SubMode:     newSubModeHandlers(opts, states)[0],
-		SpeedScales: newSpeedScaleHandlers(opts, states),
+		Mode:        newModeHandler(opts, kbs),
+		SubMode:     newSubModeHandlers(opts, kbs)[0],
+		SpeedScales: newSpeedScaleHandlers(opts, kbs),
 	}
 }
 
 // Control contains sound filename.
 // SoundPlayer contains a pointer to sound volume scale.
-func newMusicVolumeHandler(opts *Options, states *States) ui.KeyNumberHandler[float64] {
+func newMusicVolumeHandler(opts *Options, kbs *ui.KeyboardState) ui.KeyNumberHandler[float64] {
 	return ui.KeyNumberHandler[float64]{
 		NumberController: ui.NumberController[float64]{
 			Value: &opts.MusicVolume,
@@ -71,14 +71,14 @@ func newMusicVolumeHandler(opts *Options, states *States) ui.KeyNumberHandler[fl
 			Unit:  0.05,
 		},
 		KeyListener: *ui.NewKeyListener(
-			states.Keyboard,
+			kbs,
 			[]input.Key{input.KeyControlLeft},
 			DownUpControls[:],
 		),
 	}
 }
 
-func newSoundVolumeScaleHandler(opts *Options, states *States) ui.KeyNumberHandler[float64] {
+func newSoundVolumeScaleHandler(opts *Options, kbs *ui.KeyboardState) ui.KeyNumberHandler[float64] {
 	return ui.KeyNumberHandler[float64]{
 		NumberController: ui.NumberController[float64]{
 			Value: &opts.SoundVolumeScale,
@@ -87,14 +87,14 @@ func newSoundVolumeScaleHandler(opts *Options, states *States) ui.KeyNumberHandl
 			Unit:  0.05,
 		},
 		KeyListener: *ui.NewKeyListener(
-			states.Keyboard,
+			kbs,
 			[]input.Key{input.KeyAltLeft},
 			DownUpControls[:],
 		),
 	}
 }
 
-func newMusicOffsetHandler(opts *Options, states *States) ui.KeyNumberHandler[int32] {
+func newMusicOffsetHandler(opts *Options, kbs *ui.KeyboardState) ui.KeyNumberHandler[int32] {
 	ctrls := LeftRightControls
 	ctrls[ui.Decrease].SoundFilename = SoundTransitionDown
 	ctrls[ui.Increase].SoundFilename = SoundTransitionUp
@@ -107,14 +107,14 @@ func newMusicOffsetHandler(opts *Options, states *States) ui.KeyNumberHandler[in
 			Unit:  1,
 		},
 		KeyListener: *ui.NewKeyListener(
-			states.Keyboard,
+			kbs,
 			[]input.Key{input.KeyShiftLeft},
 			ctrls[:],
 		),
 	}
 }
 
-func newBackgroundBrightnessHandler(opts *Options, states *States) ui.KeyNumberHandler[float32] {
+func newBackgroundBrightnessHandler(opts *Options, kbs *ui.KeyboardState) ui.KeyNumberHandler[float32] {
 	return ui.KeyNumberHandler[float32]{
 		NumberController: ui.NumberController[float32]{
 			Value: &opts.BackgroundBrightness,
@@ -123,14 +123,14 @@ func newBackgroundBrightnessHandler(opts *Options, states *States) ui.KeyNumberH
 			Unit:  0.1,
 		},
 		KeyListener: *ui.NewKeyListener(
-			states.Keyboard,
+			kbs,
 			[]input.Key{input.KeyTab},
 			LeftRightControls[:],
 		),
 	}
 }
 
-func newDebugPrintHandler(opts *Options, states *States) ui.KeyBoolHandler {
+func newDebugPrintHandler(opts *Options, kbs *ui.KeyboardState) ui.KeyBoolHandler {
 	ctrl := ui.Control{
 		Key:           input.KeyF12,
 		Type:          ui.Toggle,
@@ -141,7 +141,7 @@ func newDebugPrintHandler(opts *Options, states *States) ui.KeyBoolHandler {
 			Value: &opts.DebugPrint,
 		},
 		KeyListener: *ui.NewKeyListener(
-			states.Keyboard,
+			kbs,
 			[]input.Key{},
 			[]ui.Control{ctrl},
 		),
@@ -149,7 +149,7 @@ func newDebugPrintHandler(opts *Options, states *States) ui.KeyBoolHandler {
 }
 
 // Todo: loop = true?
-func newModeHandler(opts *Options, states *States) ui.KeyNumberHandler[int] {
+func newModeHandler(opts *Options, kbs *ui.KeyboardState) ui.KeyNumberHandler[int] {
 	ctrl := ui.Control{
 		Key:           input.KeyF1,
 		Type:          ui.Toggle,
@@ -163,7 +163,7 @@ func newModeHandler(opts *Options, states *States) ui.KeyNumberHandler[int] {
 			Unit:  1,
 		},
 		KeyListener: *ui.NewKeyListener(
-			states.Keyboard,
+			kbs,
 			[]input.Key{},
 			[]ui.Control{ctrl},
 		),
@@ -171,7 +171,7 @@ func newModeHandler(opts *Options, states *States) ui.KeyNumberHandler[int] {
 }
 
 // Todo: loop = true?
-func newSubModeHandlers(opts *Options, states *States) []ui.KeyNumberHandler[int] {
+func newSubModeHandlers(opts *Options, kbs *ui.KeyboardState) []ui.KeyNumberHandler[int] {
 	// Declare ctrls as a array for better readability.
 	ctrls := [2]ui.Control{
 		{
@@ -202,7 +202,7 @@ func newSubModeHandlers(opts *Options, states *States) []ui.KeyNumberHandler[int
 				Unit:  1,
 			},
 			KeyListener: *ui.NewKeyListener(
-				states.Keyboard,
+				kbs,
 				[]input.Key{},
 				ctrls[:],
 			),
@@ -211,7 +211,7 @@ func newSubModeHandlers(opts *Options, states *States) []ui.KeyNumberHandler[int
 	return hs
 }
 
-func newSpeedScaleHandlers(opts *Options, states *States) []ui.KeyNumberHandler[float64] {
+func newSpeedScaleHandlers(opts *Options, kbs *ui.KeyboardState) []ui.KeyNumberHandler[float64] {
 	// Declare ctrls as a array for better readability.
 	ctrls := [2]ui.Control{
 		{
@@ -241,7 +241,7 @@ func newSpeedScaleHandlers(opts *Options, states *States) []ui.KeyNumberHandler[
 				Unit:  0.1,
 			},
 			KeyListener: *ui.NewKeyListener(
-				states.Keyboard,
+				kbs,
 				[]input.Key{},
 				ctrls[:],
 			),

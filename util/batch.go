@@ -9,20 +9,20 @@ import (
 	"strings"
 )
 
-type DirElement struct {
+type BatchElement struct {
 	num int
 	ext string
 }
 
 // Avoid using filepath at fs.FS.
 // It yields backslash, which is invalid.
-func DirElements(fsys fs.FS, dirName string) []string {
+func BatchElements(fsys fs.FS, dirName string) []string {
 	es, err := fs.ReadDir(fsys, dirName)
 	if err != nil {
 		return []string{}
 	}
 
-	fns := make([]DirElement, 0, len(es))
+	fns := make([]BatchElement, 0, len(es))
 	for _, f := range es {
 		if f.IsDir() {
 			continue
@@ -35,7 +35,7 @@ func DirElements(fsys fs.FS, dirName string) []string {
 			continue
 		}
 
-		fns = append(fns, DirElement{num, ext})
+		fns = append(fns, BatchElement{num, ext})
 	}
 
 	sort.Slice(fns, func(i, j int) bool {
