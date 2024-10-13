@@ -11,14 +11,16 @@ import (
 // Component is basically EventHandler.
 type Scene struct {
 	*game.Game
-	boxSprite          draws.Sprite
-	list               ListComponent
+	boxSprite draws.Sprite
+
+	searchBox          SearchBoxComponent
+	chartList          ChartListComponent
 	lastChart          *game.ChartRow
 	background         game.BackgroundComponent
 	volume             *float64
 	previewMusicPlayer PreviewMusicPlayer
+
 	// chartInfo  ChartInfoComponent
-	// searchBox  SearchBoxComponent
 
 	// Score box color: Gray128 with 50% transparent
 	// Hovered Score box color: Gray96 with 50% transparent
@@ -26,18 +28,21 @@ type Scene struct {
 }
 
 const (
-	listBoxWidth  = 400
-	listBoxHeight = 100
-	listBoxCount  = game.ScreenSizeY/listBoxHeight + 1
+	chartListBoxWidth  = 400
+	chartListBoxHeight = 100
+	chartListBoxCount  = game.ScreenSizeY/chartListBoxHeight + 1
 )
 
 func (Scene) New(g *game.Game, args game.Args) (game.Scene, error) {
 	scn := &Scene{Game: g}
 
 	s := draws.NewSprite(g.Resources.BoxMaskImage)
-	s.SetSize(listBoxWidth, listBoxHeight)
+	s.SetSize(chartListBoxWidth, chartListBoxHeight)
 	s.Locate(plays.ScreenSizeX/2, plays.ScreenSizeY/2, draws.CenterMiddle)
 	scn.boxSprite = s
+
+	scn.searchBox = NewSearchBoxComponent(g.Database)
+	scn.chartList = newChartListComponent(scn.boxSprite, g.KeyboardState, scn.searchBox.update())
 
 	return scn, nil
 }
@@ -55,7 +60,7 @@ func (s *Scene) Update() any {
 	s.Handlers.SubMode.Handle()
 	s.Handlers.SpeedScales[s.mode()].Handle()
 
-	c, isPlay := s.list.update()
+	c, isPlay := s.chartList.update()
 	if c != nil && isPlay {
 		return s.playChart(c)
 	}
@@ -78,6 +83,7 @@ func (s *Scene) Update() any {
 func (s Scene) mode() int { return *s.Handlers.Mode.Value }
 
 func (s *Scene) playChart(row *game.ChartRow) any {
+	// It is fine to call Close at blank MusicPlayer.
 	s.previewMusicPlayer.Close()
 	mods := []plays.Mods{piano.Mods{}}[s.mode()]
 	return game.PlayArgs{
@@ -89,16 +95,12 @@ func (s *Scene) playChart(row *game.ChartRow) any {
 
 func (s Scene) Draw(dst draws.Image) {
 	s.background.Draw(dst)
-	s.list.Draw(dst)
+	s.chartList.Draw(dst)
+	s.searchBox.Draw(dst)
 }
 
 func (s Scene) WindowTitle() string { return "gosu" }
-
-func (s Scene) DebugString() string {
-	return ""
-}
-
-// It is fine to call Close at blank MusicPlayer.
+func (s Scene) DebugString() string { return "" }
 
 // It is safe to call len() at nil slice.
 // https://go.dev/play/p/-1VWc9iDgMl
@@ -106,6 +108,3 @@ func (s Scene) DebugString() string {
 // Memo: 'name' is a officially used name as file path in io/fs.
 
 // Memo: make([]T, len) and make([]T, 0, len) is prone to be erroneous.
-
-// Avoid embedding game.Options directly.
-// Pass options as pointers for syncing and saving memory.

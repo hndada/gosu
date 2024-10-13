@@ -12,8 +12,9 @@ import (
 // Instead, they should load the minimum information only, such as
 // path to the file, and read the file when needed.
 
+// Databases can cover multiple file systems.
 type Databases struct {
-	Music  []MusicRow
+	Music  []MusicRow // Default chart folders
 	Chart  map[FileKey][]ChartRow
 	Replay []ReplayRow
 }
@@ -23,16 +24,10 @@ type FileKey struct {
 	Name string
 }
 
-type MusicRow struct {
-	FileKey
-	// FolderName string
-}
+type MusicRow struct{ FileKey }
 
-func (r MusicRow) String() string {
-	return r.Name
-}
+func (r MusicRow) String() string { return r.Name }
 
-// Pseudo database
 type ChartRow struct {
 	FileKey
 	MusicName          string
@@ -59,23 +54,16 @@ type ReplayRow struct {
 	ChartHash string
 }
 
-// Memo: archive/zip.OpenReader returns ReadSeeker, which implements Read.
-// Both Read and fs.Open are same in type: (name string) (fs.File, error)
-// func zipFS(path string) (fs.FS, error) {
-// 	r, err := zip.OpenReader(path)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return r, nil
-// }
-
-func NewDatabases(fsys fs.FS) (*Databases, error) {
+// TODO: handle other music and replay directories
+func NewDatabases(root fs.FS) (*Databases, error) {
 	var dbs Databases
-	var err error
 
-	dbs.Music, err = NewMusicDB(fsys)
-	if err != nil {
-		return nil, err
+	if fsys, err := fs.Sub(root, "music"); err == nil {
+		db, err := NewMusicDB(fsys)
+		if err != nil {
+			return nil, err
+		}
+		dbs.Music = db
 	}
 
 	dbs.Chart = make(map[FileKey][]ChartRow)
@@ -84,13 +72,15 @@ func NewDatabases(fsys fs.FS) (*Databases, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		dbs.Chart[m.FileKey] = cdb
 	}
 
-	dbs.Replay, err = NewReplayDB(fsys)
-	if err != nil {
-		return nil, err
+	if fsys, err := fs.Sub(root, "replays"); err == nil {
+		db, err := NewReplayDB(fsys)
+		if err != nil {
+			return nil, err
+		}
+		dbs.Replay = db
 	}
 
 	return &dbs, nil
@@ -121,8 +111,8 @@ func NewMusicDB(fsys fs.FS) ([]MusicRow, error) {
 	return list, nil
 }
 
-func NewChartDB(fsys fs.FS, dirName string) ([]ChartRow, error) {
-	fs, err := fs.ReadDir(fsys, dirName)
+func NewChartDB(fsys fs.FS, dname string) ([]ChartRow, error) {
+	fs, err := fs.ReadDir(fsys, dname)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +128,7 @@ func NewChartDB(fsys fs.FS, dirName string) ([]ChartRow, error) {
 			continue
 		}
 
-		c, err := plays.NewChartHeaderFromFile(fsys, filepath.Join(dirName, f.Name()))
+		c, err := plays.NewChartHeaderFromFile(fsys, filepath.Join(dname, f.Name()))
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 			continue
@@ -147,7 +137,7 @@ func NewChartDB(fsys fs.FS, dirName string) ([]ChartRow, error) {
 		list = append(list, ChartRow{
 			FileKey: FileKey{
 				FS:   fsys,
-				Name: filepath.Join(dirName, f.Name()),
+				Name: filepath.Join(dname, f.Name()),
 			},
 			MusicName: c.MusicName,
 			Artist:    c.Artist,
@@ -189,3 +179,13 @@ func NewReplayDB(fsys fs.FS) ([]ReplayRow, error) {
 	}
 	return list, nil
 }
+
+// Memo: archive/zip.OpenReader returns ReadSeeker, which implements Read.
+// Both Read and fs.Open are same in type: (name string) (fs.File, error)
+// func zipFS(path string) (fs.FS, error) {
+// 	r, err := zip.OpenReader(path)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return r, nil
+// }

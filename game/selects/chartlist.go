@@ -11,6 +11,7 @@ import (
 	"github.com/hndada/gosu/ui"
 )
 
+// 2-depth is enough
 const (
 	depthFolder = iota
 	depthChart
@@ -18,14 +19,14 @@ const (
 )
 
 // Even though the list component seems too big, it is still a single component.
-type ListComponent struct {
+type ChartListComponent struct {
 	sprite draws.Sprite // Box sprite for a list item
 	// h      float64      // Height of a list item
 	tween tween.Tween // Tween of the list's cursor position
 
-	charts       [][]game.ChartRow
 	folderTexts  []draws.Text
 	chartTexts   [][]draws.Text
+	charts       [][]game.ChartRow
 	i            int   // outer index
 	js           []int // inner indexs, need to keep track of them
 	depth        int
@@ -33,20 +34,20 @@ type ListComponent struct {
 	depthHandler ui.KeyNumberHandler[int]
 }
 
-func NewListComponent(boxSprite draws.Sprite, kbs *ui.KeyboardState, t1 []draws.Text, t2 [][]draws.Text, cs [][]game.ChartRow) (cmp ListComponent) {
+func newChartListComponent(boxSprite draws.Sprite, kbs *ui.KeyboardState, r game.SearchResult) (cmp ChartListComponent) {
 	cmp.sprite = boxSprite
 	// cmp.h = boxSprite.H()
 
-	cmp.charts = cs
-	cmp.folderTexts = t1
-	cmp.chartTexts = t2
-	cmp.js = make([]int, len(cs))
-	cmp.indexHandler = cmp.newIndexHandler(&cmp.i, len(cs), kbs)
+	cmp.charts = r.Charts
+	cmp.folderTexts = r.FolderNames
+	cmp.chartTexts = r.ChartNames
+	cmp.js = make([]int, len(r.Charts))
+	cmp.indexHandler = cmp.newIndexHandler(&cmp.i, len(r.Charts), kbs)
 	cmp.depthHandler = cmp.newDepthHandler(&cmp.depth, kbs)
 	return cmp
 }
 
-func (ListComponent) newIndexHandler(i *int, maxLen int, kbs *ui.KeyboardState) ui.KeyNumberHandler[int] {
+func (ChartListComponent) newIndexHandler(i *int, maxLen int, kbs *ui.KeyboardState) ui.KeyNumberHandler[int] {
 	ctrls := game.DownUpControls
 	ctrls[ui.Decrease].SoundFilename = game.SoundTransitionDown
 	ctrls[ui.Increase].SoundFilename = game.SoundTransitionUp
@@ -66,7 +67,7 @@ func (ListComponent) newIndexHandler(i *int, maxLen int, kbs *ui.KeyboardState) 
 	}
 }
 
-func (ListComponent) newDepthHandler(depth *int, kbs *ui.KeyboardState) ui.KeyNumberHandler[int] {
+func (ChartListComponent) newDepthHandler(depth *int, kbs *ui.KeyboardState) ui.KeyNumberHandler[int] {
 	ctrls := [2]ui.Control{
 		{
 			Key:           input.KeyEscape,
@@ -95,10 +96,10 @@ func (ListComponent) newDepthHandler(depth *int, kbs *ui.KeyboardState) ui.KeyNu
 	}
 }
 
-func (cmp ListComponent) j() int                { return cmp.js[cmp.i] }
-func (cmp ListComponent) chart() *game.ChartRow { return &cmp.charts[cmp.i][cmp.j()] }
+func (cmp ChartListComponent) j() int                { return cmp.js[cmp.i] }
+func (cmp ChartListComponent) chart() *game.ChartRow { return &cmp.charts[cmp.i][cmp.j()] }
 
-func (cmp *ListComponent) update() (r *game.ChartRow, isPlay bool) {
+func (cmp *ChartListComponent) update() (r *game.ChartRow, isPlay bool) {
 	if _, ok := cmp.depthHandler.Update(); ok {
 		cmp.updateIndexHandler()
 		cmp.updateTween()
@@ -114,7 +115,7 @@ func (cmp *ListComponent) update() (r *game.ChartRow, isPlay bool) {
 	return nil, false
 }
 
-func (cmp *ListComponent) updateIndexHandler() {
+func (cmp *ChartListComponent) updateIndexHandler() {
 	var maxLen int
 	var ptr *int
 	switch cmp.depth {
@@ -129,9 +130,9 @@ func (cmp *ListComponent) updateIndexHandler() {
 	cmp.indexHandler.Max = maxLen - 1
 }
 
-func (cmp *ListComponent) updateTween() {
+func (cmp *ChartListComponent) updateTween() {
 	begin := cmp.tween.Value()
-	target := listBoxHeight * float64([]int{cmp.i, cmp.j()}[cmp.depth])
+	target := chartListBoxHeight * float64([]int{cmp.i, cmp.j()}[cmp.depth])
 	change := target - begin
 	cmp.tween = tween.Tween{MaxLoop: 1}
 	cmp.tween.Add(begin, change, 400*time.Millisecond, tween.EaseOutExponential)
@@ -140,7 +141,7 @@ func (cmp *ListComponent) updateTween() {
 }
 
 // TODO: smoothly enlarge focused item?
-func (cmp ListComponent) Draw(dst draws.Image) {
+func (cmp ChartListComponent) Draw(dst draws.Image) {
 	var list []draws.Text
 	var idx int
 	var maxLen int
@@ -159,19 +160,19 @@ func (cmp ListComponent) Draw(dst draws.Image) {
 	// List items' positions are fixed; Only the cursor of the list is changed.
 	cursor := cmp.tween.Value()
 	top := cursor - float64(game.ScreenSizeY/2)
-	first := int(top/listBoxHeight) - 1
+	first := int(top/chartListBoxHeight) - 1
 	if first < 0 {
 		first = 0
 	}
 
 	bottom := cursor + float64(game.ScreenSizeY/2)
-	last := int(bottom/listBoxHeight) + 1
+	last := int(bottom/chartListBoxHeight) + 1
 	if last >= maxLen {
 		last = maxLen - 1
 	}
 
 	for i := first; i <= last; i++ {
-		pos := listBoxHeight * float64(i)
+		pos := chartListBoxHeight * float64(i)
 
 		// draw box
 		box := cmp.sprite

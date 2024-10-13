@@ -23,13 +23,15 @@ type Scene interface {
 	DebugString() string
 }
 
+// Avoid embedding game.Options directly.
+// Pass options as pointers for syncing and saving memory.
 type Game struct {
 	*ui.KeyboardState
 
 	Resources *Resources
 	Options   *Options
 	Handlers  *Handlers
-	Databases *Databases
+	Database  *Database
 
 	SceneSelect  Scene
 	ScenePlay    Scene
@@ -61,11 +63,11 @@ func NewGame(fsys fs.FS) (*Game, error) {
 
 	s.Handlers = NewHandlers(s.Options, s.KeyboardState)
 
-	dbs, err := NewDatabases(fsys)
+	dbs, err := NewDatabase(fsys)
 	if err != nil {
 		panic(err)
 	}
-	s.Databases = dbs
+	s.Database = dbs
 
 	// issue: It jitters when Vsync is enabled.
 	ebiten.SetTPS(ebiten.SyncWithFPS)

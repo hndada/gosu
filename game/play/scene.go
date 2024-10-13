@@ -253,7 +253,10 @@ func (s Scene) Draw(dst draws.Image) {
 }
 
 func (s Scene) DebugString() string {
-	return s.play.DebugString()
+	const str = `
+	Press TAB to pause.
+	Press ESC to back to choose a song.`
+	return s.play.DebugString() + str
 }
 
 // func (t *Timer) sync() {
