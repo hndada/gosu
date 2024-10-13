@@ -142,18 +142,21 @@ func (cmp *ChartListComponent) updateTween() {
 
 // TODO: smoothly enlarge focused item?
 func (cmp ChartListComponent) Draw(dst draws.Image) {
+	var (
+		skyblue = color.NRGBA{R: 64, G: 255, B: 255, A: 128}
+		pink    = color.NRGBA{R: 255, G: 128, B: 255, A: 128}
+	)
 	var list []draws.Text
-	var idx int
+	var focusedIndex int
 	var maxLen int
-	var clr = color.NRGBA{R: 64, G: 255, B: 255, A: 128} // skyblue
 	switch cmp.depth {
 	case depthFolder:
 		list = cmp.folderTexts
-		idx = cmp.i
+		focusedIndex = cmp.i
 		maxLen = len(cmp.charts)
 	case depthChart:
 		list = cmp.chartTexts[cmp.i]
-		idx = cmp.j()
+		focusedIndex = cmp.j()
 		maxLen = len(cmp.charts[cmp.i])
 	}
 
@@ -177,10 +180,11 @@ func (cmp ChartListComponent) Draw(dst draws.Image) {
 		// draw box
 		box := cmp.sprite
 		box.Move(0, pos-cursor)
-		if i == idx {
-			clr = color.NRGBA{R: 255, G: 128, B: 255, A: 128} // pink
+		if i == focusedIndex {
+			box.ColorScale.ScaleWithColor(pink)
+		} else {
+			box.ColorScale.ScaleWithColor(skyblue)
 		}
-		box.ColorScale.ScaleWithColor(clr)
 		box.Draw(dst)
 
 		// draw text

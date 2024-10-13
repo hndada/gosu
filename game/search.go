@@ -99,22 +99,27 @@ func (db Database) Search(q SearchQuery) (r SearchResult) {
 	}
 
 	t1 := make([]draws.Text, len(ccs))
-	switch q.GroupBy {
-	case GroupByMusic:
-		for i, cs := range ccs {
-			t1[i] = draws.NewText(cs[0].MusicString())
+	for i, cs := range ccs {
+		var text string
+		switch q.GroupBy {
+		case GroupByMusic:
+			text = cs[0].MusicString()
+		case GroupByLevel:
+			text = cs[0].LevelString()
 		}
-	case GroupByLevel:
-		for i, cs := range ccs {
-			t1[i] = draws.NewText(cs[0].LevelString())
-		}
+
+		t := draws.NewText(text)
+		t.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
+		t1[i] = t
 	}
 
 	t2 := make([][]draws.Text, len(ccs))
 	for i, cs := range ccs {
 		t2[i] = make([]draws.Text, len(cs))
 		for j, c := range cs {
-			t2[i][j] = draws.NewText(c.ChartString())
+			t := draws.NewText(c.ChartString())
+			t.Locate(ScreenSizeX/2, ScreenSizeY/2, draws.CenterMiddle)
+			t2[i][j] = t
 		}
 	}
 

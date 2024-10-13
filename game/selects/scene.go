@@ -27,9 +27,10 @@ type Scene struct {
 	// leaderboard
 }
 
+// TODO: move to chartlist.go
 const (
-	chartListBoxWidth  = 400
-	chartListBoxHeight = 100
+	chartListBoxWidth  = 550
+	chartListBoxHeight = 50
 	chartListBoxCount  = game.ScreenSizeY/chartListBoxHeight + 1
 )
 

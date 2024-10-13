@@ -38,11 +38,11 @@ type Animation struct {
 	Box
 }
 
-func NewAnimation(frames []Image, periodMS time.Duration) Animation {
+func NewAnimation(frames []Image, periodMS int) Animation {
 	a := Animation{
 		Frames:    frames,
 		StartTime: times.Now(),
-		Period:    periodMS * time.Millisecond,
+		Period:    time.Duration(periodMS) * time.Millisecond,
 	}
 	if len(frames) > 0 {
 		a.Box = NewBox(frames[0])

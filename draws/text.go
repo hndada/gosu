@@ -51,9 +51,9 @@ func NewFaceOptions() FaceOptions {
 	return FaceOptions{
 		Font: "goregular",
 		FaceOptions: opentype.FaceOptions{
-			Size:    12,
+			Size:    24,
 			DPI:     72,
-			Hinting: font.HintingFull,
+			Hinting: font.HintingVertical,
 		},
 	}
 }
