@@ -99,7 +99,7 @@ func (ChartListComponent) newDepthHandler(depth *int, kbs *ui.KeyboardState) ui.
 func (cmp ChartListComponent) j() int                { return cmp.js[cmp.i] }
 func (cmp ChartListComponent) chart() *game.ChartRow { return &cmp.charts[cmp.i][cmp.j()] }
 
-func (cmp *ChartListComponent) update() (r *game.ChartRow, isPlay bool) {
+func (cmp *ChartListComponent) update() (c *game.ChartRow, isPlay bool) {
 	if _, ok := cmp.depthHandler.Update(); ok {
 		cmp.updateIndexHandler()
 		cmp.updateTween()
@@ -112,7 +112,7 @@ func (cmp *ChartListComponent) update() (r *game.ChartRow, isPlay bool) {
 		cmp.updateTween()
 	}
 
-	return nil, false
+	return cmp.chart(), false
 }
 
 func (cmp *ChartListComponent) updateIndexHandler() {

@@ -102,11 +102,11 @@ func (db Database) Search(q SearchQuery) (r SearchResult) {
 	switch q.GroupBy {
 	case GroupByMusic:
 		for i, cs := range ccs {
-			t1[i] = draws.Text{Text: cs[0].MusicString()}
+			t1[i] = draws.NewText(cs[0].MusicString())
 		}
 	case GroupByLevel:
 		for i, cs := range ccs {
-			t1[i] = draws.Text{Text: cs[0].LevelString()}
+			t1[i] = draws.NewText(cs[0].LevelString())
 		}
 	}
 
@@ -114,7 +114,7 @@ func (db Database) Search(q SearchQuery) (r SearchResult) {
 	for i, cs := range ccs {
 		t2[i] = make([]draws.Text, len(cs))
 		for j, c := range cs {
-			t2[i][j] = draws.Text{Text: c.ChartString()}
+			t2[i][j] = draws.NewText(c.ChartString())
 		}
 	}
 
