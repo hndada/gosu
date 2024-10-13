@@ -31,7 +31,6 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
 	{
 		scn, err := selects.Scene{}.New(g, nil)
 		if err != nil {
@@ -46,7 +45,7 @@ func main() {
 		}
 		g.ScenePlay = scn
 	}
-	g.CurrentScene = g.ScenePlay
+	g.CurrentScene = g.SceneSelect
 
 	if err := ebiten.RunGame(g); err != nil {
 		panic(err)

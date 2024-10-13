@@ -9,6 +9,7 @@ import (
 
 	"github.com/gopxl/beep"
 	"github.com/gopxl/beep/effects"
+	"github.com/gopxl/beep/generators"
 	"github.com/gopxl/beep/speaker"
 )
 
@@ -53,7 +54,7 @@ func NewMusicPlayerFromFile(fsys fs.FS, name string) (*MusicPlayer, error) {
 
 func (mp MusicPlayer) IsEmpty() bool { return mp.seekCloser == nil }
 
-func (mp *MusicPlayer) Play() {
+func (mp MusicPlayer) Play() {
 	if mp.IsEmpty() {
 		return
 	}
@@ -74,6 +75,7 @@ func (mp MusicPlayer) Current() time.Duration {
 	sr := mp.format.SampleRate
 	return sr.D(mp.seekCloser.Position())
 }
+
 func (mp MusicPlayer) Duration() time.Duration {
 	if mp.IsEmpty() {
 		return 0
@@ -149,5 +151,5 @@ func (mp *MusicPlayer) Close() {
 
 func NewSilence(duration time.Duration) beep.Streamer {
 	num := defaultSampleRate.N(duration)
-	return beep.Silence(num)
+	return generators.Silence(num)
 }

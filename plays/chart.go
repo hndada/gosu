@@ -72,7 +72,7 @@ type ChartHeader struct {
 
 // internal game packages use chart format.
 func LoadChartFormat(fsys fs.FS, name string) (any, string, error) {
-	data, err := fs.ReadFile(fsys, name)
+	data, err := util.ReadFile(fsys, name)
 	if err != nil {
 		return nil, "", err
 	}

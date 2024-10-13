@@ -3,6 +3,7 @@ package game
 import (
 	"fmt"
 	"io/fs"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -67,7 +68,12 @@ type ReplayRow struct {
 func NewDatabase(root fs.FS) (*Database, error) {
 	var dbs Database
 
-	if fsys, err := fs.Sub(root, "music"); err == nil {
+	// fs.Sub returns nil even if the directory does not exist.
+	if _, err := fs.Stat(root, "music"); err == nil {
+		fsys, err := fs.Sub(root, "music")
+		if err != nil {
+			return nil, fmt.Errorf("NewDatabase music: %w", err)
+		}
 		db, err := newChartDB(fsys)
 		if err != nil {
 			return nil, err
@@ -75,14 +81,17 @@ func NewDatabase(root fs.FS) (*Database, error) {
 		dbs.Chart = db
 	}
 
-	if fsys, err := fs.Sub(root, "replays"); err == nil {
+	if _, err := fs.Stat(root, "replays"); err == nil {
+		fsys, err := fs.Sub(root, "replays")
+		if err != nil {
+			return nil, fmt.Errorf("NewDatabase replays: %w", err)
+		}
 		db, err := newReplayDB(fsys)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("NewDatabase replays: %w", err)
 		}
 		dbs.Replay = db
 	}
-
 	return &dbs, nil
 }
 
@@ -91,7 +100,7 @@ func NewDatabase(root fs.FS) (*Database, error) {
 func newChartDB(fsys fs.FS) ([]ChartRow, error) {
 	dirs, err := fs.ReadDir(fsys, ".")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("newChartDB dirs: %w", err)
 	}
 
 	var db []ChartRow
@@ -102,7 +111,7 @@ func newChartDB(fsys fs.FS) ([]ChartRow, error) {
 		dname := dir.Name()
 		fs, err := fs.ReadDir(fsys, dname)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("newChartDB dir: %w", err)
 		}
 
 		for _, f := range fs {
@@ -115,7 +124,7 @@ func newChartDB(fsys fs.FS) ([]ChartRow, error) {
 				continue
 			}
 
-			fname := filepath.Join(dname, f.Name())
+			fname := path.Join(dname, f.Name())
 			c, err := plays.NewChartHeaderFromFile(fsys, fname)
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)

@@ -57,3 +57,9 @@ func (mp *PreviewMusicPlayer) Update() {
 		mp.startTime = times.Now()
 	}
 }
+
+func (pmp *PreviewMusicPlayer) Close() {
+	if pmp.MusicPlayer != nil {
+		pmp.MusicPlayer.Close()
+	}
+}
