@@ -11,41 +11,21 @@ import (
 // Component is basically EventHandler.
 type Scene struct {
 	*game.Game
-	boxSprite draws.Sprite
-
-	// searchBox          SearchBoxComponent
-	chartList          ChartListComponent
-	lastChart          *game.ChartRow
-	
-	// volume             *float64
-	background         game.BackgroundComponent
+	chartBrowser       *chartBrowser
+	background         game.Background
 	previewMusicPlayer PreviewMusicPlayer
-
-	// chartInfo  ChartInfoComponent
+	// chartInfo  chartInfo
 
 	// Score box color: Gray128 with 50% transparent
 	// Hovered Score box color: Gray96 with 50% transparent
 	// leaderboard
 }
 
-// TODO: move to chartlist.go
-const (
-	chartListBoxWidth  = 550
-	chartListBoxHeight = 50
-	chartListBoxCount  = game.ScreenSizeY/chartListBoxHeight + 1
-)
-
 func (Scene) New(g *game.Game, args game.Args) (game.Scene, error) {
 	scn := &Scene{Game: g}
-
-	s := draws.NewSprite(g.Resources.BoxMaskImage)
-	s.SetSize(chartListBoxWidth, chartListBoxHeight)
-	s.Locate(plays.ScreenSizeX/2, plays.ScreenSizeY/2, draws.CenterMiddle)
-	scn.boxSprite = s
-
-	scn.searchBox = NewSearchBoxComponent(g.Database)
-	scn.chartList = newChartListComponent(scn.boxSprite, g.KeyboardState, scn.searchBox.update())
-
+	sq := game.SearchQuery{}
+	sr := g.Database.Search(sq)
+	scn.chartBrowser = scn.newChartBrowser(sq, sr)
 	return scn, nil
 }
 
@@ -62,23 +42,23 @@ func (s *Scene) Update() any {
 	s.Handlers.SubMode.Handle()
 	s.Handlers.SpeedScales[s.mode()].Handle()
 
-	c, isPlay := s.chartList.update()
+	lastChart := s.chartBrowser.chart()
+	c, isPlay := s.chartBrowser.update()
 	if c != nil && isPlay {
 		return s.playChart(c)
 	}
 
-	lc := s.lastChart
-	if lc == nil || lc.MusicName != c.MusicName {
+	if lastChart == nil || lastChart.MusicName != c.MusicName {
+		vol := &s.Options.MusicVolume
 		s.previewMusicPlayer.Close()
-		pmp, err := NewPreviewMusicPlayer(c.FS, c.MusicName, s.volume)
+		pmp, err := NewPreviewMusicPlayer(c.FS, c.MusicName, vol)
 		if err == nil { // music file may not exist
 			s.previewMusicPlayer = pmp
 		}
 	}
-	if lc == nil || lc.BackgroundFilename != c.BackgroundFilename {
-		s.background = game.NewBackgroundComponent(s.Resources, s.Options)
+	if lastChart == nil || lastChart.BackgroundFilename != c.BackgroundFilename {
+		s.background = game.NewBackground(s.Resources, s.Options)
 	}
-	s.lastChart = c
 	return nil
 }
 
@@ -96,9 +76,8 @@ func (s *Scene) playChart(row *game.ChartRow) any {
 }
 
 func (s Scene) Draw(dst draws.Image) {
-	s.background.Draw(dst)
-	s.chartList.Draw(dst)
-	s.searchBox.Draw(dst)
+	// s.background.Draw(dst)
+	s.chartBrowser.Draw(dst)
 }
 
 func (s Scene) WindowTitle() string { return "gosu" }

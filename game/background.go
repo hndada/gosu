@@ -6,39 +6,42 @@ import (
 	"github.com/hndada/gosu/draws"
 )
 
-type BackgroundComponent struct {
+type Background struct {
 	defaultSprite draws.Sprite
-	screenSize    draws.XY
 	sprite        draws.Sprite
+	screenSize    draws.XY
 	brightness    *float32
-}
-
-func (cmp BackgroundComponent) newSprite(img draws.Image) draws.Sprite {
-	s := draws.NewSprite(img)
-	s.Scale(cmp.screenSize.X / s.W())
-	s.Locate(cmp.screenSize.X/2, cmp.screenSize.Y/2, draws.CenterMiddle)
-	return s
 }
 
 // In osu!, background brightness at Song selectis 60% (153 / 255).
 // However, for the sake of simplicity, gosu will use the option value.
-func NewBackgroundComponent(res *Resources, opts *Options) (cmp BackgroundComponent) {
-	cmp.defaultSprite = cmp.newSprite(res.DefaultBackgroundImage)
-	cmp.brightness = &opts.BackgroundBrightness
+func NewBackground(res *Resources, opts *Options) (bg Background) {
+	bg.defaultSprite = bg.newSprite(res.DefaultBackgroundImage)
+	bg.sprite = bg.defaultSprite
+	bg.screenSize = opts.screenSize
+	// fmt.Println(opts.BackgroundBrightness)
+	bg.brightness = &opts.BackgroundBrightness
 	return
 }
 
-func (cmp *BackgroundComponent) UpdateBackground(fsys fs.FS, name string) {
+func (bg Background) newSprite(img draws.Image) draws.Sprite {
+	s := draws.NewSprite(img)
+	s.Scale(bg.screenSize.X / s.W())
+	s.Locate(bg.screenSize.X/2, bg.screenSize.Y/2, draws.CenterMiddle)
+	return s
+}
+
+func (bg *Background) UpdateBackground(fsys fs.FS, name string) {
 	img := draws.NewImageFromFile(fsys, name)
 	if img.IsEmpty() {
-		cmp.sprite = cmp.defaultSprite
+		bg.sprite = bg.defaultSprite
 	} else {
-		cmp.sprite = cmp.newSprite(img)
+		bg.sprite = bg.newSprite(img)
 	}
 }
 
-func (cmp BackgroundComponent) Draw(dst draws.Image) {
+func (bg Background) Draw(dst draws.Image) {
 	// op.ColorM.ChangeHSV(0, 1, opts.Brightness)
-	cmp.sprite.ColorScale.ScaleAlpha(*cmp.brightness)
-	cmp.sprite.Draw(dst)
+	bg.sprite.ColorScale.ScaleAlpha(*bg.brightness)
+	bg.sprite.Draw(dst)
 }
