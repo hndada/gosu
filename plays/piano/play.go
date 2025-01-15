@@ -20,6 +20,7 @@ type Play struct {
 }
 
 func NewPlay(res *Resources, opts *Options, c *Chart, mods Mods, sp *audios.SoundPlayer) (*Play, error) {
+	fmt.Println("YYssssssssY")
 	return &Play{
 		Resources: res,
 		Options:   opts,

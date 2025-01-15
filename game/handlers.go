@@ -1,6 +1,7 @@
 package game
 
 import (
+	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/input"
 	"github.com/hndada/gosu/plays"
 	"github.com/hndada/gosu/ui"
@@ -46,6 +47,7 @@ type Handlers struct {
 	SpeedScales []ui.KeyNumberHandler[float64]
 }
 
+// TODO: make this a method of game struct.
 func NewHandlers(opts *Options, kbs *ui.KeyboardState) *Handlers {
 	return &Handlers{
 		MusicVolume:          newMusicVolumeHandler(opts, kbs),
@@ -70,6 +72,7 @@ func newMusicVolumeHandler(opts *Options, kbs *ui.KeyboardState) ui.KeyNumberHan
 			Max:   1,
 			Unit:  0.05,
 		},
+		SoundPlayer: audios.NewSoundPlayer(&opts.SoundVolumeScale),
 		KeyListener: *ui.NewKeyListener(
 			kbs,
 			[]input.Key{input.KeyControlLeft},
@@ -86,6 +89,7 @@ func newSoundVolumeScaleHandler(opts *Options, kbs *ui.KeyboardState) ui.KeyNumb
 			Max:   1,
 			Unit:  0.05,
 		},
+		SoundPlayer: audios.NewSoundPlayer(&opts.SoundVolumeScale),
 		KeyListener: *ui.NewKeyListener(
 			kbs,
 			[]input.Key{input.KeyAltLeft},
@@ -106,6 +110,7 @@ func newMusicOffsetHandler(opts *Options, kbs *ui.KeyboardState) ui.KeyNumberHan
 			Max:   200,
 			Unit:  1,
 		},
+		SoundPlayer: audios.NewSoundPlayer(&opts.SoundVolumeScale),
 		KeyListener: *ui.NewKeyListener(
 			kbs,
 			[]input.Key{input.KeyShiftLeft},
@@ -122,6 +127,7 @@ func newBackgroundBrightnessHandler(opts *Options, kbs *ui.KeyboardState) ui.Key
 			Max:   1,
 			Unit:  0.1,
 		},
+		SoundPlayer: audios.NewSoundPlayer(&opts.SoundVolumeScale),
 		KeyListener: *ui.NewKeyListener(
 			kbs,
 			[]input.Key{input.KeyTab},
@@ -140,6 +146,7 @@ func newDebugPrintHandler(opts *Options, kbs *ui.KeyboardState) ui.KeyBoolHandle
 		BoolController: ui.BoolController{
 			Value: &opts.DebugPrint,
 		},
+		SoundPlayer: audios.NewSoundPlayer(&opts.SoundVolumeScale),
 		KeyListener: *ui.NewKeyListener(
 			kbs,
 			[]input.Key{},
@@ -162,6 +169,7 @@ func newModeHandler(opts *Options, kbs *ui.KeyboardState) ui.KeyNumberHandler[in
 			Max:   plays.ModePiano,
 			Unit:  1,
 		},
+		SoundPlayer: audios.NewSoundPlayer(&opts.SoundVolumeScale),
 		KeyListener: *ui.NewKeyListener(
 			kbs,
 			[]input.Key{},
@@ -201,6 +209,7 @@ func newSubModeHandlers(opts *Options, kbs *ui.KeyboardState) []ui.KeyNumberHand
 				Max:   max,
 				Unit:  1,
 			},
+			SoundPlayer: audios.NewSoundPlayer(&opts.SoundVolumeScale),
 			KeyListener: *ui.NewKeyListener(
 				kbs,
 				[]input.Key{},
@@ -240,6 +249,7 @@ func newSpeedScaleHandlers(opts *Options, kbs *ui.KeyboardState) []ui.KeyNumberH
 				Max:   2.5,
 				Unit:  0.1,
 			},
+			SoundPlayer: audios.NewSoundPlayer(&opts.SoundVolumeScale),
 			KeyListener: *ui.NewKeyListener(
 				kbs,
 				[]input.Key{},

@@ -5,7 +5,6 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/game"
-	"github.com/hndada/gosu/game/play"
 	"github.com/hndada/gosu/game/selects"
 	"github.com/hndada/gosu/plays/piano"
 )
@@ -38,13 +37,13 @@ func main() {
 		}
 		g.SceneSelect = scn
 	}
-	{
-		scn, err := play.Scene{}.New(g, testPlayArgs)
-		if err != nil {
-			panic(err)
-		}
-		g.ScenePlay = scn
-	}
+	// {
+	// 	scn, err := play.Scene{}.New(g, testPlayArgs)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	g.ScenePlay = scn
+	// }
 	g.CurrentScene = g.SceneSelect
 
 	if err := ebiten.RunGame(g); err != nil {

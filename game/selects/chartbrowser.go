@@ -120,17 +120,43 @@ func (cb chartBrowser) j() int                { return cb.js[cb.i] }
 func (cb chartBrowser) chart() *game.ChartRow { return &cb.Charts[cb.i][cb.j()] }
 
 func (cb *chartBrowser) update() (c *game.ChartRow, isPlay bool) {
-	if _, ok := cb.depthHandler.Update(); ok {
+	if c, ok := cb.depthHandler.Update(); ok {
+		// TODO: refactor
+		switch c.Type {
+		case ui.Decrease:
+			cb.depth--
+			if cb.depth < 0 {
+				cb.depth = 0
+			}
+		case ui.Increase:
+			cb.depth++
+			if cb.depth > depthPlay {
+				cb.depth = depthPlay
+			}
+		}
 		cb.renewIndexHandler()
-		cb.renewTween()
 	}
+
 	if cb.depth == depthPlay {
 		cb.depth = depthChart
 		return cb.chart(), true
 	}
-	if _, ok := cb.indexHandler.Update(); ok {
-		cb.renewTween()
+
+	if c, ok := cb.indexHandler.Update(); ok {
+		switch c.Type {
+		case ui.Increase:
+			cb.i--
+			if cb.i < 0 {
+				cb.i = 0
+			}
+		case ui.Decrease:
+			cb.i++
+			if cb.i >= cb.indexHandler.Max {
+				cb.i = cb.indexHandler.Max - 1
+			}
+		}
 	}
+	cb.renewTween()
 
 	return cb.chart(), false
 }

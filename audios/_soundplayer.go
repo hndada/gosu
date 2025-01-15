@@ -29,8 +29,8 @@ type SoundPlayer struct {
 	PlaybackRate     float64
 }
 
-func NewSoundPlayer(scale *float64) SoundPlayer {
-	return SoundPlayer{
+func NewSoundPlayer(scale *float64) *SoundPlayer {
+	return &SoundPlayer{
 		buffer:           beep.NewBuffer(defaultFormat),
 		starts:           make(map[string]int),
 		ends:             make(map[string]int),

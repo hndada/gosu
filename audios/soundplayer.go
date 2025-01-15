@@ -20,10 +20,10 @@ type SoundPlayer struct {
 	PlaybackRate     float64
 }
 
-func NewSoundPlayer(scale *float64) SoundPlayer {
+func NewSoundPlayer(scale *float64) *SoundPlayer {
 	buffers := map[string]SoundBuffer{"": newSoundBuffer()}
-	bufferNames := []string{"default"}
-	return SoundPlayer{
+	bufferNames := []string{""}
+	return &SoundPlayer{
 		buffers:          buffers,
 		bufferNames:      bufferNames,
 		soundVolumeScale: scale,
@@ -36,7 +36,7 @@ func (sp *SoundPlayer) AddFile(fsys fs.FS, name string) error {
 	if err != nil {
 		return fmt.Errorf("read file %s: %w", name, err)
 	}
-	sb := sp.buffers["default"]
+	sb := sp.buffers[""]
 	return sb.add(data, name)
 }
 
@@ -63,7 +63,7 @@ func (sp *SoundPlayer) AddDir(fsys fs.FS, name string) error {
 
 // Count returns the number of kinds of sounds in SoundPlayer.
 func (sp SoundPlayer) Count() int {
-	defBuf := sp.buffers["default"]
+	defBuf := sp.buffers[""]
 	return len(defBuf.keys) + len(sp.bufferNames) - 1
 }
 
@@ -85,7 +85,7 @@ func (sp SoundPlayer) PlayWithVolume(name string, vol float64) {
 		key := sb.keys[i]
 		s = sb.buffer.Streamer(sb.starts[key], sb.ends[key])
 	} else {
-		sb := sp.buffers["default"]
+		sb := sp.buffers[""]
 		s = sb.buffer.Streamer(sb.starts[name], sb.ends[name])
 	}
 

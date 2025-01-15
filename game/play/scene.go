@@ -61,7 +61,7 @@ func (Scene) New(g *game.Game, _args game.Args) (game.Scene, error) {
 		// soft-hitnormal.wav
 		sp := s.newSamplePlayer(args.ChartFS, s.MusicFilename)
 
-		play, err := piano.NewPlay(s.Resources.Piano, s.Options.Piano, c, mods, &sp)
+		play, err := piano.NewPlay(s.Resources.Piano, s.Options.Piano, c, mods, sp)
 		if err != nil {
 			err = fmt.Errorf("failed to create play scene: %w", err)
 			return nil, err
@@ -104,7 +104,7 @@ func (Scene) New(g *game.Game, _args game.Args) (game.Scene, error) {
 	return s, nil
 }
 
-func (s Scene) newSamplePlayer(fsys fs.FS, musicFilename string) audios.SoundPlayer {
+func (s Scene) newSamplePlayer(fsys fs.FS, musicFilename string) *audios.SoundPlayer {
 	sp := audios.NewSoundPlayer(&s.Options.SoundVolumeScale)
 	fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {

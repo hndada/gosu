@@ -1,6 +1,8 @@
 package ui
 
-import "github.com/hndada/gosu/audios"
+import (
+	"github.com/hndada/gosu/audios"
+)
 
 // Each Listener returns Control.
 // A Controller then updates values by returned Control struct.
@@ -17,7 +19,9 @@ func (h *KeyNumberHandler[T]) Handle() {
 		return
 	}
 
-	h.SoundPlayer.Play(ctrl.SoundFilename)
+	// if h.SoundPlayer != nil {
+	// 	h.SoundPlayer.Play(ctrl.SoundFilename)
+	// }
 	switch ctrl.Type {
 	case Decrease:
 		h.Decrease()
@@ -34,12 +38,15 @@ type KeyBoolHandler struct {
 }
 
 func (h *KeyBoolHandler) Handle() {
-	ctrl, ok := h.KeyListener.Update()
+	// ctrl, ok := h.KeyListener.Update()
+	_, ok := h.KeyListener.Update()
 	if !ok {
 		return
 	}
 
-	h.SoundPlayer.Play(ctrl.SoundFilename)
+	// if h.SoundPlayer != nil {
+	// 	h.SoundPlayer.Play(ctrl.SoundFilename)
+	// }
 	h.Toggle()
 }
 
