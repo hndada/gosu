@@ -20,8 +20,7 @@ type Play struct {
 }
 
 func NewPlay(res *Resources, opts *Options, c *Chart, mods Mods, sp *audios.SoundPlayer) (*Play, error) {
-	fmt.Println("YYssssssssY")
-	return &Play{
+	scn := &Play{
 		Resources: res,
 		Options:   opts,
 		Chart:     c,
@@ -30,7 +29,10 @@ func NewPlay(res *Resources, opts *Options, c *Chart, mods Mods, sp *audios.Soun
 		Scorer:     NewScorer(&c.Notes, mods, sp),
 		Components: NewComponents(res, opts, c),
 		// soundPlayer: sp,
-	}, nil
+	}
+	// TODO: refactor
+	scn.SetSpeedScale(1, scn.SpeedScale)
+	return scn, nil
 }
 
 func (p *Play) Update(now int32, kas []plays.KeyboardAction) any {
@@ -43,26 +45,27 @@ func (p *Play) Update(now int32, kas []plays.KeyboardAction) any {
 }
 
 // Need to re-calculate positions when Speed has changed.
-func (p *Play) SetSpeedScale(newScale float64) {
-	oldScale := p.SpeedScale
-	scale := newScale / oldScale
+func (p *Play) SetSpeedScale(oldScale, newScale float64) {
+	// oldScale := p.SpeedScale
+	ratio := newScale / oldScale
 	p.SpeedScale = newScale
 
 	ds := p.Dynamics.Dynamics()
 	for i := range ds {
-		ds[i].Position *= scale
+		ds[i].Position *= ratio
 	}
+	p.Dynamics.SpeedScale = newScale
 
 	ns := p.Chart.Notes.data
 	for i := range ns {
-		ns[i].position *= scale
+		ns[i].position *= ratio
 	}
 	// for lowermost and uppermost
-	p.Components.notes.scaledScreenSize = plays.ScreenSizeY * scale
+	p.Components.notes.scaledScreenSize = plays.ScreenSizeY * ratio
 
 	bs := p.bars.bars.data
 	for i := range bs {
-		bs[i].position *= scale
+		bs[i].position *= ratio
 	}
 }
 
