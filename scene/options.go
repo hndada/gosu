@@ -6,8 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/plays"
-	"github.com/hndada/gosu/plays/piano"
+	"github.com/hndada/gosu/game/piano"
 )
 
 // Options passed to each scene.

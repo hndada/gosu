@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/hndada/gosu/audios"
-	"github.com/hndada/gosu/plays"
 )
 
 // There are three kinds of factors: Flow, Acc, and Extra.

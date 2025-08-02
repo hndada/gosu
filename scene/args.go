@@ -2,8 +2,6 @@ package scene
 
 import (
 	"io/fs"
-
-	"github.com/hndada/gosu/plays"
 )
 
 type Args interface{}

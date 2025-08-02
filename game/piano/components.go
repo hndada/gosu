@@ -2,7 +2,6 @@ package piano
 
 import (
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/plays"
 )
 
 // Too dedicated structs harms readability.

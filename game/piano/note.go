@@ -6,7 +6,6 @@ import (
 
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/format/osu"
-	"github.com/hndada/gosu/plays"
 )
 
 type NoteKind int

@@ -1,7 +1,5 @@
 package piano
 
-import "github.com/hndada/gosu/plays"
-
 type Mods struct {
 }
 

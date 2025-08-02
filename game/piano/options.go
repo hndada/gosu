@@ -2,8 +2,6 @@ package piano
 
 import (
 	"image/color"
-
-	"github.com/hndada/gosu/plays"
 )
 
 // SpeedScale is universal for all key counts.

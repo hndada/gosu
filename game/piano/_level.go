@@ -2,8 +2,6 @@ package piano
 
 import (
 	"sort"
-
-	"github.com/hndada/gosu/plays"
 )
 
 type Level struct {

@@ -6,7 +6,6 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/plays"
 )
 
 // Resources is a collection of images and sounds.

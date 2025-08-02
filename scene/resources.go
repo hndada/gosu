@@ -4,7 +4,7 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/plays/piano"
+	"github.com/hndada/gosu/game/piano"
 )
 
 // Todo: deal with two kinds of values: file path and directory path.

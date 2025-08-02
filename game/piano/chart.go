@@ -2,8 +2,6 @@ package piano
 
 import (
 	"io/fs"
-
-	"github.com/hndada/gosu/plays"
 )
 
 // Todo: make fields unexported?

@@ -8,9 +8,9 @@ import (
 
 	"github.com/hndada/gosu/audios"
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/game"
+	"github.com/hndada/gosu/game/piano"
 	"github.com/hndada/gosu/input"
-	"github.com/hndada/gosu/plays"
-	"github.com/hndada/gosu/plays/piano"
 	"github.com/hndada/gosu/times"
 )
 
