@@ -1,4 +1,4 @@
-package game
+package scene
 
 import (
 	"io/fs"

@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/play"
 	"github.com/hndada/gosu/game/selects"
 	"github.com/hndada/gosu/plays/piano"
