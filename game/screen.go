@@ -1,4 +1,4 @@
-package plays
+package game
 
 // Fixed screen size, and variable resolution:
 // Fixing screen size enables users to feel UI elements

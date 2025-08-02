@@ -1,4 +1,4 @@
-package plays
+package game
 
 type JudgmentKind int
 

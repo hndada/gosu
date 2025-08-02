@@ -1,3 +1,3 @@
-package plays
+package game
 
 type Mods interface{}

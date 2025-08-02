@@ -1,4 +1,4 @@
-package plays
+package game
 
 import "image/color"
 

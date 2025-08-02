@@ -1,4 +1,4 @@
-package plays
+package game
 
 import "github.com/hndada/gosu/input"
 
