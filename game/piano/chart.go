@@ -2,44 +2,176 @@ package piano
 
 import (
 	"io/fs"
+	"sort"
+
+	"github.com/hndada/gosu/format/osu"
+	"github.com/hndada/gosu/game"
 )
 
-// Todo: make fields unexported?
+// Chart contains all data needed to play a piano chart.
 type Chart struct {
-	Mods Mods
-	*plays.ChartHeader
-	plays.Dynamics
-	Notes
-	// KeyCount int
+	game.ChartHeader
+	keyCount int // Number of keys in the chart.
+
+	mods Mods
+	game.Dynamics
+	bars            []Bar
+	notes           []Note
+	keysFocusedNote []int // indexes of focused notes
 }
 
 func NewChart(fsys fs.FS, name string, mods Mods) (*Chart, error) {
-	c := &Chart{
-		Mods: mods,
-	}
-
-	format, hash, err := plays.LoadChartFormat(fsys, name)
+	c := &Chart{}
+	format, hash, err := game.LoadChartFormat(fsys, name)
 	if err != nil {
 		return c, err
 	}
-	header := plays.NewChartHeaderFromFormat(format, hash)
-	c.ChartHeader = header
-	// c.KeyCount = c.SubMode
+	c.ChartHeader = game.NewChartHeaderFromFormat(format, hash)
+	keyCount := c.ChartHeader.SubMode
 
-	dys, err := plays.NewDynamics(format)
+	c.mods = mods
+	c.Dynamics, err = game.NewDynamics(format)
 	if err != nil {
 		return c, err
 	}
-	c.Dynamics = dys
-
-	keyCount := c.SubMode
-	c.Notes = NewNotes(keyCount, format, dys)
+	c.bars = newChartBars(c.Dynamics)
+	c.notes, c.keysFocusedNote = newChartNotes(keyCount, format, c.Dynamics)
 	return c, nil
+}
+
+// Drum and Piano modes have different bar drawing methods.
+// Hence, this method is defined per game mode.
+type Bar struct {
+	position float64
+}
+
+// Given Dynamics' index is 0 and it is fine to modify it.
+func newChartBars(dys game.Dynamics) []Bar {
+	// const useDefaultMeter = 0
+	times := dys.BeatTimes()
+	bs := make([]Bar, len(times))
+	dys.Reset()
+	for i, t := range times {
+		dys.UpdateIndex(t)
+		bs[i] = Bar{position: dys.Position(t)}
+	}
+	return bs
+}
+
+type NoteKind int
+
+const (
+	Normal NoteKind = iota
+	Head
+	Tail
+	Body
+)
+
+type Note struct {
+	Time   int32
+	Kind   NoteKind
+	Key    int
+	Sample game.Sample
+
+	position float64 // Scaled x or y value.
+	next     int     // For updating staged notes.
+	prev     int     // For accessing to Head from Tail.
+	scored   bool
+}
+
+// The length of the returned slice is 1 or 2.
+func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
+	n := Note{
+		Time:   int32(f.Time),
+		Kind:   Normal,
+		Key:    f.Column(keyCount),
+		Sample: game.NewSample(f),
+	}
+	if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
+		n.Kind = Head
+		d := int32(f.EndTime) - n.Time
+		n2 := Note{
+			Time: n.Time + d,
+			Kind: Tail,
+			Key:  n.Key,
+			// Tail has no sample sound.
+		}
+		ns = append(ns, n, n2)
+	} else {
+		ns = append(ns, n)
+	}
+	return ns
+}
+
+func newChartNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) ([]Note, []int) {
+	var ns []Note
+	switch format := format.(type) {
+	case *osu.Format:
+		ns = make([]Note, 0, len(format.HitObjects)*2)
+		for _, ho := range format.HitObjects {
+			ns = append(ns, newNoteFromOsu(ho, keyCount)...)
+		}
+		// keyCount = int(format.CircleSize)
+	}
+
+	sort.Slice(ns, func(i, j int) bool {
+		if ns[i].Time == ns[j].Time {
+			return ns[i].Key < ns[j].Key
+		}
+		return ns[i].Time < ns[j].Time
+	})
+
+	// Position calculation is based on Dynamics.
+	// Farther note has larger position.
+	// Todo: dys.Reset() looks not pretty.
+	dys.Reset()
+	for i, n := range ns {
+		dys.UpdateIndex(n.Time)
+		ns[i].position = dys.Position(n.Time)
+
+		// Tail's Position should be always equal or larger than Head's.
+		if ns[i].Kind == Tail {
+			if head := ns[n.prev]; ns[i].position < head.position {
+				ns[i].position = head.position
+			}
+		}
+	}
+	dys.Reset()
+
+	// linking
+	keysNone := make([]int, keyCount)
+	for k := range keysNone {
+		keysNone[k] = -1
+	}
+	keysFocusedNote := make([]int, keyCount)
+	copy(keysFocusedNote, keysNone)
+	keysPrev := make([]int, keyCount)
+	copy(keysPrev, keysNone)
+
+	for i, n := range ns {
+		prev := keysPrev[n.Key]
+		ns[i].prev = prev
+		if prev != -1 {
+			ns[prev].next = i
+		}
+		keysPrev[n.Key] = i
+
+		if keysFocusedNote[n.Key] == -1 {
+			keysFocusedNote[n.Key] = i
+		}
+	}
+
+	for _, last := range keysPrev {
+		if last != -1 {
+			ns[last].next = len(ns)
+		}
+	}
+	return ns, keysFocusedNote
 }
 
 func (c Chart) NoteCounts() []int {
 	counts := make([]int, 2)
-	for _, n := range c.Notes.data {
+	for _, n := range c.notes {
 		switch n.Kind {
 		case Normal:
 			counts[0]++
@@ -51,7 +183,7 @@ func (c Chart) NoteCounts() []int {
 }
 
 func (c Chart) TotalDuration() int32 {
-	ns := c.Notes.data
+	ns := c.notes
 	if len(ns) == 0 {
 		return 0
 	}

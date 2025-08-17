@@ -2,23 +2,24 @@ package piano
 
 import "github.com/hndada/gosu/draws"
 
-type FieldComponent struct {
+type Field struct {
 	sprite draws.Sprite
 }
 
-func NewFieldComponent(res *Resources, opts *Options, keyCount int) (cmp FieldComponent) {
+func NewField(res *Resources, opts *Options, keyCount int) Field {
+	field := Field{}
 	s := draws.NewSprite(res.FieldImage)
 	s.SetSize(opts.StageWidths[keyCount], opts.screenSizeY)
 	s.Locate(opts.StagePositionX, 0, draws.CenterTop)
 	s.ColorScale.Scale(1, 1, 1, opts.FieldOpacity)
-	cmp.sprite = s
-	return
+	field.sprite = s
+	return field
 }
 
-func (cmp *FieldComponent) Update() {
+func (cmp *Field) Update() {
 	// Do nothing.
 }
 
-func (cmp FieldComponent) Draw(dst draws.Image) {
+func (cmp Field) Draw(dst draws.Image) {
 	cmp.sprite.Draw(dst)
 }

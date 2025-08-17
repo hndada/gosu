@@ -2,52 +2,55 @@ package piano
 
 import (
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/plays"
+	"github.com/hndada/gosu/game"
 )
 
-type HoldLightsComponent struct {
+type HoldLights struct {
 	anims               []draws.Animation
 	keysLongNoteHolding []bool
-	notes               *Notes
+	notes               []Note
+	keysFocusedNote     []int
 }
 
-func NewHoldLightsComponent(res *Resources, opts *Options, c *Chart) (cmp HoldLightsComponent) {
-	cmp.anims = make([]draws.Animation, c.keyCount)
+func NewHoldLights(res *Resources, opts *Options, c *Chart) HoldLights {
+	holdLights := HoldLights{}
+	holdLights.anims = make([]draws.Animation, c.keyCount)
 	xs := opts.keyPositionXsMap[c.keyCount]
-	for k := range cmp.anims {
+	for k := range holdLights.anims {
 		a := draws.NewAnimation(res.HoldLightsFrames, 300)
 		a.Scale(opts.HoldLightImageScale)
 		a.Locate(xs[k], opts.KeyPositionY-opts.HintHeight/2, draws.CenterMiddle)
 		a.ColorScale.Scale(1, 1, 1, opts.HoldLightOpacity)
-		cmp.anims[k] = a
+		holdLights.anims[k] = a
 	}
-	cmp.keysLongNoteHolding = make([]bool, c.keyCount)
-	cmp.notes = &c.Notes
-	return
+	holdLights.keysLongNoteHolding = make([]bool, c.keyCount)
+	holdLights.notes = c.notes
+	holdLights.keysFocusedNote = c.keysFocusedNote
+	return holdLights
 }
 
 // draws only when a long note is holding.
-func (cmp *HoldLightsComponent) Update(ka plays.KeyboardAction) {
-	kfns := make([]Note, cmp.notes.keyCount) // key focused notes
-	for k, ni := range cmp.notes.keysFocus {
-		if ni < 0 || ni == len(cmp.notes.data) {
+func (holdLights *HoldLights) Update(ka game.KeyboardAction) {
+	kfns := make([]Note, len(holdLights.keysFocusedNote)) // key focused notes
+	for k, ni := range holdLights.keysFocusedNote {
+		if ni < 0 || ni == len(holdLights.notes) {
 			continue
 		}
-		kfns[k] = cmp.notes.data[ni]
+		kfns[k] = holdLights.notes[ni]
 	}
 
-	keysOld := cmp.keysLongNoteHolding
-	keysNew := cmp.newKeysLongNoteHolding(ka, kfns)
+	keysOld := holdLights.keysLongNoteHolding
+	keysNew := holdLights.newKeysLongNoteHolding(ka, kfns)
 	for k, new := range keysNew {
 		old := keysOld[k]
 		if (old && !new) || (!old && new) {
-			cmp.anims[k].Reset()
+			holdLights.anims[k].Reset()
 		}
 	}
-	cmp.keysLongNoteHolding = keysNew
+	holdLights.keysLongNoteHolding = keysNew
 }
 
-func (cmp HoldLightsComponent) newKeysLongNoteHolding(ka plays.KeyboardAction, kn []Note) []bool {
+func (holdLights HoldLights) newKeysLongNoteHolding(ka game.KeyboardAction, kn []Note) []bool {
 	klnh := make([]bool, len(kn))
 	for k, holding := range ka.KeysHolding() {
 		if holding && kn[k].Kind == Tail {
@@ -57,9 +60,9 @@ func (cmp HoldLightsComponent) newKeysLongNoteHolding(ka plays.KeyboardAction, k
 	return klnh
 }
 
-func (cmp HoldLightsComponent) Draw(dst draws.Image) {
-	for k, a := range cmp.anims {
-		if cmp.keysLongNoteHolding[k] {
+func (holdLights HoldLights) Draw(dst draws.Image) {
+	for k, a := range holdLights.anims {
+		if holdLights.keysLongNoteHolding[k] {
 			a.Draw(dst)
 		}
 	}

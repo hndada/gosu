@@ -33,7 +33,7 @@ type ScoreOptions struct {
 	DigitGap   float64
 }
 
-type ScoreComponent struct {
+type ScoreDrawer struct {
 	sprites []draws.Sprite
 	score   float64
 	w       float64 // Score's width is fixed.
@@ -41,8 +41,9 @@ type ScoreComponent struct {
 }
 
 // Name of a function which returns closure ends with "-er".
-func NewScoreComponent(imgs []draws.Image, opts *ScoreOptions) (cmp ScoreComponent) {
-	cmp.sprites = make([]draws.Sprite, 13)
+func NewScoreDrawer(imgs []draws.Image, opts *ScoreOptions) ScoreDrawer {
+	sd := ScoreDrawer{}
+	sd.sprites = make([]draws.Sprite, 13)
 	// h0 is the height of number 0. Other numbers are located at h0 - h.
 	// Score needs to set same base line, since
 	// each number might have different height.
@@ -50,32 +51,32 @@ func NewScoreComponent(imgs []draws.Image, opts *ScoreOptions) (cmp ScoreCompone
 	s0 := draws.NewSprite(imgs[0])
 	s0.Scale(opts.ImageScale)
 	h0 = s0.H()
-	cmp.w = s0.W() + opts.DigitGap
+	sd.w = s0.W() + opts.DigitGap
 	for i, img := range imgs {
 		sprite := draws.NewSprite(img)
 		sprite.Scale(opts.ImageScale)
 		sprite.Locate(ScreenSizeX, h0-sprite.H(), draws.RightTop)
-		cmp.sprites[i] = sprite
+		sd.sprites[i] = sprite
 	}
-	return
+	return sd
 }
 
-func (cmp *ScoreComponent) Update(newScore float64) {
-	if old := cmp.score; old != newScore {
-		cmp.score = newScore
+func (sd *ScoreDrawer) Update(newScore float64) {
+	if old := sd.score; old != newScore {
+		sd.score = newScore
 
-		begin := cmp.tween.Value()
+		begin := sd.tween.Value()
 		change := newScore - begin
-		cmp.tween = tween.Tween{MaxLoop: 1}
-		cmp.tween.Add(begin, change, 400*time.Millisecond, tween.EaseOutExponential)
-		// cmp.tween.Start()
+		sd.tween = tween.Tween{MaxLoop: 1}
+		sd.tween.Add(begin, change, 400*time.Millisecond, tween.EaseOutExponential)
+		// sd.tween.Start()
 	}
 	// Score is persistent, so no need to check if it is finished.
-	cmp.tween.Update()
+	sd.tween.Update()
 }
 
-func (cmp ScoreComponent) Draw(screen draws.Image) {
-	score := int(cmp.tween.Value())
+func (sd ScoreDrawer) Draw(screen draws.Image) {
+	score := int(sd.tween.Value())
 	digits := make([]int, 0)
 	for v := score; v > 0; v /= 10 {
 		digits = append(digits, v%10) // Little endian.
@@ -89,11 +90,11 @@ func (cmp ScoreComponent) Draw(screen draws.Image) {
 
 	var tx float64
 	for _, d := range digits {
-		s := cmp.sprites[d]
+		s := sd.sprites[d]
 		s.Move(tx, 0)
 		// Need to set at center since anchor is RightTop.
-		s.Move(-cmp.w/2+s.W()/2, 0)
+		s.Move(-sd.w/2+s.W()/2, 0)
 		s.Draw(screen)
-		tx -= cmp.w
+		tx -= sd.w
 	}
 }

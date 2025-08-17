@@ -4,58 +4,60 @@ import (
 	"time"
 
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/plays"
+	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/times"
 )
 
-type KeyButtonsComponent struct {
+const (
+	keyButtonUp   = 0
+	keyButtonDown = 1
+)
+
+type KeyButtons struct {
 	keysSprites [][2]draws.Sprite
 	keysPressed []bool
 	startTimes  []time.Time
 	minDuration time.Duration
 }
 
-func NewKeyButtonsComponent(res *Resources, opts *Options, keyCount int) (cmp KeyButtonsComponent) {
-	cmp.keysSprites = make([][2]draws.Sprite, keyCount)
+func NewKeyButtons(res *Resources, opts *Options, keyCount int) KeyButtons {
+	keyButtons := KeyButtons{}
+	keyButtons.keysSprites = make([][2]draws.Sprite, keyCount)
 	ws := opts.keyWidthsMap[keyCount]
 	xs := opts.keyPositionXsMap[keyCount]
-	for k := range cmp.keysSprites {
+	for k := range keyButtons.keysSprites {
 		for i, img := range res.KeyButtonsImages {
 			s := draws.NewSprite(img)
 			s.SetSize(ws[k], opts.keyButtonHeight)
 			s.Locate(xs[k], opts.KeyPositionY, draws.CenterTop)
-			cmp.keysSprites[k][i] = s
+			keyButtons.keysSprites[k][i] = s
 		}
 	}
-	cmp.keysPressed = make([]bool, keyCount)
-	cmp.startTimes = make([]time.Time, keyCount)
-	for k := range cmp.startTimes {
-		cmp.startTimes[k] = times.Now()
+	keyButtons.keysPressed = make([]bool, keyCount)
+	keyButtons.startTimes = make([]time.Time, keyCount)
+	for k := range keyButtons.startTimes {
+		keyButtons.startTimes[k] = times.Now()
 	}
-	cmp.minDuration = 30 * time.Millisecond
-	return
+	keyButtons.minDuration = 30 * time.Millisecond
+	return keyButtons
 }
 
-func (cmp *KeyButtonsComponent) Update(ka plays.KeyboardAction) {
+func (keyButtons *KeyButtons) Update(ka game.KeyboardAction) {
 	for k, p := range ka.KeysPressed() {
 		if p {
-			cmp.startTimes[k] = times.Now()
+			keyButtons.startTimes[k] = times.Now()
 		}
 	}
 }
 
 // Draw key-down buttons for a while even if the press is brief.
-func (cmp KeyButtonsComponent) Draw(dst draws.Image) {
-	const (
-		up   = 0
-		down = 1
-	)
-	for k, p := range cmp.keysPressed {
-		elapsed := times.Since(cmp.startTimes[k])
-		if p || elapsed <= cmp.minDuration {
-			cmp.keysSprites[k][down].Draw(dst)
+func (keyButtons KeyButtons) Draw(dst draws.Image) {
+	for k, p := range keyButtons.keysPressed {
+		elapsed := times.Since(keyButtons.startTimes[k])
+		if p || elapsed <= keyButtons.minDuration {
+			keyButtons.keysSprites[k][keyButtonDown].Draw(dst)
 		} else {
-			cmp.keysSprites[k][up].Draw(dst)
+			keyButtons.keysSprites[k][keyButtonUp].Draw(dst)
 		}
 	}
 }

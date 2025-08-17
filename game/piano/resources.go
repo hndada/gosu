@@ -6,6 +6,7 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/game"
 )
 
 // Resources is a collection of images and sounds.
@@ -29,7 +30,7 @@ type Resources struct {
 }
 
 func loadFieldImage() draws.Image {
-	img := draws.CreateImage(plays.ScreenSizeX, plays.ScreenSizeY)
+	img := draws.CreateImage(game.ScreenSizeX, game.ScreenSizeY)
 	return img
 }
 
@@ -104,7 +105,7 @@ func NewResources(fsys fs.FS) *Resources {
 		HoldLightsFrames:   loadHoldLightFrames(fsys),
 		JudgmentFramesList: loadJudgmentFramesList(fsys),
 		HitSound:           loadHitSound(fsys),
-		ComboImages:        plays.LoadComboImages(fsys),
-		ScoreImages:        plays.LoadScoreImages(fsys),
+		ComboImages:        game.LoadComboImages(fsys),
+		ScoreImages:        game.LoadScoreImages(fsys),
 	}
 }

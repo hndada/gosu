@@ -2,39 +2,40 @@ package piano
 
 import (
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/plays"
+	"github.com/hndada/gosu/game"
 )
 
-type HitLightsComponent struct {
+type HitLights struct {
 	keysAnim []draws.Animation
 }
 
-func NewHitLightsComponent(res *Resources, opts *Options, keyCount int) (cmp HitLightsComponent) {
-	cmp.keysAnim = make([]draws.Animation, keyCount)
+func NewHitLights(res *Resources, opts *Options, keyCount int) HitLights {
+	hitLights := HitLights{}
+	hitLights.keysAnim = make([]draws.Animation, keyCount)
 	xs := opts.keyPositionXsMap[keyCount]
-	for k := range cmp.keysAnim {
+	for k := range hitLights.keysAnim {
 		a := draws.NewAnimation(res.HitLightsFrames, 150)
 		a.Scale(opts.HitLightImageScale)
 		a.Locate(xs[k], opts.KeyPositionY-opts.HintHeight/2, draws.CenterMiddle)
 		a.ColorScale.Scale(1, 1, 1, opts.HitLightOpacity)
 		a.MaxLoop = 1
-		cmp.keysAnim[k] = a
+		hitLights.keysAnim[k] = a
 	}
-	return
+	return hitLights
 }
 
 // Tail also makes hit lighting on.
-func (cmp *HitLightsComponent) Update(kjk []plays.JudgmentKind) {
+func (hitLights *HitLights) Update(kjk []game.JudgmentKind) {
 	for k, jk := range kjk {
 		if jk <= good {
-			cmp.keysAnim[k].Reset()
+			hitLights.keysAnim[k].Reset()
 		}
 	}
 }
 
-// HitLightsComponent.Draw draws hit lights when Normal is Hit or Tail is Released.
-func (cmp HitLightsComponent) Draw(dst draws.Image) {
-	for _, a := range cmp.keysAnim {
+// HitLights.Draw draws hit lights when Normal is Hit or Tail is Released.
+func (hitLights HitLights) Draw(dst draws.Image) {
+	for _, a := range hitLights.keysAnim {
 		if a.IsFinished() {
 			continue
 		}

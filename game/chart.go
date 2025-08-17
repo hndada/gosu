@@ -90,10 +90,10 @@ func LoadChartFormat(fsys fs.FS, name string) (any, string, error) {
 }
 
 // scene select use NewChartHeaderFromFile.
-func NewChartHeaderFromFile(fsys fs.FS, name string) (*ChartHeader, error) {
+func NewChartHeaderFromFile(fsys fs.FS, name string) (ChartHeader, error) {
 	format, hash, err := LoadChartFormat(fsys, name)
 	if err != nil {
-		return nil, err
+		return ChartHeader{}, err
 	}
 
 	switch format := format.(type) {
@@ -103,23 +103,23 @@ func NewChartHeaderFromFile(fsys fs.FS, name string) (*ChartHeader, error) {
 		return c, nil
 	}
 
-	return nil, fmt.Errorf("unsupported file format")
+	return ChartHeader{}, fmt.Errorf("unsupported file format")
 }
 
 // game piano use NewChartHeaderFromFormat.
-func NewChartHeaderFromFormat(format any, hash string) *ChartHeader {
+func NewChartHeaderFromFormat(format any, hash string) ChartHeader {
 	switch format := format.(type) {
 	case *osu.Format:
-		c := newChartHeaderFromOsu(format)
-		c.ChartHash = hash
-		return c
+		ch := newChartHeaderFromOsu(format)
+		ch.ChartHash = hash
+		return ch
 	}
-	return nil
+	return ChartHeader{}
 }
 
-func newChartHeaderFromOsu(format *osu.Format) (c *ChartHeader) {
+func newChartHeaderFromOsu(format *osu.Format) ChartHeader {
 	const unknownID = -1
-	c = &ChartHeader{
+	ch := ChartHeader{
 		SetID: int32(format.BeatmapSetID),
 		ID:    int32(format.BeatmapID),
 
@@ -140,25 +140,25 @@ func newChartHeaderFromOsu(format *osu.Format) (c *ChartHeader) {
 
 	var e osu.Event
 	e, _ = format.Background()
-	c.BackgroundFilename = e.Filename
+	ch.BackgroundFilename = e.Filename
 	e, _ = format.Video()
-	c.VideoFilename = e.Filename
-	c.VideoTimeOffset = int32(e.StartTime)
-	if c.MusicFilename == "virtual" {
-		c.MusicFilename = ""
+	ch.VideoFilename = e.Filename
+	ch.VideoTimeOffset = int32(e.StartTime)
+	if ch.MusicFilename == "virtual" {
+		ch.MusicFilename = ""
 	}
 
-	c.Mode = -1
+	ch.Mode = -1
 	switch format.Mode {
 	case osu.ModeStandard:
 	case osu.ModeTaiko:
-		c.Mode = ModeDrum
+		ch.Mode = ModeDrum
 	case osu.ModeCatch:
 	case osu.ModeMania:
-		c.Mode = ModePiano
-		c.SubMode = int(format.CircleSize)
+		ch.Mode = ModePiano
+		ch.SubMode = int(format.CircleSize)
 	}
-	return
+	return ch
 }
 
 func (c ChartHeader) WindowTitle() string {

@@ -2,22 +2,23 @@ package piano
 
 import "github.com/hndada/gosu/draws"
 
-type HintComponent struct {
+type Hint struct {
 	sprite draws.Sprite
 }
 
-func NewHintComponent(res *Resources, opts *Options, keyCount int) (cmp HintComponent) {
+func NewHint(res *Resources, opts *Options, keyCount int) Hint {
+	hint := Hint{}
 	s := draws.NewSprite(res.HintImage)
 	s.SetSize(opts.StageWidths[keyCount], opts.HintHeight)
 	s.Locate(opts.StagePositionX, opts.KeyPositionY, draws.CenterBottom)
-	cmp.sprite = s
-	return
+	hint.sprite = s
+	return hint
 }
 
-func (cmp *HintComponent) Update() {
+func (hint *Hint) Update() {
 	// Do nothing.
 }
 
-func (cmp HintComponent) Draw(dst draws.Image) {
-	cmp.sprite.Draw(dst)
+func (hint Hint) Draw(dst draws.Image) {
+	hint.sprite.Draw(dst)
 }
