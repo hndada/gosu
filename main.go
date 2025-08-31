@@ -5,11 +5,11 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/game/piano"
-	"github.com/hndada/gosu/game/selects"
+	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/scene/play"
 )
 
-var testPlayArgs = game.PlayArgs{
+var testPlayArgs = scene.PlayArgs{
 	// ChartFS:       os.DirFS("C:/Users/hndada/Documents/GitHub/gosu/music/nekodex - circles!"),
 	// ChartFilename: "nekodex - circles! (MuangMuangE) [Hard].osu",
 	ChartFS:       os.DirFS("C:/Users/hndada/Documents/GitHub/gosu/music/cYsmix - triangles"),
@@ -27,17 +27,17 @@ func main() {
 	}
 	root := os.DirFS(dir)
 
-	g, err := game.NewGame(root)
+	g, err := scene.NewGame(root)
 	if err != nil {
 		panic(err)
 	}
-	{
-		scn, err := selects.Scene{}.New(g, nil)
-		if err != nil {
-			panic(err)
-		}
-		g.SceneSelect = scn
-	}
+	// {
+	// 	scn, err := selects.Scene{}.New(g, nil)
+	// 	if err != nil {
+	// 		panic(err)
+	// 	}
+	// 	g.SceneSelect = scn
+	// }
 	{
 		scn, err := play.Scene{}.New(g, testPlayArgs)
 		if err != nil {

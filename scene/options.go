@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hndada/gosu/draws"
+	"github.com/hndada/gosu/game"
 	"github.com/hndada/gosu/game/piano"
 )
 
@@ -23,8 +24,8 @@ import (
 // Load server first, then local.
 // In web mode, server is the only option.
 const (
-	ScreenSizeX = plays.ScreenSizeX
-	ScreenSizeY = plays.ScreenSizeY
+	ScreenSizeX = game.ScreenSizeX
+	ScreenSizeY = game.ScreenSizeY
 )
 
 type Options struct {
@@ -63,7 +64,7 @@ func NewOptions() *Options {
 		MusicPaths:     []string{"music"},
 		ReplaysPaths:   []string{"replays"},
 
-		screenSize:           draws.NewXY(plays.ScreenSizeX, plays.ScreenSizeY),
+		screenSize:           draws.NewXY(game.ScreenSizeX, game.ScreenSizeY),
 		Resolution:           draws.NewXY(1600, 900),
 		IsFullscreen:         false,
 		BackgroundBrightness: 0.6,
@@ -75,7 +76,7 @@ func NewOptions() *Options {
 
 		MouseCursorImageScale: 1.0,
 
-		Mode:            plays.ModePiano,
+		Mode:            game.ModePiano,
 		SubMode:         4,
 		ErrorMeterScale: 1.0,
 		ScoreImageScale: 1.0,
@@ -102,7 +103,7 @@ func (opts Options) DebugString() string {
 
 	var speedScale float64
 	switch opts.Mode {
-	case plays.ModePiano:
+	case game.ModePiano:
 		speedScale = opts.Piano.SpeedScale
 	}
 

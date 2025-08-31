@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/hndada/gosu/plays"
+	"github.com/hndada/gosu/game"
 )
 
 // A function which load database should not load the entire file system into memory.
@@ -125,7 +125,7 @@ func newChartDB(fsys fs.FS) ([]ChartRow, error) {
 			}
 
 			fname := path.Join(dname, f.Name())
-			c, err := plays.NewChartHeaderFromFile(fsys, fname)
+			c, err := game.NewChartHeaderFromFile(fsys, fname)
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 				continue
@@ -163,7 +163,7 @@ func newReplayDB(fsys fs.FS) ([]ReplayRow, error) {
 			continue
 		}
 
-		_, hash, err := plays.NewReplay(fsys, f.Name(), maxKeyCount)
+		_, hash, err := game.NewReplay(fsys, f.Name(), maxKeyCount)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 			continue
