@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Song List</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            display: flex;
+            height: 100vh;
+        }
+
+        .song-list {
+            width: 300px;
+            background: #f2f2f2;
+            padding: 1em;
+            overflow-y: auto;
+            margin-left: auto;
+        }
+
+        .song-box {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transition: background 0.2s;
+        }
+
+        .song-box.selected {
+            background: #d0ebff;
+            border-left: 4px solid #339af0;
+        }
+    </style>
+</head>
+<body>
+    <div class="song-list" id="song-list"></div>
+
+    <script>
+        const socket = new WebSocket("ws://localhost:8080/ws");
+
+        socket.onopen = () => console.log("WebSocket connected");
+        socket.onerror = (e) => console.error("WebSocket error", e);
+        socket.onclose = () => console.log("WebSocket closed");
+
+        function sendToGame(data) {
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(JSON.stringify(data));
+            } else {
+                console.warn("WebSocket not ready");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            fetch('/music.json')
+                .then(res => res.json())
+                .then(songs => {
+                    songs.sort((a, b) => a.musicName.localeCompare(b.musicName));
+                    const list = document.getElementById('song-list');
+                    songs.forEach(song => {
+                        const box = document.createElement('div');
+                        box.className = 'song-box';
+                        box.dataset.filePath = song.filePath;
+                        box.innerHTML = `
+                            <div class="song-title">${song.musicName}</div>
+                            <div class="song-meta">[${song.chartName}]</div>
+                        `;
+
+                        box.onclick = () => {
+                            document.querySelectorAll('.song-box').forEach(el => el.classList.remove('selected'));
+                            box.classList.add('selected');
+                            sendToGame(song);
+                        };
+
+                        list.appendChild(box);
+                    });
+                });
+        });
+    </script>
+</body>
+</html>

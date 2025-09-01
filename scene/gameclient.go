@@ -74,6 +74,11 @@ func NewGame(fsys fs.FS) (*Game, error) {
 	ebiten.SetWindowSize(s.Options.Resolution.IntValues())
 	ebiten.SetWindowTitle("gosu")
 	// ebiten.SetVsyncEnabled(false)
+
+	// OpenWebServer()
+	OpenWebServer()
+	OpenBrowser("http://localhost:8080/")
+
 	return s, nil
 }
 
