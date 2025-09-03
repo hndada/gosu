@@ -24,7 +24,7 @@ type play interface {
 
 // Todo: draw 4:3 screen on 16:9 screen
 type Scene struct {
-	*scene.Game
+	*scene.Context
 
 	game.ChartHeader
 	play              play
@@ -44,10 +44,10 @@ type Scene struct {
 // (*Scene, error) is typically used for regular functions that operate on struct pointers.
 // (s *Scene, err error) is typically used for methods attached to structs.
 // chartFS fs.FS, cname string, replayFS fs.FS, rname string, mods game.Mods) (*Scene, error) {
-func (Scene) New(g *scene.Game, _args scene.Args) (scene.Scene, error) {
+func NewScene(ctx *scene.Context, _args scene.Args) (scene.Scene, error) {
 	args := _args.(scene.PlayArgs)
-	s := &Scene{Game: g}
-	switch g.Options.Mode {
+	scn := Scene{Context: ctx}
+	switch scn.Options.Mode {
 	case game.ModePiano:
 		mods := args.Mods.(piano.Mods)
 		c, err := piano.NewChart(args.ChartFS, args.ChartFilename, mods)
@@ -56,34 +56,34 @@ func (Scene) New(g *scene.Game, _args scene.Args) (scene.Scene, error) {
 			return nil, err
 		}
 
-		s.ChartHeader = c.ChartHeader
+		scn.ChartHeader = c.ChartHeader
 		// Todo: add default sound
 		// soft-hitnormal.wav
-		sp := s.newSamplePlayer(args.ChartFS, s.MusicFilename)
+		sp := scn.newSamplePlayer(args.ChartFS, scn.MusicFilename)
 
-		play, err := piano.NewPlay(s.Resources.Piano, s.Options.Piano, c, mods, sp)
+		play, err := piano.NewPlay(&scn.Resources.Piano, scn.Options.Piano, c, mods, sp)
 		if err != nil {
 			err = fmt.Errorf("failed to create play scene: %w", err)
 			return nil, err
 		}
-		s.play = play
+		scn.play = play
 	}
 
-	mp, err := audios.NewMusicPlayerFromFile(args.ChartFS, s.MusicFilename)
+	mp, err := audios.NewMusicPlayerFromFile(args.ChartFS, scn.MusicFilename)
 	if err != nil {
 		err = fmt.Errorf("failed to load music file: %w", err)
 		return nil, err
 	}
-	s.musicPlayer = mp
-	mp.SetVolume(s.Options.MusicVolume)
-	s.musicOffset = s.Options.MusicOffset
+	scn.musicPlayer = mp
+	mp.SetVolume(scn.Options.MusicVolume)
+	scn.musicOffset = scn.Options.MusicOffset
 
 	var keyCount int
 	var keyNames []string
-	switch s.Options.Mode {
+	switch scn.Options.Mode {
 	case game.ModePiano:
-		keyCount = s.Options.SubMode
-		keyNames = s.Options.Piano.KeyMappings[keyCount]
+		keyCount = scn.Options.SubMode
+		keyNames = scn.Options.Piano.KeyMappings[keyCount]
 	case game.ModeDrum:
 		keyCount = 4
 		// keyNames = opts.Drum.Key.Mappings
@@ -95,13 +95,13 @@ func (Scene) New(g *scene.Game, _args scene.Args) (scene.Scene, error) {
 			err = fmt.Errorf("failed to load replay file: %w", err)
 			return nil, err
 		}
-		s.keyboard = kb
+		scn.keyboard = kb
 	} else {
 		keys := input.NamesToKeys(keyNames)
-		s.keyboard = input.NewKeyboard(keys)
+		scn.keyboard = input.NewKeyboard(keys)
 	}
 
-	return s, nil
+	return &scn, nil
 }
 
 func (s Scene) newSamplePlayer(fsys fs.FS, musicFilename string) *audios.SoundPlayer {

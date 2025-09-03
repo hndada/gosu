@@ -48,8 +48,8 @@ type Handlers struct {
 }
 
 // TODO: make this a method of game struct.
-func NewHandlers(opts *Options, kbs *ui.KeyboardState) *Handlers {
-	return &Handlers{
+func NewHandlers(opts *Options, kbs *ui.KeyboardState) Handlers {
+	return Handlers{
 		MusicVolume:          newMusicVolumeHandler(opts, kbs),
 		SoundVolumeScale:     newSoundVolumeScaleHandler(opts, kbs),
 		MusicOffset:          newMusicOffsetHandler(opts, kbs),

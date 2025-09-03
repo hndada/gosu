@@ -65,18 +65,18 @@ type ReplayRow struct {
 }
 
 // TODO: handle other music and replay directories
-func NewDatabase(root fs.FS) (*Database, error) {
+func NewDatabase(root fs.FS) (Database, error) {
 	var dbs Database
 
 	// fs.Sub returns nil even if the directory does not exist.
 	if _, err := fs.Stat(root, "music"); err == nil {
 		fsys, err := fs.Sub(root, "music")
 		if err != nil {
-			return nil, fmt.Errorf("NewDatabase music: %w", err)
+			return Database{}, fmt.Errorf("NewDatabase music: %w", err)
 		}
 		db, err := newChartDB(fsys)
 		if err != nil {
-			return nil, err
+			return Database{}, err
 		}
 		dbs.Chart = db
 	}
@@ -84,15 +84,15 @@ func NewDatabase(root fs.FS) (*Database, error) {
 	if _, err := fs.Stat(root, "replays"); err == nil {
 		fsys, err := fs.Sub(root, "replays")
 		if err != nil {
-			return nil, fmt.Errorf("NewDatabase replays: %w", err)
+			return Database{}, fmt.Errorf("NewDatabase replays: %w", err)
 		}
 		db, err := newReplayDB(fsys)
 		if err != nil {
-			return nil, fmt.Errorf("NewDatabase replays: %w", err)
+			return Database{}, fmt.Errorf("NewDatabase replays: %w", err)
 		}
 		dbs.Replay = db
 	}
-	return &dbs, nil
+	return dbs, nil
 }
 
 // NewMusicDB reads only first depth of root for directory.

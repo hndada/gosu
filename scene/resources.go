@@ -26,11 +26,11 @@ type Resources struct {
 	CursorAdditiveImage    draws.Image
 	CursorTrailImage       draws.Image
 
-	Piano *piano.Resources
+	Piano piano.Resources
 }
 
-func NewResources(fsys fs.FS) (res *Resources) {
-	res = &Resources{}
+func NewResources(fsys fs.FS) (res Resources) {
+	res = Resources{}
 	{
 		fname := "interface/default-bg.jpg"
 		res.DefaultBackgroundImage = draws.NewImageFromFile(fsys, fname)

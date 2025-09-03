@@ -1,12 +1,14 @@
-package scene
+package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os/exec"
 	"runtime"
 
 	"github.com/gorilla/websocket"
+	"github.com/hndada/gosu/scene"
 )
 
 func OpenBrowser(url string) {
@@ -24,37 +26,15 @@ func OpenBrowser(url string) {
 
 var musicData = []byte(`[
   {
-    "musicName": "Song A",
+    "musicName": "triangle!",
     "chartName": "Easy",
-    "filePath": "/music/songA.mp3",
-    "previewStart": 30,
-    "previewDur": 10
-  },
-  {
-    "musicName": "Song B",
-    "chartName": "Medium",
-    "filePath": "/music/songB.mp3",
-    "previewStart": 45,
-    "previewDur": 12
-  },
-  {
-    "musicName": "Song C",
-    "chartName": "Hard",
-    "filePath": "/music/songC.mp3",
-    "previewStart": 10,
-    "previewDur": 15
-  },
-  {
-    "musicName": "Song D",
-    "chartName": "Expert",
-    "filePath": "/music/songD.mp3",
-    "previewStart": 20,
-    "previewDur": 8
+	"chartFS": "C:/Users/hndada/Documents/GitHub/gosu/music/cYsmix - triangles",
+	"chartFilename": "cYsmix - triangles (MuangMuangE) [Easy].osu"
   }
 ]
 `)
 
-func OpenWebServer() {
+func OpenWebServer(g *Game) {
 	// Serve /selects page (HTML)
 	http.HandleFunc("/selects", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "scene/selects/static/index.html")
@@ -78,11 +58,13 @@ func OpenWebServer() {
 		http.Redirect(w, r, "/selects", http.StatusFound)
 	})
 
-	http.HandleFunc("/ws", handleWS)
-	fmt.Println("WebSocket server on ws://localhost:8080/ws")
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		handleWS(g, w, r)
+	})
+	fmt.Println("WebSocket server on ws://127.0.0.1:8080/ws")
 
-	go OpenBrowser("http://localhost:8080/")
-	fmt.Println("Server started at http://localhost:8080")
+	go OpenBrowser("http://127.0.0.1:8080/")
+	fmt.Println("Server started at http://127.0.0.1:8080")
 	http.ListenAndServe(":8080", nil)
 }
 
@@ -90,7 +72,7 @@ var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool { return true }, // allow all origins
 }
 
-func handleWS(w http.ResponseWriter, r *http.Request) {
+func handleWS(g *Game, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println("Upgrade error:", err)
@@ -106,5 +88,17 @@ func handleWS(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 		fmt.Printf("Received: %s\n", msg)
+
+		// Unmarshal JSON into struct
+		var argsData scene.PlayArgsData
+		if err := json.Unmarshal(msg, &argsData); err != nil {
+			fmt.Println("JSON error:", err)
+			continue
+		}
+
+		// Send to game update loop
+		go func() {
+			g.WSMessages <- argsData.ToPlayArgs()
+		}()
 	}
 }

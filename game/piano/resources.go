@@ -93,8 +93,8 @@ func loadHitSound(fsys fs.FS) []byte {
 	return data
 }
 
-func NewResources(fsys fs.FS) *Resources {
-	return &Resources{
+func NewResources(fsys fs.FS) Resources {
+	return Resources{
 		FieldImage:         loadFieldImage(),
 		BarImage:           loadBarImage(),
 		HintImage:          loadHintImage(fsys),
