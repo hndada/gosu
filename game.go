@@ -1,4 +1,4 @@
-package main
+package gosu
 
 import (
 	"fmt"
@@ -11,35 +11,43 @@ import (
 	"github.com/hndada/gosu/game/piano"
 	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/scene/play"
+	"github.com/hndada/gosu/scene/selects"
 )
 
 // Avoid embedding game.Options directly.
 // Pass options as pointers for syncing and saving memory.
 type Game struct {
-	*scene.Context
-	scn        scene.Scene
-	WSMessages chan scene.PlayArgs
+	ctx    *scene.Context
+	scn    scene.Scene
+	events chan any // from webserver via websocket
 }
 
 func NewGame(fsys fs.FS) (*Game, error) {
 	ctx, err := scene.NewContext(fsys)
 	if err != nil {
-		return nil, err
-	}
-	g := &Game{
-		Context:    ctx,
-		WSMessages: make(chan scene.PlayArgs, 10),
+		return nil, fmt.Errorf("failed to create scene context: %w", err)
 	}
 
-	// issue: It jitters when Vsync is enabled.
+	scn, err := selects.NewScene()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create selects scene: %w", err)
+	}
+
+	g := &Game{
+		ctx:    ctx,
+		scn:    scn,
+		events: make(chan any, 10),
+	}
+
 	ebiten.SetTPS(ebiten.SyncWithFPS)
-	ebiten.SetWindowSize(g.Options.Resolution.IntValues())
+	ebiten.SetWindowSize(g.ctx.Options.Resolution.IntValues())
 	ebiten.SetWindowTitle("gosu")
+	// issue: It jitters when Vsync is enabled.
 	// ebiten.SetVsyncEnabled(false)
 
-	go OpenWebServer(g)
-	time.Sleep(3 * time.Second) // wait for server to start
-	OpenBrowser("http://localhost:8080/")
+	go g.openWebServer()
+	// wait for server to start
+	time.Sleep(3 * time.Second)
 
 	return g, nil
 }
@@ -48,24 +56,30 @@ func NewGame(fsys fs.FS) (*Game, error) {
 func (g *Game) Update() error {
 	// 1. Handle WebSocket events before scene update
 	select {
-	case args := <-g.WSMessages: // assume chan scene.PlayArgs
-		scn, err := play.NewScene(g.Context, args)
-		if err != nil {
-			return fmt.Errorf("play scene error: %w", err)
+	case args := <-g.events: // assume chan scene.PlayArgs
+		switch args := args.(type) {
+		case scene.PlayArgs:
+			scn, err := play.NewScene(g.ctx, args)
+			if err != nil {
+				return fmt.Errorf("play scene error: %w", err)
+			}
+			g.scn = scn
+			ebiten.SetWindowTitle(g.scn.WindowTitle())
+			return nil
+		case error:
+			fmt.Println("WS message error:", args)
+			return args
 		}
-		g.scn = scn
-		ebiten.SetWindowTitle(g.scn.WindowTitle())
-		return nil
 	default:
 		// no WS message
 	}
 
+	// 2. Update current scene
 	if g.scn == nil {
 		return nil
 	}
 
 	switch args := g.scn.Update().(type) {
-	case scene.PlayArgs:
 	case piano.Scorer:
 		// g.CurrentScene = g.SceneSelect
 		ebiten.SetWindowTitle(g.scn.WindowTitle())
@@ -83,8 +97,8 @@ func (g Game) Draw(screen *ebiten.Image) {
 	}
 	g.scn.Draw(draws.Image{Image: screen})
 	str := g.scn.DebugString()
-	if g.Options.DebugPrint {
-		str += "\n" + g.Options.DebugString()
+	if g.ctx.Options.DebugPrint {
+		str += "\n" + g.ctx.Options.DebugString()
 	}
 	ebitenutil.DebugPrint(screen, str)
 }
@@ -92,7 +106,3 @@ func (g Game) Draw(screen *ebiten.Image) {
 func (s Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
 	return scene.ScreenSizeX, scene.ScreenSizeY
 }
-
-// I would keep os package not to be in scene package.
-// json.MarshalIndent(options, "", "  ")
-// os.WriteFile(fname, data, 0644)

@@ -49,7 +49,10 @@ func NewScene(ctx *scene.Context, _args scene.Args) (scene.Scene, error) {
 	scn := Scene{Context: ctx}
 	switch scn.Options.Mode {
 	case game.ModePiano:
-		mods := args.Mods.(piano.Mods)
+		var mods piano.Mods
+		if args.Mods != nil {
+			mods = args.Mods.(piano.Mods)
+		}
 		c, err := piano.NewChart(args.ChartFS, args.ChartFilename, mods)
 		if err != nil {
 			err = fmt.Errorf("failed to create chart: %w", err)

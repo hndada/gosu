@@ -16,6 +16,11 @@ Decision makings
     - It is about 250 byte, small enough to pass by value 
 7. Put `Drawer` suffix when the name conflicts with score-relating terms
     - Combo, Score, Note, Bar, Judgment 
+8. Put reference typed field once it gets shared
+    - It is recommended to keep it a pointer from the beginning 
+        so there’s no risk of accidental copies:
+9. Keep os package not to be in scene package
+10. gosu game client acts as web server as well.
 
 ===
 # Pending

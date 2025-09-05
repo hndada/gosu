@@ -1,4 +1,4 @@
-package main
+package gosu
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ import (
 	"github.com/hndada/gosu/scene"
 )
 
-func OpenBrowser(url string) {
+func openBrowser(url string) {
 	var cmd *exec.Cmd
 	switch runtime.GOOS {
 	case "windows":
@@ -34,7 +34,7 @@ var musicData = []byte(`[
 ]
 `)
 
-func OpenWebServer(g *Game) {
+func (g *Game) openWebServer() {
 	// Serve /selects page (HTML)
 	http.HandleFunc("/selects", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "scene/selects/static/index.html")
@@ -61,9 +61,11 @@ func OpenWebServer(g *Game) {
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		handleWS(g, w, r)
 	})
-	fmt.Println("WebSocket server on ws://127.0.0.1:8080/ws")
 
-	go OpenBrowser("http://127.0.0.1:8080/")
+	// Notify game that server has started
+	// Should I use a channel or context instead?
+
+	go openBrowser("http://127.0.0.1:8080/")
 	fmt.Println("Server started at http://127.0.0.1:8080")
 	http.ListenAndServe(":8080", nil)
 }
@@ -98,7 +100,7 @@ func handleWS(g *Game, w http.ResponseWriter, r *http.Request) {
 
 		// Send to game update loop
 		go func() {
-			g.WSMessages <- argsData.ToPlayArgs()
+			g.events <- argsData.ToPlayArgs()
 		}()
 	}
 }

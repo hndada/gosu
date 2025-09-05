@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hndada/gosu"
 )
 
 func main() {
@@ -11,9 +12,9 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	root := os.DirFS(dir)
 
-	g, err := NewGame(root)
+	root := os.DirFS(dir)
+	g, err := gosu.NewGame(root)
 	if err != nil {
 		panic(err)
 	}
