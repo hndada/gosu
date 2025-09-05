@@ -6,7 +6,7 @@ import (
 	"io/fs"
 
 	"github.com/hndada/gosu/draws"
-	"github.com/hndada/gosu/resources"
+	"github.com/hndada/gosu/resource"
 	"github.com/hndada/gosu/ui"
 )
 
@@ -39,7 +39,7 @@ func NewContext(fsys fs.FS) (*Context, error) {
 	if resFS, err := fs.Sub(fsys, "resources"); err == nil {
 		c.Resources = NewResources(resFS)
 	} else {
-		c.Resources = NewResources(resources.DefaultFS)
+		c.Resources = NewResources(resource.DefaultFS)
 	}
 
 	// NewOptions is always called, as there
