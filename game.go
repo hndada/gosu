@@ -3,7 +3,7 @@ package gosu
 import (
 	"fmt"
 	"io/fs"
-	"time"
+	"os"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -11,13 +11,12 @@ import (
 	"github.com/hndada/gosu/game/piano"
 	"github.com/hndada/gosu/scene"
 	"github.com/hndada/gosu/scene/play"
-	"github.com/hndada/gosu/scene/selects"
 )
 
 // Avoid embedding game.Options directly.
 // Pass options as pointers for syncing and saving memory.
 type Game struct {
-	ctx    *scene.Context
+	ctx    scene.Context
 	scn    scene.Scene
 	events chan any // from webserver via websocket
 }
@@ -28,9 +27,21 @@ func NewGame(fsys fs.FS) (*Game, error) {
 		return nil, fmt.Errorf("failed to create scene context: %w", err)
 	}
 
-	scn, err := selects.NewScene()
+	// scn, err := selects.NewScene()
+	// if err != nil {
+	// 	return nil, fmt.Errorf("failed to create selects scene: %w", err)
+	// }
+
+	// Temporary: directly go to play scene
+	scn, err := play.NewScene(&ctx, scene.PlayArgs{
+		ChartFS:        os.DirFS("C:/Users/hndada/Documents/GitHub/gosu/music/cYsmix - triangles"),
+		ChartFilename:  "cYsmix - triangles (MuangMuangE) [Easy].osu",
+		Mods:           piano.Mods{},
+		ReplayFS:       nil,
+		ReplayFilename: "",
+	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to create selects scene: %w", err)
+		return nil, fmt.Errorf("failed to create play scene: %w", err)
 	}
 
 	g := &Game{
@@ -45,21 +56,17 @@ func NewGame(fsys fs.FS) (*Game, error) {
 	// issue: It jitters when Vsync is enabled.
 	// ebiten.SetVsyncEnabled(false)
 
-	go g.openWebServer()
-	// wait for server to start
-	time.Sleep(3 * time.Second)
-
+	// go openWebServer(g)
 	return g, nil
 }
 
-// TODO: result page
 func (g *Game) Update() error {
 	// 1. Handle WebSocket events before scene update
 	select {
 	case args := <-g.events: // assume chan scene.PlayArgs
 		switch args := args.(type) {
 		case scene.PlayArgs:
-			scn, err := play.NewScene(g.ctx, args)
+			scn, err := play.NewScene(&g.ctx, args)
 			if err != nil {
 				return fmt.Errorf("play scene error: %w", err)
 			}

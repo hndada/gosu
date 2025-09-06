@@ -8,38 +8,43 @@ import (
 	"github.com/hndada/gosu/draws"
 	"github.com/hndada/gosu/resource"
 	"github.com/hndada/gosu/ui"
+	"github.com/hndada/gosu/util"
 )
 
 // Resources are loaded from file system.
 // Options are set by user and saved to file system.
 type Scene interface {
-	// New(*Game, Args) (Scene, error)
 	Update() any
 	Draw(screen draws.Image)
+
 	WindowTitle() string
 	DebugString() string
 }
 
+// Shared values should be passed by reference in general.
+// However, fields of Resources, Handlers, Database are
+// either pointer or read-only.
 type Context struct {
-	ui.KeyboardState
-
+	*ui.KeyboardState
 	Resources Resources
 	// Option should not be passed by value,
-	// as its value should be shared and modified.
+	// as its value should be shared and modified at runtime.
 	Options  *Options
 	Handlers Handlers
 	Database Database
 }
 
-func NewContext(fsys fs.FS) (*Context, error) {
-	c := &Context{
-		KeyboardState: ui.KeyboardState{},
+func NewContext(fsys fs.FS) (Context, error) {
+	c := Context{
+		KeyboardState: &ui.KeyboardState{},
 	}
 
-	if resFS, err := fs.Sub(fsys, "resources"); err == nil {
-		c.Resources = NewResources(resFS)
-	} else {
-		c.Resources = NewResources(resource.DefaultFS)
+	c.Resources = NewResources(resource.DefaultFS)
+	if ok, _ := util.DirectoryExists(fsys, "resource"); ok {
+		resFS, err := fs.Sub(fsys, "resource")
+		if err == nil {
+			c.Resources = NewResources(resFS)
+		}
 	}
 
 	// NewOptions is always called, as there
@@ -54,11 +59,11 @@ func NewContext(fsys fs.FS) (*Context, error) {
 	c.Options.Normalize()
 	c.Options.Piano.SetDerived()
 
-	c.Handlers = NewHandlers(c.Options, &c.KeyboardState)
+	c.Handlers = NewHandlers(c.Options, c.KeyboardState)
 
 	dbs, err := NewDatabase(fsys)
 	if err != nil {
-		return nil, err
+		return Context{}, err
 	}
 	c.Database = dbs
 

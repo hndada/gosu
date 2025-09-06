@@ -27,7 +27,7 @@ func NewChart(fsys fs.FS, name string, mods Mods) (*Chart, error) {
 		return c, err
 	}
 	c.ChartHeader = game.NewChartHeaderFromFormat(format, hash)
-	keyCount := c.ChartHeader.SubMode
+	c.keyCount = c.ChartHeader.SubMode
 
 	c.mods = mods
 	c.Dynamics, err = game.NewDynamics(format)
@@ -35,7 +35,7 @@ func NewChart(fsys fs.FS, name string, mods Mods) (*Chart, error) {
 		return c, err
 	}
 	c.bars = newChartBars(c.Dynamics)
-	c.notes, c.keysFocusedNote = newChartNotes(keyCount, format, c.Dynamics)
+	c.notes, c.keysFocusedNote = newChartNotes(c.keyCount, format, c.Dynamics)
 	return c, nil
 }
 

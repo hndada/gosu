@@ -34,10 +34,10 @@ var musicData = []byte(`[
 ]
 `)
 
-func (g *Game) openWebServer() {
+func openWebServer(g *Game) {
 	// Serve /selects page (HTML)
 	http.HandleFunc("/selects", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "scene/selects/static/index.html")
+		http.ServeFile(w, r, "../../scene/selects/static/index.html")
 	})
 
 	// Serve song data JSON
