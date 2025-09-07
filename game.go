@@ -34,8 +34,10 @@ func NewGame(fsys fs.FS) (*Game, error) {
 
 	// Temporary: directly go to play scene
 	scn, err := play.NewScene(&ctx, scene.PlayArgs{
-		ChartFS:        os.DirFS("C:/Users/hndada/Documents/GitHub/gosu/music/cYsmix - triangles"),
-		ChartFilename:  "cYsmix - triangles (MuangMuangE) [Easy].osu",
+		// ChartFS:        os.DirFS("C:/Users/hndada/Documents/GitHub/gosu/music/cYsmix - triangles"),
+		// ChartFilename:  "cYsmix - triangles (MuangMuangE) [Easy].osu",
+		ChartFS:        os.DirFS("C:/Users/hndada/Documents/GitHub/gosu/cmd/ojn"),
+		ChartFilename:  "o2ma111.ojn",
 		Mods:           piano.Mods{},
 		ReplayFS:       nil,
 		ReplayFilename: "",

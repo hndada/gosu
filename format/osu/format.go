@@ -2,9 +2,9 @@ package osu
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"image/color"
+	"io"
 	"strings"
 	"unicode"
 )
@@ -89,7 +89,7 @@ type Colours struct {
 	SliderBorder        color.RGBA
 }
 
-func NewFormat(data []byte) (f *Format, err error) {
+func NewFormat(r io.Reader) (f *Format, err error) {
 	f = &Format{
 		General: General{
 			PreviewTime:      -1,
@@ -101,7 +101,6 @@ func NewFormat(data []byte) (f *Format, err error) {
 		},
 	}
 
-	r := bytes.NewReader(data)
 	// dat = bytes.ReplaceAll(dat, []byte("\r\n"), []byte("\n"))
 	scanner := bufio.NewScanner(r)
 

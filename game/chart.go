@@ -1,10 +1,12 @@
 package game
 
 import (
+	"bytes"
 	"fmt"
 	"io/fs"
 	"path/filepath"
 
+	"github.com/hndada/gosu/format/o2jam"
 	"github.com/hndada/gosu/format/osu"
 	"github.com/hndada/gosu/util"
 )
@@ -76,11 +78,24 @@ func LoadChartFormat(fsys fs.FS, name string) (any, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
+
+	r := bytes.NewReader(data)
 	hash := util.MD5(data)
 
 	switch filepath.Ext(name) {
 	case ".osu", ".OSU":
-		format, err := osu.NewFormat(data)
+		format, err := osu.NewFormat(r)
+		if err != nil {
+			return nil, "", err
+		}
+		return format, hash, nil
+	case ".ojn", ".OJN":
+		ojn, err := o2jam.Parse(r)
+		if err != nil {
+			return nil, "", err
+		}
+		// TODO: extract all difficulties
+		format, err := o2jam.ConvertOJNToOsuFormat(ojn, 2) // hard mode
 		if err != nil {
 			return nil, "", err
 		}
@@ -151,6 +166,7 @@ func newChartHeaderFromOsu(format *osu.Format) ChartHeader {
 	ch.Mode = -1
 	switch format.Mode {
 	case osu.ModeStandard:
+		// ch.SubMode = int(format.CircleSize)
 	case osu.ModeTaiko:
 		ch.Mode = ModeDrum
 	case osu.ModeCatch:

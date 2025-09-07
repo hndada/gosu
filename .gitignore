@@ -27,3 +27,7 @@ cmd/gosu/music/*
 gosu/replays/*
 cmd/gosu/options.json
 *.zip
+
+# Ignore all o2jam files
+*.ojn
+*.ojm

@@ -26,7 +26,7 @@ require (
 	github.com/jfreymuth/vorbis v1.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/text v0.16.0 
 )
 
 retract v1.0.1 // Put the version carelessly.
