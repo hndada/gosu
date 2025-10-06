@@ -73,10 +73,15 @@ type Note struct {
 	Key    int
 	Sample game.Sample
 
+	// Derived
+	Next     int     // For updating staged notes.
+	Prev     int     // For accessing to Head from Tail.
 	position float64 // Scaled x or y value.
-	next     int     // For updating staged notes.
-	prev     int     // For accessing to Head from Tail.
 	scored   bool
+}
+
+func (n Note) IsBlank() bool {
+	return n == Note{}
 }
 
 // The length of the returned slice is 1 or 2.
@@ -131,7 +136,7 @@ func newChartNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) ([]
 
 		// Tail's Position should be always equal or larger than Head's.
 		if ns[i].Kind == Tail {
-			if head := ns[n.prev]; ns[i].position < head.position {
+			if head := ns[n.Prev]; ns[i].position < head.position {
 				ns[i].position = head.position
 			}
 		}
@@ -150,9 +155,9 @@ func newChartNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) ([]
 
 	for i, n := range ns {
 		prev := keysPrev[n.Key]
-		ns[i].prev = prev
+		ns[i].Prev = prev
 		if prev != -1 {
-			ns[prev].next = i
+			ns[prev].Next = i
 		}
 		keysPrev[n.Key] = i
 
@@ -163,7 +168,7 @@ func newChartNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) ([]
 
 	for _, last := range keysPrev {
 		if last != -1 {
-			ns[last].next = len(ns)
+			ns[last].Next = len(ns)
 		}
 	}
 	return ns, keysFocusedNote

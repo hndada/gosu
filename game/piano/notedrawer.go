@@ -68,10 +68,10 @@ func NewNoteDrawer(res *Resources, opts *Options, c *Chart) NoteDrawer {
 		c.notes[i].position += float64(opts.TailNoteOffset) * d.Speed
 
 		// Tail's Position should be always equal or larger than Head's.
-		if n.prev == -1 {
+		if n.Prev == -1 {
 			continue
 		}
-		if head := c.notes[n.prev]; n.position < head.position {
+		if head := c.notes[n.Prev]; n.position < head.position {
 			c.notes[i].position = head.position
 		}
 	}
@@ -94,7 +94,7 @@ func NewNoteDrawer(res *Resources, opts *Options, c *Chart) NoteDrawer {
 func (nd *NoteDrawer) Update(ka game.KeyboardAction, cursor float64) {
 	lowermost := cursor - nd.scaledScreenSize
 	for k, lowest := range nd.keysLowest {
-		for ni := lowest; ni < len(nd.notes); ni = nd.notes[ni].next {
+		for ni := lowest; ni < len(nd.notes); ni = nd.notes[ni].Next {
 			if ni < 0 {
 				break
 			}
@@ -112,7 +112,7 @@ func (nd *NoteDrawer) Update(ka game.KeyboardAction, cursor float64) {
 			continue
 		}
 		if n := nd.notes[ni]; n.Kind == Tail {
-			nd.keysLowest[k] = n.prev
+			nd.keysLowest[k] = n.Prev
 		}
 	}
 	nd.cursor = cursor
@@ -124,7 +124,7 @@ func (nd NoteDrawer) Draw(dst draws.Image) {
 	uppermost := nd.cursor + nd.scaledScreenSize
 	for k, lowest := range nd.keysLowest {
 		var nis []int
-		for ni := lowest; ni < len(nd.notes); ni = nd.notes[ni].next {
+		for ni := lowest; ni < len(nd.notes); ni = nd.notes[ni].Next {
 			if ni < 0 {
 				break
 			}
@@ -163,7 +163,7 @@ func (nd NoteDrawer) Draw(dst draws.Image) {
 
 // drawLongNoteBody draws stretched long note body sprite.
 func (nd NoteDrawer) drawLongNoteBody(dst draws.Image, head Note) {
-	tail := nd.notes[head.next]
+	tail := nd.notes[head.Next]
 	if head.Kind != Head || tail.Kind != Tail {
 		return
 	}

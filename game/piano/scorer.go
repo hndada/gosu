@@ -98,7 +98,7 @@ func (s Scorer) playSample(smp game.Sample) {
 // marks the untouched note as missed.
 func (s *Scorer) markKeysUntouchedNote(now int32) {
 	for k, lowest := range s.keysFocusedNote {
-		for ni := lowest; ni < len(s.notes); ni = s.notes[ni].next {
+		for ni := lowest; ni < len(s.notes); ni = s.notes[ni].Next {
 			if ni < 0 {
 				break
 			}
@@ -111,7 +111,7 @@ func (s *Scorer) markKeysUntouchedNote(now int32) {
 				// Tail note may be focused even after being marked.
 				// Other types of note should not.
 				if n.Kind == Tail {
-					s.keysFocusedNote[k] = n.next
+					s.keysFocusedNote[k] = n.Next
 				} else {
 					panic("remained marked note is not Tail")
 				}
@@ -192,12 +192,12 @@ func (s *Scorer) markNote(ni int, jk game.JudgmentKind) {
 
 	// when Head is missed, its tail goes missed as well.
 	if n.Kind == Head && jk == miss {
-		s.markNote(n.next, miss)
+		s.markNote(n.Next, miss)
 	}
 
 	// Tail is flushed separately at markKeysUntouchedNote.
 	if n.Kind != Tail {
-		s.keysFocusedNote[n.Key] = n.next
+		s.keysFocusedNote[n.Key] = n.Next
 	}
 
 	s.keysJudgmentKind[n.Key] = jk
