@@ -77,7 +77,7 @@ func NewNoteDrawer(res *Resources, opts *Options, c *Chart) NoteDrawer {
 	}
 
 	nd.keysLowest = make([]int, c.keyCount)
-	copy(nd.keysLowest, c.keysFocusedNote)
+	copy(nd.keysLowest, c.focusedNotes)
 	nd.scaledScreenSize = opts.screenSizeY * opts.SpeedScale
 
 	nd.keysColor = make([]color.NRGBA, c.keyCount)

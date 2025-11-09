@@ -6,10 +6,10 @@ import (
 )
 
 type HoldLights struct {
-	anims               []draws.Animation
-	keysLongNoteHolding []bool
-	notes               []Note
-	keysFocusedNote     []int
+	anims            []draws.Animation
+	longNoteHoldings []bool
+	notes            []Note
+	focusedNotes     []int
 }
 
 func NewHoldLights(res *Resources, opts *Options, c *Chart) HoldLights {
@@ -23,34 +23,34 @@ func NewHoldLights(res *Resources, opts *Options, c *Chart) HoldLights {
 		a.ColorScale.Scale(1, 1, 1, opts.HoldLightOpacity)
 		holdLights.anims[k] = a
 	}
-	holdLights.keysLongNoteHolding = make([]bool, c.keyCount)
+	holdLights.longNoteHoldings = make([]bool, c.keyCount)
 	holdLights.notes = c.notes
-	holdLights.keysFocusedNote = c.keysFocusedNote
+	holdLights.focusedNotes = c.focusedNotes
 	return holdLights
 }
 
 // draws only when a long note is holding.
 func (holdLights *HoldLights) Update(ka game.KeyboardAction) {
-	kfns := make([]Note, len(holdLights.keysFocusedNote)) // key focused notes
-	for k, ni := range holdLights.keysFocusedNote {
+	kfns := make([]Note, len(holdLights.focusedNotes)) // key focused notes
+	for k, ni := range holdLights.focusedNotes {
 		if ni < 0 || ni == len(holdLights.notes) {
 			continue
 		}
 		kfns[k] = holdLights.notes[ni]
 	}
 
-	keysOld := holdLights.keysLongNoteHolding
-	keysNew := holdLights.newKeysLongNoteHolding(ka, kfns)
-	for k, new := range keysNew {
-		old := keysOld[k]
+	olds := holdLights.longNoteHoldings
+	news := holdLights.newlongNoteHoldings(ka, kfns)
+	for k, new := range news {
+		old := olds[k]
 		if (old && !new) || (!old && new) {
 			holdLights.anims[k].Reset()
 		}
 	}
-	holdLights.keysLongNoteHolding = keysNew
+	holdLights.longNoteHoldings = news
 }
 
-func (holdLights HoldLights) newKeysLongNoteHolding(ka game.KeyboardAction, kn []Note) []bool {
+func (holdLights HoldLights) newlongNoteHoldings(ka game.KeyboardAction, kn []Note) []bool {
 	klnh := make([]bool, len(kn))
 	for k, holding := range ka.KeysHolding() {
 		if holding && kn[k].Kind == Tail {
@@ -62,7 +62,7 @@ func (holdLights HoldLights) newKeysLongNoteHolding(ka game.KeyboardAction, kn [
 
 func (holdLights HoldLights) Draw(dst draws.Image) {
 	for k, a := range holdLights.anims {
-		if holdLights.keysLongNoteHolding[k] {
+		if holdLights.longNoteHoldings[k] {
 			a.Draw(dst)
 		}
 	}

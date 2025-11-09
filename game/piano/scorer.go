@@ -29,8 +29,8 @@ const (
 
 // Todo: FlowPoint (kind of HP)
 type Scorer struct {
-	notes           []Note
-	keysFocusedNote []int // indexes of focused notes
+	notes        []Note
+	focusedNotes []int // indexes of focused notes
 
 	game.Judgments
 	keysJudgmentKind []game.JudgmentKind
@@ -45,7 +45,7 @@ type Scorer struct {
 
 func NewScorer(c *Chart, sp *audios.SoundPlayer) (s Scorer) {
 	s.notes = c.notes
-	s.keysFocusedNote = c.keysFocusedNote
+	s.focusedNotes = c.focusedNotes
 	js := c.mods.DefaultJudgments()
 	s.Judgments = game.NewJudgments(js)
 
@@ -65,14 +65,14 @@ func NewScorer(c *Chart, sp *audios.SoundPlayer) (s Scorer) {
 
 // update returns the indices of the judgments.
 func (s *Scorer) update(ka game.KeyboardAction) {
-	s.keysJudgmentKind = make([]game.JudgmentKind, len(s.keysFocusedNote))
+	s.keysJudgmentKind = make([]game.JudgmentKind, len(s.focusedNotes))
 	for k := range s.keysJudgmentKind {
 		s.keysJudgmentKind[k] = blank
 	}
 
 	s.markKeysUntouchedNote(ka.Time)
 
-	for k, ni := range s.keysFocusedNote {
+	for k, ni := range s.focusedNotes {
 		if ni < 0 || ni == len(s.notes) {
 			continue
 		}
@@ -97,7 +97,7 @@ func (s Scorer) playSample(smp game.Sample) {
 
 // marks the untouched note as missed.
 func (s *Scorer) markKeysUntouchedNote(now int32) {
-	for k, lowest := range s.keysFocusedNote {
+	for k, lowest := range s.focusedNotes {
 		for ni := lowest; ni < len(s.notes); ni = s.notes[ni].Next {
 			if ni < 0 {
 				break
@@ -111,7 +111,7 @@ func (s *Scorer) markKeysUntouchedNote(now int32) {
 				// Tail note may be focused even after being marked.
 				// Other types of note should not.
 				if n.Kind == Tail {
-					s.keysFocusedNote[k] = n.Next
+					s.focusedNotes[k] = n.Next
 				} else {
 					panic("remained marked note is not Tail")
 				}
@@ -197,7 +197,7 @@ func (s *Scorer) markNote(ni int, jk game.JudgmentKind) {
 
 	// Tail is flushed separately at markKeysUntouchedNote.
 	if n.Kind != Tail {
-		s.keysFocusedNote[n.Key] = n.Next
+		s.focusedNotes[n.Key] = n.Next
 	}
 
 	s.keysJudgmentKind[n.Key] = jk

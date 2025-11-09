@@ -1,6 +1,14 @@
-package main
+package piano
 
 import "math"
+
+// Bonus: plus(+) operator
+// Weight: times(x) operator
+// Factor: times(x) operator with constant operand
+const (
+	LNReleasingBonusFactor = 1.40 // Releasing tail
+	LNHoldingBonusFactor   = 1.25 // Holding LN
+)
 
 func SimpleDecay(maxX, maxY, power float64) func(x float64) float64 {
 	return func(x float64) float64 {
@@ -41,3 +49,10 @@ func LinearFunc(xs, ys []float64) func(x float64) float64 {
 		return ys[n-1]
 	}
 }
+
+var ChordStrain = func(n int) float64 { return 1.0/float64(n) + 0.1*float64(n-1) }
+var JackWeight = SimpleDecay(1.0, 200, 1.25)
+var TailStrain = LinearFunc(
+	[]float64{0, 50, 200, 800},
+	[]float64{0.4, 0.1, 0.1, 0.7},
+)

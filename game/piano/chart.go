@@ -15,9 +15,9 @@ type Chart struct {
 
 	mods Mods
 	game.Dynamics
-	bars            []Bar
-	notes           []Note
-	keysFocusedNote []int // indexes of focused notes
+	bars         []Bar
+	notes        []Note
+	focusedNotes []int // indexes of focused notes
 }
 
 func NewChart(fsys fs.FS, name string, mods Mods) (*Chart, error) {
@@ -35,7 +35,8 @@ func NewChart(fsys fs.FS, name string, mods Mods) (*Chart, error) {
 		return c, err
 	}
 	c.bars = newChartBars(c.Dynamics)
-	c.notes, c.keysFocusedNote = newChartNotes(c.keyCount, format, c.Dynamics)
+	c.notes, c.focusedNotes = newChartNotes(c.keyCount, format, c.Dynamics)
+	c.calcSteps()
 	return c, nil
 }
 
@@ -78,10 +79,15 @@ type Note struct {
 	Prev     int     // For accessing to Head from Tail.
 	position float64 // Scaled x or y value.
 	scored   bool
-}
 
-func (n Note) IsBlank() bool {
-	return n == Note{}
+	// Derived: Level calculation
+	step        int // Step is convenient for handling "Bomb" note
+	hand        int
+	baseStrain  float64
+	chordFactor float64
+	holding     bool // is other notes in a same step holding?
+	// jack
+	// bomb
 }
 
 // The length of the returned slice is 1 or 2.
@@ -144,34 +150,40 @@ func newChartNotes(keyCount int, format game.ChartFormat, dys game.Dynamics) ([]
 	dys.Reset()
 
 	// linking
-	keysNone := make([]int, keyCount)
-	for k := range keysNone {
-		keysNone[k] = -1
+	// Keys-: A slice with a length of key count
+	// TODO: fix that ugly prefix
+
+	// I once thought of a struct NoteStep which
+	// accepts int value as a index, and yields Note.
+	// I didn't go further as it looked too complex.
+	focusedNotes := make([]int, keyCount)
+	for i := range focusedNotes {
+		focusedNotes[i] = -1
 	}
-	keysFocusedNote := make([]int, keyCount)
-	copy(keysFocusedNote, keysNone)
-	keysPrev := make([]int, keyCount)
-	copy(keysPrev, keysNone)
+	prevNotes := make([]int, keyCount)
+	for i := range prevNotes {
+		prevNotes[i] = -1
+	}
 
 	for i, n := range ns {
-		prev := keysPrev[n.Key]
+		prev := prevNotes[n.Key]
 		ns[i].Prev = prev
 		if prev != -1 {
 			ns[prev].Next = i
 		}
-		keysPrev[n.Key] = i
+		prevNotes[n.Key] = i
 
-		if keysFocusedNote[n.Key] == -1 {
-			keysFocusedNote[n.Key] = i
+		if focusedNotes[n.Key] == -1 {
+			focusedNotes[n.Key] = i
 		}
 	}
 
-	for _, last := range keysPrev {
+	for _, last := range prevNotes {
 		if last != -1 {
 			ns[last].Next = len(ns)
 		}
 	}
-	return ns, keysFocusedNote
+	return ns, focusedNotes
 }
 
 func (c Chart) NoteCounts() []int {
