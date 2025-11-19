@@ -1,17 +1,17 @@
 module github.com/hndada/gosu
 
-go 1.21
-
-toolchain go1.21.5
+go 1.23.0
 
 require (
 	github.com/gopxl/beep v1.4.1
 	github.com/hajimehoshi/ebiten/v2 v2.7.6
 	github.com/ulikunitz/xz v0.5.12
 	golang.org/x/exp v0.0.0-20240613232115-7f521ea00fb8
-	golang.org/x/image v0.18.0
+	golang.org/x/image v0.25.0
 	golang.org/x/sys v0.21.0
 )
+
+require gonum.org/v1/gonum v0.16.0 // indirect
 
 require (
 	github.com/ebitengine/gomobile v0.0.0-20240518074828-e86332849895 // indirect
@@ -25,8 +25,8 @@ require (
 	github.com/jfreymuth/oggvorbis v1.0.5 // indirect
 	github.com/jfreymuth/vorbis v1.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/text v0.16.0 
+	golang.org/x/sync v0.12.0 // indirect
+	golang.org/x/text v0.23.0
 )
 
 retract v1.0.1 // Put the version carelessly.
