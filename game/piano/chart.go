@@ -81,13 +81,8 @@ type Note struct {
 	scored   bool
 
 	// Derived: Level calculation
-	step        int // Step is convenient for handling "Bomb" note
-	hand        int
-	baseStrain  float64
-	chordFactor float64
-	holding     bool // is other notes in a same step holding?
-	// jack
-	// bomb
+	step int // Step is convenient for handling "Bomb" note
+	hand int
 }
 
 // The length of the returned slice is 1 or 2.

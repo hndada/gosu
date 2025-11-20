@@ -60,6 +60,8 @@ var influences = [25]float64{
 // 2. Solve linear equations
 // 3. Convert solutions into [5]float64
 func calcStrains(dps [5]float64) [5]float64 {
+	var strains [5]float64
+
 	activeFingers := make([]int, 0, 5)
 	dps2 := make([]float64, 0, 5)
 	for i, dp := range dps {
@@ -76,6 +78,9 @@ func calcStrains(dps [5]float64) [5]float64 {
 			infl[i*rank+j] = influences[5*fin1+fin2]
 		}
 	}
+	if rank == 0 {
+		return strains
+	}
 
 	x := new(mat.VecDense)
 	a := mat.NewDense(rank, rank, infl)
@@ -83,7 +88,6 @@ func calcStrains(dps [5]float64) [5]float64 {
 	x.SolveVec(a, b) // solves a*x = b
 	xdata := x.RawVector().Data
 
-	var strains [5]float64
 	for i, fin := range activeFingers {
 		strains[fin] = xdata[i]
 	}
@@ -134,3 +138,24 @@ func a() {
 		}
 	}
 }
+
+func b() {
+	var ns []Note
+	var (
+		leftPoses  [5]float64
+		rightPoses [5]float64
+	)
+	// 노트 상태 추적?
+	stepNotes := make([]Note, 0, 5)
+	for i, n := range ns {
+		if i == 0 || n.step == stepNotes[0].step {
+			stepNotes = append(stepNotes, n)
+			continue
+		}
+		a()
+	}
+}
+
+// TODO: 왼손, 오른손 influences 반전
+// TODO: keyCount 보정
+// TODO: 100ms 넘었으면 pressed 건은 pos 리셋
