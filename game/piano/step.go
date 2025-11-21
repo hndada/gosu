@@ -11,8 +11,8 @@ const maxStepTimeWindow = 30
 // Required preprocess:
 // 1. Sort by time and key
 // 2. Set prev and next note
-func (c Chart) calcSteps() {
-	c.calcHands()
+func (c Chart) setStepIDs() {
+	c.setHands()
 	pn := c.notes[0] // pivot note
 	exists := make([]bool, c.keyCount)
 	exists[pn.Key] = true
@@ -34,6 +34,102 @@ func (c Chart) calcSteps() {
 		}
 		exists[n.Key] = true
 	}
+}
+
+var FingersMap = map[int][]int{
+	1:  {0},
+	2:  {1, 1},
+	3:  {1, 0, 1},
+	4:  {2, 1, 1, 2},
+	5:  {2, 1, 0, 1, 2},
+	6:  {3, 2, 1, 1, 2, 3},
+	7:  {3, 2, 1, 0, 1, 2, 3},
+	8:  {4, 3, 2, 1, 0, 1, 2, 3}, // Left-scratch
+	9:  {4, 3, 2, 1, 0, 1, 2, 3, 4},
+	10: {4, 3, 2, 1, 0, 0, 1, 2, 3, 4},
+}
+
+func (c *Chart) calcStrains() {
+	var left, right Hand
+	fingers := FingersMap[c.keyCount]
+	stepNotes := make([]Note, 0, 5)
+	for i, n := range c.notes {
+		// Check if prev step is complete
+		if i != 0 && n.step != stepNotes[0].step {
+			var pressings [5]bool
+			for _, n := range stepNotes {
+				fi := fingers[n.Key]
+				pressings[fi] = true
+			}
+
+			hand := stepNotes[0].hand
+			if hand == leftHand {
+				strains := left.calcStrain()
+			} else {
+				strains := right.calcStrain()
+			}
+			stepNotes = make([]Note, 0, 5)
+		}
+		stepNotes = append(stepNotes, n)
+	}
+}
+
+// var FromHandFingerToKeyMap = map[int][2][]int{
+// 	7: [2]int{
+// 		{3, 2, 1, 0, -1},
+// 		{3, 4, 5, 6, -1},
+// 	},
+// }
+
+// func d(keyCount, hand int, strain [5]float64) int {
+// 	if hand == leftHand {
+
+// 	} else {
+// 		keyCount / 2
+// 	}
+// }
+
+type Hand struct {
+	Positions    [5]float64
+	PrevHoldings [5]bool
+	Pressings    [5]bool
+}
+
+// TODO: 100ms 넘었으면 pressed 건은 pos 리셋
+
+// To press the note, it should starts at the top (0)
+// and keep pressing toward the bottom (1). Hence, we will
+// correct the position first before press the notes.
+// Meanwhile, no need to correct the pos for releasing as
+// they are always at the bottom.
+func (h *Hand) calcStrain() [5]float64 {
+	// 1. Release all non-holding keys for preparing pressing.
+	// 2. Press the keys
+	var strains [5]float64
+	for _, ps := range [2][5]bool{h.PrevHoldings, h.Pressings} {
+		reqMoves := calcReqMoves(h.Positions, ps)
+		partialStrains := calcStrains(reqMoves)
+		for i, s := range partialStrains {
+			strains[i] += s
+		}
+		respMoves := calcMoves(partialStrains)
+		for i, m := range respMoves {
+			h.Positions[i] += m
+		}
+	}
+	return strains
+}
+
+func calcReqMoves(poses [5]float64, ps [5]bool) [5]float64 {
+	var reqMoves [5]float64
+	for i, pos := range poses {
+		if ps[i] { // pressed
+			reqMoves[i] = 1.0 - pos
+		} else {
+			reqMoves[i] = 0.0 - pos
+		}
+	}
+	return reqMoves
 }
 
 // How the influence matrix is derived:
@@ -105,57 +201,3 @@ func calcMoves(strains [5]float64) [5]float64 {
 	}
 	return moves
 }
-
-func calcReqMoves(poses [5]float64, ps [5]bool) [5]float64 {
-	var reqMoves [5]float64
-	for i, pos := range poses {
-		if ps[i] { // pressed
-			reqMoves[i] = 1.0 - pos
-		} else {
-			reqMoves[i] = 0.0 - pos
-		}
-	}
-	return reqMoves
-}
-
-// To press the note, it should starts at the top (0)
-// and keep pressing toward the bottom (1). Hence,
-// we will correct the position first before press the notes.
-// Meanwhile, no need to correct the pos for releasing as
-// they are always at the bottom.
-func a() {
-	var poses [5]float64
-	// 1. Release all non-holding keys for preparing pressing.
-	// 2. Press the keys
-	var holdings [5]bool
-	var pressings [5]bool
-	for _, ps := range [2][5]bool{holdings, pressings} {
-		reqMoves := calcReqMoves(poses, ps)
-		strains := calcStrains(reqMoves) // TODO: each note
-		respMoves := calcMoves(strains)
-		for i, m := range respMoves {
-			poses[i] += m
-		}
-	}
-}
-
-func b() {
-	var ns []Note
-	var (
-		leftPoses  [5]float64
-		rightPoses [5]float64
-	)
-	// 노트 상태 추적?
-	stepNotes := make([]Note, 0, 5)
-	for i, n := range ns {
-		if i == 0 || n.step == stepNotes[0].step {
-			stepNotes = append(stepNotes, n)
-			continue
-		}
-		a()
-	}
-}
-
-// TODO: 왼손, 오른손 influences 반전
-// TODO: keyCount 보정
-// TODO: 100ms 넘었으면 pressed 건은 pos 리셋

@@ -1,7 +1,7 @@
 package piano
 
 const (
-	none = iota
+	none int = iota
 	leftHand
 	rightHand
 	middle // To be determined
@@ -12,7 +12,7 @@ const subHand = mainHand%2 + 1
 // Hand of the middle note is trivial in even keys: right hand.
 // In odd keys, the middle note is assigned to the hand which has
 // closer note on its side.
-func (c *Chart) calcHands() {
+func (c *Chart) setHands() {
 	hands := make([]int, len(c.notes))
 
 	mid := c.keyCount / 2

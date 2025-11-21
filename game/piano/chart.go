@@ -36,7 +36,7 @@ func NewChart(fsys fs.FS, name string, mods Mods) (*Chart, error) {
 	}
 	c.bars = newChartBars(c.Dynamics)
 	c.notes, c.focusedNotes = newChartNotes(c.keyCount, format, c.Dynamics)
-	c.calcSteps()
+	c.setStepIDs()
 	return c, nil
 }
 
