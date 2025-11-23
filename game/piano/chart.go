@@ -36,7 +36,7 @@ func NewChart(fsys fs.FS, name string, mods Mods) (*Chart, error) {
 	}
 	c.bars = newChartBars(c.Dynamics)
 	c.notes, c.focusedNotes = newChartNotes(c.keyCount, format, c.Dynamics)
-	c.setStepIDs()
+	c.calcStrains()
 	return c, nil
 }
 
@@ -81,8 +81,9 @@ type Note struct {
 	scored   bool
 
 	// Derived: Level calculation
-	step int // Step is convenient for handling "Bomb" note
-	hand int
+	step   int // Note: step; Chart: stepID
+	hand   int
+	strain float64
 }
 
 // The length of the returned slice is 1 or 2.
@@ -92,6 +93,9 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 		Kind:   Normal,
 		Key:    f.Column(keyCount),
 		Sample: game.NewSample(f),
+
+		step: -1,
+		hand: -1,
 	}
 	if f.NoteType&osu.ComboMask == osu.HitTypeHoldNote {
 		n.Kind = Head
@@ -101,6 +105,9 @@ func newNoteFromOsu(f osu.HitObject, keyCount int) (ns []Note) {
 			Kind: Tail,
 			Key:  n.Key,
 			// Tail has no sample sound.
+
+			step: -1,
+			hand: -1,
 		}
 		ns = append(ns, n, n2)
 	} else {

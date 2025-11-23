@@ -1,0 +1,362 @@
+package piano
+
+import (
+	"fmt"
+	"math"
+
+	"gonum.org/v1/gonum/mat"
+)
+
+const maxStepTimeWindow = 30
+
+var fingerIndicesMap = make(map[int][]int)
+var leftKeyIndicesMap = make(map[int][5]int)
+var rightKeyIndicesMap = make(map[int][5]int)
+
+func init() {
+	initIndices()
+}
+func initIndices() {
+	// Left-scratch is default in 8 key mode
+	isLeftScratchModes := map[int]bool{8: true}
+
+	// 1. fingerIndicesMap
+	// 7:  {3, 2, 1, 0, 1, 2, 3},
+	// 8:  {4, 3, 2, 1, 0, 1, 2, 3}, // Left-scratch
+	// 9:  {4, 3, 2, 1, 0, 1, 2, 3, 4},
+	for keyCount := 1; keyCount <= 10; keyCount++ {
+		if isLeftScratchModes[keyCount] {
+			fingerIndicesMap[keyCount] = append([]int{4},
+				fingerIndicesMap[keyCount-1]...)
+			continue
+		}
+
+		fins := make([]int, keyCount)
+		mid := keyCount / 2
+		for k := 0; k < keyCount; k++ {
+			if k < mid {
+				fins[k] = mid - k
+			} else {
+				if keyCount%2 == 0 {
+					fins[k] = k - mid + 1 // skip thumb
+				} else {
+					fins[k] = k - mid
+				}
+			}
+		}
+		fingerIndicesMap[keyCount] = fins
+	}
+
+	// 2. keyIndicesMap
+	//	6: [2][5]int{
+	//		{-1, 2, 1, 0, -1},
+	//		{-1, 3, 4, 5, -1},
+	//	},
+	//	7: [2][5]int{
+	//		[5]int{3, 2, 1, 0, -1},
+	//		[5]int{3, 4, 5, 6, -1},
+	//	},
+	for keyCount := 1; keyCount <= 10; keyCount++ {
+		var lkis, rkis [5]int
+		if isLeftScratchModes[keyCount] {
+			prevKis := leftKeyIndicesMap[keyCount-1]
+			for f := range prevKis {
+				if f == 0 {
+					lkis[f] = 4
+					continue
+				}
+				lkis[f] = prevKis[f-1]
+			}
+			rkis = rightKeyIndicesMap[keyCount-1]
+			leftKeyIndicesMap[keyCount] = lkis
+			rightKeyIndicesMap[keyCount] = rkis
+			continue
+		}
+
+		for i := 0; i < 5; i++ {
+			lkis[i] = -1
+			rkis[i] = -1
+		}
+		mid := keyCount / 2
+		for k, fi := range fingerIndicesMap[keyCount] {
+			if k < mid {
+				lkis[fi] = k
+			} else {
+				rkis[fi] = k
+			}
+		}
+		// map the thumb on odd key mode
+		if keyCount%2 == 1 {
+			lkis[0] = rkis[0]
+		}
+		leftKeyIndicesMap[keyCount] = lkis
+		rightKeyIndicesMap[keyCount] = rkis
+	}
+}
+
+const (
+	leftHand = iota
+	rightHand
+	middle // To be determined
+)
+const mainHand = rightHand
+const subHand = (mainHand + 1) % 2
+
+// Hand of the middle note is trivial in even keys: right hand.
+// In odd keys, the middle note is assigned to the hand which has
+// closer note on its side.
+func (c *Chart) setHands() {
+	hands := make([]int, len(c.notes))
+
+	mid := c.keyCount / 2
+	for i, n := range c.notes {
+		if c.keyCount%2 != 0 && n.Key == mid {
+			hands[i] = middle
+		}
+		if c.keyCount < mid {
+			hands[i] = leftHand
+		}
+		hands[i] = rightHand
+	}
+
+	// Determine 'middle' hand
+	for i, h := range hands {
+		if h != middle {
+			continue
+		}
+
+		if i == 0 || i == len(hands)-1 {
+			hands[i] = mainHand
+			continue
+		}
+
+		prevHand := hands[i-1]
+		nextHand := hands[i+1]
+		if prevHand != subHand || nextHand != subHand {
+			hands[i] = mainHand
+			continue
+		}
+
+		prevNote := c.notes[i-1]
+		currNote := c.notes[i]
+		nextNote := c.notes[i+1]
+		pdt := currNote.Time - prevNote.Time // prev delta time
+		ndt := nextNote.Time - currNote.Time
+		if pdt == ndt {
+			hands[i] = mainHand
+		} else if pdt < ndt {
+			hands[i] = leftHand
+		} else {
+			hands[i] = rightHand
+		}
+	}
+
+	for i, h := range hands {
+		c.notes[i].hand = h
+	}
+}
+
+// Required preprocess:
+// 1. Sort by time and key
+// 2. Set prev and next note
+func (c *Chart) setStepIDs() {
+	c.setHands()
+	pn := c.notes[0] // pivot note
+	exists := make([]bool, c.keyCount)
+	exists[pn.Key] = true
+	for i, n := range c.notes {
+		if i == 0 {
+			continue
+		}
+		prev := c.notes[i-1]
+
+		isExist := exists[n.Key]
+		sameHand := pn.hand == n.hand
+		inTime := n.Time-pn.Time <= maxStepTimeWindow
+		if !isExist && sameHand && inTime {
+			c.notes[i].step = prev.step
+		} else {
+			pn = c.notes[i]
+			exists = make([]bool, c.keyCount)
+			c.notes[i].step = prev.step + 1
+		}
+		exists[n.Key] = true
+	}
+}
+
+func (c *Chart) calcStrains() {
+	c.setStepIDs()
+
+	var (
+		fis  = fingerIndicesMap[c.keyCount]
+		lrhs = [2]handState{ // left right hand states
+			{fis: fis}, {fis: fis},
+		}
+		lrkis = [2][5]int{ // left right key indices
+			leftKeyIndicesMap[c.keyCount],
+			rightKeyIndicesMap[c.keyCount],
+		}
+		sns     = make([]*Note, c.keyCount) // step notes
+		sn      *Note
+		strains [5]float64
+	)
+
+	for i, n := range c.notes {
+		// Check if prev step is complete
+		if i != 0 && n.step != sns[0].step {
+			hand := sns[0].hand
+			hs := &lrhs[hand]
+			hs.prevStep = hs.step
+			hs.step = sns
+
+			strains = hs.calcStrain()
+			for fin, strain := range strains {
+				sn = sns[lrkis[hand][fin]]
+				if sn == nil {
+					fmt.Printf("error: dereferencing to nil note: %+v, %+v\n",
+						fin, sns)
+					continue
+				}
+				sn.strain = strain
+			}
+			sns = make([]*Note, c.keyCount)
+		}
+		sns = append(sns, &n)
+	}
+}
+
+type handState struct {
+	fis       []int
+	positions [5]float64
+	prevStep  []*Note
+	step      []*Note
+}
+
+const plainPressingDuration = 100 // ms
+
+// To press the note, it should starts at the top (0)
+// and keep pressing toward the bottom (1). Hence, we will
+// correct the position first before press the notes.
+// Meanwhile, no need to correct the pos for releasing as
+// they are always at the bottom.
+func (hs *handState) calcStrain() [5]float64 {
+	var pressings [5]bool
+	for k, n := range hs.step {
+		if n.Kind == Normal || n.Kind == Head {
+			pressings[hs.fis[k]] = true
+		}
+	}
+
+	var prevPressings [5]bool
+	for k, pn := range hs.prevStep {
+		fi := hs.fis[k]
+		if pn.Kind == Normal || pn.Kind == Head {
+			pressings[hs.fis[k]] = true
+		}
+
+		// A normal note goes released soon
+		n := hs.step[k]
+		if pn.Kind == Normal &&
+			pn.Time-n.Time >= plainPressingDuration {
+			prevPressings[fi] = false
+		}
+	}
+
+	// 1. Release all non-holding keys for preparing pressing.
+	// 2. Press the keys
+	var strains [5]float64
+	for _, ps := range [2][5]bool{prevPressings, pressings} {
+		reqMoves := hs.calcReqMoves(hs.positions, ps)
+		partialStrains := hs.calcPartialStrains(reqMoves)
+		for i, s := range partialStrains {
+			strains[i] += s
+		}
+		respMoves := hs.calcMoves(partialStrains)
+		for i, m := range respMoves {
+			hs.positions[i] += m
+		}
+	}
+	return strains
+}
+
+func (h handState) calcReqMoves(poses [5]float64, ps [5]bool) [5]float64 {
+	var reqMoves [5]float64
+	for i, pos := range poses {
+		if ps[i] { // pressed
+			reqMoves[i] = 1.0 - pos
+		} else {
+			reqMoves[i] = 0.0 - pos
+		}
+	}
+	return reqMoves
+}
+
+// How the influence matrix is derived:
+// 1. Degree of dependence among fingers.
+// Neighbor finger is affected strongly, vice versa.
+// Index is the most independent, pinky is the opposite.
+// Matrix is symmetric before scaled.
+// var nonNeighborInfluence = 0.05
+// var neighborInfluences = [4]float64{0.05, 0.1, 0.2, 0.3}
+//
+// 2. base strain: Index ≈ Middle > Ring > Pinky
+// Each row is inversely scaled by the following values:
+// var baseStrains [5]float64{1.1, 1.0, 1.05, 1.1, 1.2}
+var influences = [25]float64{
+	0.90909, 0.04545, 0.04545, 0.04545, 0.04545,
+	0.05000, 1.00000, 0.10000, 0.05000, 0.05000,
+	0.04762, 0.09524, 0.95238, 0.19048, 0.04762,
+	0.04545, 0.04545, 0.18182, 0.90909, 0.27273,
+	0.04167, 0.04167, 0.04167, 0.25000, 0.83333,
+}
+
+// calcStrains calculates strain with the following process.
+// 1. Extract active variables only
+// 2. Solve linear equations
+// 3. Convert solutions into [5]float64
+func (h handState) calcPartialStrains(dps [5]float64) [5]float64 {
+	var strains [5]float64
+
+	activeFingers := make([]int, 0, 5)
+	dps2 := make([]float64, 0, 5)
+	for i, dp := range dps {
+		if math.Abs(dp) > 1e-9 { // check non-zero
+			activeFingers = append(activeFingers, i)
+			dps2 = append(dps2, dp)
+		}
+	}
+
+	rank := len(activeFingers)
+	infl := make([]float64, rank*rank)
+	for i, fin1 := range activeFingers {
+		for j, fin2 := range activeFingers {
+			infl[i*rank+j] = influences[5*fin1+fin2]
+		}
+	}
+	if rank == 0 {
+		return strains
+	}
+
+	x := new(mat.VecDense)
+	a := mat.NewDense(rank, rank, infl)
+	b := mat.NewVecDense(rank, dps2)
+	x.SolveVec(a, b) // solves a*x = b
+	xdata := x.RawVector().Data
+
+	for i, fin := range activeFingers {
+		strains[fin] = xdata[i]
+	}
+	return strains
+}
+
+func (h handState) calcMoves(strains [5]float64) [5]float64 {
+	var moves [5]float64
+	for i := range strains {
+		move := 0.0
+		for j := 0; j < 5; j++ {
+			move += influences[i*5+j] * strains[j]
+		}
+		moves[i] = move
+	}
+	return moves
+}
