@@ -55,7 +55,7 @@ func initIndices() {
 	//		[5]int{3, 2, 1, 0, -1},
 	//		[5]int{3, 4, 5, 6, -1},
 	//	},
-	for keyCount := 1; keyCount <= 10; keyCount++ {
+	for keyCount := 1; keyCount <= 9; keyCount++ {
 		var lkis, rkis [5]int
 		if isLeftScratchModes[keyCount] {
 			prevKis := leftKeyIndicesMap[keyCount-1]
@@ -109,13 +109,14 @@ func (c *Chart) setHands() {
 
 	mid := c.keyCount / 2
 	for i, n := range c.notes {
-		if c.keyCount%2 != 0 && n.Key == mid {
-			hands[i] = middle
-		}
-		if c.keyCount < mid {
+		switch {
+		case n.Key < mid:
 			hands[i] = leftHand
+		case c.keyCount%2 != 0 && n.Key == mid:
+			hands[i] = middle
+		default:
+			hands[i] = rightHand
 		}
-		hands[i] = rightHand
 	}
 
 	// Determine 'middle' hand
@@ -165,6 +166,7 @@ func (c *Chart) setStepIDs() {
 	exists[pn.Key] = true
 	for i, n := range c.notes {
 		if i == 0 {
+			c.notes[0].step = 0
 			continue
 		}
 		prev := c.notes[i-1]
@@ -196,9 +198,13 @@ func (c *Chart) calcStrains() {
 		// lrhs: left right hand states
 		lrhs = [2]handState{
 			{handKind: leftHand,
-				fis: fis, kis: lrkis[leftHand]},
+				fis:       fis,
+				kis:       lrkis[leftHand],
+				prevNotes: make([]*Note, c.keyCount)},
 			{handKind: rightHand,
-				fis: fis, kis: lrkis[rightHand]},
+				fis:       fis,
+				kis:       lrkis[rightHand],
+				prevNotes: make([]*Note, c.keyCount)},
 		}
 		sns     = make([]*Note, 0, c.keyCount) // step notes
 		strains [5]float64
@@ -211,12 +217,13 @@ func (c *Chart) calcStrains() {
 			hs := &lrhs[hand]
 			strains = hs.calcStrain(sns)
 			for _, sn := range sns {
-				fin := lrkis[hand][sn.Key]
+				fin := hs.fis[sn.Key]
 				sn.strain = strains[fin]
 			}
 			sns = make([]*Note, 0, 5)
 		}
-		sns = append(sns, &n)
+		// Beware not to use a pointer to local variable 'n'
+		sns = append(sns, &c.notes[i])
 	}
 }
 
@@ -252,7 +259,11 @@ func (hs *handState) calcStrain(step []*Note) [5]float64 {
 	dt := st - hs.time // delta time
 	for fin, pos := range hs.positions {
 		k := hs.kis[fin]
-		if hs.prevNotes[k].Kind == Head {
+		if k == -1 {
+			continue
+		}
+		pn := hs.prevNotes[k]
+		if pn == nil || pn.Kind == Head {
 			continue // should be 1.0
 		}
 		pos2 := pos - float64(dt)/normalKeyStrokeDuration
@@ -269,8 +280,8 @@ func (hs *handState) calcStrain(step []*Note) [5]float64 {
 	)
 	// 1. Release all non-holding keys for preparing pressing.
 	// 2. Press the keys
-	for k, sn := range step {
-		fin := hs.fis[k]
+	for _, sn := range step {
+		fin := hs.fis[sn.Key]
 		switch sn.Kind {
 		case Normal, Head:
 			reqMoves1[fin] = 0.0

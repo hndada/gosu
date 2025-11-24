@@ -6,7 +6,8 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
-const unitDuration = 800 // 800ms. 2 beats with 150 BPM
+// const unitDuration = 800 // 800ms. 2 beats with 150 BPM
+const unitDuration = 500 // 800ms. 2 beats with 150 BPM
 
 const (
 	ScoreScale           = 1_000_000
@@ -14,7 +15,7 @@ const (
 	StandardMaxScore int = 1.0 * ScoreScale
 )
 
-const baseLevelScale = 0.05
+const baseLevelScale = 0.25
 
 var (
 	scoreXs = []float64{
