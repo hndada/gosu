@@ -1,7 +1,6 @@
 package piano
 
 import (
-	"fmt"
 	"math"
 
 	"gonum.org/v1/gonum/mat"
@@ -188,16 +187,20 @@ func (c *Chart) calcStrains() {
 	c.setStepIDs()
 
 	var (
-		fis  = fingerIndicesMap[c.keyCount]
-		lrhs = [2]handState{ // left right hand states
-			{fis: fis}, {fis: fis},
-		}
-		lrkis = [2][5]int{ // left right key indices
+		fis = fingerIndicesMap[c.keyCount]
+		// lrkis: left right key indices
+		lrkis = [2][5]int{
 			leftKeyIndicesMap[c.keyCount],
 			rightKeyIndicesMap[c.keyCount],
 		}
-		sns     = make([]*Note, c.keyCount) // step notes
-		sn      *Note
+		// lrhs: left right hand states
+		lrhs = [2]handState{
+			{handKind: leftHand,
+				fis: fis, kis: lrkis[leftHand]},
+			{handKind: rightHand,
+				fis: fis, kis: lrkis[rightHand]},
+		}
+		sns     = make([]*Note, 0, c.keyCount) // step notes
 		strains [5]float64
 	)
 
@@ -206,67 +209,79 @@ func (c *Chart) calcStrains() {
 		if i != 0 && n.step != sns[0].step {
 			hand := sns[0].hand
 			hs := &lrhs[hand]
-			hs.prevStep = hs.step
-			hs.step = sns
-
-			strains = hs.calcStrain()
-			for fin, strain := range strains {
-				sn = sns[lrkis[hand][fin]]
-				if sn == nil {
-					fmt.Printf("error: dereferencing to nil note: %+v, %+v\n",
-						fin, sns)
-					continue
-				}
-				sn.strain = strain
+			strains = hs.calcStrain(sns)
+			for _, sn := range sns {
+				fin := lrkis[hand][sn.Key]
+				sn.strain = strains[fin]
 			}
-			sns = make([]*Note, c.keyCount)
+			sns = make([]*Note, 0, 5)
 		}
 		sns = append(sns, &n)
 	}
 }
 
 type handState struct {
-	fis       []int
+	handKind int
+	fis      []int
+	kis      [5]int
+
+	time      int32
 	positions [5]float64
-	prevStep  []*Note
-	step      []*Note
+	prevNotes []*Note
 }
 
-const plainPressingDuration = 100 // ms
+// It is guaranteed that step notes contains non-nil elements only.
+func stepTime(step []*Note) int32 {
+	var sumTime int32
+	for _, n := range step {
+		sumTime += n.Time
+	}
+	return sumTime / int32(len(step))
+}
 
 // To press the note, it should starts at the top (0)
 // and keep pressing toward the bottom (1). Hence, we will
 // correct the position first before press the notes.
 // Meanwhile, no need to correct the pos for releasing as
 // they are always at the bottom.
-func (hs *handState) calcStrain() [5]float64 {
-	var pressings [5]bool
-	for k, n := range hs.step {
-		if n.Kind == Normal || n.Kind == Head {
-			pressings[hs.fis[k]] = true
+func (hs *handState) calcStrain(step []*Note) [5]float64 {
+	const normalKeyStrokeDuration = 100 // ms
+	// Adjust positions for non-holding keystroke.
+	// Normal keystroke takes 80~120ms.
+	st := stepTime(step)
+	dt := st - hs.time // delta time
+	for fin, pos := range hs.positions {
+		k := hs.kis[fin]
+		if hs.prevNotes[k].Kind == Head {
+			continue // should be 1.0
 		}
+		pos2 := pos - float64(dt)/normalKeyStrokeDuration
+		if pos2 < 0 {
+			pos2 = 0
+		}
+		hs.positions[fin] = pos2
 	}
 
-	var prevPressings [5]bool
-	for k, pn := range hs.prevStep {
-		fi := hs.fis[k]
-		if pn.Kind == Normal || pn.Kind == Head {
-			pressings[hs.fis[k]] = true
-		}
-
-		// A normal note goes released soon
-		n := hs.step[k]
-		if pn.Kind == Normal &&
-			pn.Time-n.Time >= plainPressingDuration {
-			prevPressings[fi] = false
-		}
-	}
-
+	var (
+		reqMoves1 [5]float64
+		reqMoves2 [5]float64
+		strains   [5]float64
+	)
 	// 1. Release all non-holding keys for preparing pressing.
 	// 2. Press the keys
-	var strains [5]float64
-	for _, ps := range [2][5]bool{prevPressings, pressings} {
-		reqMoves := hs.calcReqMoves(hs.positions, ps)
+	for k, sn := range step {
+		fin := hs.fis[k]
+		switch sn.Kind {
+		case Normal, Head:
+			reqMoves1[fin] = 0.0
+			reqMoves2[fin] = 1.0
+		case Tail:
+			reqMoves1[fin] = 1.0
+			reqMoves2[fin] = 0.0
+		}
+	}
+
+	for _, reqMoves := range [2][5]float64{reqMoves1, reqMoves2} {
 		partialStrains := hs.calcPartialStrains(reqMoves)
 		for i, s := range partialStrains {
 			strains[i] += s
@@ -276,20 +291,26 @@ func (hs *handState) calcStrain() [5]float64 {
 			hs.positions[i] += m
 		}
 	}
+
+	// Store for next calculation
+	hs.time = st
+	for _, sn := range step {
+		hs.prevNotes[sn.Key] = sn
+	}
 	return strains
 }
 
-func (h handState) calcReqMoves(poses [5]float64, ps [5]bool) [5]float64 {
-	var reqMoves [5]float64
-	for i, pos := range poses {
-		if ps[i] { // pressed
-			reqMoves[i] = 1.0 - pos
-		} else {
-			reqMoves[i] = 0.0 - pos
-		}
-	}
-	return reqMoves
-}
+// func (h handState) calcReqMoves(poses [5]float64, ps [5]bool) [5]float64 {
+// 	var reqMoves [5]float64
+// 	for i, pos := range poses {
+// 		if ps[i] { // pressed
+// 			reqMoves[i] = 1.0 - pos
+// 		} else {
+// 			reqMoves[i] = 0.0 - pos
+// 		}
+// 	}
+// 	return reqMoves
+// }
 
 // How the influence matrix is derived:
 // 1. Degree of dependence among fingers.
@@ -344,7 +365,7 @@ func (h handState) calcPartialStrains(dps [5]float64) [5]float64 {
 	xdata := x.RawVector().Data
 
 	for i, fin := range activeFingers {
-		strains[fin] = xdata[i]
+		strains[fin] = math.Abs(xdata[i])
 	}
 	return strains
 }
