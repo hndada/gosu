@@ -1,5 +1,8 @@
 package game
 
+// Bonus: plus(+) operator
+// Weight: times(x) operator
+// Factor: times(x) operator with constant operand
 func LinearInterpolate(xs, ys []float64) func(float64) float64 {
 	return func(x float64) float64 {
 		// No out of index panic.

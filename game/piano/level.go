@@ -1,58 +1,70 @@
 package piano
 
-import "math"
+import (
+	"sort"
 
-// Bonus: plus(+) operator
-// Weight: times(x) operator
-// Factor: times(x) operator with constant operand
+	"github.com/hndada/gosu/game"
+)
+
+const unitDuration = 800 // 800ms. 2 beats with 150 BPM
+
 const (
-	LNReleasingBonusFactor = 1.40 // Releasing tail
-	LNHoldingBonusFactor   = 1.25 // Holding LN
+	ScoreScale           = 1_000_000
+	MaxScore         int = 1.1 * ScoreScale
+	StandardMaxScore int = 1.0 * ScoreScale
 )
 
-func SimpleDecay(maxX, maxY, power float64) func(x float64) float64 {
-	return func(x float64) float64 {
-		base := (maxY - x/maxX)
-		if base < 0 {
-			return 0
-		}
-		return math.Pow(base, power)
-	}
-}
+const baseLevelScale = 0.05
 
-func LinearFunc(xs, ys []float64) func(x float64) float64 {
-	n := len(xs)
-	if n == 0 || len(ys) != n {
-		panic("xs and ys must have same non-zero length")
-	}
+var (
+	scoreXs = []float64{
+		0.60, 0.70, 0.80, 0.90, 1.00, 1.10}
+	decayFactorYs = []float64{
+		0.99, 0.98, 0.97, 0.96, 0.95, 0.50}
+	levelScaleYs = []float64{
+		0.85, 0.90, 0.95, 1.0, 1.1, 1.25}
 
-	return func(x float64) float64 {
-		// before first point
-		if x <= xs[0] {
-			return ys[0]
-		}
-		// after last point
-		if x >= xs[n-1] {
-			return ys[n-1]
-		}
-
-		// find interval
-		for i := 0; i < n-1; i++ {
-			if x >= xs[i] && x <= xs[i+1] {
-				x0, y0 := xs[i], ys[i]
-				x1, y1 := xs[i+1], ys[i+1]
-				t := (x - x0) / (x1 - x0)
-				return y0 + t*(y1-y0)
-			}
-		}
-		// fallback (shouldn’t reach)
-		return ys[n-1]
-	}
-}
-
-var ChordStrain = func(n int) float64 { return 1.0/float64(n) + 0.1*float64(n-1) }
-var JackWeight = SimpleDecay(1.0, 200, 1.25)
-var TailStrain = LinearFunc(
-	[]float64{0, 50, 200, 800},
-	[]float64{0.4, 0.1, 0.1, 0.7},
+	decayFactor = game.LinearInterpolate(
+		scoreXs, decayFactorYs)
+	levelScale = game.LinearInterpolate(
+		scoreXs, levelScaleYs)
 )
+
+func (c Chart) StandardLevel() float64 {
+	return c.Level(StandardMaxScore)
+}
+
+// Each target score gives different level.
+
+// Different BPM make duration of 'diff' different.
+// However, it looks fine not to scale each diff based on its duration
+// and using the same size of duration on each piece.
+// They will be alleviated into diffs.
+func (c Chart) Level(score int) float64 {
+	factor := decayFactor(float64(score))
+	scale := levelScale(float64(score))
+	scale *= baseLevelScale
+	if len(c.notes) == 0 {
+		return 0.0
+	}
+	var diff float64
+	diffs := make([]float64, 0, 200)
+
+	endTime := c.notes[0].Time + unitDuration
+	for _, n := range c.notes {
+		if n.Time >= endTime {
+			diffs = append(diffs, diff)
+			diff = 0
+			endTime += unitDuration
+		}
+		diff += n.strain
+	}
+
+	sort.Slice(diffs, func(i, j int) bool { return diffs[i] > diffs[j] })
+	difficulty := game.WeightedSum(diffs, factor)
+	return difficulty * scale
+}
+
+// Todo: debug level calculation
+// color each note based on its strain
+// with printing strain value.
