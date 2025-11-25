@@ -70,8 +70,8 @@ const (
 // it can handle scratch options smoothly.
 func NewOptions() *Options {
 	opts := &Options{
-		// SpeedScale: 1.0,
-		SpeedScale: 1.4,
+		SpeedScale: 0.45,
+		// SpeedScale: 1.4,
 
 		StageWidths: map[int]float64{
 			1:  game.ScreenSizeX / 2 * 0.50,
@@ -125,7 +125,7 @@ func NewOptions() *Options {
 		FieldOpacity:   0.8,
 		BarHeight:      1,
 		HintHeight:     50,
-		NoteHeight:     40,
+		NoteHeight:     20, // 40
 		TailNoteOffset: 0,
 		NoteColors: [4]color.NRGBA{
 			{255, 255, 255, 255}, // One: white

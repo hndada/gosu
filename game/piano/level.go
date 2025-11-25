@@ -6,8 +6,8 @@ import (
 	"github.com/hndada/gosu/game"
 )
 
-// const unitDuration = 800 // 800ms. 2 beats with 150 BPM
-const unitDuration = 500 // 800ms. 2 beats with 150 BPM
+// 2 beats with 150 BPM takes 800ms
+const unitDuration = 800
 
 const (
 	ScoreScale           = 1_000_000
@@ -65,7 +65,3 @@ func (c Chart) Level(score int) float64 {
 	difficulty := game.WeightedSum(diffs, factor)
 	return difficulty * scale
 }
-
-// Todo: debug level calculation
-// color each note based on its strain
-// with printing strain value.

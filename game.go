@@ -36,8 +36,10 @@ func NewGame(fsys fs.FS) (*Game, error) {
 	scn, err := play.NewScene(&ctx, scene.PlayArgs{
 		// ChartFS:        os.DirFS("C:/Users/hndada/Documents/GitHub/gosu/music/cYsmix - triangles"),
 		// ChartFilename:  "cYsmix - triangles (MuangMuangE) [Easy].osu",
-		ChartFS:        os.DirFS("C:/Users/hndada/Documents/GitHub/gosu/cmd/ojn"),
-		ChartFilename:  "o2ma111.ojn",
+		// ChartFS:        os.DirFS(`C:\Users\Muang\AppData\Local\osu!\Songs\237212 Paitan - LEMON SUMMER`),
+		// ChartFilename:  `Paitan - LEMON SUMMER (Yuutosan) [4K NOVICE].osu`,
+		ChartFS:        os.DirFS(`C:\Users\Muang\AppData\Local\osu!\Songs\237512 Hommarju feat mamiko - Katayoku No Tori`),
+		ChartFilename:  `Hommarju feat. mamiko - Katayoku No Tori (Awang411) [3rd Twilight].osu`,
 		Mods:           piano.Mods{},
 		ReplayFS:       nil,
 		ReplayFilename: "",

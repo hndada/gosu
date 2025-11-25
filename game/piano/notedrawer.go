@@ -1,6 +1,7 @@
 package piano
 
 import (
+	"fmt"
 	"image/color"
 	"sort"
 
@@ -78,8 +79,9 @@ func NewNoteDrawer(res *Resources, opts *Options, c *Chart) NoteDrawer {
 
 	nd.keysLowest = make([]int, c.keyCount)
 	copy(nd.keysLowest, c.focusedNotes)
-	nd.scaledScreenSize = opts.screenSizeY * opts.SpeedScale
-
+	// Low speed scale makes the screen zoom out.
+	// Hence its covering size should be enlarged.
+	nd.scaledScreenSize = opts.screenSizeY / opts.SpeedScale
 	nd.keysColor = make([]color.NRGBA, c.keyCount)
 	order := opts.KeyOrders[c.keyCount]
 	for k := range nd.keysColor {
@@ -157,9 +159,17 @@ func (nd NoteDrawer) Draw(dst draws.Image) {
 				// op.ColorM.ChangeHSV(0, 0.3, 0.3)
 			}
 			a.Draw(dst)
+
+			s := fmt.Sprintf("%.2f", n.strain)
+			t := draws.NewText(s)
+			t.ColorScale.ScaleWithColor(blue)
+			t.Move(a.X(), a.Y()-23) // a little offset
+			t.Draw(dst)
 		}
 	}
 }
+
+var blue = color.RGBA{0, 80, 0, 255}
 
 // drawLongNoteBody draws stretched long note body sprite.
 func (nd NoteDrawer) drawLongNoteBody(dst draws.Image, head Note) {

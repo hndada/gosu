@@ -1,6 +1,7 @@
 package piano
 
 import (
+	"fmt"
 	"math"
 
 	"gonum.org/v1/gonum/mat"
@@ -225,6 +226,16 @@ func (c *Chart) calcStrains() {
 		// Beware not to use a pointer to local variable 'n'
 		sns = append(sns, &c.notes[i])
 	}
+	minStrain := 10000.0
+	maxStrain := -1000.0
+	for _, n := range c.notes {
+		if minStrain > n.strain {
+			minStrain = n.strain
+		} else if maxStrain < n.strain {
+			maxStrain = n.strain
+		}
+	}
+	fmt.Printf("min: %.2f	max: %.2f\n", minStrain, maxStrain)
 }
 
 type handState struct {

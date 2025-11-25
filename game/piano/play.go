@@ -97,7 +97,7 @@ func (p *Play) SetSpeedScale(oldScale, newScale float64) {
 		ns[i].position *= ratio
 	}
 	// for lowermost and uppermost
-	p.noteDrawer.scaledScreenSize = game.ScreenSizeY * ratio
+	p.noteDrawer.scaledScreenSize = game.ScreenSizeY / ratio
 
 	bs := p.Chart.bars
 	for i := range bs {
