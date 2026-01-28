@@ -21,14 +21,14 @@ var (
 	scoreXs = []float64{
 		0.60, 0.70, 0.80, 0.90, 1.00, 1.10}
 	decayFactorYs = []float64{
-		0.99, 0.98, 0.97, 0.96, 0.95, 0.50}
-	levelScaleYs = []float64{
+		0.99, 0.98, 0.97, 0.95, 0.90, 0.50}
+	levelWeightYs = []float64{
 		0.85, 0.90, 0.95, 1.0, 1.1, 1.25}
 
 	decayFactor = game.LinearInterpolate(
 		scoreXs, decayFactorYs)
-	levelScale = game.LinearInterpolate(
-		scoreXs, levelScaleYs)
+	levelWeight = game.LinearInterpolate(
+		scoreXs, levelWeightYs)
 )
 
 func (c Chart) StandardLevel() float64 {
@@ -43,8 +43,8 @@ func (c Chart) StandardLevel() float64 {
 // They will be alleviated into diffs.
 func (c Chart) Level(score int) float64 {
 	factor := decayFactor(float64(score))
-	scale := levelScale(float64(score))
-	scale *= baseLevelScale
+	scale := 1 / factor
+	scale *= levelWeight(float64(score))
 	if len(c.notes) == 0 {
 		return 0.0
 	}

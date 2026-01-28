@@ -70,7 +70,7 @@ const (
 // it can handle scratch options smoothly.
 func NewOptions() *Options {
 	opts := &Options{
-		SpeedScale: 0.45,
+		SpeedScale: 0.65,
 		// SpeedScale: 1.4,
 
 		StageWidths: map[int]float64{

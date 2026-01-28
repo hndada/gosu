@@ -181,7 +181,7 @@ func (s *Scene) SetMusicOffset(newOffset int32) {
 
 func (s *Scene) firstUpdate() {
 	const wait = 1800 * time.Millisecond
-	s.startTime = times.Now().Add(wait)
+	s.startTime = times.Now().Add(wait * 4)
 	if kb, ok := s.keyboard.(*input.Keyboard); ok {
 		kb.Listen(s.startTime)
 	}

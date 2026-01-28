@@ -114,7 +114,7 @@ func (p Play) Draw(dst draws.Image) {
 	p.backlights.Draw(dst)
 	p.hitLights.Draw(dst)
 	p.holdLights.Draw(dst)
-	p.judgmentDrawer.Draw(dst)
+	// p.judgmentDrawer.Draw(dst)
 	p.comboDrawer.Draw(dst)
 	p.scoreDrawer.Draw(dst)
 }

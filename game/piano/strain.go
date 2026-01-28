@@ -263,7 +263,7 @@ func stepTime(step []*Note) int32 {
 // Meanwhile, no need to correct the pos for releasing as
 // they are always at the bottom.
 func (hs *handState) calcStrain(step []*Note) [5]float64 {
-	const normalKeyStrokeDuration = 100 // ms
+	const normalKeyStrokeDuration = 250 // ms
 	// Adjust positions for non-holding keystroke.
 	// Normal keystroke takes 80~120ms.
 	st := stepTime(step)
@@ -345,13 +345,22 @@ func (hs *handState) calcStrain(step []*Note) [5]float64 {
 // 2. base strain: Index ≈ Middle > Ring > Pinky
 // Each row is inversely scaled by the following values:
 // var baseStrains [5]float64{1.1, 1.0, 1.05, 1.1, 1.2}
-var influences = [25]float64{
+var influences1 = [25]float64{
 	0.90909, 0.04545, 0.04545, 0.04545, 0.04545,
 	0.05000, 1.00000, 0.10000, 0.05000, 0.05000,
 	0.04762, 0.09524, 0.95238, 0.19048, 0.04762,
 	0.04545, 0.04545, 0.18182, 0.90909, 0.27273,
 	0.04167, 0.04167, 0.04167, 0.25000, 0.83333,
 }
+
+//	var influences2 = [25]float64{
+//		1.00, 0.12, 0.04, 0.02, 0.01,
+//		0.12, 1.00, 0.08, 0.06, 0.03,
+//		0.04, 0.08, 1.00, 0.18, 0.05,
+//		0.02, 0.06, 0.18, 1.00, 0.45,
+//		0.01, 0.03, 0.05, 0.45, 1.00,
+//	}
+var influences = influences1
 
 // calcStrains calculates strain with the following process.
 // 1. Extract active variables only
@@ -387,7 +396,12 @@ func (h handState) calcPartialStrains(dps [5]float64) [5]float64 {
 	xdata := x.RawVector().Data
 
 	for i, fin := range activeFingers {
-		strains[fin] = math.Abs(xdata[i])
+		if s := xdata[i]; s > 0 {
+			strains[fin] = math.Abs(s)
+		} else {
+			// Releasing takes less strain than pressing
+			strains[fin] = math.Abs(s) / 3
+		}
 	}
 	return strains
 }
